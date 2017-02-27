@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.5.3
+// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.6
 package org.firebirdsql.jdbc.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;

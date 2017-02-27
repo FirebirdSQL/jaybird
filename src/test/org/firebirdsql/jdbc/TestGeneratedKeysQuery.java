@@ -150,12 +150,10 @@ public class TestGeneratedKeysQuery {
                 will(returnValue(columnRs));
                 // We want to return three columns, so for next() three return true, fourth returns false
                 exactly(4).of(columnRs).next();
-                will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true),
-                        returnValue(false)));
+                will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true), returnValue(false)));
                 // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
                 exactly(3).of(columnRs).getString(4);
-                will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"),
-                        returnValue("TEXT_VALUE")));
+                will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"), returnValue("TEXT_VALUE")));
                 oneOf(columnRs).close();
             }
         });
@@ -176,6 +174,60 @@ public class TestGeneratedKeysQuery {
         assertFalse("Query string should be modified", TEST_INSERT_QUERY.equals(queryString));
         assertTrue("Query string should start with original query",
                 queryString.startsWith(TEST_INSERT_QUERY));
+        assertTrue(queryString, queryString.endsWith(expectedSuffix));
+    }
+
+    /**
+     * Test
+     * {@link AbstractGeneratedKeysQuery#AbstractGeneratedKeysQuery(String, int)}
+     * for the case of passing {@link Statement#RETURN_GENERATED_KEYS} with a normal
+     * INSERT with a table name with whitespace.
+     * <p>
+     * <ul>
+     * <li>generatesKeys() returns <code>true</code></li>
+     * <li>getQueryString() returns query with added RETURNING clause containing
+     * all columns reported by the databasemetadata</li>
+     * </ul>
+     * </p>
+     *
+     * @throws SQLException
+     */
+    @Test
+    public void testGeneratedKeys_returnGeneratedKeys_tableName_with_whitespace() throws SQLException {
+        final DatabaseMetaData dbMetadata = context.mock(DatabaseMetaData.class);
+        final ResultSet columnRs = context.mock(ResultSet.class);
+
+        context.checking(new Expectations() {
+            {
+                // Metadata for table in query will be retrieved
+                oneOf(dbMetadata).getColumns(null, null, "GENERATED KEYS TBL", null);
+                will(returnValue(columnRs));
+                // We want to return three columns, so for next() three return true, fourth returns false
+                exactly(4).of(columnRs).next();
+                will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true), returnValue(false)));
+                // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
+                exactly(3).of(columnRs).getString(4);
+                will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"), returnValue("TEXT_VALUE")));
+                oneOf(columnRs).close();
+            }
+        });
+
+        // NOTE Implementation detail
+        String expectedSuffix = "\nRETURNING \"ID\",\"NAME\",\"TEXT_VALUE\"";
+
+        AbstractGeneratedKeysQuery query = new AbstractGeneratedKeysQuery("INSERT INTO \"GENERATED KEYS TBL\"(NAME, TEXT_VALUE) VALUES (?, ?)",
+                Statement.RETURN_GENERATED_KEYS) {
+            @Override
+            DatabaseMetaData getDatabaseMetaData() throws SQLException {
+                return dbMetadata;
+            }
+        };
+
+        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
+        String queryString = query.getQueryString();
+        assertFalse("Query string should be modified", "INSERT INTO \"GENERATED KEYS TBL\"(NAME, TEXT_VALUE) VALUES (?, ?)".equals(queryString));
+        assertTrue("Query string should start with original query",
+                queryString.startsWith("INSERT INTO \"GENERATED KEYS TBL\"(NAME, TEXT_VALUE) VALUES (?, ?)"));
         assertTrue(queryString, queryString.endsWith(expectedSuffix));
     }
 

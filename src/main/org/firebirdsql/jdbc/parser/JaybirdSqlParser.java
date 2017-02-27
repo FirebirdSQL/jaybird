@@ -17,21 +17,24 @@
  * All rights reserved.
  */
 
-// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.5.3
+// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.6
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.v4.runtime.atn.*;
-import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
-import java.util.List;
-import java.util.Iterator;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.ParserATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class JaybirdSqlParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.5.3", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -311,6 +314,7 @@ public class JaybirdSqlParser extends Parser {
 				_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
 			}
 			setState(106);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==RETURNING) {
 				{
@@ -394,6 +398,7 @@ public class JaybirdSqlParser extends Parser {
 				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
 			}
 			setState(121);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==RETURNING) {
 				{
@@ -577,6 +582,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(141);
 			tableName();
 			setState(143);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==LEFT_PAREN) {
 				{
@@ -588,6 +594,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(145);
 			insertValues();
 			setState(147);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==MATCHING) {
 				{
@@ -597,6 +604,7 @@ public class JaybirdSqlParser extends Parser {
 			}
 
 			setState(150);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==RETURNING) {
 				{
@@ -713,6 +721,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(159);
 			tableName();
 			setState(161);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==LEFT_PAREN) {
 				{
@@ -722,6 +731,7 @@ public class JaybirdSqlParser extends Parser {
 			}
 
 			setState(172);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case VALUES:
 				{
@@ -761,6 +771,7 @@ public class JaybirdSqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			setState(175);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==RETURNING) {
 				{
@@ -992,7 +1003,10 @@ public class JaybirdSqlParser extends Parser {
 			_la = _input.LA(1);
 			if ( !(_la==GENERIC_ID || _la==QUOTED_ID) ) {
 			_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}
@@ -1610,7 +1624,10 @@ public class JaybirdSqlParser extends Parser {
 			_la = _input.LA(1);
 			if ( !(_la==NULL || _la==UNKNOWN) ) {
 			_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}
@@ -1658,7 +1675,10 @@ public class JaybirdSqlParser extends Parser {
 			_la = _input.LA(1);
 			if ( !(((((_la - 75)) & ~0x3f) == 0 && ((1L << (_la - 75)) & ((1L << (INTEGER - 75)) | (1L << (NUMERIC - 75)) | (1L << (REAL - 75)) | (1L << (STRING - 75)) | (1L << (BINARY_STRING - 75)) | (1L << (TRUTH_VALUE - 75)))) != 0)) ) {
 			_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}
@@ -1702,6 +1722,7 @@ public class JaybirdSqlParser extends Parser {
 		enterRule(_localctx, 44, RULE_nextValueExpression);
 		try {
 			setState(295);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case NEXT:
 				enterOuterAlt(_localctx, 1);
@@ -1883,6 +1904,7 @@ public class JaybirdSqlParser extends Parser {
 		enterRule(_localctx, 50, RULE_nonArrayType);
 		try {
 			setState(310);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case KW_BIGINT:
 			case KW_BOOLEAN:
@@ -1954,6 +1976,7 @@ public class JaybirdSqlParser extends Parser {
 		enterRule(_localctx, 52, RULE_simpleType);
 		try {
 			setState(314);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case KW_BIGINT:
 			case KW_BOOLEAN:
@@ -2079,6 +2102,7 @@ public class JaybirdSqlParser extends Parser {
 		int _la;
 		try {
 			setState(330);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case KW_CHAR:
 			case KW_NCHAR:
@@ -2088,10 +2112,14 @@ public class JaybirdSqlParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==KW_CHAR || _la==KW_NCHAR) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(324);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==LEFT_PAREN) {
 					{
@@ -2114,7 +2142,10 @@ public class JaybirdSqlParser extends Parser {
 				_la = _input.LA(1);
 				if ( !(_la==KW_NVARCHAR || _la==KW_VARCHAR) ) {
 				_errHandler.recoverInline(this);
-				} else {
+				}
+				else {
+					if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+					_errHandler.reportMatch(this);
 					consume();
 				}
 				setState(327);
@@ -2222,6 +2253,7 @@ public class JaybirdSqlParser extends Parser {
 		int _la;
 		try {
 			setState(366);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case KW_BIGINT:
 				enterOuterAlt(_localctx, 1);
@@ -2243,6 +2275,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(337);
 				match(KW_DECIMAL);
 				setState(345);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==LEFT_PAREN) {
 					{
@@ -2251,6 +2284,7 @@ public class JaybirdSqlParser extends Parser {
 					setState(339);
 					match(INTEGER);
 					setState(342);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if (_la==COMMA) {
 						{
@@ -2304,6 +2338,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(352);
 				match(KW_NUMERIC);
 				setState(360);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==LEFT_PAREN) {
 					{
@@ -2312,6 +2347,7 @@ public class JaybirdSqlParser extends Parser {
 					setState(354);
 					match(INTEGER);
 					setState(357);
+					_errHandler.sync(this);
 					_la = _input.LA(1);
 					if (_la==COMMA) {
 						{
@@ -2415,6 +2451,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(368);
 				match(KW_BLOB);
 				setState(370);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==SUB_TYPE) {
 					{
@@ -2424,6 +2461,7 @@ public class JaybirdSqlParser extends Parser {
 				}
 
 				setState(373);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==SEGMENT) {
 					{
@@ -2433,6 +2471,7 @@ public class JaybirdSqlParser extends Parser {
 				}
 
 				setState(376);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==CHARACTER) {
 					{
@@ -2453,6 +2492,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(380);
 				match(INTEGER);
 				setState(383);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==COMMA) {
 					{
@@ -2655,6 +2695,7 @@ public class JaybirdSqlParser extends Parser {
 		int _la;
 		try {
 			setState(414);
+			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case KW_CHAR:
 			case KW_NCHAR:
@@ -2671,6 +2712,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(405);
 				match(T__9);
 				setState(407);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==CHARACTER) {
 					{
@@ -2751,6 +2793,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(416);
 			arrayRange();
 			setState(419);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==COMMA) {
 				{
@@ -2969,6 +3012,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(443);
 				match(LEFT_PAREN);
 				setState(445);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ALL || _la==DISTINCT) {
 					{
@@ -2976,7 +3020,10 @@ public class JaybirdSqlParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==ALL || _la==DISTINCT) ) {
 					_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -2996,6 +3043,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(451);
 				match(LEFT_PAREN);
 				setState(453);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ALL || _la==DISTINCT) {
 					{
@@ -3003,7 +3051,10 @@ public class JaybirdSqlParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==ALL || _la==DISTINCT) ) {
 					_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -3023,6 +3074,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(459);
 				match(LEFT_PAREN);
 				setState(461);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ALL || _la==DISTINCT) {
 					{
@@ -3030,7 +3082,10 @@ public class JaybirdSqlParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==ALL || _la==DISTINCT) ) {
 					_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -3050,6 +3105,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(467);
 				match(LEFT_PAREN);
 				setState(469);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ALL || _la==DISTINCT) {
 					{
@@ -3057,7 +3113,10 @@ public class JaybirdSqlParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==ALL || _la==DISTINCT) ) {
 					_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -3077,6 +3136,7 @@ public class JaybirdSqlParser extends Parser {
 				setState(475);
 				match(LEFT_PAREN);
 				setState(477);
+				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ALL || _la==DISTINCT) {
 					{
@@ -3084,7 +3144,10 @@ public class JaybirdSqlParser extends Parser {
 					_la = _input.LA(1);
 					if ( !(_la==ALL || _la==DISTINCT) ) {
 					_errHandler.recoverInline(this);
-					} else {
+					}
+					else {
+						if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+						_errHandler.reportMatch(this);
 						consume();
 					}
 					}
@@ -3152,6 +3215,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(488);
 			value(0);
 			setState(491);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==FOR) {
 				{
@@ -3215,6 +3279,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(496);
 			match(LEFT_PAREN);
 			setState(498);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOTH) | (1L << LEADING) | (1L << TRAILING))) != 0)) {
 				{
@@ -3226,6 +3291,7 @@ public class JaybirdSqlParser extends Parser {
 			setState(500);
 			value(0);
 			setState(503);
+			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==FROM) {
 				{
@@ -3334,7 +3400,10 @@ public class JaybirdSqlParser extends Parser {
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOTH) | (1L << LEADING) | (1L << TRAILING))) != 0)) ) {
 			_errHandler.recoverInline(this);
-			} else {
+			}
+			else {
+				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
+				_errHandler.reportMatch(this);
 				consume();
 			}
 			}

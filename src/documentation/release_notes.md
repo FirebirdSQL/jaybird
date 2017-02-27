@@ -158,7 +158,7 @@ use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include
 server.
 
 For `getGeneratedKeys` support you will need to include 
-`antlr-runtime-4.5.3.jar` on your classpath.
+`antlr-runtime-4.6.jar` on your classpath.
 
 For native, local or embedded support, you will need to include `jna-4.2.2.jar` 
 on your classpath.
@@ -186,7 +186,7 @@ If you manage your dependencies manually, you need to do the following:
     - `jaybird-full-2.2.x.jar` with `jaybird-full-@VERSION@.jar`
 
 2.  If installed, remove `antlr-runtime-3.4.jar` and replace it with 
-    `antlr-runtime-4.5.3.jar`. This library is necessary for `getGeneratedKeys`
+    `antlr-runtime-4.6.jar`. This library is necessary for `getGeneratedKeys`
     support.
   
 3.  If you use native (or embedded) you can remove the native library: 
@@ -259,6 +259,11 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-2
     SQL:2003, for versions 2.0, 2.1, 2.5 and 3.0 are available.
 -   Improved: Calling `Blob.setBytes` and `Clob.getString` is now supported for 
     position `1`, on a new blob. ([JDBC-478](http://tracker.firebirdsql.org/browse/JDBC-478))
+-   Upgrade `antlr-runtime` dependency from 4.5.3 to 4.6 ([JDBC-480](http://tracker.firebirdsql.org/browse/JDBC-480))  
+    If you tested with previous snapshot or beta versions of Jaybird 3.0, make
+    sure to replace `antlr-runtime-4.5.3.jar` with `antlr-runtime-4.6.jar`.
+-   Fixed: Generated keys query for table with space (or any other character 
+    below 0x22) in its name returns empty generated keys result set ([JDBC-481](http://tracker.firebirdsql.org/browse/JDBC-481))
 
 Changes in Jaybird 3.0.0-beta-2
 -------------------------------
@@ -468,8 +473,8 @@ For more information see: [Connection rejected without an explicit character set
 
 ### ANTLR 4 runtime ###
 
-The generated keys functionality now requires ANTLR 4.5. Make sure to replace
-`antlr-runtime-3.4.jar` with the `antlr-runtime-4.5.3.jar` included in the 
+The generated keys functionality now requires ANTLR 4.6. Make sure to replace
+`antlr-runtime-3.4.jar` with the `antlr-runtime-4.6.jar` included in the 
 distribution zip. If you use maven this will happen automatically.
 
 As in previous versions: if the ANTLR runtime is not on the classpath, then 

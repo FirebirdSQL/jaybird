@@ -172,6 +172,18 @@ public class TestGrammar {
     }
 
     @Test
+    public void update_quotedTableNameWithSpace() throws Exception {
+        JaybirdSqlParser parser = createParser(
+                "Update \"some Table\" Set col1 = 25, col2 = 'abc' Where 1=0");
+
+        parser.statement();
+
+        JaybirdStatementModel statementModel = parser.getStatementModel();
+        assertEquals("Unexpected statement type", JaybirdStatementModel.UPDATE_TYPE, statementModel.getStatementType());
+        assertEquals("\"some Table\"", statementModel.getTableName());
+    }
+
+    @Test
     public void update_withReturning() throws Exception {
         JaybirdSqlParser parser = createParser(
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0 Returning col3");

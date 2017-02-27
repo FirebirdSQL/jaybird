@@ -182,7 +182,7 @@ fragment ID_NUMBER_OR_SYMBOL
         ;
 
 fragment ID_QUOTED_UNICODE
-        : '\u00A0' .. '\u0021'
+        : '\u0000' .. '\u0021'
         | '\u0023' .. '\uFFFF'
         | '\"\"'
         ;
