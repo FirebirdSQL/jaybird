@@ -53,6 +53,8 @@ import org.firebirdsql.jca.FBConnectionRequestInfo;
 import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIREBIRD_AUTOCOMMIT;
@@ -66,6 +68,7 @@ import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIRE
  */
 public abstract class AbstractConnection implements FirebirdConnection, Synchronizable {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractConnection.class);
     // This flag is set tu true in close() method to indicate that this
     // instance is invalid and cannot be used anymore
     private boolean invalid = false;
@@ -140,9 +143,11 @@ public abstract class AbstractConnection implements FirebirdConnection, Synchron
      * @param stmt statement that was closed.
      */
     void notifyStatementClosed(AbstractStatement stmt) {
-        if (!activeStatements.remove(stmt))
-            throw new IllegalArgumentException(
-                "Specified statement was not created by this connection.");
+        if (!activeStatements.remove(stmt)) {
+            // NOTE: This can also happen if the statement object was intercepted and replaced by a proxy
+            // Examples: some of the tests in the Hibernate test suite
+            log.warn("Specified statement was not created by this connection: " + stmt);
+        }
     }
     
     /**
