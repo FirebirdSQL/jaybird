@@ -1,12 +1,9 @@
-// $ANTLR 3.4 JaybirdSql.g 2015-05-02 17:09:44
+// $ANTLR 3.4 JaybirdSql.g 2017-02-27 16:36:41
 
 package org.firebirdsql.jdbc.parser;
 
 
 import org.antlr.runtime.*;
-import java.util.Stack;
-import java.util.List;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked"})
 public class JaybirdSqlLexer extends Lexer {
@@ -2017,106 +2014,56 @@ public class JaybirdSqlLexer extends Lexer {
         try {
             int _type = QUOTED_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // JaybirdSql.g:570:9: ( '\\\"' ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"' )
-            // JaybirdSql.g:570:11: '\\\"' ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+ '\\\"'
+            // JaybirdSql.g:570:9: ( '\\\"' ( '\\u0000' .. '\\u0021' | '\\u0023' .. '\\uFFFF' | '\\\"\\\"' )+ '\\\"' )
+            // JaybirdSql.g:570:11: '\\\"' ( '\\u0000' .. '\\u0021' | '\\u0023' .. '\\uFFFF' | '\\\"\\\"' )+ '\\\"'
             {
             match('\"'); 
 
-            // JaybirdSql.g:570:16: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | ':' | '$' | '\\u00A0' .. '\\uFFFF' | '\\\"\\\"' | '0' .. '9' )+
+            // JaybirdSql.g:570:16: ( '\\u0000' .. '\\u0021' | '\\u0023' .. '\\uFFFF' | '\\\"\\\"' )+
             int cnt2=0;
             loop2:
             do {
-                int alt2=9;
+                int alt2=4;
                 int LA2_0 = input.LA(1);
 
                 if ( (LA2_0=='\"') ) {
                     int LA2_1 = input.LA(2);
 
                     if ( (LA2_1=='\"') ) {
-                        alt2=7;
+                        alt2=3;
                     }
 
 
                 }
-                else if ( ((LA2_0 >= 'a' && LA2_0 <= 'z')) ) {
+                else if ( ((LA2_0 >= '\u0000' && LA2_0 <= '!')) ) {
                     alt2=1;
                 }
-                else if ( ((LA2_0 >= 'A' && LA2_0 <= 'Z')) ) {
+                else if ( ((LA2_0 >= '#' && LA2_0 <= '\uFFFF')) ) {
                     alt2=2;
-                }
-                else if ( (LA2_0=='_') ) {
-                    alt2=3;
-                }
-                else if ( (LA2_0==':') ) {
-                    alt2=4;
-                }
-                else if ( (LA2_0=='$') ) {
-                    alt2=5;
-                }
-                else if ( ((LA2_0 >= '\u00A0' && LA2_0 <= '\uFFFF')) ) {
-                    alt2=6;
-                }
-                else if ( ((LA2_0 >= '0' && LA2_0 <= '9')) ) {
-                    alt2=8;
                 }
 
 
                 switch (alt2) {
             	case 1 :
-            	    // JaybirdSql.g:570:18: 'a' .. 'z'
+            	    // JaybirdSql.g:570:18: '\\u0000' .. '\\u0021'
             	    {
-            	    matchRange('a','z'); 
+            	    matchRange('\u0000','!'); 
 
             	    }
             	    break;
             	case 2 :
-            	    // JaybirdSql.g:570:29: 'A' .. 'Z'
+            	    // JaybirdSql.g:570:41: '\\u0023' .. '\\uFFFF'
             	    {
-            	    matchRange('A','Z'); 
+            	    matchRange('#','\uFFFF'); 
 
             	    }
             	    break;
             	case 3 :
-            	    // JaybirdSql.g:570:40: '_'
-            	    {
-            	    match('_'); 
-
-            	    }
-            	    break;
-            	case 4 :
-            	    // JaybirdSql.g:570:46: ':'
-            	    {
-            	    match(':'); 
-
-            	    }
-            	    break;
-            	case 5 :
-            	    // JaybirdSql.g:570:52: '$'
-            	    {
-            	    match('$'); 
-
-            	    }
-            	    break;
-            	case 6 :
-            	    // JaybirdSql.g:570:58: '\\u00A0' .. '\\uFFFF'
-            	    {
-            	    matchRange('\u00A0','\uFFFF'); 
-
-            	    }
-            	    break;
-            	case 7 :
-            	    // JaybirdSql.g:570:81: '\\\"\\\"'
+            	    // JaybirdSql.g:570:64: '\\\"\\\"'
             	    {
             	    match("\"\""); 
 
 
-
-            	    }
-            	    break;
-            	case 8 :
-            	    // JaybirdSql.g:570:90: '0' .. '9'
-            	    {
-            	    matchRange('0','9'); 
 
             	    }
             	    break;
