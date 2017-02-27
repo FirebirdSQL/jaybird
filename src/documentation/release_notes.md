@@ -44,7 +44,7 @@ Jaybird 3.0 before using it in production.
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.6, and 3.0.0, but should also 
+Jaybird 3.0 was tested against Firebird 2.5.7, and 3.0.0, but should also 
 support other Firebird versions from 2.0 and up.
 
 Formal support for Firebird 1.x has been dropped (although in general we expect
@@ -63,7 +63,7 @@ Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for
 earlier Java versions has been dropped.
 
 Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
-but real module support will not be available until Jaybird 3.1.
+but real module support will not be available until Jaybird 3.1 (or even later).
 
 Jaybird 3.0 is the last version to support Java 7.
 
@@ -232,13 +232,31 @@ Changes in Jaybird 3.0.0-beta-3
 
 The following has been changed or fixed since Jaybird 3.0.0-beta-2
 
+-   Improved: Support for Firebird 4 object name length of 63 characters ([JDBC-467](http://tracker.firebirdsql.org/browse/JDBC-467))
+-   Various improvements to thread safety and incomplete object validity checks.
+    ([JDBC-469](http://tracker.firebirdsql.org/browse/JDBC-469))
+    ([JDBC-470](http://tracker.firebirdsql.org/browse/JDBC-470))  
+    Some methods did not throw an `SQLException` when the object (`ResultSet`, 
+    `Statement`, `Connection`) was already closed. This sometimes lead to an
+    unclear `RuntimeException` at a later point. In other cases an `SQLException`
+    was thrown, even though the object was valid.  
+-   Fixed: _Unsupported or unexpected operation code 0 in processOperation_ when
+    executing stored procedure ([JDBC-472](http://tracker.firebirdsql.org/browse/JDBC-472))
 -   Fixed: specifying `org.firebirdsql.jdbc.defaultConnectionEncoding` does not
-    set connection character set ([JDBC-473](http://tracker.firebirdsql.org/browse/JDBC-473))
-    
+    set connection character set ([JDBC-473](http://tracker.firebirdsql.org/browse/JDBC-473))  
     As part of this fix we also removed the need to have the system property set
     before Jaybird was loaded. It will now be queried dynamically for each
     connection without a connection character set.
-
+-   Fixed: `ClassCastException` on downgrade of result set concurrency ([JDBC-474](http://tracker.firebirdsql.org/browse/JDBC-474))
+-   Improved: `Statement.setFetchDirection` and `ResultSet.setFetchDirection` 
+    now allow the values `ResultSet.FETCH_REVERSE` and `ResultSet.FETCH_UNKNOWN`
+    ([JDBC-475](http://tracker.firebirdsql.org/browse/JDBC-475))  
+    These values are effectively ignored, and result set behavior is the same as
+    with the default value of `ResultSet.FETCH_FORWARD`.
+-   Updated `DatabseMetaData.getSqlKeywords` ([JDBC-476](http://tracker.firebirdsql.org/browse/JDBC-476))  
+    The database metadata now returns the reserved words specific to the
+    connected Firebird version. The reserved words, excluding those defined in
+    SQL:2003, for versions 2.0, 2.1, 2.5 and 3.0 are available.
 -   Improved: Calling `Blob.setBytes` and `Clob.getString` is now supported for 
     position `1`, on a new blob. ([JDBC-478](http://tracker.firebirdsql.org/browse/JDBC-478))
 
@@ -254,7 +272,7 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
     libraries could be loaded.
 -   Fixed: native protocol is 20x-30x slower than Jaybird 2.2 native ([JDBC-463](http://tracker.firebirdsql.org/browse/JDBC-463))
 -   Fixed: `ResultSetMetaData.getPrecision` of a numeric column when no 
-    transaction is active throws an SQLException ([JDBC-464](http://tracker.firebirdsql.org/browse/JDBC-464))\
+    transaction is active throws an SQLException ([JDBC-464](http://tracker.firebirdsql.org/browse/JDBC-464))  
     As part of this fix, the handling of queries executed by `FBDatabaseMetaData` 
     has been changed. Most metadata queries are now kept prepared for reuse.
 
