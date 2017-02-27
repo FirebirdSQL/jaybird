@@ -16,7 +16,7 @@ the application server and driver.
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.6, and 
+Jaybird @VERSION@ was tested against Firebird 2.5.7, and 
 Firebird 3 (3.0.0.32483), but should also support other Firebird versions from
 1.0 and up. The Type 2 and embedded server JDBC drivers require the appropriate
 JNI library. Precompiled JNI binaries for Windows and Linux platforms are 
@@ -24,7 +24,7 @@ shipped in the default installation, other platforms require porting/building
 the JNI library for that platform.
 
 Connecting to Firebird 3 requires some additional configuration, see
-[Jaybird and Firebird 3.0 Beta 2](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3.0-beta-2)
+[Jaybird and Firebird 3.0](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
 for details.
 
 This driver does not support InterBase servers due to Firebird-specific changes
@@ -58,6 +58,29 @@ What's new in Jaybird 2.2
 Changelog
 ---------
 
+### Changes and fixes in Jaybird 2.2.13
+
+The following has been changed or fixed in Jaybird 2.2.13:
+
+-   Improved: Support for Firebird 4 object name length of 63 characters ([JDBC-467](http://tracker.firebirdsql.org/browse/JDBC-467))
+-   Various improvements to thread safety and incomplete object validity checks.
+    ([JDBC-469](http://tracker.firebirdsql.org/browse/JDBC-469))
+    ([JDBC-470](http://tracker.firebirdsql.org/browse/JDBC-470))    
+    Some methods did not throw an `SQLException` when the object (`ResultSet`, 
+    `Statement`, `Connection`) was already closed. This sometimes lead to an
+    unclear `RuntimeException` at a later point. In other cases an `SQLException`
+    was thrown, even though the object was valid.
+-   Fixed: Generated keys query for table with space character (or any other 
+    character below `\u00A0` that was not `a`-`z`, `A`-`Z`, `0`-`9`, `$`, `_`,
+    or `:`) in its (quoted) name returns empty generated keys result set ([JDBC-481](http://tracker.firebirdsql.org/browse/JDBC-481))
+    
+**Known issues in Jaybird 2.2.13**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname, or to
+    use a Firebird 2.5 or earlier `fbclient.dll`.
+
 ### Changes and fixes in Jaybird 2.2.12
 
 The following has been changed or fixed in Jaybird 2.2.12:
@@ -77,13 +100,6 @@ The following has been changed or fixed in Jaybird 2.2.12:
     transaction is active throws an SQLException ([JDBC-464](http://tracker.firebirdsql.org/browse/JDBC-464))\
     As part of this fix, the handling of queries executed by `FBDatabaseMetaData` 
     has been changed. Most metadata queries are now kept prepared for reuse.
-
-**Known issues in Jaybird 2.2.12**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname, or to
-    use a Firebird 2.5 or earlier `fbclient.dll`.
 
 ### Changes and fixes in Jaybird 2.2.11
 
