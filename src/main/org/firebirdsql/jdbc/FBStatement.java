@@ -1590,18 +1590,23 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     @Override
+    public final int getLocalStatementId() {
+        return localStatementId;
+    }
+
+    @Override
     public final int hashCode() {
         return localStatementId;
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof FBStatement)) {
+    public final boolean equals(Object other) {
+        if (!(other instanceof FirebirdStatement)) {
             return false;
         }
 
-        FBStatement otherStmt = (FBStatement) other;
-        return this.localStatementId == otherStmt.localStatementId;
+        FirebirdStatement otherStmt = (FirebirdStatement) other;
+        return this.localStatementId == otherStmt.getLocalStatementId();
     }
 
     /**

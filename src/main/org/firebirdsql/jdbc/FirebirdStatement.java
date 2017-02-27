@@ -124,4 +124,19 @@ public interface FirebirdStatement extends Statement {
      * @throws SQLException if a database access error occurs
      */
     boolean isClosed() throws SQLException;
+
+    /**
+     * The local statement id is intended to identify the statement for internal implementation purposes.
+     * <p>
+     * NOTE: This method is only included in this interface to try and avoid problems with proxied and bytecode enhanced
+     * classes in certain libraries, you should normally have no reason to call this method directly.
+     * </p>
+     * <p>
+     * The id is expected - but not guaranteed - to be unique for a single connection, and - preferably - for
+     * the entire JVM run time as well.
+     * </p>
+     *
+     * @return The local statement id.
+     */
+    int getLocalStatementId();
 }

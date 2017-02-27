@@ -141,9 +141,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * @param stmt statement that was closed.
      */
     void notifyStatementClosed(FBStatement stmt) {
-        if (!activeStatements.remove(stmt))
-            throw new IllegalArgumentException(
-                "Specified statement was not created by this connection.");
+        if (!activeStatements.remove(stmt)) {
+            // NOTE: This can also happen if the statement object was intercepted and replaced by a proxy
+            // Examples: some of the tests in the Hibernate test suite (although that should be fixed now)
+            log.warn("Specified statement was not created by this connection: " + stmt);
+        }
     }
     
     /**

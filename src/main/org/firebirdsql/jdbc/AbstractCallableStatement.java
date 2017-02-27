@@ -1487,15 +1487,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
-    @Override
-    public final boolean equals(Object other) {
-        if (!(other instanceof AbstractCallableStatement)) {
-            return false;
-        }
-
-        return super.equals(other);
-    }
-
     private static class WrapperWithCalendar {
         private final Object value;
         private final Calendar c;
