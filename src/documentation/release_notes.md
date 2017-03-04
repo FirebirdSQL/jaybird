@@ -257,13 +257,13 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-2
     The database metadata now returns the reserved words specific to the
     connected Firebird version. The reserved words, excluding those defined in
     SQL:2003, for versions 2.0, 2.1, 2.5 and 3.0 are available.
--   Improved: Calling `Blob.setBytes` and `Clob.getString` is now supported for 
+-   Improved: Calling `Blob.setBytes` and `Clob.setString` is now supported for 
     position `1`, on a new blob. ([JDBC-478](http://tracker.firebirdsql.org/browse/JDBC-478))
 -   Upgrade `antlr-runtime` dependency from 4.5.3 to 4.6 ([JDBC-480](http://tracker.firebirdsql.org/browse/JDBC-480))  
     If you tested with previous snapshot or beta versions of Jaybird 3.0, make
     sure to replace `antlr-runtime-4.5.3.jar` with `antlr-runtime-4.6.jar`.
 -   Fixed: Generated keys query for table with space (or any other character 
-    below 0x22) in its name returns empty generated keys result set ([JDBC-481](http://tracker.firebirdsql.org/browse/JDBC-481))
+    below `\u0022`) in its (quoted) name returns empty generated keys result set ([JDBC-481](http://tracker.firebirdsql.org/browse/JDBC-481))
 
 Changes in Jaybird 3.0.0-beta-2
 -------------------------------
@@ -284,6 +284,8 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
 What's new in Jaybird 3.0
 =========================
 
+For a full list of changes, see [Firebird tracker for Jaybird 3.0.0](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10440).
+
 Java support
 ------------
 
@@ -299,14 +301,12 @@ JDBC 4.2 features.
 The improved support includes
 
 -   Support for `java.time` in `set/get/updateObject`
--   Support for `java.math.BigInteger` in `set/get/updateObject`
-
+-   Support for `java.math.BigInteger` in `set/get/updateObject`  
     Contrary to the support required by JDBC (`BIGINT`, `VARCHAR` and 
     `LONGVARCHAR`), we also support it for `SMALLINT`, `INTEGER`, `NUMERIC` and 
     `DECIMAL`). In the case of numeric and decimal, the value will be rounded
     for non-zero decimal fractions using the logic applied by 
     `BigDecimal.toBigInteger()`.
-
 -   Support for `getObject(int/String, Class<?>)`
 -   Support for `setBinaryStream`/`setCharacterStream` with no length or 
     (long) length beyond `Integer.MAX_VALUE`
@@ -314,8 +314,9 @@ The improved support includes
 
 ### Java 9 ###
 
-Jaybird currently does not formally support Java 9 (JDBC 4.3), although some of
-the JDBC 4.3 features have been implemented. 
+Jaybird currently does not formally support Java 9 (JDBC 4.3), although most of
+the JDBC 4.3 features have been implemented (in as far as they are supported by 
+Firebird). 
 
 You can use the Java 8 driver under Java 9, but it is necessary to add the
 `java.xml.bind` module using `--add-modules java.xml.bind`.
@@ -350,8 +351,7 @@ by [Hajime Nakagami](https://github.com/nakagami).
 
 ### Other Firebird feature support ###
 
-*   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))
-
+*   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))  
     This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
 
 New low-level implementation
@@ -383,29 +383,27 @@ implementation.
 
 We have applied the following mapping for the log levels:
 
-* `Logger.trace`: `Level.FINER`
-* `Logger.debug`: `Level.FINE`
-* `Logger.info`: `Level.INFO`
-* `Logger.warn`: `Level.WARNING`
-* `Logger.error`: `Level.SEVERE`
-* `Logger.fatal`: `Level.SEVERE`
+|Jaybird log level   |_jul_ log level  |
+|--------------------|-----------------|
+| `Logger.trace`     | `Level.FINER`   |
+| `Logger.debug`     | `Level.FINE`    |
+| `Logger.info`      | `Level.INFO`    |
+| `Logger.warn`      | `Level.WARNING` |
+| `Logger.error`     | `Level.SEVERE`  |
+| `Logger.fatal`     | `Level.SEVERE`  |
 
 We have also added some options to control logging behavior:
 
 *   System property `org.firebirdsql.jdbc.disableLogging` with value `true`
     will disable logging entirely.
-    
 *   System property `org.firebirdsql.jdbc.forceConsoleLogger` with value `true`
     will force logging to the `System.out` for info and lower and `System.err` 
     for warn and above (`debug` and `trace` are disabled in the implementation).
-    
 *   System property `org.firebirdsql.jdbc.loggerImplementation` to specify an
-    alternative implementation of the interface `org.firebirdsql.logging.Logger`.
-    
+    alternative implementation of the interface `org.firebirdsql.logging.Logger`.  
     This implementation must be public and must have a public constructor with
     a single `String` argument for the logger name. See also 
-    [Support for log4j 1.x removed] for an example.
-    
+    [Support for log4j 1.x removed] for an example.  
     The `org.firebirdsql.logging.Logger` interface is volatile and might change 
     in future minor releases (but not point/bugfix releases).
 
@@ -467,7 +465,7 @@ See also [Compatibility changes] for details.
 ### Specifying connection character set is now required ###
 
 Jaybird 3.0 requires you to specify the connection character set by either
-specifying `encoding=<firebird encoding>` or `charSet=<Java encoding>`.
+specifying `encoding=<Firebird encoding>` or `charSet=<Java encoding>`.
 
 For more information see: [Connection rejected without an explicit character set]
 
@@ -529,14 +527,14 @@ Other fixes and changes
     `DatabaseMetaData.getColumns` to report the type of identity column ([JDBC-322](http://tracker.firebirdsql.org/browse/JDBC-322))
     
     `JB_IS_IDENTITY` has either `YES` or `NO` as possible values and can be used
-     to check if the column is really an identity column.
+    to check if the column is really an identity column.
 
     Possible values for `JB_IDENTITY_TYPE` are:
     
-    * `null` : not an identity column, or unknown identity type, 
-    * `ALWAYS` : a `GENERATED ALWAYS AS IDENTITY` column (NOTE: not yet 
-      supported by Firebird),
-    * `BY DEFAULT` : a `GENERATED BY DEFAULT AS IDENTITY` column.
+    *   `null` : not an identity column, or unknown identity type, 
+    *   `ALWAYS` : a `GENERATED ALWAYS AS IDENTITY` column (NOTE: not yet 
+        supported by Firebird),
+    *   `BY DEFAULT` : a `GENERATED BY DEFAULT AS IDENTITY` column.
     
     You should always retrieve these columns by name, as their position will 
     change when the JDBC specification adds new columns.
@@ -781,6 +779,13 @@ Stricter JDBC compliance
 In Jaybird 3.0 a number of changes were made for stricter compliance to the JDBC
 specification.
 
+### General ###
+
+Most methods in JDBC objects are required to throw an `SQLException` if 
+the object is closed or otherwise invalid. Not all Jaybird methods followed this
+requirement. We have improved this in Jaybird 3, but there are still some cases
+left to fix (which we might do in point releases).
+
 ### Statement ###
 
 _Unless explicitly indicated, changes also apply to `PreparedStatement` and
@@ -908,7 +913,8 @@ The changes made are as follows:
     `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird as
     Firebird currently doesn't support this)
 *   Double quotes around a pattern will no longer be stripped, and therefor will
-    now never match existing object names
+    now never match existing object names (unless those double quotes are part
+    of the actual object name)
 *   The driver will no longer try the uppercase variant of the provided
     pattern(s) if the original value(s) did not yield a result
 *   Object name parameters that are not patterns (as indicated by the absence of
@@ -919,7 +925,7 @@ Review your `DatabaseMetaData` usage and make the following changes:
 *   Empty string parameters: replace with `"%"` (or `null`)
 *   Double quotes around patterns: remove the double quotes
 *   Casing of patterns should be reviewed for correctness
-*   Non-pattern parameters containing `\` should be reviewed for correctness
+*   Non-pattern parameters containing `\ ` should be reviewed for correctness
 
 Some examples:
 

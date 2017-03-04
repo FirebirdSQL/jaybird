@@ -30,11 +30,11 @@ dependency as this will be provided by the application server.
 
 #### Jaybird 3.0 for testing ####
 
-Jaybird 3.0 Beta 2 is available from Maven central:
+Jaybird 3.0 Beta 3 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
-Version: `3.0.0-beta-2`
+Version: `3.0.0-beta-3`
 
 For example:
 
@@ -42,7 +42,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-beta-2</version>
+    <version>3.0.0-beta-3</version>
 </dependency>
 ~~~
 
@@ -54,7 +54,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-beta-2</version>
+    <version>3.0.0-beta-3</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -179,6 +179,7 @@ Where to get help
 
 *   On [Stack Overflow](http://stackoverflow.com/), please tag your questions
     with *jaybird* and *firebird*
+    
 *   The [Firebird-Java group](http://groups.yahoo.com/group/Firebird-Java) and
     corresponding mailing list firebird-java@yahoogroups.com
 
@@ -186,6 +187,7 @@ Where to get help
     [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
 
 *   The [Firebird project home page](http://www.firebirdsql.org)
+
 *   Firebird support and other [Firebird mailing lists](http://www.firebirdsql.org/en/mailing-lists/)
     for questions not directly related to Jaybird and java.
 
@@ -201,8 +203,6 @@ There are several ways you can contribute to Jaybird or Firebird in general:
   general, use the Firebird-devel mailing list)
 * Become a paying member or sponsor of the Firebird Foundation (see
   [http://www.firebirdsql.org/en/firebird-foundation/](http://www.firebirdsql.org/en/firebird-foundation/))
-
-See also [http://www.firebirdsql.org/en/consider-your-contribution/](http://www.firebirdsql.org/en/consider-your-contribution/)
 
 Reporting Bugs
 --------------
@@ -247,8 +247,7 @@ path of the database file as it hides implementation details like file locations
 and OS type.
 
 On Linux the root `/` should be included in the path. A database located on
-`/opt/firebird/db.fdb` should use (note the double slash after
-port!):  
+`/opt/firebird/db.fdb` should use (note the double slash after port!):  
 
     jdbc:firebirdsql://host:port//opt/firebird/db.fdb
 
