@@ -253,7 +253,7 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-2
     ([JDBC-475](http://tracker.firebirdsql.org/browse/JDBC-475))  
     These values are effectively ignored, and result set behavior is the same as
     with the default value of `ResultSet.FETCH_FORWARD`.
--   Updated `DatabseMetaData.getSqlKeywords` ([JDBC-476](http://tracker.firebirdsql.org/browse/JDBC-476))  
+-   Updated `DatabaseMetaData.getSqlKeywords` ([JDBC-476](http://tracker.firebirdsql.org/browse/JDBC-476))  
     The database metadata now returns the reserved words specific to the
     connected Firebird version. The reserved words, excluding those defined in
     SQL:2003, for versions 2.0, 2.1, 2.5 and 3.0 are available.
