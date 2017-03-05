@@ -72,9 +72,6 @@
         <property name="version.maven" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
         <property name="version.full" value="${version.maven}${version.name}"/>
 
-        <!-- This must be set to the Subversion tag for any release -->
-        <property name="version.svntag" value="master"/>
-
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
         <condition property="specification.version" value="4.1">
