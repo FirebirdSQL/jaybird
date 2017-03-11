@@ -988,7 +988,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         boolean closeResultSet = mode == Statement.CLOSE_ALL_RESULTS
                 || mode == Statement.CLOSE_CURRENT_RESULT;
         
-        if (closeResultSet && currentRs != null) {
+        if (currentStatementResult == StatementResult.RESULT_SET && closeResultSet) {
             closeResultSet(true);
         }
         currentStatementResult = currentStatementResult.nextResult();

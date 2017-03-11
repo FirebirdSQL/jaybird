@@ -94,10 +94,15 @@ public class SimpleStatementListener implements StatementListener {
     }
 
     public List<SQLWarning> getWarnings() {
-        return new ArrayList<SQLWarning>(warnings);
+        return new ArrayList<>(warnings);
     }
 
     public void clear() {
+        allRowsFetched = null;
+        hasResultSet = null;
+        hasSingletonResult = null;
+        sqlCounts = null;
+        rows.clear();
         warnings.clear();
     }
 

@@ -235,6 +235,10 @@ public class TestJnaStatement extends AbstractStatementTest {
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue("Expected more than two rows", listener.getRows().size() > 2);
 
+        assertNull("expected no SQL counts immediately after retrieving all rows", listener.getSqlCounts());
+
+        statement.getSqlCounts();
+
         assertNotNull("Expected SQL counts", listener.getSqlCounts());
         assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
     }

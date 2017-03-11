@@ -274,6 +274,10 @@ public abstract class AbstractStatementTest {
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue("Expected more than two rows", listener.getRows().size() > 2);
 
+        assertNull("expected no SQL counts immediately after retrieving all rows", listener.getSqlCounts());
+
+        statement.getSqlCounts();
+
         assertNotNull("Expected SQL counts", listener.getSqlCounts());
         assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
     }
@@ -428,6 +432,10 @@ public abstract class AbstractStatementTest {
         parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
 
         statement.execute(RowValue.of(parameter1, parameter2));
+
+        assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
+
+        statement.getSqlCounts();
 
         assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
         assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
@@ -653,8 +661,14 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
         parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4097));
 
+        listener.clear();
+
         // Insert another value
         statement.execute(RowValue.of(parameter1, parameter2));
+
+        assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
+
+        statement.getSqlCounts();
 
         assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
         assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());

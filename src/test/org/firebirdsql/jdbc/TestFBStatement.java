@@ -905,6 +905,91 @@ public class TestFBStatement extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void verifySingletonStatementWithException() throws Exception {
+// @formatting:off
+        executeDDL(con, "create procedure singleton_error returns (intresult int) as "
+                + "begin "
+                + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
+                + "end");
+// @formatting:on
+        try (Statement stmt = con.createStatement()) {
+            try {
+                stmt.execute("execute procedure singleton_error");
+            } catch (SQLException e) {
+                // expected
+            }
+
+            stmt.getMoreResults();
+            assertEquals(0, stmt.getUpdateCount());
+        }
+    }
+
+    @Test
+    public void verifyMultipleResultsWithUpdateCount_autocommit() throws Exception {
+        assumeTrue("Test requires execute block support", getDefaultSupportInfo().supportsExecuteBlock());
+        executeDDL(con, CREATE_TABLE);
+        try (Statement stmt = con.createStatement()) {
+            boolean hasResultSet = stmt.execute(
+// @formatter:off
+                    "execute block returns (intresult integer) as "
+                    + "BEGIN "
+                    + "  insert into test (col1) VALUES (1) returning col1 into intresult;"
+                    + "  suspend;"
+                    + "  insert into test (col1) VALUES (2) returning col1 into intresult;"
+                    + "  suspend;"
+                    + "end"
+// @formatter:on
+            );
+            assertTrue(hasResultSet);
+
+            ResultSet rs = stmt.getResultSet();
+            assertNotNull(rs);
+            assertTrue("first result", rs.next());
+            assertEquals(1, rs.getInt(1));
+            assertTrue("second result", rs.next());
+            assertEquals(2, rs.getInt(1));
+            assertFalse("no more results", rs.next());
+
+            assertFalse(stmt.getMoreResults());
+            assertEquals(2, stmt.getUpdateCount());
+        }
+    }
+
+    @Test
+    public void verifyMultipleResultsWithUpdateCount_noAutocommit() throws Exception {
+        assumeTrue("Test requires execute block support", getDefaultSupportInfo().supportsExecuteBlock());
+        executeDDL(con, CREATE_TABLE);
+        con.setAutoCommit(false);
+        try (Statement stmt = con.createStatement()) {
+            boolean hasResultSet = stmt.execute(
+// @formatter:off
+                    "execute block returns (intresult integer) as "
+                    + "BEGIN "
+                    + "  insert into test (col1) VALUES (1) returning col1 into intresult;"
+                    + "  suspend;"
+                    + "  insert into test (col1) VALUES (2) returning col1 into intresult;"
+                    + "  suspend;"
+                    + "end"
+// @formatter:on
+            );
+            assertTrue(hasResultSet);
+
+            ResultSet rs = stmt.getResultSet();
+            assertNotNull(rs);
+            assertTrue("first result", rs.next());
+            assertEquals(1, rs.getInt(1));
+            assertTrue("second result", rs.next());
+            assertEquals(2, rs.getInt(1));
+            assertFalse("no more results", rs.next());
+
+            assertFalse(stmt.getMoreResults());
+            assertEquals(2, stmt.getUpdateCount());
+
+            con.commit();
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 

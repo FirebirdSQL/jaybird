@@ -227,6 +227,17 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.0
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.0-beta-3
+
+-   Changed: Remove automatic retrieval of sql counts in the low-level API on 
+    execute or after fetching all rows ([JDBC-482](http://tracker.firebirdsql.org/browse/JDBC-482)  
+    This restores the behavior of Jaybird 2.2 and should result in a minor 
+    performance improvement when (fully) reading result sets or using
+    `execute` instead of `executeUpdate` and **not** obtaining update counts.
+
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------
 

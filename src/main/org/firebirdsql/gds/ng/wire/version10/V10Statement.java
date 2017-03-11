@@ -360,13 +360,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
-
-                /* We need to split retrieving update counts from the actual execute
-                 * otherwise a cancel will not work. For simplicity, we already do this in V10, and not just in V12
-                 */
-                if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                    getSqlCounts();
-                }
             }
         } catch (SQLException e) {
             if (getState() != StatementState.ERROR) {
@@ -481,7 +474,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 queueRowData(readSqlData());
             } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
                 setAllRowsFetched(true);
-                getSqlCounts();
                 // Note: we are not explicitly 'closing' the cursor here
             } else {
                 // TODO Log, raise exception, or simply 'not possible'?

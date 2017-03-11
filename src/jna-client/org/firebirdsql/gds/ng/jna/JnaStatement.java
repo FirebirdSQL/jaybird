@@ -179,22 +179,19 @@ public class JnaStatement extends AbstractFbStatement {
                     clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
                             inXSqlDa.version, inXSqlDa);
                 }
-                processStatusVector();
 
                 if (hasSingletonResult) {
                     /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
                      * have a result set that will be fetched, instead we have a singleton result if we have fields
                      */
                     statementListenerDispatcher.statementExecuted(this, false, true);
+                    processStatusVector();
                     queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
                     setAllRowsFetched(true);
                 } else {
                     // A normal execute is never a singleton result (even if it only produces a single result)
                     statementListenerDispatcher.statementExecuted(this, hasFields(), false);
-                }
-
-                if (!statementType.isTypeWithCursor() && statementType.isTypeWithUpdateCounts()) {
-                    getSqlCounts();
+                    processStatusVector();
                 }
 
                 if (getState() != StatementState.ERROR) {
@@ -365,7 +362,6 @@ public class JnaStatement extends AbstractFbStatement {
                     queueRowData(toRowValue(getFieldDescriptor(), outXSqlDa));
                 } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
                     setAllRowsFetched(true);
-                    getSqlCounts();
                     // Note: we are not explicitly 'closing' the cursor here
                 } else {
                     final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
