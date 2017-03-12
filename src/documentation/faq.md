@@ -339,6 +339,25 @@ one of the following options:
 
     Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
     old behavior (with some caveats, see the Jaybird 3 release notes).
+    
+How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
+-----------------------------------------------------------------------------------
+
+Firebird 3.0.2 adds support for "TCP Loopback Fast Path" (`SIO_LOOPBACK_FAST_PATH` 
+socket option). This is available in Windows 8 / Windows Server 2012 and higher.
+This feature enables performance optimizations when connecting through 
+localhost (127.0.01 / ::1). It requires support on both client and server side.
+
+Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, 
+it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` 
+with value `true` (eg specify `-Djdk.net.useFastTcpLoopback=true` in your Java 
+commandline).
+  
+Unfortunately, Java only has an 'all-or-nothing' support for the "TCP Loopback 
+Fast Path", so Jaybird cannot enable this for you: you must specify this 
+property on JVM startup. On the other hand, this has the benefit that this works 
+for all Jaybird versions, as long as you use Java 8 update 60 or higher (and 
+Firebird 3.0.2 or higher).
 
 JDBC Support
 ============
