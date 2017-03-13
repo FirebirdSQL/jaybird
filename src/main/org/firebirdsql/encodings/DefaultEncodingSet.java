@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -22,6 +20,7 @@ package org.firebirdsql.encodings;
 
 import org.firebirdsql.encodings.xml.EncodingDefinitionType;
 import org.firebirdsql.encodings.xml.Encodings;
+import org.firebirdsql.encodings.xml.ObjectFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -97,7 +96,8 @@ public class DefaultEncodingSet implements EncodingSet {
     protected final Encodings loadEncodingsFromXml(String xmlFileResource) throws JAXBException {
         InputStream inputStream = null;
         try {
-            JAXBContext ctx = JAXBContext.newInstance(Encodings.class);
+            JAXBContext ctx = JAXBContext.newInstance(ObjectFactory.class.getPackage().getName(),
+                    ObjectFactory.class.getClassLoader());
             Unmarshaller unmarshaller = ctx.createUnmarshaller();
             inputStream = getClass().getResourceAsStream(xmlFileResource);
             if (inputStream == null) {
@@ -130,7 +130,7 @@ public class DefaultEncodingSet implements EncodingSet {
             if (encodings == null) {
                 return Collections.emptyList();
             }
-            List<EncodingDefinition> encodingSet = new ArrayList<EncodingDefinition>();
+            List<EncodingDefinition> encodingSet = new ArrayList<>();
             for (EncodingDefinitionType definition : encodings.getEncodingDefinition()) {
                 final EncodingDefinition encoding = createEncodingDefinition(definition);
                 if (encoding != null) {

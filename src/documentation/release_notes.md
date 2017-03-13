@@ -237,6 +237,7 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     This restores the behavior of Jaybird 2.2 and should result in a minor 
     performance improvement when (fully) reading result sets or using
     `execute` instead of `executeUpdate` and **not** obtaining update counts.
+-   Fixed: Database connection in NetBeans 8.2 fails ([JDBC-483](http://tracker.firebirdsql.org/browse/JDBC-483)) 
 
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------
