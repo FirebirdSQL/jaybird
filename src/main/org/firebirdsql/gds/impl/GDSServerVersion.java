@@ -45,8 +45,11 @@ public final class GDSServerVersion implements Serializable {
 
     private static final long serialVersionUID = -3401092369588765195L;
 
+    @SuppressWarnings("unused")
     public static final String TYPE_PRODUCTION = "V";
+    @SuppressWarnings("unused")
     public static final String TYPE_BETA = "T";
+    @SuppressWarnings("unused")
     public static final String TYPE_DEVELOPMENT = "X";
 
     /**

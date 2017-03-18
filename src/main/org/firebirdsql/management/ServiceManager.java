@@ -24,7 +24,10 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.impl.GDSServerVersion;
+
 import java.io.OutputStream;
+import java.sql.SQLException;
 
 /**
  * The base Firebird Service API functionality.
@@ -136,4 +139,13 @@ public interface ServiceManager {
      */
     void setLogger(OutputStream logger);
 
+    /**
+     * Obtains the server version through a service call.
+     *
+     * @return Parsed server version, or {@link org.firebirdsql.gds.impl.GDSServerVersion#INVALID_VERSION} if parsing
+     * failed.
+     * @throws SQLException
+     *         For errors connecting to the service manager.
+     */
+    GDSServerVersion getServerVersion() throws SQLException;
 }

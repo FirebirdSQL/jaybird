@@ -282,14 +282,7 @@ public class FBServiceManager implements ServiceManager {
         return srb;
     }
 
-    /**
-     * Obtains the server version through a service call.
-     *
-     * @return Parsed server version, or {@link org.firebirdsql.gds.impl.GDSServerVersion#INVALID_VERSION} if parsing
-     * failed.
-     * @throws SQLException
-     *         For errors connecting to the service manager.
-     */
+    @Override
     public GDSServerVersion getServerVersion() throws SQLException {
         try (FbService service = attachServiceManager()) {
             return service.getServerVersion();
