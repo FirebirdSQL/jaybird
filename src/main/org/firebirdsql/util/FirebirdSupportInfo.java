@@ -19,7 +19,7 @@
 package org.firebirdsql.util;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.PageSizeConstants;
 
@@ -77,42 +77,42 @@ public final class FirebirdSupportInfo {
      * @return <code>true</code> when the data type BIGINT is supported
      */
     public boolean supportsBigint() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
      * @return <code>true</code> when the data type BOOLEAN is supported
      */
     public boolean supportsBoolean() {
-        return serverVersion.isEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3, 0);
     }
 
     /**
      * @return <code>true</code> when the COMMENT statement is supported
      */
     public boolean supportsComment() {
-        return serverVersion.isEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2, 0);
     }
 
     /**
      * @return <code>true</code> when RDB$GET_CONTEXT and RDB$SET_CONTEXT are supported
      */
     public boolean supportsGetSetContext() {
-        return serverVersion.isEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2, 0);
     }
 
     /**
      * @return <code>true</code> when CASE (simple or searched) is supported
      */
     public boolean supportsCase() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
      * @return <code>true</code> when the blob character set is reported in the scale of the field descriptor
      */
     public boolean reportsBlobCharSetInDescriptor() {
-        return serverVersion.isEqualOrAbove(2, 1);
+        return isVersionEqualOrAbove(2, 1);
     }
 
     /**
@@ -122,7 +122,7 @@ public final class FirebirdSupportInfo {
      * char length)
      */
     public boolean reportsByteLengthInDescriptor() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
@@ -131,14 +131,14 @@ public final class FirebirdSupportInfo {
      * @return <code>true</code> when INSERT ... RETURNING ... is supported
      */
     public boolean supportsInsertReturning() {
-        return serverVersion.isEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2, 0);
     }
 
     /**
      * @return <code>true</code> when UPDATE ... RETURNING ... is supported
      */
     public boolean supportsUpdateReturning() {
-        return serverVersion.isEqualOrAbove(2, 1);
+        return isVersionEqualOrAbove(2, 1);
     }
 
     /**
@@ -146,49 +146,49 @@ public final class FirebirdSupportInfo {
      * UNICODE_FSS)
      */
     public boolean supportsUtf8() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
      * @return <code>true</code> when SAVEPOINT is supported
      */
     public boolean supportsSavepoint() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
      * @return <code>true</code> when EXECUTE BLOCK is supported
      */
     public boolean supportsExecuteBlock() {
-        return serverVersion.isEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2, 0);
     }
 
     /**
      * @return <code>true</code> when CREATE/ALTER/DROP USER is supported
      */
     public boolean supportsSqlUserManagement() {
-        return serverVersion.isEqualOrAbove(2, 5);
+        return isVersionEqualOrAbove(2, 5);
     }
 
     /**
      * @return <code>true</code> when fb_cancel_operation is supported
      */
     public boolean supportsCancelOperation() {
-        return serverVersion.isEqualOrAbove(2, 5);
+        return isVersionEqualOrAbove(2, 5);
     }
 
     /**
      * @return {@code true} when field descriptors contain table alias information
      */
     public boolean supportsTableAlias() {
-        return serverVersion.isEqualOrAbove(2, 0);
+        return isVersionEqualOrAbove(2, 0);
     }
 
     /**
      * @return {@code true} when the {@code NULL} data type and {@code ? IS NULL} is supported
      */
     public boolean supportsNullDataType() {
-        return serverVersion.isEqualOrAbove(2, 5);
+        return isVersionEqualOrAbove(2, 5);
     }
 
     /**
@@ -211,11 +211,11 @@ public final class FirebirdSupportInfo {
         case 10:
             return true;
         case 11:
-            return serverVersion.isEqualOrAbove(2, 1);
+            return isVersionEqualOrAbove(2, 1);
         case 12:
-            return serverVersion.isEqualOrAbove(2, 5);
+            return isVersionEqualOrAbove(2, 5);
         case 13:
-            return serverVersion.isEqualOrAbove(3, 0);
+            return isVersionEqualOrAbove(3, 0);
         default:
             return false;
         }
@@ -225,49 +225,49 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when custom exception messages are supported.
      */
     public boolean supportsCustomExceptionMessages() {
-        return serverVersion.isEqualOrAbove(1, 5);
+        return isVersionEqualOrAbove(1, 5);
     }
 
     /**
      * @return {@code true} when parametrized exceptions are supported.
      */
     public boolean supportsParametrizedExceptions() {
-        return serverVersion.isEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3, 0);
     }
 
     /**
      * @return {@code true} when monitoring tables are supported.
      */
     public boolean supportsMonitoringTables() {
-        return serverVersion.isEqualOrAbove(2, 1);
+        return isVersionEqualOrAbove(2, 1);
     }
 
     /**
      * @return {@code true} when global temporary tables (GTTs) are supported.
      */
     public boolean supportsGlobalTemporaryTables() {
-        return serverVersion.isEqualOrAbove(2, 5);
+        return isVersionEqualOrAbove(2, 5);
     }
 
     /**
      * @return {@code true} when blobs are fully searchable (eg using `LIKE`).
      */
     public boolean supportsFullSearchableBlobs() {
-        return serverVersion.isEqualOrAbove(2, 1);
+        return isVersionEqualOrAbove(2, 1);
     }
 
     /**
      * @return {@code true} when identity columns are supported.
      */
     public boolean supportsIdentityColumns() {
-        return serverVersion.isEqualOrAbove(3, 0);
+        return isVersionEqualOrAbove(3, 0);
     }
 
     /**
      * @return The maximum number of characters in an identifier.
      */
     public int maxIdentifierLengthCharacters() {
-        if (serverVersion.isEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4, 0)) {
             // Technically this is configurable
             return 63;
         } else {
@@ -280,7 +280,7 @@ public final class FirebirdSupportInfo {
      * @see #maxReportedIdentifierLengthBytes()
      */
     public int maxIdentifierLengthBytes() {
-        if (serverVersion.isEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4, 0)) {
             // Technically this is configurable
             return 4 * 63;
         } else {
@@ -294,7 +294,7 @@ public final class FirebirdSupportInfo {
      * @see #maxIdentifierLengthBytes()
      */
     public int maxReportedIdentifierLengthBytes() {
-        if (serverVersion.isEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4, 0)) {
             // Technically this is configurable
             return 4 * 63;
         } else if (reportsByteLengthInDescriptor()) {
@@ -309,7 +309,7 @@ public final class FirebirdSupportInfo {
      * @return The character set id of system metadata
      */
     public int reportedMetadataCharacterSetId() {
-        if (serverVersion.isEqualOrAbove(4, 0)) {
+        if (isVersionEqualOrAbove(4, 0)) {
             return 4; // UTF8
         } else {
             return 3; // UNICODE_FSS
@@ -319,18 +319,18 @@ public final class FirebirdSupportInfo {
     public boolean supportsPageSize(int pageSize) {
         switch (pageSize) {
         case PageSizeConstants.SIZE_1K:
-            return !serverVersion.isEqualOrAbove(2, 1);
+            return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_2K:
-            return !serverVersion.isEqualOrAbove(2, 1);
+            return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_4K:
             return true;
         case PageSizeConstants.SIZE_8K:
             return true;
         case PageSizeConstants.SIZE_16K:
             // TODO check
-            return serverVersion.isEqualOrAbove(2, 0);
+            return isVersionEqualOrAbove(2, 0);
         case PageSizeConstants.SIZE_32K:
-            return serverVersion.isEqualOrAbove(4, 0);
+            return isVersionEqualOrAbove(4, 0);
         }
         return false;
     }
@@ -345,12 +345,12 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @param database
-     *         Low level database object
+     * @param attachment
+     *         Low level attachment object
      * @return FirebirdVersionSupport instance
      */
-    public static FirebirdSupportInfo supportInfoFor(FbDatabase database) {
-        return supportInfoFor(database.getServerVersion());
+    public static FirebirdSupportInfo supportInfoFor(FbAttachment attachment) {
+        return supportInfoFor(attachment.getServerVersion());
     }
 
     /**
