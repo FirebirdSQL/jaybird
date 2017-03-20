@@ -650,13 +650,13 @@ explicit connection character set.
 To address this change, explicitly set the connection character set using
 one of the following options:
 
-*   Use connection property `encoding` (or `lc_ctype`) with a Firebird character
+*   Use connection property `encoding` (alias: `lc_ctype`) with a Firebird character
     set name. 
     
     Use `encoding=NONE` for the old default behavior (with some caveats, see 
     other sections).
 
-*   Use connection property `charSet` (or `localEncoding`) with a Java character
+*   Use connection property `charSet` (alias: `localEncoding`) with a Java character
     set name.
     
 *   Use a combination of `encoding` and `charSet`, if you want to reinterpret a 

@@ -296,15 +296,74 @@ Similar to the Firebird client library, however `fbembed.dll` on Windows and
 Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native
 library, or - for Jaybird 3.0 - the JNA jar file.
 
-How can I solve the error "Connection rejected: No connection character set specified"
---------------------------------------------------------------------------------------
+Character sets
+--------------
+
+### How can I specify the connection character set?
+
+Jaybird provides two connection properties to specify the connection character set:
+
+-   `charSet` with a Java character set name (alias: `localEncoding`)
+
+    The Java character set name must map to an equivalent Firebird character set.
+
+-   `encoding` with a Firebird character set name (alias: `encoding`)
+
+    The Firebird character set name - with the exception of `NONE` must map to
+    an equivalent Java character set.
+
+For most applications, use only one of these two properties.
+
+For special situations it is possible to specify both `charSet` and `encoding` to
+convert/reinterpret a character set into another character set, this is usually only
+necessary to fix data problems.
+
+To phrase differently:
+
+-   `encoding=<firebird charset>`: use connection encoding `<firebird charset>` and 
+    interpret in the equivalent Java character set
+    
+-   `charSet=<java charset>`: use Firebird equivalent of `<java charset>` as 
+    connection encoding and interpret in <java charset>
+    
+-   `encoding=<firebird charset>&charSet=<java charset>`: use connection encoding 
+    `<firebird charset>`, but interpret in `<java charset>`
+
+The handling of Firebird character set `NONE` is slightly different, see below.
+
+### How does character set `NONE` work?
+
+The Firebird character set `NONE` is a special case, it essentially means "no 
+character set". You can store anything in it, but conversions to or from this
+character set are not defined.
+
+When used as a connection character set, Jaybird handles `NONE` as follows:
+
+#### Jaybird 3.0 {#none-jaybird3}
+
+-   `encoding=NONE` means connection encoding `NONE` and interpret columns with 
+    character set `NONE` using the default JVM encoding, and interpret columns
+    with an explicit character set in their equivalent Java character set
+    
+-   `encoding=NONE&charSet=ISO-8859-1` the same, but instead of the JVM default,
+    use `ISO-8859-1`
+
+#### Jaybird 2.2 and earlier {#none-jaybird2-2}
+
+-   `encoding=NONE` means use connection encoding `NONE` and interpret everything 
+    using the default JVM encoding
+
+-   `encoding=NONE&charSet=ISO-8859-1` the same, but instead of the JVM default, 
+    use `ISO-8859-1`
+
+### How can I solve the error "Connection rejected: No connection character set specified"
 
 If no explicit character set has been set, Jaybird 3.0 will reject the 
 connection with an `SQLNonTransientConnectionException` with message 
 _"Connection rejected: No connection character set specified (property lc_ctype,
 encoding, charSet or localEncoding). Please specify a connection character set 
 (eg property charSet=utf-8) or consult the Jaybird documentation for more 
-information."_ ([JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
+information."_ (see [JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
 
 In Jaybird 2.2 and earlier, Jaybird would default to connection character set 
 `NONE` if no character set had been specified (through `encoding` 
@@ -317,13 +376,13 @@ explicit connection character set.
 To address this change, explicitly set the connection character set using
 one of the following options:
 
-*   Use connection property `encoding` (or `lc_ctype`) with a Firebird character
+*   Use connection property `encoding` (alias: `lc_ctype`) with a Firebird character
     set name. 
     
     Use `encoding=NONE` for the old default behavior (with some caveats, see 
-    other sections).
+    [How does character set `NONE` work?]).
 
-*   Use connection property `charSet` (or `localEncoding`) with a Java character
+*   Use connection property `charSet` (alias: `localEncoding`) with a Java character
     set name.
     
 *   Use a combination of `encoding` and `charSet`, if you want to reinterpret a 
@@ -338,7 +397,7 @@ one of the following options:
     This property only supports Firebird character set names.
 
     Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
-    old behavior (with some caveats, see the Jaybird 3 release notes).
+    old behavior (with some caveats, see [How does character set `NONE` work?]).
     
 How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
 -----------------------------------------------------------------------------------
