@@ -56,6 +56,19 @@ in the protocol and database attachment parameters that are sent to the server.
 
 Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1.
 
+### Notes on Firebird 3 support
+
+Jaybird 3 does not support the Firebird 3 wire encryption nor zlib compression.
+
+To be able to connect to Firebird 3, it is necessary to change the `WireCrypt` 
+setting from its default `Required` to `Enabled` in `firebird.conf`:
+                                     
+    WireCrypt = Enabled
+    
+This configuration option can also be set to `Disabled`, but that is not 
+advisable as that will also disable it for clients that do support wire 
+encryption.
+
 Supported Java versions
 -----------------------
 
