@@ -155,7 +155,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
                     if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
                     break;
                 case isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
+                    log.debug("isc_info_truncated ");
                     return AbstractFbService.this;
                 default:
                     throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();

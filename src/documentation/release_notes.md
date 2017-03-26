@@ -250,7 +250,14 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     This restores the behavior of Jaybird 2.2 and should result in a minor 
     performance improvement when (fully) reading result sets or using
     `execute` instead of `executeUpdate` and **not** obtaining update counts.
--   Fixed: Database connection in NetBeans 8.2 fails ([JDBC-483](http://tracker.firebirdsql.org/browse/JDBC-483)) 
+-   Fixed: Database connection in NetBeans 8.2 fails ([JDBC-483](http://tracker.firebirdsql.org/browse/JDBC-483))
+-   New feature: added method `getDatabaseTransactionInfo` to `StatisticsManager`
+    to retrieve oldest, oldest active, oldest snapshot and next transaction, and
+    the active transaction count ([JDBC-485](http://tracker.firebirdsql.org/browse/JDBC-485))  
+    The active transaction count is only available in Firebird 2 and higher, for
+    Firebird 1.5 and earlier this will have value `-1`.  
+    A static `FBStatisticsManager.getDatabaseTransactionInfo(Connection connection)` 
+    is available to obtain this information using an existing connection.
 
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------

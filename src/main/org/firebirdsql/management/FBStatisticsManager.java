@@ -25,12 +25,21 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.InfoProcessor;
+import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
  * The <code>FBStatisticsManager</code> class is responsible for replicating the functionality of
@@ -127,7 +136,38 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         }
     }
 
-    //---------- Private implementation methods -----------------
+    // We actually need 56 bytes: 5 info items * (1 byte type + 2 byte length + (max) 8 byte value) + 1 byte end
+    private static final int DB_TRANSACTION_INFO_BUFFER_LENGTH = 100;
+
+    @Override
+    public DatabaseTransactionInfo getDatabaseTransactionInfo() throws SQLException {
+        try (FbDatabase database = attachDatabase()) {
+            return getDatabaseTransactionInfo(database);
+        }
+    }
+
+    /**
+     * Get transaction information for an existing database connection.
+     *
+     * @param connection
+     *         Database connection; must unwrap to {@link FirebirdConnection}.
+     * @return Database transaction information
+     * @throws SQLException
+     *         If {@code connection} does not unwrap to {@link FirebirdConnection}, or for failures to
+     *         retrieve information
+     */
+    public static DatabaseTransactionInfo getDatabaseTransactionInfo(Connection connection) throws SQLException {
+        FirebirdConnection firebirdConnection = connection.unwrap(FirebirdConnection.class);
+        return getDatabaseTransactionInfo(firebirdConnection.getFbDatabase());
+    }
+
+    private static DatabaseTransactionInfo getDatabaseTransactionInfo(
+            FbDatabase database) throws SQLException {
+        final byte[] infoItems = DatabaseTransactionInfoProcessor.getInfoItems(database.getServerVersion());
+
+        return database.getDatabaseInfo(infoItems, DB_TRANSACTION_INFO_BUFFER_LENGTH,
+                new DatabaseTransactionInfoProcessor());
+    }
 
     /**
      * Get a mostly empty buffer that can be filled in as needed.
@@ -152,5 +192,81 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
      */
     private ServiceRequestBuffer createStatsSRB(FbService service, int options) {
         return createRequestBuffer(service, isc_action_svc_db_stats, options);
+    }
+
+    private static final class DatabaseTransactionInfoProcessor implements InfoProcessor<DatabaseTransactionInfo> {
+
+        private static final Logger log = LoggerFactory.getLogger(DatabaseTransactionInfoProcessor.class);
+
+        @Override
+        public DatabaseTransactionInfo process(byte[] info) throws SQLException {
+            if (info.length == 0) {
+                throw new SQLException("Response buffer for service information request is empty");
+            }
+            DatabaseTransactionInfo databaseTransactionInfo = new DatabaseTransactionInfo();
+            int idx = 0;
+            while (info[idx] != isc_info_end) {
+                final byte infoItem = info[idx];
+                idx++;
+                if (infoItem == isc_info_truncated) {
+                    log.warn("Transaction information response was truncated at index " + idx + ". Info block size: " +
+                            info.length + ". This could indicate a bug in the implementation.");
+                    break;
+                }
+
+                int valueLength = iscVaxInteger2(info, idx);
+                idx += 2;
+                long dataItem = iscVaxLong(info, idx, valueLength);
+                idx += valueLength;
+
+                switch (infoItem) {
+                case isc_info_oldest_transaction:
+                    databaseTransactionInfo.setOldestTransaction(dataItem);
+                    break;
+
+                case isc_info_oldest_active:
+                    databaseTransactionInfo.setOldestActiveTransaction(dataItem);
+                    break;
+
+                case isc_info_oldest_snapshot:
+                    databaseTransactionInfo.setOldestSnapshotTransaction(dataItem);
+                    break;
+
+                case isc_info_next_transaction:
+                    databaseTransactionInfo.setNextTransaction(dataItem);
+                    break;
+
+                case isc_info_active_tran_count:
+                    databaseTransactionInfo.setActiveTransactionCount(dataItem);
+                    break;
+                    
+                default:
+                    log.warn("Unknown or unexpected info item: " + infoItem);
+                    break;
+                }
+            }
+            return databaseTransactionInfo;
+        }
+
+        /**
+         * The information items supported by this processor for the provided server version.
+         *
+         * @param serverVersion Server version
+         * @return Array with information items
+         */
+        public static byte[] getInfoItems(GDSServerVersion serverVersion) {
+            if (serverVersion.isEqualOrAbove(2, 0)) {
+                return new byte[] { isc_info_oldest_transaction, isc_info_oldest_active, isc_info_oldest_snapshot,
+                        isc_info_next_transaction, isc_info_active_tran_count };
+            } else {
+                /*
+                Firebird 1.5 and earlier could only count using isc_info_active_transactions (which returns an entry
+                for each active transaction). We are not doing that (Firebird 1.5 isn't supported anymore), but we
+                do the minimum necessary to not break on Firebird 1.5, which means we sacrifice transaction count.
+                */
+                return new byte[] { isc_info_oldest_transaction, isc_info_oldest_active, isc_info_oldest_snapshot,
+                        isc_info_next_transaction };
+            }
+        }
     }
 }

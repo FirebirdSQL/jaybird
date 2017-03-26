@@ -28,7 +28,6 @@ import org.firebirdsql.gds.ISCConstants;
 
 import java.sql.SQLException;
 
-
 /**
  * A {@code StatisticsManager} is responsible for replicating the functionality of the {@code gstat} command-line tool.
  * <p>
@@ -65,10 +64,6 @@ public interface StatisticsManager extends ServiceManager {
      * Request statistics on record versions.
      */
     int RECORD_VERSION_STATISTICS = ISCConstants.isc_spb_sts_record_versions;
-
-    /**
-     * Request statistics on 
-     */
 
     /**
      * Fetch the database statistics header page.
@@ -157,4 +152,65 @@ public interface StatisticsManager extends ServiceManager {
      *         if something went wrong.
      */
     void getTableStatistics(String[] tableNames) throws SQLException;
+
+    /**
+     * Get transaction information of the database specified in {@code database}.
+     *
+     * @return Database transaction information
+     * @throws SQLException
+     *         If {@code database} is not specified, or for failures to connect or retrieve information
+     */
+    DatabaseTransactionInfo getDatabaseTransactionInfo() throws SQLException;
+
+    final class DatabaseTransactionInfo {
+        private long oldestTransaction;
+        private long oldestActiveTransaction;
+        private long oldestSnapshotTransaction;
+        private long nextTransaction;
+        private long activeTransactionCount = -1;
+
+        public long getOldestTransaction() {
+            return oldestTransaction;
+        }
+
+        void setOldestTransaction(long oldestTransaction) {
+            this.oldestTransaction = oldestTransaction;
+        }
+
+        public long getOldestActiveTransaction() {
+            return oldestActiveTransaction;
+        }
+
+        void setOldestActiveTransaction(long oldestActiveTransaction) {
+            this.oldestActiveTransaction = oldestActiveTransaction;
+        }
+
+        public long getOldestSnapshotTransaction() {
+            return oldestSnapshotTransaction;
+        }
+
+        void setOldestSnapshotTransaction(long oldestSnapshotTransaction) {
+            this.oldestSnapshotTransaction = oldestSnapshotTransaction;
+        }
+
+        public long getNextTransaction() {
+            return nextTransaction;
+        }
+
+        void setNextTransaction(long nextTransaction) {
+            this.nextTransaction = nextTransaction;
+        }
+
+        /**
+         * @return active transaction count; {@code -1} means that this information wasn't retrieved (Firebird 1.5 and
+         * lower)
+         */
+        public long getActiveTransactionCount() {
+            return activeTransactionCount;
+        }
+
+        void setActiveTransactionCount(long activeTransactionCount) {
+            this.activeTransactionCount = activeTransactionCount;
+        }
+    }
 }
