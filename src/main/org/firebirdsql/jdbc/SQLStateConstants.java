@@ -46,6 +46,7 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_INVALID_PARAM_TYPE = "HY105";
 
     public static final String SQL_STATE_WRONG_PARAM_NUM = "07001";
+    public static final String SQL_STATE_INVALID_STMT_TYPE = "07003";
     public static final String SQL_STATE_NO_RESULT_SET = "07005";
     public static final String SQL_STATE_INVALID_CONVERSION = "07006";
 

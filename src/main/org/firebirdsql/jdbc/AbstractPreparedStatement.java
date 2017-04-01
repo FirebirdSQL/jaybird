@@ -929,10 +929,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
 
         if (internalExecute(isExecuteProcedureStatement)) {
-            // TODO SQL state
             throw jdbcVersionSupport.createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(results), null);
+                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
         }
 
         results.add(getLargeUpdateCount());

@@ -70,7 +70,6 @@ class FBStringField extends FBField {
     }
 
     protected static EncodingDefinition getEncodingDefinition(FieldDescriptor fieldDescriptor) throws SQLException {
-        // TODO Add compatibility option for old NONE behavior?
         // Note: characterSetId includes the collation id
         final int characterSetId;
         switch (fieldDescriptor.getType() & ~1) {

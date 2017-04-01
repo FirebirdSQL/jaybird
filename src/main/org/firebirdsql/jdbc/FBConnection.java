@@ -611,10 +611,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                                 timeout)));
             }
             try {
-                // TODO Is isc_info_user_names a good info item to use?
-                getFbDatabase().getDatabaseInfo(new byte[] { ISCConstants.isc_info_user_names,
-                                ISCConstants.isc_info_end },
-                        1024);
+                getFbDatabase().getDatabaseInfo(
+                        new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
                 return true;
             } catch (SQLException ex) {
                 return false;

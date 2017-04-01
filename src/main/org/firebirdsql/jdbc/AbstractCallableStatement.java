@@ -162,10 +162,9 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     
     private void executeSingleForBatch(List<Long> results) throws SQLException {
         if (internalExecute(!isSelectableProcedure())) {
-            // TODO SQL state
             throw jdbcVersionSupport.createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(results), null);
+                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
         }
 
         results.add(getLargeUpdateCount());
