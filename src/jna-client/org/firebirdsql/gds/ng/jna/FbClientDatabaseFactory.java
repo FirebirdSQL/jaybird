@@ -23,6 +23,9 @@ import com.sun.jna.Platform;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
  * Firebird native client library.
@@ -51,7 +54,7 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
      */
     private static final class ClientHolder {
 
-        private static final FbClientLibrary clientLibrary = initClientLibrary();
+        private static final FbClientLibrary clientLibrary = syncWrapIfNecessary(initClientLibrary());
 
         private static FbClientLibrary initClientLibrary() {
             if (Platform.isWindows()) {
@@ -59,6 +62,21 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
             } else {
                 return (FbClientLibrary) Native.loadLibrary("fbclient", FbClientLibrary.class);
             }
+        }
+
+        private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
+            if ("true".equalsIgnoreCase(getSystemPropertyPrivileged("org.firebirdsql.jna.syncWrapNativeLibrary"))) {
+                return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
+            }
+            return clientLibrary;
+        }
+
+        private static String getSystemPropertyPrivileged(final String propertyName) {
+            return AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(propertyName);
+                }
+            });
         }
     }
 

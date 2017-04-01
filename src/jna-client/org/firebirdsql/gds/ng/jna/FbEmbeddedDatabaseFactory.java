@@ -26,6 +26,8 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,7 +71,7 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         private static final List<String> LIBRARIES_TO_TRY =
                 Collections.unmodifiableList(Arrays.asList("fbembed", "fbclient"));
 
-        private static final FbClientLibrary clientLibrary = initClientLibrary();
+        private static final FbClientLibrary clientLibrary = syncWrapIfNecessary(initClientLibrary());
 
         private static FbClientLibrary initClientLibrary() {
             final List<Throwable> throwables = new ArrayList<>();
@@ -92,6 +94,21 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
                 log.error("Loading " + LIBRARIES_TO_TRY.get(idx) + " failed", throwables.get(idx));
             }
             throw new ExceptionInInitializerError(throwables.get(0));
+        }
+
+        private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
+            if ("true".equalsIgnoreCase(getSystemPropertyPrivileged("org.firebirdsql.jna.syncWrapNativeLibrary"))) {
+                return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
+            }
+            return clientLibrary;
+        }
+
+        private static String getSystemPropertyPrivileged(final String propertyName) {
+            return AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty(propertyName);
+                }
+            });
         }
     }
 

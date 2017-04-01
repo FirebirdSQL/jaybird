@@ -258,6 +258,12 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     Firebird 1.5 and earlier this will have value `-1`.  
     A static `FBStatisticsManager.getDatabaseTransactionInfo(Connection connection)` 
     is available to obtain this information using an existing connection.
+-   Added system property `org.firebirdsql.jna.syncWrapNativeLibrary`. If this 
+    system property has a value of `true`, the native library is wrapped in a 
+    synchronisation proxy.  
+    This synchronisation proxy will serialise all access to the native library.
+    In previous versions of Jaybird this was always applied for Embedded on 
+    platforms other than Windows.
 
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------
