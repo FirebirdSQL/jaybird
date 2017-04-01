@@ -18,9 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.auth;
 
+import org.firebirdsql.util.ByteArrayHelper;
 import org.junit.Test;
-
-import javax.xml.bind.DatatypeConverter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +45,7 @@ public class SrpClientTest {
 
         byte[] clientSessionKey = srp.getSessionKey();
 
-        assertEquals(DatatypeConverter.printHexBinary(clientSessionKey),
-                DatatypeConverter.printHexBinary(serverSessionKey));
+        assertEquals(ByteArrayHelper.toHexString(clientSessionKey),
+                ByteArrayHelper.toHexString(serverSessionKey));
     }
 }

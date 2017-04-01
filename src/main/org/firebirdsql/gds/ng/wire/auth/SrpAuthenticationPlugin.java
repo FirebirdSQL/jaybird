@@ -22,8 +22,8 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
@@ -91,6 +91,6 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     private static String toHex(byte[] bytes) {
-        return DatatypeConverter.printHexBinary(bytes);
+        return ByteArrayHelper.toHexString(bytes);
     }
 }

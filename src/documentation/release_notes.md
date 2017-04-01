@@ -215,27 +215,8 @@ If you manage your dependencies manually, you need to do the following:
 Gotcha's
 --------
 
-### Wildfly ###
-
-When you use Jaybird 3 in Wildfly (or JBoss), you will need to add the module 
-`javax.xml.bind.api` to your module to get it to work.
-
-The minimal `module.xml` to use Jaybird 3 under Wildfly is:
-
-``` {.xml}
-<?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
-  <resources>
-    <resource-root path="jaybird-@VERSION@.jar"/>
-  </resources>
-  <dependencies>
-    <module name="javax.api"/>
-    <module name="javax.transaction.api"/>
-    <module name="javax.resource.api"/>
-    <module name="javax.xml.bind.api"/> <!-- Add this -->
-  </dependencies>
-</module>
-```
+No known gotcha's at this time. If you find a problem: please report it on
+http://tracker.firebirdsql.org/brows/JDBC
 
 Jaybird 3.0.x changelog
 =======================
@@ -258,6 +239,9 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     Firebird 1.5 and earlier this will have value `-1`.  
     A static `FBStatisticsManager.getDatabaseTransactionInfo(Connection connection)` 
     is available to obtain this information using an existing connection.
+-   Removed dependency on JAXB ([JDBC-486](http://tracker.firebirdsql.org/browse/JDBC-486))  
+    This removes the dependency on module `java.xml.bind` in Java 9, and in 
+    Wildfly on module `javax.xml.bind.api`. 
 -   Added system property `org.firebirdsql.jna.syncWrapNativeLibrary`. If this 
     system property has a value of `true`, the native library is wrapped in a 
     synchronisation proxy.  
@@ -356,8 +340,9 @@ Jaybird currently does not formally support Java 9 (JDBC 4.3), although most of
 the JDBC 4.3 features have been implemented (in as far as they are supported by 
 Firebird). 
 
-You can use the Java 8 driver under Java 9, but it is necessary to add the
-`java.xml.bind` module using `--add-modules java.xml.bind`.
+You can use the Java 8 driver under Java 9, contrary to earlier Jaybird 3 test 
+releases, it is no longer necessary to add the `java.xml.bind` module using 
+`--add-modules java.xml.bind`.
 
 Jaybird cannot be fully tested under Java 9 at this moment, as some of our tests
 fail due to recent changes, that prevent JMock (or specifically cglib) from

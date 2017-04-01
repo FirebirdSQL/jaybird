@@ -529,9 +529,6 @@ Compatibility notes
 Wildfly
 -------
 
-When you use Jaybird 3 in Wildfly (or JBoss), you will need to add the module 
-`javax.xml.bind.api` to your module to get it to work.
-
 The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 
 ``` {.xml}
@@ -544,7 +541,6 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
     <module name="javax.api"/>
     <module name="javax.transaction.api"/>
     <module name="javax.resource.api"/>
-    <module name="javax.xml.bind.api"/> <!-- Add this -->
   </dependencies>
 </module>
 ```

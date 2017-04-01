@@ -28,8 +28,8 @@ package org.firebirdsql.gds.ng.wire.auth;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.util.ByteArrayHelper;
 
-import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -183,7 +183,7 @@ public final class SrpClient {
     }
 
     String getPublicKeyHex() {
-        return DatatypeConverter.printHexBinary(pad(publicKey));
+        return ByteArrayHelper.toHexString(pad(publicKey));
     }
 
     byte[] clientProof(String user, String password, byte[] salt, BigInteger serverPublicKey) {
