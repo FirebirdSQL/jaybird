@@ -168,6 +168,11 @@ public final class JnaEventHandle extends AbstractEventHandle {
         }
     }
 
+    @Override
+    public String toString() {
+        return "JnaEventHandle:{ name:" + getEventName() + ", eventId:" + getEventId() + " }";
+    }
+
     private class JnaEventCallback implements FbClientLibrary.IscEventCallback {
         @Override
         public void apply(Pointer resultArgument, short eventBufferLength, Pointer eventsList) {

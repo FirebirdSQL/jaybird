@@ -71,7 +71,7 @@ public class FBEventManager implements EventManager {
     private boolean connected = false;
     private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
     private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
-    private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<DatabaseEvent>();
+    private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<>();
     private EventDispatcher eventDispatcher;
     private Thread dispatchThread;
     private volatile long waitTimeout = 1000;
@@ -105,10 +105,10 @@ public class FBEventManager implements EventManager {
         if (!connected) {
             throw new IllegalStateException("Disconnect called while not connected");
         }
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<SQLException>();
+        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         try {
             try {
-                for (String eventName : new HashSet<String>(handlerMap.keySet())) {
+                for (String eventName : new HashSet<>(handlerMap.keySet())) {
                     try {
                         unregisterListener(eventName);
                     } catch (SQLException e) {

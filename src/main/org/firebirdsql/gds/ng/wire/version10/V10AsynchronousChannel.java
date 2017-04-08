@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -153,6 +154,13 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     public void processEventData() {
         eventBuffer.flip();
         try {
+            if (log.isDebugEnabled()) {
+                if (eventBuffer.hasArray()) {
+                    log.debug(eventBuffer + ": " + ByteArrayHelper.toHexString(eventBuffer.array()).substring(0, 2 * eventBuffer.limit()));
+                } else {
+                    log.debug(eventBuffer.toString());
+                }
+            }
             bufferProcessing:
             while (eventBuffer.remaining() >= 4) {
                 eventBuffer.mark();
@@ -198,6 +206,9 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
         synchronized (database.getSynchronizationObject()) {
             try {
+                if (log.isDebugEnabled()) {
+                    log.debug("Queue event: " + wireEventHandle);
+                }
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
                 dbXdrOut.writeInt(op_que_events);
                 dbXdrOut.writeInt(auxHandle);
@@ -276,7 +287,9 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             eventBuffer.getLong(); // AST info (ignore)
             int eventId = eventBuffer.getInt();
 
-            log.debug(String.format("Received event id %d, eventCount %d", eventId, eventCount));
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Received event id %d, eventCount %d", eventId, eventCount));
+            }
 
             channelListenerDispatcher.eventReceived(this, new AsynchronousChannelListener.Event(eventId, eventCount));
 

@@ -118,4 +118,10 @@ public final class WireEventHandle extends AbstractEventHandle implements Asynch
         }
         onEventOccurred();
     }
+
+    @Override
+    public String toString() {
+        return "WireEventHandle:{ name:" + getEventName() + ", localId:" + localId +
+                ", internalCount:" + internalCount + ", previousInternalCount:" + previousInternalCount + " }";
+    }
 }
