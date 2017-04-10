@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,16 +25,20 @@
 package org.firebirdsql.gds;
 
 /**
- * A callback handler interface for <code>GDS</code>-based event handling.
+ * A callback handler interface for event handling.
  */
 public interface EventHandler {
 
     /**
      * Called when a database event occurs.
+     * <p>
+     * Implementations should take care to only perform short processing on the current thread. If longer or
+     * complicated processing is necessary, please offload it to another thread or executor.
+     * </p>
      *
      * @param eventHandle
      *         The event handle
      */
-    public void eventOccurred(EventHandle eventHandle);
+    void eventOccurred(EventHandle eventHandle);
 
 }

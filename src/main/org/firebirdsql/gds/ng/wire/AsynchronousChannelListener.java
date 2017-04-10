@@ -53,7 +53,7 @@ public interface AsynchronousChannelListener {
     /**
      * Event count notification
      */
-    public class Event {
+    class Event {
         private final int eventId;
         private final int eventCount;
 

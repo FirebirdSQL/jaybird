@@ -187,8 +187,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
             producerThreads[i] = t;
             t.start();
         }
-        for (int i = 0; i < THREAD_COUNT; i++){
-            final Thread t = producerThreads[i];
+        for (final Thread t : producerThreads) {
             t.join();
         }
         Thread.sleep(2 * LONG_DELAY);
@@ -250,7 +249,7 @@ public class TestFBEventManager extends FBJUnit4TestBase {
         }
     }
 
-    class AccumulatingEventListener implements EventListener {
+    static class AccumulatingEventListener implements EventListener {
 
         private volatile int eventCount = 0;
        
