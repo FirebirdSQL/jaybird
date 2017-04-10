@@ -17,7 +17,7 @@ Supported Firebird versions
 ---------------------------
 
 Jaybird @VERSION@ was tested against Firebird 2.5.7, and 
-Firebird 3 (3.0.0.32483), but should also support other Firebird versions from
+Firebird 3.0.2, but should also support other Firebird versions from
 1.0 and up. The Type 2 and embedded server JDBC drivers require the appropriate
 JNI library. Precompiled JNI binaries for Windows and Linux platforms are 
 shipped in the default installation, other platforms require porting/building 
@@ -36,12 +36,12 @@ Supported Java versions
 Jaybird @VERSION@ supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 
 (JDBC 4.2). Support for earlier Java versions has been dropped.
 
-The upcoming Jaybird 3.0 will support Java 7 and 8 (and probably 9).
+The upcoming Jaybird 3.0 will support Java 7, 8, and 9.
 
 Specification support
 ---------------------
 
-Jaybird supports the following specifications:
+Jaybird @VERSION@ supports the following specifications:
 
 |Specification|Notes
 |-------------|----------------------------------------------------------------
