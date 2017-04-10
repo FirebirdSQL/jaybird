@@ -171,7 +171,7 @@ use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include
 server.
 
 For `getGeneratedKeys` support you will need to include 
-`antlr-runtime-4.6.jar` on your classpath.
+`antlr-runtime-4.7.jar` on your classpath.
 
 For native, local or embedded support, you will need to include `jna-4.2.2.jar` 
 on your classpath.
@@ -199,7 +199,7 @@ If you manage your dependencies manually, you need to do the following:
     - `jaybird-full-2.2.x.jar` with `jaybird-full-@VERSION@.jar`
 
 2.  If installed, remove `antlr-runtime-3.4.jar` and replace it with 
-    `antlr-runtime-4.6.jar`. This library is necessary for `getGeneratedKeys`
+    `antlr-runtime-4.7.jar`. This library is necessary for `getGeneratedKeys`
     support.
   
 3.  If you use native (or embedded) you can remove the native library: 
@@ -248,6 +248,10 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     This synchronisation proxy will serialise all access to the native library.
     In previous versions of Jaybird this was always applied for Embedded on 
     platforms other than Windows.
+-   Upgrade `antlr-runtime` dependency from 4.6 to 4.7 ([JDBC-488](http://tracker.firebirdsql.org/browse/JDBC-488))  
+    If you tested with previous snapshot or beta versions of Jaybird 3.0, make
+    sure to replace `antlr-runtime-4.5.3.jar` or `antlr-runtime-4.6.jar` 
+    with `antlr-runtime-4.7.jar`.
 
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------
@@ -494,8 +498,8 @@ For more information see: [Connection rejected without an explicit character set
 
 ### ANTLR 4 runtime ###
 
-The generated keys functionality now requires ANTLR 4.6. Make sure to replace
-`antlr-runtime-3.4.jar` with the `antlr-runtime-4.6.jar` included in the 
+The generated keys functionality now requires ANTLR 4.7. Make sure to replace
+`antlr-runtime-3.4.jar` with the `antlr-runtime-4.7.jar` included in the 
 distribution zip. If you use maven this will happen automatically.
 
 As in previous versions: if the ANTLR runtime is not on the classpath, then 

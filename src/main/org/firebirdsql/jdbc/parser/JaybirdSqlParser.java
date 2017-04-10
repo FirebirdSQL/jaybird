@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.6
+// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.7
 package org.firebirdsql.jdbc.parser;
 
 import org.antlr.v4.runtime.*;
@@ -34,7 +34,7 @@ import java.util.List;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class JaybirdSqlParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -3482,7 +3482,7 @@ public class JaybirdSqlParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3W\u0209\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3W\u0209\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -3519,10 +3519,10 @@ public class JaybirdSqlParser extends Parser {
 		"+\5+\u01fa\n+\3+\3+\3,\3,\3,\3,\3,\3,\3,\3-\3-\3.\3.\3.\5hw\u00aa\3&/"+
 		"\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH"+
 		"JLNPRTVXZ\2\t\3\2ST\4\2&&\63\63\3\2MR\4\2::BB\4\2DDHH\4\2\16\16\31\31"+
-		"\5\2\22\22\"\"\62\62\u0230\2`\3\2\2\2\4b\3\2\2\2\6p\3\2\2\2\b\177\3\2"+
-		"\2\2\n\u0087\3\2\2\2\f\u008b\3\2\2\2\16\u009c\3\2\2\2\20\u009f\3\2\2\2"+
-		"\22\u00b5\3\2\2\2\24\u00ba\3\2\2\2\26\u00bf\3\2\2\2\30\u00c4\3\2\2\2\32"+
-		"\u00c8\3\2\2\2\34\u00ca\3\2\2\2\36\u00ce\3\2\2\2 \u00d1\3\2\2\2\"\u00df"+
+		"\5\2\22\22\"\"\62\62\2\u0230\2`\3\2\2\2\4b\3\2\2\2\6p\3\2\2\2\b\177\3"+
+		"\2\2\2\n\u0087\3\2\2\2\f\u008b\3\2\2\2\16\u009c\3\2\2\2\20\u009f\3\2\2"+
+		"\2\22\u00b5\3\2\2\2\24\u00ba\3\2\2\2\26\u00bf\3\2\2\2\30\u00c4\3\2\2\2"+
+		"\32\u00c8\3\2\2\2\34\u00ca\3\2\2\2\36\u00ce\3\2\2\2 \u00d1\3\2\2\2\"\u00df"+
 		"\3\2\2\2$\u00e1\3\2\2\2&\u00ff\3\2\2\2(\u0118\3\2\2\2*\u011a\3\2\2\2,"+
 		"\u011c\3\2\2\2.\u0129\3\2\2\2\60\u012b\3\2\2\2\62\u0134\3\2\2\2\64\u0138"+
 		"\3\2\2\2\66\u013c\3\2\2\28\u0140\3\2\2\2:\u014c\3\2\2\2<\u014e\3\2\2\2"+

@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class TestGrammar {
 	// TODO Add more testcases for grammar
 
     protected JaybirdSqlParser createParser(String testString) {
-        CharStream stream = new ANTLRInputStream(testString);
+        CharStream stream = CharStreams.fromString(testString);
         
         JaybirdSqlLexer lexer = new JaybirdSqlLexer(stream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);

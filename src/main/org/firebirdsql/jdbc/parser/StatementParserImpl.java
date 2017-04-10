@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.jdbc.parser;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 
@@ -34,7 +34,7 @@ public class StatementParserImpl implements StatementParser {
 
     public JaybirdStatementModel parseInsertStatement(String sql) throws ParseException {
         try {
-            CharStream stream = new ANTLRInputStream(sql);
+            CharStream stream = CharStreams.fromString(sql);
             JaybirdSqlLexer lexer = new JaybirdSqlLexer(stream);
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             

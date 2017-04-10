@@ -162,7 +162,7 @@ GENERIC_ID
         ;
 
 QUOTED_ID
-        : '\"' ( ID_QUOTED_UNICODE )+ '\"'
+        : '"' ( ID_QUOTED_UNICODE )+ '"'
         ;
 
 fragment HEXIT
@@ -184,7 +184,7 @@ fragment ID_NUMBER_OR_SYMBOL
 fragment ID_QUOTED_UNICODE
         : '\u0000' .. '\u0021'
         | '\u0023' .. '\uFFFF'
-        | '\"\"'
+        | '""'
         ;
 
 statement
