@@ -19,9 +19,9 @@
 	<classpathentry kind="lib" path="lib/test/jmock-junit4-2.8.2.jar"/>
 	<classpathentry kind="lib" path="lib/test/hamcrest-core-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/test/hamcrest-library-1.3.jar"/>
-	<classpathentry kind="lib" path="src/lib/jna-4.2.2.jar"/>
 	<classpathentry kind="lib" path="lib/test/objenesis-2.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/test/cglib-nodep-3.2.5.jar"/>
 	<classpathentry kind="lib" path="src/lib/antlr-runtime-4.7.jar"/>
+	<classpathentry kind="lib" path="src/lib/jna-4.4.0.jar"/>
 	<classpathentry kind="output" path="classes/production/client-java"/>
 </classpath>

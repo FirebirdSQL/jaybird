@@ -71,13 +71,13 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 4.2.2 as a dependency:
+explicitly include JNA 4.4.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>4.2.2</version>
+    <version>4.4.0</version>
 </dependency>
 ~~~
 

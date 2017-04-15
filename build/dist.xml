@@ -74,7 +74,7 @@
                 <include name="antlr-runtime-4.7.jar"/>
             </zipfileset>
             <zipfileset dir="${module.thirdparty}" prefix="lib">
-                <include name="jna-4.2.2.jar"/>
+                <include name="jna-4.4.0.jar"/>
             </zipfileset>
             <zipfileset dir="${build.documentation}" prefix="docs">
                 <include name="faq.html"/>
