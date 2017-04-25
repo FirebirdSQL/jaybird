@@ -42,14 +42,22 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
 
     static {
         // Load protocol implementation information
-        final Set<ProtocolDescriptor> supportedProtocols = new HashSet<ProtocolDescriptor>();
+        final Set<ProtocolDescriptor> supportedProtocols = new HashSet<>();
         final Collection<ClassLoader> classLoaders = classLoadersForLoading();
         for (ClassLoader classLoader : classLoaders) {
-            final ServiceLoader<ProtocolDescriptor> descriptors = ServiceLoader.load(ProtocolDescriptor.class,
-                    classLoader);
-            for (ProtocolDescriptor protocol : descriptors) {
-                if (!supportedProtocols.contains(protocol)) {
-                    supportedProtocols.add(protocol);
+            final ServiceLoader<ProtocolDescriptor> descriptors =
+                    ServiceLoader.load(ProtocolDescriptor.class, classLoader);
+            // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
+            Iterator<ProtocolDescriptor> descriptorIterator = descriptors.iterator();
+            //noinspection WhileLoopReplaceableByForEach
+            while (descriptorIterator.hasNext()) {
+                try {
+                    ProtocolDescriptor protocol = descriptorIterator.next();
+                    if (!supportedProtocols.contains(protocol)) {
+                        supportedProtocols.add(protocol);
+                    }
+                } catch (Exception | ServiceConfigurationError e) {
+                    log.error("Could not load protocol descriptor (skipping): " + e.getMessage(), e);
                 }
             }
         }

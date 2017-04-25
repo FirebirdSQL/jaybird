@@ -311,12 +311,20 @@ public final class EncodingFactory implements IEncodingFactory {
      *
      * @see EncodingSet
      */
+    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static NavigableSet<EncodingSet> loadEncodingSets() {
         final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
+        // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
+        Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
         // Load the encoding sets and populate the TreeMap
-        for (final EncodingSet encodingSet : encodingSetLoader) {
-            encodingSets.add(encodingSet);
+        while (encodingSetIterator.hasNext()) {
+            try {
+                final EncodingSet encodingSet = encodingSetIterator.next();
+                encodingSets.add(encodingSet);
+            } catch (Exception | ServiceConfigurationError e) {
+                log.error("Could not load encoding set (skipping): " + e.getMessage(), e);
+            }
         }
         return encodingSets;
     }

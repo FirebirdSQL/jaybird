@@ -93,7 +93,7 @@ public class GDSFactory {
      */
     private static List<ClassLoader> classLoadersForLoading() {
         final List<ClassLoader> classLoaders = new ArrayList<>(2);
-        final ClassLoader classLoader = GDSFactory.class.getClassLoader();
+        final ClassLoader classLoader = GDSFactoryPlugin.class.getClassLoader();
         if (classLoader != null) {
             classLoaders.add(classLoader);
         } else {
@@ -113,10 +113,18 @@ public class GDSFactory {
      * @param classLoader
      *         instance of {@link ClassLoader}.
      */
+    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
         ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
-        for (GDSFactoryPlugin plugin : pluginLoader) {
-            registerPlugin(plugin);
+        // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
+        Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
+        while (pluginIterator.hasNext()) {
+            try {
+                GDSFactoryPlugin plugin = pluginIterator.next();
+                registerPlugin(plugin);
+            } catch (Exception | ServiceConfigurationError e) {
+                log.error("Can't register plugin (skipping): " + e.getMessage(), e);
+            }
         }
     }
 
@@ -137,13 +145,17 @@ public class GDSFactory {
                 "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
         };
         for (String className : pluginClasses) {
-            try {
-                Class<?> clazz = classLoader.loadClass(className);
-                GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
-                registerPlugin(plugin);
-            } catch (Exception ex) {
-                log.error("Can't register plugin" + className, ex);
-            }
+            loadPlugin(className, classLoader);
+        }
+    }
+
+    private static void loadPlugin(String className, ClassLoader classLoader) {
+        try {
+            Class<?> clazz = classLoader.loadClass(className);
+            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
+            registerPlugin(plugin);
+        } catch (Exception ex) {
+            log.error("Can't register plugin " + className, ex);
         }
     }
 
@@ -180,8 +192,8 @@ public class GDSFactory {
 
             if (otherPlugin != null && !otherPlugin.equals(plugin))
                 throw new IllegalArgumentException(
-                        "Duplicate JDBC URL pattern detected: URL " + jdbcUrl + ", " +
-                                "plugin " + plugin.getTypeName() + ", other plugin " + otherPlugin.getTypeName());
+                        "Duplicate JDBC URL pattern detected: URL " + jdbcUrl + ", plugin " + plugin.getTypeName() +
+                                ", other plugin " + otherPlugin.getTypeName());
         }
     }
 

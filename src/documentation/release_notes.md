@@ -258,6 +258,14 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-3
     If you use native, local or embedded and tested previous snapshot or beta 
     versions of Jaybird 3.0, make sure to replace `jna-4.2.2.jar` with 
     `jna.4.4.0.jar`.
+-   Fixed: Presence of multiple copies of Jaybird (or its plugins) in multiple 
+    class loader hierarchies could lead to a `ServiceConfigurationError` caused
+    by incompatible class hierarchies. ([JDBC-490](http://tracker.firebirdsql.org/browse/JDBC-490))  
+    This error was not caught and would bubble up the call chain, stopping 
+    Jaybird from loading, and possibly stopping the application.     
+    The error itself can still occur (because Jaybird is intentionally broad in
+    the class loaders it tries), but the error is now caught and the next plugin 
+    is tried.
 
 Changes in Jaybird 3.0.0-beta-3
 -------------------------------
