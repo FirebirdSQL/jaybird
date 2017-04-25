@@ -42,8 +42,7 @@ import java.util.*;
  */
 public class GDSFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class,
-        false);
+    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
 
     /**
      * Class for string comparison in descending order. This effectively
@@ -82,11 +81,11 @@ public class GDSFactory {
                 loadPluginsFromClassLoader(classLoader);
             }
         } catch (Exception ex) {
-            if (log != null) log.error("Can't register plugins ", ex);
+            log.error("Can't register plugins", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
-            if (log != null) log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
+            log.warn("No plugins loaded from META-INF/services, falling back to fixed registration of default plugins");
             for (ClassLoader classLoader : classLoaders) {
                 loadPluginsFallback(classLoader);
             }
@@ -131,20 +130,21 @@ public class GDSFactory {
                 "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
         };
         for (String className : pluginClasses) {
-            try {
-                Class<?> clazz = classLoader.loadClass(className);
-                GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
-                registerPlugin(plugin);
-            } catch (ClassNotFoundException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
-            } catch (IllegalAccessException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
-            } catch(InstantiationException ex) {
-                if (log != null)
-                    log.error("Can't register plugin" + className, ex);
-            }
+            loadPlugin(className, classLoader);
+        }
+    }
+
+    private static void loadPlugin(String className, ClassLoader classLoader) {
+        try {
+            Class<?> clazz = classLoader.loadClass(className);
+            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
+            registerPlugin(plugin);
+        } catch (ClassNotFoundException ex) {
+            log.error("Can't register plugin " + className, ex);
+        } catch (IllegalAccessException ex) {
+            log.error("Can't register plugin " + className, ex);
+        } catch(InstantiationException ex) {
+            log.error("Can't register plugin " + className, ex);
         }
     }
 
@@ -159,7 +159,7 @@ public class GDSFactory {
         Enumeration res = classLoader.getResources(
             "META-INF/services/" + GDSFactoryPlugin.class.getName());
 
-        if (!res.hasMoreElements() && log != null) {
+        if (!res.hasMoreElements()) {
             log.warn("No GDSFactoryPlugin service file(s) found");
         }
 
@@ -172,20 +172,7 @@ public class GDSFactory {
             try {
                 String className;
                 while ((className = bin.readLine()) != null) {
-                    try {
-                        Class<?> clazz = classLoader.loadClass(className);
-                        GDSFactoryPlugin plugin = (GDSFactoryPlugin)clazz.newInstance();
-                        registerPlugin(plugin);
-                    } catch (ClassNotFoundException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    } catch (IllegalAccessException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    } catch(InstantiationException ex) {
-                        if (log != null)
-                            log.error("Can't register plugin" + className, ex);
-                    }
+                    loadPlugin(className, classLoader);
                 }
             } finally {
                 bin.close();
@@ -221,7 +208,7 @@ public class GDSFactory {
             typeToPluginMap.put(aliasType, plugin);
         }
 
-        String[] jdbcUrls = (String[]) plugin.getSupportedProtocols();
+        String[] jdbcUrls = plugin.getSupportedProtocols();
         for (int i = 0; i < jdbcUrls.length; i++) {
 
             GDSFactoryPlugin otherPlugin = 
@@ -373,7 +360,7 @@ public class GDSFactory {
                 return GDSType.getType(plugin.getTypeName());
             }
         }
-        if (log != null) log.debug("No protocol match found for url " + jdbcUrl);
+        if (log.isDebugEnabled()) log.debug("No protocol match found for url " + jdbcUrl);
         return null;
     }
 
