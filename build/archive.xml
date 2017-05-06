@@ -26,6 +26,9 @@
             <zipfileset dir="${build.resources}/META-INF" prefix="META-INF">
                 <include name="services/**/*"/>
             </zipfileset>
+            <zipfileset dir="${build.etc}/META-INF" prefix="META-INF">
+                <include name="maven/**/*"/>
+            </zipfileset>
         </jar>
 
         <jar jarfile="${build.lib}/${archive.name.full}" manifest="${build.etc}/default.mf">

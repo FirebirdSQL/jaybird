@@ -41,12 +41,6 @@
         <echo message="${toString:source.java.openoffice}"/>
         <echo message="${toString:source.java.additional}"/>
 
-        <copy todir="${build.classes}" filtering="no">
-            <fileset dir="${source.java}">
-                <include name="org/firebirdsql/encodings/xml/encodings.xsd"/>
-            </fileset>
-        </copy>
-
         <javac destdir="${build.classes}"
                target="${javac.level}"
                source="${javac.level}"
@@ -125,6 +119,25 @@
                 <filter token="implementation.vendor" value="${implementation.vendor}"/>
                 <filter token="implementation.vendor.id" value="${implementation.vendor.id}"/>
 
+            </filterset>
+        </copy>
+
+        <mkdir dir="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}"/>
+        <copy file="${source.etc}/META-INF/maven/org.firebirdsql.jdbc/ARTIFACT_ID/pom.properties"
+              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.properties"
+              filtering="true">
+            <filterset>
+                <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
+                <filter token="VERSION" value="${version.maven}"/>
+            </filterset>
+        </copy>
+
+        <copy file="${maven.pom.template}"
+              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.xml"
+              filtering="true">
+            <filterset>
+                <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
+                <filter token="VERSION" value="${version.maven}"/>
             </filterset>
         </copy>
     </target>
