@@ -239,7 +239,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 	}
 	
 	private class TraceStream extends FilterOutputStream {
-	    private static final String START_TEXT = "Trace session ID ";
+	    private static final String START_TEXT = "Session ID: ";
 	    
 	    private final String sessionName;
 	    private volatile boolean lookForSessionId = true;
