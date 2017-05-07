@@ -1,19 +1,3 @@
-WARNING {-}
-=======
-
-Jaybird 3 is still in development. This version is provided for testing
-purposes only. We'd appreciate your feedback, but we'd like to emphasize that
-this version is **not intended for production**.
-
-The protocol implementation has been fundamentally rewritten and changes have
-been made for stricter JDBC conformance. As a result the driver might exhibit
-different behavior than previous versions. Read these release notes carefully to
-see if those differences are intentional. 
-
-Bug reports about undocumented changes in behavior are appreciated. Feedback can
-be sent to the Firebird-java mailing list or reported on the issue tracker
-<http://tracker.firebirdsql.org/browse/JDBC>.
-
 General Notes
 =============
 
@@ -31,20 +15,24 @@ the application server and driver.
 About this version
 ------------------
 
-Jaybird 3.0 is a big change from Jaybird 2.2 and earlier. We have rewritten the
-entire low-level implementation to be able to support protocol improvements in 
-newer Firebird versions, made changes with a stricter interpretation of the JDBC 
-requirements, and removed some parts that were either obsolete or not 
-functioning correctly.
+Jaybird 3.0 is a big change from Jaybird 2.2 and earlier. The entire low-level 
+implementation has been rewritten to be able to support protocol improvements in
+newer Firebird versions. We have also made changes with a stricter 
+interpretation of the JDBC requirements, and removed some parts that were either 
+obsolete or not functioning correctly.
 
 We recommend that you do not consider Jaybird 3.0 a drop-in replacement for 
-Jaybird 2.2, and study these release notes carefully. Test your product with
+Jaybird 2.2, and study these release notes carefully. Test your application with
 Jaybird 3.0 before using it in production.
+
+Bug reports about undocumented changes in behavior are appreciated. Feedback can
+be sent to the Firebird-java mailing list or reported on the issue tracker
+<http://tracker.firebirdsql.org/browse/JDBC>.
 
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.7, and 3.0.0, but should also 
+Jaybird 3.0 was tested against Firebird 2.5.7, and 3.0.2, but should also 
 support other Firebird versions from 2.0 and up.
 
 Formal support for Firebird 1.x has been dropped (although in general we expect
@@ -76,7 +64,7 @@ Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for
 earlier Java versions has been dropped.
 
 Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
-but real module support will not be available until Jaybird 3.1 (or even later).
+but real module support will not be available until Jaybird 3.1 (or later).
 
 Jaybird 3.0 is the last version to support Java 7.
 
@@ -164,7 +152,7 @@ See also [Type 2 (native) and embedded driver].
 You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
 
 At minimum Jaybird 3.0 requires `jaybird-@VERSION@.jar` and 
-`connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` as it
+`connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` which
 includes the connector-api files.
 
 If you deploy your application to a Java EE application server, then you must 
@@ -596,7 +584,7 @@ Known Issues
 
 -   Firebird 3.0.1 does not correctly support `BOOLEAN` parameters, see [CORE-5367](http://tracker.firebirdsql.org/browse/CORE-5367)
 
-    Either use Firebird 3.0.0 or 3.0.2 (when available).
+    Either use Firebird 3.0.0 or 3.0.2 and higher.
 
 -   Using a native connection with a Firebird 3 client library to a Firebird 2.5
     or older server may be slow to connect. The workaround is to specify the
@@ -949,8 +937,8 @@ The changes made are as follows:
 
 *   `null` will always be interpreted as `"%"` (before this rule was applied
     inconsistently)
-*   Empty string will no longer match (ie they are no longer interpreted as
-    `"%"`) unless explicitly allowed by the method javadoc (usually only the
+*   Empty string will no longer match (ie it is no longer interpreted as `"%"`) 
+    unless explicitly allowed by the method javadoc (usually only the
     `catalogPattern` and `schemaPattern`, which are always ignored by Jaybird as
     Firebird currently doesn't support this)
 *   Double quotes around a pattern will no longer be stripped, and therefor will
@@ -1025,7 +1013,7 @@ Jaybird no longer needs a `jaybirdxx.dll` or `libjaybirdxx.so` for the Type 2
 and embedded driver. Jaybird now uses JNA to access the client library.
 
 If you want to use the Type 2 driver, or Firebird embedded, then you need to
-include the `jna-4.4.0.jar` on the classpath.
+include `jna-4.4.0.jar` on the classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we 
 don't depend on it by default:
@@ -1040,7 +1028,8 @@ don't depend on it by default:
 
 The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to
 be on the path, or the location needs to be specified in the system property 
-`jna.library.path`.
+`jna.library.path` (as an absolute or relative path to the directory/directories
+containing the library file(s)).
 
 In the future we will move the Type 2 support to a separate library and provide 
 JNA-compatible jars that provide the native libraries of a specific Firebird 

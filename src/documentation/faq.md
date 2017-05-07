@@ -6,43 +6,21 @@ Where do I get Jaybird?
 
 ### Maven ###
 
-#### Jaybird 2.2 ####
+#### Jaybird 3.0 ####
 
-Jaybird is available on maven (since version 2.2.0), with a separate artifact
-for each supported Java version.
+Jaybird 3.0 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`).\
-Version: `2.2.12`
+Groupid: `org.firebirdsql.jdbc`,  
+Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
+Version: `3.0.0`
 
-For example:
-
-~~~ {.xml}
-<dependency>
-    <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>jaybird-jdk18</artifactId>
-    <version>2.2.12</version>
-</dependency>
-~~~
-
-When deploying to a JavaEE environment, exclude the `javax.resource connector-api`
-dependency as this will be provided by the application server.
-
-#### Jaybird 3.0 for testing ####
-
-Jaybird 3.0 Beta 3 is available from Maven central:
-
-Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
-Version: `3.0.0-beta-3`
-
-For example:
+For example, for Java 8:
 
 ~~~ {.xml}
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-beta-3</version>
+    <version>3.0.0</version>
 </dependency>
 ~~~
 
@@ -54,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0-beta-3</version>
+    <version>3.0.0</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -80,6 +58,28 @@ explicitly include JNA 4.4.0 as a dependency:
     <version>4.4.0</version>
 </dependency>
 ~~~
+
+#### Jaybird 2.2 ####
+
+Jaybird 2.2 is available on maven, with a separate artifact
+for each supported Java version.
+
+Groupid: `org.firebirdsql.jdbc`,  
+Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`)  
+Version: `2.2.12`
+
+For example:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>2.2.12</version>
+</dependency>
+~~~
+
+When deploying to a JavaEE environment, exclude the `javax.resource connector-api`
+dependency as this will be provided by the application server.
 
 ### Download ###
 
