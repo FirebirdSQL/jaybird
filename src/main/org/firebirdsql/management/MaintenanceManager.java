@@ -435,7 +435,7 @@ public interface MaintenanceManager extends ServiceManager {
      * @throws SQLException
      *         if a database access error occurs
      * @deprecated Use {@link #limboTransactionsAsList()} or
-     * {@link #getLimboTransactions()} instead
+     * {@link #getLimboTransactions()} instead; this method will be removed in Jaybird 4.
      */
     @Deprecated
     void listLimboTransactions() throws SQLException;
@@ -461,22 +461,9 @@ public interface MaintenanceManager extends ServiceManager {
 
     /**
      * Commit a limbo transaction based on its ID.
-     *
-     * @param transactionId
-     *         The ID of the limbo transaction to be committed
-     * @throws SQLException
-     *         if a database access error occurs or the given transaction ID is not valid
-     * @deprecated Use {@link #commitTransaction(long)}. This method wil be removed in Jaybird 3.1.
-     */
-    @Deprecated
-    void commitTransaction(int transactionId) throws SQLException;
-
-    /**
-     * Commit a limbo transaction based on its ID.
      * <p>
-     * The transaction id is expected to be a positive long. If you have a negative {@code int}, either call the
-     * - deprecated - {@link #commitTransaction(int)}, or convert the int to an unsigned long
-     * using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
+     * The transaction id is expected to be a positive long. If you have a negative {@code int}, convert the int to
+     * an unsigned long using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
      * </p>
      *
      * @param transactionId
@@ -488,22 +475,9 @@ public interface MaintenanceManager extends ServiceManager {
 
     /**
      * Rollback a limbo transaction based on its ID.
-     *
-     * @param transactionId
-     *         The ID of the limbo transaction to be rolled back
-     * @throws SQLException
-     *         if a database access error occurs or the given transaction ID is not valid
-     * @deprecated Use {@link #rollbackTransaction(long)}. This method wil be removed in Jaybird 3.1.
-     */
-    @Deprecated
-    void rollbackTransaction(int transactionId) throws SQLException;
-
-    /**
-     * Rollback a limbo transaction based on its ID.
      * <p>
-     * The transaction id is expected to be a positive long. If you have a negative {@code int}, either call the
-     * - deprecated - {@link #rollbackTransaction(int)}, or convert the int to an unsigned long
-     * using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
+     * The transaction id is expected to be a positive long. If you have a negative {@code int}, convert the int to
+     * an unsigned long using {@link org.firebirdsql.util.NumericHelper#toUnsignedLong(int)}
      * </p>
      *
      * @param transactionId

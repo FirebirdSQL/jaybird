@@ -54,17 +54,6 @@ public final class CharacterTranslator {
     }
 
     /**
-     * Get mapping table.
-     *
-     * @return mapping table.
-     * @deprecated Use {@link #getMapping(char)} instead. This method will be removed in Jaybird 3.1
-     */
-    @Deprecated
-    public char[] getMapping() {
-        return mapping.clone();
-    }
-
-    /**
      * Get mapping for the specified character.
      *
      * @param toMap

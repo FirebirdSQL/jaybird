@@ -348,21 +348,9 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         return trans;
     }
 
-    @Deprecated
-    @Override
-    public void commitTransaction(final int transactionId) throws SQLException {
-        handleTransaction(transactionId, isc_spb_rpr_commit_trans);
-    }
-
     @Override
     public void commitTransaction(final long transactionId) throws SQLException {
         handleTransaction(transactionId, isc_spb_rpr_commit_trans, isc_spb_rpr_commit_trans_64);
-    }
-
-    @Deprecated
-    @Override
-    public void rollbackTransaction(final int transactionId) throws SQLException {
-        handleTransaction(transactionId, isc_spb_rpr_rollback_trans);
     }
 
     @Override

@@ -197,53 +197,6 @@ http://tracker.firebirdsql.org/brows/JDBC
 Jaybird 3.1.x changelog
 =======================
 
-Changes in Jaybird 3.0.0
-------------------------
-
-The following has been changed or fixed since Jaybird 3.0.0-beta-3
-
--   Changed: Remove automatic retrieval of sql counts in the low-level API on 
-    execute or after fetching all rows ([JDBC-482](http://tracker.firebirdsql.org/browse/JDBC-482)  
-    This restores the behavior of Jaybird 2.2 and should result in a minor 
-    performance improvement when (fully) reading result sets or using
-    `execute` instead of `executeUpdate` and **not** obtaining update counts.
--   Fixed: Database connection in NetBeans 8.2 fails ([JDBC-483](http://tracker.firebirdsql.org/browse/JDBC-483))
--   New feature: added method `getDatabaseTransactionInfo` to `StatisticsManager`
-    to retrieve oldest, oldest active, oldest snapshot and next transaction, and
-    the active transaction count ([JDBC-485](http://tracker.firebirdsql.org/browse/JDBC-485))  
-    The active transaction count is only available in Firebird 2 and higher, for
-    Firebird 1.5 and earlier this will have value `-1`.  
-    A static `FBStatisticsManager.getDatabaseTransactionInfo(Connection connection)` 
-    is available to obtain this information using an existing connection.
--   Removed dependency on JAXB ([JDBC-486](http://tracker.firebirdsql.org/browse/JDBC-486))  
-    This removes the dependency on module `java.xml.bind` in Java 9, and in 
-    Wildfly on module `javax.xml.bind.api`. 
--   Added system property `org.firebirdsql.jna.syncWrapNativeLibrary`. If this 
-    system property has a value of `true`, the native library is wrapped in a 
-    synchronisation proxy.  
-    This synchronisation proxy will serialise all access to the native library.
-    In previous versions of Jaybird this was always applied for Embedded on 
-    platforms other than Windows.
--   Upgraded `antlr-runtime` dependency from 4.6 to 4.7 ([JDBC-488](http://tracker.firebirdsql.org/browse/JDBC-488))  
-    If you tested with previous snapshot or beta versions of Jaybird 3.0, make
-    sure to replace `antlr-runtime-4.5.3.jar` or `antlr-runtime-4.6.jar` 
-    with `antlr-runtime-4.7.jar`.
--   Upgraded `jna` dependency from 4.2.2 to 4.4.0 ([JDBC-489](http://tracker.firebirdsql.org/browse/JDBC-489))
-    If you use native, local or embedded and tested previous snapshot or beta 
-    versions of Jaybird 3.0, make sure to replace `jna-4.2.2.jar` with 
-    `jna.4.4.0.jar`.
--   Fixed: Presence of multiple copies of Jaybird (or its plugins) in multiple 
-    class loader hierarchies could lead to a `ServiceConfigurationError` caused
-    by incompatible class hierarchies. ([JDBC-490](http://tracker.firebirdsql.org/browse/JDBC-490))  
-    This error was not caught and would bubble up the call chain, stopping 
-    Jaybird from loading, and possibly stopping the application.     
-    The error itself can still occur (because Jaybird is intentionally broad in
-    the class loaders it tries), but the error is now caught and the next plugin 
-    is tried.
-
-Changes in Jaybird 3.0.0-beta-3
--------------------------------
-
 ...
 
 What's new in Jaybird 3.1
@@ -254,11 +207,15 @@ For a full list of changes, see [Firebird tracker for Jaybird 3.1.0](http://trac
 Java support
 ------------
 
-### Java 7 and 8 ###
+### Java 7 ###
 
-The driver supports Java 7 and 8.
+The driver supports Java 7 for now.
 
-...
+Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
+
+### Java 8 ###
+
+The driver supports Java 8.
 
 ### Java 9 ###
 
@@ -334,20 +291,7 @@ earlier.
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
 
-Breaking changes for Jaybird 3.1
---------------------------------
-
-*TODO: Section to be removed*
-
-With Jaybird 3.1 the following breaking changes will be introduced.
-
-### Dropping support for Java 7 ###
-
-Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
-
-### Removal of deprecated methods ###
-
-The following methods will be removed in Jaybird 3.1:
+The following deprecated methods have been removed in Jaybird 3.1:
 
 -   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
     instead.
@@ -369,9 +313,33 @@ The following methods will be removed in Jaybird 3.1:
 
 ### Removal of deprecated constants ###
 
-The following constants will be removed in Jaybird 3.1:
+The following constants have been removed in Jaybird 3.1:
 
 -   All `SQL_STATE_*` constants in `FBSQLException`,
     `FBResourceTransactionException`, `FBResourceException`, and
     `FBDriverNotCapableException` will be removed. Use equivalent constants in
     `org.firebirdsql.jdbc.SQLStateConstants`.
+
+Breaking changes for Jaybird 3.1
+--------------------------------
+
+*TODO: Section to be removed*
+
+With Jaybird 3.1 the following breaking changes will be introduced.
+
+### Dropping support for Java 7 ###
+
+Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
+
+Breaking changes for Jaybird 4
+------------------------------
+
+With Jaybird 4 the following breaking changes will be introduced.
+
+### Removal of deprecated methods ###
+
+The following methods will be removed in Jaybird 4:
+
+-   `MaintenanceManager.listLimboTransactions()`, use
+    `MaintenanceManager.limboTransactionsAsList()` or 
+    `MaintenanceManager.getLimboTransactions()` instead.

@@ -46,12 +46,6 @@ import java.sql.SQLException;
 public class FBResourceException extends ResourceException {
 
     /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
-     */
-    @Deprecated
-    public static final String SQL_STATE_GENERAL_ERROR = SQLStateConstants.SQL_STATE_GENERAL_ERROR;
-
-    /**
      * Create a new instance of {@code FBResourceException} with a given string message and generic error code.
      *
      * @param reason

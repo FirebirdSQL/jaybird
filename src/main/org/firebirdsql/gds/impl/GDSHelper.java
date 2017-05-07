@@ -186,22 +186,6 @@ public final class GDSHelper implements Synchronizable {
         database.cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
-    /**
-     * @deprecated Use {@link VaxEncoding#iscVaxInteger(byte[], int, int)}. This method will be removed in Jaybird 3.1
-     */
-    @Deprecated
-    public int iscVaxInteger(byte[] buffer, int pos, int length) {
-        return VaxEncoding.iscVaxInteger(buffer, pos, length);
-    }
-
-    /**
-     * @deprecated Use {@link VaxEncoding#iscVaxLong(byte[], int, int)}. This method will be removed in Jaybird 3.1
-     */
-    @Deprecated
-    public long iscVaxLong(byte[] buffer, int pos, int length) {
-        return VaxEncoding.iscVaxLong(buffer, pos, length);
-    }
-
     // for DatabaseMetaData.
 
     /**
