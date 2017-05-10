@@ -211,6 +211,13 @@ http://tracker.firebirdsql.org/brows/JDBC
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.1
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.1
+
+-   Fixed: FBTraceManager.loadConfigurationFromFile strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
+
 Changes in Jaybird 3.0.0
 ------------------------
 
