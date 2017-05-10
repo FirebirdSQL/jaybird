@@ -214,28 +214,19 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 	    return traceSessions.get(sessionName);
 	}
 	
-	/**
-	 * Loads a configuration from the specified fileName
-	 *
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 */
-	public String loadConfigurationFromFile(String fileName) throws FileNotFoundException, IOException {
-		
-		FileReader fr = new FileReader(fileName);
-		BufferedReader br = new BufferedReader(fr);
-		StringBuffer sb = new StringBuffer(256);
-		String s;
+	@Override
+	public String loadConfigurationFromFile(String fileName) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(fileName));
 		try {
+			StringBuilder sb = new StringBuilder(256);
+			String s;
 			while ((s = br.readLine()) != null) {
-				sb.append(s);
+				sb.append(s).append('\n');
 			}
+			return sb.toString();
 		} finally {
 			br.close();
-			fr.close();
 		}
-		
-		return sb.toString();
 	}
 	
 	private class TraceStream extends FilterOutputStream {

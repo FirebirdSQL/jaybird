@@ -60,6 +60,12 @@ Changelog
 
 ### Changes and fixes in Jaybird 2.2.13
 
+The following has been changed or fixed in Jaybird 2.2.14:
+
+-   Fixed: FBTraceManager.loadConfigurationFromFile strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
+
+### Changes and fixes in Jaybird 2.2.13
+
 The following has been changed or fixed in Jaybird 2.2.13:
 
 -   Improved: Support for Firebird 4 object name length of 63 characters ([JDBC-467](http://tracker.firebirdsql.org/browse/JDBC-467))
