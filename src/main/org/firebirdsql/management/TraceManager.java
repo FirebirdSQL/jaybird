@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.management;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -92,10 +91,16 @@ public interface TraceManager extends ServiceManager {
     void listTraceSessions() throws SQLException;
 
     /**
-     * Loads a configuration from the specified fileName
+     * Loads a configuration from the specified fileName using the default character set.
      *
+     * @param fileName
+     *         File name
      * @throws IOException
+     * @deprecated We suggest you use standard Java functionality instead (eg
+     * {@code new String(Files.readAllBytes(Paths.get(fileName)), Charset.defaultCharset())}.
+     * This method will be removed in Jaybird 4.
      */
+    @Deprecated
     String loadConfigurationFromFile(String fileName) throws IOException;
 
     /**

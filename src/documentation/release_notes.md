@@ -343,3 +343,5 @@ The following methods will be removed in Jaybird 4:
 -   `MaintenanceManager.listLimboTransactions()`, use
     `MaintenanceManager.limboTransactionsAsList()` or 
     `MaintenanceManager.getLimboTransactions()` instead.
+-   `TraceManager.loadConfigurationFromFile(String)`, use standard Java 
+    functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`

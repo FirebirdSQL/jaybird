@@ -23,6 +23,9 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -256,22 +259,10 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         return traceSessions.get(sessionName);
     }
 
-    /**
-     * Loads a configuration from the specified fileName
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
+    @Override
+    @Deprecated
     public String loadConfigurationFromFile(String fileName) throws IOException {
-        StringBuilder sb = new StringBuilder(256);
-        String s;
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-            while ((s = br.readLine()) != null) {
-                sb.append(s);
-            }
-        }
-
-        return sb.toString();
+        return new String(Files.readAllBytes(Paths.get(fileName)), Charset.defaultCharset());
     }
 
     private class TraceStream extends FilterOutputStream {
