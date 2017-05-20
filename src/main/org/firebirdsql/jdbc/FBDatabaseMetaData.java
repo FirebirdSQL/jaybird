@@ -1931,13 +1931,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_TABLE_ORDER_BY = " order by 4, 3";
 
     //@formatter:off
+    private static final String LEGACY_IS_TABLE = " rdb$relation_type is null and rdb$view_blr is null ";
+    private static final String LEGACY_IS_VIEW = " rdb$relation_type is null and rdb$view_blr is not null ";
+
     private static final String TABLE_COLUMNS_2_5 =
             " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
             + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
             + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
             + "cast(case"
-            + "  when rdb$relation_type = 0 then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
-            + "  when rdb$relation_type = 1 then '" + VIEW + "'"
+            + "  when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
+            + "  when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'"
             + "  when rdb$relation_type = 2 then '" + TABLE + "'" // external table; assume as normal table
             + "  when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "'" // virtual (monitoring) table: assume system
             + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
@@ -1950,6 +1953,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             + "cast(null as varchar(31)) as REF_GENERATION,"
             + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
             + "from RDB$RELATIONS ";
+    //@formatter:on
 
     /**
      * Implementation of {@link #getTables(String, String, String, String[])} for Firebird 2.5 and up.
@@ -1974,18 +1978,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             // Only construct conditions when we don't query for all
             StringBuilder typeCondition = new StringBuilder(112);
             if (typeSet.contains(SYSTEM_TABLE) && typeSet.contains(TABLE)) {
-                typeCondition.append(" rdb$relation_type in (0, 2, 3) ");
+                typeCondition.append(" (rdb$relation_type in (0, 2, 3) or " + LEGACY_IS_TABLE + ") ");
             } else if (typeSet.contains(SYSTEM_TABLE)) {
-                typeCondition.append(" rdb$relation_type in (0, 3) and rdb$system_flag = 1 "); // We assume that external tables are never system and that virtual tables are always system
+                typeCondition.append(" (rdb$relation_type in (0, 3) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 1 "); // We assume that external tables are never system and that virtual tables are always system
             } else if (typeSet.contains(TABLE)) {
-                typeCondition.append(" rdb$relation_type in (0, 2) and rdb$system_flag = 0 "); // We assume that external tables are never system and that virtual tables are always system
+                typeCondition.append(" (rdb$relation_type in (0, 2) or " + LEGACY_IS_TABLE + ") and rdb$system_flag = 0 "); // We assume that external tables are never system and that virtual tables are always system
             }
 
             if (typeSet.contains(VIEW)) {
                 if (typeCondition.length() > 0) {
                     typeCondition.append(" or ");
                 }
-                typeCondition.append(" rdb$relation_type = 1 "); // We assume (but don't check) that views are never system
+                typeCondition.append(" (rdb$relation_type = 1 or " + LEGACY_IS_VIEW + ") "); // We assume (but don't check) that views are never system
             }
 
             if (typeSet.contains(GLOBAL_TEMPORARY)) {
@@ -2037,40 +2041,40 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final String GET_TABLES_ALL_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
             + " union"
             + TABLE_COLUMNS_NORMAL
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
             + " union"
             + TABLE_COLUMNS_VIEW
-            + " where ? = 'T' and RDB$VIEW_SOURCE is not null "
+            + " where ? = 'T' and rdb$view_blr is not null "
             + GET_TABLE_ORDER_BY;
 
     private static final String GET_TABLES_EXACT_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
             + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + " union"
             + TABLE_COLUMNS_NORMAL
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
             + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + " union"
             + TABLE_COLUMNS_VIEW
-            + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+            + " where ? = 'T' and rdb$view_blr is not null"
             + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
             + GET_TABLE_ORDER_BY;
 
     private static final String GET_TABLES_LIKE_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
             + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
             + " union"
             + TABLE_COLUMNS_NORMAL
-            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and RDB$VIEW_SOURCE is null"
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
             + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
             + " union"
             + TABLE_COLUMNS_VIEW
-            + " where ? = 'T' and RDB$VIEW_SOURCE is not null"
+            + " where ? = 'T' and rdb$view_blr is not null"
             + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
             + GET_TABLE_ORDER_BY;
     //@formatter:on
