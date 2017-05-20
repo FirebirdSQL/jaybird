@@ -216,7 +216,9 @@ Changes in Jaybird 3.0.1
 
 The following has been changed or fixed since Jaybird 3.0.1
 
--   Fixed: FBTraceManager.loadConfigurationFromFile strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
+-   Fixed: `FBTraceManager.loadConfigurationFromFile` strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
+-   Fixed: `FBDatabaseMetaData.getTables` does not list tables where 
+    `rdb$relation_type` is `null` ([JDBC-494](http://tracker.firebirdsql.org/browse/JDBC-494))
 
 Changes in Jaybird 3.0.0
 ------------------------
