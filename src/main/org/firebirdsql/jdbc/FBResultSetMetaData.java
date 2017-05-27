@@ -378,7 +378,7 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     /**
      * Indicates whether the designated column is definitely not writable.
      * <p>
-     * The current implementation always returns <code>false</code>.
+     * The current implementation always returns <code>false</code>, except for a DB_KEY column.
      * </p>
      *
      * @param column
@@ -390,13 +390,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     @Override
     public boolean isReadOnly(int column) throws SQLException {
         // TODO Need to consider privileges!!
+        if (getFieldDescriptor(column).isDbKey()) {
+            return true;
+        }
         return false;
     }
 
     /**
      * Indicates whether it is possible for a write on the designated column to succeed.
      * <p>
-     * The current implementation always returns <code>true</code>.
+     * The current implementation always returns <code>true</code>, except for a DB_KEY column.
      * </p>
      *
      * @param column
@@ -408,25 +411,15 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     @Override
     public boolean isWritable(int column) throws SQLException {
         // TODO Needs privileges?
+        if (getFieldDescriptor(column).isDbKey()) {
+            return false;
+        }
         return true;
     }
 
-    /**
-     * Indicates whether a write on the designated column will definitely succeed.
-     * <p>
-     * The current implementation always returns <code>true</code>.
-     * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public boolean isDefinitelyWritable(int column) throws SQLException {
-        // TODO Need to consider privileges!!!
-        return true;
+        return isWritable(column);
     }
 
     /**

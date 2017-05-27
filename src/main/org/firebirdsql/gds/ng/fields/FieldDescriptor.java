@@ -216,6 +216,21 @@ public final class FieldDescriptor {
     }
 
     /**
+     * Determines if this is a db-key (RDB$DB_KEY) of a table.
+     * <p>
+     * NOTE: Technically it could also be a normal {@code CHAR CHARACTER SET OCTETS} column called {@code DB_KEY}.
+     * </p>
+     *
+     * @return {@code true} if the field is a RDB$DB_KEY
+     * @since 3.1
+     */
+    public boolean isDbKey() {
+        return "DB_KEY".equals(getOriginalName())
+                && isFbType(ISCConstants.SQL_TEXT)
+                && getSubType() == ISCConstants.CS_BINARY;
+    }
+
+    /**
      * Creates a default, uninitialized {@link FieldValue}
      *
      * @return A new {@link FieldValue}

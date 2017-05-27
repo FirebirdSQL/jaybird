@@ -240,6 +240,36 @@ longer supported] for details.
 See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
 on the wiki.
 
+JDBC RowId support
+------------------
+
+Columns of type `RDB$DBK_KEY` are now identified as `java.sql.Types.ROWID`,
+and `getObject` on these columns will now return a `java.sql.RowId`.
+
+The `getObject(int/String, Class)` methods support retrieval as 
+`java.sql.RowId` and `org.firebirdsql.jdbc.FBRowId`; the object returned is the
+same type (`org.firebirdsql.jdbc.FBRowId`) in both cases.
+
+Updating row ids is not possible, so attempts to call `updateRowId` or 
+`updateObject` on a `RDB$DB_KEY` in an updatable result set will throw an 
+`SQLFeatureNotSupportedException`.
+
+Unfortunately, this support does not extend to parameters, as parameters (eg in
+`where RDB$DB_KEY = ?`) cannot be distinguished from parameters of a normal 
+binary field (`char character set octets`). To address this, binary fields
+now also accept values of type `java.sql.RowId` on `setRowId` and `setObject`.
+
+Support has also been added to `DatabaseMetaData`:
+
+-   `getBestRowIdentifier` returns `RDB$DB_KEY` if there is no primary key (existing
+    functionality)
+-   `getRowIdLifetime` now returns `RowIdLifetime.ROWID_VALID_TRANSACTION` (even
+    if `dbkey_scope=1` has been specified!)
+-   `getPseudoColumns` now returns `RDB$DB_KEY`
+
+Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
+column, as it is a pseudo-column.
+
 Potentially breaking changes
 ----------------------------
 
@@ -287,6 +317,19 @@ expect the driver to remain functional, but chances are certain metadata (eg
 
 In general we will no longer fix issues that only occur with Firebird 2.1 or
 earlier.
+
+RDB$DB_KEY columns no longer of Types.BINARY
+--------------------------------------------
+
+With the introduction of [JDBC RowId support], `RDB$DB_KEY` columns are no 
+longer identified as `java.sql.Types.BINARY`, but as `java.sql.Types.ROWID`.
+The column will behave in a backwards-compatible manner as a binary field, with
+the exception of `getObject`, which will return a `java.sql.RowId` instead.
+
+Unfortunately this does not apply to parameters, see also [JDBC RowId support].
+
+Due to the method of identification, real columns of type `char character set 
+octets` with the name `DB_KEY` will also be identified as a `ROWID` column.
 
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------

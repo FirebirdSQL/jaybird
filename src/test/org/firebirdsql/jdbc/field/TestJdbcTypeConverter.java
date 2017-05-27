@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -100,7 +101,8 @@ public class TestJdbcTypeConverter {
                 create(SQL_BOOLEAN, 0, 0, boolean_type, Types.BOOLEAN),
                 create(SQL_NULL, 0, 0, -1, Types.NULL), // TODO Check if there is a metadata type
                 create(SQL_ARRAY, 0, 0, -1, Types.ARRAY), // TODO Check if there is a metadata type
-                create(SQL_QUAD, 0, 0, quad_type, Types.OTHER)
+                create(SQL_QUAD, 0, 0, quad_type, Types.OTHER),
+                createDbKey(Types.ROWID)
         );
     }
 
@@ -111,6 +113,9 @@ public class TestJdbcTypeConverter {
 
     @Test
     public void testFromFirebirdToJdbcTypeNullableBitSet() {
+        assumeThat("ROWID detection not possible for fromFirebirdToJdbcType",
+                expectedJdbcType, not(equalTo(Types.ROWID)));
+
         // fromFirebirdToJdbcType with non-nullable is tested through testToJdbcType
         int nullableFirebirdType = fieldDescriptor.getType() | 1;
         int subType = fieldDescriptor.getSubType();
@@ -153,6 +158,15 @@ public class TestJdbcTypeConverter {
                 .setScale(scale)
                 .toFieldDescriptor();
         return new Object[] { fieldDescriptor, metadataType, jdbcType };
+    }
+
+    private static Object[] createDbKey(int jdbcType) {
+        FieldDescriptor fieldDescriptor = rowDescriptorBuilder
+                .setType(ISCConstants.SQL_TEXT)
+                .setSubType(ISCConstants.CS_BINARY)
+                .setOriginalName("DB_KEY")
+                .toFieldDescriptor();
+        return new Object[] { fieldDescriptor, -1, jdbcType };
     }
 
 }

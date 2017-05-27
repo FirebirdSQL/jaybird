@@ -19,10 +19,12 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jdbc.FBRowId;
 import org.firebirdsql.util.IOUtils;
 
 import java.io.*;
 import java.sql.DataTruncation;
+import java.sql.RowId;
 import java.sql.SQLException;
 
 /**
@@ -35,7 +37,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FBBinaryField extends FBField {
+class FBBinaryField extends FBField {
 
     FBBinaryField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -123,5 +125,23 @@ public class FBBinaryField extends FBField {
         } catch (IOException ioex) {
             throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
         }
+    }
+
+    // Binary fields supports setting RowId, because Firebird doesn't support detection of row id parameters
+
+    @Override
+    public RowId getRowId() throws SQLException {
+        if (isNull()) return null;
+        return new FBRowId(getBytes());
+    }
+
+    @Override
+    public void setRowId(RowId value) throws SQLException {
+        if (value == null) {
+            setNull();
+            return;
+        }
+
+        setBytes(value.getBytes());
     }
 }

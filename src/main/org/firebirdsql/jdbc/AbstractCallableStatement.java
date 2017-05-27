@@ -1479,7 +1479,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void setRowId(String parameterName, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
     public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {

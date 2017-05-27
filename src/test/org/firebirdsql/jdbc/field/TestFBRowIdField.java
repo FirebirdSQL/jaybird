@@ -31,16 +31,17 @@ import java.util.Random;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotSame;
 
 /**
- * Tests for {@link FBBinaryField}.
- *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
  */
-public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte[]> {
+public class TestFBRowIdField extends BaseJUnit4TestFBField<FBRowIdField, RowId> {
 
-    private static final int FIELD_LENGTH = 15;
+    // Note some of the tests were copied from FBBinaryField to check if the field is (largely) backwards compatible
+
+    private static final int FIELD_LENGTH = 8;
     private final Random rnd = new Random();
 
     @Before
@@ -48,195 +49,12 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     public void setUp() throws Exception {
         super.setUp();
 
-        rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
+        rowDescriptorBuilder.setType(ISCConstants.SQL_TEXT);
         rowDescriptorBuilder.setSubType(ISCConstants.CS_BINARY);
         rowDescriptorBuilder.setLength(FIELD_LENGTH);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
-        field = new FBBinaryField(fieldDescriptor, fieldData, Types.VARBINARY);
+        field = new FBRowIdField(fieldDescriptor, fieldData, Types.ROWID);
     }
-
-    @Test
-    @Override
-    public void getCharacterStreamNonNull() throws Exception {
-        final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
-        toReturnValueExpectations(bytes);
-
-        Reader reader = field.getCharacterStream();
-        StringBuilder stringBuilder = new StringBuilder();
-        int characterValue;
-        while ((characterValue = reader.read()) != -1) {
-            stringBuilder.append((char) characterValue);
-        }
-
-        assertEquals(expectedString, stringBuilder.toString());
-    }
-
-    @Test
-    @Override
-    public void getObject_Reader() throws Exception {
-        final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
-        toReturnValueExpectations(bytes);
-
-        Reader reader = field.getObject(Reader.class);
-        StringBuilder stringBuilder = new StringBuilder();
-        int characterValue;
-        while ((characterValue = reader.read()) != -1) {
-            stringBuilder.append((char) characterValue);
-        }
-
-        assertEquals(expectedString, stringBuilder.toString());
-    }
-
-    @Test
-    @Override
-    public void getStringNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
-        toReturnValueExpectations(bytes);
-
-        String value = field.getString();
-
-        assertEquals(expectedString, value);
-    }
-
-    @Test
-    @Override
-    public void getObject_String() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
-        toReturnValueExpectations(bytes);
-
-        String value = field.getObject(String.class);
-
-        assertEquals(expectedString, value);
-    }
-
-    @Test
-    @Override
-    public void setStringNonNull() throws SQLException {
-        final String string = "hdgkehgfjdfjdfe";
-        final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
-
-        field.setString(string);
-    }
-
-    @Test
-    @Override
-    public void getBinaryStreamNonNull() throws Exception {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        InputStream stream = field.getBinaryStream();
-
-        assertArrayEquals(bytes, streamToBytes(stream));
-    }
-
-    @Test
-    @Override
-    public void getObject_InputStream() throws Exception {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        InputStream stream = field.getObject(InputStream.class);
-
-        assertArrayEquals(bytes, streamToBytes(stream));
-    }
-
-    @Test
-    @Override
-    public void setBinaryStreamNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
-        InputStream stream = new ByteArrayInputStream(bytes);
-
-        field.setBinaryStream(stream, FIELD_LENGTH);
-    }
-
-    @Test
-    public void setCharacterStreamNonNull() throws SQLException {
-        final String string = "hdgkehgfjdfjdfe";
-        final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
-        Reader reader = new StringReader(string);
-
-        field.setCharacterStream(reader, FIELD_LENGTH);
-    }
-
-    @Test
-    @Override
-    public void getObjectNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        Object value = field.getObject();
-
-        assertThat(value, instanceOf(byte[].class));
-        assertArrayEquals(bytes, (byte[]) value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
-    }
-
-    @Test
-    public void getObjectNonNull_typeBinary() throws SQLException {
-        rowDescriptorBuilder.setType(ISCConstants.SQL_TEXT);
-        rowDescriptorBuilder.setSubType(ISCConstants.CS_BINARY);
-        fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
-        field = new FBBinaryField(fieldDescriptor, fieldData, Types.BINARY);
-
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        Object value = field.getObject();
-
-        assertThat(value, instanceOf(byte[].class));
-        assertArrayEquals(bytes, (byte[]) value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
-    }
-
-    @Test
-    public void setObjectNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
-
-        field.setObject(bytes);
-    }
-
-    @Test
-    @Override
-    public void getBytesNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        byte[] value = field.getBytes();
-
-        assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
-    }
-
-    @Test
-    @Override
-    public void getObject_byteArray() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        toReturnValueExpectations(bytes);
-
-        byte[] value = field.getObject(byte[].class);
-
-        assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
-    }
-
-    @Test
-    @Override
-    public void setBytesNonNull() throws SQLException {
-        final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
-
-        field.setBytes(bytes);
-    }
-
-    // Binary fields supports setting RowId, because Firebird doesn't support detection of row id parameters
 
     @Test
     @Override
@@ -245,7 +63,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
         toReturnValueExpectations(bytes);
 
         RowId rowId = field.getRowId();
-
+        
         assertArrayEquals(bytes, rowId.getBytes());
     }
 
@@ -309,6 +127,177 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
         field.setObject(rowId);
     }
 
+    @Test
+    @Override
+    public void getCharacterStreamNonNull() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        Reader reader = field.getCharacterStream();
+        StringBuilder stringBuilder = new StringBuilder();
+        int characterValue;
+        while ((characterValue = reader.read()) != -1) {
+            stringBuilder.append((char) characterValue);
+        }
+
+        assertEquals(expectedString, stringBuilder.toString());
+    }
+
+    @Test
+    @Override
+    public void getObject_Reader() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        Reader reader = field.getObject(Reader.class);
+        StringBuilder stringBuilder = new StringBuilder();
+        int characterValue;
+        while ((characterValue = reader.read()) != -1) {
+            stringBuilder.append((char) characterValue);
+        }
+
+        assertEquals(expectedString, stringBuilder.toString());
+    }
+
+    @Test
+    @Override
+    public void getStringNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        String value = field.getString();
+
+        assertEquals(expectedString, value);
+    }
+
+    @Test
+    @Override
+    public void getObject_String() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        toReturnValueExpectations(bytes);
+
+        String value = field.getObject(String.class);
+
+        assertEquals(expectedString, value);
+    }
+
+    @Test
+    @Override
+    public void setStringNonNull() throws SQLException {
+        final String string = "hdgkehgf";
+        final byte[] bytes = string.getBytes();
+        setValueExpectations(bytes);
+
+        field.setString(string);
+    }
+
+    @Test
+    @Override
+    public void getBinaryStreamNonNull() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        InputStream stream = field.getBinaryStream();
+
+        assertArrayEquals(bytes, streamToBytes(stream));
+    }
+
+    @Test
+    @Override
+    public void getObject_InputStream() throws Exception {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        InputStream stream = field.getObject(InputStream.class);
+
+        assertArrayEquals(bytes, streamToBytes(stream));
+    }
+
+    @Test
+    @Override
+    public void setBinaryStreamNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        setValueExpectations(bytes);
+        InputStream stream = new ByteArrayInputStream(bytes);
+
+        field.setBinaryStream(stream, FIELD_LENGTH);
+    }
+
+    @Test
+    public void setCharacterStreamNonNull() throws SQLException {
+        final String string = "hdgkehgf";
+        final byte[] bytes = string.getBytes();
+        setValueExpectations(bytes);
+        Reader reader = new StringReader(string);
+
+        field.setCharacterStream(reader, FIELD_LENGTH);
+    }
+
+    @Test
+    @Override
+    public void getObjectNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        Object value = field.getObject();
+
+        assertThat(value, instanceOf(RowId.class));
+        assertArrayEquals(bytes, ((RowId) value).getBytes());
+    }
+
+    @Test
+    public void setObjectNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        setValueExpectations(bytes);
+
+        field.setObject(new FBRowId(bytes));
+    }
+
+    @Test
+    public void setObjectNonNull_bytes() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        setValueExpectations(bytes);
+
+        field.setObject(bytes);
+    }
+
+    @Test
+    @Override
+    public void getBytesNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        byte[] value = field.getBytes();
+
+        assertArrayEquals(bytes, value);
+        assertNotSame("Expected a clone of the bytes", bytes, value);
+    }
+
+    @Test
+    @Override
+    public void getObject_byteArray() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        toReturnValueExpectations(bytes);
+
+        byte[] value = field.getObject(byte[].class);
+
+        assertArrayEquals(bytes, value);
+        assertNotSame("Expected a clone of the bytes", bytes, value);
+    }
+
+    @Test
+    @Override
+    public void setBytesNonNull() throws SQLException {
+        final byte[] bytes = getRandomBytes();
+        setValueExpectations(bytes);
+
+        field.setBytes(bytes);
+    }
+
     private byte[] getRandomBytes() {
         return getRandomBytes(FIELD_LENGTH);
     }
@@ -330,7 +319,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     }
 
     @Override
-    protected byte[] getNonNullObject() {
-        return new byte[0];
+    protected RowId getNonNullObject() {
+        return new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
     }
 }

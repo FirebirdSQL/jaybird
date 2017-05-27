@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -246,7 +245,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                     // special handling for the RDB$DB_KEY columns that must be
                     // selected as RDB$DB_KEY, but in XSQLVAR are represented
                     // as DB_KEY
-                    if ("RDB$DB_KEY".equals(columnName) && isDbKey(rowDescriptor.getFieldDescriptor(i))) {
+                    if ("RDB$DB_KEY".equals(columnName) && rowDescriptor.getFieldDescriptor(i).isDbKey()) {
                         result[i] = PARAMETER_DBKEY;
                         hasParams = true;
                     } else if (columnName.equals(rowDescriptor.getFieldDescriptor(i).getOriginalName())) {
@@ -376,7 +375,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
             // do special handling of RDB$DB_KEY, since Firebird returns
             // DB_KEY column name instead of the correct one
-            if (isDbKey(fieldDescriptor)) {
+            if (fieldDescriptor.isDbKey()) {
                 columns.append("RDB$DB_KEY");
             } else {
                 quoteStrategy.appendQuoted(fieldDescriptor.getOriginalName(), columns);
@@ -390,19 +389,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         quoteStrategy.appendQuoted(tableName, sb).append('\n');
         appendWhereClause(sb, parameterMask);
         return sb.toString();
-    }
-
-    /**
-     * Determines if the supplied {@link org.firebirdsql.gds.ng.fields.FieldDescriptor} is a db-key (RDB$DB_KEY) of a table.
-     *
-     * @param fieldDescriptor
-     *         Field descriptor
-     * @return <code>true</code> if <code>xsqlvar</code> is a RDB$DB_KEY
-     */
-    private boolean isDbKey(FieldDescriptor fieldDescriptor) {
-        return "DB_KEY".equals(fieldDescriptor.getOriginalName())
-                && ((fieldDescriptor.getType() & ~1) == ISCConstants.SQL_TEXT)
-                && fieldDescriptor.getLength() == 8;
     }
 
     private static final int UPDATE_STATEMENT_TYPE = 1;

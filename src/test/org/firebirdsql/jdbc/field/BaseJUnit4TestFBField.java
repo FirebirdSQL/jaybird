@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.firebirdsql.jdbc.FBRowId;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
@@ -584,6 +585,41 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         expectedException.expect(TypeConversionException.class);
 
         field.setObject(BigInteger.ONE);
+    }
+
+    @Test
+    public void setRowIdNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setRowId(new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }));
+    }
+
+    @Test
+    public void getRowIdNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.getRowId();
+    }
+
+    @Test
+    public void getObject_RowId() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.getObject(RowId.class);
+    }
+
+    @Test
+    public void getObject_FBRowId() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.getObject(FBRowId.class);
+    }
+
+    @Test
+    public void setObject_RowId() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+
+        field.setObject(new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }));
     }
 
     @Test

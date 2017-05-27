@@ -1186,6 +1186,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 }
             }
         }
+        
+        if ("RDB$DB_KEY".equalsIgnoreCase(columnName)) {
+            // Fix up: RDB$DB_KEY is identified as DB_KEY in the result set
+            return findColumn("DB_KEY");
+        }
 
         throw new SQLException("Column name " + columnName + " not found in result set.",
                 SQLStateConstants.SQL_STATE_INVALID_COLUMN);
@@ -3092,11 +3097,11 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public RowId getRowId(int columnIndex) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        return getField(columnIndex).getRowId();
     }
 
     public RowId getRowId(String columnLabel) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        return getField(columnLabel).getRowId();
     }
 
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
@@ -3174,11 +3179,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        checkUpdatable();
+        throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
     }
 
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        checkUpdatable();
+        throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
     }
 
     public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {

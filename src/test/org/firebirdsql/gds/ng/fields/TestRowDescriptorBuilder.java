@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.fields;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.junit.Test;
@@ -28,8 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -213,11 +213,25 @@ public class TestRowDescriptorBuilder {
         assertEquals("Field1.getSubType()", 1, field1.getSubType());
         assertEquals("Field1.getFieldName()", "Field1", field1.getFieldName());
         assertEquals("Field1.getTableAlias()", "Alias1", field1.getTableAlias());
+        assertFalse("Field1.isDbKey()", field1.isDbKey());
         FieldDescriptor field2 = descriptor.getFieldDescriptor(0);
         assertEquals("Field2.getPosition()", 0, field2.getPosition());
         assertEquals("Field2.getType()", 2, field2.getType());
         assertEquals("Field2.getSubType()", 0, field2.getSubType());
         assertEquals("Field2.getFieldName()", "Field2", field2.getFieldName());
         assertEquals("Field2.getTableAlias()", null, field2.getTableAlias());
+        assertFalse("Field2.isDbKey()", field1.isDbKey());
+    }
+
+    @Test
+    public void testIsDbKey() {
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
+                .setFieldIndex(0)
+                .setType(ISCConstants.SQL_TEXT)
+                .setSubType(ISCConstants.CS_BINARY)
+                .setOriginalName("DB_KEY")
+                .toFieldDescriptor();
+
+        assertTrue("isDbKey()", fieldDescriptor.isDbKey());
     }
 }

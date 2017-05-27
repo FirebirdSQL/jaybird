@@ -1282,7 +1282,8 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        throw new FBDriverNotCapableException("Type ROWID not yet supported");
+        getField(parameterIndex).setRowId(x);
+        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {

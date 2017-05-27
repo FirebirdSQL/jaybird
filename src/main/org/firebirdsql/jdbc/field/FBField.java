@@ -61,6 +61,7 @@ public abstract class FBField {
     static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
     static final String BLOB_CONVERSION_ERROR = "Error converting to Firebird BLOB object";
     static final String CLOB_CONVERSION_ERROR = "Error converting to Firebird CLOB object";
+    static final String ROWID_CONVERSION_ERROR = "Error converting to Firebird RowId object";
     
     static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported.";
     static final String SQL_ARRAY_NOT_SUPPORTED = "Types.ARRAY: " + FBField.SQL_TYPE_NOT_SUPPORTED;
@@ -164,7 +165,8 @@ public abstract class FBField {
      * TODO Consider moving to FieldDescriptor itself
      */
     public static boolean isType(FieldDescriptor field, int jdbcType) {
-        return isType(field.getType(), field.getSubType(), jdbcType);
+        return isType(field.getType(), field.getSubType(), jdbcType)
+                || jdbcType == Types.ROWID && field.isDbKey();
     }
 
     private static boolean isType(int fbType, int subType, int jdbcType) {
@@ -301,6 +303,8 @@ public abstract class FBField {
             return new FBBooleanField(fieldDescriptor, dataProvider, jdbcType);
         case Types.NULL:
             return new FBNullField(fieldDescriptor, dataProvider, jdbcType);
+        case Types.ROWID:
+            return new FBRowIdField(fieldDescriptor, dataProvider, jdbcType);
         case Types.ARRAY:
             throw new FBDriverNotCapableException(FBField.SQL_ARRAY_NOT_SUPPORTED);
         default:
@@ -449,6 +453,9 @@ public abstract class FBField {
         case Types.ARRAY:
             return getArray();
 
+        case Types.ROWID:
+            return getRowId();
+
         default:
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }
@@ -511,6 +518,9 @@ public abstract class FBField {
             return (T) getBinaryStream();
         case "java.io.Reader":
             return (T) getCharacterStream();
+        case "java.sql.RowId":
+        case "org.firebirdsql.jdbc.FBRowId":
+            return (T) getRowId();
         case "org.firebirdsql.gds.ng.DatatypeCoder$RawDateTimeStruct":
             return (T) getRawDateTimeStruct();
         }
@@ -577,6 +587,10 @@ public abstract class FBField {
 
     public BigInteger getBigInteger() throws SQLException {
         throw new TypeConversionException(FBField.BIG_INTEGER_CONVERSION_ERROR);
+    }
+
+    public RowId getRowId() throws SQLException {
+        throw new TypeConversionException(FBField.ROWID_CONVERSION_ERROR);
     }
 
     // --- setters
@@ -667,6 +681,8 @@ public abstract class FBField {
             setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
         } else if (value instanceof BigInteger) {
             setBigInteger((BigInteger) value);
+        } else if (value instanceof RowId) {
+            setRowId((RowId) value);
         } else if (!getObjectConverter().setObject(this, value)) {
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }
@@ -744,6 +760,10 @@ public abstract class FBField {
 
     public void setClob(FBClob clob) throws SQLException {
         throw new TypeConversionException(FBField.CLOB_CONVERSION_ERROR);
+    }
+
+    public void setRowId(RowId rowId) throws SQLException {
+        throw new TypeConversionException(FBField.ROWID_CONVERSION_ERROR);
     }
 
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {

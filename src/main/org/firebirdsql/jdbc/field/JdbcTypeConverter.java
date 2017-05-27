@@ -45,12 +45,19 @@ public final class JdbcTypeConverter {
      * @return JDBC type, or {@link Types#OTHER} for unknown types
      */
     public static int toJdbcType(final FieldDescriptor fieldDescriptor) {
+        if (fieldDescriptor.isDbKey()) {
+            return Types.ROWID;
+        }
         return fromFirebirdToJdbcType(fieldDescriptor.getType(), fieldDescriptor.getSubType(),
                 fieldDescriptor.getScale());
     }
 
     /**
      * Converts from the Firebird type, subtype and scale to the JDBC type value from {@link java.sql.Types}.
+     * <p>
+     * This method is not capable of identifying {@link java.sql.Types#ROWID}; this will be identified
+     * as {@link java.sql.Types#BINARY} instead.
+     * </p>
      *
      * @param firebirdType Firebird type value (from {@link ISCConstants} {@code SQL_*} with or without nullable bit set
      * @param subtype Subtype

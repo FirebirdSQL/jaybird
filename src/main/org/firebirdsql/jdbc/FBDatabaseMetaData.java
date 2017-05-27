@@ -2869,6 +2869,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, rows);
     }
 
+    //@formatter:off
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
             "CAST(rf.rdb$field_name AS varchar(" + OBJECT_NAME_LENGTH + ")) AS column_name," +
@@ -2885,46 +2886,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "WHERE " +
             "CAST(rc.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? " +
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
+    //@formatter:on
 
-    /**
-     * Gets a description of a table's optimal set of columns that
-     * uniquely identifies a row. They are ordered by SCOPE.
-     *
-     * <P>Each column description has the following columns:
-     *  <OL>
-     *  <LI><B>SCOPE</B> short => actual scope of result
-     *      <UL>
-     *      <LI> bestRowTemporary - very temporary, while using row
-     *      <LI> bestRowTransaction - valid for remainder of current transaction
-     *      <LI> bestRowSession - valid for remainder of current session
-     *      </UL>
-     *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>DATA_TYPE</B> short => SQL data type from java.sql.Types
-     *  <LI><B>TYPE_NAME</B> String => Data source dependent type name,
-     *  for a UDT the type name is fully qualified
-     *  <LI><B>COLUMN_SIZE</B> int => precision
-     *  <LI><B>BUFFER_LENGTH</B> int => not used
-     *  <LI><B>DECIMAL_DIGITS</B> short  => scale
-     *  <LI><B>PSEUDO_COLUMN</B> short => is this a pseudo column
-     *      like an Oracle ROWID
-     *      <UL>
-     *      <LI> bestRowUnknown - may or may not be pseudo column
-     *      <LI> bestRowNotPseudo - is NOT a pseudo column
-     *      <LI> bestRowPseudo - is a pseudo column
-     *      </UL>
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those without a schema
-     * @param table a table name
-     * @param scope the scope of interest; use same values as SCOPE
-     * @param nullable include columns that are nullable?
-     * @return <code>ResultSet</code> - each row is a column description
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
+        // TODO Handling of scope is wrong
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
                 .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "ROWIDENTIFIER").addField()
@@ -2948,14 +2915,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
-        // TODO Check actual column type of RDB$DB_KEY
         if (rows.size() == 0) {
             rows.add(rowValueBuilder
                     .at(0).set(createShort(scope))
                     .at(1).set(getBytes("RDB$DB_KEY"))
-                    .at(2).set(createShort(getDataType(char_type, 0, 0, CS_BINARY)))
-                    .at(3).set(getBytes(getDataTypeName(char_type, 0, 0)))
-                    .at(4).set(createInt(0))
+                    .at(2).set(createShort(Types.ROWID))
+                    .at(3).set(getBytes(getDataTypeName(char_type, 0, CS_BINARY)))
+                    .at(4).set(createInt(8)) // TODO Consider querying RDB$RELATIONS for the actual size of the DB_KEY
                     .at(6).set(createShort(0))
                     .at(7).set(createShort(bestRowPseudo))
                     .toRowValue(true)
@@ -4702,10 +4668,59 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return "F";
     }
 
+    //@formatter:off
+    private static final String GET_PSEUDO_COLUMNS_START =
+            "select "
+            + " cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT, "
+            + " cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM, "
+            + " TABLE_NAME, "
+            + " COLUMN_NAME, "
+            + " DATA_TYPE, "
+            + " COLUMN_SIZE, "
+            + " DECIMAL_DIGITS, "
+            + " NUM_PREC_RADIX, "
+            + " COLUMN_USAGE, "
+            + " cast(null as blob sub_type text) as REMARKS,"
+            + " CHAR_OCTET_LENGTH, "
+            + " IS_NULLABLE "
+            + "from ( " ;
+
+    private static final String GET_PSEUDO_DB_KEY_FRAGMENT =
+            "select "
+            + " cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME, "
+            + " cast('RDB$DB_KEY' as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME, "
+            + " " + Types.ROWID + " as DATA_TYPE, "
+            + " RDB$DBKEY_LENGTH as COLUMN_SIZE, "
+            + " 0 as DECIMAL_DIGITS, "
+            + " 10 as NUM_PREC_RADIX, "
+            + " '" + PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name() + "' as COLUMN_USAGE, "
+            + " RDB$DBKEY_LENGTH as CHAR_OCTET_LENGTH, "
+            + " cast('NO' as varchar(3)) as IS_NULLABLE "
+            + "from rdb$relations ";
+
+    private static final String GET_PSEUDO_COLUMNS_END = " ) a ";
+
+    //@formatter:on
+
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
-        // TODO Write implementation
-        throw new FBDriverNotCapableException();
+
+        Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
+        Clause columnNameClause = new Clause("COLUMN_NAME", columnNamePattern);
+        // TODO Add other Firebird 3 pseudo column
+        String sql = GET_PSEUDO_COLUMNS_START +
+                GET_PSEUDO_DB_KEY_FRAGMENT +
+                (tableNameClause.hasCondition() ? " where " + tableNameClause.getCondition(false) : "") +
+                GET_PSEUDO_COLUMNS_END +
+                (columnNameClause.hasCondition() ? " where " + columnNameClause.getCondition(false) : "");
+        List<String> params = new ArrayList<>(2);
+        if (tableNameClause.hasCondition()) {
+            params.add(tableNameClause.getValue());
+        }
+        if (columnNameClause.hasCondition()) {
+            params.add(columnNameClause.getValue());
+        }
+        return doQuery(sql, params);
     }
 
     public boolean generatedKeyAlwaysReturned() throws SQLException {
@@ -4761,16 +4776,29 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             } else if (hasNoWildcards(pattern)) {
                 value = stripEscape(pattern);
                 // We are casting to VARCHAR( max object length + 10) to accommodate slightly larger object names
-                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ";
+                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? ";
             } else {
                 // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
                 // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
                 value = pattern + SPACES_15 + "%";
-                condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' and ";
+                condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' ";
             }
         }
 
+        /**
+         * @return Result of {@code getCondition(true)}
+         */
         public String getCondition() {
+            return getCondition(true);
+        }
+
+        public String getCondition(boolean includeAnd) {
+            if (!hasCondition()) {
+                return "";
+            }
+            if (includeAnd) {
+                return condition + " and ";
+            }
             return condition;
         }
 
@@ -4848,27 +4876,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Indicates whether or not this data source supports the SQL <code>ROWID</code> type,
-     * and if so  the lifetime for which a <code>RowId</code> object remains valid.
+     * {@inheritDoc}
      * <p>
-     * The returned int values have the following relationship:
-     * <pre>
-     *     ROWID_UNSUPPORTED < ROWID_VALID_OTHER < ROWID_VALID_TRANSACTION
-     *         < ROWID_VALID_SESSION < ROWID_VALID_FOREVER
-     * </pre>
-     * so conditional logic such as
-     * <pre>
-     *     if (metadata.getRowIdLifetime() > DatabaseMetaData.ROWID_VALID_TRANSACTION)
-     * </pre>
-     * can be used. Valid Forever means valid across all Sessions, and valid for
-     * a Session means valid across all its contained Transactions.
-     *
-     * @return the status indicating the lifetime of a <code>RowId</code>
-     * @throws SQLException if a database access error occurs
-     * @since 1.6
+     * Minimum lifetime supported by Firebird is transaction-scope, and this can be changed to session-scope with
+     * {@code isc_dpb_dbkey_scope} set to {@code 1} (eg connection property {@code dbkey_scope=1}). This implementation,
+     * however, will always report {@link RowIdLifetime#ROWID_VALID_TRANSACTION}.
+     * </p>
      */
     public RowIdLifetime getRowIdLifetime() throws SQLException {
-        return RowIdLifetime.ROWID_UNSUPPORTED;
+        return RowIdLifetime.ROWID_VALID_TRANSACTION;
     }
 
     private static final int JDBC_MAJOR_VERSION = 4;

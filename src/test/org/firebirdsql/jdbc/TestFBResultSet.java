@@ -148,13 +148,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         connection.setAutoCommit(false);
 
@@ -277,13 +271,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         connection.setAutoCommit(false);
 
@@ -348,13 +336,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         connection.setAutoCommit(false);
 
@@ -461,13 +443,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         connection.setAutoCommit(false);
 
@@ -490,13 +466,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         connection.setAutoCommit(true);
 
@@ -837,13 +807,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                 ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -871,13 +835,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
         final int recordCount = 10;
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
-            }
-        }
+        createTestData(recordCount);
 
         try (PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -1352,4 +1310,47 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Rationale: rdb$db_key column is actually identified as DB_KEY in result set
+     */
+    @Test
+    public void testRetrievalOfDbKeyByRDB$DB_KEY() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        createTestData(1);
+
+        try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
+             ResultSet rs = pstmt.executeQuery()) {
+            assertTrue("Expected a row", rs.next());
+
+            RowId rowId = rs.getRowId("RDB$DB_KEY");
+            assertNotNull(rowId);
+        }
+    }
+
+    /**
+     * Rationale: rdb$db_key column is actually identified as DB_KEY in result set
+     */
+    @Test
+    public void testRetrievalOfDbKeyByDB_KEY() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        createTestData(1);
+
+        try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
+             ResultSet rs = pstmt.executeQuery()) {
+            assertTrue("Expected a row", rs.next());
+
+            RowId rowId = rs.getRowId("DB_KEY");
+            assertNotNull(rowId);
+        }
+    }
+
+    private void createTestData(int recordCount) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
+            for (int i = 0; i < recordCount; i++) {
+                ps.setInt(1, i);
+                ps.setInt(2, i);
+                ps.executeUpdate();
+            }
+        }
+    }
 }
