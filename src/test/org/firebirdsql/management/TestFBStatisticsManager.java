@@ -20,6 +20,7 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -151,7 +152,10 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
 
     @Test
     public void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
+        int oldest = getDefaultSupportInfo().isVersionEqualOrAbove(2, 5) ? 1: 5;
+        int expectedNextOffset = getDefaultSupportInfo().isVersionEqualOrAbove(3, 0) ? 1 : 2;
         createTestTable();
+        
         try (Connection conn = getConnectionViaDriverManager()) {
             conn.setAutoCommit(false);
             Statement stmt = conn.createStatement();
@@ -159,10 +163,10 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
             FBStatisticsManager.DatabaseTransactionInfo databaseTransactionInfo =
                     statManager.getDatabaseTransactionInfo();
             // The transaction values checked here might be implementation dependent
-            assertEquals("oldest", 1, databaseTransactionInfo.getOldestTransaction());
-            assertEquals("oldest active", 2, databaseTransactionInfo.getOldestActiveTransaction());
-            assertEquals("oldest snapshot", 2, databaseTransactionInfo.getOldestSnapshotTransaction());
-            assertEquals("next", 2, databaseTransactionInfo.getNextTransaction());
+            assertEquals("oldest", oldest, databaseTransactionInfo.getOldestTransaction());
+            assertEquals("oldest active", oldest + 1, databaseTransactionInfo.getOldestActiveTransaction());
+            assertEquals("oldest snapshot", oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction());
+            assertEquals("next", oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction());
             assertEquals("active", 1, databaseTransactionInfo.getActiveTransactionCount());
         }
     }
@@ -176,7 +180,18 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
 
     @Test
     public void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        int oldest = supportInfo.isVersionEqualOrAbove(2, 5) ? 1: 5;
+        int expectedNextOffset;
+        if (supportInfo.isVersionEqualOrAbove(3, 0)) {
+            expectedNextOffset = 1;
+        } else if (supportInfo.isVersionEqualOrAbove(2, 5)) {
+            expectedNextOffset = 2;
+        } else {
+            expectedNextOffset = 1;
+        }
         createTestTable();
+
         try (Connection conn = getConnectionViaDriverManager()) {
             conn.setAutoCommit(false);
             Statement stmt = conn.createStatement();
@@ -185,10 +200,10 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
             FBStatisticsManager.DatabaseTransactionInfo databaseTransactionInfo =
                     FBStatisticsManager.getDatabaseTransactionInfo(conn);
             // The transaction values checked here might be implementation dependent
-            assertEquals("oldest", 1, databaseTransactionInfo.getOldestTransaction());
-            assertEquals("oldest active", 2, databaseTransactionInfo.getOldestActiveTransaction());
-            assertEquals("oldest snapshot", 2, databaseTransactionInfo.getOldestSnapshotTransaction());
-            assertEquals("next", 2, databaseTransactionInfo.getNextTransaction());
+            assertEquals("oldest", oldest, databaseTransactionInfo.getOldestTransaction());
+            assertEquals("oldest active", oldest + 1, databaseTransactionInfo.getOldestActiveTransaction());
+            assertEquals("oldest snapshot", oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction());
+            assertEquals("next", oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction());
             assertEquals("active", 1, databaseTransactionInfo.getActiveTransactionCount());
         }
     }
