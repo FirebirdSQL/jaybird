@@ -13,7 +13,7 @@
                  extdirs="${module.thirdparty}"
                  additionalparam="${javadoc.additionalparam}"
                  excludepackagenames="${excludedPackages}"
-                 bottom="Copyright &#169; 2001-2016 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
+                 bottom="Copyright &#169; 2001-2017 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
             <arg line="${java.module.arg}"/>
             <classpath refid="javac.driver.classpath"/>
             <sourcepath>
@@ -22,7 +22,7 @@
             </sourcepath>
             <sourcepath refid="source.java.openoffice"/>
             <sourcepath refid="source.java.additional"/>
-            <link href="http://docs.oracle.com/javase/7/docs/api/"/>
+            <link href="http://docs.oracle.com/javase/8/docs/api/"/>
         </javadoc>
     </target>
 
