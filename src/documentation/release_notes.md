@@ -150,7 +150,7 @@ See also [Type 2 (native) and embedded driver].
 
 ### Download ###
 
-You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
+You can download the latest versions from <https://www.firebirdsql.org/en/jdbc-driver/>
 
 At minimum Jaybird 3.1 requires `jaybird-@VERSION@.jar` and 
 `connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` which
