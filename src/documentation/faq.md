@@ -307,7 +307,7 @@ Jaybird provides two connection properties to specify the connection character s
 
     The Java character set name must map to an equivalent Firebird character set.
 
--   `encoding` with a Firebird character set name (alias: `encoding`)
+-   `encoding` with a Firebird character set name (alias: `lc_ctype`)
 
     The Firebird character set name - with the exception of `NONE` must map to
     an equivalent Java character set.
