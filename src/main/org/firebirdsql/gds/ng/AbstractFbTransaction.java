@@ -101,6 +101,11 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     }
 
     @Override
+    public final void addWeakTransactionListener(TransactionListener listener) {
+        transactionListenerDispatcher.addWeakListener(listener);
+    }
+
+    @Override
     public final void removeTransactionListener(TransactionListener listener) {
         transactionListenerDispatcher.removeListener(listener);
     }

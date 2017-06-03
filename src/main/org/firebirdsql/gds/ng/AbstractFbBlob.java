@@ -53,8 +53,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         this.database = database;
         this.transaction = transaction;
         this.blobParameterBuffer = blobParameterBuffer;
-        transaction.addTransactionListener(this);
-        database.addDatabaseListener(this);
+        transaction.addWeakTransactionListener(this);
     }
 
     @Override
@@ -107,6 +106,16 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected final void setOpen(boolean open) {
         synchronized (getSynchronizationObject()) {
+            final FbDatabase database = this.database;
+            if (open) {
+                database.addWeakDatabaseListener(this);
+            } else {
+                database.removeDatabaseListener(this);
+                final FbTransaction transaction = this.transaction;
+                if (transaction != null) {
+                    transaction.removeTransactionListener(this);
+                }
+            }
             this.open = open;
         }
     }
@@ -191,10 +200,12 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public void detaching(FbDatabase database) {
+        if (this.database != database) {
+            database.removeDatabaseListener(this);
+            return;
+        }
         synchronized (getSynchronizationObject()) {
-            if (this.database != database) {
-                database.removeDatabaseListener(this);
-            } else if (isOpen()) {
+            if (isOpen()) {
                 log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
                 try {
                     close();
@@ -213,8 +224,8 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
                 clearDatabase();
                 clearTransaction();
             }
-            database.removeDatabaseListener(this);
         }
+        database.removeDatabaseListener(this);
     }
 
     @Override
@@ -270,11 +281,13 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     protected final void clearTransaction() {
+        final FbTransaction transaction;
         synchronized (getSynchronizationObject()) {
-            if (transaction != null) {
-                transaction.removeTransactionListener(this);
-            }
-            transaction = null;
+            transaction = this.transaction;
+            this.transaction = null;
+        }
+        if (transaction != null) {
+            transaction.removeTransactionListener(this);
         }
     }
 
@@ -325,11 +338,13 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     protected final void clearDatabase() {
+        final FbDatabase database;
         synchronized (getSynchronizationObject()) {
-            if (database != null) {
-                database.removeDatabaseListener(this);
-            }
-            database = null;
+            database = this.database;
+            this.database = null;
+        }
+        if (database != null) {
+            database.removeDatabaseListener(this);
         }
     }
 

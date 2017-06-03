@@ -66,7 +66,9 @@ public class TestV10InputBlobMock {
             allowing(db).getSynchronizationObject();
             will(returnValue(new Object()));
             allowing(transaction).addTransactionListener(with(any(TransactionListener.class)));
+            allowing(transaction).addWeakTransactionListener(with(any(TransactionListener.class)));
             allowing(db).addDatabaseListener(with(any(DatabaseListener.class)));
+            allowing(db).addWeakDatabaseListener(with(any(DatabaseListener.class)));
         }});
     }
 

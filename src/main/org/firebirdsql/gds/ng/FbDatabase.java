@@ -252,6 +252,17 @@ public interface FbDatabase extends FbAttachment {
     void addDatabaseListener(DatabaseListener listener);
 
     /**
+     * Adds a {@link DatabaseListener} instance to this database using a weak reference.
+     * <p>
+     * If the listener is already strongly referenced, this call will be ignored
+     * </p>
+     *
+     * @param listener
+     *         Database listener
+     */
+    void addWeakDatabaseListener(DatabaseListener listener);
+
+    /**
      * Removes a {@link DatabaseListener} instance from this database.
      *
      * @param listener

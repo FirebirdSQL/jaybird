@@ -143,6 +143,11 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     }
 
     @Override
+    public final void addWeakDatabaseListener(DatabaseListener listener) {
+        databaseListenerDispatcher.addWeakListener(listener);
+    }
+
+    @Override
     public final void removeDatabaseListener(DatabaseListener listener) {
         databaseListenerDispatcher.removeListener(listener);
     }
