@@ -52,12 +52,23 @@ public interface FbTransaction extends ExceptionListenable {
     int getHandle();
 
     /**
-     * Adds a {@link org.firebirdsql.gds.ng.listeners.TransactionListener} to the list of listeners.
+     * Adds a {@link org.firebirdsql.gds.ng.listeners.TransactionListener} to the list of strongly referenced listeners.
      *
      * @param listener
      *         TransactionListener to register
      */
     void addTransactionListener(TransactionListener listener);
+
+    /**
+     * Adds a {@link org.firebirdsql.gds.ng.listeners.TransactionListener} to the list of weakly referenced listeners.
+     * <p>
+     * If the listener is already strongly referenced, this call will be ignored
+     * </p>
+     *
+     * @param listener
+     *         TransactionListener to register
+     */
+    void addWeakTransactionListener(TransactionListener listener);
 
     /**
      * Removes the {@link org.firebirdsql.gds.ng.listeners.TransactionListener} from the list of listeners.
