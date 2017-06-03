@@ -149,7 +149,7 @@ See also [Type 2 (native) and embedded driver].
 
 ### Download ###
 
-You can download the latest versions from <http://www.firebirdsql.org/en/jdbc-driver/>
+You can download the latest versions from <https://www.firebirdsql.org/en/jdbc-driver/>
 
 At minimum Jaybird 3.0 requires `jaybird-@VERSION@.jar` and 
 `connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` which
@@ -219,6 +219,8 @@ The following has been changed or fixed since Jaybird 3.0.1
 -   Fixed: `FBTraceManager.loadConfigurationFromFile` strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
 -   Fixed: `FBDatabaseMetaData.getTables` does not list tables where 
     `rdb$relation_type` is `null` ([JDBC-494](http://tracker.firebirdsql.org/browse/JDBC-494))
+-   Fixed: Memory leak caused by retaining blob handles until transaction (or 
+    connection) end ([JDBC-497](http://tracker.firebirdsql.org/browse/JDBC-497))
 
 Changes in Jaybird 3.0.0
 ------------------------

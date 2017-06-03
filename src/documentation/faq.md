@@ -84,7 +84,7 @@ dependency as this will be provided by the application server.
 ### Download ###
 
 Firebird can be downloaded from the Firebird website, under Downloads,
-[JDBC Driver](http://www.firebirdsql.org/en/jdbc-driver/).
+[JDBC Driver](https://www.firebirdsql.org/en/jdbc-driver/).
 
 Alternatively, you can go directly to GitHub and download Jaybird from the
 [jaybird releases](https://github.com/FirebirdSQL/jaybird/releases).
@@ -171,13 +171,13 @@ Where to get more information on Jaybird
 Apart from this FAQ, you can get additional information from:
 
 * [Jaybird wiki](https://github.com/FirebirdSQL/jaybird/wiki/)
-* [Jaybird 2.1 Programmers Manual](http://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
-* [Firebird Website: Development, JDBC Driver](http://www.firebirdsql.org/en/devel-jdbc-driver/)
+* [Jaybird 2.1 Programmers Manual](https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
+* [Firebird Website: Development, JDBC Driver](https://www.firebirdsql.org/en/devel-jdbc-driver/)
 
 Where to get help
 -----------------
 
-*   On [Stack Overflow](http://stackoverflow.com/), please tag your questions
+*   On [Stack Overflow](https://stackoverflow.com/), please tag your questions
     with *jaybird* and *firebird*
     
 *   The [Firebird-Java group](http://groups.yahoo.com/group/Firebird-Java) and
@@ -186,9 +186,9 @@ Where to get help
     You can subscribe to the mailing list by sending an email to
     [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
 
-*   The [Firebird project home page](http://www.firebirdsql.org)
+*   The [Firebird project home page](https://www.firebirdsql.org)
 
-*   Firebird support and other [Firebird mailing lists](http://www.firebirdsql.org/en/mailing-lists/)
+*   Firebird support and other [Firebird mailing lists](https://www.firebirdsql.org/en/mailing-lists/)
     for questions not directly related to Jaybird and java.
 
 Contributing
@@ -196,13 +196,13 @@ Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see [http://www.firebirdsql.org/en/mailing-lists/](http://www.firebirdsql.org/en/mailing-lists/))
+* Participate on the mailing lists (see [https://www.firebirdsql.org/en/mailing-lists/](https://www.firebirdsql.org/en/mailing-lists/))
 * Report bugs or submit patches on the tracker (see [Reporting Bugs])
 * Create pull requests on GitHub ([https://github.com/FirebirdSQL/jaybird](https://github.com/FirebirdSQL/jaybird))
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
 * Become a paying member or sponsor of the Firebird Foundation (see
-  [http://www.firebirdsql.org/en/firebird-foundation/](http://www.firebirdsql.org/en/firebird-foundation/))
+  [https://www.firebirdsql.org/en/firebird-foundation/](https://www.firebirdsql.org/en/firebird-foundation/))
 
 Reporting Bugs
 --------------
@@ -307,7 +307,7 @@ Jaybird provides two connection properties to specify the connection character s
 
     The Java character set name must map to an equivalent Firebird character set.
 
--   `encoding` with a Firebird character set name (alias: `encoding`)
+-   `encoding` with a Firebird character set name (alias: `lc_ctype`)
 
     The Firebird character set name - with the exception of `NONE` must map to
     an equivalent Java character set.
