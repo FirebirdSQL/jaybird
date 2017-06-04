@@ -219,8 +219,10 @@ The following has been changed or fixed since Jaybird 3.0.1
 -   Fixed: `FBTraceManager.loadConfigurationFromFile` strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
 -   Fixed: `FBDatabaseMetaData.getTables` does not list tables where 
     `rdb$relation_type` is `null` ([JDBC-494](http://tracker.firebirdsql.org/browse/JDBC-494))
--   Fixed: Memory leak caused by retaining blob handles until transaction (or 
-    connection) end ([JDBC-497](http://tracker.firebirdsql.org/browse/JDBC-497))
+-   Improvement: Character sets are now initialized lazily ([JDBC-495](http://tracker.firebirdsql.org/browse/JDBC-495))  
+    Under Excelsior Jet, the eager loading of character sets could lead to slow
+    initialization if character sets were excluded from the build.
+-   Fixed: Memory leak caused by retaining blob handles until connection close ([JDBC-497](http://tracker.firebirdsql.org/browse/JDBC-497))
 
 Changes in Jaybird 3.0.0
 ------------------------
