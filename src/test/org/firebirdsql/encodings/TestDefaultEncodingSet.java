@@ -37,8 +37,7 @@ public class TestDefaultEncodingSet {
      */
     @Test
     public void testDefinitionWithUnsupportedCharset() {
-        final EncodingDefinition encodingDefinition = DefaultEncodingSet
-                .createEncodingDefinition("INVALID", "INVALID", 132, 1, false);
+        final EncodingDefinition encodingDefinition = new DefaultEncodingDefinition("INVALID", "INVALID", 1, 132, false);
         assertNotNull("Expected a non-null EncodingDefinition", encodingDefinition);
         assertEquals("Unexpected firebirdEncodingName", "INVALID", encodingDefinition.getFirebirdEncodingName());
         assertNull("Expected javaCharset to be null", encodingDefinition.getJavaCharset());

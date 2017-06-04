@@ -18,16 +18,14 @@
  */
 package org.firebirdsql.encodings;
 
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+
+import static org.firebirdsql.gds.ISCConstants.CS_BINARY;
+import static org.firebirdsql.gds.ISCConstants.CS_NONE;
 
 /**
  * The default encoding set for Jaybird.
@@ -44,7 +42,6 @@ import java.util.List;
  */
 public class DefaultEncodingSet implements EncodingSet {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultEncodingSet.class);
     private List<EncodingDefinition> encodingDefinitions = null;
 
     @Override
@@ -66,113 +63,62 @@ public class DefaultEncodingSet implements EncodingSet {
      * @return List of encoding definitions
      */
     private static List<EncodingDefinition> createEncodingDefinitions() {
-        List<EncodingDefinition> definitionList = new ArrayList<>();
-        definitionList.add(createEncodingDefinition("NONE", null, 0, 1, false));
-        definitionList.add(createEncodingDefinition("OCTETS", null, 1, 1, false));
-        definitionList.add(createEncodingDefinition("ASCII", "US-ASCII", 2, 1, false));
-        definitionList.add(createEncodingDefinition("UNICODE_FSS", "UTF-8", 3, 3, true));
-        definitionList.add(createEncodingDefinition("UTF8", "UTF-8", 4, 4, false));
-        definitionList.add(createEncodingDefinition("SJIS_0208", "MS932", 5, 2, false));
-        definitionList.add(createEncodingDefinition("EUCJ_0208", "EUC_JP", 6, 2, false));
-        definitionList.add(createEncodingDefinition("DOS737", "Cp737", 9, 1, false));
-        definitionList.add(createEncodingDefinition("DOS437", "Cp437", 10, 1, false));
-        definitionList.add(createEncodingDefinition("DOS850", "Cp850", 11, 1, false));
-        definitionList.add(createEncodingDefinition("DOS865", "Cp865", 12, 1, false));
-        definitionList.add(createEncodingDefinition("DOS860", "Cp860", 13, 1, false));
-        definitionList.add(createEncodingDefinition("DOS863", "Cp863", 14, 1, false));
-        definitionList.add(createEncodingDefinition("DOS775", "Cp775", 15, 1, false));
-        definitionList.add(createEncodingDefinition("DOS858", "Cp858", 16, 1, false));
-        definitionList.add(createEncodingDefinition("DOS862", "Cp862", 17, 1, false));
-        definitionList.add(createEncodingDefinition("DOS864", "Cp864", 18, 1, false));
-        definitionList.add(createEncodingDefinition("NEXT", null, 19, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_1", "ISO-8859-1", 21, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_2", "ISO-8859-2", 22, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_3", "ISO-8859-3", 23, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_4", "ISO-8859-4", 34, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_5", "ISO-8859-5", 35, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_6", "ISO-8859-6", 36, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_7", "ISO-8859-7", 37, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_8", "ISO-8859-8", 38, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_9", "ISO-8859-9", 39, 1, false));
-        definitionList.add(createEncodingDefinition("ISO8859_13", "ISO-8859-13", 40, 1, false));
-        definitionList.add(createEncodingDefinition("KSC_5601", "MS949", 44, 2, false));
-        definitionList.add(createEncodingDefinition("DOS852", "Cp852", 45, 1, false));
-        definitionList.add(createEncodingDefinition("DOS857", "Cp857", 46, 1, false));
-        definitionList.add(createEncodingDefinition("DOS861", "Cp861", 47, 1, false));
-        definitionList.add(createEncodingDefinition("DOS866", "Cp866", 48, 1, false));
-        definitionList.add(createEncodingDefinition("DOS869", "Cp869", 49, 1, false));
-        definitionList.add(createEncodingDefinition("CYRL", null, 50, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1250", "Cp1250", 51, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1251", "Cp1251", 52, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1252", "Cp1252", 53, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1253", "Cp1253", 54, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1254", "Cp1254", 55, 1, false));
-        definitionList.add(createEncodingDefinition("BIG_5", "Big5", 56, 2, false));
-        definitionList.add(createEncodingDefinition("GB_2312", "EUC_CN", 57, 2, false));
-        definitionList.add(createEncodingDefinition("WIN1255", "Cp1255", 58, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1256", "Cp1256", 59, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1257", "Cp1257", 60, 1, false));
-        definitionList.add(createEncodingDefinition("KOI8R", "KOI8_R", 63, 1, false));
-        definitionList.add(createEncodingDefinition("KOI8U", "KOI8_U", 64, 1, false));
-        definitionList.add(createEncodingDefinition("WIN1258", "Cp1258", 65, 1, false));
-        definitionList.add(createEncodingDefinition("TIS620", "TIS620", 66, 1, false));
-        definitionList.add(createEncodingDefinition("GBK", "GBK", 67, 2, false));
-        definitionList.add(createEncodingDefinition("CP943C", "Cp943C", 68, 2, false));
-        definitionList.add(createEncodingDefinition("GB18030", "GB18030", 69, 3, false));
+        final Charset noCharset = null;
+        final List<EncodingDefinition> definitionList = new ArrayList<>(52);
+        definitionList.add(new DefaultEncodingDefinition("NONE", noCharset, 1, CS_NONE, false));
+        definitionList.add(new DefaultEncodingDefinition("OCTETS", noCharset, 1, CS_BINARY, false));
+        definitionList.add(new DefaultEncodingDefinition("ASCII", StandardCharsets.US_ASCII, 1, 2, false));
+        definitionList.add(new DefaultEncodingDefinition("UNICODE_FSS", StandardCharsets.UTF_8, 3, 3, true));
+        definitionList.add(new DefaultEncodingDefinition("UTF8", StandardCharsets.UTF_8, 4, 4, false));
+        definitionList.add(new DefaultEncodingDefinition("SJIS_0208", "MS932", 2, 5, false));
+        definitionList.add(new DefaultEncodingDefinition("EUCJ_0208", "EUC_JP", 2, 6, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS737", "Cp737", 1, 9, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS437", "Cp437", 1, 10, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS850", "Cp850", 1, 11, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS865", "Cp865", 1, 12, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS860", "Cp860", 1, 13, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS863", "Cp863", 1, 14, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS775", "Cp775", 1, 15, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS858", "Cp858", 1, 16, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS862", "Cp862", 1, 17, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS864", "Cp864", 1, 18, false));
+        definitionList.add(new DefaultEncodingDefinition("NEXT", noCharset, 1, 19, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_1", StandardCharsets.ISO_8859_1, 1, 21, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_2", "ISO-8859-2", 1, 22, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_3", "ISO-8859-3", 1, 23, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_4", "ISO-8859-4", 1, 34, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_5", "ISO-8859-5", 1, 35, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_6", "ISO-8859-6", 1, 36, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_7", "ISO-8859-7", 1, 37, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_8", "ISO-8859-8", 1, 38, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_9", "ISO-8859-9", 1, 39, false));
+        definitionList.add(new DefaultEncodingDefinition("ISO8859_13", "ISO-8859-13", 1, 40, false));
+        definitionList.add(new DefaultEncodingDefinition("KSC_5601", "MS949", 2, 44, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS852", "Cp852", 1, 45, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS857", "Cp857", 1, 46, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS861", "Cp861", 1, 47, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS866", "Cp866", 1, 48, false));
+        definitionList.add(new DefaultEncodingDefinition("DOS869", "Cp869", 1, 49, false));
+        definitionList.add(new DefaultEncodingDefinition("CYRL", noCharset, 1, 50, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1250", "Cp1250", 1, 51, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1251", "Cp1251", 1, 52, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1252", "Cp1252", 1, 53, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1253", "Cp1253", 1, 54, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1254", "Cp1254", 1, 55, false));
+        definitionList.add(new DefaultEncodingDefinition("BIG_5", "Big5", 2, 56, false));
+        definitionList.add(new DefaultEncodingDefinition("GB_2312", "EUC_CN", 2, 57, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1255", "Cp1255", 1, 58, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1256", "Cp1256", 1, 59, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1257", "Cp1257", 1, 60, false));
+        definitionList.add(new DefaultEncodingDefinition("KOI8R", "KOI8_R", 1, 63, false));
+        definitionList.add(new DefaultEncodingDefinition("KOI8U", "KOI8_U", 1, 64, false));
+        definitionList.add(new DefaultEncodingDefinition("WIN1258", "Cp1258", 1, 65, false));
+        definitionList.add(new DefaultEncodingDefinition("TIS620", "TIS620", 1, 66, false));
+        definitionList.add(new DefaultEncodingDefinition("GBK", "GBK", 2, 67, false));
+        definitionList.add(new DefaultEncodingDefinition("CP943C", "Cp943C", 2, 68, false));
+        definitionList.add(new DefaultEncodingDefinition("GB18030", "GB18030", 3, 69, false));
 
-        Iterator<EncodingDefinition> iterator = definitionList.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next() == null) {
-                iterator.remove();
-            }
-        }
-
-        return Collections.unmodifiableList(new ArrayList<>(definitionList));
-    }
-
-    /**
-     * Creates an encoding definition.
-     *
-     * @param firebirdName
-     *         Firebird name of the character set
-     * @param javaName
-     *         Name of the Java character set (or {@code null} for an information-only encoding). Unsupported character
-     *         set names are also handled as information-only. Illegal names (according to the rules established in
-     *         {@link java.nio.charset.Charset} will cause this method to return {@code null}
-     * @param characterSetId
-     *         The Firebird id of the character set (as listed in {@code RDB$CHARACTER_SETS}). Value {@code 127} ({@code
-     *         CS_dynamic}) is not allowed and will be ignored.
-     * @param maxBytesPerCharacter
-     *         Max bytes per character
-     * @param firebirdOnly
-     *         {@code true} if this encoding should only be used to map from Firebird to Java, not in reverse. This is
-     *         for example used to map Firebird encoding {@code UNICODE-FSS} to Java encoding {@code UTF-8}, but in
-     *         reverse Java encoding {@code UTF-8} is mapped to Firebird encoding {@code UTF8}.
-     * @return Encoding definition, or {@code null} if we failed to create an encoding definition (eg illegal Java
-     * character set name, or other failures)
-     */
-    public static EncodingDefinition createEncodingDefinition(final String firebirdName, final String javaName,
-            final int characterSetId, final int maxBytesPerCharacter, final boolean firebirdOnly) {
-        try {
-            try {
-                final Charset charset = javaName != null ? Charset.forName(javaName) : null;
-                return new DefaultEncodingDefinition(firebirdName, charset, maxBytesPerCharacter, characterSetId,
-                        firebirdOnly);
-            } catch (IllegalCharsetNameException e) {
-                logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is an illegal character set name, skipping encoding",
-                        javaName, firebirdName), e);
-            } catch (UnsupportedCharsetException e) {
-                logger.warn(String.format("javaName=\"%s\" specified for encoding \"%s\" is not supported by the jvm, creating information-only EncodingDefinition",
-                        javaName, firebirdName));
-                // Create an 'information-only' definition by using null for charset
-                return new DefaultEncodingDefinition(firebirdName, null, maxBytesPerCharacter, characterSetId,
-                        firebirdOnly);
-            }
-        } catch (Exception e) {
-            logger.warn(String.format("Loading information for encoding \"%s\" failed with an Exception", firebirdName),
-                    e);
-        }
-        return null;
+        return Collections.unmodifiableList(definitionList);
     }
 
 }

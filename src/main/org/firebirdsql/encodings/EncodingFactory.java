@@ -23,10 +23,14 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 
 /**
  * Factory for {@link EncodingDefinition} and {@link Encoding}.
@@ -38,6 +42,7 @@ public final class EncodingFactory implements IEncodingFactory {
     private static final Logger log = LoggerFactory.getLogger(EncodingFactory.class);
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
+    private static final int MAX_NORMAL_CHARSET_ID = 255;
     private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR = new Comparator<EncodingSet>() {
         @Override
         public int compare(final EncodingSet o1, final EncodingSet o2) {
@@ -62,10 +67,13 @@ public final class EncodingFactory implements IEncodingFactory {
         }
     }
 
-    private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new HashMap<>();
-    private final Map<Integer, EncodingDefinition> firebirdCharacterSetIdToDefinition = new HashMap<>();
-    private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new HashMap<>();
-    private final Map<String, EncodingDefinition> javaAliasesToDefinition = new HashMap<>();
+    // Linked HashMap because we need to preserve insertion order for the lazy initialization;
+    // Initial capacity of 128 should prevent resizing during loading (if only DefaultEncodingSet is present)
+    private final Map<String, EncodingDefinition> firebirdEncodingToDefinition = new LinkedHashMap<>(128);
+    private final EncodingDefinition[] firebirdCharacterSetIdToDefinition =
+            new EncodingDefinition[MAX_NORMAL_CHARSET_ID + 1];
+    private final Map<Charset, EncodingDefinition> javaCharsetToDefinition = new ConcurrentHashMap<>();
+    private final Map<String, EncodingDefinition> javaAliasesToDefinition = new ConcurrentHashMap<>();
     private final Encoding defaultEncoding;
     private final EncodingDefinition defaultEncodingDefinition;
     private final ConcurrentMap<String, CharacterTranslator> translations = new ConcurrentHashMap<>();
@@ -80,7 +88,9 @@ public final class EncodingFactory implements IEncodingFactory {
         while (encodingSets.hasNext()) {
             processEncodingSet(encodingSets.next());
         }
-        final EncodingDefinition candidateDefinition = javaCharsetToDefinition.get(DEFAULT_CHARSET);
+        // Ensure CS_dynamic to be null
+        firebirdCharacterSetIdToDefinition[CS_dynamic] = null;
+        final EncodingDefinition candidateDefinition = getEncodingDefinitionByCharset(DEFAULT_CHARSET);
 
         if (candidateDefinition != null && !candidateDefinition.isInformationOnly()) {
             defaultEncoding = candidateDefinition.getEncoding();
@@ -136,13 +146,7 @@ public final class EncodingFactory implements IEncodingFactory {
 
     @Override
     public EncodingDefinition getEncodingDefinitionByCharacterSetId(final int firebirdCharacterSetId) {
-        int charsetId = firebirdCharacterSetId & 0xFF;
-        if (charsetId == ISCConstants.CS_dynamic) {
-            // Value CS_dynamic (127) indicates the connection character set is to be used
-            // Explicitly returning null to prevent user defined encoding definitions from messing up
-            return null;
-        }
-        return firebirdCharacterSetIdToDefinition.get(charsetId);
+        return firebirdCharacterSetIdToDefinition[firebirdCharacterSetId & 0xFF];
     }
 
     /**
@@ -168,7 +172,24 @@ public final class EncodingFactory implements IEncodingFactory {
 
     @Override
     public EncodingDefinition getEncodingDefinitionByCharset(final Charset charset) {
-        return javaCharsetToDefinition.get(charset);
+        EncodingDefinition encodingDefinition = javaCharsetToDefinition.get(charset);
+        if (encodingDefinition != null) {
+            return encodingDefinition;
+        }
+        return findAndMapEncodingDefinition(charset);
+    }
+
+    private EncodingDefinition findAndMapEncodingDefinition(final Charset charset) {
+        final Set<String> potentialNames = toLowerCaseAliasSet(charset);
+        for (EncodingDefinition encodingDefinition : firebirdEncodingToDefinition.values()) {
+            String javaEncodingName = encodingDefinition.getJavaEncodingName();
+            if (javaEncodingName != null && !encodingDefinition.isFirebirdOnly()
+                    && potentialNames.contains(javaEncodingName.toLowerCase())) {
+                registerJavaMappingForEncodingDefinition(encodingDefinition);
+                return encodingDefinition;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -187,8 +208,15 @@ public final class EncodingFactory implements IEncodingFactory {
     }
 
     @Override
-    public EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias) {
-        return charsetAlias != null ? javaAliasesToDefinition.get(charsetAlias.toLowerCase()) : null;
+    public EncodingDefinition getEncodingDefinitionByCharsetAlias(final String charsetAlias) {
+        if (charsetAlias == null) {
+            return null;
+        }
+        EncodingDefinition encodingDefinition = javaAliasesToDefinition.get(charsetAlias.toLowerCase());
+        if (encodingDefinition != null) {
+            return encodingDefinition;
+        }
+        return resolveEncodingDefinitionByCharset(charsetAlias);
     }
 
     /**
@@ -249,7 +277,8 @@ public final class EncodingFactory implements IEncodingFactory {
             if (encodingDefinition == null) {
                 // TODO Consider throwing exception if no EncodingDefinition is found
                 return null;
-            } else if (!encodingDefinition.isInformationOnly() && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
+            } else if (!encodingDefinition.isInformationOnly()
+                    && (charset == null || encodingDefinition.getJavaCharset().equals(charset))) {
                 // Normal encoding definition
                 return encodingDefinition;
             } else if (charset != null) {
@@ -353,37 +382,47 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     private void processEncodingDefinition(final EncodingDefinition encodingDefinition) {
         final String firebirdEncodingName = encodingDefinition.getFirebirdEncodingName();
+        final int firebirdCharacterSetId = encodingDefinition.getFirebirdCharacterSetId();
         if (firebirdEncodingToDefinition.containsKey(firebirdEncodingName.toLowerCase())) {
             // We already loaded a definition for this encoding
             if (log.isDebugEnabled())
                 log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName));
             return;
-        } else if (encodingDefinition.getFirebirdCharacterSetId() == ISCConstants.CS_dynamic) {
+        } else if (firebirdCharacterSetId == CS_dynamic) {
             if (log.isDebugEnabled())
                 log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)", firebirdEncodingName));
+            return;
+        } else if (firebirdCharacterSetId < 0 || firebirdCharacterSetId > MAX_NORMAL_CHARSET_ID) {
+            log.warn(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as FirebirdCharacterSetId %d, which is outside the range [0, 255]", firebirdEncodingName, firebirdCharacterSetId));
             return;
         }
 
         // Map firebird encoding and character set id to EncodingDefinition
         firebirdEncodingToDefinition.put(firebirdEncodingName.toLowerCase(), encodingDefinition);
         // We don't check whether the characterSetId is already mapped, as a characterSetId should map to a single Firebird encoding
-        firebirdCharacterSetIdToDefinition.put(encodingDefinition.getFirebirdCharacterSetId(), encodingDefinition);
+        firebirdCharacterSetIdToDefinition[firebirdCharacterSetId] = encodingDefinition;
 
+        // We are not mapping to Java charset / aliases here; that is delayed until really needed
+    }
+
+    private void registerJavaMappingForEncodingDefinition(EncodingDefinition encodingDefinition) {
         final Charset charset = encodingDefinition.getJavaCharset();
         if (encodingDefinition.isInformationOnly() || encodingDefinition.isFirebirdOnly() || charset == null) {
             return;
         }
-        if (javaCharsetToDefinition.containsKey(charset)) {
-            if (log.isDebugEnabled())
-                log.debug(String.format("Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
-                        charset.name(), firebirdEncodingName, javaCharsetToDefinition.get(charset).getFirebirdEncodingName()));
-        } else {
+        final EncodingDefinition currentEncodingDefinition = javaCharsetToDefinition.get(charset);
+        if (currentEncodingDefinition == null) {
             // Map Java charset to EncodingDefinition
             javaCharsetToDefinition.put(charset, encodingDefinition);
             javaAliasesToDefinition.put(charset.name().toLowerCase(), encodingDefinition);
             for (String charsetAlias : charset.aliases()) {
                 javaAliasesToDefinition.put(charsetAlias.toLowerCase(), encodingDefinition);
             }
+        } else if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                    "Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
+                    charset.name(), encodingDefinition.getEncoding(),
+                    currentEncodingDefinition.getFirebirdEncodingName()));
         }
     }
 
@@ -708,5 +747,39 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     public static CharacterTranslator getTranslator(String mappingPath) throws SQLException {
         return getRootEncodingFactory().getCharacterTranslator(mappingPath);
+    }
+
+    /**
+     * Resolves the encoding definition by getting the {@code Charset} of the alias, and then retrieving by charset.
+     * <p>
+     * This is a fallback mechanism if the character set has not been loaded yet.
+     * </p>
+     *
+     * @param charsetAlias Java character set alias
+     * @return Encoding definition, or {@code null} if not found
+     */
+    private EncodingDefinition resolveEncodingDefinitionByCharset(final String charsetAlias) {
+        try {
+            Charset charset = Charset.forName(charsetAlias);
+            return getEncodingDefinitionByCharset(charset);
+        } catch (UnsupportedCharsetException | IllegalCharsetNameException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Set of the charset name and aliases in lower case.
+     *
+     * @param charset Character set
+     * @return Set of lower case names and aliases
+     */
+    private static Set<String> toLowerCaseAliasSet(final Charset charset) {
+        final Set<String> aliases = charset.aliases();
+        final Set<String> potentialNames = new HashSet<>(aliases.size() + 1);
+        potentialNames.add(charset.name().toLowerCase());
+        for (String alias : aliases) {
+            potentialNames.add(alias.toLowerCase());
+        }
+        return potentialNames;
     }
 }
