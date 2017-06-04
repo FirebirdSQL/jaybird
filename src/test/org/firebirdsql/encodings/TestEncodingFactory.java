@@ -171,8 +171,8 @@ public class TestEncodingFactory {
     @Test
     public void testDefinition_CS_dynamic_skipped() {
         final EncodingSet encodingSet = createEncodingSet(0,
-                new DefaultEncodingDefinition("TEST1", null, 1, 10, true),
-                new DefaultEncodingDefinition("TEST2", null, 1, ISCConstants.CS_dynamic, true));
+                new DefaultEncodingDefinition("TEST1", (Charset) null, 1, 10, true),
+                new DefaultEncodingDefinition("TEST2", (Charset) null, 1, ISCConstants.CS_dynamic, true));
         final IEncodingFactory factory = EncodingFactory.createInstance(encodingSet);
 
         assertNotNull("Expected EncodingDefinition for TEST1 to be returned", factory.getEncodingDefinitionByFirebirdName("TEST1"));
@@ -183,8 +183,8 @@ public class TestEncodingFactory {
     @Test
     public void testCreateInstance_MultipleEncodingSets() {
         final EncodingDefinition test0_1 = new DefaultEncodingDefinition("TEST1", Charset.forName("Cp1255"), 1, 5, false);
-        final EncodingDefinition test0_2 = new DefaultEncodingDefinition("TEST2", null, 1, 6, true);
-        final EncodingDefinition test1_1 = new DefaultEncodingDefinition("TEST1", null, 1, 5, true);
+        final EncodingDefinition test0_2 = new DefaultEncodingDefinition("TEST2", (Charset) null, 1, 6, true);
+        final EncodingDefinition test1_1 = new DefaultEncodingDefinition("TEST1", (Charset) null, 1, 5, true);
         final EncodingDefinition test1_3 = new DefaultEncodingDefinition("TEST3", Charset.forName("Cp1256"), 1, 7, false);
         // Uses same Charset as test1_3, both are firebirdOnly = false
         final EncodingDefinition test0_4 = new DefaultEncodingDefinition("TEST4", Charset.forName("Cp1256"), 1, 8, false);
@@ -452,7 +452,7 @@ public class TestEncodingFactory {
         // We assume that we won't run this test on a JVM that has DOS860 as the default encoding.
         final Charset cp860 = Charset.forName("Cp860");
         assumeTrue(!cp860.equals(Charset.defaultCharset()));
-        final String expectedName = cp860.name();
+        final String expectedName = "Cp860"; // alias used in DefaultEncodingSet
 
         assertEquals("Unexpected java encoding name for Firebird encoding DOS860", expectedName, EncodingFactory.getJavaEncoding("DOS860"));
     }
@@ -470,7 +470,7 @@ public class TestEncodingFactory {
         // We assume that we won't run this test on a JVM that has DOS860 as the default encoding.
         final Charset cp860 = Charset.forName("Cp860");
         assumeTrue(!cp860.equals(Charset.defaultCharset()));
-        final String expectedName = cp860.name();
+        final String expectedName = "Cp860"; // alias used in DefaultEncodingSet
 
         assertEquals("Unexpected java encoding name for encoding alias Cp860", expectedName, EncodingFactory.getJavaEncodingForAlias(expectedName));
     }
