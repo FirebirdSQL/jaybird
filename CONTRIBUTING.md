@@ -3,15 +3,13 @@ Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see [http://www.firebirdsql.org/en/mailing-lists/](http://www.firebirdsql.org/en/mailing-lists/))
+* Participate on the mailing lists (see <https://www.firebirdsql.org/en/mailing-lists/>)
 * Report bugs or submit patches on the tracker (see below)
-* Create pull requests on GitHub ([https://github.com/FirebirdSQL/jaybird](https://github.com/FirebirdSQL/jaybird))
+* Create pull requests on GitHub (<https://github.com/FirebirdSQL/jaybird>)
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
 * Become a paying member or sponsor of the Firebird Foundation (see
-  [http://www.firebirdsql.org/en/firebird-foundation/](http://www.firebirdsql.org/en/firebird-foundation/))
-
-See also [http://www.firebirdsql.org/en/consider-your-contribution/](http://www.firebirdsql.org/en/consider-your-contribution/)
+  <http://www.firebirdsql.org/en/firebird-foundation/>
 
 Reporting Bugs
 ==============
