@@ -1,3 +1,11 @@
+Documentation crowd-funding{-}
+==============================
+
+The Firebird Project is currently holding a crowd-funding for the Firebird 
+Developer Guide. Your donation is much appreciated!
+
+See <https://www.firebirdsql.org/en/doc-funding-2017/> for details.
+
 General Notes
 =============
 
@@ -46,7 +54,7 @@ Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1.
 
 ### Notes on Firebird 3 support
 
-Jaybird 3 does not support the Firebird 3 wire encryption nor zlib compression.
+Jaybird 3.0 does not support the Firebird 3 wire encryption nor zlib compression.
 
 To be able to connect to Firebird 3, it is necessary to change the `WireCrypt` 
 setting from its default `Required` to `Enabled` in `firebird.conf`:
@@ -206,7 +214,7 @@ Gotcha's
 --------
 
 No known gotcha's at this time. If you find a problem: please report it on
-http://tracker.firebirdsql.org/brows/JDBC
+<http://tracker.firebirdsql.org/brows/JDBC>
 
 Jaybird 3.0.x changelog
 =======================
@@ -214,7 +222,7 @@ Jaybird 3.0.x changelog
 Changes in Jaybird 3.0.1
 ------------------------
 
-The following has been changed or fixed since Jaybird 3.0.1
+The following has been changed or fixed since Jaybird 3.0.0
 
 -   Fixed: `FBTraceManager.loadConfigurationFromFile` strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
 -   Fixed: `FBDatabaseMetaData.getTables` does not list tables where 
@@ -359,7 +367,7 @@ Jaybird currently does not formally support Java 9 (JDBC 4.3), although most of
 the JDBC 4.3 features have been implemented (in as far as they are supported by 
 Firebird). 
 
-You can use the Java 8 driver under Java 9, contrary to earlier Jaybird 3 test 
+You can use the Java 8 driver under Java 9, contrary to earlier Jaybird 3.0 test 
 releases, it is no longer necessary to add the `java.xml.bind` module using 
 `--add-modules java.xml.bind`.
 
@@ -616,8 +624,9 @@ The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
 
 **The list might not be complete, if you notice a difference in behavior that is
-not listed, please report it as bug.** It might have been a change we forgot to
-document, but it could just as well be an implementation bug.
+not listed, please [report it as bug](http://tracker.firebirdsql.org/brows/JDBC).** 
+It might have been a change we forgot to document, but it could just as well be 
+an implementation bug.
 
 Character set handling
 ----------------------
@@ -825,7 +834,7 @@ specification.
 
 Most methods in JDBC objects are required to throw an `SQLException` if 
 the object is closed or otherwise invalid. Not all Jaybird methods followed this
-requirement. We have improved this in Jaybird 3, but there are still some cases
+requirement. We have improved this in Jaybird 3.0, but there are still some cases
 left to fix (which we might do in point releases).
 
 ### Statement ###

@@ -1,3 +1,11 @@
+Documentation crowd-funding{-}
+==============================
+
+The Firebird Project is currently holding a crowd-funding for the Firebird 
+Developer Guide. Your donation is much appreciated!
+
+See <https://www.firebirdsql.org/en/doc-funding-2017/> for details.
+
 Jaybird
 =======
 
@@ -12,7 +20,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.0`
+Version: `3.0.1`
 
 For example, for Java 8:
 
@@ -20,7 +28,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
 </dependency>
 ~~~
 
@@ -32,7 +40,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -66,7 +74,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`)  
-Version: `2.2.12`
+Version: `2.2.13`
 
 For example:
 
@@ -196,13 +204,13 @@ Contributing
 
 There are several ways you can contribute to Jaybird or Firebird in general:
 
-* Participate on the mailing lists (see [https://www.firebirdsql.org/en/mailing-lists/](https://www.firebirdsql.org/en/mailing-lists/))
+* Participate on the mailing lists (see <https://www.firebirdsql.org/en/mailing-lists/>)
 * Report bugs or submit patches on the tracker (see [Reporting Bugs])
-* Create pull requests on GitHub ([https://github.com/FirebirdSQL/jaybird](https://github.com/FirebirdSQL/jaybird))
+* Create pull requests on GitHub (<https://github.com/FirebirdSQL/jaybird>)
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
 * Become a paying member or sponsor of the Firebird Foundation (see
-  [https://www.firebirdsql.org/en/firebird-foundation/](https://www.firebirdsql.org/en/firebird-foundation/))
+  <https://www.firebirdsql.org/en/firebird-foundation/>)
 
 Reporting Bugs
 --------------
