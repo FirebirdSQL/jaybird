@@ -15,3 +15,8 @@ The JCA standard specifies an architecture in which an application server can co
 - [FAQ](src/documentation/faq.md)
 - [Release notes](src/documentation/release_notes.md)
 - [How to contribute](CONTRIBUTING.md)
+
+## Sponsors
+
+The Firebird JDBC team would like to thank YourKit for providing licenses to their [YourKit Java Profiler](https://www.yourkit.com/java/profiler/). 
+![YourKit](https://www.yourkit.com/images/yklogo.png)
