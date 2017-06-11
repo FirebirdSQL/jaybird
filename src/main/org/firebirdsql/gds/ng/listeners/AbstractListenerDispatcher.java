@@ -20,11 +20,9 @@ package org.firebirdsql.gds.ng.listeners;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
-import java.util.List;
+import java.util.ListIterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * Dispatcher to maintain a list of listeners of type <code>TListener</code>
@@ -35,8 +33,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
 
-    private final Set<TListener> listeners = new CopyOnWriteArraySet<>();
-    private final List<WeakReference<TListener>> weakListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<TListener> listeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<WeakReference<TListener>> weakListeners = new CopyOnWriteArrayList<>();
     private volatile boolean shutdown = false;
 
     /**
@@ -52,7 +50,7 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
             throw new IllegalArgumentException("Adding this instance to itself is not allowed");
         }
         if (isShutdown()) return;
-        listeners.add(listener);
+        listeners.addIfAbsent(listener);
     }
 
     /**
@@ -127,7 +125,7 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
     @Override
     public final Iterator<TListener> iterator() {
         cleanWeakListeners();
-        return new ListenerIterator<>(listeners.iterator(), weakListeners.iterator());
+        return new ListenerIterator<>(listeners, weakListeners);
     }
 
     private void cleanWeakListeners() {
@@ -138,37 +136,47 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
         }
     }
 
+    /**
+     * Iterator implementation that access the weak listeners in reverse order, and then the strong listeners in
+     * reverse order.
+     *
+     * @param <TListener> Listener type
+     */
     private static final class ListenerIterator<TListener> implements Iterator<TListener> {
 
-        private final Iterator<TListener> strongIterator;
-        private final Iterator<WeakReference<TListener>> weakIterator;
-        private boolean useStrongIterator = true;
+        private final ListIterator<TListener> strongIterator;
+        private final ListIterator<WeakReference<TListener>> weakIterator;
+        private boolean useStrongIterator;
         private TListener nextWeakListener;
 
-        private ListenerIterator(Iterator<TListener> strongIterator, Iterator<WeakReference<TListener>> weakIterator) {
-            this.strongIterator = strongIterator;
-            this.weakIterator = weakIterator;
+        private ListenerIterator(
+                final CopyOnWriteArrayList<TListener> strongListeners,
+                final CopyOnWriteArrayList<WeakReference<TListener>> weakListeners) {
+            this.strongIterator = listIteratorAtEnd(strongListeners);
+            this.weakIterator = listIteratorAtEnd(weakListeners);
         }
 
         @Override
         public boolean hasNext() {
-            if (useStrongIterator) {
-                if (strongIterator.hasNext()) {
+            // Be aware we are reverse iterating the listeners, but present it as forward iteration!
+            if (!useStrongIterator) {
+                if (getNextWeakListener() != null) {
                     return true;
                 } else {
-                    useStrongIterator = false;
+                    useStrongIterator = true;
                 }
             }
-            return getNextWeakListener() != null;
+            return strongIterator.hasPrevious();
         }
 
         @Override
         public TListener next() {
+            // Be aware we are reverse iterating the listeners, but present it as forward iteration!
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
             if (useStrongIterator) {
-                return strongIterator.next();
+                return strongIterator.previous();
             }
             TListener next = nextWeakListener;
             nextWeakListener = null;
@@ -181,13 +189,40 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
         }
 
         private TListener getNextWeakListener() {
-            final Iterator<WeakReference<TListener>> weakIterator = this.weakIterator;
+            // Be aware we are reverse iterating the listeners, but present it as forward iteration!
+            final ListIterator<WeakReference<TListener>> weakIterator = this.weakIterator;
             TListener nextWeakListener = this.nextWeakListener;
-            while (nextWeakListener == null && weakIterator.hasNext()) {
-                WeakReference<TListener> currentRef = weakIterator.next();
+            while (nextWeakListener == null && weakIterator.hasPrevious()) {
+                WeakReference<TListener> currentRef = weakIterator.previous();
                 nextWeakListener = currentRef.get();
             }
             return this.nextWeakListener = nextWeakListener;
+        }
+
+        /**
+         * Produces a list iterator that is at the end.
+         * <p>
+         * This allows for a thread safe variant of {@code list.listIterator(list.size())} without requiring
+         * synchronization for all modifications at the small expense of localized complexity.
+         * </p>
+         *
+         * @return List iterator at end of list
+         */
+        private static <T> ListIterator<T> listIteratorAtEnd(final CopyOnWriteArrayList<T> list) {
+            ListIterator<T> listIterator;
+            try {
+                // Try to prevent IndexOutOfBoundsException if size of list is reduced under concurrent access
+                listIterator = list.listIterator(Math.max(0, list.size() - 1));
+            } catch (IndexOutOfBoundsException e) {
+                // Reduction was greater than one, just start at beginning
+                // Note that in most forms of access this should not happen, this is just to prevent edge cases
+                listIterator = list.listIterator();
+            }
+            // Scan ahead for the real end
+            while (listIterator.hasNext()) {
+                listIterator.next();
+            }
+            return listIterator;
         }
     }
 }
