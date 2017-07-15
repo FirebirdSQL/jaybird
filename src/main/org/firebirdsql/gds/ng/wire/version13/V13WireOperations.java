@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.EncryptionLevel;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.FbWireAttachment;
@@ -29,12 +31,20 @@ import org.firebirdsql.gds.ng.wire.FbWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
+import org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -60,6 +70,7 @@ public class V13WireOperations extends V11WireOperations {
         final XdrInputStream xdrIn = getXdrIn();
         final XdrOutputStream xdrOut = getXdrOut();
         final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
+        final Encoding encoding = getEncoding();
         while (true) {
             String pluginName;
             byte[] data;
@@ -81,7 +92,7 @@ public class V13WireOperations extends V11WireOperations {
                             .toFlatSQLException();
                 case op_cont_auth:
                     data = xdrIn.readBuffer(); // p_data
-                    pluginName = xdrIn.readString(getEncoding()); //p_name
+                    pluginName = xdrIn.readString(encoding); //p_name
                     xdrIn.readBuffer(); // p_list (ignore?)
                     addServerKeys(xdrIn.readBuffer()); // p_keys
                     log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
@@ -93,7 +104,7 @@ public class V13WireOperations extends V11WireOperations {
                     xdrIn.readInt(); // p_acpt_architecture
                     xdrIn.readInt(); // p_acpt_type
                     data = xdrIn.readBuffer(); // p_acpt_data
-                    pluginName = xdrIn.readString(getEncoding()); // p_acpt_plugin
+                    pluginName = xdrIn.readString(encoding); // p_acpt_plugin
                     xdrIn.readInt(); // p_acpt_authenticated
                     addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
                     log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
@@ -103,10 +114,16 @@ public class V13WireOperations extends V11WireOperations {
 
                 case op_response:
                     GenericResponse response = (GenericResponse) readOperationResponse(operation, null);
+                    boolean wasAuthComplete = clientAuthBlock.isAuthComplete();
                     clientAuthBlock.setAuthComplete(true);
                     processAttachCallback.processAttachResponse(response);
+                    addServerKeys(response.getData());
 
-                    // TODO equivalent of cBlock.tryNewKeys(port);
+                    EncryptionLevel encryptionLevel = getAttachProperties().getEncryptionLevel();
+
+                    if (!wasAuthComplete && encryptionLevel != EncryptionLevel.DISABLED) {
+                        tryKnownServerKeys();
+                    }
                     return;
                 default:
                     throw new SQLException(String.format("Unsupported operation code: %d", operation));
@@ -135,9 +152,9 @@ public class V13WireOperations extends V11WireOperations {
             xdrOut.writeInt(op_cont_auth);
             // TODO Move to ClientAuthBlock?
             xdrOut.writeBuffer(clientAuthBlock.getClientData()); // p_data
-            xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), getEncoding()); // p_name
+            xdrOut.writeString(clientAuthBlock.getCurrentPluginName(), encoding); // p_name
             if (clientAuthBlock.isFirstTime()) {
-                xdrOut.writeString(clientAuthBlock.getPluginNames(), getEncoding()); // p_list
+                xdrOut.writeString(clientAuthBlock.getPluginNames(), encoding); // p_list
                 clientAuthBlock.setFirstTime(false);
             } else {
                 xdrOut.writeBuffer(null); // p_list
@@ -148,5 +165,76 @@ public class V13WireOperations extends V11WireOperations {
 
         // If we have exited from the cycle, this mean auth failed
         throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toFlatSQLException();
+    }
+
+    private void tryKnownServerKeys() throws IOException, SQLException {
+        boolean initializedEncryption = false;
+        SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
+
+        // TODO Define separately and make configurable
+        Map<EncryptionIdentifier, EncryptionPluginSpi> supportedEncryptionPlugins = new HashMap<>();
+        EncryptionPluginSpi encryptionPluginSpi = new Arc4EncryptionPluginSpi();
+        supportedEncryptionPlugins.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
+
+        for (EncryptionIdentifier encryptionIdentifier : getEncryptionIdentifiers()) {
+            EncryptionPluginSpi currentEncryptionSpi =
+                    supportedEncryptionPlugins.get(encryptionIdentifier);
+            if (currentEncryptionSpi == null) {
+                continue;
+            }
+
+            EncryptionPlugin encryptionPlugin =
+                    currentEncryptionSpi.createEncryptionPlugin(getConnection());
+            EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
+            if (encryptionInitInfo.isSuccess()) {
+                enableEncryption(encryptionInitInfo);
+
+                clearServerKeys();
+
+                initializedEncryption = true;
+                log.debug("Wire encryption established with " + encryptionIdentifier);
+                break;
+            } else {
+                chainBuilder.append(encryptionInitInfo.getException());
+            }
+        }
+
+        if (!initializedEncryption
+                && getAttachProperties().getEncryptionLevel() == EncryptionLevel.REQUIRED) {
+            SQLException exception = new FbExceptionBuilder()
+                    .nonTransientException(ISCConstants.isc_wirecrypt_incompatible)
+                    .toFlatSQLException();
+            if (chainBuilder.hasException()) {
+                exception.setNextException(chainBuilder.getException());
+            }
+            throw exception;
+        }
+
+        if (chainBuilder.hasException()) {
+            log.warn(initializedEncryption
+                    ? "No wire encryption established because of errors"
+                    : "Wire encryption established, but some plugins failed; see other loglines for details");
+            SQLException current = chainBuilder.getException();
+            do {
+                log.warn("Encryption plugin failed", current);
+            } while ((current = current.getNextException()) != null);
+        }
+    }
+
+    protected void enableEncryption(EncryptionInitInfo encryptionInitInfo) throws SQLException, IOException {
+        final XdrInputStream xdrIn = getXdrIn();
+        final XdrOutputStream xdrOut = getXdrOut();
+        final Encoding encoding = getEncoding();
+        final EncryptionIdentifier encryptionIdentifier = encryptionInitInfo.getEncryptionIdentifier();
+
+        xdrOut.writeInt(op_crypt);
+        xdrOut.writeString(encryptionIdentifier.getPluginName(), encoding);
+        xdrOut.writeString(encryptionIdentifier.getType(), encoding);
+        xdrOut.flush();
+
+        xdrIn.setCipher(encryptionInitInfo.getDecryptionCipher());
+        xdrOut.setCipher(encryptionInitInfo.getEncryptionCipher());
+
+        readOperationResponse(readNextOperation(), null);
     }
 }

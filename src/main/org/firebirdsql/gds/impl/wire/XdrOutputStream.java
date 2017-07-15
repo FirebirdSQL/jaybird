@@ -31,13 +31,9 @@ import org.firebirdsql.gds.ParameterBuffer;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
@@ -63,7 +59,10 @@ public final class XdrOutputStream extends OutputStream {
     private static final int ZERO_PAD_LENGTH = 3;
     private static final byte[] ZERO_PADDING = new byte[ZERO_PAD_LENGTH];
 
+    private final boolean buffered;
     private OutputStream out;
+    private OutputStream directStream;
+    private final OutputStream rawStream;
 
     // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
 
@@ -87,6 +86,9 @@ public final class XdrOutputStream extends OutputStream {
      *         {@code false} writes directly to provided {@code OutputStream}.
      */
     public XdrOutputStream(OutputStream out, boolean buffered) {
+        this.buffered = buffered;
+        this.directStream = out;
+        this.rawStream = out;
         if (buffered) {
             this.out = new BufferedOutputStream(out, BUF_SIZE);
         } else {
@@ -338,14 +340,28 @@ public final class XdrOutputStream extends OutputStream {
         out.close();
     }
 
-    public void setArc4Key(byte[] key) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
-            InvalidKeyException {
-        if (out instanceof CipherOutputStream) {
+    public void setCipher(Cipher cipher) throws IOException {
+        if (directStream instanceof CipherOutputStream) {
             throw new IOException("Output stream already encrypted");
         }
-        Cipher rc4 = Cipher.getInstance("ARCFOUR");
-        SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
-        rc4.init(Cipher.ENCRYPT_MODE, rc4Key);
-        out = new CipherOutputStream(out, rc4);
+        directStream = new CipherOutputStream(rawStream, cipher);
+        if (buffered) {
+            out = new BufferedOutputStream(directStream, BUF_SIZE);
+        } else {
+            out = directStream;
+        }
+    }
+
+    /**
+     * Writes directly to the {@code OutputStream} of the underlying socket.
+     *
+     * @param data
+     *         Data to write
+     * @throws IOException
+     *         For errors writing to the socket.
+     */
+    public final void writeDirect(byte[] data) throws IOException {
+        directStream.write(data);
+        directStream.flush();
     }
 }

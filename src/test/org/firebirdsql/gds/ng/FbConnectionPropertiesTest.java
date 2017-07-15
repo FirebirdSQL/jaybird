@@ -20,12 +20,15 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +41,10 @@ import static org.junit.Assert.assertNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestFbConnectionProperties {
+public class FbConnectionPropertiesTest {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private final FbConnectionProperties info = new FbConnectionProperties();
 
@@ -151,12 +157,29 @@ public class TestFbConnectionProperties {
     }
 
     @Test
+    public void testEncryptionLevel() {
+        assertEquals(EncryptionLevel.DEFAULT, info.getEncryptionLevel());
+        final EncryptionLevel encryptionLevel = EncryptionLevel.DISABLED;
+        info.setEncryptionLevel(encryptionLevel);
+        assertEquals(encryptionLevel, info.getEncryptionLevel());
+    }
+
+    @Test
+    public void testEncryptionLevelNullPointerExceptionOnNull() {
+        expectedException.expect(NullPointerException.class);
+        expectedException.expectMessage("encryptionLevel");
+
+        info.setEncryptionLevel(null);
+    }
+
+    @Test
     public void testCopyConstructor() throws Exception {
         info.setDatabaseName("testValue");
         info.setServerName("xyz");
         info.setPortNumber(1203);
         info.setConnectionDialect((short) 2);
         info.setConnectTimeout(15);
+        info.setEncryptionLevel(EncryptionLevel.REQUIRED);
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
         BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);
@@ -171,15 +194,18 @@ public class TestFbConnectionProperties {
     @Test
     public void testAsImmutable() throws Exception {
         // TODO Explicitly test properties instead of using reflection
-        Map<String, Object> testValues = new HashMap<String, Object>();
+        Map<String, Object> testValues = new HashMap<>();
         int intValue = 1;
-        BeanInfo beanInfo = Introspector.getBeanInfo(IConnectionProperties.class);
+        BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class, Object.class);
         for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
             if ("extraDatabaseParameters".equals(descriptor.getName())) {
                 // Property extraDatabaseParameters has no setter
                 continue;
             }
             Method method = descriptor.getWriteMethod();
+            if (method == null) {
+                continue;
+            }
             Class<?> parameterType = method.getParameterTypes()[0];
             if (parameterType == int.class) {
                 Object value = intValue++;
@@ -195,14 +221,20 @@ public class TestFbConnectionProperties {
             } else if (parameterType == boolean.class) {
                 method.invoke(info, true);
                 testValues.put(descriptor.getName(), true);
+            } else if (parameterType == EncryptionLevel.class) {
+                method.invoke(info, EncryptionLevel.REQUIRED);
+                testValues.put(descriptor.getName(), EncryptionLevel.REQUIRED);
             } else {
                 throw new IllegalStateException("Unexpected setter type: " + parameterType);
             }
         }
 
         IConnectionProperties immutable = info.asImmutable();
-        BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionProperties.class);
+        BeanInfo immutableBean = Introspector.getBeanInfo(FbImmutableConnectionProperties.class, Object.class);
         for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
+            if (Arrays.asList("attachObjectName").contains(descriptor.getName())) {
+                continue;
+            }
             if ("extraDatabaseParameters".equals(descriptor.getName())) {
                 // Property extraDatabaseParameters always returns a buffer
                 // TODO: Add or update test(s) to include extraDatabaseParameters

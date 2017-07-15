@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Abstract mutable implementation of {@link IAttachProperties}.
  *
@@ -36,6 +38,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     private int socketBufferSize = IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE;
     private int soTimeout = IAttachProperties.DEFAULT_SO_TIMEOUT;
     private int connectTimeout = IAttachProperties.DEFAULT_CONNECT_TIMEOUT;
+    private EncryptionLevel encryptionLevel = EncryptionLevel.DEFAULT;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -58,6 +61,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
             socketBufferSize = src.getSocketBufferSize();
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
+            encryptionLevel = src.getEncryptionLevel();
         }
     }
 
@@ -174,6 +178,17 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+        dirtied();
+    }
+
+    @Override
+    public EncryptionLevel getEncryptionLevel() {
+        return encryptionLevel;
+    }
+
+    @Override
+    public void setEncryptionLevel(EncryptionLevel encryptionLevel) {
+        this.encryptionLevel = requireNonNull(encryptionLevel, "encryptionLevel");
         dirtied();
     }
 

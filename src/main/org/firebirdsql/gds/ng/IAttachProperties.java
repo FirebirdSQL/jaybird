@@ -234,6 +234,30 @@ public interface IAttachProperties<T extends IAttachProperties> {
     void setConnectTimeout(int connectTimeout);
 
     /**
+     * Get the encryption level.
+     * <p>
+     * NOTE: Implementer should take care to return {@link EncryptionLevel#DEFAULT} if
+     * the value hasn't been set yet.
+     * </p>
+     *
+     * @return Encryption level
+     * @since 3.1
+     */
+    EncryptionLevel getEncryptionLevel();
+
+    /**
+     * Set the encryption level.
+     * <p>
+     * NOTE: Implementer should take care to use {@link EncryptionLevel#DEFAULT} if
+     * the value hasn't been set yet.
+     * </p>
+     *
+     * @param encryptionLevel Encryption level ({@code null} not allowed)
+     * @since 3.1
+     */
+    void setEncryptionLevel(EncryptionLevel encryptionLevel);
+
+    /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}
      */
     T asImmutable();
@@ -242,4 +266,5 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * @return A new, mutable, instance as an implementation of {@link IAttachProperties} with all properties copied.
      */
     T asNewMutable();
+
 }

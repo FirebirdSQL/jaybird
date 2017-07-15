@@ -36,6 +36,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     private final int socketBufferSize;
     private final int soTimeout;
     private final int connectTimeout;
+    private final EncryptionLevel encryptionLevel;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -58,6 +59,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
         socketBufferSize = src.getSocketBufferSize();
         soTimeout = src.getSoTimeout();
         connectTimeout = src.getConnectTimeout();
+        encryptionLevel = src.getEncryptionLevel();
     }
 
     @Override
@@ -157,6 +159,16 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public void setConnectTimeout(final int connectTimeout) {
+        immutable();
+    }
+
+    @Override
+    public EncryptionLevel getEncryptionLevel() {
+        return encryptionLevel;
+    }
+
+    @Override
+    public void setEncryptionLevel(final EncryptionLevel encryptionLevel) {
         immutable();
     }
 

@@ -39,7 +39,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestWireDatabaseConnection extends FBJUnit4TestBase {
+public class WireDatabaseConnectionTest extends FBJUnit4TestBase {
 
     @ClassRule
     public static final GdsTypeRule testTypes = GdsTypeRule.excludesNativeOnly();
@@ -62,6 +62,8 @@ public class TestWireDatabaseConnection extends FBJUnit4TestBase {
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setUser(FBTestProperties.DB_USER);
+        connectionInfo.setPassword(FBTestProperties.DB_PASSWORD);
         // TODO consider keeping NONE the default in WireConnection if not specified
         connectionInfo.setEncoding("NONE");
     }

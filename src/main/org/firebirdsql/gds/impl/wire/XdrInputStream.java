@@ -28,17 +28,12 @@ package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
 
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import javax.crypto.CipherInputStream;
-import javax.crypto.NoSuchPaddingException;
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -230,14 +225,10 @@ public final class XdrInputStream {
         in.close();
     }
 
-    public void setArc4Key(byte[] key) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
-            InvalidKeyException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (in instanceof CipherInputStream) {
             throw new IOException("Input stream already encrypted");
         }
-        Cipher rc4 = Cipher.getInstance("ARCFOUR");
-        SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
-        rc4.init(Cipher.DECRYPT_MODE, rc4Key);
-        in = new CipherInputStream(in, rc4);
+        in = new CipherInputStream(in, cipher);
     }
 }

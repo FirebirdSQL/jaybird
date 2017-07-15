@@ -295,6 +295,29 @@ public final class ClientAuthBlock {
         }
     }
 
+    /**
+     * TODO Need to handle this differently
+     * @return {@code true} if the encryption is supported
+     * @throws SQLException If it is impossible to determine if encryption is supported (eg there is no current auth plugin)
+     */
+    public boolean supportsEncryption() throws SQLException {
+        if (currentPlugin == null) {
+            throw new SQLException("No authentication plugin available");
+        }
+        return currentPlugin.generatesSessionKey();
+    }
+
+    /**
+     * @return Session key
+     * @throws SQLException If a session key cannot be provided
+     */
+    public byte[] getSessionKey() throws SQLException {
+        if (currentPlugin == null) {
+            throw new SQLException("No authentication plugin available");
+        }
+        return currentPlugin.getSessionKey();
+    }
+
     private void extractDataToParameterBuffer(ConnectionParameterBuffer pb) {
         byte[] clientData = getClientData();
         if (clientData == null || clientData.length == 0) {
@@ -320,4 +343,5 @@ public final class ClientAuthBlock {
         pb.removeArgument(tagMapping.getEncryptedPasswordTag());
         pb.removeArgument(tagMapping.getTrustedAuthTag());
     }
+
 }

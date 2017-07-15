@@ -20,8 +20,11 @@ package org.firebirdsql.gds.ng.wire.crypt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Class to hold server keys known to the client.
@@ -29,7 +32,7 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class KnownServerKey {
+public final class KnownServerKey {
 
     private static final Pattern CRYPT_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
 
@@ -37,12 +40,19 @@ public class KnownServerKey {
     private final List<String> plugins;
 
     public KnownServerKey(String keyType, List<String> plugins) {
-        this.keyType = keyType;
-        this.plugins = new ArrayList<>(plugins);
+        this.keyType = requireNonNull(keyType, "keyType");
+        this.plugins = Collections.unmodifiableList(new ArrayList<>(requireNonNull(plugins, "plugins")));
     }
 
     public KnownServerKey(String keyType, String plugins) {
-        this.keyType = keyType;
-        this.plugins = Arrays.asList(CRYPT_PLUGIN_LIST_SPLIT.split(plugins));
+        this(keyType, Arrays.asList(CRYPT_PLUGIN_LIST_SPLIT.split(plugins)));
+    }
+
+    public List<EncryptionIdentifier> getIdentifiers() {
+        List<EncryptionIdentifier> identifiers = new ArrayList<>(plugins.size());
+        for (String plugin : plugins) {
+            identifiers.add(new EncryptionIdentifier(keyType, plugin));
+        }
+        return identifiers;
     }
 }
