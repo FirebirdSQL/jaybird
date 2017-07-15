@@ -50,14 +50,14 @@
 
             <batchtest todir="${build.reports.pure_java}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/jni/Test*.class"/>
-                    <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
-                    <exclude name="**/TestConst.class"/>
                     <exclude name="**/*$$*.class"/>
 
                 </fileset>
@@ -117,14 +117,14 @@
 
             <batchtest todir="${build.reports.native}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/wire/Test*.class"/>
-                    <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
-                    <exclude name="**/TestConst.class"/>
                     <exclude name="**/*$$*.class"/>
                     <exclude name="**/jni/TestSpecialEmbeddedServerUrls.class"/>
                     <exclude name="**/jni/TestServicesAPI.class"/>
@@ -187,14 +187,14 @@
 
             <batchtest todir="${build.reports.embedded}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/wire/Test*.class"/>
-                    <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
-                    <exclude name="**/TestConst.class"/>
                     <exclude name="**/*$$*.class"/>
                     <exclude name="**/TestReconnectTransaction.class"/>
                 </fileset>
@@ -247,10 +247,12 @@
 
             <batchtest todir="${build.reports.pure_java}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                     <exclude name="org/firebirdsql/*/*$$*.class"/>
                 </fileset>
             </batchtest>
@@ -301,10 +303,12 @@
 
             <batchtest todir="${build.reports.native}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                 </fileset>
             </batchtest>
         </junit>
@@ -350,10 +354,12 @@
 
             <batchtest todir="${build.reports.embedded}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                 </fileset>
             </batchtest>
         </junit>
