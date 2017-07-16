@@ -69,6 +69,7 @@ public interface JaybirdErrorCodes {
     int jb_cryptNoCryptKeyAvailable = 337248280;
     int jb_cryptAlgorithmNotAvailable                    = 337248281;
     int jb_cryptInvalidKey          = 337248282;
+    int jb_invalidConnectionPropertyValue                = 337248283;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

@@ -415,6 +415,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
     }
 
+    @Override
+    public String getWireCrypt() {
+        return connectionProperties.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        connectionProperties.setWireCrypt(wireCrypt);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

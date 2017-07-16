@@ -22,9 +22,11 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jca.FBManagedConnection;
@@ -43,6 +45,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -52,7 +55,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBConnection extends FBJUnit4TestBase {
+public class FBConnectionTest extends FBJUnit4TestBase {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -496,6 +499,88 @@ public class TestFBConnection extends FBJUnit4TestBase {
         assumeTrue("Test only works for native", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME.equals(FBTestProperties.GDS_TYPE));
         try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:native://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
             assertTrue(connection.isValid(0));
+        }
+    }
+
+    @Test
+    public void testWireCrypt_DISABLED_FB2_5_and_earlier() throws Exception {
+        testWireCrypt_FB2_5_and_earlier(WireCrypt.DISABLED);
+    }
+
+    @Test
+    public void testWireCrypt_ENABLED_FB2_5_and_earlier() throws Exception {
+        testWireCrypt_FB2_5_and_earlier(WireCrypt.ENABLED);
+    }
+
+    @Test
+    public void testWireCrypt_DEFAULT_FB2_5_and_earlier() throws Exception {
+        testWireCrypt_FB2_5_and_earlier(WireCrypt.DEFAULT);
+    }
+
+    @Test
+    public void testWireCrypt_REQUIRED_FB2_5_and_earlier() throws Exception {
+        testWireCrypt_FB2_5_and_earlier(WireCrypt.REQUIRED);
+    }
+
+    private void testWireCrypt_FB2_5_and_earlier(WireCrypt wireCrypt) throws Exception {
+        assumeFalse("Test for Firebird versions without wire encryption support",
+                getDefaultSupportInfo().supportsWireEncryption());
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("wireCrypt", wireCrypt.name());
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            assertTrue(connection.isValid(0));
+        }
+    }
+
+    @Test
+    public void testWireCrypt_DISABLED_FB3_0_and_later() throws Exception {
+        testWireCrypt_FB3_0_and_later(WireCrypt.DISABLED);
+    }
+
+    @Test
+    public void testWireCrypt_ENABLED_FB3_0_and_later() throws Exception {
+        testWireCrypt_FB3_0_and_later(WireCrypt.ENABLED);
+    }
+
+    @Test
+    public void testWireCrypt_DEFAULT_FB3_0_and_later() throws Exception {
+        testWireCrypt_FB3_0_and_later(WireCrypt.DEFAULT);
+    }
+
+    @Test
+    public void testWireCrypt_REQUIRED_FB3_0_and_later() throws Exception {
+        testWireCrypt_FB3_0_and_later(WireCrypt.REQUIRED);
+    }
+
+    private void testWireCrypt_FB3_0_and_later(WireCrypt wireCrypt) throws Exception {
+        assumeTrue("Test for Firebird versions with wire encryption support",
+                getDefaultSupportInfo().supportsWireEncryption());
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("wireCrypt", wireCrypt.name());
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            assertTrue(connection.isValid(0));
+            GDSServerVersion serverVersion =
+                    connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
+            boolean encryptionUsed = serverVersion.isWireEncryptionUsed();
+            switch (wireCrypt) {
+            case DEFAULT:
+            case ENABLED:
+                if (!encryptionUsed) {
+                    System.err.println("WARNING: wire encryption level " + wireCrypt + " requested, but no encryption "
+                            + "used. Consider re-running the test with a WireCrypt=Enabled in firebird.conf");
+                }
+                // intentional fall-through
+            case REQUIRED:
+                assertTrue("Expected wire encryption to be used for wireCrypt=" + wireCrypt, encryptionUsed);
+                break;
+            case DISABLED:
+                assertFalse("Expected wire encryption not to be usedfor wireCrypt=" + wireCrypt, encryptionUsed);
+            }
+        } catch (SQLException e) {
+            if (e.getErrorCode() == ISCConstants.isc_wirecrypt_incompatible) {
+                System.err.println("WARNING: wire encryption level " + wireCrypt + " requested, but rejected by server."
+                        + " Consider re-running the test with a WireCrypt=Enabled in firebird.conf");
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public enum EncryptionLevel {
+public enum WireCrypt {
     REQUIRED(WireProtocolConstants.WIRE_CRYPT_REQUIRED),
     ENABLED(WireProtocolConstants.WIRE_CRYPT_ENABLED),
     DISABLED(WireProtocolConstants.WIRE_CRYPT_DISABLED),
@@ -35,7 +35,7 @@ public enum EncryptionLevel {
 
     private final int wireProtocolCryptLevel;
 
-    EncryptionLevel(int wireProtocolCryptLevel) {
+    WireCrypt(int wireProtocolCryptLevel) {
         this.wireProtocolCryptLevel = wireProtocolCryptLevel;
     }
 
@@ -44,5 +44,24 @@ public enum EncryptionLevel {
      */
     public int getWireProtocolCryptLevel() {
         return wireProtocolCryptLevel;
+    }
+
+    /**
+     * Get the enum value for the provided name, case-insensitive.
+     * <p>
+     * Works like {@link #valueOf(String)}, except {@code null} will return {@link #DEFAULT} and values
+     * are handled case-insensitively.
+     * </p>
+     *
+     * @param name String name
+     * @return Enum name for the name
+     * @throws IllegalArgumentException if this enum type has no constant with the specified name
+     */
+    public static WireCrypt fromString(String name) throws IllegalArgumentException {
+        if (name == null) {
+            return DEFAULT;
+        }
+        String uppercaseValue = name.toUpperCase();
+        return valueOf(uppercaseValue);
     }
 }

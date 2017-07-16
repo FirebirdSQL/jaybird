@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.gds.ng.EncryptionLevel;
+import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
@@ -60,8 +60,8 @@ public class V10WireOperations extends AbstractWireOperations {
         processAttachCallback.processAttachResponse(response);
 
         // fbclient also ignores REQUIRED when connecting to FB 2.5 or lower, apply same
-        if (getAttachProperties().getEncryptionLevel() == EncryptionLevel.REQUIRED) {
-            String message = "encryptionLevel=REQUIRED, but wire protocol version does not support encryption, "
+        if (getAttachProperties().getWireCrypt() == WireCrypt.REQUIRED) {
+            String message = "wireCrypt=REQUIRED, but wire protocol version does not support encryption, "
                     + "encryption requirement dropped";
             log.warn(message);
             getDefaultWarningMessageCallback().processWarning(new SQLWarning(message));

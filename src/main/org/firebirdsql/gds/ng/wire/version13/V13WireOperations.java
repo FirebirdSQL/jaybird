@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.EncryptionLevel;
+import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.FbWireAttachment;
@@ -119,9 +119,9 @@ public class V13WireOperations extends V11WireOperations {
                     processAttachCallback.processAttachResponse(response);
                     addServerKeys(response.getData());
 
-                    EncryptionLevel encryptionLevel = getAttachProperties().getEncryptionLevel();
+                    WireCrypt wireCrypt = getAttachProperties().getWireCrypt();
 
-                    if (!wasAuthComplete && encryptionLevel != EncryptionLevel.DISABLED) {
+                    if (!wasAuthComplete && wireCrypt != WireCrypt.DISABLED) {
                         tryKnownServerKeys();
                     }
                     return;
@@ -200,7 +200,7 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         if (!initializedEncryption
-                && getAttachProperties().getEncryptionLevel() == EncryptionLevel.REQUIRED) {
+                && getAttachProperties().getWireCrypt() == WireCrypt.REQUIRED) {
             SQLException exception = new FbExceptionBuilder()
                     .nonTransientException(ISCConstants.isc_wirecrypt_incompatible)
                     .toFlatSQLException();

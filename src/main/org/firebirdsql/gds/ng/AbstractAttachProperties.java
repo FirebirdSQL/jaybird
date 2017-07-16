@@ -38,7 +38,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     private int socketBufferSize = IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE;
     private int soTimeout = IAttachProperties.DEFAULT_SO_TIMEOUT;
     private int connectTimeout = IAttachProperties.DEFAULT_CONNECT_TIMEOUT;
-    private EncryptionLevel encryptionLevel = EncryptionLevel.DEFAULT;
+    private WireCrypt wireCrypt = WireCrypt.DEFAULT;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -61,7 +61,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
             socketBufferSize = src.getSocketBufferSize();
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
-            encryptionLevel = src.getEncryptionLevel();
+            wireCrypt = src.getWireCrypt();
         }
     }
 
@@ -182,13 +182,13 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     }
 
     @Override
-    public EncryptionLevel getEncryptionLevel() {
-        return encryptionLevel;
+    public WireCrypt getWireCrypt() {
+        return wireCrypt;
     }
 
     @Override
-    public void setEncryptionLevel(EncryptionLevel encryptionLevel) {
-        this.encryptionLevel = requireNonNull(encryptionLevel, "encryptionLevel");
+    public void setWireCrypt(WireCrypt wireCrypt) {
+        this.wireCrypt = requireNonNull(wireCrypt, "wireCrypt");
         dirtied();
     }
 

@@ -22,7 +22,7 @@ import org.firebirdsql.gds.ConnectionParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
-import org.firebirdsql.gds.ng.EncryptionLevel;
+import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.IAttachProperties;
 
 import java.sql.SQLException;
@@ -47,9 +47,9 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
             pb.addArgument(tagMapping.getPasswordTag(), props.getPassword());
         }
 
-        if (props.getEncryptionLevel() != EncryptionLevel.DEFAULT) {
+        if (props.getWireCrypt() != WireCrypt.DEFAULT) {
             // Need to do this differently when having to add multiple configs
-            String configString = "WireCrypt = " + props.getEncryptionLevel();
+            String configString = "WireCrypt = " + props.getWireCrypt();
             pb.addArgument(tagMapping.getConfigTag(), configString);
         }
     }

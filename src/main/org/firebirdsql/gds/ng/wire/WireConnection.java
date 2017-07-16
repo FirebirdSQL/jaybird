@@ -346,7 +346,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         clientAuthBlock.writePluginDataTo(userId);
 
         userId.write(CNCT_client_crypt);
-        VaxEncoding.encodeVaxInteger(userId, attachProperties.getEncryptionLevel().getWireProtocolCryptLevel());
+        VaxEncoding.encodeVaxInteger(userId, attachProperties.getWireCrypt().getWireProtocolCryptLevel());
 
         userId.write(CNCT_user);
         int userLength = Math.min(userBytes.length, 255);

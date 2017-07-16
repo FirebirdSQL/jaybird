@@ -18,22 +18,10 @@
  */
 package org.firebirdsql.jca;
 
-import java.io.ByteArrayInputStream;
-import java.io.PrintWriter;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.sql.*;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.resource.ResourceException;
-import javax.resource.spi.*;
-import javax.resource.spi.security.PasswordCredential;
-import javax.security.auth.Subject;
-import javax.transaction.xa.*;
-
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
@@ -43,12 +31,33 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
-import org.firebirdsql.jdbc.*;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
+import org.firebirdsql.jdbc.Synchronizable;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
+
+import javax.resource.ResourceException;
+import javax.resource.spi.*;
+import javax.resource.spi.security.PasswordCredential;
+import javax.security.auth.Subject;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+import java.io.ByteArrayInputStream;
+import java.io.PrintWriter;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLWarning;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The class <code>FBManagedConnection</code> implements both the

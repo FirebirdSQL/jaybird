@@ -157,19 +157,19 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testEncryptionLevel() {
-        assertEquals(EncryptionLevel.DEFAULT, info.getEncryptionLevel());
-        final EncryptionLevel encryptionLevel = EncryptionLevel.DISABLED;
-        info.setEncryptionLevel(encryptionLevel);
-        assertEquals(encryptionLevel, info.getEncryptionLevel());
+    public void testWireCrypt() {
+        assertEquals(WireCrypt.DEFAULT, info.getWireCrypt());
+        final WireCrypt wireCrypt = WireCrypt.DISABLED;
+        info.setWireCrypt(wireCrypt);
+        assertEquals(wireCrypt, info.getWireCrypt());
     }
 
     @Test
-    public void testEncryptionLevelNullPointerExceptionOnNull() {
+    public void testWireCryptNullPointerExceptionOnNull() {
         expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("encryptionLevel");
+        expectedException.expectMessage("wireCrypt");
 
-        info.setEncryptionLevel(null);
+        info.setWireCrypt(null);
     }
 
     @Test
@@ -179,7 +179,7 @@ public class FbConnectionPropertiesTest {
         info.setPortNumber(1203);
         info.setConnectionDialect((short) 2);
         info.setConnectTimeout(15);
-        info.setEncryptionLevel(EncryptionLevel.REQUIRED);
+        info.setWireCrypt(WireCrypt.REQUIRED);
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
         BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);
@@ -221,9 +221,9 @@ public class FbConnectionPropertiesTest {
             } else if (parameterType == boolean.class) {
                 method.invoke(info, true);
                 testValues.put(descriptor.getName(), true);
-            } else if (parameterType == EncryptionLevel.class) {
-                method.invoke(info, EncryptionLevel.REQUIRED);
-                testValues.put(descriptor.getName(), EncryptionLevel.REQUIRED);
+            } else if (parameterType == WireCrypt.class) {
+                method.invoke(info, WireCrypt.REQUIRED);
+                testValues.put(descriptor.getName(), WireCrypt.REQUIRED);
             } else {
                 throw new IllegalStateException("Unexpected setter type: " + parameterType);
             }

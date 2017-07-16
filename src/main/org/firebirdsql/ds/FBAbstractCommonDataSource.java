@@ -518,6 +518,21 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
         }
     }
+
+    @Override
+    public String getWireCrypt() {
+        synchronized (lock) {
+            return connectionProperties.getWireCrypt();
+        }
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setWireCrypt(wireCrypt);
+        }
+    }
     
     /**
      * Method that allows setting non-standard property in the form "key=value"

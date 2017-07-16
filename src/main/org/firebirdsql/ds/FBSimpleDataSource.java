@@ -390,6 +390,16 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
         mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
     }
+
+    @Override
+    public String getWireCrypt() {
+        return mcf.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        mcf.setWireCrypt(wireCrypt);
+    }
     
     /*
      * INTERFACES IMPLEMENTATION

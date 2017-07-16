@@ -234,28 +234,28 @@ public interface IAttachProperties<T extends IAttachProperties> {
     void setConnectTimeout(int connectTimeout);
 
     /**
-     * Get the encryption level.
+     * Get the wire encryption level.
      * <p>
-     * NOTE: Implementer should take care to return {@link EncryptionLevel#DEFAULT} if
+     * NOTE: Implementer should take care to return {@link WireCrypt#DEFAULT} if
      * the value hasn't been set yet.
      * </p>
      *
-     * @return Encryption level
+     * @return Wire encryption level
      * @since 3.1
      */
-    EncryptionLevel getEncryptionLevel();
+    WireCrypt getWireCrypt();
 
     /**
-     * Set the encryption level.
+     * Set the wire encryption level.
      * <p>
-     * NOTE: Implementer should take care to use {@link EncryptionLevel#DEFAULT} if
+     * NOTE: Implementer should take care to use {@link WireCrypt#DEFAULT} if
      * the value hasn't been set yet.
      * </p>
      *
-     * @param encryptionLevel Encryption level ({@code null} not allowed)
+     * @param wireCrypt Wire encryption level ({@code null} not allowed)
      * @since 3.1
      */
-    void setEncryptionLevel(EncryptionLevel encryptionLevel);
+    void setWireCrypt(WireCrypt wireCrypt);
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}
