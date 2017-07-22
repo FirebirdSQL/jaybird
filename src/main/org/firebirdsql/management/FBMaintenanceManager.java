@@ -358,14 +358,6 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
         handleTransaction(transactionId, isc_spb_rpr_rollback_trans, isc_spb_rpr_rollback_trans_64);
     }
 
-    private void handleTransaction(final int transactionId, final int action) throws SQLException {
-        try (FbService service = attachServiceManager()) {
-            ServiceRequestBuffer srb = createDefaultRepairSRB(service);
-            srb.addArgument(action, transactionId);
-            executeServicesOperation(service, srb);
-        }
-    }
-
     private void handleTransaction(final long transactionId, final int action32bit, final int action64bit)
             throws SQLException {
         if (transactionId < 0) {
