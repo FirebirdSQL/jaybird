@@ -18,23 +18,19 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.encodings.EncodingDefinition;
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ParameterBufferHelper;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.firebirdsql.gds.ParameterBufferHelper.DPB_PREFIX;
 
 /**
  * Manager of the DPB properties.
  */
 class FBDriverPropertyManager {
 
-    private static final Logger log = LoggerFactory.getLogger(FBDriverPropertyManager.class);
     private static final String RES = "driver_property_info";
 
     private static ResourceBundle info;
@@ -107,7 +103,7 @@ class FBDriverPropertyManager {
                     dpbName = value.trim();
 
                 // skip incorrect mappings
-                if (!dpbName.startsWith(ParameterBufferHelper.DPB_PREFIX))
+                if (!dpbName.startsWith(DPB_PREFIX))
                     continue;
 
                 Integer dpbKey = ParameterBufferHelper.getDpbKey(dpbName);
@@ -129,7 +125,7 @@ class FBDriverPropertyManager {
             String dpbName = entry.getKey();
             Integer dpbKey = entry.getValue();
 
-            if (!dpbName.startsWith(ParameterBufferHelper.DPB_PREFIX))
+            if (!dpbName.startsWith(DPB_PREFIX))
                 continue;
 
             if (tempDpbMap.containsKey(dpbName))
@@ -171,8 +167,7 @@ class FBDriverPropertyManager {
             // check if alias is not used together with original property
             if (propInfo != null) {
                 String originalName = propInfo.dpbName;
-                String shortName = propInfo.dpbName.substring(
-                        ParameterBufferHelper.DPB_PREFIX.length());
+                String shortName = propInfo.dpbName.substring(DPB_PREFIX.length());
 
                 boolean hasDuplicate =
                         tempProps.keySet().contains(originalName)
@@ -191,11 +186,7 @@ class FBDriverPropertyManager {
             // if the specified property is not an alias, check
             // the full list
             if (propInfo == null) {
-                String tempKey = propName;
-                if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                    tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
-
-                propInfo = dpbMap.get(tempKey);
+                propInfo = getPropertyInfo(propName);
             }
 
             // skip the element if nothing if found
@@ -205,8 +196,6 @@ class FBDriverPropertyManager {
             result.put(propInfo.dpbName, propValue);
         }
 
-        handleEncodings(result);
-
         return result;
     }
 
@@ -214,56 +203,13 @@ class FBDriverPropertyManager {
         PropertyInfo propInfo = aliases.get(propertyName);
 
         if (propInfo == null) {
-            String tempKey = propertyName;
-            if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
-
-            propInfo = dpbMap.get(tempKey);
+            propInfo = getPropertyInfo(propertyName);
         }
 
         if (propInfo == null)
             return propertyName;
 
         return propInfo.dpbName;
-    }
-
-    /**
-     * Handle character encoding parameters. This method ensures that both
-     * java encoding an client connection encodings are correctly set.
-     * Additionally method handles the character translation stuff.
-     *
-     * @param info
-     *         connection properties
-     * @throws SQLException
-     *         if the mapping path is specified but does not exist
-     */
-    public static void handleEncodings(Map<String, String> info) throws SQLException {
-        final IEncodingFactory encodingFactory = EncodingFactory.getPlatformDefault();
-        final String iscEncoding = info.get("isc_dpb_lc_ctype");
-        final String localEncoding = info.get("isc_dpb_local_encoding");
-
-        final EncodingDefinition encodingDefinition = encodingFactory.getEncodingDefinition(iscEncoding, localEncoding);
-        if (encodingDefinition != null) {
-            if (!encodingDefinition.isInformationOnly()) {
-                info.put("isc_dpb_local_encoding", encodingDefinition.getJavaEncodingName());
-            }
-
-            info.put("isc_dpb_lc_ctype", encodingDefinition.getFirebirdEncodingName());
-        } else if (iscEncoding != null) {
-            log.warn("No EncodingDefinition for " + iscEncoding + " / " + localEncoding + " specifying " + iscEncoding
-                    + " as connection encoding");
-            info.put("isc_dpb_lc_ctype", iscEncoding);
-        } else if (localEncoding != null) {
-            log.warn("No EncodingDefinition for " + localEncoding + "; ignoring connection encoding");
-        }
-
-        // ensure that we fail before any connection is obtained
-        // in case when incorrect mapping path is specified 
-        // (note, EncodingFactory.getEncoding(String, String) throws exception)
-        String mappingPath = info.get("isc_dpb_mapping_path");
-        if (encodingDefinition != null && mappingPath != null) {
-            encodingDefinition.getEncoding().withTranslation(encodingFactory.getCharacterTranslator(mappingPath));
-        }
     }
 
     /**
@@ -283,11 +229,7 @@ class FBDriverPropertyManager {
             // if the specified property is not an alias, check
             // the full list
             if (propInfo == null) {
-                String tempKey = propName;
-                if (!tempKey.startsWith(ParameterBufferHelper.DPB_PREFIX))
-                    tempKey = ParameterBufferHelper.DPB_PREFIX + tempKey;
-
-                propInfo = dpbMap.get(tempKey);
+                propInfo = getPropertyInfo(propName);
             }
 
             DriverPropertyInfo driverPropInfo = new DriverPropertyInfo(
@@ -300,5 +242,13 @@ class FBDriverPropertyManager {
         }
 
         return result.toArray(new DriverPropertyInfo[0]);
+    }
+
+    private static PropertyInfo getPropertyInfo(final String propName) {
+        String propertyKey = propName.startsWith(DPB_PREFIX)
+                ? propName
+                : DPB_PREFIX + propName;
+
+        return dpbMap.get(propertyKey);
     }
 }

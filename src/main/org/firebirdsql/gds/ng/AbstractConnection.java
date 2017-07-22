@@ -60,6 +60,9 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
         }
         encodingDefinition = tempEncodingDefinition;
         this.encodingFactory = encodingFactory.withDefaultEncodingDefinition(encodingDefinition);
+        // Overwrite with normalized values and specify missing values, eg if only charSet was specified, encoding will be set
+        this.attachProperties.setEncoding(encodingDefinition.getFirebirdEncodingName());
+        this.attachProperties.setCharSet(encodingDefinition.getJavaEncodingName());
     }
 
     /**
@@ -67,7 +70,7 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
      * for the agreed protocol.
      *
      * @return Connection handle (ie {@link FbDatabase} or {@link FbService})
-     * @throws SQLException
+     * @throws SQLException For exceptions connecting
      */
     public abstract C identify() throws SQLException;
 

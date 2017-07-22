@@ -22,6 +22,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
@@ -112,7 +113,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         try {
             DatabaseParameterBuffer dpb = this.cri.getDpb();
 
-            if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null) {
+            if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null
+                    && dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING) == null) {
                 String defaultEncoding = getDefaultConnectionEncoding();
                 if (defaultEncoding == null) {
                     throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
