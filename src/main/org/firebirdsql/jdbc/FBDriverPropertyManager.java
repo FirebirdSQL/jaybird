@@ -254,7 +254,8 @@ class FBDriverPropertyManager {
                     + " as connection encoding");
             info.put("isc_dpb_lc_ctype", iscEncoding);
         } else if (localEncoding != null) {
-            log.warn("No EncodingDefinition for " + localEncoding + "; ignoring connection encoding");
+            log.warn("No EncodingDefinition for " + localEncoding);
+            info.put("isc_dpb_local_encoding", localEncoding);
         }
 
         // ensure that we fail before any connection is obtained

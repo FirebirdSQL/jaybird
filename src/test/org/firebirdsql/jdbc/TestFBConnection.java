@@ -498,4 +498,33 @@ public class TestFBConnection extends FBJUnit4TestBase {
             assertTrue(connection.isValid(0));
         }
     }
+
+    @Test
+    public void connectingWithUnknownFirebirdCharacterSetName() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("lc_ctype", "DOES_NOT_EXIST");
+
+        expectedException.expect(SQLNonTransientConnectionException.class);
+        expectedException.expectMessage("No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null");
+
+        //noinspection EmptyTryBlock
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            // Using try-with-resources just in case connection is created
+        }
+    }
+
+    @Test
+    public void connectingWithUnknownJavaCharacterSetName() throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+        props.setProperty("charSet", "DOES_NOT_EXIST");
+
+        expectedException.expect(SQLNonTransientConnectionException.class);
+        expectedException.expectMessage("No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST");
+
+        //noinspection EmptyTryBlock
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            // Using try-with-resources just in case connection is created
+        }
+    }
 }

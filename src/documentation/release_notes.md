@@ -219,6 +219,16 @@ No known gotcha's at this time. If you find a problem: please report it on
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.2
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.1
+
+-   Changed: Specifying an unknown Java character set in connection property 
+    `charSet` or `localEncoding` was handled as if no connection character
+    set had been specified, now we throw an exception that the character set 
+    is unknown. ([JDBC-498](http://tracker.firebirdsql.org/browse/JDBC-498))
+
 Changes in Jaybird 3.0.1
 ------------------------
 
