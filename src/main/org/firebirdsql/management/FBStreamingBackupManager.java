@@ -47,10 +47,10 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
     private BufferedInputStream restoreInputStream = null;
 
     private int backupBufferSize = BUFFER_SIZE * 30; // 30K
-    private final int MAX_RESTORE_CHUNK = 65532;
+    private static final int MAX_RESTORE_CHUNK = 65532;
 
-    private final int DATA_NOT_READY = 0;
-    private final int END_OF_STREAM = -1;
+    private static final int DATA_NOT_READY = 0;
+    private static final int END_OF_STREAM = -1;
 
     /**
      * Set the local buffer size to be used when doing a backup. Default is
