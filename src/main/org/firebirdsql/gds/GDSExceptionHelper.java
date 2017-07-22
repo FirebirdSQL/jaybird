@@ -31,6 +31,8 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class returns messages for the specified error code.
@@ -49,6 +51,7 @@ public class GDSExceptionHelper {
 
     private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
+    private static final Pattern MESSAGE_PARAM_PATTERN = Pattern.compile("\\{(\\d+)}");
     private static final String MESSAGES = "isc_error_msg";
     private static final String JAYBIRD_MESSAGES = "org/firebirdsql/jaybird_error_msg";
     private static final String SQLSTATES = "isc_error_sqlstates";
@@ -56,7 +59,7 @@ public class GDSExceptionHelper {
     private static final Map<Integer, String> messages;
     private static final Map<Integer, String> sqlstates;
 
-    /**
+    /*
      * Initializes the messages map.
      */
     static {
@@ -179,6 +182,8 @@ public class GDSExceptionHelper {
      * file and allows to set parameters to the message.
      */
     public static final class GDSMessage {
+        private static final int PARAM_SIZE_FACTOR = 20;
+
         private final String template;
         private final String[] params;
         private final List<String> extraParameters = new ArrayList<>();
@@ -188,7 +193,7 @@ public class GDSExceptionHelper {
          */
         public GDSMessage(String template) {
             this.template = template;
-            params = new String[getParamCountInternal()];
+            params = new String[getParamCountInternal(template)];
         }
 
         /**
@@ -200,10 +205,11 @@ public class GDSExceptionHelper {
             return params.length;
         }
 
-        private int getParamCountInternal() {
+        private static int getParamCountInternal(final String template) {
             int count = 0;
-            for (int i = 0; i < template.length(); i++) {
-                if (template.charAt(i) == '{') count++;
+            final Matcher matcher = MESSAGE_PARAM_PATTERN.matcher(template);
+            while (matcher.find()) {
+                count++;
             }
             return count;
         }
@@ -251,21 +257,29 @@ public class GDSExceptionHelper {
          * @return string representation of the message.
          */
         public String toString() {
-            String message = template;
-            for (int i = 0; i < params.length; i++) {
-                String param = "{" + i + "}";
-                int pos = message.indexOf(param);
-                if (pos > -1) {
-                    message = message.substring(0, pos)
-                            + (params[i] != null ? params[i] : "(null)")
-                            + message.substring(pos + param.length());
-                }
+            final StringBuffer messageBuffer = new StringBuffer(estimateBufferCapacity());
+            final Matcher matcher = MESSAGE_PARAM_PATTERN.matcher(template);
+            while (matcher.find()) {
+                final int paramIndex = Integer.parseInt(matcher.group(1));
+                String parameterValue = isValidParameterIndex(paramIndex) ? params[paramIndex] : null;
+                matcher.appendReplacement(messageBuffer, parameterValue != null ? parameterValue : "(null)");
             }
+            matcher.appendTail(messageBuffer);
             // Include extra parameters at the end of the message
             for (String extraParameter : extraParameters) {
-                message = message + "; " + extraParameter;
+                messageBuffer.append("; ").append(extraParameter);
             }
-            return message;
+
+            return messageBuffer.toString();
+        }
+
+        private int estimateBufferCapacity() {
+            return template.length()
+                    + (params.length + extraParameters.size()) * PARAM_SIZE_FACTOR;
+        }
+
+        private boolean isValidParameterIndex(int index) {
+            return index >= 0 && index < params.length;
         }
     }
 
