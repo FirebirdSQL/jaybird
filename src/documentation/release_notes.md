@@ -224,10 +224,17 @@ Changes in Jaybird 3.0.2
 
 The following has been changed or fixed since Jaybird 3.0.1
 
--   Changed: Specifying an unknown Java character set in connection property 
+-   Fixed: Specifying an unknown Java character set in connection property 
     `charSet` or `localEncoding` was handled as if no connection character
     set had been specified, now we throw an exception that the character set 
     is unknown. ([JDBC-498](http://tracker.firebirdsql.org/browse/JDBC-498))
+-   Changed: Specifying a connection character set is no longer required, and
+    will now default to `NONE` again, if system property 
+    `org.firebirdsql.jdbc.defaultConnectionEncoding` is not specified. ([JDBC-502](http://tracker.firebirdsql.org/browse/JDBC-502))  
+    The new requirement turned out to be too restrictive and hindering adoption
+    of Jaybird 3. If you do want strict behaviour, you can specify system
+    property `org.firebirdsql.jdbc.requireConnectionEncoding` with value `true`.
+    See [Connecting without explicit character set] for more information.
 
 Changes in Jaybird 3.0.1
 ------------------------
@@ -524,8 +531,10 @@ See also [Compatibility changes] for details.
 
 ### Specifying connection character set is now required ###
 
-Jaybird 3.0 requires you to specify the connection character set by either
+Jaybird 3.0.0 and 3.0.1 required you to specify the connection character set by either
 specifying `encoding=<Firebird encoding>` or `charSet=<Java encoding>`.
+
+This requirement has been dropped again in 3.0.2.
 
 For more information see: [Connection rejected without an explicit character set]
 
@@ -681,29 +690,27 @@ right character set.
 
 ### Connection rejected without an explicit character set ###
 
-If no explicit character set has been set, Jaybird 3.0 will reject the 
-connection with an `SQLNonTransientConnectionException` with message 
-_"Connection rejected: No connection character set specified (property lc_ctype,
-encoding, charSet or localEncoding). Please specify a connection character set 
-(eg property charSet=utf-8) or consult the Jaybird documentation for more 
-information."_ ([JDBC-446](http://tracker.firebirdsql.org/browse/JDBC-446))
+Jaybird version 3.0.0 and 3.0.1 would not connect if no connection character set
+had been specified. This requirement has been dropped again. See 
+[Connecting without explicit character set] for more information on the behavior
+in Jaybird 3.0.2 and higher. 
 
-In Jaybird 2.2 and earlier, Jaybird would default to connection character set 
-`NONE` if no character set had been specified (through `encoding` 
-and/or `charSet`). This can result in incorrect character set
-handling when the database is used from different locales.
+### Connecting without explicit character set ###
 
-To prevent potential data-corruption, we no longer allow connecting without an
-explicit connection character set.
+If no connection character set has been specified (using connection property 
+`encoding` or `charSet` or their aliases), then - by default - Jaybird 3.0.2 and 
+higher will default to connection character set `NONE`. Be aware that `NONE` in 
+Jaybird 3 does not behave the same as in Jaybird 2.2 and earlier, see 
+[Connection character set NONE] for information.
 
-To address this change, explicitly set the connection character set using
-one of the following options:
+Note that using `NONE` can result in incorrect character set handling when the 
+database is used from different locales.
+
+You can explicitly set the connection character set using one of the following 
+options:
 
 *   Use connection property `encoding` (alias: `lc_ctype`) with a Firebird character
     set name. 
-    
-    Use `encoding=NONE` for the old default behavior (with some caveats, see 
-    other sections).
 
 *   Use connection property `charSet` (alias: `localEncoding`) with a Java character
     set name.
@@ -712,15 +719,31 @@ one of the following options:
     Firebird character set in a Java character set other than the default 
     mapping.
 
-*   By providing a default Firebird character set with system property 
+To control how Jaybird handles connections without explicit character sets, you
+can use the following options:
+
+*   You can configure a default Firebird character set - overriding the default 
+    of `NONE` - with system property 
     `org.firebirdsql.jdbc.defaultConnectionEncoding`. Jaybird will apply the
     specified character set as the default when no character set is specified
     in the connection properties.
-    
+      
     This property only supports Firebird character set names.
-
-    Use `-Dorg.firebirdsql.jdbc.defaultConnectionEncoding=NONE` to revert to the
-    old behavior (with some caveats, see other sections).
+    
+*   You can require an explicit character set to be specified with system
+    property `org.firebirdsql.jdbc.requireConnectionEncoding` set to `true`.
+    With this property specified, a connection character set must have been
+    specified using connection properties or using the system property 
+    `org.firebirdsql.jdbc.defaultConnectionEncoding`.
+    
+    This is the behaviour that was the default in Jaybird 3.0.0 and 3.0.1.
+  
+    This property will cause Jaybird to reject the connection, if no character 
+    set has been set, with an `SQLNonTransientConnectionException` with message 
+    _"Connection rejected: No connection character set specified (property 
+    lc_ctype, encoding, charSet or localEncoding). Please specify a connection 
+    character set (eg property charSet=utf-8) or consult the Jaybird 
+    documentation for more information."_.
 
 Logging
 -------

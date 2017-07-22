@@ -315,8 +315,6 @@ public class TestFBConnection extends FBJUnit4TestBase {
     /**
      * Test if not explicitly specifying a connection character set results in a warning on the connection when
      * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has been set.
-     *
-     * @see #testNoCharacterSetExceptionWithoutDefaultConnectionEncoding()
      */
     @Test
     public void testNoCharacterSetWarningWithDefaultConnectionEncoding() throws Exception {
@@ -343,13 +341,40 @@ public class TestFBConnection extends FBJUnit4TestBase {
     }
 
     /**
-     * Test if not explicitly specifying a connection character set results in an exception on the connection when
-     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not been set.
-     *
-     * @see #testNoCharacterSetWarningWithDefaultConnectionEncoding()
+     * Test if not explicitly specifying a connection character set does not result in an exception on the connection
+     * and sets encoding to NONE when system properties {@code org.firebirdsql.jdbc.defaultConnectionEncoding} and
+     * {@code org.firebirdsql.jdbc.requireConnectionEncoding} have not been set.
      */
     @Test
-    public void testNoCharacterSetExceptionWithoutDefaultConnectionEncoding() throws Exception {
+    public void testNoCharacterSetWithoutDefaultConnectionEncodingDefaultsToNONEIfEncodingNotRequired() throws Exception {
+        String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
+        assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
+                defaultConnectionEncoding, nullValue());
+        String requireConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
+        assumeThat("Test only works if org.firebirdsql.jdbc.requireConnectionEncoding has not been specified",
+                requireConnectionEncoding, nullValue());
+        Properties props = getDefaultPropertiesForConnection();
+        props.remove("lc_ctype");
+
+        //noinspection EmptyTryBlock
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            SQLWarning warnings = connection.getWarnings();
+            assertNotNull("Expected a warning for not specifying connection character set", warnings);
+            assertEquals("Unexpected warning message for not specifying connection character set",
+                    FBManagedConnection.WARNING_NO_CHARSET + "NONE", warnings.getMessage());
+            IConnectionProperties connectionProperties =
+                    connection.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
+            assertEquals("Unexpected connection encoding", "NONE", connectionProperties.getEncoding());
+        }
+    }
+
+    /**
+     * Test if not explicitly specifying a connection character set results in an exception on the connection when
+     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has not been set and
+     * {@code org.firebirdsql.jdbc.requireConnectionEncoding} has been set to {@code true}
+     */
+    @Test
+    public void testNoCharacterSetExceptionWithoutDefaultConnectionEncodingAndEncodingRequired() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());
@@ -358,7 +383,15 @@ public class TestFBConnection extends FBJUnit4TestBase {
         expectedException.expect(SQLNonTransientConnectionException.class);
         expectedException.expectMessage(FBManagedConnection.ERROR_NO_CHARSET);
 
-        DriverManager.getConnection(getUrl(), props);
+        try {
+            System.setProperty("org.firebirdsql.jdbc.requireConnectionEncoding", "true");
+            //noinspection EmptyTryBlock
+            try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        } finally {
+            System.clearProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
+        }
     }
 
     /**
