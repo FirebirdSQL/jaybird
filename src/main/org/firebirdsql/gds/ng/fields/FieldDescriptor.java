@@ -222,7 +222,7 @@ public final class FieldDescriptor {
      * </p>
      *
      * @return {@code true} if the field is a RDB$DB_KEY
-     * @since 3.1
+     * @since 4.0
      */
     public boolean isDbKey() {
         return "DB_KEY".equals(getOriginalName())

@@ -31,7 +31,7 @@ import java.util.Objects;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.1
+ * @since 4.0
  */
 public class FBRowId implements RowId {
 

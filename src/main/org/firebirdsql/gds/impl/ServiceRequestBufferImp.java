@@ -30,30 +30,8 @@ import org.firebirdsql.gds.impl.argument.NumericArgument;
  */
 public class ServiceRequestBufferImp extends ParameterBufferBase implements ServiceRequestBuffer {
 
-    /**
-     * Creates an empty service request buffer.
-     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
-     */
-    @Deprecated
-    public ServiceRequestBufferImp() {
-        super(SrbMetaData.SRB_VERSION_2);
-    }
-
     public ServiceRequestBufferImp(SrbMetaData srbMetaData, Encoding encoding) {
         super(srbMetaData, encoding);
-    }
-
-    /**
-     * Create a service request buffer with a task identifier as the first item.
-     *
-     * @param taskIdentifier
-     *         Service request task
-     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
-     */
-    @Deprecated
-    public ServiceRequestBufferImp(int taskIdentifier) {
-        super(SrbMetaData.SRB_VERSION_2);
-        addArgument(taskIdentifier);
     }
 
     @Override

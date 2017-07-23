@@ -18,31 +18,12 @@
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.jdbc.SQLStateConstants;
-
 /**
  * Exception represents transaction error in resource.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBResourceTransactionException extends FBResourceException {
-
-    /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
-     */
-    @Deprecated
-    public static final String SQL_STATE_INVALID_TRANSACTION_STATE =
-            SQLStateConstants.SQL_STATE_INVALID_TRANSACTION_STATE;
-    /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
-     */
-    @Deprecated
-    public static final String SQL_STATE_TRANSACTION_ACTIVE = SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE;
-    /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
-     */
-    @Deprecated
-    public static final String SQL_STATE_TRANSACTION_ROLLED_BACK = SQLStateConstants.SQL_STATE_TRANSACTION_ROLLED_BACK;
 
     /**
      * Create a new instance of {@code FBResourceTransactionException} with a given message and generic error code

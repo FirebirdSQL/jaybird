@@ -241,7 +241,7 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * </p>
      *
      * @return Wire encryption level
-     * @since 3.1
+     * @since 4.0
      */
     WireCrypt getWireCrypt();
 
@@ -253,7 +253,7 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * </p>
      *
      * @param wireCrypt Wire encryption level ({@code null} not allowed)
-     * @since 3.1
+     * @since 4.0
      */
     void setWireCrypt(WireCrypt wireCrypt);
 

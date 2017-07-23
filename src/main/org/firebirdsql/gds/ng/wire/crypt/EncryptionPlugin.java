@@ -31,7 +31,7 @@ package org.firebirdsql.gds.ng.wire.crypt;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.1
+ * @since 4.0
  */
 public interface EncryptionPlugin {
 

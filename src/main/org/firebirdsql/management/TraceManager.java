@@ -98,7 +98,7 @@ public interface TraceManager extends ServiceManager {
      * @throws IOException
      * @deprecated We suggest you use standard Java functionality instead (eg
      * {@code new String(Files.readAllBytes(Paths.get(fileName)), Charset.defaultCharset())}.
-     * This method will be removed in Jaybird 4.
+     * This method will be removed in Jaybird 5.
      */
     @Deprecated
     String loadConfigurationFromFile(String fileName) throws IOException;

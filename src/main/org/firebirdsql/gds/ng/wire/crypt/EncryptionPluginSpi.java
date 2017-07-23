@@ -33,7 +33,7 @@ import org.firebirdsql.gds.ng.wire.WireConnection;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.1
+ * @since 4.0
  */
 public interface EncryptionPluginSpi {
 

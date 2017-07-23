@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.ParameterBuffer;

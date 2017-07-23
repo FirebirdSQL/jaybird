@@ -27,7 +27,7 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
  * ARC4 encryption plugin provider.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.1
+ * @since 4.0
  */
 public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
 

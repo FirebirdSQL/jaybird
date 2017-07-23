@@ -435,7 +435,7 @@ public interface MaintenanceManager extends ServiceManager {
      * @throws SQLException
      *         if a database access error occurs
      * @deprecated Use {@link #limboTransactionsAsList()} or
-     * {@link #getLimboTransactions()} instead; this method will be removed in Jaybird 4.
+     * {@link #getLimboTransactions()} instead; this method will be removed in Jaybird 5.
      */
     @Deprecated
     void listLimboTransactions() throws SQLException;
