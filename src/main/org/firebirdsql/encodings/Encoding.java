@@ -69,7 +69,9 @@ public interface Encoding {
      * @param translator
      *         The translation to apply
      * @return The derived Encoding, or this encoding if {@code translator} is {@code null}
+     * @deprecated To be removed in Jaybird 3.1
      */
+    @Deprecated
     Encoding withTranslation(CharacterTranslator translator);
 
     /**

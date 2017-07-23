@@ -118,13 +118,17 @@ public interface FirebirdConnectionProperties {
 
     /**
      * @return path to the character translation table.
+     * @deprecated To be removed in Jaybird 3.1
      */
+    @Deprecated
     String getUseTranslation();
 
     /**
      * @param translationPath
      *         path to the character translation table.
+     * @deprecated To be removed in Jaybird 3.1
      */
+    @Deprecated
     void setUseTranslation(String translationPath);
 
     /**

@@ -179,7 +179,9 @@ public interface IEncodingFactory {
      *         Path of the file with mapping definition
      * @return Instance of CharacterTranslator
      * @throws java.sql.SQLException
+     * @deprecated To be removed in Jaybird 3.1
      */
+    @Deprecated
     CharacterTranslator getCharacterTranslator(String mappingPath) throws SQLException;
 
     /**

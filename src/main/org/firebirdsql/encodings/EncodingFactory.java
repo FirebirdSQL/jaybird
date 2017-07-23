@@ -596,8 +596,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @param mappingPath
      *         Resource file with alternative character mapping
      * @return Instance of {@link Encoding}
-     * @deprecated Use {@link #getEncodingForCharsetAlias(String, Encoding)} and {@link
-     *             Encoding#withTranslation(CharacterTranslator)}
+     * @deprecated To be removed in Jaybird 3.1, use {@link #getEncodingForCharsetAlias(String)}
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -624,8 +623,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @param mappingPath
      *         Resource file with alternative character mapping
      * @return Instance of {@link Encoding}
-     * @deprecated Use {@link #getEncodingForCharset(java.nio.charset.Charset, Encoding)} and {@link
-     *             Encoding#withTranslation(CharacterTranslator)}
+     * @deprecated To be removed in Jaybird 3.1, use {@link #getEncodingForCharset(Charset)}
      */
     @Deprecated
     @SuppressWarnings("deprecation")

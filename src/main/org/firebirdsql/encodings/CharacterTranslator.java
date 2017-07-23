@@ -24,7 +24,10 @@ import java.util.*;
 
 /**
  * Class responsible for character translation.
+ *
+ * @deprecated To be removed in Jaybird 3.1
  */
+@Deprecated
 public final class CharacterTranslator {
 
     /**
@@ -49,7 +52,8 @@ public final class CharacterTranslator {
     private final char[] mapping;
 
     private CharacterTranslator(char[] mapping) {
-        assert mapping.length == FULL_CHAR_RANGE : "Invalid length for mapping table"; // need to cover all possible char values
+        assert mapping.length == FULL_CHAR_RANGE
+                : "Invalid length for mapping table"; // need to cover all possible char values
         this.mapping = mapping;
     }
 

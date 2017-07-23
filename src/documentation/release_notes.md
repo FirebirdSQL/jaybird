@@ -1170,12 +1170,33 @@ Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final
 
 The following methods will be removed in Jaybird 3.1:
 
--   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
-    instead.
+-   Character set mapping (translation) will be removed entirely. Connection 
+    property `useTranslation` (and it's alias `mapping_path`) will no longer be
+    available.
     
-    Complete removal of the character translation support is also being
-    considered, as similar effects can be achieved by a custom encoding 
-    implementation.
+    Similar effects can be achieved by a custom encoding implementation.
+    
+    As part of this change the following parts of the implementation will be 
+    removed (note that most are internal to Jaybird):
+    
+    -   `org.firebirdsql.encodings.CharacterTranslator` will be removed entirely
+    -   `DatatypeCoder#encodeString(String value, String javaEncoding, String mappingPath)`
+    -   `DatatypeCoder#encodeString(String value, Encoding encoding, String mappingPath)`
+    -   `DatatypeCoder#decodeString(byte[] value, String javaEncoding, String mappingPath)`
+    -   `DatatypeCoder#decodeString(byte[] value, Encoding encoding, String mappingPath)`
+    -   `Encoding#withTranslation(CharacterTranslator translator)`
+    -   `EncodingFactory#getEncoding(String encoding, String mappingPath)`
+    -   `EncodingFactory#getEncoding(Charset charset, String mappingPath)`
+    -   `FirebirdConnectionProperties#setUseTranslation(String translationPath)` (and on data sources)
+    -   `FirebirdConnectionProperties#getUseTranslation` (and on data sources)
+    -   `IEncodingFactory#getCharacterTranslator(String mappingPath)`
+    
+-   The following connection properties will be removed:
+
+    -   `useTranslation`: See previous item
+    -   `octetsAsBytes`: Since Jaybird 3 octets is always handled as `BINARY`
+    -   `noResultSetTracking`: Option does nothing since Jaybird 3
+    -   `paranoia_mode`: Option does nothing since Jaybird 2.2 (maybe earlier)
     
 -   `GDSHelper.iscVaxInteger(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxInteger(byte[] buffer, int startPosition, int length)`
@@ -1187,6 +1208,8 @@ The following methods will be removed in Jaybird 3.1:
     `MaintenanceManager.commitTransaction(long transactionId)` instead.
 -   `MaintenanceManager.rollbackTransaction(int transactionId)`, use
     `MaintenanceManager.rollbackTransaction(long transactionId)` instead.
+-   `FBBlob#copyCharacterStream(Reader reader, long length, String encoding)`
+-   `FBBlob#copyCharacterStream(Reader reader, String encoding)`  
 
 ### Removal of deprecated constants ###
 
