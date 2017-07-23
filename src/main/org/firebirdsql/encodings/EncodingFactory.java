@@ -596,7 +596,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @param mappingPath
      *         Resource file with alternative character mapping
      * @return Instance of {@link Encoding}
-     * @deprecated To be removed in Jaybird 3.1, use {@link #getEncodingForCharsetAlias(String)}
+     * @deprecated To be removed in Jaybird 4, use {@link #getEncodingForCharsetAlias(String)}
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -623,7 +623,7 @@ public final class EncodingFactory implements IEncodingFactory {
      * @param mappingPath
      *         Resource file with alternative character mapping
      * @return Instance of {@link Encoding}
-     * @deprecated To be removed in Jaybird 3.1, use {@link #getEncodingForCharset(Charset)}
+     * @deprecated To be removed in Jaybird 4, use {@link #getEncodingForCharset(Charset)}
      */
     @Deprecated
     @SuppressWarnings("deprecation")

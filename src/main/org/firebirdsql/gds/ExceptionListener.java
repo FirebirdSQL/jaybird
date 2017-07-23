@@ -23,7 +23,7 @@ import java.sql.SQLException;
 /**
  * Notification listener for exceptions.
  *
- * @deprecated Use {@link org.firebirdsql.gds.ng.listeners.ExceptionListener}, interface will be removed in 3.1
+ * @deprecated Use {@link org.firebirdsql.gds.ng.listeners.ExceptionListener}, interface will be removed in Jaybird 4
  */
 @SuppressWarnings("deprecation")
 @Deprecated

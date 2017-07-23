@@ -3,7 +3,7 @@ package org.firebirdsql.pool;
 import org.firebirdsql.gds.impl.GDSType;
 
 /**
- * @deprecated This class will be removed in Jaybird 3.1; use {@link org.firebirdsql.ds.FBSimpleDataSource}
+ * @deprecated This class will be removed in Jaybird 4; use {@link org.firebirdsql.ds.FBSimpleDataSource}
  */
 @Deprecated
 public class FBSimpleDataSource extends org.firebirdsql.ds.FBSimpleDataSource {

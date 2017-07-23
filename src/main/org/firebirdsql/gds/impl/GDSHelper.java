@@ -187,7 +187,7 @@ public final class GDSHelper implements Synchronizable {
     }
 
     /**
-     * @deprecated Use {@link VaxEncoding#iscVaxInteger(byte[], int, int)}. This method will be removed in Jaybird 3.1
+     * @deprecated Use {@link VaxEncoding#iscVaxInteger(byte[], int, int)}. This method will be removed in Jaybird 4
      */
     @Deprecated
     public int iscVaxInteger(byte[] buffer, int pos, int length) {
@@ -195,7 +195,7 @@ public final class GDSHelper implements Synchronizable {
     }
 
     /**
-     * @deprecated Use {@link VaxEncoding#iscVaxLong(byte[], int, int)}. This method will be removed in Jaybird 3.1
+     * @deprecated Use {@link VaxEncoding#iscVaxLong(byte[], int, int)}. This method will be removed in Jaybird 4
      */
     @Deprecated
     public long iscVaxLong(byte[] buffer, int pos, int length) {

@@ -28,18 +28,18 @@ import org.firebirdsql.jdbc.SQLStateConstants;
 public class FBResourceTransactionException extends FBResourceException {
 
     /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in Jaybird 4.
      */
     @Deprecated
     public static final String SQL_STATE_INVALID_TRANSACTION_STATE =
             SQLStateConstants.SQL_STATE_INVALID_TRANSACTION_STATE;
     /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in Jaybird 4.
      */
     @Deprecated
     public static final String SQL_STATE_TRANSACTION_ACTIVE = SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE;
     /**
-     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+     * @deprecated Use constants from {@link SQLStateConstants}. To be removed in Jaybird 4.
      */
     @Deprecated
     public static final String SQL_STATE_TRANSACTION_ROLLED_BACK = SQLStateConstants.SQL_STATE_TRANSACTION_ROLLED_BACK;

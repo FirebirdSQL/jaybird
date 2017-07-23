@@ -27,7 +27,7 @@ import java.sql.SQLFeatureNotSupportedException;
  */
 public class FBDriverNotCapableException extends SQLFeatureNotSupportedException {
 	/**
-	 * @deprecated Use constants from {@link SQLStateConstants}. To be removed in 3.1.
+	 * @deprecated Use constants from {@link SQLStateConstants}. To be removed in Jaybird 4.
 	 */
 	@Deprecated
     public static final String SQL_STATE_FEATURE_NOT_SUPPORTED = SQLStateConstants.SQL_STATE_FEATURE_NOT_SUPPORTED;

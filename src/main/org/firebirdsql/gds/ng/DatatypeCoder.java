@@ -143,13 +143,13 @@ public interface DatatypeCoder {
      * @return The value of {@code value} as a {@code byte} array
      * @throws java.sql.SQLException if the given encoding cannot be found, or an error
      *         occurs during the encoding
-     * @deprecated To be removed in Jaybird 3.1
+     * @deprecated To be removed in Jaybird 4
      */
     @Deprecated
     byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException;
 
     /**
-     * @deprecated To be removed in Jaybird 3.1
+     * @deprecated To be removed in Jaybird 4
      */
     @Deprecated
     byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException;
@@ -163,13 +163,13 @@ public interface DatatypeCoder {
      * @return The decoded {@code String}
      * @throws java.sql.SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
-     * @deprecated To be removed in Jaybird 3.1
+     * @deprecated To be removed in Jaybird 4
      */
     @Deprecated
     String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException;
 
     /**
-     * @deprecated To be removed in Jaybird 3.1
+     * @deprecated To be removed in Jaybird 4
      */
     @Deprecated
     String decodeString(byte[] value, Encoding encoding, String mappingPath) throws SQLException;

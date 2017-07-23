@@ -32,7 +32,7 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
     /**
      * Creates an empty service request buffer.
-     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
+     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 4
      */
     @Deprecated
     public ServiceRequestBufferImp() {
@@ -48,7 +48,7 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
      *
      * @param taskIdentifier
      *         Service request task
-     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 3.1
+     * @deprecated Use {@link #ServiceRequestBufferImp(SrbMetaData, Encoding)}, will be removed in Jaybird 4
      */
     @Deprecated
     public ServiceRequestBufferImp(int taskIdentifier) {

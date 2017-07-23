@@ -489,7 +489,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      * @param reader the source of data to copy
      * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
      * @param encoding The encoding used in the character stream
-     * @deprecated Method signature will change incompatibly in Jaybird 3.1
+     * @deprecated Method signature will change incompatibly in Jaybird 4
      */
     @Deprecated
     public void copyCharacterStream(Reader reader, long length, String encoding) throws SQLException {
@@ -525,7 +525,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
      *
      * @param reader the source of data to copy
      * @param encoding The encoding used in the character stream
-     * @deprecated Method signature will change incompatibly in Jaybird 3.1
+     * @deprecated Method signature will change incompatibly in Jaybird 4
      */
     @Deprecated
     public void copyCharacterStream(Reader reader, String encoding) throws SQLException {

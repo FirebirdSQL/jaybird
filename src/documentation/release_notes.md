@@ -72,7 +72,7 @@ Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for
 earlier Java versions has been dropped.
 
 Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
-but real module support will not be available until Jaybird 3.1 (or later).
+but real module support will not be available until Jaybird 4 (or later).
 
 Jaybird 3.0 is the last version to support Java 7.
 
@@ -407,7 +407,7 @@ version 12.
 Firebird 3.0 support is improved with the (partial) implementation of wire
 protocol 13 and support for the _Srp_ authentication plugin. Version 13 support
 does not yet provide Firebird 3.0 wire encryption and zlib compression. Wire
-encryption is planned for Jaybird 3.1. Support for zlib compression is not 
+encryption is planned for Jaybird 4. Support for zlib compression is not 
 planned yet.
 
 See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
@@ -1100,7 +1100,7 @@ removed completely, with the exception of
 `org.firebirdsql.pool.FBSimpleDataSource`. This class has been moved to
 `org.firebirdsql.ds.FBSimpleDataSource`. A subclass with the same name is kept
 in `org.firebirdsql.pool` for backwards compatibility. This subclass will be
-removed in Jaybird 3.1.
+removed in Jaybird 4.
 
 With this change, there are no `javax.sql.DataSource` implementations in Jaybird
 that provide connection pooling (the `javax.sql.ConnectionPoolDataSource`
@@ -1154,21 +1154,26 @@ Miscellaneous
 Breaking changes for Jaybird 3.1
 --------------------------------
 
-With Jaybird 3.1 the following breaking changes will be introduced.
+The version previously announced as 3.1 will be released as Jaybird 4.
+
+Breaking changes for Jaybird 4
+------------------------------
+
+With Jaybird 4 the following breaking changes will be introduced.
 
 ### Dropping support for Firebird 2.0 and 2.1 ###
 
-Jaybird 3.1 will drop support for Firebird 2.0 and 2.1. In general we expect the
+Jaybird 4 will drop support for Firebird 2.0 and 2.1. In general we expect the
 driver to remain functional, but chances are certain metadata (eg 
 `DatabaseMetaData`) will break if we use features introduced in newer versions.
 
 ### Dropping support for Java 7 ###
 
-Jaybird 3.1 will very likely drop support for Java 7 (this decision is not final yet).
+Jaybird 4 will very likely drop support for Java 7 (this decision is not final yet).
 
 ### Removal of deprecated methods ###
 
-The following methods will be removed in Jaybird 3.1:
+The following methods will be removed in Jaybird 4:
 
 -   Character set mapping (translation) will be removed entirely. Connection 
     property `useTranslation` (and it's alias `mapping_path`) will no longer be
@@ -1213,7 +1218,7 @@ The following methods will be removed in Jaybird 3.1:
 
 ### Removal of deprecated constants ###
 
-The following constants will be removed in Jaybird 3.1:
+The following constants will be removed in Jaybird 4:
 
 -   All `SQL_STATE_*` constants in `FBSQLException`,
     `FBResourceTransactionException`, `FBResourceException`, and

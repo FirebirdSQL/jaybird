@@ -466,7 +466,7 @@ public interface MaintenanceManager extends ServiceManager {
      *         The ID of the limbo transaction to be committed
      * @throws SQLException
      *         if a database access error occurs or the given transaction ID is not valid
-     * @deprecated Use {@link #commitTransaction(long)}. This method wil be removed in Jaybird 3.1.
+     * @deprecated Use {@link #commitTransaction(long)}. This method wil be removed in Jaybird 4.
      */
     @Deprecated
     void commitTransaction(int transactionId) throws SQLException;
@@ -493,7 +493,7 @@ public interface MaintenanceManager extends ServiceManager {
      *         The ID of the limbo transaction to be rolled back
      * @throws SQLException
      *         if a database access error occurs or the given transaction ID is not valid
-     * @deprecated Use {@link #rollbackTransaction(long)}. This method wil be removed in Jaybird 3.1.
+     * @deprecated Use {@link #rollbackTransaction(long)}. This method wil be removed in Jaybird 4.
      */
     @Deprecated
     void rollbackTransaction(int transactionId) throws SQLException;
