@@ -24,6 +24,11 @@
  */
 package org.firebirdsql.encodings;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
+
 /**
  * Encoding translates between a Java string and a byte array for a specific (Firebird) encoding.
  * <p>
@@ -64,16 +69,25 @@ public interface Encoding {
     String decodeFromCharset(byte[] in, int offset, int length);
 
     /**
-     * Derives an {@link Encoding} that applies the specified character translation.
-     *
-     * @param translator
-     *         The translation to apply
-     * @return The derived Encoding, or this encoding if {@code translator} is {@code null}
-     */
-    Encoding withTranslation(CharacterTranslator translator);
-
-    /**
      * @return The name of the Java character set.
      */
     String getCharsetName();
+
+    /**
+     * Creates a reader wrapping an input stream.
+     *
+     * @param inputStream
+     *         Input stream
+     * @return Reader applying this encoding when reading
+     */
+    Reader createReader(InputStream inputStream);
+
+    /**
+     * Creates a writer wrapping an input stream.
+     *
+     * @param outputStream
+     *         Input stream
+     * @return Writer applying this encoding when writing
+     */
+    Writer createWriter(OutputStream outputStream);
 }

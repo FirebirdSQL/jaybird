@@ -147,34 +147,13 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException {
-        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
-        return encodingFactory
-                .getEncodingForCharsetAlias(javaEncoding)
-                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
-                .encodeToCharset(value);
+    public byte[] encodeString(String value, Encoding encoding) throws SQLException {
+        return encoding.encodeToCharset(value);
     }
 
     @Override
-    public byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException {
-        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
-        return encoding
-                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
-                .encodeToCharset(value);
-    }
-
-    @Override
-    public String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException {
-        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
-        return decodeString(value, encodingFactory.getEncodingForCharsetAlias(javaEncoding), mappingPath);
-    }
-
-    @Override
-    public String decodeString(byte[] value, Encoding encoding, String mappingPath) throws SQLException {
-        // TODO mappingPath (or translator) might need to be property of DefaultDataTypeCoder itself, and not handed over at each invocation
-        return encoding
-                .withTranslation(encodingFactory.getCharacterTranslator(mappingPath))
-                .decodeFromCharset(value);
+    public String decodeString(byte[] value, Encoding encoding) throws SQLException {
+        return encoding.decodeFromCharset(value);
     }
 
     // times,dates...

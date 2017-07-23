@@ -97,7 +97,6 @@ public abstract class FBField {
     protected final FieldDescriptor fieldDescriptor;
     private final FieldDataProvider dataProvider;
     protected GDSHelper gdsHelper;
-    protected String mappingPath;
     protected int requiredType;
     protected int scale = -1;
 
@@ -143,10 +142,6 @@ public abstract class FBField {
 
     public void setConnection(GDSHelper gdsHelper) {
         this.gdsHelper = gdsHelper;
-
-        if (gdsHelper != null) {
-            mappingPath = gdsHelper.getMappingPath();
-        }
     }
 
     /**
@@ -537,7 +532,7 @@ public abstract class FBField {
         if (is == null) {
             return null;
         } else {
-            return TranslatingReader.getInstance(is, getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName(), mappingPath);
+            return getDatatypeCoder().getEncodingFactory().getDefaultEncoding().createReader(is);
         }
     }
 

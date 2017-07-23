@@ -41,16 +41,10 @@ public final class GDSHelper implements Synchronizable {
     private final Object syncObject;
     private FbTransaction transaction;
 
-    private boolean registerResultSets;
-
     /**
      * Create instance of this class.
      */
     public GDSHelper(FbDatabase database) {
-        // TODO Make explicit property
-        this.registerResultSets = !database.getConnectionProperties().getExtraDatabaseParameters()
-                .hasArgument(DatabaseParameterBufferExtension.NO_RESULT_SET_TRACKING);
-
         this.database = database;
         syncObject = database.getSynchronizationObject();
     }
@@ -282,12 +276,6 @@ public final class GDSHelper implements Synchronizable {
 
     public String getJavaEncoding() {
         return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
-    }
-
-    public String getMappingPath() {
-        // TODO Add as explicit property on IConnectionProperties
-        DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
-        return dpb.getArgumentAsString(DatabaseParameterBufferExtension.MAPPING_PATH);
     }
 
     @Override

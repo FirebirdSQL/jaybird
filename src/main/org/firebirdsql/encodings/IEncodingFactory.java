@@ -19,7 +19,6 @@
 package org.firebirdsql.encodings;
 
 import java.nio.charset.Charset;
-import java.sql.SQLException;
 
 /**
  * Interface for the EncodingFactory.
@@ -171,16 +170,6 @@ public interface IEncodingFactory {
      * @return Encoding instance (never null)
      */
     Encoding getEncodingForCharsetAlias(String charsetAlias);
-
-    /**
-     * Gets an instance of {@link org.firebirdsql.encodings.CharacterTranslator} for the specified mappingPath.
-     *
-     * @param mappingPath
-     *         Path of the file with mapping definition
-     * @return Instance of CharacterTranslator
-     * @throws java.sql.SQLException
-     */
-    CharacterTranslator getCharacterTranslator(String mappingPath) throws SQLException;
 
     /**
      * Gets or creates an {@link EncodingDefinition} for the supplied Firebird encoding and Java charset.

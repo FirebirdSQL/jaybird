@@ -47,16 +47,7 @@ in the protocol and database attachment parameters that are sent to the server.
 
 ### Notes on Firebird 3 support
 
-Jaybird 4 does not (yet) support the Firebird 3 wire encryption nor zlib compression.
-
-To be able to connect to Firebird 3, it is necessary to change the `WireCrypt` 
-setting from its default `Required` to `Enabled` in `firebird.conf`:
-                                     
-    WireCrypt = Enabled
-    
-This configuration option can also be set to `Disabled`, but that is not 
-advisable as that will also disable it for clients that do support wire 
-encryption.
+Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 
 Supported Java versions
 -----------------------
@@ -237,8 +228,7 @@ Firebird support
 Support for Firebird 2.0 and 2.1 has been dropped. See [Firebird 2.0 and 2.1 no
 longer supported] for details.
 
-See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
-on the wiki.
+Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
 
 JDBC RowId support
 ------------------
@@ -377,18 +367,47 @@ Unfortunately this does not apply to parameters, see also [JDBC RowId support].
 Due to the method of identification, real columns of type `char character set 
 octets` with the name `DB_KEY` will also be identified as a `ROWID` column.
 
+Removal of character mapping
+----------------------------
+
+Character mapping has been removed. Character mapping (also known as
+translation) was a feature that allowed to remap certain characters when 
+encoding/decoding strings. This could be used to address incompatibilities or
+incorrect mappings in the character set implementation of certain platforms 
+(apparently HPUX was affected).
+
+If you do need this feature, then you will need to use a custom encoding 
+implementation.
+
+Connection property `useTranslation` (and it's alias `mapping_path`) will no 
+longer be available. As part of this change the following parts of the 
+implementation have been removed (note that most are internal to Jaybird):
+
+-   `org.firebirdsql.encodings.CharacterTranslator` will be removed entirely
+-   `DatatypeCoder#encodeString(String value, String javaEncoding, String mappingPath)`
+-   `DatatypeCoder#encodeString(String value, Encoding encoding, String mappingPath)`
+-   `DatatypeCoder#decodeString(byte[] value, String javaEncoding, String mappingPath)`
+-   `DatatypeCoder#decodeString(byte[] value, Encoding encoding, String mappingPath)`
+-   `Encoding#withTranslation(CharacterTranslator translator)`
+-   `EncodingFactory#getEncoding(String encoding, String mappingPath)`
+-   `EncodingFactory#getEncoding(Charset charset, String mappingPath)`
+-   `FirebirdConnectionProperties#setUseTranslation(String translationPath)` (and on data sources)
+-   `FirebirdConnectionProperties#getUseTranslation` (and on data sources)
+-   `IEncodingFactory#getCharacterTranslator(String mappingPath)`
+    
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
 
+The following connection properties (and equivalent data source properties) have
+been removed:
+
+-   `useTranslation`: See previous item
+-   `octetsAsBytes`: Since Jaybird 3 octets is always handled as `BINARY`
+-   `noResultSetTracking`: Option does nothing since Jaybird 3
+-   `paranoia_mode`: Option does nothing since Jaybird 2.2 (maybe earlier)
+
 The following deprecated methods have been removed in Jaybird 4:
 
--   `CharacterTranslator.getMapping()`, use `CharacterTranslator.getMapping(char)`
-    instead.
-    
-    Complete removal of the character translation support is also being
-    considered, as similar effects can be achieved by a custom encoding 
-    implementation.
-    
 -   `GDSHelper.iscVaxInteger(byte[] buffer, int pos, int length)` use
     `VaxEncoding.iscVaxInteger(byte[] buffer, int startPosition, int length)`
     instead.
@@ -401,8 +420,11 @@ The following deprecated methods have been removed in Jaybird 4:
     `MaintenanceManager.rollbackTransaction(long transactionId)` instead.
 -   `ServiceRequestBufferImp#ServiceRequestBufferImp()`
 -   `ServiceRequestBufferImp#ServiceRequestBufferImp(int taskIdentifier)`
+-   `FBBlob#copyCharacterStream(Reader reader, long length, String encoding)`
+-   `FBBlob#copyCharacterStream(Reader reader, String encoding)` 
+-   See also [Removal of character mapping] for a number of removed methods
     
-The following classes have been removed in Jaybird 3:
+The following classes have been removed in Jaybird 4:
 
 -   `org.firebirdsql.gds.ExceptionListener`, use `org.firebirdsql.gds.ng.listeners.ExceptionListener`
 -   `org.firebirdsql.pool.FBSimpleDataSource`, use `org.firebirdsql.ds.FBSimpleDataSource` 

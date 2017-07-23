@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.encodings;
 
+import java.io.*;
 import java.nio.charset.Charset;
 
 /**
@@ -32,12 +31,7 @@ final class EncodingSingleByte implements Encoding {
     private final Charset charset;
 
     public EncodingSingleByte(final Charset charset) {
-        this(charset, CharacterTranslator.IDENTITY_TRANSLATOR);
-    }
-
-    EncodingSingleByte(final Charset charset, final CharacterTranslator translator) {
         assert charset != null : "charset should not be null";
-        assert translator != null : "translator should not be null";
         byteToChar = new char[256];
         charToByte = new byte[256 * 256];
         this.charset = charset;
@@ -45,8 +39,8 @@ final class EncodingSingleByte implements Encoding {
         byte[] val = new byte[1];
         for (int i = 0; i < 256; i++) {
             val[0] = (byte) i;
-            char ch = new String(val, 0, 1, charset).charAt(0);
-            byteToChar[i] = translator.getMapping(ch);
+            char ch = new String(val, charset).charAt(0);
+            byteToChar[i] = ch;
             charToByte[byteToChar[i]] = (byte) i;
         }
     }
@@ -76,15 +70,18 @@ final class EncodingSingleByte implements Encoding {
     }
 
     @Override
-    public Encoding withTranslation(final CharacterTranslator translator) {
-        if (translator != null) {
-            return new EncodingSingleByte(charset, translator);
-        }
-        return this;
-    }
-
-    @Override
     public String getCharsetName() {
         return charset.name();
     }
+
+    @Override
+    public Reader createReader(InputStream inputStream) {
+        return new InputStreamReader(inputStream, charset);
+    }
+
+    @Override
+    public Writer createWriter(OutputStream outputStream) {
+        return new OutputStreamWriter(outputStream, charset);
+    }
+    
 }

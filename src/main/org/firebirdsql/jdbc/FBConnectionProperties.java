@@ -47,7 +47,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String ENCODING_PROPERTY = "encoding";
     public static final String ROLE_NAME_PROPERTY = "roleName";
     public static final String SQL_DIALECT_PROPERTY = "sqlDialect";
-    public static final String USE_TRANSLATION_PROPERTY = "useTranslation";
     public static final String USE_STREAM_BLOBS_PROPERTY = "useStreamBlobs";
     public static final String USE_STANDARD_UDF_PROPERTY = "useStandardUdf";
     public static final String SOCKET_BUFFER_SIZE_PROPERTY = "socketBufferSize";
@@ -244,16 +243,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public void setSqlDialect(String sqlDialect) {
         if (sqlDialect != null) {
             setStringProperty(SQL_DIALECT_PROPERTY, sqlDialect);
-        }
-    }
-
-    public String getUseTranslation() {
-        return getStringProperty(USE_TRANSLATION_PROPERTY);
-    }
-
-    public void setUseTranslation(String translationPath) {
-        if (translationPath != null) {
-            setStringProperty(USE_TRANSLATION_PROPERTY, translationPath);
         }
     }
 

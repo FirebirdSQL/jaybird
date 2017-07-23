@@ -277,10 +277,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         return mcf.getType();
     }
 
-    public String getUseTranslation() {
-        return mcf.getUseTranslation();
-    }
-
     public boolean isTimestampUsesLocalTimezone() {
         return mcf.isTimestampUsesLocalTimezone();
     }
@@ -351,10 +347,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
         mcf.setUseStreamBlobs(useStreamBlobs);
-    }
-
-    public void setUseTranslation(String translationPath) {
-        mcf.setUseTranslation(translationPath);
     }
 
     public boolean isDefaultResultSetHoldable() {

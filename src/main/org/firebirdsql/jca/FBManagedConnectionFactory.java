@@ -273,10 +273,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         return connectionProperties.getUserName();
     }
 
-    public String getUseTranslation() {
-        return connectionProperties.getUseTranslation();
-    }
-
     public boolean isTimestampUsesLocalTimezone() {
         return connectionProperties.isTimestampUsesLocalTimezone();
     }
@@ -371,10 +367,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
         connectionProperties.setUseStreamBlobs(useStreamBlobs);        
-    }
-
-    public void setUseTranslation(String translationPath) {
-        connectionProperties.setUseTranslation(translationPath);        
     }
 
     public boolean isDefaultResultSetHoldable() {

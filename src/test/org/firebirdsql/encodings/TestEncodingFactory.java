@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.nio.charset.Charset;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -213,33 +212,6 @@ public class TestEncodingFactory {
         assertNull("Expected no EncodingDefinition for Charset US-ASCII, as the definition was firebirdOnly=true",
                 factory.getEncodingDefinitionByCharset(Charset.forName("US-ASCII")));
 
-    }
-
-    @Test
-    public void testGetCharacterTranslator_initial() throws Exception {
-        final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
-
-        final CharacterTranslator characterTranslator = factory.getCharacterTranslator("org.firebirdsql.encodings.testTranslation");
-        assertNotNull("Expected a CharacterTranslator instance", characterTranslator);
-    }
-
-    @Test
-    public void testGetCharacterTranslator_cached() throws Exception {
-        final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
-
-        final CharacterTranslator characterTranslator = factory.getCharacterTranslator("org.firebirdsql.encodings.testTranslation");
-        final CharacterTranslator secondCharacterTranslator = factory.getCharacterTranslator("org.firebirdsql.encodings.testTranslation");
-        assertSame("Expected second call to getCharacterTranslator to return same instance", characterTranslator, secondCharacterTranslator);
-    }
-
-    @Test
-    public void testGetCharacterTranslator_notFound() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage("could not be found.");
-
-        final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
-
-        factory.getCharacterTranslator("org.firebirdsql.encodings.testDoesNotExist");
     }
 
     @Test

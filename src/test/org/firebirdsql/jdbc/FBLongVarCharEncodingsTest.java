@@ -20,19 +20,6 @@
 package org.firebirdsql.jdbc;
 
 import org.junit.Ignore;
-import org.junit.Test;
-
-import java.io.Reader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Properties;
-
-import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
-import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * This test case tests encodings in text blobs.
@@ -40,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TestFBLongVarCharEncodings extends TestFBEncodings {
+public class FBLongVarCharEncodingsTest extends FBEncodingsTest {
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -72,60 +59,6 @@ public class TestFBLongVarCharEncodings extends TestFBEncodings {
     @Override
     public void testPadding() throws Exception {
         // test is not relevant
-    }
-
-    /**
-     * Test whether character translation code works correctly.
-     *
-     * @throws Exception
-     *         if something went wrong.
-     */
-    @Test
-    public void testTranslation() throws Exception {
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.put("lc_ctype", "NONE");
-        props.put("charSet", "Cp1252");
-        props.put("useTranslation", "translation.hpux");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-
-        try {
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_encodings(" +
-                            "  id, none_field) " +
-                            "VALUES(?, ?)");
-
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            stmt.setBytes(2, TRANSLATION_TEST_BYTES);
-
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
-
-            // 
-            // Test each column
-            //
-            stmt = connection.prepareStatement("SELECT none_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-
-            Reader in = rs.getCharacterStream(1);
-            char[] buffer = new char[8192]; // should be enough
-
-            int readChars = in.read(buffer);
-
-            String str = new String(buffer, 0, readChars);
-
-            assertEquals("Value should be correct.", TRANSLATION_TEST, str);
-
-            stmt.close();
-        } finally {
-            connection.close();
-        }
     }
 
     @Override

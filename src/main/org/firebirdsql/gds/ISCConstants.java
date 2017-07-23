@@ -170,11 +170,14 @@ public interface ISCConstants {
     int isc_dpb_socket_buffer_size      = 129;
     int isc_dpb_blob_buffer_size        = 130;
     int isc_dpb_use_stream_blobs        = 131;
+    @Deprecated
     int isc_dpb_paranoia_mode           = 132;
     int isc_dpb_timestamp_uses_local_timezone        = 133;
     int isc_dpb_use_standard_udf        = 134;
     int isc_dpb_local_encoding          = 135;
+    @Deprecated
     int isc_dpb_mapping_path            = 136;
+    @Deprecated
     int isc_dpb_no_result_set_tracking  = 137;
     int isc_dpb_result_set_holdable     = 138;
     int isc_dpb_filename_charset        = 139;

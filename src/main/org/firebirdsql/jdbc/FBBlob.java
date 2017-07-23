@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -483,22 +484,20 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
     /**
      * Copy data from a character stream into this Blob.
      * <p>
-     * Calling with length {@code -1} is equivalent to calling {@link #copyCharacterStream(Reader, String)}.
+     * Calling with length {@code -1} is equivalent to calling {@link #copyCharacterStream(Reader, Encoding)}.
      * </p>
      *
      * @param reader the source of data to copy
      * @param length The maximum number of bytes to copy, or {@code -1} to read the whole stream
      * @param encoding The encoding used in the character stream
      */
-    public void copyCharacterStream(Reader reader, long length, String encoding) throws SQLException {
+    public void copyCharacterStream(Reader reader, long length, Encoding encoding) throws SQLException {
         if (length == -1L) {
             copyCharacterStream(reader, encoding);
             return;
         }
         try (OutputStream os = setBinaryStream(1);
-             OutputStreamWriter osw = encoding != null
-                     ? new OutputStreamWriter(os, encoding)
-                     : new OutputStreamWriter(os)) {
+             Writer osw = encoding.createWriter(os)) {
 
             final char[] buffer = new char[(int) Math.min(bufferLength, length)];
             int chunk;
@@ -518,17 +517,15 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
     /**
      * Copy data from a character stream into this Blob. Unlike
-     * the {@link #copyCharacterStream(Reader, long, String)} )} method, this one copies bytes
+     * the {@link #copyCharacterStream(Reader, long, Encoding)} )} method, this one copies bytes
      * until the EOF is reached.
      *
      * @param reader the source of data to copy
      * @param encoding The encoding used in the character stream
      */
-    public void copyCharacterStream(Reader reader, String encoding) throws SQLException {
+    public void copyCharacterStream(Reader reader, Encoding encoding) throws SQLException {
         try (OutputStream os = setBinaryStream(1);
-             OutputStreamWriter osw = encoding != null
-                ? new OutputStreamWriter(os, encoding)
-                : new OutputStreamWriter(os)) {
+             Writer osw = encoding.createWriter(os)) {
             final char[] buffer = new char[bufferLength];
             int chunk;
             while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {

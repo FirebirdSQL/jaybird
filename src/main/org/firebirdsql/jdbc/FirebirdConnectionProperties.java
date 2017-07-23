@@ -118,17 +118,6 @@ public interface FirebirdConnectionProperties {
     void setSqlDialect(String sqlDialect);
 
     /**
-     * @return path to the character translation table.
-     */
-    String getUseTranslation();
-
-    /**
-     * @param translationPath
-     *         path to the character translation table.
-     */
-    void setUseTranslation(String translationPath);
-
-    /**
      * @return <code>true</code> if stream blobs should be created, otherwise
      * <code>false</code>.
      */

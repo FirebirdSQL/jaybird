@@ -186,7 +186,7 @@ class FBStringField extends FBField {
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeString(getFieldData(), encodingDefinition.getEncoding(), mappingPath);
+        return getDatatypeCoder().decodeString(getFieldData(), encodingDefinition.getEncoding());
     }
 
     //----- getXXXStream code
@@ -314,7 +314,7 @@ class FBStringField extends FBField {
             setNull();
             return;
         }
-        setFieldData(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
+        setFieldData(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding()));
     }
 
     //----- setXXXStream code

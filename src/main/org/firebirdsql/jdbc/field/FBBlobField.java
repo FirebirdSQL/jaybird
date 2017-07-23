@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
@@ -161,8 +162,7 @@ class FBBlobField extends FBField implements FBFlushableField {
 
         if (blob == null) return null;
 
-        return getDatatypeCoder().decodeString(getBytes(), getDatatypeCoder().getEncodingFactory().getDefaultEncoding(),
-                mappingPath);
+        return getDatatypeCoder().decodeString(getBytes(), getDatatypeCoder().getEncodingFactory().getDefaultEncoding());
     }
 
     //--- setXXX methods
@@ -192,8 +192,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (binaryStream != null) {
             copyBinaryStream(binaryStream, length);
         } else if (characterStream != null) {
-            copyCharacterStream(characterStream, length,
-                    getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName());
+            copyCharacterStream(characterStream, length, getDatatypeCoder().getEncodingFactory().getDefaultEncoding());
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
         } else if (blob == null) {
@@ -212,7 +211,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
-    private void copyCharacterStream(Reader in, long length, String encoding) throws SQLException {
+    private void copyCharacterStream(Reader in, long length, Encoding encoding) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
@@ -241,8 +240,7 @@ class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
 
-        setBytes(getDatatypeCoder().encodeString(value, getDatatypeCoder().getEncodingFactory().getDefaultEncoding(),
-                mappingPath));
+        setBytes(getDatatypeCoder().encodeString(value, getDatatypeCoder().getEncodingFactory().getDefaultEncoding()));
     }
 
     @Override

@@ -21,7 +21,6 @@ package org.firebirdsql.encodings;
 import org.firebirdsql.gds.ISCConstants;
 
 import java.nio.charset.Charset;
-import java.sql.SQLException;
 
 /**
  * Implementation of {@link IEncodingFactory} that wraps an {@link EncodingFactory} to
@@ -154,11 +153,6 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     @Override
     public Encoding getEncodingForCharsetAlias(final String charsetAlias) {
         return factory.getEncodingForCharsetAlias(charsetAlias, getDefaultEncoding());
-    }
-
-    @Override
-    public CharacterTranslator getCharacterTranslator(final String mappingPath) throws SQLException {
-        return factory.getCharacterTranslator(mappingPath);
     }
 
     @Override

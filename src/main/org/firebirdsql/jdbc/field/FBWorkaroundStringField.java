@@ -94,7 +94,7 @@ public final class FBWorkaroundStringField extends FBStringField {
             setNull();
             return null;
         }
-        byte[] data = getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath);
+        byte[] data = getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding());
         setFieldData(data);
         return data;
     }   

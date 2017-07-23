@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -40,15 +38,15 @@ import static org.junit.Assume.assumeTrue;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBEncodings extends FBJUnit4TestBase {
+public class FBEncodingsTest extends FBJUnit4TestBase {
 
     private static final List<String> ENCODINGS_JAVA;
     private static final List<String> ENCODINGS_FIREBIRD;
     private static final String CREATE_TABLE_UNIVERSAL;
 
     static {
-        List<String> encJava = new ArrayList<String>();
-        List<String> encFB = new ArrayList<String>();
+        List<String> encJava = new ArrayList<>();
+        List<String> encFB = new ArrayList<>();
 
         encJava.add("Cp437");
         encFB.add("DOS437");
@@ -83,8 +81,7 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         encFB.add("ISO8859_1");
         encJava.add("ISO8859_2");
         encFB.add("ISO8859_2");
-//New cs               
-/*              
+
         encJava.add("Cp737"); encFB.add("DOS737");
         encJava.add("Cp775"); encFB.add("DOS775");
         encJava.add("Cp858"); encFB.add("DOS858");
@@ -104,7 +101,7 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         encJava.add("ISO8859_8"); encFB.add("ISO8859_8");
         encJava.add("ISO8859_9"); encFB.add("ISO8859_9");
         encJava.add("ISO8859_13"); encFB.add("ISO8859_13");
-*/
+
         ENCODINGS_JAVA = Collections.unmodifiableList(encJava);
         ENCODINGS_FIREBIRD = Collections.unmodifiableList(encFB);
 
@@ -164,8 +161,7 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "NONE");
 
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             List<String> createTableStatements = Arrays.asList(
                     getCreateTableStatement(), getCreateTableStatement_cyrl(), CREATE_TABLE_UNIVERSAL);
             if (!supportInfoFor(connection).supportsUtf8()) {
@@ -178,8 +174,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
             executeCreateTable(connection, getCreateTableStatement());
             executeCreateTable(connection, getCreateTableStatement_cyrl());
             executeCreateTable(connection, CREATE_TABLE_UNIVERSAL);
-        } finally {
-            connection.close();
         }
     }
 
@@ -194,9 +188,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings("
                             + "  id, win1251_field, unicode_field, none_field) "
@@ -252,8 +245,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
             }
 
             stmt.close();
-        } finally {
-            connection.close();
         }
     }
 
@@ -288,9 +279,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings_cyrl(id, cyrl_field, win1251_field, unicode_field) VALUES(?, ?, ?, ?)");
 
@@ -368,8 +358,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
 
             rs.close();
             stmt.close();
-        } finally {
-            connection.close();
         }
     }
 
@@ -384,9 +372,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1252");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings(id, win1252_field, unicode_field, none_field) VALUES(?, ?, ?, ?)");
 
@@ -436,8 +423,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
 
             stmt.close();
 
-        } finally {
-            connection.close();
         }
     }
 
@@ -451,9 +436,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings("
                             + "  id, win1250_field, win1251_field, win1252_field, "
@@ -514,8 +498,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
             }
 
             stmt.close();
-        } finally {
-            connection.close();
         }
     }
 
@@ -533,9 +515,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             StringBuilder insert = new StringBuilder("INSERT INTO test_encodings_universal VALUES(? ");
             for (int col = 0; col < ENCODINGS_JAVA.size() * 2; col++) {
                 insert.append(", ?");
@@ -576,8 +557,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
 
             rs.close();
             stmt.close();
-        } finally {
-            connection.close();
         }
     }
 
@@ -588,9 +567,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings("
                             + "  id, char_field) "
@@ -620,60 +598,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
             assertEquals("Trimmed values should be correct.", testString, str.trim());
 
             stmt.close();
-        } finally {
-            connection.close();
-        }
-    }
-
-    protected static final byte[] TRANSLATION_TEST_BYTES = new byte[] {
-            (byte) 0xde, (byte) 0xbd, (byte) 0xd8, (byte) 0xda, (byte) 0xdb, (byte) 0xcc, (byte) 0xce, (byte) 0xcf
-    };
-
-    protected static final String TRANSLATION_TEST = "\u00df\u00a7\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc";
-
-    /**
-     * Test whether character translation code works correctly.
-     *
-     * @throws Exception
-     *         if something went wrong.
-     */
-    @Test
-    public void testTranslation() throws Exception {
-        Properties props = new Properties();
-        props.putAll(getDefaultPropertiesForConnection());
-        props.put("lc_ctype", "NONE");
-        props.put("charSet", "Cp1252");
-        props.put("useTranslation", "translation.hpux");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-
-        try {
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_encodings(id, none_field) VALUES(?, ?)");
-
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            stmt.setBytes(2, TRANSLATION_TEST_BYTES);
-
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
-
-            //
-            // Test each column
-            //
-            stmt = connection.prepareStatement("SELECT none_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-
-            assertEquals("Value should be correct.", TRANSLATION_TEST, rs.getString(1));
-
-            stmt.close();
-
-        } finally {
-            connection.close();
         }
     }
 
@@ -706,9 +630,7 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         props.putAll(getDefaultPropertiesForConnection());
         props.put("charSet", "Cp1252");
 
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings(id, octets_field, var_octets_field, none_octets_field) "
                             + "VALUES(?, ?, ?, ?)");
@@ -743,8 +665,6 @@ public class TestFBEncodings extends FBJUnit4TestBase {
             assertArrayEquals("CHAR NONE value should be correct.", getOctetsFullLengthAsNone(), noneBytes);
 
             stmt.close();
-        } finally {
-            connection.close();
         }
     }
 
@@ -752,13 +672,11 @@ public class TestFBEncodings extends FBJUnit4TestBase {
     public void testExecuteBlock() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             assumeTrue("Test requires EXECUTE BLOCK support", supportInfoFor(connection).supportsExecuteBlock());
 
-            Statement stmt = connection.createStatement();
-            try {
+            try (Statement stmt = connection.createStatement()) {
                 stmt.execute("INSERT INTO test_encodings(unicode_field) VALUES('" +
                         "0123456789" +
                         "abcdefghij" +
@@ -775,12 +693,8 @@ public class TestFBEncodings extends FBJUnit4TestBase {
                 rs.next();
                 System.out.println(rs.getString(1));
 
-            } finally {
-                stmt.close();
             }
 
-        } finally {
-            connection.close();
         }
     }
 
@@ -789,12 +703,10 @@ public class TestFBEncodings extends FBJUnit4TestBase {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UTF8");
-        Connection connection = DriverManager.getConnection(getUrl(), props);
 
-        try {
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             final String randomUUID = UUID.randomUUID().toString();
-            Statement statement = connection.createStatement();
-            try {
+            try (Statement statement = connection.createStatement()) {
                 String updateSql = "INSERT INTO test_encodings (uuid_char, uuid_varchar) VALUES ('" + randomUUID + "', '" + randomUUID + "')";
                 statement.executeUpdate(updateSql);
 
@@ -810,11 +722,7 @@ public class TestFBEncodings extends FBJUnit4TestBase {
                     assertEquals(randomUUID.length(), uuidChar.length());
                     assertEquals(randomUUID, uuidChar);
                 }
-            } finally {
-                statement.close();
             }
-        } finally {
-            connection.close();
         }
     }
 }

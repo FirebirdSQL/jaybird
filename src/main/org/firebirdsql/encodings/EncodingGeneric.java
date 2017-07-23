@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.encodings;
 
+import java.io.*;
 import java.nio.charset.Charset;
 
 /**
@@ -58,74 +57,18 @@ final class EncodingGeneric implements Encoding {
     }
 
     @Override
-    public Encoding withTranslation(final CharacterTranslator translator) {
-        if (translator == null) return this;
-        return new EncodingGenericWithTranslation(translator);
-    }
-
-    @Override
     public String getCharsetName() {
         return charset.name();
     }
 
-    /**
-     * Class for applying {@link EncodingGeneric} with translation.
-     */
-    private final class EncodingGenericWithTranslation implements Encoding {
-        private final CharacterTranslator translator;
-
-        /**
-         * Creates an {@link EncodingGeneric} with translation.
-         *
-         * @param translator
-         *         The translation to apply
-         */
-        private EncodingGenericWithTranslation(CharacterTranslator translator) {
-            assert translator != null : "CharacterTranslator should never be null";
-            this.translator = translator;
-        }
-
-        @Override
-        public byte[] encodeToCharset(final String in) {
-            return EncodingGeneric.this.encodeToCharset(new String(translate(in.toCharArray())));
-        }
-
-        @Override
-        public String decodeFromCharset(final byte[] in) {
-            final String result = EncodingGeneric.this.decodeFromCharset(in);
-            return new String(translate(result.toCharArray()));
-        }
-
-        @Override
-        public String decodeFromCharset(final byte[] in, final int off, final int len) {
-            final String result = EncodingGeneric.this.decodeFromCharset(in, off, len);
-            return new String(translate(result.toCharArray()));
-        }
-
-        /**
-         * In a slight deviation from the contract of {@link Encoding#withTranslation(CharacterTranslator)},
-         * this implementation returns the result of the parent implementation {@link
-         * EncodingGeneric#withTranslation(CharacterTranslator)}, as applying multiple translations is a bad idea.
-         *
-         * @param translator
-         *         The translation to apply
-         * @return Instance with translation.
-         */
-        @Override
-        public Encoding withTranslation(final CharacterTranslator translator) {
-            return EncodingGeneric.this.withTranslation(translator);
-        }
-
-        @Override
-        public String getCharsetName() {
-            return charset.name();
-        }
-
-        private char[] translate(char[] chars) {
-            for (int i = 0; i < chars.length; i++) {
-                chars[i] = translator.getMapping(chars[i]);
-            }
-            return chars;
-        }
+    @Override
+    public Reader createReader(InputStream inputStream) {
+        return new InputStreamReader(inputStream, charset);
     }
+
+    @Override
+    public Writer createWriter(OutputStream outputStream) {
+        return new OutputStreamWriter(outputStream, charset);
+    }
+
 }

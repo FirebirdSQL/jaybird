@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
@@ -146,7 +147,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         byte[] data = getBytes();
         if (data == null) return null;
         
-        return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding(), mappingPath);
+        return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding());
     }
 
     @Override
@@ -178,7 +179,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         // setNull() to reset field to empty state
         setNull();
         if (value != null) {
-            setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding(), mappingPath));
+            setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding()));
         }
     }
 
@@ -207,7 +208,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (binaryStream != null) {
             copyBinaryStream(this.binaryStream, this.length);
         } else if (characterStream != null) {
-            copyCharacterStream(characterStream, length, encodingDefinition.getJavaEncodingName());
+            copyCharacterStream(characterStream, length, encodingDefinition.getEncoding());
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
         } else if (blob == null) {
@@ -242,7 +243,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
-    private void copyCharacterStream(Reader in, long length, String encoding) throws SQLException {
+    private void copyCharacterStream(Reader in, long length, Encoding encoding) throws SQLException {
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));

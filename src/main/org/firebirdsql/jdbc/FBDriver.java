@@ -46,7 +46,6 @@ public class FBDriver implements FirebirdDriver {
     private final static Logger log;
 
     public static final String CHARSET = "charSet";
-    public static final String USE_TRANSLATION = "useTranslation";
     public static final String USER = "user";
     public static final String USER_NAME = "user_name";
     public static final String PASSWORD = "password";

@@ -138,29 +138,23 @@ public interface DatatypeCoder {
      * Encode a {@code String} value into a {@code byte} array using a given encoding.
      *
      * @param value The {@code String} to be encoded
-     * @param javaEncoding The java encoding to use in the encoding process
-     * @param mappingPath The character mapping path to be used in the encoding
+     * @param encoding The encoding to use in the encoding process
      * @return The value of {@code value} as a {@code byte} array
      * @throws java.sql.SQLException if the given encoding cannot be found, or an error
      *         occurs during the encoding
      */
-    byte[] encodeString(String value, String javaEncoding, String mappingPath) throws SQLException;
-
-    byte[] encodeString(String value, Encoding encoding, String mappingPath) throws SQLException;
+    byte[] encodeString(String value, Encoding encoding) throws SQLException;
 
     /**
      * Decode an encoded {@code byte} array into a {@code String} using a given encoding.
      *
      * @param value The value to be decoded
-     * @param javaEncoding The java encoding to be used in the decoding process
-     * @param mappingPath The character mapping path to be used in the decoding
+     * @param encoding The encoding to be used in the decoding process
      * @return The decoded {@code String}
      * @throws java.sql.SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
      */
-    String decodeString(byte[] value, String javaEncoding, String mappingPath) throws SQLException;
-
-    String decodeString(byte[] value, Encoding encoding, String mappingPath) throws SQLException;
+    String decodeString(byte[] value, Encoding encoding) throws SQLException;
 
     /**
      * Encode a {@code Timestamp} using a given {@code Calendar}.
