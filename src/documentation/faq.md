@@ -1,11 +1,3 @@
-Documentation crowd-funding{-}
-==============================
-
-The Firebird Project is currently holding a crowd-funding for the Firebird 
-Developer Guide. Your donation is much appreciated!
-
-See <https://www.firebirdsql.org/en/doc-funding-2017/> for details.
-
 Jaybird
 =======
 
@@ -20,7 +12,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.1`
+Version: `3.0.2`
 
 For example, for Java 8:
 
@@ -28,7 +20,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
 </dependency>
 ~~~
 
@@ -40,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -82,7 +74,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>2.2.12</version>
+    <version>2.2.13</version>
 </dependency>
 ~~~
 
