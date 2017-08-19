@@ -1,11 +1,3 @@
-Documentation crowd-funding{-}
-==============================
-
-The Firebird Project is currently holding a crowd-funding for the Firebird 
-Developer Guide. Your donation is much appreciated!
-
-See <https://www.firebirdsql.org/en/doc-funding-2017/> for details.
-
 General Notes
 =============
 
@@ -74,7 +66,7 @@ earlier Java versions has been dropped.
 Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
 but real module support will not be available until Jaybird 4 (or later).
 
-Jaybird 3.0 is the last version to support Java 7.
+Jaybird 3.0 is the last version to support Java 7 (_decision under debate_).
 
 Specification support
 ---------------------
