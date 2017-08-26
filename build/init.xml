@@ -162,7 +162,7 @@
         <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
         <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
         <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
-        <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-example.pom"/>
+        <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-template.pom"/>
         <property name="maven.pom.target" value="${maven.artifactId}-${version.maven}.pom"/>
 
         <property name="junit.timeout" value="600000"/>
