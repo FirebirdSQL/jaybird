@@ -532,7 +532,7 @@ public abstract class FBField {
         if (is == null) {
             return null;
         } else {
-            return getDatatypeCoder().getEncodingFactory().getDefaultEncoding().createReader(is);
+            return getDatatypeCoder().createReader(is);
         }
     }
 

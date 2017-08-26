@@ -21,6 +21,10 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -132,8 +136,6 @@ public interface DatatypeCoder {
      */
     double decodeDouble(byte[] byte_int);
 
-// TODO String encoding/decoding might need to be done differently
-
     /**
      * Encode a {@code String} value into a {@code byte} array using a given encoding.
      *
@@ -142,8 +144,29 @@ public interface DatatypeCoder {
      * @return The value of {@code value} as a {@code byte} array
      * @throws java.sql.SQLException if the given encoding cannot be found, or an error
      *         occurs during the encoding
+     * @deprecated To be removed
      */
+    @Deprecated
     byte[] encodeString(String value, Encoding encoding) throws SQLException;
+
+    /**
+     * Encode a {@code String} value into a {@code byte} array using the encoding of this datatype coder.
+     *
+     * @param value The {@code String} to be encoded
+     * @return The value of {@code value} as a {@code byte} array
+     * @since 4.0
+     */
+    byte[] encodeString(String value);
+
+    /**
+     * Creates a writer wrapping an input stream.
+     *
+     * @param outputStream
+     *         Input stream
+     * @return Writer applying the encoding of this datatype when writing
+     * @since 4.0
+     */
+    Writer createWriter(OutputStream outputStream);
 
     /**
      * Decode an encoded {@code byte} array into a {@code String} using a given encoding.
@@ -153,8 +176,30 @@ public interface DatatypeCoder {
      * @return The decoded {@code String}
      * @throws java.sql.SQLException if the given encoding cannot be found, or an
      *         error occurs during the decoding
+     * @deprecated To be removed
      */
+    @Deprecated
     String decodeString(byte[] value, Encoding encoding) throws SQLException;
+
+    /**
+     * Decode an encoded {@code byte} array into a {@code String} using the encoding of this datatype coder.
+     *
+     * @param value The value to be decoded
+     * @return The decoded {@code String}
+     * @since 4.0
+     */
+    String decodeString(byte[] value);
+
+    /**
+     * Creates a reader wrapping an input stream.
+     *
+     * @param inputStream
+     *         Input stream
+     * @return Reader applying the encoding of this datatype coder when reading
+     * @since 4.0
+     */
+    Reader createReader(InputStream inputStream);
+
 
     /**
      * Encode a {@code Timestamp} using a given {@code Calendar}.

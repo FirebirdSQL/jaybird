@@ -59,7 +59,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getCharacterStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
 
         Reader reader = field.getCharacterStream();
@@ -76,7 +76,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getObject_Reader() throws Exception {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
 
         Reader reader = field.getObject(Reader.class);
@@ -93,7 +93,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getStringNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
 
         String value = field.getString();
@@ -105,7 +105,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
     @Override
     public void getObject_String() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        final String expectedString = datatypeCoder.getEncodingFactory().getDefaultEncoding().decodeFromCharset(bytes);
+        final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
 
         String value = field.getObject(String.class);

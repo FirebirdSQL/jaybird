@@ -21,12 +21,18 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The default datatype coder.
@@ -44,12 +50,11 @@ import java.util.GregorianCalendar;
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
     private final IEncodingFactory encodingFactory;
+    private final Encoding encoding;
 
     public DefaultDatatypeCoder(IEncodingFactory encodingFactory) {
-        if (encodingFactory == null) {
-            throw new NullPointerException("encodingFactory should not be null");
-        }
-        this.encodingFactory = encodingFactory;
+        this.encodingFactory = requireNonNull(encodingFactory, "encodingFactory");
+        encoding = encodingFactory.getDefaultEncoding();
     }
 
     @Override
@@ -152,8 +157,28 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public final byte[] encodeString(String value) {
+        return encoding.encodeToCharset(value);
+    }
+
+    @Override
+    public final Writer createWriter(OutputStream outputStream) {
+        return encoding.createWriter(outputStream);
+    }
+
+    @Override
     public String decodeString(byte[] value, Encoding encoding) throws SQLException {
         return encoding.decodeFromCharset(value);
+    }
+
+    @Override
+    public final String decodeString(byte[] value) {
+        return encoding.decodeFromCharset(value);
+    }
+
+    @Override
+    public final Reader createReader(InputStream inputStream) {
+        return encoding.createReader(inputStream);
     }
 
     // times,dates...

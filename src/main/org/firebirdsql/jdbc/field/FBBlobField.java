@@ -162,7 +162,7 @@ class FBBlobField extends FBField implements FBFlushableField {
 
         if (blob == null) return null;
 
-        return getDatatypeCoder().decodeString(getBytes(), getDatatypeCoder().getEncodingFactory().getDefaultEncoding());
+        return getDatatypeCoder().decodeString(getBytes());
     }
 
     //--- setXXX methods
@@ -240,7 +240,7 @@ class FBBlobField extends FBField implements FBFlushableField {
             return;
         }
 
-        setBytes(getDatatypeCoder().encodeString(value, getDatatypeCoder().getEncodingFactory().getDefaultEncoding()));
+        setBytes(getDatatypeCoder().encodeString(value));
     }
 
     @Override
