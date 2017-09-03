@@ -44,8 +44,11 @@ import org.junit.rules.ExpectedException;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBNullField {
+public class FBNullFieldTest {
 
+    private static final DefaultDatatypeCoder defaultDatatypeCoder =
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+    
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
@@ -62,8 +65,7 @@ public class TestFBNullField {
     @Before
     public void setUp() throws Exception {
         fieldData = context.mock(FieldDataProvider.class);
-        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8)))
-                .toFieldDescriptor();
+        FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, defaultDatatypeCoder).toFieldDescriptor();
         field = new FBNullField(fieldDescriptor, fieldData, Types.NULL);
     }
     

@@ -52,6 +52,24 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     private final IEncodingFactory encodingFactory;
     private final Encoding encoding;
 
+    /**
+     * Returns an instance of {@code DefaultDatatypeCoder} for an encoding factory.
+     *
+     * @param encodingFactory Encoding factory
+     * @return Datatype coder, this might be a cached instance
+     */
+    public static DefaultDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
+        return encodingFactory.getOrCreateDatatypeCoder(DefaultDatatypeCoder.class);
+    }
+
+    /**
+     * Creates a default datatype coder for the wire protocol.
+     * <p>
+     * In almost all cases, it is better to use {@link #forEncodingFactory(IEncodingFactory)}.
+     * </p>
+     *
+     * @param encodingFactory Encoding factory
+     */
     public DefaultDatatypeCoder(IEncodingFactory encodingFactory) {
         this.encodingFactory = requireNonNull(encodingFactory, "encodingFactory");
         encoding = encodingFactory.getDefaultEncoding();
@@ -401,7 +419,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public IEncodingFactory getEncodingFactory() {
+    public final IEncodingFactory getEncodingFactory() {
         return encodingFactory;
     }
 

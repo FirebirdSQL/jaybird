@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -34,6 +32,24 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
  */
 public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
+    /**
+     * Returns an instance of {@code LittleEndianDatatypeCoder} for an encoding factory.
+     *
+     * @param encodingFactory Encoding factory
+     * @return Datatype coder, this might be a cached instance
+     */
+    public static LittleEndianDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
+        return encodingFactory.getOrCreateDatatypeCoder(LittleEndianDatatypeCoder.class);
+    }
+
+    /**
+     * Creates a little-endian datatype coder for native access on little-endian platforms.
+     * <p>
+     * In almost all cases, it is better to use {@link #forEncodingFactory(IEncodingFactory)}.
+     * </p>
+     *
+     * @param encodingFactory Encoding factory
+     */
     public LittleEndianDatatypeCoder(IEncodingFactory encodingFactory) {
         super(encodingFactory);
     }

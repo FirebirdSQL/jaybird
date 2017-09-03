@@ -35,10 +35,10 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestRowDescriptorBuilder {
+public class RowDescriptorBuilderTest {
 
     private static final DatatypeCoder datatypeCoder =
-            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     private static final List<FieldDescriptor> TEST_FIELD_DESCRIPTORS;
     static {

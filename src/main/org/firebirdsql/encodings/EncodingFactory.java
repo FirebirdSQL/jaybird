@@ -19,14 +19,20 @@
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.jna.BigEndianDatatypeCoder;
+import org.firebirdsql.gds.ng.jna.LittleEndianDatatypeCoder;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.firebirdsql.gds.ISCConstants.CS_dynamic;
 
@@ -74,6 +80,8 @@ public final class EncodingFactory implements IEncodingFactory {
     private final Map<String, EncodingDefinition> javaAliasesToDefinition = new ConcurrentHashMap<>();
     private final Encoding defaultEncoding;
     private final EncodingDefinition defaultEncodingDefinition;
+    private final ConcurrentMap<Class<? extends DatatypeCoder>, DatatypeCoder> datatypeCoderCache
+            = new ConcurrentHashMap<>(3);
 
     /**
      * Initializes EncodingFactory by processing the encodingSets using the provided iterator.
@@ -291,10 +299,12 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(EncodingDefinition encodingDefinition) {
-        return new ConnectionEncodingFactory(this,
+        EncodingDefinition resolvedEncodingDefinition =
                 encodingDefinition != null && !encodingDefinition.isInformationOnly()
                         ? encodingDefinition
-                        : getDefaultEncodingDefinition());
+                        : getDefaultEncodingDefinition();
+        // TODO Add (weak?) cache for encoding factory instances?
+        return new ConnectionEncodingFactory(this, resolvedEncodingDefinition);
     }
 
     /**
@@ -305,7 +315,43 @@ public final class EncodingFactory implements IEncodingFactory {
      */
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
-        return new ConnectionEncodingFactory(this, getEncodingDefinitionByCharset(charset));
+        // TODO This might misbehave if there is no EncodingDefinition for charset (it will then revert to the default)
+        return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
+        DatatypeCoder coder = datatypeCoderCache.get(datatypeCoderClass);
+        if (coder == null) {
+            T newCoder = createNewDatatypeCoder(datatypeCoderClass, this);
+            coder = datatypeCoderCache.putIfAbsent(datatypeCoderClass, newCoder);
+            if (coder == null) {
+                return newCoder;
+            }
+        }
+        return (T) coder;
+    }
+
+    @SuppressWarnings({ "unchecked", "JavaReflectionMemberAccess" })
+    protected static <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass,
+            IEncodingFactory encodingFactory) {
+        // Avoid reflection if we can:
+        if (datatypeCoderClass == DefaultDatatypeCoder.class) {
+            return (T) new DefaultDatatypeCoder(encodingFactory);
+        } else if (datatypeCoderClass == LittleEndianDatatypeCoder.class) {
+            return (T) new LittleEndianDatatypeCoder(encodingFactory);
+        } else if (datatypeCoderClass == BigEndianDatatypeCoder.class) {
+            return (T) new BigEndianDatatypeCoder(encodingFactory);
+        } else {
+            try {
+                Constructor<T> datatypeCoderConstructor = datatypeCoderClass.getConstructor(IEncodingFactory.class);
+                return datatypeCoderConstructor.newInstance(encodingFactory);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalArgumentException("Type " + datatypeCoderClass +
+                        " has no single arg constructor accepting an IEncodingFactory");
+            }
+        }
     }
 
     /**

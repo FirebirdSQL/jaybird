@@ -54,7 +54,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
      *         used for creating further dependent objects).
      */
     protected AbstractFbWireDatabase(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
-        super(connection, new DefaultDatatypeCoder(connection.getEncodingFactory()));
+        super(connection, DefaultDatatypeCoder.forEncodingFactory(connection.getEncodingFactory()));
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
         wireOperations = descriptor.createWireOperations(connection, getDatabaseWarningCallback(),
                 getSynchronizationObject());

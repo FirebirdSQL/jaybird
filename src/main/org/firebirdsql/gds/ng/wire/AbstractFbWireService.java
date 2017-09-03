@@ -55,7 +55,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      *         used for creating further dependent objects).
      */
     protected AbstractFbWireService(WireServiceConnection connection, ProtocolDescriptor descriptor) {
-        super(connection, new DefaultDatatypeCoder(connection.getEncodingFactory()));
+        super(connection, DefaultDatatypeCoder.forEncodingFactory(connection.getEncodingFactory()));
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
         wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback(),
                 getSynchronizationObject());

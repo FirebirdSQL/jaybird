@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -34,6 +32,24 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
  */
 public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
 
+    /**
+     * Returns an instance of {@code BigEndianDatatypeCoder} for an encoding factory.
+     *
+     * @param encodingFactory Encoding factory
+     * @return Datatype coder, this might be a cached instance
+     */
+    public static BigEndianDatatypeCoder forEncodingFactory(IEncodingFactory encodingFactory) {
+        return encodingFactory.getOrCreateDatatypeCoder(BigEndianDatatypeCoder.class);
+    }
+
+    /**
+     * Creates a big-endian datatype coder for native access on big-endian platforms.
+     * <p>
+     * In almost all cases, it is better to use {@link #forEncodingFactory(IEncodingFactory)}.
+     * </p>
+     *
+     * @param encodingFactory Encoding factory
+     */
     public BigEndianDatatypeCoder(IEncodingFactory encodingFactory) {
         super(encodingFactory);
     }

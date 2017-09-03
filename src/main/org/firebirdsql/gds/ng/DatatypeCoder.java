@@ -200,7 +200,6 @@ public interface DatatypeCoder {
      */
     Reader createReader(InputStream inputStream);
 
-
     /**
      * Encode a {@code Timestamp} using a given {@code Calendar}.
      *

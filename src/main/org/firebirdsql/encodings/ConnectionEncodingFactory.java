@@ -19,8 +19,11 @@
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.DatatypeCoder;
 
 import java.nio.charset.Charset;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Implementation of {@link IEncodingFactory} that wraps an {@link EncodingFactory} to
@@ -40,6 +43,8 @@ class ConnectionEncodingFactory implements IEncodingFactory {
     private final Encoding defaultEncoding;
     private final EncodingDefinition noneEncodingDefinition;
     private final EncodingDefinition octetsEncodingDefinition;
+    private final ConcurrentMap<Class<? extends DatatypeCoder>, DatatypeCoder> datatypeCoderCache
+            = new ConcurrentHashMap<>(3);
 
     ConnectionEncodingFactory(EncodingFactory factory, EncodingDefinition defaultEncodingDefinition) {
         assert factory != null && defaultEncodingDefinition != null;
@@ -168,6 +173,21 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
-        return factory.withDefaultEncodingDefinition(charset);
+        // TODO This might misbehave if there is no EncodingDefinition for charset (it will then revert to the default)
+        return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
+        DatatypeCoder coder = datatypeCoderCache.get(datatypeCoderClass);
+        if (coder == null) {
+            T newCoder = EncodingFactory.createNewDatatypeCoder(datatypeCoderClass, this);
+            coder = datatypeCoderCache.putIfAbsent(datatypeCoderClass, newCoder);
+            if (coder == null) {
+                return newCoder;
+            }
+        }
+        return (T) coder;
     }
 }

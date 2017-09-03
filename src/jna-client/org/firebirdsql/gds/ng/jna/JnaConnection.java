@@ -154,9 +154,9 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
 
     final DatatypeCoder createDatatypeCoder() {
         if (bigEndian) {
-            return new BigEndianDatatypeCoder(getEncodingFactory());
+            return BigEndianDatatypeCoder.forEncodingFactory(getEncodingFactory());
         }
-        return new LittleEndianDatatypeCoder(getEncodingFactory());
+        return LittleEndianDatatypeCoder.forEncodingFactory(getEncodingFactory());
     }
 
     /**

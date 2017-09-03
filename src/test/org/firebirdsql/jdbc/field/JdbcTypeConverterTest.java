@@ -47,15 +47,15 @@ import static org.junit.Assume.assumeThat;
  * @since 3.0
  */
 @RunWith(Parameterized.class)
-public class TestJdbcTypeConverter {
+public class JdbcTypeConverterTest {
 
     private static final RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1,
-            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8)));
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8)));
     private final FieldDescriptor fieldDescriptor;
     private final int expectedJdbcType;
     private final int metadataType;
 
-    public TestJdbcTypeConverter(FieldDescriptor fieldDescriptor, Integer metadataType, Integer expectedJdbcType) {
+    public JdbcTypeConverterTest(FieldDescriptor fieldDescriptor, Integer metadataType, Integer expectedJdbcType) {
         this.metadataType = metadataType;
         assertTrue("Only use non-nullable types", (fieldDescriptor.getType() & 1) == 0);
         this.fieldDescriptor = fieldDescriptor;

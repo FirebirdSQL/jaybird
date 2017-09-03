@@ -77,7 +77,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     protected static final String NAME_VALUE = "namevalue";
     protected static final String RELATION_NAME_VALUE = "relationnamevalue";
     protected static final DatatypeCoder datatypeCoder =
-            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();

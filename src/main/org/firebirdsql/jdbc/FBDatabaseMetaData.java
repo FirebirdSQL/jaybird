@@ -85,7 +85,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int SUBTYPE_DECIMAL = 2;
 
     protected static final DatatypeCoder datatypeCoder =
-            new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     private static final byte[] TRUE_BYTES = getBytes("T");
     private static final byte[] FALSE_BYTES = getBytes("F");

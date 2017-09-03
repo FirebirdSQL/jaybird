@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.encodings;
 
+import org.firebirdsql.gds.ng.DatatypeCoder;
+
 import java.nio.charset.Charset;
 
 /**
@@ -162,8 +164,8 @@ public interface IEncodingFactory {
 
     /**
      * Gets an {@link org.firebirdsql.encodings.Encoding} for the specified Java character set name or alias. If there
-     * is no known encoding for
-     * this name, or the loaded EncodingDefinition is information-only, then the defaultEncoding will be used.
+     * is no known encoding for this name, or the loaded EncodingDefinition is information-only, then the
+     * defaultEncoding will be used.
      *
      * @param charsetAlias
      *         The Java character set name or alias
@@ -177,21 +179,17 @@ public interface IEncodingFactory {
      * When {@code firebirdEncodingName} is not null and {@code javaCharsetAlias} is null, then the
      * encoding definition as returned by {@link #getEncodingDefinitionByFirebirdName(String)} is returned. For the
      * reverse ({@code firebirdEncodingName} is null and {@code javaCharsetAlias} isn't), the encoding
-     * definition
-     * as returned by {@link #getEncodingDefinitionByCharsetAlias(String)} is returned.
+     * definition as returned by {@link #getEncodingDefinitionByCharsetAlias(String)} is returned.
      * </p>
      * <p>
      * When both parameters are set, the result of {@link #getEncodingDefinitionByFirebirdName(String)} is returned if
-     * the
-     * character set matches, otherwise a new {@link DefaultEncodingDefinition} is created based on its information,
-     * but
-     * with the specified character set. This can be useful for attempting to fix encoding issues in Firebird.
+     * the character set matches, otherwise a new {@link DefaultEncodingDefinition} is created based on its information,
+     * but with the specified character set. This can be useful for attempting to fix encoding issues in Firebird.
      * </p>
      * <p>
      * If either of the parameters cannot be resolved, to an EncodingDefinition or {@link Charset}, or the
-     * EncodingDefinition
-     * is information-only - with the exception of Firebird encoding NONE - and no Java Charset is specified, then null
-     * is returned.
+     * EncodingDefinition is information-only - with the exception of Firebird encoding NONE - and no Java Charset
+     * is specified, then null is returned.
      * </p>
      *
      * @param firebirdEncodingName
@@ -222,4 +220,18 @@ public interface IEncodingFactory {
      * @return IEncodingFactory instance with the specified default.
      */
     IEncodingFactory withDefaultEncodingDefinition(Charset charset);
+
+    /**
+     * Gets or - if necessary - creates a datatype coder of the specified type.
+     * <p>
+     * In general this method should only be called from a static factory method on the datatype coder itself.
+     * </p>
+     *
+     * @param datatypeCoderClass
+     *         Type of datatype coder, needs to have a single-arg constructor accepting an {@code IEncodingFactory}.
+     * @param <T>
+     *         Type parameter of type {@link DatatypeCoder}
+     * @return New or cached instance of datatype coder
+     */
+    <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass);
 }
