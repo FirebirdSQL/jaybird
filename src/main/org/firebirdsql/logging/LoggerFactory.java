@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,9 +18,9 @@
  */
 package org.firebirdsql.logging;
 
+import org.firebirdsql.gds.JaybirdSystemProperties;
+
 import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 /**
  * Factory for Logger instances
@@ -40,20 +38,21 @@ public final class LoggerFactory {
 
     private static final LoggerCreator loggerCreator;
 
-    public static final String FORCE_CONSOLE_LOGGER_PROP = "org.firebirdsql.jdbc.forceConsoleLogger";
-    public static final String DISABLE_LOGGING_PROP = "org.firebirdsql.jdbc.disableLogging";
-    public static final String LOGGER_IMPLEMENTATION_PROP = "org.firebirdsql.jdbc.loggerImplementation";
+    @SuppressWarnings("unused")
+    public static final String FORCE_CONSOLE_LOGGER_PROP = JaybirdSystemProperties.FORCE_CONSOLE_LOGGER_PROP;
+    @SuppressWarnings("unused")
+    public static final String DISABLE_LOGGING_PROP = JaybirdSystemProperties.DISABLE_LOGGING_PROP;
+    @SuppressWarnings("unused")
+    public static final String LOGGER_IMPLEMENTATION_PROP = JaybirdSystemProperties.LOGGER_IMPLEMENTATION_PROP;
 
     static {
         LoggerCreator tempLoggerCreator = JulLoggerCreator.INSTANCE;
         try {
-            String sForceConsoleLogger = getSystemPropertyPrivileged(FORCE_CONSOLE_LOGGER_PROP);
-            String sDisableLogging = getSystemPropertyPrivileged(DISABLE_LOGGING_PROP);
-            String sLoggerImplementation = getSystemPropertyPrivileged(LOGGER_IMPLEMENTATION_PROP);
-            boolean bForceConsoleLogger = "true".equalsIgnoreCase(sForceConsoleLogger);
-            boolean bDisableLogging = "true".equalsIgnoreCase(sDisableLogging);
+            String loggerImplementation = JaybirdSystemProperties.getLoggerImplementation();
+            boolean forceConsoleLogger = JaybirdSystemProperties.isForceConsoleLogger();
+            boolean disableLogging = JaybirdSystemProperties.isDisableLogging();
 
-            tempLoggerCreator = getLoggerCreator(sLoggerImplementation, bForceConsoleLogger, bDisableLogging);
+            tempLoggerCreator = getLoggerCreator(loggerImplementation, forceConsoleLogger, disableLogging);
         } catch (Exception e) {
             // JulLoggerCreator will be used
             e.printStackTrace();
@@ -72,14 +71,6 @@ public final class LoggerFactory {
 
     public static Logger getLogger(Class<?> clazz) {
         return getLogger(clazz.getName());
-    }
-
-    private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(propertyName);
-            }
-        });
     }
 
     private static LoggerCreator getLoggerCreator(String loggerImplementationClassName, boolean forceConsoleLogger, boolean disableLogging) {

@@ -19,11 +19,10 @@
 package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10ParameterConverter;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.sql.SQLException;
 
 /**
@@ -53,7 +52,7 @@ public class V11ParameterConverter extends V10ParameterConverter {
      *         Database parameter buffer
      */
     protected final void addProcessName(DatabaseParameterBuffer dpb) {
-        String processName = getSystemPropertyPrivileged("org.firebirdsql.jdbc.processName");
+        String processName = JaybirdSystemProperties.getProcessName();
         if (processName != null) {
             dpb.addArgument(DatabaseParameterBuffer.PROCESS_NAME, processName);
         }
@@ -66,22 +65,10 @@ public class V11ParameterConverter extends V10ParameterConverter {
      *         Database Database parameter buffer
      */
     protected final void addProcessId(DatabaseParameterBuffer dpb) {
-        String pidStr = getSystemPropertyPrivileged("org.firebirdsql.jdbc.pid");
-        if (pidStr != null) {
-            try {
-                int pid = Integer.parseInt(pidStr);
-                dpb.addArgument(DatabaseParameterBuffer.PROCESS_ID, pid);
-            } catch (NumberFormatException ex) {
-                // ignore
-            }
+        Integer pid = JaybirdSystemProperties.getProcessId();
+        if (pid != null) {
+            dpb.addArgument(DatabaseParameterBuffer.PROCESS_ID, pid);
         }
     }
 
-    private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(propertyName);
-            }
-        });
-    }
 }

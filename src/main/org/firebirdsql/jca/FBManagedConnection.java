@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.jca;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -50,8 +47,6 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.ByteArrayInputStream;
 import java.io.PrintWriter;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
@@ -75,8 +70,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
 
     private static final Logger log = LoggerFactory.getLogger(FBManagedConnection.class);
-    private static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = "org.firebirdsql.jdbc.defaultConnectionEncoding";
-    private static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = "org.firebirdsql.jdbc.requireConnectionEncoding";
 
     private final FBManagedConnectionFactory mcf;
 
@@ -1450,9 +1443,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     private static String getDefaultConnectionEncoding() {
         try {
-            String defaultConnectionEncoding = getSystemPropertyPrivileged(DEFAULT_CONNECTION_ENCODING_PROPERTY);
+            String defaultConnectionEncoding = JaybirdSystemProperties.getDefaultConnectionEncoding();
             if (defaultConnectionEncoding == null) {
-                if (Boolean.valueOf(getSystemPropertyPrivileged(REQUIRE_CONNECTION_ENCODING_PROPERTY))) {
+                if (JaybirdSystemProperties.isRequireConnectionEncoding()) {
                     return null;
                 }
                 return "NONE";
@@ -1462,14 +1455,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             log.error("Exception obtaining default connection encoding", e);
         }
         return "NONE";
-    }
-
-    private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(propertyName);
-            }
-        });
     }
 
     /**

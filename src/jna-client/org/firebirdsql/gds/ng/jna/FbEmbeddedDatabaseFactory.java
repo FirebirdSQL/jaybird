@@ -20,14 +20,13 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -78,9 +77,9 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
             for (String libraryName : LIBRARIES_TO_TRY) {
                 try {
                     if (Platform.isWindows()) {
-                        return (FbClientLibrary) Native.loadLibrary(libraryName, WinFbClientLibrary.class);
+                        return Native.loadLibrary(libraryName, WinFbClientLibrary.class);
                     } else {
-                        return (FbClientLibrary) Native.loadLibrary(libraryName, FbClientLibrary.class);
+                        return Native.loadLibrary(libraryName, FbClientLibrary.class);
                     }
                 } catch (UnsatisfiedLinkError e) {
                     throwables.add(e);
@@ -97,18 +96,10 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         }
 
         private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
-            if ("true".equalsIgnoreCase(getSystemPropertyPrivileged("org.firebirdsql.jna.syncWrapNativeLibrary"))) {
+            if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
                 return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
             }
             return clientLibrary;
-        }
-
-        private static String getSystemPropertyPrivileged(final String propertyName) {
-            return AccessController.doPrivileged(new PrivilegedAction<String>() {
-                public String run() {
-                    return System.getProperty(propertyName);
-                }
-            });
         }
     }
 

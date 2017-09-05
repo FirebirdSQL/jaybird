@@ -233,7 +233,7 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
             int bufferSize = BUFFER_SIZE;
             byte[] stdinBuffer = new byte[MAX_RESTORE_CHUNK];
-            byte[] newLine = System.getProperty("line.separator").getBytes();
+            byte[] newLine = System.lineSeparator().getBytes();
             boolean processing = true;
             boolean sending = true;
 

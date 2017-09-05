@@ -20,11 +20,9 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
-
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
@@ -58,25 +56,17 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
 
         private static FbClientLibrary initClientLibrary() {
             if (Platform.isWindows()) {
-                return (FbClientLibrary) Native.loadLibrary("fbclient", WinFbClientLibrary.class);
+                return Native.loadLibrary("fbclient", WinFbClientLibrary.class);
             } else {
-                return (FbClientLibrary) Native.loadLibrary("fbclient", FbClientLibrary.class);
+                return Native.loadLibrary("fbclient", FbClientLibrary.class);
             }
         }
 
         private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
-            if ("true".equalsIgnoreCase(getSystemPropertyPrivileged("org.firebirdsql.jna.syncWrapNativeLibrary"))) {
+            if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
                 return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
             }
             return clientLibrary;
-        }
-
-        private static String getSystemPropertyPrivileged(final String propertyName) {
-            return AccessController.doPrivileged(new PrivilegedAction<String>() {
-                public String run() {
-                    return System.getProperty(propertyName);
-                }
-            });
         }
     }
 
