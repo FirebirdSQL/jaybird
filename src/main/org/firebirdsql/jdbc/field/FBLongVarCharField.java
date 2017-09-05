@@ -147,7 +147,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         byte[] data = getBytes();
         if (data == null) return null;
         
-        return getDatatypeCoder().decodeString(data, encodingDefinition.getEncoding());
+        return getDatatypeCoder().decodeString(data);
     }
 
     @Override
@@ -179,7 +179,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         // setNull() to reset field to empty state
         setNull();
         if (value != null) {
-            setBytes(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding()));
+            setBytes(getDatatypeCoder().encodeString(value));
         }
     }
 
@@ -208,7 +208,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (binaryStream != null) {
             copyBinaryStream(this.binaryStream, this.length);
         } else if (characterStream != null) {
-            copyCharacterStream(characterStream, length, encodingDefinition.getEncoding());
+            copyCharacterStream(characterStream, length);
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
         } else if (blob == null) {
@@ -243,8 +243,10 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }
 
-    private void copyCharacterStream(Reader in, long length, Encoding encoding) throws SQLException {
+    private void copyCharacterStream(Reader in, long length) throws SQLException {
         FBBlob blob =  new FBBlob(gdsHelper);
+        // TODO Push this down into FBBlob?
+        Encoding encoding = getDatatypeCoder().getEncoding();
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
     }

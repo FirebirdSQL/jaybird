@@ -2631,9 +2631,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 if (sqlsubtype < 0)
                     // TODO Include actual subtype?
                     return "BLOB SUB_TYPE <0";
-                else if (sqlsubtype == 0)
+                else if (sqlsubtype == BLOB_SUB_TYPE_BINARY)
                     return "BLOB SUB_TYPE 0";
-                else if (sqlsubtype == 1)
+                else if (sqlsubtype == BLOB_SUB_TYPE_TEXT)
                     return "BLOB SUB_TYPE 1";
                 else
                     return "BLOB SUB_TYPE " + sqlsubtype;

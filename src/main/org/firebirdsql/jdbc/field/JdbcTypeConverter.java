@@ -120,7 +120,7 @@ public final class JdbcTypeConverter {
         case ISCConstants.SQL_BLOB:
             if (subtype < 0)
                 return Types.BLOB;
-            else if (subtype == 1)
+            else if (subtype == ISCConstants.BLOB_SUB_TYPE_TEXT)
                 return Types.LONGVARCHAR;
             else // if (subtype == 0 || subtype > 1)
                 return Types.LONGVARBINARY;

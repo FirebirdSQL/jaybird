@@ -834,21 +834,21 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         new FBBigDecimalField(fieldDescriptor, fieldData, Types.VARCHAR);
     }
 
-    private static FieldDescriptor createShortFieldDescriptor(int scale) {
+    private FieldDescriptor createShortFieldDescriptor(int scale) {
         return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_SHORT)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
-    private static FieldDescriptor createIntegerFieldDescriptor(int scale) {
+    private FieldDescriptor createIntegerFieldDescriptor(int scale) {
         return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_LONG)
                 .setScale(scale)
                 .toFieldDescriptor();
     }
 
-    private static FieldDescriptor createLongFieldDescriptor(int scale) {
+    private FieldDescriptor createLongFieldDescriptor(int scale) {
         return new RowDescriptorBuilder(1, datatypeCoder)
                 .setType(ISCConstants.SQL_INT64)
                 .setScale(scale)

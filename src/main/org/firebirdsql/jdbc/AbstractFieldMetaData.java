@@ -238,9 +238,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_BLOB:
             if (sqlSubtype < 0)
                 return "BLOB SUB_TYPE <0"; // TODO report actual subtype
-            else if (sqlSubtype == 0)
+            else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_BINARY)
                 return "BLOB SUB_TYPE 0";
-            else if (sqlSubtype == 1)
+            else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_TEXT)
                 return "BLOB SUB_TYPE 1";
             else
                 return "BLOB SUB_TYPE " + sqlSubtype;

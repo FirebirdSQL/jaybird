@@ -24,11 +24,14 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 
 import java.util.Objects;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
@@ -62,7 +65,8 @@ public final class FieldDescriptor {
      * @param position
      *         Position of this field (0-based), or {@code -1} if position is not known (eg for test code)
      * @param datatypeCoder
-     *         Instance of DatatypeCoder to use when decoding column data
+     *         Instance of DatatypeCoder to use when decoding column data (note that another instance may be derived
+     *         internally, which then will be returned by {@link #getDatatypeCoder()})
      * @param type
      *         Column SQL type
      * @param subType
@@ -82,13 +86,15 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column/table
      */
-    public FieldDescriptor(int position, final DatatypeCoder datatypeCoder, int type, final int subType,
+    public FieldDescriptor(final int position, final DatatypeCoder datatypeCoder,
+            final int type, final int subType,
             final int scale, int length,
-            final String fieldName, final String tableAlias, final String originalName, final String originalTableName,
+            final String fieldName, final String tableAlias, 
+            final String originalName, final String originalTableName,
             final String ownerName) {
         assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.position = position;
-        this.datatypeCoder = datatypeCoder;
+        this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
         this.type = type;
         this.subType = subType;
         this.scale = scale;
@@ -190,7 +196,7 @@ public final class FieldDescriptor {
      * @return {@code true} if the type is variable length (ie {@link org.firebirdsql.gds.ISCConstants#SQL_VARYING}).
      */
     public boolean isVarying() {
-        return isFbType(ISCConstants.SQL_VARYING);
+        return isFbType(SQL_VARYING);
     }
 
     /**
@@ -205,14 +211,14 @@ public final class FieldDescriptor {
      * @return {@code true} if the type is the same as the type of this field
      */
     public boolean isFbType(int fbType) {
-        return (getType() & ~1) == fbType;
+        return (type & ~1) == fbType;
     }
 
     /**
      * @return {@code true} if this field is nullable.
      */
     public boolean isNullable() {
-        return (getType() & 1) == 1;
+        return (type & 1) == 1;
     }
 
     /**
@@ -225,9 +231,27 @@ public final class FieldDescriptor {
      * @since 4.0
      */
     public boolean isDbKey() {
-        return "DB_KEY".equals(getOriginalName())
-                && isFbType(ISCConstants.SQL_TEXT)
-                && getSubType() == ISCConstants.CS_BINARY;
+        return "DB_KEY".equals(originalName)
+                && isFbType(SQL_TEXT)
+                && (subType & 0xFF) == CS_BINARY;
+    }
+
+    /**
+     * The length in characters of this field.
+     * <p>
+     * This takes into account the max bytes per character of the character set.
+     * </p>
+     *
+     * @return Character length, or {@code -1} for non-character types (including blobs)
+     */
+    public int getCharacterLength() {
+        switch (type & ~1) {
+        case SQL_TEXT:
+        case SQL_VARYING:
+            return length / getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+        default:
+            return -1;
+        }
     }
 
     /**
@@ -237,6 +261,58 @@ public final class FieldDescriptor {
      */
     public FieldValue createDefaultFieldValue() {
         return new FieldValue();
+    }
+
+    /**
+     * Returns a type-specific coder for this datatype.
+     * <p>
+     * Primary intent is to handle character set conversion for char, varchar and blob sub_type text.
+     * </p>
+     *
+     * @param datatypeCoder
+     *         Datatype coder to use for obtaining the type-specific variant
+     * @param type
+     *         Firebird type code
+     * @param subType
+     *         Firebird sub type code
+     * @param scale
+     *         Scale
+     * @return type-specific datatype coder
+     */
+    private static DatatypeCoder datatypeCoderForType(DatatypeCoder datatypeCoder, int type, int subType, int scale) {
+        int characterSetId = getCharacterSetId(type, subType, scale);
+        EncodingDefinition encodingDefinition = datatypeCoder.getEncodingFactory()
+                .getEncodingDefinitionByCharacterSetId(characterSetId);
+        return datatypeCoder.forEncodingDefinition(encodingDefinition);
+    }
+
+    /**
+     * Determines the character set id (without collation id) for a combination of type, sub type and scale.
+     *
+     * @param type
+     *         Firebird type code
+     * @param subType
+     *         Firebird sub type code
+     * @param scale
+     *         Firebird scale
+     * @return Character set id for the type, if the type has no character set, than {@link ISCConstants#CS_dynamic}
+     * is returned
+     */
+    private static int getCharacterSetId(int type, int subType, int scale) {
+        switch (type & ~1) {
+        case SQL_TEXT:
+        case SQL_VARYING:
+            return subType & 0xFF;
+        case SQL_BLOB:
+            if (subType == BLOB_SUB_TYPE_TEXT) {
+                return scale & 0xFF;
+            }
+            // Assume binary/octets (instead of NONE)
+            return CS_BINARY;
+        default:
+            // Technically not a character type, but assume connection character set
+            return CS_dynamic;
+        }
     }
 
     /**
@@ -273,20 +349,19 @@ public final class FieldDescriptor {
         return sb.toString();
     }
 
-    StringBuilder appendFieldDescriptor(final StringBuilder sb) {
+    void appendFieldDescriptor(final StringBuilder sb) {
         sb.append("FieldDescriptor:[")
-                .append("Position=").append(getPosition())
-                .append(",FieldName=").append(getFieldName())
-                .append(",TableAlias=").append(getTableAlias())
-                .append(",Type=").append(getType())
-                .append(",SubType=").append(getSubType())
-                .append(",Scale=").append(getScale())
-                .append(",Length=").append(getLength())
-                .append(",OriginalName=").append(getOriginalName())
-                .append(",OriginalTableName=").append(getOriginalTableName())
-                .append(",OwnerName=").append(getOwnerName())
+                .append("Position=").append(position)
+                .append(",FieldName=").append(fieldName)
+                .append(",TableAlias=").append(tableAlias)
+                .append(",Type=").append(type)
+                .append(",SubType=").append(subType)
+                .append(",Scale=").append(scale)
+                .append(",Length=").append(length)
+                .append(",OriginalName=").append(originalName)
+                .append(",OriginalTableName=").append(originalTableName)
+                .append(",OwnerName=").append(ownerName)
                 .append(']');
-        return sb;
     }
 
     @Override
@@ -304,7 +379,7 @@ public final class FieldDescriptor {
                 && Objects.equals(this.originalName, other.originalName)
                 && Objects.equals(this.originalTableName, other.originalTableName)
                 && Objects.equals(this.ownerName, other.ownerName)
-                && this.datatypeCoder == other.datatypeCoder;
+                && this.datatypeCoder.equals(other.datatypeCoder);
     }
 
     @Override

@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.encodings.EncodingDefinition;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.util.IOUtils;
@@ -58,40 +56,16 @@ class FBStringField extends FBField {
     static final String SHORT_TRUE_3 = "1";
 
     protected final int possibleCharLength;
-    protected final EncodingDefinition encodingDefinition;
 
     FBStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
 
-        encodingDefinition = getEncodingDefinition(fieldDescriptor);
+        int charLength = fieldDescriptor.getCharacterLength();
         // TODO This might wreak havoc if field is a FBLongVarcharField
-        possibleCharLength = fieldDescriptor.getLength() / encodingDefinition.getMaxBytesPerChar();
+        // TODO currently avoiding -1 to avoid problems in FBLongVarcharField (eg with setBoolean); need to fix that
+        possibleCharLength = charLength != -1 ? charLength : fieldDescriptor.getLength();
     }
-
-    protected static EncodingDefinition getEncodingDefinition(FieldDescriptor fieldDescriptor) throws SQLException {
-        // Note: characterSetId includes the collation id
-        final int characterSetId;
-        switch (fieldDescriptor.getType() & ~1) {
-        case ISCConstants.SQL_TEXT:
-        case ISCConstants.SQL_VARYING:
-            characterSetId = fieldDescriptor.getSubType();
-            break;
-        case ISCConstants.SQL_BLOB:
-            if (fieldDescriptor.getSubType() == 1) {
-                characterSetId = fieldDescriptor.getScale();
-            } else {
-                characterSetId = ISCConstants.CS_NONE;
-            }
-            break;
-        default:
-            throw new SQLException("Unexpected Firebird data type: " + fieldDescriptor);
-        }
-        return fieldDescriptor.getDatatypeCoder().getEncodingFactory()
-                .getEncodingDefinitionByCharacterSetId(characterSetId);
-    }
-
-    //----- Math code
 
     @Override
     public byte getByte() throws SQLException {
@@ -186,7 +160,7 @@ class FBStringField extends FBField {
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeString(getFieldData(), encodingDefinition.getEncoding());
+        return getDatatypeCoder().decodeString(getFieldData());
     }
 
     //----- getXXXStream code
@@ -314,7 +288,7 @@ class FBStringField extends FBField {
             setNull();
             return;
         }
-        setFieldData(getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding()));
+        setFieldData(getDatatypeCoder().encodeString(value));
     }
 
     //----- setXXXStream code

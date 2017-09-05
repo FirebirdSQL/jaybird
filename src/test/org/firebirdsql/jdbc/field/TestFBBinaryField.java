@@ -27,7 +27,6 @@ import java.io.*;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Random;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
@@ -41,8 +40,7 @@ import static org.junit.Assert.*;
 public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte[]> {
 
     private static final int FIELD_LENGTH = 15;
-    private final Random rnd = new Random();
-
+    
     @Before
     @Override
     public void setUp() throws Exception {
@@ -53,6 +51,7 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
         rowDescriptorBuilder.setLength(FIELD_LENGTH);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
         field = new FBBinaryField(fieldDescriptor, fieldData, Types.VARBINARY);
+        datatypeCoder = fieldDescriptor.getDatatypeCoder();
     }
 
     @Test
@@ -311,12 +310,6 @@ public class TestFBBinaryField extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     private byte[] getRandomBytes() {
         return getRandomBytes(FIELD_LENGTH);
-    }
-
-    private byte[] getRandomBytes(int length) {
-        final byte[] bytes = new byte[length];
-        rnd.nextBytes(bytes);
-        return bytes;
     }
 
     private byte[] streamToBytes(InputStream stream) throws IOException {

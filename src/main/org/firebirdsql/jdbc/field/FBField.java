@@ -128,9 +128,7 @@ public abstract class FBField {
     }
 
     /**
-     * @return <code>true</code> if the corresponding <code>field</code> is
-     *         <code>null</code>, otherwise <code>false</code>.
-     * @throws SQLException
+     * @return {@code true} if the corresponding field is {@code null}, otherwise {@code false}
      */
     public final boolean isNull() throws SQLException {
         return getFieldData() == null;
@@ -175,7 +173,7 @@ public abstract class FBField {
             if (subType < 0) {
                 return jdbcType == Types.BLOB;
             }
-            if (subType == 1) {
+            if (subType == ISCConstants.BLOB_SUB_TYPE_TEXT) {
                 return jdbcType == Types.LONGVARCHAR;
             } else {
                 return jdbcType == Types.LONGVARBINARY
@@ -387,7 +385,6 @@ public abstract class FBField {
     }
 
     public Object getObject() throws SQLException {
-
         if (isNull()) {
             return null;
         }
@@ -527,7 +524,6 @@ public abstract class FBField {
     }
 
     public Reader getCharacterStream() throws SQLException {
-        // TODO Needs to be moved higher, or FBStringField needs to get specific version that handles encoding.
         final InputStream is = getBinaryStream();
         if (is == null) {
             return null;

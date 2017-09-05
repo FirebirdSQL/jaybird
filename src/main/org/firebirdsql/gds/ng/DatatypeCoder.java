@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 
 import java.io.InputStream;
@@ -443,6 +444,44 @@ public interface DatatypeCoder {
      * @return The encoding factory.
      */
     IEncodingFactory getEncodingFactory();
+
+    /**
+     * @return The encoding definition used by this datatype coder for string conversions.
+     */
+    EncodingDefinition getEncodingDefinition();
+
+    /**
+     * @return The encoding used by this datatype coder for string conversions.
+     */
+    Encoding getEncoding();
+
+    /**
+     * Return a derived datatype coder that applies the supplied encoding definition for string conversions.
+     *
+     * @param encodingDefinition Encoding definition
+     * @return Derived datatype coder (may be this instance if encoding definition is the same)
+     * @since 4.0
+     */
+    DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition);
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Equality: same basic type (ie: wire protocol/JNA type + endianness) and same encoding definition.
+     * </p>
+     * <p>
+     * This does not need to take into account the encoding factory, as usage should be limited to datatype coders
+     * derived from the same connection.
+     * </p>
+     *
+     * @param other Object to compare to
+     * @return {@code true} if other is an equivalent datatype coder.
+     */
+    @Override
+    boolean equals(Object other);
+
+    @Override
+    int hashCode();
 
     /**
      * Raw date/time value.

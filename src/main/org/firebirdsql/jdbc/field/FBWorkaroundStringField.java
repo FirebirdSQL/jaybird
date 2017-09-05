@@ -94,7 +94,7 @@ public final class FBWorkaroundStringField extends FBStringField {
             setNull();
             return null;
         }
-        byte[] data = getDatatypeCoder().encodeString(value, encodingDefinition.getEncoding());
+        byte[] data = getDatatypeCoder().encodeString(value);
         setFieldData(data);
         return data;
     }   
@@ -115,7 +115,8 @@ public final class FBWorkaroundStringField extends FBStringField {
             return result;
         
         // fix incorrect padding done by the database for multibyte charsets
-        if ((fieldDescriptor.getLength() % encodingDefinition.getMaxBytesPerChar()) == 0
+        final int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+        if ((fieldDescriptor.getLength() % maxBytesPerChar) == 0
                 && result.length() > possibleCharLength)
             result = result.substring(0, possibleCharLength);
         

@@ -2105,6 +2105,9 @@ public interface ISCConstants {
     int CS_BINARY  = 1; /* BINARY BYTES */
     int CS_dynamic = 127; // Pseudo number for runtime charset (see intl\charsets.h and references to it in Firebird)
 
+    int BLOB_SUB_TYPE_BINARY = 0;
+    int BLOB_SUB_TYPE_TEXT = 1;
+
     // Fetch related constants
     int FETCH_OK = 0;
     int FETCH_NO_MORE_ROWS = 100;

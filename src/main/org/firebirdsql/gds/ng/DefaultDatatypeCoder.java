@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 
 import java.io.InputStream;
@@ -32,6 +33,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import static java.util.Objects.hash;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -421,6 +423,48 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public final IEncodingFactory getEncodingFactory() {
         return encodingFactory;
+    }
+
+    @Override
+    public final EncodingDefinition getEncodingDefinition() {
+        return encodingFactory.getDefaultEncodingDefinition();
+    }
+
+    @Override
+    public final Encoding getEncoding() {
+        return encoding;
+    }
+
+    @Override
+    public final DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition) {
+        if (getEncodingFactory().getDefaultEncodingDefinition().equals(encodingDefinition)) {
+            return this;
+        }
+        // TODO Cache?
+        return new EncodingSpecificDatatypeCoder(this, encodingDefinition);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof DatatypeCoder)) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        DatatypeCoder other = (DatatypeCoder) o;
+        if (o instanceof EncodingSpecificDatatypeCoder) {
+            return getEncodingDefinition().equals(other.getEncodingDefinition())
+                    && getClass() == ((EncodingSpecificDatatypeCoder) other).unwrap().getClass();
+        } else {
+            return getEncodingDefinition().equals(other.getEncodingDefinition())
+                    && getClass() == other.getClass();
+        }
+    }
+
+    @Override
+    public final int hashCode() {
+        return hash(getClass(), getEncodingDefinition());
     }
 
     private datetime fromLongBytes(byte[] byte_long) {

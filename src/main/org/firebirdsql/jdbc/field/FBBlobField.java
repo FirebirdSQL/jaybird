@@ -192,7 +192,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (binaryStream != null) {
             copyBinaryStream(binaryStream, length);
         } else if (characterStream != null) {
-            copyCharacterStream(characterStream, length, getDatatypeCoder().getEncodingFactory().getDefaultEncoding());
+            copyCharacterStream(characterStream, length, getDatatypeCoder().getEncoding());
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
         } else if (blob == null) {

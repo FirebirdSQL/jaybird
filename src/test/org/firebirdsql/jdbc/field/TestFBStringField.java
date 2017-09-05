@@ -65,6 +65,7 @@ public class TestFBStringField extends BaseJUnit4TestFBField<FBStringField, Stri
         rowDescriptorBuilder.setLength(TEST_STRING_SIZE);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
         field = new FBStringField(fieldDescriptor, fieldData, Types.VARCHAR);
+        datatypeCoder = fieldDescriptor.getDatatypeCoder();
     }
 
     @Test
