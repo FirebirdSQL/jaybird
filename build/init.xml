@@ -39,7 +39,7 @@
 
         <!-- Java 9 specific properties -->
         <condition property="jdk9" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.9"/>
+            <equals arg1="${ant.java.version}" arg2="9"/>
         </condition>
         <condition property="maven.jdkversion" value="jdk9">
             <istrue value="${jdk9}"/>
