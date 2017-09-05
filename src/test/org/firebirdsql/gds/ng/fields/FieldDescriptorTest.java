@@ -47,6 +47,7 @@ public class FieldDescriptorTest {
         FieldDescriptor descriptor = createFieldDescriptor(ISCConstants.SQL_LONG, 0, 0);
 
         assertSame(defaultDatatypeCoder, descriptor.getDatatypeCoder());
+        assertEquals(-1, descriptor.getCharacterLength());
     }
 
     @Test
@@ -54,6 +55,7 @@ public class FieldDescriptorTest {
         FieldDescriptor descriptor = createFieldDescriptor(ISCConstants.SQL_TEXT, CHARSET_ID_UTF8, 0);
 
         assertSame(defaultDatatypeCoder, descriptor.getDatatypeCoder());
+        assertEquals(2, descriptor.getCharacterLength());
     }
 
     @Test
@@ -61,6 +63,7 @@ public class FieldDescriptorTest {
         FieldDescriptor descriptor = createFieldDescriptor(ISCConstants.SQL_TEXT, ISCConstants.CS_dynamic, 0);
 
         assertSame(defaultDatatypeCoder, descriptor.getDatatypeCoder());
+        assertEquals(2, descriptor.getCharacterLength());
     }
 
     @Test
@@ -72,6 +75,7 @@ public class FieldDescriptorTest {
         DatatypeCoder datatypeCoder = descriptor.getDatatypeCoder();
         assertThat(datatypeCoder, instanceOf(EncodingSpecificDatatypeCoder.class));
         assertEquals(win1252EncodingDefinition, datatypeCoder.getEncodingDefinition());
+        assertEquals(8, descriptor.getCharacterLength());
     }
 
     @Test
@@ -79,6 +83,7 @@ public class FieldDescriptorTest {
         FieldDescriptor descriptor = createFieldDescriptor(ISCConstants.SQL_BLOB, 1, CHARSET_ID_UTF8);
 
         assertSame(defaultDatatypeCoder, descriptor.getDatatypeCoder());
+        assertEquals(-1, descriptor.getCharacterLength());
     }
 
     @Test
@@ -86,6 +91,7 @@ public class FieldDescriptorTest {
         FieldDescriptor descriptor = createFieldDescriptor(ISCConstants.SQL_BLOB, 1, ISCConstants.CS_dynamic);
 
         assertSame(defaultDatatypeCoder, descriptor.getDatatypeCoder());
+        assertEquals(-1, descriptor.getCharacterLength());
     }
 
     @Test
@@ -97,9 +103,10 @@ public class FieldDescriptorTest {
         DatatypeCoder datatypeCoder = descriptor.getDatatypeCoder();
         assertThat(datatypeCoder, instanceOf(EncodingSpecificDatatypeCoder.class));
         assertEquals(win1252EncodingDefinition, datatypeCoder.getEncodingDefinition());
+        assertEquals(-1, descriptor.getCharacterLength());
     }
 
     private FieldDescriptor createFieldDescriptor(int type, int subType, int scale) {
-        return new FieldDescriptor(1, defaultDatatypeCoder, type, subType, scale, 4, "x", "t", "x", "t", "");
+        return new FieldDescriptor(1, defaultDatatypeCoder, type, subType, scale, 8, "x", "t", "x", "t", "");
     }
 }

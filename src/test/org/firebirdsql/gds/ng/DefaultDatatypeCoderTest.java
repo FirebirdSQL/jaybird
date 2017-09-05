@@ -19,14 +19,17 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.encodings.IEncodingFactory;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.ng.DefaultDatatypeCoder}.
@@ -37,7 +40,7 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestDefaultDatatypeCoder {
+public class DefaultDatatypeCoderTest {
 
     private final DefaultDatatypeCoder datatypeCoder =
             new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
@@ -234,5 +237,47 @@ public class TestDefaultDatatypeCoder {
         final java.sql.Time result = datatypeCoder.decodeTimeCalendar(timeBytes, calendar);
 
         assertEquals("Unexpected timestamp", expected, result);
+    }
+
+    /**
+     * Checks cache maintenance implementation (warning: reflection ties this to the implementation)
+     */
+    @Test
+    public void testCacheOfEncodingSpecificDatatypeCoders() throws Exception {
+        Field cacheField = DefaultDatatypeCoder.class.getDeclaredField("encodingSpecificDatatypeCoders");
+        cacheField.setAccessible(true);
+
+        assertEquals("Cache size at start", 0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
+
+        List<String> encodingsToTry = Arrays.asList("ISO8859_1", "ISO8859_2", "ISO8859_3", "ISO8859_4", "ISO8859_5",
+                "ISO8859_6", "ISO8859_7", "ISO8859_8", "ISO8859_9", "DOS437");
+        String additionalEncoding = "DOS850";
+        assert encodingsToTry.size() == 10 : "Unexected number of encodings";
+        Map<String, DatatypeCoder> retrievedDatatypeCoders = new HashMap<>(encodingsToTry.size() + 1);
+
+        IEncodingFactory encodingFactory = datatypeCoder.getEncodingFactory();
+        // prime cache
+        for (String encoding : encodingsToTry) {
+            DatatypeCoder encodingSpecificDatatypeCoder =
+                    datatypeCoder.forEncodingDefinition(encodingFactory.getEncodingDefinitionByFirebirdName(encoding));
+            retrievedDatatypeCoders.put(encoding, encodingSpecificDatatypeCoder);
+        }
+
+        assertEquals("Cache size after adding items", encodingsToTry.size(), ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
+
+        // check cache
+        for (String encoding : encodingsToTry) {
+            DatatypeCoder encodingSpecificDatatypeCoder =
+                    datatypeCoder.forEncodingDefinition(encodingFactory.getEncodingDefinitionByFirebirdName(encoding));
+            assertSame("Unexpected instance for " + encoding,
+                    retrievedDatatypeCoders.get(encoding), encodingSpecificDatatypeCoder);
+        }
+
+        // Overflow cache to trigger clean up
+        DatatypeCoder additionalDatatypeCoder = datatypeCoder.forEncodingDefinition(
+                encodingFactory.getEncodingDefinitionByFirebirdName(additionalEncoding));
+        assertNotNull(additionalDatatypeCoder);
+
+        assertEquals("Cache size after overflow", 0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
     }
 }

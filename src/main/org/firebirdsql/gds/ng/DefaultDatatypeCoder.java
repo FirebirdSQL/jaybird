@@ -21,6 +21,9 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,6 +35,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.Objects.hash;
 import static java.util.Objects.requireNonNull;
@@ -51,8 +58,19 @@ import static java.util.Objects.requireNonNull;
  */
 public class DefaultDatatypeCoder implements DatatypeCoder {
 
+    private static final Logger logger = LoggerFactory.getLogger(DefaultDatatypeCoder.class);
+    private static final int DEFAULT_DATATYPE_CODER_CACHE_SIZE = 10;
+    private static final int DATATYPE_CODER_CACHE_SIZE = Math.max(1,
+            JaybirdSystemProperties.getDatatypeCoderCacheSize(DEFAULT_DATATYPE_CODER_CACHE_SIZE));
+    private static final int LOG_CACHE_MAINTENANCE_WARNING = 10;
+
     private final IEncodingFactory encodingFactory;
     private final Encoding encoding;
+
+    private final ConcurrentMap<EncodingDefinition, DatatypeCoder> encodingSpecificDatatypeCoders =
+            new ConcurrentHashMap<>(DATATYPE_CODER_CACHE_SIZE);
+    private final Lock cacheMaintenanceLock = new ReentrantLock();
+    private int cacheMaintenanceCount = 0;
 
     /**
      * Returns an instance of {@code DefaultDatatypeCoder} for an encoding factory.
@@ -436,12 +454,55 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public final DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition) {
-        if (getEncodingFactory().getDefaultEncodingDefinition().equals(encodingDefinition)) {
+    public final DatatypeCoder forEncodingDefinition(final EncodingDefinition encodingDefinition) {
+        if (getEncodingDefinition().equals(encodingDefinition)) {
             return this;
         }
-        // TODO Cache?
-        return new EncodingSpecificDatatypeCoder(this, encodingDefinition);
+        return getOrCreateForEncodingDefinition(encodingDefinition);
+    }
+
+    private DatatypeCoder getOrCreateForEncodingDefinition(final EncodingDefinition encodingDefinition) {
+        final DatatypeCoder coder = encodingSpecificDatatypeCoders.get(encodingDefinition);
+        if (coder != null) {
+            // existing instance in cache
+            return coder;
+        }
+        return createForEncodingDefinition(encodingDefinition);
+    }
+
+    private DatatypeCoder createForEncodingDefinition(final EncodingDefinition encodingDefinition) {
+        final DatatypeCoder newCoder = new EncodingSpecificDatatypeCoder(this, encodingDefinition);
+        final DatatypeCoder coder = encodingSpecificDatatypeCoders.putIfAbsent(encodingDefinition, newCoder);
+        if (coder != null) {
+            // Other thread already created and added an instance; return that
+            return coder;
+        }
+        try {
+            return newCoder;
+        } finally {
+            if (encodingSpecificDatatypeCoders.size() > DATATYPE_CODER_CACHE_SIZE) {
+                performCacheMaintenance();
+            }
+        }
+    }
+
+    private void performCacheMaintenance() {
+        if (cacheMaintenanceLock.tryLock()) {
+            try {
+                // Simple but brute force maintenance: clear entire cache
+                encodingSpecificDatatypeCoders.clear();
+                cacheMaintenanceCount++;
+            } finally {
+                cacheMaintenanceLock.unlock();
+            }
+
+            if (cacheMaintenanceCount % LOG_CACHE_MAINTENANCE_WARNING == 1 && logger.isWarnEnabled()) {
+                logger.warn("Cleared encoding specific datatype coder cache (current reset count: "
+                        + cacheMaintenanceCount + "). Consider setting system property "
+                        + JaybirdSystemProperties.DATATYPE_CODER_CACHE_SIZE
+                        + " to a value higher than the current maximum size of " + DATATYPE_CODER_CACHE_SIZE);
+            }
+        }
     }
 
     @Override

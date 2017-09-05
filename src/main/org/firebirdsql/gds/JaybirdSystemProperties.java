@@ -41,6 +41,7 @@ public final class JaybirdSystemProperties {
     public static final String PROCESS_NAME_PROP = JDBC_PREFIX + "processName";
     public static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "defaultConnectionEncoding";
     public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
+    public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
 
     private JaybirdSystemProperties() {
         // no instances
@@ -76,6 +77,11 @@ public final class JaybirdSystemProperties {
 
     public static boolean isRequireConnectionEncoding() {
         return getBooleanSystemPropertyPrivileged(REQUIRE_CONNECTION_ENCODING_PROPERTY);
+    }
+
+    public static int getDatatypeCoderCacheSize(int defaultValue) {
+        Integer value = getIntegerSystemPropertyPrivileged(DATATYPE_CODER_CACHE_SIZE);
+        return value != null ? value : defaultValue;
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
