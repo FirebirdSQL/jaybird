@@ -10,10 +10,9 @@
                  version="true"
                  windowtitle="${Name} API"
                  doctitle="${Name}"
-                 extdirs="${module.thirdparty}"
                  additionalparam="${javadoc.additionalparam}"
                  excludepackagenames="${excludedPackages}"
-                 bottom="Copyright &#169; 2001-2017 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
+                 bottom="Copyright &amp;copy; 2001-2017 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
             <arg line="${java.module.arg}"/>
             <classpath refid="javac.driver.classpath"/>
             <sourcepath>
