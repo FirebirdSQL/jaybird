@@ -93,6 +93,11 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
+    public void close() throws Exception {
+        stop();
+    }
+
+    @Override
     public String getState() {
         return state;
     }

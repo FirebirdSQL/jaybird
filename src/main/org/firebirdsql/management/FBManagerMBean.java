@@ -24,11 +24,16 @@ package org.firebirdsql.management;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public interface FBManagerMBean {
+public interface FBManagerMBean extends AutoCloseable {
 
     void start() throws Exception;
 
     void stop() throws Exception;
+
+    /**
+     * Alias for {@link #stop()}
+     */
+    void close() throws Exception;
 
     String getName();
 
