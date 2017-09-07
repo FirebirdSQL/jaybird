@@ -159,6 +159,11 @@ public class TestDbAttachInfo {
         checkInvalidUrl(null, "Connection string is missing");
     }
 
+    @Test
+    public void testInvalidConnectionUrl_extraPortSeparator() throws Exception {
+        checkInvalidUrl("//127.0.0.1:3050://C:/db/example.FDB", "Bad port: '3050:' is not a number");
+    }
+
     private void checkInvalidUrl(String invalidUrl, String expectedExceptionMessageSubString) throws Exception {
         expectedException.expect(SQLNonTransientConnectionException.class);
         expectedException.expect(allOf(
