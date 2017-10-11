@@ -81,7 +81,7 @@ public class FBResourceException extends ResourceException {
         super(reason, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
         // Preserve setLinkedException for backwards compatibility
         setLinkedException(original);
-        initCause(original);
+        if (getCause() != original) initCause(original);
         if (original instanceof SQLException) {
             SQLException origSql = (SQLException) original;
             if (origSql.getSQLState() != null) {
