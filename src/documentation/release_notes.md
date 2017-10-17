@@ -211,6 +211,15 @@ No known gotcha's at this time. If you find a problem: please report it on
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.3
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.2
+
+-   Fixed: Some older versions of JBoss would throw an `java.lang.IllegalStateException: 
+    Can't overwrite cause` when `FBResourceException` initialised its exception 
+    cause. ([JDBC-512](http://tracker.firebirdsql.org/browse/JDBC-512))
+
 Changes in Jaybird 3.0.2
 ------------------------
 

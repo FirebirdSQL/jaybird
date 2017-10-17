@@ -45,6 +45,17 @@ import java.sql.SQLException;
 @SuppressWarnings("deprecation")
 public class FBResourceException extends ResourceException {
 
+    /* Some versions of JCA will call initCause from setLinkedException. A subsequent call to initCause will then
+     * throw an IllegalStateException.
+     * We check this behavior once, so we don't need to check if cause is null for each exception.
+     */
+    private static final boolean PERFORM_EXPLICIT_INIT_CAUSE;
+    static {
+        ResourceException resourceException = new ResourceException();
+        resourceException.setLinkedException(new RuntimeException());
+        PERFORM_EXPLICIT_INIT_CAUSE = resourceException.getCause() == null;
+    }
+
     /**
      * @deprecated Use constants from {@link SQLStateConstants}. To be removed in Jaybird 4.
      */
@@ -87,7 +98,9 @@ public class FBResourceException extends ResourceException {
         super(reason, SQLStateConstants.SQL_STATE_GENERAL_ERROR);
         // Preserve setLinkedException for backwards compatibility
         setLinkedException(original);
-        initCause(original);
+        if (PERFORM_EXPLICIT_INIT_CAUSE) {
+            initCause(original);
+        }
         if (original instanceof SQLException) {
             SQLException origSql = (SQLException) original;
             if (origSql.getSQLState() != null) {
