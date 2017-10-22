@@ -63,6 +63,8 @@ Changelog
 The following has been changed or fixed in Jaybird 2.2.14:
 
 -   Fixed: FBTraceManager.loadConfigurationFromFile strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
+-   Improved: Added explicit `Automatic-Module-Name: org.firebirdsql.jaybird` to 
+    manifest for forwards compatibility with Java 9 modularization. ([JDBC-511](http://tracker.firebirdsql.org/browse/JDBC-511))
 
 ### Changes and fixes in Jaybird 2.2.13
 
