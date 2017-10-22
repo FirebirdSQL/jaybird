@@ -219,6 +219,8 @@ The following has been changed or fixed since Jaybird 3.0.2
 -   Fixed: Some older versions of JBoss would throw an `java.lang.IllegalStateException: 
     Can't overwrite cause` when `FBResourceException` initialised its exception 
     cause. ([JDBC-512](http://tracker.firebirdsql.org/browse/JDBC-512))
+-   Improved: Added explicit `Automatic-Module-Name: org.firebirdsql.jaybird` to 
+    manifest for forwards compatibility with Java 9 modularization. ([JDBC-511](http://tracker.firebirdsql.org/browse/JDBC-511))
 
 Changes in Jaybird 3.0.2
 ------------------------
