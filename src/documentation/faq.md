@@ -1,11 +1,3 @@
-Documentation crowd-funding{-}
-==============================
-
-The Firebird Project is currently holding a crowd-funding for the Firebird 
-Developer Guide. Your donation is much appreciated!
-
-See <https://www.firebirdsql.org/en/doc-funding-2017/> for details.
-
 Jaybird
 =======
 
