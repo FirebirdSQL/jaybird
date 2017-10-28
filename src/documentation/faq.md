@@ -12,7 +12,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.1`
+Version: `3.0.2`
 
 For example, for Java 8:
 
@@ -20,7 +20,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
 </dependency>
 ~~~
 
@@ -32,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.1</version>
+    <version>3.0.2</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -74,7 +74,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>2.2.12</version>
+    <version>2.2.13</version>
 </dependency>
 ~~~
 
@@ -138,7 +138,7 @@ JDBC 4.2 features are supported or fully implemented.
 Jaybird 2.2.7 is the last version to support Java 5, support has been dropped
 with Jaybird 2.2.8.
 
-Jaybird 2.2 is the last version to support Java 6, support will be dropped with
+Jaybird 2.2 is the last version to support Java 6, support has been dropped with
 Jaybird 3.0.
 
 Which Firebird versions are supported?
