@@ -8,7 +8,7 @@
 //
 // An example of using a JDBC 2 Standard Extension DataSource.
 // The DataSource facility provides an alternative to the JDBC DriverManager,
-// essentially duplicating all of the driver manager’s useful functionality.
+// essentially duplicating all of the driver manager's useful functionality.
 // Although, both mechanisms may be used by the same application if desired,
 // JavaSoft encourages developers to regard the DriverManager as a legacy
 // feature of the JDBC API.
