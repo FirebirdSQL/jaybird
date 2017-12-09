@@ -32,6 +32,7 @@ import java.util.Properties;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * This method tests correctness of {@link FBResultSetMetaData} class.
@@ -307,6 +308,43 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
 
             // Will throw exception in current versions, but should work
             assertEquals(15, rsmd.getPrecision(1));
+        }
+    }
+
+    /**
+     * Test for CORE-5655
+     */
+    @Test
+    public void getTableAliasCTE() throws Exception {
+        // TODO Also works for 2.5.8+ and 3.0.3+, relax to isVersionEqualOrAbove(2, 5) after release of 2.5.8 and 3.0.3
+        assumeTrue("Firebird 4 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute("\n"
+                    + "create table tablea("
+                    + "column1 varchar(20),"
+                    + "column2 varchar(20)"
+                    + "); ");
+
+            for (String query : new String[] {
+                    "select a.column1 from (select b.column1 from (select c.column1 from tablea c) b) a",
+                    "with a as (SELECT column1 from TABLEA)\n"
+                            + "select column1 from a",
+                    "select * from (select column1 from tablea b) a"
+            }) {
+
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    System.out.println(query);
+                    FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
+                    final String columnLabel = rsmd.getColumnLabel(1);
+                    final String tableAlias = rsmd.getTableAlias(1);
+                    System.out.println("'" + columnLabel + "'");
+                    System.out.println("'" + tableAlias + "'");
+                    assertEquals("columnLabel", "COLUMN1", columnLabel);
+                    assertEquals("tableAlias", "A", tableAlias);
+                }
+                System.out.println("---------");
+            }
         }
     }
 }
