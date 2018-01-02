@@ -385,15 +385,19 @@ The improved support includes
 
 Jaybird currently does not formally support Java 9 (JDBC 4.3), although most of
 the JDBC 4.3 features have been implemented (in as far as they are supported by 
-Firebird). 
+Firebird).
+
+For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
+automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
+name for Jaybird, and allows for future modularization of Jaybird.  
 
 You can use the Java 8 driver under Java 9, contrary to earlier Jaybird 3.0 test 
-releases, it is no longer necessary to add the `java.xml.bind` module using 
-`--add-modules java.xml.bind`.
+releases, it is not necessary to add the `java.xml.bind` module using 
+`--add-modules java.xml.bind`, as we removed its use.
 
-Jaybird cannot be fully tested under Java 9 at this moment, as some of our tests
-fail due to recent changes, that prevent JMock (or specifically cglib) from
-dynamically generating classes.
+Jaybird 3.x cannot be fully tested under Java 9 at this moment, as some of our 
+tests fail due to recent changes, that prevent JMock (or specifically cglib) 
+from dynamically generating classes, this has been fixed on master (Jaybird 4).
 
 Firebird support
 ----------------
