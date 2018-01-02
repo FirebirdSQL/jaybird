@@ -12,7 +12,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.2`
+Version: `3.0.3`
 
 For example, for Java 8:
 
@@ -20,7 +20,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
 </dependency>
 ~~~
 
@@ -32,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -49,15 +49,16 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 4.4.0 as a dependency:
+explicitly include JNA as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>4.4.0</version>
 </dependency>
 ~~~
+
+The version can be excluded, as it is already specified in the Jaybird pom.
 
 #### Jaybird 2.2 ####
 
@@ -66,7 +67,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`)  
-Version: `2.2.13`
+Version: `2.2.14`
 
 For example:
 
@@ -74,7 +75,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>2.2.13</version>
+    <version>2.2.14</version>
 </dependency>
 ~~~
 
@@ -140,6 +141,12 @@ with Jaybird 2.2.8.
 
 Jaybird 2.2 is the last version to support Java 6, support has been dropped with
 Jaybird 3.0.
+
+### What is the Java 9 module name for Jaybird?
+
+Jaybird itself is not (yet) modularized. To ensure a stable module name, 
+Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name 
+`org.firebirdsql.jaybird`.
 
 Which Firebird versions are supported?
 --------------------------------------
