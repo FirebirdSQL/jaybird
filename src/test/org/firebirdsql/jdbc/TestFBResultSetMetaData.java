@@ -201,6 +201,7 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
             assertEquals("Column 3, unexpected columnName", "ADD", metaData.getColumnName(3));
             assertEquals("Column 3, unexpected columnLabel", "ADD", metaData.getColumnLabel(3));
 
+            // NOTE: change over actually starting with 2.5.8
             String expectedColumn4Name = firebirdVersion >= 3 ? "SUBTRACT" : "";
             assertEquals("Column 4, unexpected columnName", expectedColumn4Name, metaData.getColumnName(4));
             assertEquals("Column 4, unexpected columnLabel", "COLUMN4ALIAS", metaData.getColumnLabel(4));
