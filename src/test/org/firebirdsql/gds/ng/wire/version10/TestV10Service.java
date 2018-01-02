@@ -169,7 +169,7 @@ public class TestV10Service {
                 assertThat("Expected database header page content", headerPage, allOf(
                         startsWith("\nDatabase"),
                         containsString("Database header page information"),
-                        endsWith("*END*\n")));
+                        containsString("*END*\n")));
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
