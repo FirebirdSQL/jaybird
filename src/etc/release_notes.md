@@ -66,6 +66,13 @@ The following has been changed or fixed in Jaybird 2.2.14:
 -   Improved: Added explicit `Automatic-Module-Name: org.firebirdsql.jaybird` to 
     manifest for forwards compatibility with Java 9 modularization. ([JDBC-511](http://tracker.firebirdsql.org/browse/JDBC-511))
 
+**Known issues in Jaybird 2.2.14**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname, or to
+    use a Firebird 2.5 or earlier `fbclient.dll`.
+
 ### Changes and fixes in Jaybird 2.2.13
 
 The following has been changed or fixed in Jaybird 2.2.13:
@@ -81,13 +88,6 @@ The following has been changed or fixed in Jaybird 2.2.13:
 -   Fixed: Generated keys query for table with space character (or any other 
     character below `\u00A0` that was not `a`-`z`, `A`-`Z`, `0`-`9`, `$`, `_`,
     or `:`) in its (quoted) name returns empty generated keys result set ([JDBC-481](http://tracker.firebirdsql.org/browse/JDBC-481))
-    
-**Known issues in Jaybird 2.2.13**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname, or to
-    use a Firebird 2.5 or earlier `fbclient.dll`.
 
 ### Changes and fixes in Jaybird 2.2.12
 
@@ -785,6 +785,10 @@ End-Of-Public-Updates status since April 2015.
 Java 9 support is expected to be introduced with Jaybird 3.0. There are no plans
 to add Java 9 support to Jaybird 2.2.x, although the driver is expected to
 function if JDBC 4.3 specific features are avoided.
+
+For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
+automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
+name for Jaybird, and allows for future modularization of Jaybird. 
 
 [^3]: See <http://www.oracle.com/technetwork/java/eol-135779.html>
 
