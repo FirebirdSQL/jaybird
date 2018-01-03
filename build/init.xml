@@ -69,7 +69,7 @@
     <property name="version.major" value="2"/>
     <property name="version.minor" value="2"/>
     <property name="version.revision" value="14"/>
-    <property name="version.tag.maven" value="-SNAPSHOT"/>
+    <property name="version.tag.maven" value=""/>
     <property name="version.tag" value="${version.tag.maven}-"/>
     <property name="version.name" value="JDK_${ant.java.version}"/>
 
@@ -77,7 +77,7 @@
     <property name="version.maven" value="${version.major}.${version.minor}.${version.revision}${version.tag.maven}"/>
 
     <!-- This must be set to the GitHub tag for any release -->
-    <property name="version.cvstag" value="none"/>
+    <property name="version.cvstag" value="v2.2.14"/>
 
     <!-- Manifest version info -->
     <property name="specification.title" value="Firebird Jaybird"/>
