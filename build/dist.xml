@@ -11,7 +11,7 @@
              doctitle="${Name}"
              extdirs="${module.thirdparty}"
              additionalparam="${javadoc.additionalparam}"
-             bottom="Copyright &#169; 2001-2014 Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
+             bottom="Copyright &amp;copy; 2001-${YEAR} Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
       <classpath refid="javac.driver.classpath"/>
       <classpath refid="javac.pool.classpath"/>
       <sourcepath>
