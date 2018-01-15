@@ -77,7 +77,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
     private static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
 
-    private static final int DRIVER_MAJOR_VERSION = 3;
+    private static final int DRIVER_MAJOR_VERSION = 4;
     private static final int DRIVER_MINOR_VERSION = 0;
     private static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
 
