@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
@@ -342,6 +343,46 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
                     System.out.println("'" + tableAlias + "'");
                     assertEquals("columnLabel", "COLUMN1", columnLabel);
                     assertEquals("tableAlias", "A", tableAlias);
+                }
+                System.out.println("---------");
+            }
+        }
+    }
+
+    /**
+     * Test for CORE-5713
+     */
+    @Ignore
+    @Test
+    public void core5713() throws Exception {
+        //assumeTrue("Firebird 4 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+
+            for (String query : new String[] {
+                    "select 1 a1, 2 a2\n"
+                            + "from rdb$database\n"
+                            + "union all\n"
+                            + "select 1 a1, coalesce(cast(null as varchar(64)), 0) a2\n"
+                            + "from rdb$database ",
+                    "select a1, a2\n"
+                            + "from\n"
+                            + "  (select 1 a1, 2 a2\n"
+                            + "  from rdb$database)\n"
+                            + "group by 1, 2\n"
+                            + "union all\n"
+                            + "select 1 a1, coalesce(cast(null as varchar(64)), 0) a2\n"
+                            + "from rdb$database"
+            }) {
+
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    System.out.println(query);
+                    FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
+                    final String columnLabel1 = rsmd.getColumnLabel(1);
+                    final String columnLabel2 = rsmd.getColumnLabel(2);
+                    System.out.println("'" + columnLabel1 + "', '" + columnLabel2 + "'");
+                    assertEquals("columnLabel1", "A1", columnLabel1);
+                    assertEquals("columnLabel2", "A2", columnLabel2);
                 }
                 System.out.println("---------");
             }
