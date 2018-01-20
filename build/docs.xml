@@ -9,7 +9,7 @@
             <arg value="-s"/>
             <arg value="--self-contained"/>
             <arg value="-f"/>
-            <arg value="markdown"/>
+            <arg value="markdown-smart"/>
             <arg value="-t"/>
             <arg value="html5"/>
             <arg value="--toc"/>
@@ -43,7 +43,7 @@
             <arg value="-s"/>
             <arg value="--self-contained"/>
             <arg value="-f"/>
-            <arg value="markdown"/>
+            <arg value="markdown-smart"/>
             <arg value="-t"/>
             <arg value="html5"/>
             <arg value="--toc"/>
