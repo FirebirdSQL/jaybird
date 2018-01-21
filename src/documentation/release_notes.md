@@ -232,7 +232,7 @@ Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
 JDBC RowId support
 ------------------
 
-Columns of type `RDB$DBK_KEY` are now identified as `java.sql.Types.ROWID`,
+Columns of type `RDB$DB_KEY` are now identified as `java.sql.Types.ROWID`,
 and `getObject` on these columns will now return a `java.sql.RowId`.
 
 The `getObject(int/String, Class)` methods support retrieval as 
