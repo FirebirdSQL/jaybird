@@ -75,7 +75,7 @@ Jaybird supports the following specifications:
 | JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via JCA framework and `XADataSource` implementation.
 | JMX 1.2     | Jaybird provides a MBean to manage Firebird servers and installed databases via JMX agent.
 
-Getting Jaybird 3.0
+Getting Jaybird 4.0
 ===================
 
 Jaybird @VERSION@
@@ -685,3 +685,32 @@ The following methods will be removed in Jaybird 5:
     `MaintenanceManager.getLimboTransactions()` instead.
 -   `TraceManager.loadConfigurationFromFile(String)`, use standard Java 
     functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
+    
+Compatibility notes
+===================
+
+Type 2 (native) and embedded driver
+-----------------------------------
+
+Jaybird uses JNA to access the client library. If you want to use the Type 2 
+driver, or Firebird embedded, then you need to include `jna-4.4.0.jar` on the 
+classpath.
+
+When using Maven, you need to specify the dependency on JNA yourself, as we 
+don't depend on it by default (it is specified as an optional dependency):
+
+``` {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+</dependency>
+```
+
+The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to
+be on the path, or the location needs to be specified in the system property 
+`jna.library.path` (as an absolute or relative path to the directory/directories
+containing the library file(s)).
+
+In the future we will move the Type 2 support to a separate library and provide 
+JNA-compatible jars that provide the native libraries of a specific Firebird 
+version.
