@@ -505,7 +505,7 @@ or might change in future versions.
 15. Getting as `BigInteger` will behave as `BigDecimal.toBigInteger()`, which
 discards the fractional part (rounding by truncation), and may add 
 `(-1 * scale - precision)` least-significant zeroes if the scale exceeds
-precision. Be aware that use of `BigInteger` for large values this may result in 
+precision. Be aware that use of `BigInteger` for large values may result in 
 significant memory consumption. 
 
 16. Setting as `BigInteger` may lose precision, as it applies the rules 
@@ -515,7 +515,7 @@ described in [Precision and range].
 `Decimal128` from the `org.firebirdsql.extern.decimal` package. Where `Decimal64`
 exactly matches the `DECFLOAT(16)` protocol format, and `Decimal128` the 
 `DECFLOAT(34)` protocol format. Be aware that this is an implementation detail
-that might change in future Jaybird versions (both in of these support for these 
+that might change in future Jaybird versions (both in terms of support for these 
 types, and in terms of the interface (API) of these types).
 
 18. Setting a `Decimal128` on a `DECFLOAT(16)`, or a `Decimal32` on a 
