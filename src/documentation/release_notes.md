@@ -83,11 +83,14 @@ Jaybird @VERSION@
 
 ### Maven ###
 
-Jaybird @VERSION@ is available from Maven central:
+Jaybird @VERSION@ is available from Maven central: 
 
 Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
 Version: `@VERSION@`
+
+NOTE: SNAPSHOT release are only available from the Sonatype snapshot 
+repository, <https://oss.sonatype.org/content/repositories/snapshots>
 
 For example:
 
@@ -124,13 +127,13 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 4.4.0 as a dependency:
+explicitly include JNA as a dependency, as we only depend on it as an
+optional dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>4.4.0</version>
 </dependency>
 ~~~
 
