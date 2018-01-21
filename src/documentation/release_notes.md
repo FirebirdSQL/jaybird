@@ -344,7 +344,7 @@ additional dependencies.
 
 The `DECFLOAT` datatype supports values with a precision of 16 or 34 decimal 
 digits, and a scale - as used in `java.math.BigDecimal` - between -369 and 398 
-(`DECFLOAT(16)`) or between -6111 and 6176 (`DECFLOAT(16)`), so the minimum and 
+(`DECFLOAT(16)`) or between -6111 and 6176 (`DECFLOAT(34)`), so the minimum and 
 maximum values are:
 
 | Type           | Min/max value               | Smallest (non-zero) value   |
@@ -367,25 +367,25 @@ target precision using `RoundingMode.HALF_EVEN`
 -   If the magnitude (or exponent) is too low (or in `BigDecimal` terms, the scale 
 too high), then the following steps are applied:
  
-    1. Precision is reduced applying `RoundingMode.HALF_EVEN`, increasing the
+    1.  Precision is reduced applying `RoundingMode.HALF_EVEN`, increasing the
     exponent by the reduction of precision.
     
-    An example: a `DECFLOAT(16)` stores values as an integral coefficient of 16 
-    digits and an exponent between `-398` and `+369`. The value 
+        An example: a `DECFLOAT(16)` stores values as an integral coefficient of 
+    16 digits and an exponent between `-398` and `+369`. The value 
     `1.234567890123456E-394` or `1234567890123456E-409` is coefficient 
     `1234567890123456` and exponent `-409`. The coefficient is 16 digits, but
     the exponent is too low by 11.
     
-    If we sacrifice least-significant digits, we can increase the exponent,
+        If we sacrifice least-significant digits, we can increase the exponent,
     this is achieved by dividing the coefficient by 10<sup>11</sup> (and 
     rounding) and increasing the exponent by 11. We get 
     exponent = round(1234567890123456 / 10<sup>11</sup>) = 12346 and 
     exponent = -409 + 11 = -398.
     
-    The resulting value is now `12346E-398` or `1.2346E-394`, or in other words, 
-    we sacrificed precision to make the value fit.
+        The resulting value is now `12346E-398` or `1.2346E-394`, or in other 
+    words, we sacrificed precision to make the value fit.
     
-    2. If after the previous step, the magnitude is still too low, we have what
+    2.  If after the previous step, the magnitude is still too low, we have what
     is called an underflow, and the value is truncated to 0 with the minimum 
     exponent and preserving sign, eg for `DECFLOAT(16)`, the value will become 
     +0E+398 or -0E-398 (see note 19). Technically, this is just a special case 
@@ -394,28 +394,28 @@ too high), then the following steps are applied:
 -   If the magnitude (or exponent) is too high (or in `BigDecimal` terms, the 
 scale too low), then the following steps are applied:
 
-    1. If the precision is less than maximum precision, and the difference 
+    1.  If the precision is less than maximum precision, and the difference 
     between maximum precision and actual precision is larger than or equal to 
     the difference between the actual exponent and the maximum exponent, then
     the precision is increased by adding zeroes as least-significant digits
     and decreasing the exponent by the number of zeroes added.
     
-    An example: a `DECFLOAT(16)` stores values as an integral coefficient of 16 
-    digits and an exponent between `-398` and `+369`. The value `1E+384` is 
+        An example: a `DECFLOAT(16)` stores values as an integral coefficient of 
+    16 digits and an exponent between `-398` and `+369`. The value `1E+384` is 
     coefficient `1` with exponent `384`. This is too large for the maximum 
     exponent, however, we have a value with a single digit, leaving us with
     15 'unused' most-significant digits. 
     
-    If we multiply the coefficient by 10<sup>15</sup> and subtract 15 from the 
-    exponent we get: coefficient = 1 * 10<sup>15</sup> = 1000000000000000 and
-    exponent = 384 - 15 = 369. And these values for coefficient and exponent
+        If we multiply the coefficient by 10<sup>15</sup> and subtract 15 from 
+    the exponent we get: coefficient = 1 * 10<sup>15</sup> = 1000000000000000 
+    and exponent = 384 - 15 = 369. And these values for coefficient and exponent
     are in range of the storage requirements.
     
-    The resulting value is now `1000000000000000E+369` or `1.000000000000000E+384`,
+        The resulting value is now `1000000000000000E+369` or `1.000000000000000E+384`,
     or in other words, we 'increased' precision by adding zeroes as 
     least-significant digits to make the value fit.
     
-    2. Otherwise, we have what is called an overflow, and an `SQLException` is 
+    2.  Otherwise, we have what is called an overflow, and an `SQLException` is 
     thrown as the value is out of range.
     
 If you need other rounding and overflow behavior, make sure you round the values
