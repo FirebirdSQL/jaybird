@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -766,6 +767,37 @@ public class TestFBDoubleField extends BaseJUnit4TestFBField<FBDoubleField, Doub
     public void setString_noDouble() throws SQLException {
         expectedException.expect(TypeConversionException.class);
         field.setString("no double");
+    }
+
+    @Test
+    @Override
+    public void getDecimalNonNull() throws SQLException {
+        toReturnDoubleExpectations(1.34578);
+
+        Decimal128 expectedValue = Decimal128.valueOf(new BigDecimal(1.34578));
+        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+    }
+
+    @Test
+    public void getDecimal_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("expected null for getDecimal", field.getDecimal());
+    }
+
+    @Test
+    @Override
+    public void setDecimalNonNull() throws SQLException {
+        setDoubleExpectations(10);
+
+        field.setDecimal(Decimal128.valueOf("10"));
+    }
+
+    @Test
+    public void setDecimalNull() throws SQLException {
+        setNullExpectations();
+
+        field.setDecimal(null);
     }
     
     @Override

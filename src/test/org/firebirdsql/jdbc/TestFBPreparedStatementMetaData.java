@@ -32,8 +32,10 @@ import org.junit.runners.Parameterized;
 import java.sql.Connection;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static java.sql.ParameterMetaData.parameterModeIn;
 import static java.sql.ParameterMetaData.parameterNullable;
@@ -84,6 +86,8 @@ public class TestFBPreparedStatementMetaData {
         "  blob_field BLOB, " +
         "  blob_text_field BLOB SUB_TYPE TEXT, " +
         "  blob_minus_one BLOB SUB_TYPE -1 " +
+        "  /* boolean */ " +
+        "  /* decfloat */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -91,8 +95,11 @@ public class TestFBPreparedStatementMetaData {
             "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
             "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
             "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-            "timestamp_field, blob_field, blob_text_field, blob_minus_one) " +
-            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "timestamp_field, blob_field, blob_text_field, blob_minus_one" +
+            "  /* boolean */ " +
+            "  /* decfloat */ " +
+            ") " +
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? /* boolean-param *//* decfloat-param */)";
     //@formatter:on
 
     private static FBManager fbManager;
@@ -113,16 +120,25 @@ public class TestFBPreparedStatementMetaData {
         connection = getConnectionViaDriverManager();
         supportInfo = supportInfoFor(connection);
 
-        String createTable;
-        if (supportInfo.supportsBigint()) {
-            createTable = CREATE_TABLE;
-        } else {
+        String createTable = CREATE_TABLE;
+        String testQuery = TEST_QUERY;
+        if (!supportInfo.supportsBigint()) {
             // No BIGINT support, replacing type so number of columns remain the same
             createTable = CREATE_TABLE.replace("long_field BIGINT,", "long field DOUBLE PRECISION,");
         }
+        if (supportInfo.supportsBoolean()) {
+            createTable = createTable.replace("/* boolean */", ", boolean_field BOOLEAN");
+            testQuery = testQuery.replace("/* boolean */", ", boolean_field").replace("/* boolean-param */", ", ?");
+        }
+        if (supportInfo.supportsDecfloat()) {
+            createTable = createTable.replace("/* decfloat */",
+                    ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
+            testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
+                    .replace("/* decfloat-param */", ", ?, ?");
+        }
         executeCreateTable(connection, createTable);
 
-        pstmt = connection.prepareStatement(TEST_QUERY);
+        pstmt = connection.prepareStatement(testQuery);
         parameterMetaData = pstmt.getParameterMetaData();
     }
 
@@ -137,6 +153,7 @@ public class TestFBPreparedStatementMetaData {
             pstmt = null;
             connection = null;
             fbManager = null;
+            supportInfo = null;
         }
     }
 
@@ -147,7 +164,7 @@ public class TestFBPreparedStatementMetaData {
 
     @Parameterized.Parameters(name = "Column {0} ({2})")
     public static Collection<Object[]> testData() {
-        return Arrays.asList(
+        List<Object[]> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "simple_field"),
                 create(2, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "two_byte_field"),
                 create(3, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "three_byte_field"),
@@ -169,7 +186,17 @@ public class TestFBPreparedStatementMetaData {
                 create(19, "java.lang.String", parameterModeIn, LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, parameterNullable, false, "blob_text_field"),
                 // TODO Report actual subtype value
                 create(20, "java.sql.Blob", parameterModeIn, BLOB, "BLOB SUB_TYPE <0", 0, 0, parameterNullable, false, "blob_minus_one")
-        );
+        ));
+        final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        if (supportInfo.supportsBoolean()) {
+            testData.add(create(testData.size() + 1, "java.lang.Boolean", parameterModeIn, BOOLEAN, "BOOLEAN", 1, 0, parameterNullable, false, "boolean_field"));
+        }
+        if (supportInfo.supportsDecfloat()) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, parameterNullable, true, "decfloat16_field"));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, parameterNullable, true, "decfloat34_field"));
+        }
+
+        return testData;
     }
 
     @Before

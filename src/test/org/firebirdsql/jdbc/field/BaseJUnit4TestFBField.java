@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -640,6 +641,18 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     public void getObject_TypeNull() throws SQLException {
         expectedException.expect(SQLException.class);
         field.getObject((Class<?>) null);
+    }
+
+    @Test
+    public void getDecimalNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.getDecimal();
+    }
+
+    @Test
+    public void setDecimalNonNull() throws SQLException {
+        expectedException.expect(TypeConversionException.class);
+        field.setDecimal(Decimal128.valueOf("1"));
     }
 
     /**

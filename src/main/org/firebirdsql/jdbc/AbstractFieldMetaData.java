@@ -24,9 +24,10 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Map;
+
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
@@ -108,6 +109,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
         case ISCConstants.SQL_INT64:
+        case ISCConstants.SQL_DEC16:
+        case ISCConstants.SQL_DEC34:
+        case ISCConstants.SQL_DEC_FIXED:
             return true;
         default:
             return false;
@@ -131,55 +135,56 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-            return String.class.getName();
+            return STRING_CLASS_NAME;
 
         case Types.SMALLINT:
         case Types.INTEGER:
-            return Integer.class.getName();
+            return INTEGER_CLASS_NAME;
 
         case Types.FLOAT:
         case Types.DOUBLE:
-            return Double.class.getName();
+            return DOUBLE_CLASS_NAME;
 
         case Types.TIMESTAMP:
-            return Timestamp.class.getName();
+            return TIMESTAMP_CLASS_NAME;
 
         case Types.BLOB:
-            return Blob.class.getName();
+            return BLOB_CLASS_NAME;
 
         case Types.CLOB:
-            return Clob.class.getName();
+            return CLOB_CLASS_NAME;
 
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-            return byte[].class.getName();
+            return BYTE_ARRAY_CLASS_NAME;
 
         case Types.ARRAY:
-            return Array.class.getName();
+            return ARRAY_CLASS_NAME;
 
         case Types.BIGINT:
-            return Long.class.getName();
+            return LONG_CLASS_NAME;
 
         case Types.TIME:
-            return Time.class.getName();
+            return TIME_CLASS_NAME;
 
         case Types.DATE:
-            return java.sql.Date.class.getName();
+            return SQL_DATE_CLASS_NAME;
 
         case Types.NUMERIC:
         case Types.DECIMAL:
-            return BigDecimal.class.getName();
+        case JaybirdTypeCodes.DECFLOAT:
+            return BIG_DECIMAL_CLASS_NAME;
 
         case Types.BOOLEAN:
-            return Boolean.class.getName();
+            return BOOLEAN_CLASS_NAME;
 
         case Types.NULL:
         case Types.OTHER:
-            return Object.class.getName();
+            return OBJECT_CLASS_NAME;
 
         case Types.ROWID:
-            return RowId.class.getName();
+            return ROW_ID_CLASS_NAME;
 
         default:
             throw new FBSQLException("Unknown SQL type.", SQLStateConstants.SQL_STATE_INVALID_PARAM_TYPE);
@@ -195,34 +200,43 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
         switch (sqlType) {
         case ISCConstants.SQL_SHORT:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
                 return "NUMERIC";
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
+            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
                 return "DECIMAL";
-            else
+            } else {
                 return "SMALLINT";
+            }
         case ISCConstants.SQL_LONG:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
                 return "NUMERIC";
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
+            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
                 return "DECIMAL";
-            else
+            } else {
                 return "INTEGER";
+            }
         case ISCConstants.SQL_INT64:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
                 return "NUMERIC";
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
+            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
                 return "DECIMAL";
-            else
+            } else {
                 return "BIGINT";
+            }
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
-            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0))
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
                 return "NUMERIC";
-            else if (sqlSubtype == SUBTYPE_DECIMAL)
+            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
                 return "DECIMAL";
-            else
+            } else {
                 return "DOUBLE PRECISION";
+            }
+        case ISCConstants.SQL_DEC16:
+        case ISCConstants.SQL_DEC34:
+            return "DECFLOAT";
+        case ISCConstants.SQL_DEC_FIXED:
+            return "DECIMAL";
         case ISCConstants.SQL_FLOAT:
             return "FLOAT";
         case ISCConstants.SQL_TEXT:
@@ -236,14 +250,15 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_TYPE_DATE:
             return "DATE";
         case ISCConstants.SQL_BLOB:
-            if (sqlSubtype < 0)
+            if (sqlSubtype < 0) {
                 return "BLOB SUB_TYPE <0"; // TODO report actual subtype
-            else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_BINARY)
+            } else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_BINARY) {
                 return "BLOB SUB_TYPE 0";
-            else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_TEXT)
+            } else if (sqlSubtype == ISCConstants.BLOB_SUB_TYPE_TEXT) {
                 return "BLOB SUB_TYPE 1";
-            else
+            } else {
                 return "BLOB SUB_TYPE " + sqlSubtype;
+            }
         case ISCConstants.SQL_QUAD:
             return "ARRAY"; // TODO Inconsistent with getFieldType
         case ISCConstants.SQL_BOOLEAN:
@@ -283,6 +298,18 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return fieldInfo == null || fieldInfo.fieldPrecision == 0
                     ? estimateFixedPrecision(field)
                     : fieldInfo.fieldPrecision;
+        }
+
+        case JaybirdTypeCodes.DECFLOAT: {
+            final FieldDescriptor var = getFieldDescriptor(field);
+            switch (var.getType() & ~1) {
+            case ISCConstants.SQL_DEC16:
+                return 16;
+            case ISCConstants.SQL_DEC34:
+                return 34;
+            default:
+                return 0;
+            }
         }
 
         case Types.CHAR:
@@ -334,6 +361,11 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return 18;
         case ISCConstants.SQL_DOUBLE:
             return 18;
+        case ISCConstants.SQL_DEC16:
+            return 16;
+        case ISCConstants.SQL_DEC34:
+        case ISCConstants.SQL_DEC_FIXED:
+            return 34;
         default:
             return 0;
         }

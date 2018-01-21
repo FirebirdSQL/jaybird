@@ -20,6 +20,8 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -27,9 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 /**
  * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.ng.DefaultDatatypeCoder}.
@@ -280,4 +280,37 @@ public class DefaultDatatypeCoderTest {
 
         assertEquals("Cache size after overflow", 0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
     }
+
+    @Test
+    public void decodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = decimal64.toBytes();
+
+        assertEquals(decimal64, datatypeCoder.decodeDecimal64(bytes));
+    }
+
+    @Test
+    public void encodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = decimal64.toBytes();
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal64(decimal64));
+    }
+
+    @Test
+    public void decodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = decimal128.toBytes();
+
+        assertEquals(decimal128, datatypeCoder.decodeDecimal128(bytes));
+    }
+
+    @Test
+    public void encodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = decimal128.toBytes();
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
+    }
+
 }

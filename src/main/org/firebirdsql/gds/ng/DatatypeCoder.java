@@ -21,6 +21,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -439,6 +441,38 @@ public interface DatatypeCoder {
      * @return Byte array for timestamp
      */
     byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos);
+
+    /**
+     * Decodes a decimal64 from byte array.
+     *
+     * @param data Data to decode (expected 8 bytes)
+     * @return Decimal64 value
+     */
+    Decimal64 decodeDecimal64(byte[] data);
+
+    /**
+     * Encodes a decimal64 to a byte array.
+     *
+     * @param decimal64 The decimal64 value to be encoded
+     * @return Byte array for decimal64 value
+     */
+    byte[] encodeDecimal64(Decimal64 decimal64);
+
+    /**
+     * Decodes a decimal128 from byte array.
+     *
+     * @param data Data to decode (expected 16 bytes)
+     * @return Decimal128 value
+     */
+    Decimal128 decodeDecimal128(byte[] data);
+
+    /**
+     * Encodes a decimal128 to a byte array.
+     *
+     * @param decimal128 The decimal128 value to be encoded
+     * @return Byte array for decimal128 value
+     */
+    byte[] encodeDecimal128(Decimal128 decimal128);
 
     /**
      * @return The encoding factory.

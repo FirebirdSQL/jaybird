@@ -60,6 +60,9 @@ public interface BlrConstants {
     int blr_column_name = 21;
     int blr_column_name2 = 22;
     int blr_bool = 23;
+    int blr_dec64 = 24;
+    int blr_dec128 = 25;
+    int blr_dec_fixed = 26;
 
     // first sub parameter for blr_domain_name[2]
     int blr_domain_type_of = 0;

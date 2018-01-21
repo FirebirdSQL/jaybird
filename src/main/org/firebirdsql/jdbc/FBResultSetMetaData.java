@@ -209,6 +209,13 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         case Types.BIGINT:
         case Types.SMALLINT:
             return precision + 1; // sign
+        case JaybirdTypeCodes.DECFLOAT:
+            if (precision == 16) {
+                return 16 + 7;  // 7: sign + decimal separator + E + sign exp + exp (3 pos)
+            }
+            return 34 + 8; // 8: sign + decimal separator + E + sign exp + exp (4 pos)
+        case Types.BOOLEAN:
+            return 5; // assuming displaying true/false
         default:
             return precision;
         }

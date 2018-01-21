@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 
 /**
@@ -115,5 +117,34 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
         long b8 = byte_int[7] & 0xFF;
         return (b1 + (b2 << 8) + (b3 << 16) + (b4 << 24) + (b5 << 32)
                 + (b6 << 40) + (b7 << 48) + (b8 << 56));
+    }
+
+    @Override
+    public Decimal64 decodeDecimal64(byte[] data) {
+        return super.decodeDecimal64(reverseByteOrder(data));
+    }
+
+    @Override
+    public byte[] encodeDecimal64(Decimal64 decimal64) {
+        return reverseByteOrder(super.encodeDecimal64(decimal64));
+    }
+
+    @Override
+    public Decimal128 decodeDecimal128(byte[] data) {
+        return super.decodeDecimal128(reverseByteOrder(data));
+    }
+
+    @Override
+    public byte[] encodeDecimal128(Decimal128 decimal128) {
+        return reverseByteOrder(super.encodeDecimal128(decimal128));
+    }
+
+    private byte[] reverseByteOrder(byte[] array) {
+        final byte[] newArray = new byte[array.length];
+        final int maxIndex = newArray.length - 1;
+        for (int idx = 0; idx < array.length; idx++) {
+            newArray[idx] = array[maxIndex - idx];
+        }
+        return newArray;
     }
 }

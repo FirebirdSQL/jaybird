@@ -127,6 +127,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] NUMERIC_PRECISION = createInt(18);
     private static final byte[] DECIMAL_PRECISION = createInt(18);
     private static final byte[] BOOLEAN_PRECISION = createInt(1);
+    private static final byte[] DECFLOAT_16_PRECISION = createInt(16);
+    private static final byte[] DECFLOAT_34_PRECISION = createInt(34);
     private static final byte[] COLUMN_NO_NULLS = createInt(DatabaseMetaData.columnNoNulls);
     private static final byte[] COLUMN_NULLABLE = createInt(DatabaseMetaData.columnNullable);
     private static final byte[] IMPORTED_KEY_NO_ACTION = createShort(DatabaseMetaData.importedKeyNoAction);
@@ -1850,6 +1852,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     valueBuilder
                             .at(7).set(BOOLEAN_PRECISION)
                             .at(10).set(RADIX_BINARY_SHORT);
+                    break;
+                case JaybirdTypeCodes.DECFLOAT:
+                    switch (fieldType) {
+                    case dec16_type:
+                        valueBuilder.at(7).set(DECFLOAT_16_PRECISION);
+                        break;
+                    case dec34_type:
+                        valueBuilder.at(7).set(DECFLOAT_34_PRECISION);
+                        break;
+                    }
+                    break;
                 }
 
                 rows.add(valueBuilder.toRowValue(true));
@@ -1881,40 +1894,40 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <code>TABLE_SCHEM</code> and <code>TABLE_NAME</code>.
      * <P>
      * Each table description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String {@code =>} table catalog (may be <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String {@code =>} table schema (may be <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String {@code =>} table name
-     *  <LI><B>TABLE_TYPE</B> String {@code =>} table type.  Typical types are "TABLE",
-     *                  "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
-     *                  "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-     *  <LI><B>REMARKS</B> String {@code =>} explanatory comment on the table
-     *  <LI><B>TYPE_CAT</B> String {@code =>} the types catalog (may be <code>null</code>)
-     *  <LI><B>TYPE_SCHEM</B> String {@code =>} the types schema (may be <code>null</code>)
-     *  <LI><B>TYPE_NAME</B> String {@code =>} type name (may be <code>null</code>)
-     *  <LI><B>SELF_REFERENCING_COL_NAME</B> String {@code =>} name of the designated
-     *                  "identifier" column of a typed table (may be <code>null</code>)
-     *  <LI><B>REF_GENERATION</B> String {@code =>} specifies how values in
-     *                  SELF_REFERENCING_COL_NAME are created. Values are
-     *                  "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
-     *  </OL>
+     * <OL>
+     * <LI><B>TABLE_CAT</B> String {@code =>} table catalog (may be <code>null</code>)
+     * <LI><B>TABLE_SCHEM</B> String {@code =>} table schema (may be <code>null</code>)
+     * <LI><B>TABLE_NAME</B> String {@code =>} table name
+     * <LI><B>TABLE_TYPE</B> String {@code =>} table type.  Typical types are "TABLE",
+     * "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
+     * "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+     * <LI><B>REMARKS</B> String {@code =>} explanatory comment on the table
+     * <LI><B>TYPE_CAT</B> String {@code =>} the types catalog (may be <code>null</code>)
+     * <LI><B>TYPE_SCHEM</B> String {@code =>} the types schema (may be <code>null</code>)
+     * <LI><B>TYPE_NAME</B> String {@code =>} type name (may be <code>null</code>)
+     * <LI><B>SELF_REFERENCING_COL_NAME</B> String {@code =>} name of the designated
+     * "identifier" column of a typed table (may be <code>null</code>)
+     * <LI><B>REF_GENERATION</B> String {@code =>} specifies how values in
+     * SELF_REFERENCING_COL_NAME are created. Values are
+     * "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
+     * </OL>
      *
      * <P><B>Note:</B> Some databases may not return information for
      * all tables.
      *
      * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
+     *         is stored in the database; "" retrieves those without a catalog;
+     *         <code>null</code> means that the catalog name should not be used to narrow
+     *         the search
      * @param schemaPattern a schema name pattern; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
+     *         as it is stored in the database; "" retrieves those without a schema;
+     *         <code>null</code> means that the schema name should not be used to narrow
+     *         the search
      * @param tableNamePattern a table name pattern; must match the
-     *        table name as it is stored in the database
+     *         table name as it is stored in the database
      * @param types a list of table types, which must be from the list of table types
      *         returned from {@link #getTableTypes},to include; <code>null</code> returns
-     * all types
+     *         all types
      * @return <code>ResultSet</code> - each row is a table description
      * @exception SQLException if a database access error occurs
      * @see #getSearchStringEscape
@@ -2458,6 +2471,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                             .at(6).set(BOOLEAN_PRECISION)
                             .at(9).set(RADIX_BINARY);
                     break;
+                case JaybirdTypeCodes.DECFLOAT:
+                    switch (fieldType) {
+                    case dec16_type:
+                        valueBuilder.at(6).set(DECFLOAT_16_PRECISION);
+                        break;
+                    case dec34_type:
+                        valueBuilder.at(6).set(DECFLOAT_34_PRECISION);
+                        break;
+                    }
+                    break;
                 }
 
                 final short nullFlag = rs.getShort("NULL_FLAG");
@@ -2559,6 +2582,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int time_type = 13;
     private static final int char_type = 14;
     private static final int int64_type = 16;
+    private static final int dec16_type = 24;
+    private static final int dec34_type = 25;
+    private static final int dec_fixed_type = 26;
     private static final int double_type = 27;
     private static final int timestamp_type = 35;
     private static final int varchar_type = 37;
@@ -2587,27 +2613,30 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static String getDataTypeName(int sqltype, int sqlsubtype, int sqlscale) {
         switch (sqltype) {
             case smallint_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
                     return "NUMERIC";
-                else if (sqlsubtype == SUBTYPE_DECIMAL)
+                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
                     return "DECIMAL";
-                else
+                } else {
                     return "SMALLINT";
+                }
             case integer_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
                     return "NUMERIC";
-                else if (sqlsubtype == SUBTYPE_DECIMAL)
+                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
                     return "DECIMAL";
-                else
+                } else {
                     return "INTEGER";
+                }
             case double_type:
             case d_float_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
                     return "NUMERIC";
-                else if (sqlsubtype == SUBTYPE_DECIMAL)
+                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
                     return "DECIMAL";
-                else
+                } else {
                     return "DOUBLE PRECISION";
+                }
             case float_type:
                 return "FLOAT";
             case char_type:
@@ -2621,26 +2650,39 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case date_type:
                 return "DATE";
             case int64_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0))
+                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
                     return "NUMERIC";
-                else if (sqlsubtype == SUBTYPE_DECIMAL)
+                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
                     return "DECIMAL";
-                else
+                } else {
                     return "BIGINT";
+                }
             case blob_type:
-                if (sqlsubtype < 0)
+                if (sqlsubtype < 0) {
                     // TODO Include actual subtype?
                     return "BLOB SUB_TYPE <0";
-                else if (sqlsubtype == BLOB_SUB_TYPE_BINARY)
+                } else if (sqlsubtype == BLOB_SUB_TYPE_BINARY) {
                     return "BLOB SUB_TYPE 0";
-                else if (sqlsubtype == BLOB_SUB_TYPE_TEXT)
+                } else if (sqlsubtype == BLOB_SUB_TYPE_TEXT) {
                     return "BLOB SUB_TYPE 1";
-                else
+                } else {
                     return "BLOB SUB_TYPE " + sqlsubtype;
+                }
             case quad_type:
                 return "ARRAY";
             case boolean_type:
                 return "BOOLEAN";
+            case dec_fixed_type:
+                switch (sqlsubtype) {
+                case SUBTYPE_DECIMAL:
+                    return "DECIMAL";
+                case SUBTYPE_NUMERIC:
+                default:
+                    return "NUMERIC";
+                }
+            case dec16_type:
+            case dec34_type:
+                return "DECFLOAT";
             default:
                 return "NULL";
         }
@@ -3639,7 +3681,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 : TYPE_PRED_BASIC;
 
         //dialect 3 only
-        final List<RowValue> rows = new ArrayList<>(19);
+        final List<RowValue> rows = new ArrayList<>(20);
+
+        // DECFLOAT=-6001 (TODO Change when standardized)
+        if (getDatabaseMajorVersion() >= 4) {
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("DECFLOAT"), createShort(JaybirdTypeCodes.DECFLOAT), DECFLOAT_34_PRECISION, null, null,
+                    getBytes("precision"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE,
+                    NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_DEC34), null, RADIX_TEN));
+        }
 
         //BIGINT=-5
         rows.add(RowValue.of(rowDescriptor,
@@ -3655,19 +3705,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //VARBINARY=-3
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("VARCHAR"), createShort(Types.VARBINARY), createInt(32765), null, null, null, TYPE_NULLABLE,
-                CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
-                createInt(SQL_VARYING), null, RADIX_TEN));
+                getBytes("VARCHAR"), createShort(Types.VARBINARY), createInt(32765), null, null, getBytes("length"),
+                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(SQL_VARYING), null, RADIX_TEN));
 
         //BINARY=-2
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("CHAR"), createShort(Types.BINARY), createInt(32767), null, null, null, TYPE_NULLABLE,
-                CASESENSITIVE,  TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
-                createInt(SQL_TEXT), null, RADIX_TEN));
+                getBytes("CHAR"), createShort(Types.BINARY), createInt(32767), null, null, getBytes("length"),
+                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                SHORT_ZERO, createInt(SQL_TEXT), null, RADIX_TEN));
 
         //LONGVARCHAR=-1
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("BLOB SUB_TYPE TEXT"), createShort(Types.LONGVARCHAR), INT_ZERO, null, null,
+                getBytes("BLOB SUB_TYPE TEXT"), createShort(Types.LONGVARCHAR), INT_ZERO, getBytes("'"), getBytes("'"),
                 null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
@@ -3679,12 +3729,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 RADIX_TEN));
 
         //NUMERIC=2
+        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("NUMERIC"), createShort(Types.NUMERIC), NUMERIC_PRECISION, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
                 NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
 
         //DECIMAL=3
+        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("DECIMAL"), createShort(Types.DECIMAL), DECIMAL_PRECISION, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
@@ -3731,21 +3783,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //DATE=91
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, null, null, null,
+                getBytes("DATE"), createShort(Types.DATE), DATE_PRECISION, getBytes("date'"), getBytes("'"), null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(SQL_TYPE_DATE), null, RADIX_TEN));
 
         //TIME=92
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, null, null, null,
+                getBytes("TIME"), createShort(Types.TIME), TIME_PRECISION, getBytes("time'"), getBytes("'"), null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(SQL_TYPE_TIME), null, RADIX_TEN));
 
         //TIMESTAMP=93
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, null, null,
-                null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(SQL_TIMESTAMP), null, RADIX_TEN));
+                getBytes("TIMESTAMP"), createShort(Types.TIMESTAMP), TIMESTAMP_PRECISION, getBytes("timestamp'"),
+                getBytes("'"), null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC,
+                null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TIMESTAMP), null, RADIX_TEN));
 
         //OTHER=1111
         rows.add(RowValue.of(rowDescriptor,

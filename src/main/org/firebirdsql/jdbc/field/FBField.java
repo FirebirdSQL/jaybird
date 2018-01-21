@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.extern.decimal.*;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
@@ -35,6 +36,8 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Map;
 
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+
 /**
  * Describe class <code>FBField</code> here.
  * 
@@ -50,6 +53,9 @@ public abstract class FBField {
     static final String DOUBLE_CONVERSION_ERROR = "Error converting to double.";
     static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
     static final String BIG_INTEGER_CONVERSION_ERROR = "Error converting to BigInteger.";
+    static final String DECIMAL_CONVERSION_ERROR = "Error converting to Decimal";
+    static final String OVERFLOW_ERROR =
+            "Value is too large to fit in target type, or cannot be represented by the target type";
     static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";
     static final String STRING_CONVERSION_ERROR = "Error converting to string.";
     static final String OBJECT_CONVERSION_ERROR = "Error converting to object.";
@@ -163,6 +169,7 @@ public abstract class FBField {
     }
 
     private static boolean isType(int fbType, int subType, int jdbcType) {
+        // TODO No handling for NUMERIC/DECIMAL?
         // turn off null flag, in this case we're not interested in it.
         final int tempType = fbType & ~1;
         switch (tempType) {
@@ -253,7 +260,18 @@ public abstract class FBField {
             return new FBLongField(fieldDescriptor, dataProvider, jdbcType);
         case Types.NUMERIC:
         case Types.DECIMAL:
+            if (fieldDescriptor.isFbType(ISCConstants.SQL_DEC_FIXED)) {
+                // TODO May require different handling?
+                throw new FBDriverNotCapableException("DEC_FIXED support not yet implemented");
+            }
             return new FBBigDecimalField(fieldDescriptor, dataProvider, jdbcType);
+        case JaybirdTypeCodes.DECFLOAT:
+            switch (fieldDescriptor.getType() & ~1) {
+            case ISCConstants.SQL_DEC16:
+                return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal64.class);
+            case ISCConstants.SQL_DEC34:
+                return new FBDecfloatField<>(fieldDescriptor, dataProvider, jdbcType, Decimal128.class);
+            }
         case Types.FLOAT:
             return new FBFloatField(fieldDescriptor, dataProvider, jdbcType);
         case Types.DOUBLE:
@@ -402,6 +420,8 @@ public abstract class FBField {
             } else {
                 return getBigDecimal(scale);
             }
+        case JaybirdTypeCodes.DECFLOAT:
+            return getBigDecimal();
 
         case Types.BIT:
         case Types.BOOLEAN:
@@ -463,36 +483,36 @@ public abstract class FBField {
             throw new SQLNonTransientException("getObject called with type null");
         }
         switch (type.getName()) {
-        case "java.lang.Boolean":
+        case BOOLEAN_CLASS_NAME:
             return isNull() ? null : (T) Boolean.valueOf(getBoolean());
-        case "java.lang.Byte":
+        case BYTE_CLASS_NAME:
             return isNull() ? null : (T) Byte.valueOf(getByte());
-        case "java.lang.Short":
+        case SHORT_CLASS_NAME:
             return isNull() ? null : (T) Short.valueOf(getShort());
-        case "java.lang.Integer":
+        case INTEGER_CLASS_NAME:
             return isNull() ? null : (T) Integer.valueOf(getInt());
-        case "java.lang.Long":
+        case LONG_CLASS_NAME:
             return isNull() ? null : (T) Long.valueOf(getLong());
-        case "java.lang.Float":
+        case FLOAT_CLASS_NAME:
             return isNull() ? null : (T) Float.valueOf(getFloat());
-        case "java.lang.Double":
+        case DOUBLE_CLASS_NAME:
             return isNull() ? null : (T) Double.valueOf(getDouble());
-        case "java.math.BigDecimal":
+        case BIG_DECIMAL_CLASS_NAME:
             return (T) getBigDecimal();
-        case "java.math.BigInteger":
+        case BIG_INTEGER_CLASS_NAME:
             return (T) getBigInteger();
-        case "java.lang.String":
+        case STRING_CLASS_NAME:
             return (T) getString();
-        case "[B": // byte[]
+        case BYTE_ARRAY_CLASS_NAME: // byte[]
             return (T) getBytes();
-        case "java.sql.Date":
+        case SQL_DATE_CLASS_NAME:
             return (T) getDate();
-        case "java.util.Date":
-        case "java.sql.Timestamp":
+        case UTIL_DATE_CLASS_NAME:
+        case TIMESTAMP_CLASS_NAME:
             return (T) getTimestamp();
-        case "java.sql.Time":
+        case TIME_CLASS_NAME:
             return (T) getTime();
-        case "java.util.Calendar":
+        case CALENDAR_CLASS_NAME:
             if (isNull()) {
                 return null;
             } else {
@@ -500,21 +520,29 @@ public abstract class FBField {
                 calendar.setTimeInMillis(getTimestamp().getTime());
                 return (T) calendar;
             }
-        case "java.sql.Clob":
-        case "java.sql.NClob":
+        case CLOB_CLASS_NAME:
+        case NCLOB_CLASS_NAME:
             return (T) getClob();
-        case "java.sql.Blob":
-        case "org.firebirdsql.jdbc.FirebirdBlob":
+        case BLOB_CLASS_NAME:
+        case FIREBIRD_BLOB_CLASS_NAME:
             return (T) getBlob();
-        case "java.io.InputStream":
+        case INPUT_STREAM_CLASS_NAME:
             return (T) getBinaryStream();
-        case "java.io.Reader":
+        case READER_CLASS_NAME:
             return (T) getCharacterStream();
-        case "java.sql.RowId":
-        case "org.firebirdsql.jdbc.FBRowId":
+        case ROW_ID_CLASS_NAME:
+        case FB_ROW_ID_CLASS_NAME:
             return (T) getRowId();
-        case "org.firebirdsql.gds.ng.DatatypeCoder$RawDateTimeStruct":
+        case RAW_DATE_TIME_STRUCT_CLASS_NAME:
             return (T) getRawDateTimeStruct();
+        case DECIMAL_CLASS_NAME:
+            return (T) getDecimal();
+        case DECIMAL32_CLASS_NAME:
+            return (T) getDecimal(Decimal32.class);
+        case DECIMAL64_CLASS_NAME:
+            return (T) getDecimal(Decimal64.class);
+        case DECIMAL128_CLASS_NAME:
+            return (T) getDecimal(Decimal128.class);
         }
         return getObjectConverter().getObject(this, type);
     }
@@ -674,6 +702,8 @@ public abstract class FBField {
             setBigInteger((BigInteger) value);
         } else if (value instanceof RowId) {
             setRowId((RowId) value);
+        } else if (value instanceof Decimal) {
+            setDecimal((Decimal<?>) value);
         } else if (!getObjectConverter().setObject(this, value)) {
             throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
         }
@@ -763,6 +793,56 @@ public abstract class FBField {
 
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
         throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    /**
+     * Returns the value as a Decimal type.
+     * <p>
+     * The default for this method is implemented in terms of {@link #getBigDecimal()}, and
+     * returning a {@link Decimal128}. Implementations may return a {@link Decimal64} (or even
+     * {@link Decimal32}).
+     * </p>
+     *
+     * @return The value as decimal
+     * @throws SQLException For database access errors, or values that cannot be converted.
+     */
+    public Decimal<?> getDecimal() throws SQLException {
+        BigDecimal bdValue = getBigDecimal();
+        try {
+            return bdValue != null
+                    ? Decimal128.valueOf(bdValue, OverflowHandling.THROW_EXCEPTION)
+                    : null;
+        } catch (ArithmeticException e) {
+            throw new TypeConversionException(OVERFLOW_ERROR, e);
+        }
+    }
+
+    public final <D extends Decimal<D>> D getDecimal(Class<D> targetType) throws SQLException {
+        final Decimal<?> value = getDecimal();
+        try {
+            return value != null
+                    ? value.toDecimal(targetType, OverflowHandling.THROW_EXCEPTION)
+                    : null;
+        } catch (ArithmeticException e) {
+            throw new TypeConversionException(OVERFLOW_ERROR, e);
+        }
+    }
+
+    /**
+     * Sets the value as a Decimal type.
+     * <p>
+     * The default for this method is implemented in terms of {@link #setBigDecimal(BigDecimal)}.
+     * </p>
+     *
+     * @param decimal Value to set
+     * @throws SQLException
+     */
+    public void setDecimal(Decimal<?> decimal) throws SQLException {
+        try {
+            setBigDecimal(decimal != null ? decimal.toBigDecimal() : null);
+        } catch (ArithmeticException e) {
+            throw new TypeConversionException(OVERFLOW_ERROR, e);
+        }
     }
 
     protected boolean isInvertTimeZone() {

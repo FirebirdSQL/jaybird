@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -51,5 +53,37 @@ public class TestBigEndianDatatypeCoder {
         short result = datatypeCoder.decodeShort(testValue);
 
         assertEquals(0b0110_1001_0011_1100, result);
+    }
+
+    @Test
+    public void decodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = decimal64.toBytes();
+
+        assertEquals(decimal64, datatypeCoder.decodeDecimal64(bytes));
+    }
+
+    @Test
+    public void encodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = decimal64.toBytes();
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal64(decimal64));
+    }
+
+    @Test
+    public void decodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = decimal128.toBytes();
+
+        assertEquals(decimal128, datatypeCoder.decodeDecimal128(bytes));
+    }
+
+    @Test
+    public void encodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = decimal128.toBytes();
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
     }
 }

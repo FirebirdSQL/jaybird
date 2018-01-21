@@ -19,6 +19,8 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -85,5 +87,46 @@ public class TestLittleEndianDatatypeCoder {
         long result = datatypeCoder.decodeLong(testValue);
 
         assertEquals(0b1000_0001_0100_0010_0010_0100_0001_1000_1001_0001_0101_0010_0010_1100_0001_1010L, result);
+    }
+
+    @Test
+    public void decodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = reverseByteOrder(decimal64.toBytes());
+
+        assertEquals(decimal64, datatypeCoder.decodeDecimal64(bytes));
+    }
+
+    @Test
+    public void encodeDecimal64() {
+        final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
+        final byte[] bytes = reverseByteOrder(decimal64.toBytes());
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal64(decimal64));
+    }
+
+    @Test
+    public void decodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = reverseByteOrder(decimal128.toBytes());
+
+        assertEquals(decimal128, datatypeCoder.decodeDecimal128(bytes));
+    }
+
+    @Test
+    public void encodeDecimal128() {
+        final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
+        final byte[] bytes = reverseByteOrder(decimal128.toBytes());
+
+        assertArrayEquals(bytes, datatypeCoder.encodeDecimal128(decimal128));
+    }
+
+    private byte[] reverseByteOrder(byte[] array) {
+        final byte[] newArray = new byte[array.length];
+        final int maxIndex = newArray.length - 1;
+        for (int idx = 0; idx < array.length; idx++) {
+            newArray[idx] = array[maxIndex - idx];
+        }
+        return newArray;
     }
 }

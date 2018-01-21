@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jdbc.JaybirdTypeCodes;
 
 import java.sql.Types;
 
@@ -69,44 +70,43 @@ public final class JdbcTypeConverter {
 
         switch (firebirdType) {
         case ISCConstants.SQL_SHORT:
-            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0))
-                return Types.NUMERIC;
-            else if (subtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.SMALLINT;
         case ISCConstants.SQL_LONG:
-            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0))
-                return Types.NUMERIC;
-            else if (subtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.INTEGER;
         case ISCConstants.SQL_INT64:
-            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0))
-                return Types.NUMERIC;
-            else if (subtype == SUBTYPE_DECIMAL)
-                return Types.DECIMAL;
-            else
-                return Types.BIGINT;
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
-            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0))
+        case ISCConstants.SQL_DEC_FIXED:
+            if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0)) {
                 return Types.NUMERIC;
-            else if (subtype == SUBTYPE_DECIMAL)
+            } else if (subtype == SUBTYPE_DECIMAL) {
                 return Types.DECIMAL;
-            else
-                return Types.DOUBLE;
+            } else {
+                switch (firebirdType) {
+                case ISCConstants.SQL_SHORT:
+                    return Types.SMALLINT;
+                case ISCConstants.SQL_LONG:
+                    return Types.INTEGER;
+                case ISCConstants.SQL_INT64:
+                    return Types.BIGINT;
+                case ISCConstants.SQL_DOUBLE:
+                case ISCConstants.SQL_D_FLOAT:
+                    return Types.DOUBLE;
+                case ISCConstants.SQL_DEC_FIXED:
+                    return Types.NUMERIC;
+                }
+            }
         case ISCConstants.SQL_FLOAT:
             return Types.FLOAT;
+        case ISCConstants.SQL_DEC16:
+        case ISCConstants.SQL_DEC34:
+            return JaybirdTypeCodes.DECFLOAT;
         case ISCConstants.SQL_TEXT:
-            if (subtype == ISCConstants.CS_BINARY){
+            if (subtype == ISCConstants.CS_BINARY) {
                 return Types.BINARY;
             } else {
                 return Types.CHAR;
             }
         case ISCConstants.SQL_VARYING:
-            if (subtype == ISCConstants.CS_BINARY){
+            if (subtype == ISCConstants.CS_BINARY) {
                 return Types.VARBINARY;
             } else {
                 return Types.VARCHAR;
@@ -118,12 +118,13 @@ public final class JdbcTypeConverter {
         case ISCConstants.SQL_TYPE_DATE:
             return Types.DATE;
         case ISCConstants.SQL_BLOB:
-            if (subtype < 0)
+            if (subtype < 0) {
                 return Types.BLOB;
-            else if (subtype == ISCConstants.BLOB_SUB_TYPE_TEXT)
+            } else if (subtype == ISCConstants.BLOB_SUB_TYPE_TEXT) {
                 return Types.LONGVARCHAR;
-            else // if (subtype == 0 || subtype > 1)
+            } else { // if (subtype == 0 || subtype > 1)
                 return Types.LONGVARBINARY;
+            }
         case ISCConstants.SQL_BOOLEAN:
             return Types.BOOLEAN;
         case ISCConstants.SQL_NULL:
@@ -158,6 +159,9 @@ public final class JdbcTypeConverter {
     static final int time_type = 13;
     static final int char_type = 14;
     static final int int64_type = 16;
+    static final int dec16_type = 24;
+    static final int dec34_type = 25;
+    static final int dec_fixed_type = 26;
     static final int double_type = 27;
     static final int timestamp_type = 35;
     static final int varchar_type = 37;
@@ -179,6 +183,12 @@ public final class JdbcTypeConverter {
             return ISCConstants.SQL_LONG;
         case int64_type:
             return ISCConstants.SQL_INT64;
+        case dec16_type:
+            return ISCConstants.SQL_DEC16;
+        case dec34_type:
+            return ISCConstants.SQL_DEC34;
+        case dec_fixed_type:
+            return ISCConstants.SQL_DEC_FIXED;
         case quad_type:
             return ISCConstants.SQL_QUAD;
         case float_type:

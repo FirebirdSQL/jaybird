@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -25,6 +26,7 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 
 /**
@@ -42,7 +44,9 @@ final class FBBigDecimalField extends FBField {
     private static final BigInteger MIN_INT = BigInteger.valueOf(Integer.MIN_VALUE);
 
     private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigDecimal BD_MAX_LONG = BigDecimal.valueOf(Long.MAX_VALUE);
     private static final BigInteger MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
+    private static final BigDecimal BD_MIN_LONG = BigDecimal.valueOf(Long.MIN_VALUE);
 
     private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
@@ -56,6 +60,7 @@ final class FBBigDecimalField extends FBField {
     }
 
     public boolean getBoolean() throws SQLException {
+        // TODO might be better to use BigDecimal.ONE.equals(getBigDecimal()) (or compareTo == 0), but is not backwards compatible.
         return getByte() == 1;
     }
 
@@ -99,6 +104,9 @@ final class FBBigDecimalField extends FBField {
         BigDecimal value = getBigDecimal();
         if (value == null) return LONG_NULL_VALUE;
 
+        if (BD_MIN_LONG.compareTo(value) > 0 || value.compareTo(BD_MAX_LONG) > 0) {
+            throw new TypeConversionException(LONG_CONVERSION_ERROR);
+        }
         return value.longValue();
     }
 
@@ -156,7 +164,7 @@ final class FBBigDecimalField extends FBField {
     }
 
     public void setLong(long value) throws SQLException {
-        setBigDecimal(BigDecimal.valueOf(value, 0));
+        setBigDecimal(BigDecimal.valueOf(value));
     }
 
     public void setShort(short value) throws SQLException {
@@ -253,7 +261,7 @@ final class FBBigDecimalField extends FBField {
             @Override
             protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
                 BigDecimal value = new BigDecimal(fieldDescriptor.getDatatypeCoder().decodeDouble(fieldData));
-                return value.setScale(Math.abs(fieldDescriptor.getScale()), BigDecimal.ROUND_HALF_EVEN);
+                return value.setScale(Math.abs(fieldDescriptor.getScale()), RoundingMode.HALF_EVEN);
             }
 
             @Override
@@ -264,6 +272,27 @@ final class FBBigDecimalField extends FBField {
                     throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
 
                 return fieldDescriptor.getDatatypeCoder().encodeDouble(value.doubleValue());
+            }
+        },
+        DEC_FIXED {
+            // TODO Add rescaling if necessary
+            // TODO Correct application for DEC_FIXED?
+            @Override
+            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException {
+                try {
+                    return fieldDescriptor.getDatatypeCoder().decodeDecimal128(fieldData).toBigDecimal();
+                } catch (ArithmeticException e) {
+                    throw new TypeConversionException(OVERFLOW_ERROR, e);
+                }
+            }
+
+            @Override
+            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+                try {
+                    return fieldDescriptor.getDatatypeCoder().encodeDecimal128(Decimal128.valueOf(value));
+                } catch (ArithmeticException e) {
+                    throw new TypeConversionException(OVERFLOW_ERROR, e);
+                }
             }
         };
 
@@ -276,7 +305,7 @@ final class FBBigDecimalField extends FBField {
          *         encoded data
          * @return BigDecimal instance
          */
-        protected abstract BigDecimal decode(final FieldDescriptor fieldDescriptor, final byte[] fieldData);
+        protected abstract BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException;
 
         /**
          * Encodes the provided BigDecimal to fieldData
@@ -287,8 +316,7 @@ final class FBBigDecimalField extends FBField {
          *         BigDecimal instance
          * @return encoded data
          */
-        protected abstract byte[] encode(final FieldDescriptor fieldDescriptor,
-                final BigDecimal value) throws SQLException;
+        protected abstract byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException;
 
         /**
          * Helper method to rescale the BigDecimal to the provided scale and return the unscaled value of
@@ -301,7 +329,8 @@ final class FBBigDecimalField extends FBField {
          * @return Unscaled value of the rescaled BigDecimal
          */
         private static BigInteger normalize(final BigDecimal value, final int scale) {
-            BigDecimal valueToScale = value.setScale(scale, BigDecimal.ROUND_HALF_UP);
+            // TODO Switch to HALF_EVEN?
+            BigDecimal valueToScale = value.setScale(scale, RoundingMode.HALF_UP);
             return valueToScale.unscaledValue();
         }
 
@@ -323,6 +352,9 @@ final class FBBigDecimalField extends FBField {
                 return LONG;
             case ISCConstants.SQL_DOUBLE:
                 return DOUBLE;
+            // TODO:
+//            case ISCConstants.SQL_DEC_FIXED:
+//                return DEC_FIXED;
             default:
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
                         .messageParameter(fieldDescriptor.getType())

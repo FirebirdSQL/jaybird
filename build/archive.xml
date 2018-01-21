@@ -70,6 +70,12 @@
             <fileset dir="${source.java}">
                 <include name="**/*.java"/>
             </fileset>
+            <fileset dir="${source.extern}">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${source.jna-client}">
+                <include name="**/*.java"/>
+            </fileset>
             <fileset dir="${toString:source.java.openoffice}">
                 <include name="**/*.java"/>
             </fileset>

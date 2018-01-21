@@ -114,6 +114,7 @@
 
         <!-- Where source files live -->
         <property name="source.java" value="${module.source}/main"/>
+        <property name="source.extern" value="${module.source}/extern"/>
         <property name="source.openoffice" value="${module.source}/openoffice"/>
         <property name="source.jdbc.41" value="${module.source}/jdbc_41"/>
         <property name="source.jdbc.42" value="${module.source}/jdbc_42"/>

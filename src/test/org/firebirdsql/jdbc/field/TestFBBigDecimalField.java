@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
@@ -823,6 +824,45 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
         setNullExpectations();
 
         field.setBigInteger(null);
+    }
+
+    @Test
+    public void getDecimal_null() throws SQLException {
+        fieldDescriptor = createIntegerFieldDescriptor(-2);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        toReturnNullExpectations();
+
+        assertNull("Expected null result", field.getDecimal());
+    }
+
+    @Test
+    @Override
+    public void getDecimalNonNull() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(-8);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        toReturnLongExpectations(51300000000L);
+
+        Decimal128 expectedValue = Decimal128.valueOf("513.00000000");
+        assertEquals("Unexpected value for long Decimal", expectedValue, field.getDecimal());
+    }
+
+    @Test
+    public void setDecimal_null() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(-8);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setNullExpectations();
+
+        field.setDecimal(null);
+    }
+
+    @Test
+    @Override
+    public void setDecimalNonNull() throws SQLException {
+        fieldDescriptor = createLongFieldDescriptor(-5);
+        field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
+        setLongExpectations(1234567890123L);
+
+        field.setDecimal(Decimal128.valueOf("12345678.90123"));
     }
     
     @SuppressWarnings("unused")

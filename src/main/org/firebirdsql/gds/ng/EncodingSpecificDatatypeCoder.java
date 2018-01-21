@@ -21,6 +21,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -351,6 +353,26 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
         return parentCoder.encodeLocalDateTime(year, month, day, hour, minute, second, nanos);
+    }
+
+    @Override
+    public Decimal64 decodeDecimal64(byte[] data) {
+        return parentCoder.decodeDecimal64(data);
+    }
+
+    @Override
+    public byte[] encodeDecimal64(Decimal64 decimal64) {
+        return parentCoder.encodeDecimal64(decimal64);
+    }
+
+    @Override
+    public Decimal128 decodeDecimal128(byte[] data) {
+        return parentCoder.decodeDecimal128(data);
+    }
+
+    @Override
+    public byte[] encodeDecimal128(Decimal128 decimal128) {
+        return parentCoder.encodeDecimal128(decimal128);
     }
 
     @Override

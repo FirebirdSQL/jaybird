@@ -9,6 +9,7 @@
 	<classpathentry kind="src" path="src/jna-client"/>
 	<classpathentry kind="src" path="src/test_42"/>
 	<classpathentry kind="src" path="src/jna-test"/>
+	<classpathentry kind="src" path="src/extern"/>
 	<classpathentry kind="lib" path="src/lib/fscontext.jar"/>
 	<classpathentry kind="lib" path="src/lib/providerutil.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

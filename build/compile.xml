@@ -53,6 +53,7 @@
             <compilerarg line="${java.module.arg}"/>
             <classpath refid="javac.driver.classpath"/>
             <src path="${source.java}"/>
+            <src path="${source.extern}"/>
             <src path="${source.jna-client}"/>
             <src refid="source.java.openoffice"/>
             <src refid="source.java.additional"/>

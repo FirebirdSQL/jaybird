@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.util.IOUtils;
 import org.junit.Before;
@@ -698,6 +699,45 @@ public class TestFBStringField extends BaseJUnit4TestFBField<FBStringField, Stri
         setStringExpectations("10", encoding);
 
         field.setObject(BigInteger.TEN);
+    }
+
+    @Test
+    @Override
+    public void getDecimalNonNull() throws SQLException {
+        toReturnStringExpectations("1.34578", encoding);
+
+        Decimal128 expectedValue = Decimal128.valueOf("1.34578");
+        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+    }
+
+    @Test
+    public void getDecimalNonNull_notANumber() throws SQLException {
+        toReturnStringExpectations("xyz", encoding);
+        expectedException.expect(TypeConversionException.class);
+
+        field.getDecimal();
+    }
+
+    @Test
+    public void getDecimal_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("expected null for getDecimal", field.getDecimal());
+    }
+
+    @Test
+    @Override
+    public void setDecimalNonNull() throws SQLException {
+        setStringExpectations("10", encoding);
+
+        field.setDecimal(Decimal128.valueOf("10"));
+    }
+
+    @Test
+    public void setDecimalNull() throws SQLException {
+        setNullExpectations();
+
+        field.setDecimal(null);
     }
 
     @Override

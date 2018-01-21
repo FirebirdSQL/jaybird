@@ -301,6 +301,232 @@ The implementation comes with a number of caveats:
      (although that in itself would already imply a severe security breach)
  -   the ARC4 encryption - the default provided by Firebird - is considered to 
      be a weak (maybe even broken) cipher these days
+     
+Firebird 4 DECFLOAT support
+---------------------------
+
+Firebird 4 introduces the SQL:2016 `DECFLOAT` datatype, a decimal floating point 
+with a precision of 16 or 34 digits (backed by an IEEE-754 Decimal64 or 
+Decimal128). See the Firebird 4 release notes for details on this datatype.
+
+Jaybird 4 adds support for this datatype. The 'default' object type for `DECFLOAT`
+is a `java.math.BigDecimal`, but conversion from and to the following datatypes
+is supported:
+
+- `java.math.BigDecimal` (see note 1)
+- `byte` (valid range -128 to 127(!); see notes 2, 3)
+- `short` (valid range -32768 to 32767; see note 3)
+- `int` (valid range -2<sup>31</sup> to 2<sup>31</sup>-1; see note 3)
+- `long` (valid range -2<sup>63</sup> to 2<sup>63</sup>-1; see notes 3, 4)
+- `float` (valid range -1 * Float.MAX_VALUE to Float.MAX_VALUE; see notes 5-9)
+- `double` (valid range -1 * Float.MAX_VALUE to Float.MAX_VALUE; see notes 6-9)
+- `boolean` (see notes 10, 11)
+- `java.lang.String` (see notes 12-14)
+- `java.math.BigInteger` (see notes 15, 16)
+- `org.firebirdsql.extern.decimal.Decimal32/64/128` (see notes 17, 18)
+
+The `DECFLOAT` type is not yet defined in the JDBC specification, for the time
+being, we have defined a Jaybird specific type code with value `-6001`. This
+value is available through constant `org.firebirdsql.jdbc.JaybirdTypeCodes.DECFLOAT`,
+or - for JDBC 4.2 and higher - `org.firebirdsql.jdbc.JaybirdType.DECFLOAT`, which
+is an enum implementing `java.sql.SQLType`.
+
+If you need to use the type code, we suggest you use these constants. If a 
+`DECFLOAT` type constant gets added to the JDBC standard, we will update the
+value. The enum value will be deprecated when that version of JDBC has been
+released.
+
+Jaybird uses a local copy of the [FirebirdSQL/decimal-java](https://github.com/FirebirdSQL/decimal-java)
+library, with a custom package `org.firebirdsql.extern.decimal`. This to avoid 
+additional dependencies. 
+
+### Precision and range ###
+
+The `DECFLOAT` datatype supports values with a precision of 16 or 34 decimal 
+digits, and a scale - as used in `java.math.BigDecimal` - between -369 and 398 
+(`DECFLOAT(16)`) or between -6111 and 6176 (`DECFLOAT(16)`), so the minimum and 
+maximum values are:
+
+| Type           | Min/max value               | Smallest (non-zero) value   |
+|----------------|-----------------------------|-----------------------------|
+| `DECFLOAT(16)` | +/-9.9..9E+384 (16 digits)  | +/-1E-398 (1 digit)         | 
+| `DECFLOAT(34)` | +/-9.9..9E+6144 (34 digits) | +/-1E-6176 (1 digit)        |
+
+When converting values from Java types to `DECFLOAT` and retrieving
+`DECFLOAT` values as `Decimal32` or `Decimal64`, the following rules are 
+applied:
+
+-   Zero values can have a non-zero exponent, and if the exponent is out of 
+range, the exponent value is 'clamped' to the minimum or maximum exponent
+supported. This behavior is subject to change, and future release may
+'round' to exact `0` (or `0E0`)
+
+-   Values with a precision larger than the target precision are rounded to the 
+target precision using `RoundingMode.HALF_EVEN`
+
+-   If the magnitude (or exponent) is too low (or in `BigDecimal` terms, the scale 
+too high), then the following steps are applied:
+ 
+    1. Precision is reduced applying `RoundingMode.HALF_EVEN`, increasing the
+    exponent by the reduction of precision.
+    
+    An example: a `DECFLOAT(16)` stores values as an integral coefficient of 16 
+    digits and an exponent between `-398` and `+369`. The value 
+    `1.234567890123456E-394` or `1234567890123456E-409` is coefficient 
+    `1234567890123456` and exponent `-409`. The coefficient is 16 digits, but
+    the exponent is too low by 11.
+    
+    If we sacrifice least-significant digits, we can increase the exponent,
+    this is achieved by dividing the coefficient by 10<sup>11</sup> (and 
+    rounding) and increasing the exponent by 11. We get 
+    exponent = round(1234567890123456 / 10<sup>11</sup>) = 12346 and 
+    exponent = -409 + 11 = -398.
+    
+    The resulting value is now `12346E-398` or `1.2346E-394`, or in other words, 
+    we sacrificed precision to make the value fit.
+    
+    2. If after the previous step, the magnitude is still too low, we have what
+    is called an underflow, and the value is truncated to 0 with the minimum 
+    exponent and preserving sign, eg for `DECFLOAT(16)`, the value will become 
+    +0E+398 or -0E-398 (see note 19). Technically, this is just a special case 
+    of the previous step.
+    
+-   If the magnitude (or exponent) is too high (or in `BigDecimal` terms, the 
+scale too low), then the following steps are applied:
+
+    1. If the precision is less than maximum precision, and the difference 
+    between maximum precision and actual precision is larger than or equal to 
+    the difference between the actual exponent and the maximum exponent, then
+    the precision is increased by adding zeroes as least-significant digits
+    and decreasing the exponent by the number of zeroes added.
+    
+    An example: a `DECFLOAT(16)` stores values as an integral coefficient of 16 
+    digits and an exponent between `-398` and `+369`. The value `1E+384` is 
+    coefficient `1` with exponent `384`. This is too large for the maximum 
+    exponent, however, we have a value with a single digit, leaving us with
+    15 'unused' most-significant digits. 
+    
+    If we multiply the coefficient by 10<sup>15</sup> and subtract 15 from the 
+    exponent we get: coefficient = 1 * 10<sup>15</sup> = 1000000000000000 and
+    exponent = 384 - 15 = 369. And these values for coefficient and exponent
+    are in range of the storage requirements.
+    
+    The resulting value is now `1000000000000000E+369` or `1.000000000000000E+384`,
+    or in other words, we 'increased' precision by adding zeroes as 
+    least-significant digits to make the value fit.
+    
+    2. Otherwise, we have what is called an overflow, and an `SQLException` is 
+    thrown as the value is out of range.
+    
+If you need other rounding and overflow behavior, make sure you round the values
+appropriately before you set them.
+     
+### Notes ###
+
+1.  `java.math.BigDecimal` is capable of representing numbers with larger 
+precisions than `DECFLOAT`, and numbers that are out of range (too large or too 
+small). When performing calculations in Java, use `MathContext.DECIMAL64` (for 
+`DECFLOAT(16)`) or `MathContext.DECIMAL128` (for `DECFLOAT(34)`) to achieve 
+similar results in calculations as in Firebird. Be aware there might still be 
+differences in rounding, and the result of calculations may be out of range.
+
+    a.  Firebird 4 snapshots currently allow storing NaN and Infinity values,
+    retrieval of these values will result in a `SQLException`, with a 
+    `DecimalInconvertibleException` cause with details on the special. The 
+    support for these special values is currently under discussion and
+    may be removed in future Firebird 4 snapshots.
+
+2.  `byte` in Java is signed, and historically Jaybird has preserved sign when
+storing byte values, and it considers values outside -128 and +127 out of range.
+
+3.  All integral values are - if within range - first converted to `long` 
+using `BigDecimal.longValue`, which discards any fractional parts (rounding by
+truncation).
+
+4.  When storing a `long` in `DECFLOAT(16)`, rounding will be applied using
+`RoundingMode.HALF_EVEN` for values larger than `9999999999999999L` or smaller 
+than `-9999999999999999L`.
+
+5.  `float` values are first converted to (or from) double, this may lead to 
+small rounding differences
+
+6.  `float` and `double` can be fully stored in `DECFLOAT(16)` and 
+`DECLOAT(34)`, with minor rounding differences.
+   
+7.  When reading `DECFLOAT` values as `double` or `float`, rounding will be 
+applied as binary floating point types are inexact, and have a smaller 
+precision.
+ 
+8.  If the magnitude of the `DECFLOAT` value is too great to be represented in 
+`float` or `double`, +Infinity or -Infinity may be returned (see 
+`BigDecimal.doubleValue()`). This behavior is subject to change, future releases 
+may throw a `SQLException` instead, see also related note 8.
+ 
+9.  Storing and retrieving values NaN, +Infinity and -Infinity are currently 
+supported, but this may change as this doesn't seem to be allowed by the 
+SQL:2016 standard.
+  
+    It is possible that Jaybird or Firebird will disallow storing and retrieving 
+NaN and Infinity values in future releases, causing Jaybird to throw an 
+`SQLException` instead. We strongly suggest not to rely on this support for
+special values.
+
+    a.  Firebird `DECFLOAT` currently discerns four different NaNs (+/-NaN and 
+    +/-signaling-NaN). These are all mapped to `Double.NaN` (or `Float.NaN`),
+    Java NaN values are mapped to +NaN in Firebird.
+
+10. Setting `boolean` values will set `0` (or `0E+0`) for `false` and `1` (or 
+`1E+0`) for `true`.
+
+11. Retrieving as `boolean` will return `true` for `1` (exactly `1E+0`) and
+`false` for **all other values**. Be aware that this means that `1.0E+0` (or 
+`10E-1`) etc will be **`false`** (_this may change before Jaybird 4 final to 
+`getLong() == 1L` or similar, which truncates the value_). 
+
+    This behavior may change in the future and only allow `0` for `false` and 
+exactly `1` for `true` and throw an `SQLException` for all other values, or 
+maybe `true` for everything other than `0`. In general we advise to not use 
+numerical types for boolean values, and especially not to retrieve the result of 
+a calculation as a boolean value. Instead, use a real `BOOLEAN`.
+
+12. String values as `String` is supported following the format rules of 
+`new BigDecimal(String)`, with extra support for special values `+NaN`, `-NaN`, 
+`+sNaN`, `-sNaN`, `+Infinity` and `-Infinity` (case insensitive). Other non-numerical 
+strings throw an `SQLException`. Out of range values are handled as described in 
+[Precision and range].
+
+13. Getting values as `String` will equivalent to `BigDecimal.toString`, with
+extra support for the special values mentioned in the previous note.
+
+14. As mentioned in earlier notes, support for the special values is under
+discussion, and may be removed in the final Jaybird 4 or Firebird 4 release,
+or might change in future versions.
+
+15. Getting as `BigInteger` will behave as `BigDecimal.toBigInteger()`, which
+discards the fractional part (rounding by truncation), and may add 
+`(-1 * scale - precision)` least-significant zeroes if the scale exceeds
+precision. Be aware that use of `BigInteger` for large values this may result in 
+significant memory consumption. 
+
+16. Setting as `BigInteger` may lose precision, as it applies the rules 
+described in [Precision and range].
+
+17. Values can also be set and retrieved as types `Decimal32`, `Decimal64` and 
+`Decimal128` from the `org.firebirdsql.extern.decimal` package. Where `Decimal64`
+exactly matches the `DECFLOAT(16)` protocol format, and `Decimal128` the 
+`DECFLOAT(34)` protocol format. Be aware that this is an implementation detail
+that might change in future Jaybird versions (both in of these support for these 
+types, and in terms of the interface (API) of these types).
+
+18. Setting a `Decimal128` on a `DECFLOAT(16)`, or a `Decimal32` on a 
+`DECFLOAT(16)` or `DECFLOAT(34)`, or retrieving a `Decimal32` from
+a `DECFLOAT(16)` or `DECFLOAT(34)`, or a `Decimal64` from a `DECFLOAT(34)`
+will apply the rules described in [Precision and range].
+
+19. Zero values can have a sign (eg `-0` vs `0` (`+0`)), this can only be 
+set or retrieved using `String` or the `DecimalXX` types, or the result of 
+rounding. This behaviour is subject to change, and future releases may 'round' 
+to `0` (aka `+0`).
 
 Potentially breaking changes
 ----------------------------

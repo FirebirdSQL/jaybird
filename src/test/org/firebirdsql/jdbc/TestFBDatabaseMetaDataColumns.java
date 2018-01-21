@@ -90,7 +90,9 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             "    col_varchar_default_literal VARCHAR(100) DEFAULT 'literal'," + 
             "    col_varchar_generated VARCHAR(200) COMPUTED BY (col_varchar_default_user || ' ' || col_varchar_default_literal)," +
             "    col_domain_with_default DOMAIN_WITH_DEFAULT," +
-            "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default'" +
+            "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default' " +
+            "    /* boolean */ " +
+            "    /* decfloat */ " +
             ")";
     //@formatter:on
 
@@ -101,12 +103,19 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         FirebirdSupportInfo supportInfo = supportInfoFor(con);
         List<String> statements = new ArrayList<>();
         statements.add(CREATE_DOMAIN_WITH_DEFAULT);
-        if (supportInfo.supportsBigint()) {
-            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE);
-        } else {
+        String createTable = CREATE_COLUMN_METADATA_TEST_TABLE;
+        if (!supportInfo.supportsBigint()) {
             // No BIGINT support, replacing type so number of columns remain the same
-            statements.add(CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", "col_bigint DOUBLE PRECISION,"));
+            createTable = CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", "col_bigint DOUBLE PRECISION,");
         }
+        if (supportInfo.supportsBoolean()) {
+            createTable = createTable.replace("/* boolean */", ", col_boolean BOOLEAN");
+        }
+        if (supportInfo.supportsDecfloat()) {
+            createTable = createTable.replace("/* decfloat */", ", col_decfloat16 DECFLOAT(16), col_decfloat34 DECFLOAT(34)");
+        }
+
+        statements.add(createTable);
         if (supportInfo.supportsComment()) {
             statements.add(ADD_COMMENT_ON_COLUMN);
         }
@@ -783,6 +792,40 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.COLUMN_DEF, "'overridden default'");
 
         validate(TEST_TABLE, "COL_DOMAIN_W_DEFAULT_OVERRIDDEN", validationRules);
+    }
+
+    @Test
+    public void testBooleanColumn() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.BOOLEAN);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "BOOLEAN");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 1);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 40);
+        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, 2);
+
+        validate(TEST_TABLE, "COL_BOOLEAN", validationRules);
+    }
+
+    @Test
+    public void testDecfloat16Column() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 16);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 41);
+
+        validate(TEST_TABLE, "COL_DECFLOAT16", validationRules);
+    }
+
+    @Test
+    public void testDecfloat34Column() throws Exception {
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 34);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 42);
+
+        validate(TEST_TABLE, "COL_DECFLOAT34", validationRules);
     }
     
     // TODO: Add more extensive tests of patterns

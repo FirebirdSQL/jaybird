@@ -88,6 +88,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when the data type DECFLOAT is supported
+     */
+    public boolean supportsDecfloat() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @return <code>true</code> when the COMMENT statement is supported
      */
     public boolean supportsComment() {

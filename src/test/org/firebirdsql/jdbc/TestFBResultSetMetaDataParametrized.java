@@ -31,8 +31,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static java.sql.ResultSetMetaData.*;
 import static java.sql.Types.*;
@@ -82,6 +84,8 @@ public class TestFBResultSetMetaDataParametrized {
         "  blob_field BLOB, " +
         "  blob_text_field BLOB SUB_TYPE TEXT, " +
         "  blob_minus_one BLOB SUB_TYPE -1 " +
+        "  /* boolean */ " +
+        "  /* decfloat */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -90,6 +94,8 @@ public class TestFBResultSetMetaDataParametrized {
             "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
             "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
             "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
+            "/* boolean */ " +
+            "/* decfloat */ " +
             "FROM test_p_metadata";
     //@formatter:on
 
@@ -111,17 +117,25 @@ public class TestFBResultSetMetaDataParametrized {
         connection = getConnectionViaDriverManager();
         supportInfo = supportInfoFor(connection);
 
-        String createTable;
-        if (supportInfo.supportsBigint()) {
-            createTable = CREATE_TABLE;
-        } else {
+        String createTable = CREATE_TABLE;
+        String testQuery = TEST_QUERY;
+        if (!supportInfo.supportsBigint()) {
             // No BIGINT support, replacing type so number of columns remain the same
             createTable = CREATE_TABLE.replace("long_field BIGINT,", "long_field DOUBLE PRECISION,");
+        }
+        if (supportInfo.supportsBoolean()) {
+            createTable = createTable.replace("/* boolean */", ", boolean_field BOOLEAN");
+            testQuery = testQuery.replace("/* boolean */", ", boolean_field");
+        }
+        if (supportInfo.supportsDecfloat()) {
+            createTable = createTable.replace("/* decfloat */",
+                    ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
+            testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field");
         }
 
         DdlHelper.executeCreateTable(connection, createTable);
 
-        pstmt = connection.prepareStatement(TEST_QUERY);
+        pstmt = connection.prepareStatement(testQuery);
         rsmd = pstmt.getMetaData();
     }
 
@@ -136,6 +150,7 @@ public class TestFBResultSetMetaDataParametrized {
             pstmt = null;
             connection = null;
             fbManager = null;
+            supportInfo = null;
         }
     }
 
@@ -146,7 +161,7 @@ public class TestFBResultSetMetaDataParametrized {
 
     @Parameterized.Parameters(name = "Index {0} ({2})")
     public static Collection<Object[]> testData() {
-        return Arrays.asList(
+        List<Object[]> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(3, "java.lang.String", 60, "THREE_BYTE_FIELD", "THREE_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
@@ -168,7 +183,17 @@ public class TestFBResultSetMetaDataParametrized {
                 create(19, "java.lang.String", 0, "BLOB_TEXT_FIELD", "BLOB_TEXT_FIELD", LONGVARCHAR, "BLOB SUB_TYPE 1", 0, 0, TABLE_NAME, columnNullable, false, false),
                 // TODO Report actual subtype value
                 create(20, "java.sql.Blob", 0, "BLOB_MINUS_ONE", "BLOB_MINUS_ONE", BLOB, "BLOB SUB_TYPE <0", 0, 0, TABLE_NAME, columnNullable, false, false)
-        );
+        ));
+        final FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        if (supportInfo.supportsBoolean()) {
+            testData.add(create(testData.size() + 1, "java.lang.Boolean", 5, "BOOLEAN_FIELD", "BOOLEAN_FIELD", BOOLEAN, "BOOLEAN", 1, 0, TABLE_NAME, columnNullable, true, false));
+        }
+        if (supportInfo.supportsDecfloat()) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 23, "DECFLOAT16_FIELD", "DECFLOAT16_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, TABLE_NAME, columnNullable, true, true));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 42, "DECFLOAT34_FIELD", "DECFLOAT34_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, TABLE_NAME, columnNullable, true, true));
+        }
+
+        return testData;
     }
 
     @Before

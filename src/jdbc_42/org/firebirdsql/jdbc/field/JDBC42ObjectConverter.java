@@ -27,6 +27,8 @@ import java.sql.Types;
 import java.time.*;
 import java.time.format.DateTimeParseException;
 
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+
 /**
  * Implementation of {@link ObjectConverter} to support JDBC 4.2 type conversions.
  *
@@ -106,13 +108,13 @@ public class JDBC42ObjectConverter implements ObjectConverter {
         switch (field.requiredType) {
         case Types.DATE:
             switch (type.getName()) {
-            case "java.time.LocalDate": {
+            case LOCAL_DATE_CLASS_NAME: {
                 if (field.isNull()) return null;
                 final DatatypeCoder.RawDateTimeStruct raw =
                         field.getDatatypeCoder().decodeDateRaw(field.getFieldData());
                 return (T) LocalDate.of(raw.year, raw.month, raw.day);
             }
-            case "java.time.LocalDateTime": {
+            case LOCAL_DATE_TIME_CLASS_NAME: {
                 if (field.isNull()) return null;
                 final DatatypeCoder.RawDateTimeStruct raw =
                         field.getDatatypeCoder().decodeDateRaw(field.getFieldData());
@@ -122,13 +124,13 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             break;
         case Types.TIME:
             switch (type.getName()) {
-            case "java.time.LocalTime": {
+            case LOCAL_TIME_CLASS_NAME: {
                 if (field.isNull()) return null;
                 final DatatypeCoder.RawDateTimeStruct raw =
                         field.getDatatypeCoder().decodeTimeRaw(field.getFieldData());
                 return (T) LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
             }
-            case "java.time.LocalDateTime": {
+            case LOCAL_DATE_TIME_CLASS_NAME: {
                 if (field.isNull()) return null;
                 final DatatypeCoder.RawDateTimeStruct raw =
                         field.getDatatypeCoder().decodeTimeRaw(field.getFieldData());
@@ -138,7 +140,7 @@ public class JDBC42ObjectConverter implements ObjectConverter {
             }
             break;
         case Types.TIMESTAMP:
-            if ("java.time.LocalDateTime".equals(type.getName())) {
+            if (LOCAL_DATE_TIME_CLASS_NAME.equals(type.getName())) {
                 if (field.isNull()) return null;
                 final DatatypeCoder.RawDateTimeStruct raw =
                         field.getDatatypeCoder().decodeTimestampRaw(field.getFieldData());
@@ -151,15 +153,15 @@ public class JDBC42ObjectConverter implements ObjectConverter {
         case Types.LONGVARCHAR:
             try {
                 switch (type.getName()) {
-                case "java.time.LocalDate":
+                case LOCAL_DATE_CLASS_NAME:
                     return field.isNull() ? null : (T) LocalDate.parse(field.getString().trim());
-                case "java.time.LocalTime":
+                case LOCAL_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) LocalTime.parse(field.getString().trim());
-                case "java.time.LocalDateTime":
+                case LOCAL_DATE_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) LocalDateTime.parse(field.getString().trim());
-                case "java.time.OffsetTime":
+                case OFFSET_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) OffsetTime.parse(field.getString().trim());
-                case "java.time.OffsetDateTime":
+                case OFFSET_DATE_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) OffsetDateTime.parse(field.getString().trim());
                 }
             } catch (DateTimeParseException e) {

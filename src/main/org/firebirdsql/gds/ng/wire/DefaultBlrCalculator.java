@@ -154,7 +154,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
             bout.write(blr_timestamp);
             break;
         case SQL_BLOB:
-            // TODO Use blr_blob2 instead, find out which Firebird version added that
+            // TODO Use blr_blob2 instead; added in 2.5
             bout.write(blr_quad);
             bout.write(0); // scale?
             break;
@@ -180,6 +180,16 @@ public class DefaultBlrCalculator implements BlrCalculator {
             break;
         case SQL_BOOLEAN:
             bout.write(blr_bool);
+            break;
+        case SQL_DEC16:
+            bout.write(blr_dec64);
+            break;
+        case SQL_DEC34:
+            bout.write(blr_dec128);
+            break;
+        case SQL_DEC_FIXED:
+            bout.write(blr_dec_fixed);
+            bout.write(field.getScale());
             break;
         default:
             throw new FbExceptionBuilder().exception(isc_dsql_sqlda_value_err).toSQLException();
@@ -208,7 +218,12 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_ARRAY:
         case SQL_QUAD:
         case SQL_INT64:
+        case SQL_DEC16:
             return -8;
+        case SQL_DEC34:
+        case SQL_DEC_FIXED:
+            // TODO Correct for DEC_FIXED?
+            return -16;
         case SQL_NULL:
             return 0;
         case SQL_BOOLEAN:

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.Before;
 import org.junit.Test;
@@ -406,6 +407,37 @@ public class TestFBBooleanField extends BaseJUnit4TestFBField<FBBooleanField, Bo
         setBooleanExpectations(true);
 
         field.setString("true");
+    }
+
+    @Test
+    @Override
+    public void getDecimalNonNull() throws SQLException {
+        toReturnBooleanExpectations(true);
+
+        Decimal128 expectedValue = Decimal128.valueOf("1");
+        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+    }
+
+    @Test
+    public void getDecimal_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("expected null for getDecimal", field.getDecimal());
+    }
+
+    @Test
+    @Override
+    public void setDecimalNonNull() throws SQLException {
+        setBooleanExpectations(true);
+
+        field.setDecimal(Decimal128.valueOf("1"));
+    }
+
+    @Test
+    public void setDecimalNull() throws SQLException {
+        setNullExpectations();
+
+        field.setDecimal(null);
     }
 
     @Override

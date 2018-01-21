@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -644,7 +645,6 @@ public class TestFBFloatField extends BaseJUnit4TestFBField<FBFloatField, Float>
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX() throws SQLException {
@@ -655,7 +655,6 @@ public class TestFBFloatField extends BaseJUnit4TestFBField<FBFloatField, Float>
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE) plus a fraction
-     * @throws SQLException
      */
     @Test
     public void getShort_MAX_plus_fraction() throws SQLException {
@@ -667,7 +666,6 @@ public class TestFBFloatField extends BaseJUnit4TestFBField<FBFloatField, Float>
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE).
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN() throws SQLException {
@@ -678,7 +676,6 @@ public class TestFBFloatField extends BaseJUnit4TestFBField<FBFloatField, Float>
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE) minus a fraction
-     * @throws SQLException
      */
     @Test
     public void getShort_MIN_minus_fraction() throws SQLException {
@@ -766,6 +763,36 @@ public class TestFBFloatField extends BaseJUnit4TestFBField<FBFloatField, Float>
         field.setString("no float");
     }
 
+    @Test
+    @Override
+    public void getDecimalNonNull() throws SQLException {
+        toReturnFloatExpectations(1.34578f);
+
+        Decimal128 expectedValue = Decimal128.valueOf(new BigDecimal(1.34578f));
+        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+    }
+
+    @Test
+    public void getDecimal_null() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("expected null for getDecimal", field.getDecimal());
+    }
+
+    @Test
+    @Override
+    public void setDecimalNonNull() throws SQLException {
+        setFloatExpectations(10);
+
+        field.setDecimal(Decimal128.valueOf("10"));
+    }
+
+    @Test
+    public void setDecimalNull() throws SQLException {
+        setNullExpectations();
+
+        field.setDecimal(null);
+    }
 
     @Override
     protected Float getNonNullObject() {

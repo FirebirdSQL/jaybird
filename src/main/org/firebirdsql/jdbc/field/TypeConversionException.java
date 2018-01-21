@@ -34,4 +34,9 @@ public class TypeConversionException extends FBSQLException {
     public TypeConversionException(String msg) { 
         super(msg, SQLStateConstants.SQL_STATE_INVALID_CONVERSION);
     }
+
+    public TypeConversionException(String msg, Throwable cause) {
+        super(msg, SQLStateConstants.SQL_STATE_INVALID_CONVERSION);
+        initCause(cause);
+    }
 }

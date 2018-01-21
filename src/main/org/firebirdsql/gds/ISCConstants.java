@@ -2092,6 +2092,9 @@ public interface ISCConstants {
     int SQL_TYPE_TIME = 560;
     int SQL_TYPE_DATE = 570;
     int SQL_INT64     = 580;
+    int SQL_DEC_FIXED = 32758;
+    int SQL_DEC16     = 32760;
+    int SQL_DEC34     = 32762;
     int SQL_BOOLEAN   = 32764;
     int SQL_NULL      = 32766;
 
