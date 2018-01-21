@@ -489,7 +489,7 @@ maybe `true` for everything other than `0`. In general we advise to not use
 numerical types for boolean values, and especially not to retrieve the result of 
 a calculation as a boolean value. Instead, use a real `BOOLEAN`.
 
-12. String values as `String` is supported following the format rules of 
+12. Setting values as `String` is supported following the format rules of 
 `new BigDecimal(String)`, with extra support for special values `+NaN`, `-NaN`, 
 `+sNaN`, `-sNaN`, `+Infinity` and `-Infinity` (case insensitive). Other non-numerical 
 strings throw an `SQLException`. Out of range values are handled as described in 
