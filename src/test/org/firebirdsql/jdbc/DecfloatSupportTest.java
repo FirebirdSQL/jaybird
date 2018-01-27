@@ -43,10 +43,14 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
     private static final BigDecimal DECFLOAT_16_MAX = new BigDecimal("9999999999999999E+369");
     private static final BigDecimal DECFLOAT_34_MAX = new BigDecimal("9999999999999999999999999999999999E+6111");
     private static final String CREATE_TABLE =
-            "create table decfloattest(id integer primary key, decfloat16 decfloat(16), decfloat34 decfloat(34))";
+            "create table decfloattest( "
+                    + "id integer primary key, "
+                    + "decfloat16 decfloat(16), "
+                    + "decfloat34 decfloat(34)"
+                    + ")";
 
     @BeforeClass
-    public static void checkBooleanSupport() {
+    public static void checkDecfloatSupport() {
         // NOTE: For native tests will also requires use of a Firebird 4 client library
         assumeTrue("Test requires DECFLOAT support on server", getDefaultSupportInfo().supportsDecfloat());
     }
