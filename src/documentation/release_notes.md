@@ -35,8 +35,9 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.7, and 3.0.2, but should also 
-support other Firebird versions from 2.5 and up.
+Jaybird @VERSION@ was tested against Firebird 2.5.7, 3.0.2, and a recent 
+Firebird 4 snapshot build, but should also support other Firebird versions from 
+2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
 expect the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -52,11 +53,14 @@ Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 Supported Java versions
 -----------------------
 
-Jaybird 4 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for 
-earlier Java versions has been dropped.
+Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 (JDBC 4.3). 
+Support for earlier Java versions has been dropped.
 
-Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
-but real module support will not be available until Jaybird 4 (or later).
+For the time being, snapshots will not be released as specific Java 9 builds,
+the Java 8 builds have the same source and all JDBC 4.3 related functionality. 
+
+Jaybird 4 is not (yet) modularized, but all versions declare the automatic 
+module name `org.firebirdsql.jaybird`.
 
 Jaybird 4 will probably drop support Java 7 later in the development cycle.
 
@@ -75,8 +79,8 @@ Jaybird supports the following specifications:
 | JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via JCA framework and `XADataSource` implementation.
 | JMX 1.2     | Jaybird provides a MBean to manage Firebird servers and installed databases via JMX agent.
 
-Getting Jaybird 4.0
-===================
+Getting Jaybird 4
+=================
 
 Jaybird @VERSION@
 -------------------
@@ -89,7 +93,7 @@ Groupid: `org.firebirdsql.jdbc`,\
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
 Version: `@VERSION@`
 
-NOTE: SNAPSHOT release are only available from the Sonatype snapshot 
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot 
 repository, <https://oss.sonatype.org/content/repositories/snapshots>
 
 For example:
@@ -185,8 +189,17 @@ If you manage your dependencies manually, you need to do the following:
 Gotcha's
 --------
 
-No known gotcha's at this time. If you find a problem: please report it on
-http://tracker.firebirdsql.org/brows/JDBC
+During tests we have have observed that using Jaybird 4 with Firebird 4 may
+cause connection hangs when the connection is encrypted (the connection is 
+blocked in a read from the socket). The cause seems related to the Java 
+version (the problem disappeared with Java 9 Update 4). The workaround is 
+to disable wire encryption in Firebird or for the specific connection 
+(see [Wire encryption support]).
+
+If you find a problem while upgrading, or other bugs: please report it 
+on <http://tracker.firebirdsql.org/brows/JDBC>.
+
+For known issues, consult [Known Issues].
 
 Jaybird 4.0.x changelog
 =======================
@@ -322,13 +335,13 @@ is supported:
 - `int` (valid range -2<sup>31</sup> to 2<sup>31</sup>-1; see note 3)
 - `long` (valid range -2<sup>63</sup> to 2<sup>63</sup>-1; see notes 3, 4)
 - `float` (valid range -1 * Float.MAX_VALUE to Float.MAX_VALUE; see notes 5-9)
-- `double` (valid range -1 * Float.MAX_VALUE to Float.MAX_VALUE; see notes 6-9)
+- `double` (valid range -1 * Double.MAX_VALUE to Double.MAX_VALUE; see notes 6-9)
 - `boolean` (see notes 10, 11)
 - `java.lang.String` (see notes 12-14)
 - `java.math.BigInteger` (see notes 15, 16)
 - `org.firebirdsql.extern.decimal.Decimal32/64/128` (see notes 17, 18)
 
-The `DECFLOAT` type is not yet defined in the JDBC specification, for the time
+The `DECFLOAT` type is not yet defined in the JDBC specification. For the time
 being, we have defined a Jaybird specific type code with value `-6001`. This
 value is available through constant `org.firebirdsql.jdbc.JaybirdTypeCodes.DECFLOAT`,
 or - for JDBC 4.2 and higher - `org.firebirdsql.jdbc.JaybirdType.DECFLOAT`, which
@@ -346,9 +359,13 @@ additional dependencies.
 ### Precision and range ###
 
 The `DECFLOAT` datatype supports values with a precision of 16 or 34 decimal 
-digits, and a scale - as used in `java.math.BigDecimal` - between -369 and 398 
-(`DECFLOAT(16)`) or between -6111 and 6176 (`DECFLOAT(34)`), so the minimum and 
-maximum values are:
+digits, and an exponent [^decimalFormat] between -398 and 369 (`DECFLOAT(16)`), or 
+between -6176 and 6111 (`DECFLOAT(34)`), so the minimum and maximum values are:
+
+[^decimalFormat]: The `DECFLOAT` decimal format stores values as sign, integral 
+number with 16 or 34 digits, and an exponent. This is similar to  
+`java.math.BigDecimal`, but instead of an exponent, that uses the concept `scale`, 
+where `scale = -1 * exponent`.
 
 | Type           | Min/max value               | Smallest (non-zero) value   |
 |----------------|-----------------------------|-----------------------------|
@@ -367,8 +384,8 @@ supported. This behavior is subject to change, and future release may
 -   Values with a precision larger than the target precision are rounded to the 
 target precision using `RoundingMode.HALF_EVEN`
 
--   If the magnitude (or exponent) is too low (or in `BigDecimal` terms, the scale 
-too high), then the following steps are applied:
+-   If the magnitude (or exponent) is too low, then the following steps are 
+applied:
  
     1.  Precision is reduced applying `RoundingMode.HALF_EVEN`, increasing the
     exponent by the reduction of precision.
@@ -394,8 +411,8 @@ too high), then the following steps are applied:
     +0E+398 or -0E-398 (see note 19). Technically, this is just a special case 
     of the previous step.
     
--   If the magnitude (or exponent) is too high (or in `BigDecimal` terms, the 
-scale too low), then the following steps are applied:
+-   If the magnitude (or exponent) is too high, then the following steps are 
+applied:
 
     1.  If the precision is less than maximum precision, and the difference 
     between maximum precision and actual precision is larger than or equal to 
@@ -494,9 +511,9 @@ a calculation as a boolean value. Instead, use a real `BOOLEAN`.
 
 12. Setting values as `String` is supported following the format rules of 
 `new BigDecimal(String)`, with extra support for special values `+NaN`, `-NaN`, 
-`+sNaN`, `-sNaN`, `+Infinity` and `-Infinity` (case insensitive). Other non-numerical 
-strings throw an `SQLException`. Out of range values are handled as described in 
-[Precision and range].
+`+sNaN`, `-sNaN`, `+Infinity` and `-Infinity` (case insensitive). Other 
+non-numerical strings throw an `SQLException` with a `NumberFormatException` as 
+cause. Out of range values are handled as described in [Precision and range].
 
 13. Getting values as `String` will equivalent to `BigDecimal.toString`, with
 extra support for the special values mentioned in the previous note.
@@ -511,8 +528,8 @@ discards the fractional part (rounding by truncation), and may add
 precision. Be aware that use of `BigInteger` for large values may result in 
 significant memory consumption. 
 
-16. Setting as `BigInteger` may lose precision, as it applies the rules 
-described in [Precision and range].
+16. Setting as `BigInteger` will lose precision for values with more digits than
+the target type. It applies the rules described in [Precision and range].
 
 17. Values can also be set and retrieved as types `Decimal32`, `Decimal64` and 
 `Decimal128` from the `org.firebirdsql.extern.decimal` package. Where `Decimal64`
