@@ -37,6 +37,7 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 public class TestFBResultSet extends FBJUnit4TestBase {
 
@@ -384,6 +385,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
      */
     @Test
     public void testBugReport1() throws Exception {
+        assumeTrue("Test requires UDF support", getDefaultSupportInfo().supportsNativeUserDefinedFunctions());
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
         executeDDL(connection, CREATE_SUBSTR_FUNCTION);
 

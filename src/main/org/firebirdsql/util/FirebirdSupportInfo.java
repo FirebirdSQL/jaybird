@@ -30,6 +30,7 @@ import java.sql.SQLException;
  * <p>
  * Intended as a repository for Jaybird to check for functionality support, or tests to check their assumptions, or
  * decide on test or application behavior based on functionality support.
+ * </p>
  * <p>
  * Primary reason for existence of this class is to support version dependent functionality in Jaybird or
  * version dependent tests in the Jaybird test suite, so feature checks are only added when they are necessary for
@@ -66,6 +67,23 @@ public final class FirebirdSupportInfo {
      */
     public boolean isVersionEqualOrAbove(int majorVersion, int minorVersion) {
         return serverVersion.isEqualOrAbove(majorVersion, minorVersion);
+    }
+
+    /**
+     * Check if the major.minor of this version is below the specified version.
+     * <p>
+     * Equivalent to {@code !isVersionEqualOrAbove(majorVersion, minorVersion)}.
+     * </p>
+     *
+     * @param majorVersion
+     *         Major version
+     * @param minorVersion
+     *         Minor version
+     * @return {@code true} when current major is smaller than the specified major, or major is same and minor is
+     * smaller than the specified minor
+     */
+    public boolean isVersionBelow(int majorVersion, int minorVersion) {
+        return !isVersionEqualOrAbove(majorVersion, minorVersion);
     }
 
     /**
@@ -202,7 +220,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when {@code isc_spb_sec_userid} and {@code isc_spb_sec_groupid} are supported.
      */
     public boolean supportsUserAndGroupIdInUser() {
-        return serverVersion.getMajorVersion() < 3;
+        return isVersionBelow(3, 0);
     }
 
     /**
@@ -343,6 +361,20 @@ public final class FirebirdSupportInfo {
     }
 
     public boolean supportsWireEncryption() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
+     */
+    public boolean supportsNativeUserDefinedFunctions() {
+        return isVersionBelow(4, 0);
+    }
+
+    /**
+     * @return {@code true} when PSQL functions are supported
+     */
+    public boolean supportsPSQLFunctions() {
         return isVersionEqualOrAbove(3, 0);
     }
 
