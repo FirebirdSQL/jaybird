@@ -796,6 +796,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
     @Test
     public void testBooleanColumn() throws Exception {
+        assumeTrue("Test requires BOOLEAN support", supportInfoFor(con).supportsBoolean());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.BOOLEAN);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BOOLEAN");
@@ -808,6 +809,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
     @Test
     public void testDecfloat16Column() throws Exception {
+        assumeTrue("Test requires DECFLOAT(16) support", supportInfoFor(con).supportsDecfloat());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
@@ -819,6 +821,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
 
     @Test
     public void testDecfloat34Column() throws Exception {
+        assumeTrue("Test requires DECFLOAT(34) support", supportInfoFor(con).supportsDecfloat());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
