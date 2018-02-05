@@ -324,7 +324,7 @@ public class JnaStatement extends AbstractFbStatement {
 
                 if (rowDescriptor.getFieldDescriptor(idx).isVarying()) {
                     bufferOffset = 2;
-                    bufferLength = xSqlVar.sqldata.getShort(0) & 0xff;
+                    bufferLength = xSqlVar.sqldata.getShort(0) & 0xffff;
                 }
 
                 byte[] data = new byte[bufferLength];
