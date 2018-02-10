@@ -579,10 +579,18 @@ The following methods are implemented, but do not work as expected:
 * `java.sql.PreparedStatement`
     * `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
     * `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
+* `java.sql.CallableStatement`
+    * `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`. 
+      The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of
+      the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)` 
 * `java.sql.ResultSetMetaData`
     * `isReadOnly(i)` always returns false
     * `isWritable(i)` always returns true
     * `isDefinitivelyWritable(i)` always returns true
+* `java.sql.ResultSet`
+    * `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`. 
+      The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of
+      the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 
 Features
 ========
