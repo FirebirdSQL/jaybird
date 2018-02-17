@@ -82,10 +82,9 @@ public class MessageDump {
     }
 
     private static Map<Integer, String> extractErrorMessages(Connection connection) throws Exception {
-        Map<Integer, String> result = new TreeMap<Integer, String>();
+        Map<Integer, String> result = new TreeMap<>();
 
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt
                     .executeQuery("SELECT fac_code, number, text FROM messages");
 
@@ -98,17 +97,14 @@ public class MessageDump {
                         getErrorCode(code, number),
                         extractMessage(message));
             }
-        } finally {
-            stmt.close();
         }
         return result;
     }
 
     private static Map<Integer, String> extractSQLStates(Connection connection) throws SQLException {
-        Map<Integer, String> result = new TreeMap<Integer, String>();
+        Map<Integer, String> result = new TreeMap<>();
 
-        Statement stmt = connection.createStatement();
-        try {
+        try (Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt
                     .executeQuery("SELECT fac_code, number, sql_state FROM system_errors");
 
@@ -121,8 +117,6 @@ public class MessageDump {
                         getErrorCode(code, number),
                         extractMessage(sqlState));
             }
-        } finally {
-            stmt.close();
         }
 
         return result;
@@ -130,37 +124,27 @@ public class MessageDump {
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-            args = new String[] { "localhost:d:/data/db/fb3/msg.fdb" };
+            args = new String[] { "localhost:d:/data/db/fb4/msg.fdb" };
         }
 
-        Connection connection = getConnection(args[0]);
-        try {
+        try (Connection connection = getConnection(args[0])) {
             System.out.println("Retrieving error messages");
             final Map<Integer, String> errorMessages = extractErrorMessages(connection);
-            final FileOutputStream errorStream = new FileOutputStream("./error.properties");
-            try {
+            try (FileOutputStream errorStream = new FileOutputStream("./error.properties")) {
                 store(errorMessages, errorStream, null);
-            } finally {
-                errorStream.close();
             }
 
             System.out.println("Retrieving SQL State values");
             final Map<Integer, String> sqlStates = extractSQLStates(connection);
-            final FileOutputStream sqlstateStream = new FileOutputStream("./sqlstates.properties");
-            try {
+            try (FileOutputStream sqlstateStream = new FileOutputStream("./sqlstates.properties")) {
                 store(sqlStates, sqlstateStream, null);
-            } finally {
-                sqlstateStream.close();
             }
-        } finally {
-            connection.close();
         }
     }
 
     public static void store(Map<Integer, String> map, OutputStream out, String header)
             throws IOException {
-        BufferedWriter awriter;
-        awriter = new BufferedWriter(new OutputStreamWriter(out, "8859_1"));
+        BufferedWriter awriter = new BufferedWriter(new OutputStreamWriter(out, "8859_1"));
         if (header != null) writeln(awriter, "#" + header);
         writeln(awriter, "#" + new java.util.Date().toString());
         for (Map.Entry<Integer, String> entry : map.entrySet()) {
