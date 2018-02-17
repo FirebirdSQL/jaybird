@@ -557,6 +557,11 @@ public interface ISCConstants {
     int isc_info_sql_records             = 23;
     int isc_info_sql_batch_fetch         = 24;
     int isc_info_sql_relation_alias      = 25;
+    int isc_info_sql_explain_plan        = 26;
+    int isc_info_sql_stmt_flags          = 27;
+    int isc_info_sql_stmt_timeout_user   = 28;
+    int isc_info_sql_stmt_timeout_run    = 29;
+    int isc_info_sql_stmt_blob_align     = 30;
 
     /*********************************/
     /* SQL information return values */
@@ -628,6 +633,7 @@ public interface ISCConstants {
     int isc_info_ods_version = 32;
     int isc_info_ods_minor_version = 33;
     int isc_info_no_reserve = 34;
+    /* Begin deprecated WAL and JOURNAL items. */
     int isc_info_logfile = 35;
     int isc_info_cur_logfile_name = 36;
     int isc_info_cur_log_part_offset = 37;
@@ -644,6 +650,7 @@ public interface ISCConstants {
     int isc_info_wal_avg_io_size = 49;
     int isc_info_wal_num_commits = 50;
     int isc_info_wal_avg_grpc_size = 51;
+    /* End deprecated WAL and JOURNAL items. */
     int isc_info_forced_writes = 52;
     int isc_info_user_names = 53;
     int isc_info_page_errors = 54;
@@ -672,6 +679,27 @@ public interface ISCConstants {
     int isc_info_active_tran_count = 110;
     int isc_info_creation_date = 111;
     int fb_info_page_contents = 113;
+    int fb_info_implementation = 114;
+    int fb_info_page_warns = 115;
+    int fb_info_record_warns = 116;
+    int fb_info_bpage_warns = 117;
+    int fb_info_dpage_warns = 118;
+    int fb_info_ipage_warns = 119;
+    int fb_info_ppage_warns = 120;
+    int fb_info_tpage_warns = 121;
+    int fb_info_pip_errors = 122;
+    int fb_info_pip_warns = 123;
+    int fb_info_pages_used = 124;
+    int fb_info_pages_free = 125;
+    // codes 126 and 127 are used for special purposes do not use them here
+    int fb_info_ses_idle_timeout_db = 129;
+    int fb_info_ses_idle_timeout_att = 130;
+    int fb_info_ses_idle_timeout_run = 131;
+    int fb_info_conn_flags = 132;
+    int fb_info_crypt_key = 133;
+    int fb_info_crypt_state = 134;
+    int fb_info_statement_timeout_db = 135;
+    int fb_info_statement_timeout_att = 136;
 
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;
@@ -739,6 +767,9 @@ public interface ISCConstants {
     int isc_info_db_impl_linux_hppa = 82;
     int isc_info_db_impl_linux_alpha = 83;
     int isc_info_db_impl_linux_arm64 = 84;
+    int isc_info_db_impl_linux_ppc64el = 85;
+    int isc_info_db_impl_linux_ppc64 = 86;
+    int isc_info_db_impl_linux_m68k = 87;
 
     int isc_info_db_class_access = 1;
     int isc_info_db_class_y_valve = 2;
@@ -798,6 +829,20 @@ public interface ISCConstants {
     int isc_info_tra_isolation = 8;
     int isc_info_tra_access = 9;
     int isc_info_tra_lock_timeout = 10;
+    int fb_info_tra_dbpath = 11;
+
+    // isc_info_tra_isolation responses
+    int isc_info_tra_consistency = 1;
+    int isc_info_tra_concurrency = 2;
+    int isc_info_tra_read_committed = 3;
+
+    // isc_info_tra_read_committed options
+    int isc_info_tra_no_rec_version = 0;
+    int isc_info_tra_rec_version = 1;
+
+    // isc_info_tra_access responses
+    int isc_info_tra_readonly = 0;
+    int isc_info_tra_readwrite = 1;
 
     /****************************************/
     /* Cancel types for fb_cancel_operation */
@@ -1614,6 +1659,111 @@ public interface ISCConstants {
     int isc_crdb_load                        = 335545097;
     int isc_crdb_nodb                        = 335545098;
     int isc_crdb_notable                     = 335545099;
+    int isc_interface_version_too_old        = 335545100;
+    int isc_fun_param_mismatch               = 335545101;
+    int isc_savepoint_backout_err            = 335545102;
+    int isc_domain_primary_key_notnull       = 335545103;
+    int isc_invalid_attachment_charset       = 335545104;
+    int isc_map_down                         = 335545105;
+    int isc_login_error                      = 335545106;
+    int isc_already_opened                   = 335545107;
+    int isc_bad_crypt_key                    = 335545108;
+    int isc_encrypt_error                    = 335545109;
+    int isc_max_idx_depth                    = 335545110;
+    int isc_wrong_prvlg                      = 335545111;
+    int isc_miss_prvlg                       = 335545112;
+    int isc_crypt_checksum                   = 335545113;
+    int isc_not_dba                          = 335545114;
+    int isc_no_cursor                        = 335545115;
+    int isc_dsql_window_incompat_frames      = 335545116;
+    int isc_dsql_window_range_multi_key      = 335545117;
+    int isc_dsql_window_range_inv_key_type   = 335545118;
+    int isc_dsql_window_frame_value_inv_type = 335545119;
+    int isc_window_frame_value_invalid       = 335545120;
+    int isc_dsql_window_not_found            = 335545121;
+    int isc_dsql_window_cant_overr_part      = 335545122;
+    int isc_dsql_window_cant_overr_order     = 335545123;
+    int isc_dsql_window_cant_overr_frame     = 335545124;
+    int isc_dsql_window_duplicate            = 335545125;
+    int isc_sql_too_long                     = 335545126;
+    int isc_cfg_stmt_timeout                 = 335545127;
+    int isc_att_stmt_timeout                 = 335545128;
+    int isc_req_stmt_timeout                 = 335545129;
+    int isc_att_shut_killed                  = 335545130;
+    int isc_att_shut_idle                    = 335545131;
+    int isc_att_shut_db_down                 = 335545132;
+    int isc_att_shut_engine                  = 335545133;
+    int isc_overriding_without_identity      = 335545134;
+    int isc_overriding_system_invalid        = 335545135;
+    int isc_overriding_user_invalid          = 335545136;
+    int isc_overriding_system_missing        = 335545137;
+    int isc_decprecision_err                 = 335545138;
+    int isc_decfloat_divide_by_zero          = 335545139;
+    int isc_decfloat_inexact_result          = 335545140;
+    int isc_decfloat_invalid_operation       = 335545141;
+    int isc_decfloat_overflow                = 335545142;
+    int isc_decfloat_underflow               = 335545143;
+    int isc_subfunc_notdef                   = 335545144;
+    int isc_subproc_notdef                   = 335545145;
+    int isc_subfunc_signat                   = 335545146;
+    int isc_subproc_signat                   = 335545147;
+    int isc_subfunc_defvaldecl               = 335545148;
+    int isc_subproc_defvaldecl               = 335545149;
+    int isc_subfunc_not_impl                 = 335545150;
+    int isc_subproc_not_impl                 = 335545151;
+    int isc_sysf_invalid_hash_algorithm      = 335545152;
+    int isc_expression_eval_index            = 335545153;
+    int isc_decfloat_trap                    = 335545154;
+    int isc_decfloat_round                   = 335545155;
+    int isc_sysf_invalid_first_last_part     = 335545156;
+    int isc_sysf_invalid_date_timestamp      = 335545157;
+    int isc_precision_err2                   = 335545158;
+    int isc_bad_batch_handle                 = 335545159;
+    int isc_intl_char                        = 335545160;
+    int isc_null_block                       = 335545161;
+    int isc_mixed_info                       = 335545162;
+    int isc_unknown_info                     = 335545163;
+    int isc_bpb_version                      = 335545164;
+    int isc_user_manager                     = 335545165;
+    int isc_icu_entrypoint                   = 335545166;
+    int isc_icu_library                      = 335545167;
+    int isc_metadata_name                    = 335545168;
+    int isc_tokens_parse                     = 335545169;
+    int isc_iconv_open                       = 335545170;
+    int isc_batch_compl_range                = 335545171;
+    int isc_batch_compl_detail               = 335545172;
+    int isc_deflate_init                     = 335545173;
+    int isc_inflate_init                     = 335545174;
+    int isc_big_segment                      = 335545175;
+    int isc_batch_policy                     = 335545176;
+    int isc_batch_defbpb                     = 335545177;
+    int isc_batch_align                      = 335545178;
+    int isc_multi_segment_dup                = 335545179;
+    int isc_non_plugin_protocol              = 335545180;
+    int isc_message_format                   = 335545181;
+    int isc_batch_param_version              = 335545182;
+    int isc_batch_msg_long                   = 335545183;
+    int isc_batch_open                       = 335545184;
+    int isc_batch_type                       = 335545185;
+    int isc_batch_param                      = 335545186;
+    int isc_batch_blobs                      = 335545187;
+    int isc_batch_blob_append                = 335545188;
+    int isc_batch_stream_align               = 335545189;
+    int isc_batch_rpt_blob                   = 335545190;
+    int isc_batch_blob_buf                   = 335545191;
+    int isc_batch_small_data                 = 335545192;
+    int isc_batch_cont_bpb                   = 335545193;
+    int isc_batch_big_bpb                    = 335545194;
+    int isc_batch_big_segment                = 335545195;
+    int isc_batch_big_seg2                   = 335545196;
+    int isc_batch_blob_id                    = 335545197;
+    int isc_batch_too_big                    = 335545198;
+    int isc_num_literal                      = 335545199;
+    int isc_map_event                        = 335545200;
+    int isc_map_overflow                     = 335545201;
+    int isc_hdr_overflow                     = 335545202;
+    int isc_vld_plugins                      = 335545203;
+    int isc_db_crypt_key                     = 335545204;
     int isc_gfix_db_name                     = 335740929;
     int isc_gfix_invalid_sw                  = 335740930;
     int isc_gfix_incmp_sw                    = 335740932;
@@ -1646,7 +1796,9 @@ public interface ISCConstants {
     int isc_dsql_transitional_numeric        = 336003075;
     int isc_dsql_dialect_warning_expr        = 336003076;
     int isc_sql_db_dialect_dtype_unsupport   = 336003077;
-    int isc_isc_sql_dialect_conflict_num     = 336003079;
+    int isc_sql_dialect_conflict_num         = 336003079;
+    @Deprecated
+    int isc_isc_sql_dialect_conflict_num = isc_sql_dialect_conflict_num;
     int isc_dsql_warning_number_ambiguous    = 336003080;
     int isc_dsql_warning_number_ambiguous1   = 336003081;
     int isc_dsql_warn_precision_ambiguous    = 336003082;
@@ -1672,6 +1824,15 @@ public interface ISCConstants {
     int isc_dsql_incompatible_trigger_type   = 336003102;
     int isc_dsql_db_trigger_type_cant_change = 336003103;
     int isc_dsql_record_version_table        = 336003104;
+    int isc_dsql_invalid_sqlda_version       = 336003105;
+    int isc_dsql_sqlvar_index                = 336003106;
+    int isc_dsql_no_sqlind                   = 336003107;
+    int isc_dsql_no_sqldata                  = 336003108;
+    int isc_dsql_no_input_sqlda              = 336003109;
+    int isc_dsql_no_output_sqlda             = 336003110;
+    int isc_dsql_wrong_param_num             = 336003111;
+    int isc_dsql_invalid_drop_ss_clause      = 336003112;
+    int isc_upd_ins_cannot_default           = 336003113;
     int isc_dyn_filter_not_found             = 336068645;
     int isc_dyn_func_not_found               = 336068649;
     int isc_dyn_index_not_found              = 336068656;
@@ -1733,7 +1894,7 @@ public interface ISCConstants {
     int isc_dyn_procnotdef_package           = 336068872;
     int isc_dyn_funcsignat_package           = 336068873;
     int isc_dyn_procsignat_package           = 336068874;
-    int isc_dyn_defvaldecl_package           = 336068875;
+    int isc_dyn_defvaldecl_package_proc      = 336068875;
     int isc_dyn_package_body_exists          = 336068877;
     int isc_dyn_invalid_ddl_func             = 336068878;
     int isc_dyn_newfc_oldsyntax              = 336068879;
@@ -1747,6 +1908,8 @@ public interface ISCConstants {
     int isc_dyn_cant_modify_sysobj           = 336068895;
     int isc_dyn_cant_use_zero_increment      = 336068896;
     int isc_dyn_cant_use_in_foreignkey       = 336068897;
+    int isc_dyn_defvaldecl_package_func      = 336068898;
+    int isc_dyn_cant_use_zero_inc_ident      = 336068904;
     int isc_gbak_unknown_switch              = 336330753;
     int isc_gbak_page_size_missing           = 336330754;
     int isc_gbak_page_size_toobig            = 336330755;
@@ -1970,6 +2133,10 @@ public interface ISCConstants {
     int isc_dsql_firstskip_rows              = 336397327;
     int isc_dsql_wlock_aggregates            = 336397328;
     int isc_dsql_wlock_conflict              = 336397329;
+    int isc_dsql_max_exception_arguments     = 336397330;
+    int isc_dsql_string_byte_length          = 336397331;
+    int isc_dsql_string_char_length          = 336397332;
+    int isc_dsql_max_nesting                 = 336397333;
     int isc_gsec_cant_open_db                = 336723983;
     int isc_gsec_switches_error              = 336723984;
     int isc_gsec_no_op_spec                  = 336723985;
@@ -2061,6 +2228,7 @@ public interface ISCConstants {
     int isc_nbackup_switchd_parameter        = 337117255;
     int isc_nbackup_user_stop                = 337117257;
     int isc_nbackup_deco_parse               = 337117259;
+    int isc_nbackup_lostrec_guid_db          = 337117261;
     int isc_trace_conflict_acts              = 337182750;
     int isc_trace_act_notfound               = 337182751;
     int isc_trace_switch_once                = 337182752;
@@ -2072,7 +2240,7 @@ public interface ISCConstants {
     int isc_trace_switch_param_miss          = 337182758;
     int isc_trace_param_act_notcompat        = 337182759;
     int isc_trace_mandatory_switch_miss      = 337182760;
-    int isc_err_max                          = 1237;
+    int isc_err_max                          = 1358;
 
     /*******************/
     /* SQL definitions */
