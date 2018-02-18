@@ -28,9 +28,8 @@ import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +37,7 @@ import java.util.regex.Pattern;
  * This class returns messages for the specified error code.
  * <p>
  * It loads all messages during the class initialization and keeps messages
- * in the static <code>java.util.Properties</code> variable.
+ * in the static {@code errorLookup} variable.
  * </p>
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
@@ -47,97 +46,27 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class GDSExceptionHelper {
+public final class GDSExceptionHelper {
 
     private static final Logger log = LoggerFactory.getLogger(GDSExceptionHelper.class);
 
     private static final Pattern MESSAGE_PARAM_PATTERN = Pattern.compile("\\{(\\d+)}");
-    private static final String MESSAGES = "isc_error_msg";
-    private static final String JAYBIRD_MESSAGES = "org/firebirdsql/jaybird_error_msg";
-    private static final String SQLSTATES = "isc_error_sqlstates";
-    private static final String JAYBIRD_SQLSTATES = "org/firebirdsql/jaybird_error_sqlstates";
-    private static final Map<Integer, String> messages;
-    private static final Map<Integer, String> sqlstates;
+    private static final MessageLookup MESSAGE_LOOKUP;
 
     /*
      * Initializes the messages map.
      */
     static {
         try {
-            messages = loadResource(false, MESSAGES, JAYBIRD_MESSAGES);
-            sqlstates = loadResource(true, SQLSTATES, JAYBIRD_SQLSTATES);
+            MESSAGE_LOOKUP = MessageLoader.loadErrorMessages();
         } catch (Exception ex) {
             log.error("Exception in init of GDSExceptionHelper, unable to load error information", ex);
             throw new ExceptionInInitializerError(ex);
         }
     }
 
-    private static Map<Integer, String> loadResource(boolean deduplicate, String... resources) throws Exception {
-        Properties properties = new Properties();
-        Exception firstException = null;
-        // Load from property files
-        for (String resource : resources) {
-            String resourceFile = "/" + resource.replace('.', '/') + ".properties";
-            try (InputStream in = getResourceAsStream(resourceFile)) {
-                if (in != null) {
-                    properties.load(in);
-                } else {
-                    log.warn("Unable to load resource; resource " + resource + " is not found");
-                }
-            } catch (IOException ioex) {
-                log.error("Unable to load resource " + resource, ioex);
-                if (firstException == null) {
-                    firstException = ioex;
-                }
-            }
-        }
-
-        if (firstException != null) {
-            throw firstException;
-        }
-
-        // Use of HashMap avoids unnecessary synchronization in Properties
-        return asErrorCodeMapping(deduplicate, properties);
-    }
-
-    private static Map<Integer, String> asErrorCodeMapping(boolean deduplicate, Properties properties) {
-        // Convert to hash map and deduplicate values if specified
-        // We are not interning to avoid polluting the string constant pool
-        final Map<String, String> deduplicationMap = deduplicate
-                ? new HashMap<String, String>(128)
-                : Collections.<String, String>emptyMap();
-        final Map<Integer, String> propsAsMap = new HashMap<>(properties.size(), 1);
-
-        for (Object key : properties.keySet()) {
-            if (!(key instanceof String)) continue;
-            try {
-                final String keyString = (String) key;
-                final Integer errorCode = Integer.valueOf(keyString);
-
-                String value = properties.getProperty(keyString);
-                if (deduplicate) {
-                    if (deduplicationMap.containsKey(value)) {
-                        value = deduplicationMap.get(value);
-                    } else {
-                        deduplicationMap.put(value, value);
-                    }
-                }
-
-                propsAsMap.put(errorCode, value);
-            } catch (NumberFormatException e) {
-                log.warn("Key " + key + " is not a number; ignored", e);
-            }
-        }
-        return propsAsMap;
-    }
-
-    private static InputStream getResourceAsStream(String res) {
-        InputStream in = GDSExceptionHelper.class.getResourceAsStream(res);
-        if (in == null) {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            in = cl.getResourceAsStream(res);
-        }
-        return in;
+    private GDSExceptionHelper() {
+        // no instances
     }
 
     /**
@@ -148,7 +77,7 @@ public class GDSExceptionHelper {
      * @return instance of <code>GDSExceptionHelper.GDSMessage</code> class where you can set desired parameters.
      */
     public static GDSMessage getMessage(int code) {
-        final String message = messages.get(code);
+        final String message = MESSAGE_LOOKUP.getErrorMessage(code);
         return new GDSMessage(message != null ? message : "No message for code " + code + " found.");
     }
 
@@ -173,7 +102,7 @@ public class GDSExceptionHelper {
      * @return SQL state for the Firebird error code, or <code>defaultSQLState</code> if nothing found.
      */
     public static String getSQLState(int code, String defaultSQLState) {
-        final String sqlState = sqlstates.get(code);
+        final String sqlState = MESSAGE_LOOKUP.getSqlState(code);
         return sqlState != null ? sqlState : defaultSQLState;
     }
 
