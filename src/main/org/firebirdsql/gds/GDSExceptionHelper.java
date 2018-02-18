@@ -36,8 +36,7 @@ import java.util.regex.Pattern;
 /**
  * This class returns messages for the specified error code.
  * <p>
- * It loads all messages during the class initialization and keeps messages
- * in the static {@code errorLookup} variable.
+ * This loads all messages during class initialization.
  * </p>
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
