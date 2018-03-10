@@ -18,14 +18,11 @@
  */
 package org.firebirdsql.ds;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 
 import javax.sql.XAConnection;
@@ -44,19 +41,23 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
- * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in {@link org.firebirdsql.jca.TestFBXAResource}.
+ * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in
+ * {@link org.firebirdsql.jca.TestFBXAResource}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class TestFBXADataSource extends FBJUnit4TestBase {
+public class TestFBXADataSource {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
     
     private List<XAConnection> connections = new ArrayList<>();
 
-    protected FBXADataSource ds;
+    private FBXADataSource ds;
 
     @Before
     public void setUp() throws Exception {
@@ -80,6 +81,7 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
         for (XAConnection pc : connections) {
             closeQuietly(pc);
         }
+        connections.clear();
     }
     
     protected XAConnection getXAConnection() throws SQLException {
@@ -90,8 +92,6 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
 
     /**
      * Tests if the ConnectionPoolDataSource can create a PooledConnection
-     * 
-     * @throws SQLException
      */
     @Test
     public void testDataSource_start() throws SQLException {
@@ -101,8 +101,6 @@ public class TestFBXADataSource extends FBJUnit4TestBase {
     /**
      * Tests if the connection obtained from the PooledConnection can be used
      * and has expected defaults.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testConnection() throws SQLException {

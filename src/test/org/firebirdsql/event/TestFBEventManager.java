@@ -18,12 +18,10 @@
  */
 package org.firebirdsql.event;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.Unstable;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.sql.Connection;
@@ -31,13 +29,18 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.junit.Assert.assertEquals;
 
 /** 
  * Test the FBEventManager class
  */
-public class TestFBEventManager extends FBJUnit4TestBase {
+public class TestFBEventManager {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     private EventManager eventManager;
     private boolean eventManagerDisconnected;
@@ -60,11 +63,16 @@ public class TestFBEventManager extends FBJUnit4TestBase {
     private static final int SHORT_DELAY = 100;
     private static final int LONG_DELAY = 1000;
 
+    @BeforeClass
+    public static void setUpTables() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, TABLE_DEF);
+            executeDDL(connection, TRIGGER_DEF);
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
-        executeSql(TABLE_DEF);
-        executeSql(TRIGGER_DEF);
-
         eventManager = new FBEventManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
             eventManager.setHost(DB_SERVER_URL);

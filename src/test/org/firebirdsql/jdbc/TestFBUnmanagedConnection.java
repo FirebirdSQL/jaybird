@@ -18,9 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -35,13 +36,10 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Describe class <code>TestFBUnmanagedConnection</code> here.
- *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
- */
-public class TestFBUnmanagedConnection extends FBJUnit4TestBase {
+public class TestFBUnmanagedConnection {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     //@formatter:off
     private static final String CREATE_TEST_TABLE =

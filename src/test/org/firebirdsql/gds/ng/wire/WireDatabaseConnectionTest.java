@@ -19,15 +19,16 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.common.BlackholeServer;
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
 
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -39,10 +40,12 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class WireDatabaseConnectionTest extends FBJUnit4TestBase {
+public class WireDatabaseConnectionTest {
 
     @ClassRule
-    public static final GdsTypeRule testTypes = GdsTypeRule.excludesNativeOnly();
+    public static final RuleChain ruleChain = RuleChain
+            .outerRule(GdsTypeRule.excludesNativeOnly())
+            .around(UsesDatabase.usesDatabase());
 
     /**
      * IP address which does not exist (we simply assume that this site local

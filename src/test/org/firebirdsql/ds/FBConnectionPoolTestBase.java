@@ -18,25 +18,28 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.gds.impl.GDSType;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+
+import javax.sql.PooledConnection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.sql.PooledConnection;
-
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.gds.impl.GDSType;
-import org.junit.After;
-import org.junit.Before;
-
-import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 
 /**
  * Common testbase for tests using {@link FBConnectionPoolDataSource}
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class FBConnectionPoolTestBase extends FBJUnit4TestBase {
+public abstract class FBConnectionPoolTestBase {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     private List<PooledConnection> connections = new ArrayList<>();
     protected FBConnectionPoolDataSource ds;
@@ -63,6 +66,7 @@ public abstract class FBConnectionPoolTestBase extends FBJUnit4TestBase {
         for (PooledConnection pc : connections) {
             closeQuietly(pc);
         }
+        connections.clear();
     }
 
     protected PooledConnection getPooledConnection() throws SQLException {

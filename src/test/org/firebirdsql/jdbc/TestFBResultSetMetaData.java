@@ -20,9 +20,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.firebirdsql.common.rules.UsesDatabase;
+import org.junit.*;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
@@ -41,7 +40,10 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBResultSetMetaData extends FBJUnit4TestBase {
+public class TestFBResultSetMetaData {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -68,8 +70,8 @@ public class TestFBResultSetMetaData extends FBJUnit4TestBase {
         "SELECT * from RDB$DATABASE";
     //@formatter:on
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.put("lc_ctype", "UNICODE_FSS");
 
