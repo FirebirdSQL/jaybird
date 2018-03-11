@@ -27,7 +27,8 @@ import org.junit.Test;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link FBEscapedCallParser}.
@@ -35,7 +36,7 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBEscapedCallParser {
+public class FBEscapedCallParserTest {
     public static final String CALL_TEST_1 =
             "{call my_proc(?, {d 01-12-11})}";
 

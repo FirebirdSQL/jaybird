@@ -55,7 +55,7 @@ public final class FBEscapedParser {
     /**
      * Regular expression to check for existence of JDBC escapes, is used to
      * stop processing the entire SQL statement if it does not contain any of
-     * the substrings.
+     * the escape introducers.
      */
     private static final Pattern CHECK_ESCAPE_PATTERN = Pattern.compile(
             "\\{(?:(?:\\?\\s*=\\s*)?call|d|ts?|escape|fn|oj|limit)\\s",
@@ -69,8 +69,8 @@ public final class FBEscapedParser {
      * Creates a parser for JDBC escaped strings.
      *
      * @param mode
-     *            One of {@link EscapeParserMode#USE_BUILT_IN} or
-     *            {@link EscapeParserMode#USE_STANDARD_UDF}
+     *         One of {@link EscapeParserMode#USE_BUILT_IN} or
+     *         {@link EscapeParserMode#USE_STANDARD_UDF}
      */
     public FBEscapedParser(EscapeParserMode mode) {
         this.mode = mode;
@@ -85,9 +85,9 @@ public final class FBEscapedParser {
      * perform complete SQL parsing.
      *
      * @param sql
-     *            to test
+     *         to test
      * @return <code>true</code> if the <code>sql</code> is suspected to contain
-     *         escaped syntax.
+     * escaped syntax.
      */
     private boolean checkForEscapes(String sql) {
         return CHECK_ESCAPE_PATTERN.matcher(sql).find();
@@ -97,7 +97,7 @@ public final class FBEscapedParser {
      * Converts escaped parts in the passed SQL to native representation.
      *
      * @param sql
-     *            to parse
+     *         to parse
      * @return native form of the <code>sql</code>.
      */
     public String parse(final String sql) throws SQLException {
@@ -176,9 +176,9 @@ public final class FBEscapedParser {
      * Firebird SQL syntax.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param escaped
-     *            the part of escaped SQL between the '{' and '}'.
+     *         the part of escaped SQL between the '{' and '}'.
      */
     private void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
         final StringBuilder keyword = new StringBuilder();
@@ -229,9 +229,9 @@ public final class FBEscapedParser {
      * understandable format.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param dateStr
-     *            the date in the 'yyyy-mm-dd' format.
+     *         the date in the 'yyyy-mm-dd' format.
      */
     private void toDateString(final StringBuilder target, final CharSequence dateStr) throws FBSQLParseException {
         // use shorthand date cast (using just the string will not work in all contexts)
@@ -243,9 +243,9 @@ public final class FBEscapedParser {
      * understandable format.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param timeStr
-     *            the date in the 'hh:mm:ss' format.
+     *         the date in the 'hh:mm:ss' format.
      */
     private void toTimeString(final StringBuilder target, final CharSequence timeStr) throws FBSQLParseException {
         // use shorthand time cast (using just the string will not work in all contexts)
@@ -257,9 +257,9 @@ public final class FBEscapedParser {
      * Firebird understandable format.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param timestampStr
-     *            the date in the 'yyyy-mm-dd hh:mm:ss' format.
+     *         the date in the 'yyyy-mm-dd hh:mm:ss' format.
      */
     private void toTimestampString(final StringBuilder target, final CharSequence timestampStr)
             throws FBSQLParseException {
@@ -272,10 +272,10 @@ public final class FBEscapedParser {
      * procedure call.
      *
      * @param target
-     *            Target StringBuilder to append native procedure call to.
+     *         Target StringBuilder to append native procedure call to.
      * @param procedureCall
-     *            part of {call proc_name(...)} without curly braces and "call"
-     *            word.
+     *         part of {call proc_name(...)} without curly braces and "call"
+     *         word.
      */
     private void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
         FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
@@ -290,9 +290,9 @@ public final class FBEscapedParser {
      * syntax is the same.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param outerJoin
-     *            Outer join text
+     *         Outer join text
      */
     private void convertOuterJoin(final StringBuilder target, final CharSequence outerJoin) throws FBSQLParseException {
         target.append(outerJoin);
@@ -303,7 +303,7 @@ public final class FBEscapedParser {
      * escape clause for Firebird.
      *
      * @param escapeString
-     *            escape string to convert
+     *         escape string to convert
      */
     private void convertEscapeString(final StringBuilder target, final CharSequence escapeString) {
         target.append("ESCAPE ").append(escapeString);
@@ -325,7 +325,7 @@ public final class FBEscapedParser {
      * </p>
      *
      * @param limitClause
-     *            Limit clause
+     *         Limit clause
      */
     private void convertLimitString(final StringBuilder target, final CharSequence limitClause)
             throws FBSQLParseException {
@@ -348,11 +348,11 @@ public final class FBEscapedParser {
      * we do not change anything here, we hope that all UDF are defined.
      *
      * @param target
-     *            Target StringBuilder to append to.
+     *         Target StringBuilder to append to.
      * @param escapedFunction
-     *            escaped function call
+     *         escaped function call
      * @throws FBSQLParseException
-     *             if something was wrong.
+     *         if something was wrong.
      */
     private void convertEscapedFunction(final StringBuilder target, final CharSequence escapedFunction)
             throws FBSQLParseException {
@@ -481,10 +481,10 @@ public final class FBEscapedParser {
          * Decides on the next ParserState based on the input character.
          *
          * @param inputChar
-         *            Input character
+         *         Input character
          * @return Next state
          * @throws FBSQLParseException
-         *             For incorrect character for current state during parsing
+         *         For incorrect character for current state during parsing
          */
         protected abstract ParserState nextState(char inputChar) throws FBSQLParseException;
     }
@@ -493,7 +493,7 @@ public final class FBEscapedParser {
         /**
          * Use built-in functions if available.
          * <p>
-         * This may still result in a UDF function beign used if the UDF matches
+         * This may still result in a UDF function being used if the UDF matches
          * naming and arguments of the function (or function template)
          * </p>
          */

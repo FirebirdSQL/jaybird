@@ -64,6 +64,7 @@ public final class SQLStateConstants {
     public static final String SQL_STATE_COMM_LINK_FAILURE = "08S01";
 
     public static final String SQL_STATE_SYNTAX_ERROR = "42000";
+    public static final String SQL_STATE_INVALID_ESCAPE_SEQ = SQL_STATE_SYNTAX_ERROR;
 
     private SQLStateConstants() {
         // no instances

@@ -548,6 +548,108 @@ set or retrieved using `String` or the `DecimalXX` types, or the result of
 rounding. This behaviour is subject to change, and future releases may 'round' 
 to `0` (aka `+0`).
 
+Improved JDBC function escape support
+-------------------------------------
+
+Revised support for JDBC function escapes with optional parameters, and added 
+support for a number of previously unsupported functions or options.
+
+If you only target Firebird, then we suggest you do not use JDBC function 
+escapes.
+
+### New JDBC function escapes ###
+
+-   `DEGREES(number)` - Degrees in _number_ radians; implemented as 
+`((number)*180.0/PI())`
+-   `RADIANS(number)` - Radians in _number_ degrees; implemented as 
+`((number)*PI()/180.0)`
+-   `QUARTER(date)` - Quarter of year for date; implemented as 
+`(1+(EXTRACT(MONTH FROM date)-1)/3)`
+-   `TIMESTAMPADD(interval, count, timestamp)` - Implemented using `DATEADD` 
+with the following caveats:
+
+    -   _interval_ `SQL_TSI_FRAC_SECOND` unit is nanoseconds and will be 
+    simulated by using `MILLISECOND` and the count multiplied by `1.0e-6` to 
+    convert the value to milliseconds.
+    -   _interval_ `SQL_TSI_QUARTER` will be simulated by using `MONTH` and 
+    _count_ multiplied by 3.
+    -   _interval_ values that are not specified in JDBC will be passed as is, 
+    resulting in an error from the Firebird engine if it is an invalid interval 
+    name for `DATEADD`.
+-   `TIMESTAMPDIFF(interval, timestamp1, timestamp2)` - Implemented using 
+`DATEDIFF` with the following caveats:
+
+    -   _interval_  `SQL_TSI_FRAC_SECOND` unit is nanoseconds and will be 
+    simulated by using `MILLISECOND` and the result multiplied by `1.0e6` and 
+    cast to `BIGINT` to convert the value to nanoseconds.
+    -   Value `SQL_TSI_QUARTER` will be simulated by using `MONTH` and the 
+    result divided by 3.
+    -   Contrary to specified in the JDBC specification, the resulting value 
+    will be `BIGINT`, not `INTEGER`.
+    -   _interval_ values that are not specified in JDBC will be passed as is, 
+    resulting in an error from the Firebird engine if it is an invalid interval 
+    name for `DATEDIFF`.
+
+### Improved JDBC function escapes ###
+
+-   `CHAR_LENGTH(string[, CHARACTERS|OCTETS])` - The optional second parameter 
+with `CHARACTERS` or `OCTETS` is now supported.
+    
+    Absence of second parameter, or `CHARACTERS` maps to `CHAR_LENGTH`, `OCTETS` maps to
+`OCTET_LENGTH`
+-   `CHARACTER_LENGTH(string[, CHARACTERS|OCTETS])` - see `CHAR_LENGTH`
+-   `CONCAT(string1, string2)` - Added parentheses around expression to prevent 
+ambiguity or incorrect evaluation order.
+-  `LENGTH(string[, CHARACTERS|OCTETS])` - The optional second parameter with 
+`CHARACTERS` or `OCTETS` is now supported.
+
+    The JDBC specification specifies _Number of characters in string, excluding 
+trailing blanks_, we right-trim (`TRIM(TRAILING FROM value)`) the string before 
+passing the value to either `CHAR_LENGTH` or `OCTETS_LENGTH`. As a result, the 
+interpretation of what is a blank depends on the type of _value_. Is the value a 
+normal `(VAR)CHAR` (non-octets), then the blank is space (0x20), for a 
+`VAR(CHAR)CHARACTER SET OCTETS / (VAR)BINARY` the blank is NUL (0x00). This means 
+that the optional `CHARACTERS|OCTETS` parameter has no influence on which blanks 
+are trimmed, but only whether we count characters or bytes after trimming.
+-   `LOCATE(string1, string2[, start])` - The third parameter _start_ is now 
+optional.
+-   `POSITION(substring IN string[, CHARACTERS|OCTETS])` - The optional second 
+parameter is now supported if `CHARACTERS`. `OCTETS` is not supported.
+-   `CONVERT(value, SQLtype)` - See [Improved CONVERT support].
+
+### Improved CONVERT support ###
+
+In Jaybird 3, `CONVERT(value, SQLtype)` would map directly to 
+`CAST(value as SQLtype)`, we have improved support to better conform to the JDBC 
+requirements, with some caveats:
+
+-   Both the `SQL_<datatype>` and `<datatype>` mapping is now supported
+-   Contrary to the specification, we allow explicit length or precision and 
+scale parameters
+-   `(SQL_)VARCHAR`, `(SQL_)NVARCHAR` (and _value_ not a parameter (`?`)) 
+without explicit length is converted using `TRIM(TRAILING FROM value)`, which 
+means the result is `VARCHAR` except for blobs where this will result in a blob; 
+national character set will be lost. If _value_ is a parameter (`?`), and no 
+length is specified, then a length of 50 will be applied (cast to 
+`(N)VARCHAR(50)`).
+-   `(SQL_)CHAR`, `(SQL_)NCHAR` without explicit length will be cast to 
+`(N)CHAR(50)`
+-   `(SQL_)BINARY`, and `(SQL_)VARBINARY` without explicit length will be cast 
+to `(VAR)CHAR(50) CHARACTER SET OCTETS`. With explicit length, 
+`CHARACTER SET OCTETS` is appended.
+-   `(SQL_)LONGVARCHAR`, `(SQL_)LONGNVARCHAR`, `(SQL_)CLOB`, `(SQL_)NCLOB` will 
+be cast to `BLOB SUB_TYPE TEXT`, national character set will be lost
+-   `(SQL_)LONGVARBINARY`, `(SQL_)BLOB` will be cast to `BLOB SUB_TYPE BINARY`
+-   `(SQL_)TINYINT` is mapped to `SMALLINT`
+-   `(SQL_)ROWID` is not supported as length of `DB_KEY` values depend on the 
+context
+-   `(SQL_)DECIMAL` and `(SQL_)NUMERIC` without precision and scale are passed
+as is, in current Firebird versions, this means the value will be equivalent to
+`DECIMAL(9,0)` (which is equivalent to `INTEGER`)
+-   Unsupported/unknown _SQLtype_ values (or invalid length or precision and 
+scale) are passed as is to cast, resulting in an error from the Firebird engine 
+if the resulting cast is invalid
+
 Potentially breaking changes
 ----------------------------
 
@@ -705,6 +807,13 @@ The following methods will be removed in Jaybird 5:
     `MaintenanceManager.getLimboTransactions()` instead.
 -   `TraceManager.loadConfigurationFromFile(String)`, use standard Java 
     functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
+    
+### Removal of deprecated constants ###
+
+The following constants will be removed in Jaybird 5:
+
+-   All `SQL_STATE_*` constants in `FBSQLParseException` will be removed. Use equivalent 
+    constants in `org.firebirdsql.jdbc.SQLStateConstants`.
     
 Compatibility notes
 ===================
