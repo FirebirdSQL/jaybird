@@ -54,7 +54,8 @@ final class MessageLoader {
         int size = MessageLookup.FACILITY_SIZE;
         final List<Vector<String>> vectors = new ArrayList<>(size);
         while (size-- > 0) {
-            vectors.add(new Vector<>());
+            //noinspection Convert2Diamond : Keep Java 7 happy
+            vectors.add(new Vector<String>());
         }
         return vectors;
     }
