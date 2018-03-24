@@ -50,7 +50,7 @@ final class MessageLoader {
         facilityStates = createFacilityVectorList();
     }
 
-    private List<Vector<String>> createFacilityVectorList() {
+    private static List<Vector<String>> createFacilityVectorList() {
         int size = MessageLookup.FACILITY_SIZE;
         final List<Vector<String>> vectors = new ArrayList<>(size);
         while (size-- > 0) {
