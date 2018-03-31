@@ -88,6 +88,7 @@ public class TestFBPreparedStatementMetaData {
         "  blob_minus_one BLOB SUB_TYPE -1 " +
         "  /* boolean */ " +
         "  /* decfloat */ " +
+        "  /* extended numerics */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -98,8 +99,10 @@ public class TestFBPreparedStatementMetaData {
             "timestamp_field, blob_field, blob_text_field, blob_minus_one" +
             "  /* boolean */ " +
             "  /* decfloat */ " +
+            "  /* extended numerics */ " +
             ") " +
-            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? /* boolean-param *//* decfloat-param */)";
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? "
+                    + "/* boolean-param *//* decfloat-param *//* extended-num-param*/)";
     //@formatter:on
 
     private static FBManager fbManager;
@@ -135,6 +138,12 @@ public class TestFBPreparedStatementMetaData {
                     ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
             testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
                     .replace("/* decfloat-param */", ", ?, ?");
+        }
+        if (supportInfo.supportsDecimalPrecision(34)) {
+            createTable = createTable.replace("/* extended numerics */",
+                    ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
+            testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
+                    .replace("/* extended-num-param*/", ", ?, ?");
         }
         executeCreateTable(connection, createTable);
 
@@ -194,6 +203,10 @@ public class TestFBPreparedStatementMetaData {
         if (supportInfo.supportsDecfloat()) {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, parameterNullable, true, "decfloat16_field"));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, parameterNullable, true, "decfloat34_field"));
+        }
+        if (supportInfo.supportsDecimalPrecision(34)) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 34, 20, parameterNullable, true, "col_numeric25_20"));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 34, 5, parameterNullable, true, "col_decimal30_5"));
         }
 
         return testData;

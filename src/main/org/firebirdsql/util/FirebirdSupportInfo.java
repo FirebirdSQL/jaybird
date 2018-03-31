@@ -113,6 +113,23 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @param precision Precision
+     * @return {@code true} when DECIMAL (and NUMERIC) support the supplied precision; 0 or negative precision always
+     * return {@code false}
+     */
+    public boolean supportsDecimalPrecision(int precision) {
+        if (precision < 1) {
+            return false;
+        } else if (precision <= 18) {
+            // all Firebird versions
+            return true;
+        } else if (precision <= 34) {
+            return isVersionEqualOrAbove(4, 0);
+        }
+        return false;
+    }
+
+    /**
      * @return <code>true</code> when the COMMENT statement is supported
      */
     public boolean supportsComment() {

@@ -22,6 +22,7 @@
 package org.firebirdsql.extern.decimal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * An IEEE-754 Decimal64.
@@ -58,6 +59,19 @@ public final class Decimal64 extends Decimal<Decimal64> {
         return DECIMAL_64_FACTORY;
     }
 
+    /**
+     * Parses the provided byte array to a {@code Decimal64}.
+     * <p>
+     * This method parses network byte-order (aka big-endian). When using little-endian order, you will need to
+     * reverse the bytes in the array first.
+     * </p>
+     *
+     * @param decBytes
+     *         Bytes of the Decimal64 value in network byte-order (aka big-endian)
+     * @return Instance of {@code Decimal64}
+     * @throws IllegalArgumentException
+     *         When {@code decBytes} is not 8 bytes long
+     */
     public static Decimal64 parseBytes(final byte[] decBytes) {
         return DECIMAL_64_CODEC.parseBytes(decBytes);
     }
@@ -92,6 +106,55 @@ public final class Decimal64 extends Decimal<Decimal64> {
      */
     public static Decimal64 valueOf(final BigDecimal value, final OverflowHandling overflowHandling) {
         return DECIMAL_64_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @return Decimal64 equivalent
+     */
+    public static Decimal64 valueOf(final BigInteger value) {
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be handled according to the specified overflow handling.
+     * </p>
+     * <p>
+     * Calling this method is equivalent to {@code valueOf(new BigDecimal(value), overflowHandling)}.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @param overflowHandling
+     *         Handling of overflows
+     * @return Decimal64 equivalent
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     * @see #valueOfExact(BigInteger)
+     */
+    public static Decimal64 valueOf(final BigInteger value, final OverflowHandling overflowHandling) {
+        return DECIMAL_64_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal64} from {@code value}, rejecting values that would lose precision due to rounding.
+     *
+     * @param value Big integer value to convert
+     * @throws DecimalOverflowException
+     *         If the value is out of range.
+     * @return Decimal64 equivalent
+     * @see #valueOf(BigInteger, OverflowHandling)
+     */
+    public static Decimal64 valueOfExact(final BigInteger value) {
+        return DECIMAL_64_FACTORY.valueOfExact(value);
     }
 
     /**

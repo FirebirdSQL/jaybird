@@ -548,6 +548,21 @@ set or retrieved using `String` or the `DecimalXX` types, or the result of
 rounding. This behaviour is subject to change, and future releases may 'round' 
 to `0` (aka `+0`).
 
+Firebird 4 extended numeric precision support
+---------------------------------------------
+
+Added support for the extended precision for `NUMERIC` and `DECIMAL` introduced 
+in Firebird 4, increasing the maximum precision to 34. Technically, this
+extended precision is supported by a IEEE-754 Decimal128 which is also used for
+`DECFLOAT` support.
+
+Any `NUMERIC` or `DECIMAL` with a precision between 19 and 34 will allow storage
+up to a precision of 34. 
+
+Values set on a field or parameter will be rounded using `RoundingMode.HALF_EVEN` 
+to the target scale of the field. Values exceeding a precision of 34 will be
+rejected with a `TypeConversionException`. 
+
 Improved JDBC function escape support
 -------------------------------------
 

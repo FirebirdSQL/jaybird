@@ -1013,50 +1013,6 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
         return tempField;
     }
 
-    /**
-     * Expectations to return a specific decfloat(16) (Decimal64) value from fieldData.
-     *
-     * @param value
-     *         String representation of the value to return
-     */
-    protected final void toReturnDecfloat16Expectations(final String value) {
-        Decimal64 parsedValue = Decimal64.valueOf(value, OverflowHandling.THROW_EXCEPTION);
-        toReturnValueExpectations(parsedValue.toBytes());
-    }
-
-    /**
-     * Expectations to return a specific decfloat(34) (Decimal128) value from fieldData.
-     *
-     * @param value
-     *         String representation of the value to return
-     */
-    protected final void toReturnDecfloat34Expectations(final String value) {
-        Decimal128 parsedValue = Decimal128.valueOf(value, OverflowHandling.THROW_EXCEPTION);
-        toReturnValueExpectations(parsedValue.toBytes());
-    }
-
-    /**
-     * Expectations for setting fieldData to a specific decfloat(16) (Decimal64) value.
-     *
-     * @param value
-     *         String representation of the value to be set
-     */
-    protected final void setDecfloat16Expectations(final String value) {
-        Decimal64 parsedValue = Decimal64.valueOf(value, OverflowHandling.THROW_EXCEPTION);
-        setValueExpectations(parsedValue.toBytes());
-    }
-
-    /**
-     * Expectations for setting fieldData to a specific decfloat(34) (Decimal128) value.
-     *
-     * @param value
-     *         String representation of the value to be set
-     */
-    protected final void setDecfloat34Expectations(final String value) {
-        Decimal128 parsedValue = Decimal128.valueOf(value, OverflowHandling.THROW_EXCEPTION);
-        setValueExpectations(parsedValue.toBytes());
-    }
-
     @Override
     protected BigDecimal getNonNullObject() {
         return BigDecimal.ONE;

@@ -22,6 +22,7 @@
 package org.firebirdsql.extern.decimal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * An IEEE-754 Decimal32.
@@ -58,6 +59,19 @@ public final class Decimal32 extends Decimal<Decimal32> {
         return DECIMAL_32_FACTORY;
     }
 
+    /**
+     * Parses the provided byte array to a {@code Decimal32}.
+     * <p>
+     * This method parses network byte-order (aka big-endian). When using little-endian order, you will need to
+     * reverse the bytes in the array first.
+     * </p>
+     *
+     * @param decBytes
+     *         Bytes of the Decimal32 value in network byte-order (aka big-endian)
+     * @return Instance of {@code Decimal32}
+     * @throws IllegalArgumentException
+     *         When {@code decBytes} is not 4 bytes long
+     */
     public static Decimal32 parseBytes(final byte[] decBytes) {
         return DECIMAL_32_CODEC.parseBytes(decBytes);
     }
@@ -92,6 +106,55 @@ public final class Decimal32 extends Decimal<Decimal32> {
      */
     public static Decimal32 valueOf(final BigDecimal value, final OverflowHandling overflowHandling) {
         return DECIMAL_32_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @return Decimal32 equivalent
+     */
+    public static Decimal32 valueOf(final BigInteger value) {
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal32} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be handled according to the specified overflow handling.
+     * </p>
+     * <p>
+     * Calling this method is equivalent to {@code valueOf(new BigDecimal(value), overflowHandling)}.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @param overflowHandling
+     *         Handling of overflows
+     * @return Decimal32 equivalent
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     * @see #valueOfExact(BigInteger)
+     */
+    public static Decimal32 valueOf(final BigInteger value, final OverflowHandling overflowHandling) {
+        return DECIMAL_32_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal32} from {@code value}, rejecting values that would lose precision due to rounding.
+     *
+     * @param value Big integer value to convert
+     * @throws DecimalOverflowException
+     *         If the value is out of range.
+     * @return Decimal32 equivalent
+     * @see #valueOf(BigInteger, OverflowHandling)
+     */
+    public static Decimal32 valueOfExact(final BigInteger value) {
+        return DECIMAL_32_FACTORY.valueOfExact(value);
     }
 
     /**

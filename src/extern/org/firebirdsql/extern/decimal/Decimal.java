@@ -22,6 +22,8 @@
 package org.firebirdsql.extern.decimal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
 
 import static java.util.Objects.requireNonNull;
 
@@ -61,7 +63,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      *
      * @return Value as BigDecimal
      * @throws DecimalInconvertibleException
-     *         If this value is a NaN, sNaN or Infinity, which can't be represented as a {@code BigDecimal).
+     *         If this value is a NaN, sNaN or Infinity, which can't be represented as a {@code BigDecimal}.
      */
     public final BigDecimal toBigDecimal() {
         if (type != DecimalType.FINITE) {
@@ -102,7 +104,11 @@ public abstract class Decimal<T extends Decimal<T>> {
     }
 
     /**
-     * Converts this decimal to its IEEE-754 byte encoding.
+     * Converts this decimal to its IEEE-754 byte encoding in network byte-order (aka big-endian).
+     * <p>
+     * This method returns network byte-order (aka big-endian). When you need little-endian order, you will need to
+     * reverse the bytes in the array.
+     * </p>
      *
      * @return byte array
      */
@@ -123,17 +129,7 @@ public abstract class Decimal<T extends Decimal<T>> {
      *         If conversion to {@code decimalType} is not supported
      */
     public final <D extends Decimal<D>> D toDecimal(Class<D> decimalType) {
-        if (decimalType == getClass()) {
-            return decimalType.cast(this);
-        } else if (decimalType == Decimal128.class) {
-            return decimalType.cast(Decimal128.valueOf(this));
-        } else if (decimalType == Decimal64.class) {
-            return decimalType.cast(Decimal64.valueOf(this));
-        } else if (decimalType == Decimal32.class) {
-            return decimalType.cast(Decimal32.valueOf(this));
-        } else {
-            throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
-        }
+        return toDecimal(decimalType, OverflowHandling.ROUND_TO_INFINITY);
     }
 
     /**
@@ -155,11 +151,11 @@ public abstract class Decimal<T extends Decimal<T>> {
         if (decimalType == getClass()) {
             return decimalType.cast(this);
         } else if (decimalType == Decimal128.class) {
-            return decimalType.cast(Decimal128.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal128.valueOf(this, overflowHandling));
         } else if (decimalType == Decimal64.class) {
-            return decimalType.cast(Decimal64.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal64.valueOf(this, overflowHandling));
         } else if (decimalType == Decimal32.class) {
-            return decimalType.cast(Decimal32.valueOf(this, OverflowHandling.THROW_EXCEPTION));
+            return decimalType.cast(Decimal32.valueOf(this, overflowHandling));
         } else {
             throw new IllegalArgumentException("Unsupported conversion to " + decimalType.getName());
         }
@@ -278,6 +274,13 @@ public abstract class Decimal<T extends Decimal<T>> {
         }
 
         /**
+         * @return Math context for the decimal type constructed.
+         */
+        private MathContext getMathContext() {
+            return decimalFormat.getMathContext();
+        }
+
+        /**
          * @see DecimalFormat#validate(BigDecimal)
          */
         final BigDecimal validateRange(BigDecimal value) {
@@ -311,6 +314,42 @@ public abstract class Decimal<T extends Decimal<T>> {
         /**
          * Creates a decimal from {@code value}, applying rounding where necessary.
          * <p>
+         * Values exceeding the range of this type will be handled according to the specified overflow handling.
+         * </p>
+         * <p>
+         * Calling this method is equivalent to {@code valueOf(new BigDecimal(value), overflowHandling)}.
+         * </p>
+         *
+         * @param value
+         *         Big integer value to convert
+         * @param overflowHandling
+         *         Handling of overflows
+         * @return Decimal equivalent
+         * @throws DecimalOverflowException
+         *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+         * @see #valueOfExact(BigInteger)
+         */
+        final T valueOf(BigInteger value, OverflowHandling overflowHandling) {
+            return valueOf(new BigDecimal(value, getMathContext()), overflowHandling);
+        }
+
+        /**
+         * Creates a decimal from {@code value}, rejecting values that would lose precision due to rounding.
+         *
+         * @param value Big integer value to convert
+         * @throws DecimalOverflowException
+         *         If the value is out of range.
+         * @return Decimal equivalent
+         * @see #valueOf(BigInteger, OverflowHandling)
+         */
+        final T valueOfExact(BigInteger value) {
+            final BigDecimal bigDecimal = new BigDecimal(decimalFormat.validateCoefficient(value));
+            return createDecimal(value.signum(), bigDecimal);
+        }
+
+        /**
+         * Creates a decimal from {@code value}, applying rounding where necessary.
+         * <p>
          * {@code Double.NaN} is mapped to positive NaN, the infinities to their equivalent +/- infinity.
          * </p>
          * <p>
@@ -334,7 +373,8 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            return valueOf(BigDecimal.valueOf(value), overflowHandling);
+            // TODO Use new BigDecimal(double, MathContext) instead, has slightly different precision?
+            return valueOf(new BigDecimal(Double.toString(value), getMathContext()), overflowHandling);
         }
 
         /**
@@ -395,7 +435,7 @@ public abstract class Decimal<T extends Decimal<T>> {
                     return valueOfSpecial(value);
                 }
             }
-            BigDecimal bdValue = new BigDecimal(value);
+            BigDecimal bdValue = new BigDecimal(value, getMathContext());
             T decimalValue = valueOf(bdValue, overflowHandling);
             if (decimalValue.isEquivalentToZero()
                     && value.charAt(0) == '-'

@@ -21,6 +21,8 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
+import org.firebirdsql.extern.decimal.Decimal64;
+import org.firebirdsql.extern.decimal.OverflowHandling;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -774,6 +776,58 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      */
     protected final void toReturnLongExpectations(final long value) {
         toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLong(value));
+    }
+
+    /**
+     * Expectations for setting fieldData to a specific decfloat(16) (Decimal64) value.
+     *
+     * @param value
+     *         String representation of the value to be set
+     */
+    protected final void setDecfloat16Expectations(final String value) {
+        Decimal64 parsedValue = Decimal64.valueOf(value, OverflowHandling.THROW_EXCEPTION);
+        setValueExpectations(parsedValue.toBytes());
+    }
+
+    /**
+     * Expectations to return a specific decfloat(16) (Decimal64) value from fieldData.
+     *
+     * @param value
+     *         String representation of the value to return
+     */
+    protected final void toReturnDecfloat16Expectations(final String value) {
+        Decimal64 parsedValue = Decimal64.valueOf(value, OverflowHandling.THROW_EXCEPTION);
+        toReturnValueExpectations(parsedValue.toBytes());
+    }
+
+    /**
+     * Expectations for setting fieldData to a specific decfloat(34) (Decimal128) value.
+     *
+     * @param value
+     *         String representation of the value to be set
+     */
+    protected final void setDecfloat34Expectations(final String value) {
+        Decimal128 parsedValue = Decimal128.valueOf(value, OverflowHandling.THROW_EXCEPTION);
+        setValueExpectations(parsedValue.toBytes());
+    }
+
+    /**
+     * Expectations to return a specific decfloat(34) (Decimal128) value from fieldData.
+     *
+     * @param value
+     *         String representation of the value to return
+     */
+    protected final void toReturnDecfloat34Expectations(final String value) {
+        Decimal128 parsedValue = Decimal128.valueOf(value, OverflowHandling.THROW_EXCEPTION);
+        toReturnValueExpectations(parsedValue.toBytes());
+    }
+
+    protected final void setDecFixedExpectations(final String value) {
+        setDecfloat34Expectations(value);
+    }
+
+    protected final void toReturnDecFixedExpectations(final String value) {
+        toReturnDecfloat34Expectations(value);
     }
 
     /**

@@ -222,7 +222,6 @@ public class DefaultBlrCalculator implements BlrCalculator {
             return -8;
         case SQL_DEC34:
         case SQL_DEC_FIXED:
-            // TODO Correct for DEC_FIXED?
             return -16;
         case SQL_NULL:
             return 0;

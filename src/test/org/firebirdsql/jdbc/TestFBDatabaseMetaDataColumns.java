@@ -93,6 +93,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             "    col_domain_w_default_overridden DOMAIN_WITH_DEFAULT DEFAULT 'overridden default' " +
             "    /* boolean */ " +
             "    /* decfloat */ " +
+            "    /* extended numerics */ " +
             ")";
     //@formatter:on
 
@@ -106,13 +107,19 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         String createTable = CREATE_COLUMN_METADATA_TEST_TABLE;
         if (!supportInfo.supportsBigint()) {
             // No BIGINT support, replacing type so number of columns remain the same
-            createTable = CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,", "col_bigint DOUBLE PRECISION,");
+            createTable = CREATE_COLUMN_METADATA_TEST_TABLE.replace("col_bigint BIGINT,",
+                    "col_bigint DOUBLE PRECISION,");
         }
         if (supportInfo.supportsBoolean()) {
             createTable = createTable.replace("/* boolean */", ", col_boolean BOOLEAN");
         }
         if (supportInfo.supportsDecfloat()) {
-            createTable = createTable.replace("/* decfloat */", ", col_decfloat16 DECFLOAT(16), col_decfloat34 DECFLOAT(34)");
+            createTable = createTable.replace("/* decfloat */",
+                    ", col_decfloat16 DECFLOAT(16), col_decfloat34 DECFLOAT(34)");
+        }
+        if (supportInfo.supportsDecimalPrecision(34)) {
+            createTable = createTable.replace("/* extended numerics */",
+                    ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
         }
 
         statements.add(createTable);
@@ -829,6 +836,42 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 42);
 
         validate(TEST_TABLE, "COL_DECFLOAT34", validationRules);
+    }
+
+    /**
+     * Tests getColumns() metadata for a NUMERIC(25,20) column without further
+     * constraints, defaults and remarks.
+     */
+    @Test
+    public void testNumeric25_20Column() throws Exception {
+        assertTrue("Test requires extended numeric precision support",
+                supportInfoFor(con).supportsDecimalPrecision(34));
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 25);
+        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 20);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 43);
+
+        validate(TEST_TABLE, "COL_NUMERIC25_20", validationRules);
+    }
+
+    /**
+     * Tests getColumns() metadata for a DECIMAL(30,5) column without further
+     * constraints, defaults and remarks.
+     */
+    @Test
+    public void testDecimal30_5Column() throws Exception {
+        assertTrue("Test requires extended numeric precision support",
+                supportInfoFor(con).supportsDecimalPrecision(34));
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 30);
+        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 5);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 44);
+
+        validate(TEST_TABLE, "COL_DECIMAL30_5", validationRules);
     }
     
     // TODO: Add more extensive tests of patterns

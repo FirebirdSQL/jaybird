@@ -141,6 +141,26 @@ enum DecimalFormat {
     }
 
     /**
+     * Validates if the provided coefficient is in range for this decimal format.
+     * <p>
+     * Implementation note: this method is only used for validation in {@code valueOfExact(BigInteger)} methods.
+     * </p>
+     *
+     * @param coefficient
+     *         Coefficient to check
+     * @return coefficient if validation succeeded
+     * @throws DecimalOverflowException
+     *         If the coefficient is out of range
+     */
+    final BigInteger validateCoefficient(BigInteger coefficient) {
+        if (maxCoefficient.compareTo(coefficient) < 0 || minCoefficient.compareTo(coefficient) > 0) {
+            throw new DecimalOverflowException("Value " + coefficient + " is out of range for this type "
+                    + "[" + minCoefficient + ", " + maxCoefficient + "]");
+        }
+        return coefficient;
+    }
+
+    /**
      * Checks if the current precision or scale of the provided value is out of range for this decimal format.
      * <p>
      * This method can be used to check if a big decimal should be handled as {@code +/-Infinity} after

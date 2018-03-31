@@ -236,7 +236,11 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_DEC34:
             return "DECFLOAT";
         case ISCConstants.SQL_DEC_FIXED:
-            return "DECIMAL";
+            if (sqlSubtype == SUBTYPE_NUMERIC) {
+                return "NUMERIC";
+            } else {
+                return "DECIMAL";
+            }
         case ISCConstants.SQL_FLOAT:
             return "FLOAT";
         case ISCConstants.SQL_TEXT:

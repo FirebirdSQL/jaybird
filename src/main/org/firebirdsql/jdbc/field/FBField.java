@@ -260,10 +260,6 @@ public abstract class FBField {
             return new FBLongField(fieldDescriptor, dataProvider, jdbcType);
         case Types.NUMERIC:
         case Types.DECIMAL:
-            if (fieldDescriptor.isFbType(ISCConstants.SQL_DEC_FIXED)) {
-                // TODO May require different handling?
-                throw new FBDriverNotCapableException("DEC_FIXED support not yet implemented");
-            }
             return new FBBigDecimalField(fieldDescriptor, dataProvider, jdbcType);
         case JaybirdTypeCodes.DECFLOAT:
             switch (fieldDescriptor.getType() & ~1) {

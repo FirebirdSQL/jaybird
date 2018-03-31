@@ -22,6 +22,7 @@
 package org.firebirdsql.extern.decimal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * An IEEE-754 Decimal128.
@@ -58,6 +59,19 @@ public final class Decimal128 extends Decimal<Decimal128> {
         return DECIMAL_128_FACTORY;
     }
 
+    /**
+     * Parses the provided byte array to a {@code Decimal128}.
+     * <p>
+     * This method parses network byte-order (aka big-endian). When using little-endian order, you will need to
+     * reverse the bytes in the array first.
+     * </p>
+     *
+     * @param decBytes
+     *         Bytes of the Decimal128 value in network byte-order (aka big-endian)
+     * @return Instance of {@code Decimal128}
+     * @throws IllegalArgumentException
+     *         When {@code decBytes} is not 16 bytes long
+     */
     public static Decimal128 parseBytes(final byte[] decBytes) {
         return DECIMAL_128_CODEC.parseBytes(decBytes);
     }
@@ -92,6 +106,55 @@ public final class Decimal128 extends Decimal<Decimal128> {
      */
     public static Decimal128 valueOf(final BigDecimal value, final OverflowHandling overflowHandling) {
         return DECIMAL_128_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal128} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be returned as +/-Infinity.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @return Decimal128 equivalent
+     */
+    public static Decimal128 valueOf(final BigInteger value) {
+        return valueOf(value, OverflowHandling.ROUND_TO_INFINITY);
+    }
+
+    /**
+     * Creates a {@code Decimal128} from {@code value}, applying rounding where necessary.
+     * <p>
+     * Values exceeding the range of this type will be handled according to the specified overflow handling.
+     * </p>
+     * <p>
+     * Calling this method is equivalent to {@code valueOf(new BigDecimal(value), overflowHandling)}.
+     * </p>
+     *
+     * @param value
+     *         Big integer value to convert
+     * @param overflowHandling
+     *         Handling of overflows
+     * @return Decimal128 equivalent
+     * @throws DecimalOverflowException
+     *         If {@code OverflowHandling#THROW_EXCEPTION} and the value is out of range.
+     * @see #valueOfExact(BigInteger)
+     */
+    public static Decimal128 valueOf(final BigInteger value, final OverflowHandling overflowHandling) {
+        return DECIMAL_128_FACTORY.valueOf(value, overflowHandling);
+    }
+
+    /**
+     * Creates a {@code Decimal128} from {@code value}, rejecting values that would lose precision due to rounding.
+     *
+     * @param value Big integer value to convert
+     * @throws DecimalOverflowException
+     *         If the value is out of range.
+     * @return Decimal128 equivalent
+     * @see #valueOf(BigInteger, OverflowHandling)
+     */
+    public static Decimal128 valueOfExact(final BigInteger value) {
+        return DECIMAL_128_FACTORY.valueOfExact(value);
     }
 
     /**
