@@ -3,7 +3,7 @@
     <!-- =================================================================== -->
     <!-- Creates the jar archives                                            -->
     <!-- =================================================================== -->
-    <target name="jars" depends="jar-j2ee, rar, jar-test, jar-sources, jar-javadoc"/>
+    <target name="jars" depends="jar-j2ee, jar-ra, jar-test, jar-sources, jar-javadoc"/>
 
     <!-- Not really a jar operation but necessary :) -->
     <target name="jar-j2ee" depends="compile">

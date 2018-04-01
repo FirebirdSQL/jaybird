@@ -675,7 +675,8 @@ See also [Compatibility changes] for details.
 Other fixes and changes
 -----------------------
 
-...
+-   The distribution zip no longer includes the jaybird-@VERSION@.rar. This file
+was an example JCA Resource Archive. 
 
 Removal of deprecated classes and packages
 ------------------------------------------

@@ -35,7 +35,7 @@
     <!-- =================================================================== -->
     <!-- Puts the files in the right place for a (manual) Maven release      -->
     <!-- =================================================================== -->
-    <target name="mavenPrepare" depends="jars,javadocs">
+    <target name="mavenPrepare" depends="jars">
         <mkdir dir="${build.maven}"/>
         <copy file="${build.lib}/${archive.name.simple}" tofile="${build.maven}/${archive.maven.simple}"/>
         <copy file="${build.lib}/${archive.name.sources}" tofile="${build.maven}/${archive.maven.sources}"/>
@@ -51,11 +51,10 @@
     <!-- =================================================================== -->
     <!-- Creates the distribution                                            -->
     <!-- =================================================================== -->
-    <target name="dist" depends="jars,javadocs,buildalldocs,mavenPrepare">
+    <target name="dist" depends="jars,buildalldocs,mavenPrepare">
         <mkdir dir="${build.dist}"/>
         <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
             <fileset dir="${build.lib}">
-                <include name="${archive.name.rar}"/>
                 <include name="${archive.name.full}"/>
                 <include name="${archive.name.simple}"/>
                 <include name="${archive.name.sources}"/>
