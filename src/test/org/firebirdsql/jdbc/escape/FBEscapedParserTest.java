@@ -336,4 +336,71 @@ public class FBEscapedParserTest {
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for nested escapes", expectedOutput, parseResult);
     }
+
+    @Test
+    public void testQLiteral_basic() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "q'x {fn EXP(2)} x'";
+
+        String parseResult = parser.parse(input);
+        assertEquals("Expected identical output for Q-literal with JDBC escape in literal", input, parseResult);
+    }
+
+    @Test
+    public void testQLiteral_processesEscapeAfterLiteral() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "Q'x {fn EXP(2)} x'{fn EXP(2)}";
+        final String expectedOutput = "Q'x {fn EXP(2)} x'EXP(2)";
+
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output", expectedOutput, parseResult);
+    }
+
+    @Test
+    public void testQButNotLiteral() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "qMx {fn EXP(2)} x'";
+        final String expectedOutput = "qMx EXP(2) x'";
+
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output", expectedOutput, parseResult);
+    }
+
+    @Test
+    public void testQLiteralStart_AtEndOfString_throwsParseException() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "{fn EXP(2)} q'";
+        expectedException.expect(FBSQLParseException.class);
+
+        parser.parse(input);
+    }
+
+    @Test
+    public void testQLiteral_InLiteralEndOfString_throwsParseException() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "{fn EXP(2)} q'abc";
+        expectedException.expect(FBSQLParseException.class);
+
+        parser.parse(input);
+    }
+
+    @Test
+    public void testQLiteralSpecials() throws Exception {
+        checkQLiteralSpecialsBalancedStartEnd('(', ')');
+        checkQLiteralSpecialsBalancedStartEnd(')', ')');
+        checkQLiteralSpecialsBalancedStartEnd('{', '}');
+        checkQLiteralSpecialsBalancedStartEnd('}', '}');
+        checkQLiteralSpecialsBalancedStartEnd('[', ']');
+        checkQLiteralSpecialsBalancedStartEnd(']', ']');
+        checkQLiteralSpecialsBalancedStartEnd('<', '>');
+        checkQLiteralSpecialsBalancedStartEnd('>', '>');
+    }
+
+    private void checkQLiteralSpecialsBalancedStartEnd(char start, char end) throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "q'" + start + " {fn EXP(2)} " + end + "'";
+
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output", input, parseResult);
+    }
 }

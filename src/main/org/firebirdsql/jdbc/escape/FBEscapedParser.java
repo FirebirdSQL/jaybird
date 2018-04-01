@@ -106,9 +106,10 @@ public final class FBEscapedParser {
         ParserState state = ParserState.INITIAL_STATE;
         // Note initialising to 8 as that is the minimum size in Oracle Java, and we (usually) need less than the default of 16
         final Deque<StringBuilder> bufferStack = new ArrayDeque<>(8);
-        StringBuilder buffer = new StringBuilder(sql.length());
+        final int sqlLength = sql.length();
+        StringBuilder buffer = new StringBuilder(sqlLength);
 
-        for (int i = 0, n = sql.length(); i < n; i++) {
+        for (int i = 0; i < sqlLength; i++) {
             char currentChar = sql.charAt(i);
             state = state.nextState(currentChar);
             switch (state) {
@@ -122,6 +123,7 @@ public final class FBEscapedParser {
             case START_BLOCK_COMMENT:
             case BLOCK_COMMENT:
             case END_BLOCK_COMMENT:
+            case POSSIBLE_Q_LITERAL_ENTER:
                 buffer.append(currentChar);
                 break;
             case ESCAPE_ENTER_STATE:
@@ -136,6 +138,27 @@ public final class FBEscapedParser {
                 buffer = bufferStack.pop();
                 escapeToNative(buffer, escapeText);
                 break;
+            case Q_LITERAL_START:
+                buffer.append(currentChar);
+                if (++i >= sqlLength) {
+                    throw new FBSQLParseException("Unexpected end of string at parser state " + state);
+                }
+                final char alternateStartChar = sql.charAt(i);
+                buffer.append(alternateStartChar);
+                final char alternateEndChar = qLiteralEndChar(alternateStartChar);
+                for (i++; i <sqlLength; i++) {
+                    currentChar = sql.charAt(i);
+                    buffer.append(currentChar);
+                    if (currentChar == alternateEndChar
+                            && i + 1 < sqlLength && sql.charAt(i + 1) == '\'') {
+                        state = ParserState.Q_LITERAL_END;
+                        break;
+                    }
+                }
+                if (i == sqlLength) {
+                    throw new FBSQLParseException("Unexpected end of string at parser state " + state);
+                }
+                break;
             default:
                 throw new FBSQLParseException("Unexpected parser state " + state);
             }
@@ -144,6 +167,21 @@ public final class FBEscapedParser {
             return buffer.toString();
         } else {
             throw new FBSQLParseException("Unbalanced JDBC escape, too many '{'");
+        }
+    }
+
+    private static char qLiteralEndChar(char startChar) {
+        switch (startChar) {
+        case '(':
+            return ')';
+        case '{':
+            return '}';
+        case '[':
+            return ']';
+        case '<':
+            return '>';
+        default:
+            return startChar;
         }
     }
 
@@ -233,7 +271,7 @@ public final class FBEscapedParser {
      * @param dateStr
      *         the date in the 'yyyy-mm-dd' format.
      */
-    private void toDateString(final StringBuilder target, final CharSequence dateStr) throws FBSQLParseException {
+    private void toDateString(final StringBuilder target, final CharSequence dateStr) {
         // use shorthand date cast (using just the string will not work in all contexts)
         target.append("DATE ").append(dateStr);
     }
@@ -247,7 +285,7 @@ public final class FBEscapedParser {
      * @param timeStr
      *         the date in the 'hh:mm:ss' format.
      */
-    private void toTimeString(final StringBuilder target, final CharSequence timeStr) throws FBSQLParseException {
+    private void toTimeString(final StringBuilder target, final CharSequence timeStr) {
         // use shorthand time cast (using just the string will not work in all contexts)
         target.append("TIME ").append(timeStr);
     }
@@ -261,8 +299,7 @@ public final class FBEscapedParser {
      * @param timestampStr
      *         the date in the 'yyyy-mm-dd hh:mm:ss' format.
      */
-    private void toTimestampString(final StringBuilder target, final CharSequence timestampStr)
-            throws FBSQLParseException {
+    private void toTimestampString(final StringBuilder target, final CharSequence timestampStr) {
         // use shorthand timestamp cast (using just the string will not work in all contexts)
         target.append("TIMESTAMP ").append(timestampStr);
     }
@@ -294,7 +331,7 @@ public final class FBEscapedParser {
      * @param outerJoin
      *         Outer join text
      */
-    private void convertOuterJoin(final StringBuilder target, final CharSequence outerJoin) throws FBSQLParseException {
+    private void convertOuterJoin(final StringBuilder target, final CharSequence outerJoin) {
         target.append(outerJoin);
     }
 
@@ -387,6 +424,9 @@ public final class FBEscapedParser {
                     return START_LINE_COMMENT;
                 case '/':
                     return START_BLOCK_COMMENT;
+                case 'q':
+                case 'Q':
+                    return POSSIBLE_Q_LITERAL_ENTER;
                 default:
                     return NORMAL_STATE;
                 }
@@ -445,7 +485,7 @@ public final class FBEscapedParser {
          */
         LINE_COMMENT {
             @Override
-            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+            protected ParserState nextState(char inputChar) {
                 return (inputChar == '\n') ? NORMAL_STATE : LINE_COMMENT;
             }
         },
@@ -463,7 +503,7 @@ public final class FBEscapedParser {
          */
         BLOCK_COMMENT {
             @Override
-            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+            protected ParserState nextState(char inputChar) {
                 return (inputChar == '*') ? END_BLOCK_COMMENT : BLOCK_COMMENT;
             }
         },
@@ -472,8 +512,36 @@ public final class FBEscapedParser {
          */
         END_BLOCK_COMMENT {
             @Override
-            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+            protected ParserState nextState(char inputChar) {
                 return (inputChar == '/') ? NORMAL_STATE : BLOCK_COMMENT;
+            }
+        },
+        /**
+         * Potential Q-literal
+         */
+        POSSIBLE_Q_LITERAL_ENTER {
+            @Override
+            protected ParserState nextState(char inputChar) {
+                return (inputChar == '\'') ? Q_LITERAL_START : NORMAL_STATE;
+            }
+        },
+        /**
+         * Start of Q escape, next character will be the alternate end character. Further processing needs to be done
+         * separately.
+         */
+        Q_LITERAL_START {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                throw new FBSQLParseException("Q-literal handling needs to be performed separately");
+            }
+        },
+        Q_LITERAL_END {
+            @Override
+            protected ParserState nextState(char inputChar) throws FBSQLParseException {
+                if (inputChar != '\'') {
+                    throw new FBSQLParseException("Invalid char " + inputChar + " for state Q_LITERAL_END");
+                }
+                return NORMAL_STATE;
             }
         };
 
