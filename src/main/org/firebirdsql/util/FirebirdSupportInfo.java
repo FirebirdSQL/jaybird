@@ -335,6 +335,10 @@ public final class FirebirdSupportInfo {
         return false;
     }
 
+    public boolean supportsWireEncryption() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
     /**
      * @param serverVersion
      *         Server version

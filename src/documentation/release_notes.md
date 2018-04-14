@@ -205,11 +205,27 @@ If you manage your dependencies manually, you need to do the following:
 Gotcha's
 --------
 
-No known gotcha's at this time. If you find a problem: please report it on
-<http://tracker.firebirdsql.org/brows/JDBC>
+During tests we have have observed that using Jaybird 4 with Firebird 3.0.4 may
+cause connection hangs when the connection is encrypted (the connection is 
+blocked in a read from the socket). The cause seems related to the Java 
+version (the problem disappeared with Java 9 Update 4), or possibly the 
+`TcpRemoteBufferSize` setting in Firebird. The workaround is to disable 
+wire encryption in Firebird or for the specific connection (see 
+[Wire encryption support]).
+
+If you find a problem while upgrading, or other bugs: please report it 
+on <http://tracker.firebirdsql.org/brows/JDBC>.
 
 Jaybird 3.0.x changelog
 =======================
+
+Changes in Jaybird 3.0.4
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.3
+
+-   Back-ported wire encryption support from Jaybird 4 ([JDBC-415](http://tracker.firebirdsql.org/browse/JDBC-415))  
+    See [Wire encryption support] for more information.
 
 Changes in Jaybird 3.0.3
 ------------------------
@@ -539,6 +555,54 @@ etc
 
 IPv6 literals are not supported in the legacy URL format (the 
 `<host>[/port]:<path-or-alias>` format).
+
+Wire encryption support
+-----------------------
+
+Added in 3.0.4, back-ported from Jaybird 4
+
+Jaybird 3.0.4 adds support for the Firebird 3 ARC4 wire encryption. The encryption
+is configured using the connection property `wireCrypt`, with the following
+(case-insensitive) values:
+
+ -  `DEFAULT`: default (value used when `wireCrypt` is not specified; you'd 
+    normally not specify this explicitly)
+ -  `ENABLED`: enable, but not require, wire encryption
+ -  `REQUIRED`: require wire encryption (only if Firebird version is 3.0 or higher)
+ -  `DISABLED`: disable wire encryption 
+ 
+The default value acts as `ENABLED` for pure Java connections, for JNA (native) 
+connections this wil use the fbclient default (either `Enabled` or the 
+configured value of `WireCrypt` from a `firebird.conf` read by the native 
+library).
+
+Connection property `wireCrypt=REQUIRED` will **not** reject unencrypted 
+connections when connecting to Firebird 2.5 or lower. This behavior matches the 
+Firebird 3 client library behavior. The value will also be ignored when using
+native connections with a Firebird 2.5 client library.
+
+Using `wireCrypt=DISABLED` when Firebird 3 or higher uses setting 
+`WireCrypt = Required` (or vice versa) will yield error _"Incompatible wire 
+encryption levels requested on client and server"_ (error: 
+_isc_wirecrypt_incompatible / 335545064_).
+
+The same error is raised when connecting to Firebird 3 and higher with a legacy
+authentication user with connection property `wireCrypt=REQUIRED`. 
+
+Alternative wire encryption plugins are currently not supported, although we 
+made some preparations to support this. If you want to develop such a plugin, 
+contact us on the Firebird-Java mailing list so we can work out the details of 
+adding plugin support.
+
+**WARNING**
+
+The implementation comes with a number of caveats:
+ 
+ -   we cannot guarantee that the session key cannot be obtained by someone with 
+     access to your application or the machine hosting your application
+     (although that in itself would already imply a severe security breach)
+ -   the ARC4 encryption - the default provided by Firebird - is considered to 
+     be a weak (maybe even broken) cipher these days
 
 Potentially breaking changes
 ----------------------------

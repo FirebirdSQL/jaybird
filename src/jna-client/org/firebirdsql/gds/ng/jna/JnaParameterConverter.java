@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.gds.ng.WireCrypt;
 
 import java.sql.SQLException;
 
@@ -44,6 +45,12 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
         }
         if (props.getPassword() != null) {
             pb.addArgument(tagMapping.getPasswordTag(), props.getPassword());
+        }
+
+        if (props.getWireCrypt() != WireCrypt.DEFAULT) {
+            // Need to do this differently when having to add multiple configs
+            String configString = "WireCrypt = " + props.getWireCrypt();
+            pb.addArgument(tagMapping.getConfigTag(), configString);
         }
     }
 }

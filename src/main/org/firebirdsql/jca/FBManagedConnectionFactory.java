@@ -182,7 +182,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     }
 
     /**
-     * @deprecated use {@link #setDefaultIsolation(String)} 
+     * @deprecated use {@link #setDefaultIsolation(String)}
      */
     @Deprecated
     public void setTransactionIsolationName(String name) {
@@ -374,7 +374,7 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     }
 
     public void setUseTranslation(String translationPath) {
-        connectionProperties.setUseTranslation(translationPath);        
+        connectionProperties.setUseTranslation(translationPath);
     }
 
     public boolean isDefaultResultSetHoldable() {
@@ -413,6 +413,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
         connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
+    @Override
+    public String getWireCrypt() {
+        return connectionProperties.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        connectionProperties.setWireCrypt(wireCrypt);
     }
 
     public int hashCode() {

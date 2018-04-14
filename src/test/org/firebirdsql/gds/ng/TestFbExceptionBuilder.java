@@ -18,17 +18,14 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLTimeoutException;
-import java.sql.SQLWarning;
+import java.sql.*;
 
+import static org.firebirdsql.gds.ISCConstants.*;
 import static org.junit.Assert.*;
 
 /**
@@ -49,11 +46,11 @@ public class TestFbExceptionBuilder {
     public void exception_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        SQLException result = builder.exception(ISCConstants.isc_req_wrong_db).toSQLException();
+        SQLException result = builder.exception(isc_req_wrong_db).toSQLException();
 
         assertNotNull(result);
         assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_req_wrong_db, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
         assertEquals("Unexpected SQLState", "HY000", result.getSQLState());
         assertEquals("Unexpected message",
                 "request referenced an unavailable database [SQLState:HY000, ISC error code:335544365]",
@@ -68,11 +65,11 @@ public class TestFbExceptionBuilder {
     public void warning_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        SQLException result = builder.warning(ISCConstants.isc_unavailable).toSQLException();
+        SQLException result = builder.warning(isc_unavailable).toSQLException();
 
         assertNotNull(result);
         assertEquals("Expected exception to be SQLWarning (no subclass!)", SQLWarning.class, result.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_unavailable, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_unavailable, result.getErrorCode());
         assertEquals("Unexpected SQLState", "08001", result.getSQLState());
         assertEquals("Unexpected message",
                 "unavailable database [SQLState:08001, ISC error code:335544375]", result.getMessage());
@@ -86,12 +83,12 @@ public class TestFbExceptionBuilder {
     public void timeoutException_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        SQLException result = builder.timeoutException(ISCConstants.isc_net_connect_err).toSQLException();
+        SQLException result = builder.timeoutException(isc_net_connect_err).toSQLException();
 
         assertNotNull(result);
         assertEquals("Expected exception to be SQLTimeoutException (no subclass!)",
                 SQLTimeoutException.class, result.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_net_connect_err, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_net_connect_err, result.getErrorCode());
         assertEquals("Unexpected SQLState", "08006", result.getSQLState());
         assertEquals("Unexpected message",
                 "Failed to establish a connection. [SQLState:08006, ISC error code:335544722]", result.getMessage());
@@ -107,12 +104,12 @@ public class TestFbExceptionBuilder {
     public void exception_featureNotSupported() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        SQLException result = builder.exception(ISCConstants.isc_wish_list).toSQLException();
+        SQLException result = builder.exception(isc_wish_list).toSQLException();
 
         assertNotNull(result);
         assertEquals("Expected exception to be SQLFeatureNotSupportedException (no subclass!)",
                 SQLFeatureNotSupportedException.class, result.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_wish_list, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_wish_list, result.getErrorCode());
         assertEquals("Unexpected SQLState", "0A000", result.getSQLState());
         assertEquals("Unexpected message",
                 "feature is not supported [SQLState:0A000, ISC error code:335544378]", result.getMessage());
@@ -126,7 +123,7 @@ public class TestFbExceptionBuilder {
     public void exception_parameterSubstitution() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_wrong_ods).messageParameter("the filename");
+        builder.exception(isc_wrong_ods).messageParameter("the filename");
         builder.messageParameter(11).messageParameter(2);
         builder.messageParameter(10).messageParameter(0);
 
@@ -146,7 +143,7 @@ public class TestFbExceptionBuilder {
     public void exception_parameterIncompleteSubstitution() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_wrong_ods).messageParameter("the filename");
+        builder.exception(isc_wrong_ods).messageParameter("the filename");
         builder.messageParameter(11).messageParameter(2);
 
         SQLException result = builder.toSQLException();
@@ -165,7 +162,7 @@ public class TestFbExceptionBuilder {
         FbExceptionBuilder builder = new FbExceptionBuilder();
         Throwable throwable = new IOException("the message");
 
-        builder.exception(ISCConstants.isc_req_wrong_db);
+        builder.exception(isc_req_wrong_db);
         builder.cause(throwable);
         SQLException result = builder.toSQLException();
 
@@ -180,14 +177,14 @@ public class TestFbExceptionBuilder {
     public void exception_overrideSQLState_valid() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_req_wrong_db).toSQLException();
+        builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         builder.sqlState("42000");
 
         SQLException result = builder.toSQLException();
 
         assertNotNull(result);
-        assertEquals("Unexpected errorCode", ISCConstants.isc_req_wrong_db, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
         assertEquals("Unexpected SQLState", "42000", result.getSQLState());
     }
 
@@ -200,7 +197,7 @@ public class TestFbExceptionBuilder {
         exceptionRule.expectMessage("Value of sqlState must be a 5 character string");
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_req_wrong_db).toSQLException();
+        builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         builder.sqlState(null);
     }
@@ -215,7 +212,7 @@ public class TestFbExceptionBuilder {
         exceptionRule.expectMessage("Value of sqlState must be a 5 character string");
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_req_wrong_db).toSQLException();
+        builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
         builder.sqlState("4200");
     }
@@ -228,21 +225,21 @@ public class TestFbExceptionBuilder {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         // Exception one
-        builder.exception(ISCConstants.isc_req_wrong_db);
+        builder.exception(isc_req_wrong_db);
         // Exception two
-        builder.exception(ISCConstants.isc_wish_list);
+        builder.exception(isc_wish_list);
 
         SQLException result = builder.toSQLException();
         assertNotNull(result);
 
         // Exception one
         assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_req_wrong_db, result.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
         // Exception two
         SQLException result2 = result.getNextException();
         assertNotNull(result2);
         assertEquals("Expected exception to be SQLFeatureNotSupportedException (no subclass!)", SQLFeatureNotSupportedException.class, result2.getClass());
-        assertEquals("Unexpected errorCode", ISCConstants.isc_wish_list, result2.getErrorCode());
+        assertEquals("Unexpected errorCode", isc_wish_list, result2.getErrorCode());
         // No further results
         assertNull("Expected no further exceptions", result2.getNextException());
     }
@@ -255,7 +252,7 @@ public class TestFbExceptionBuilder {
     public void toSQLException_withCasting_valid() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.warning(ISCConstants.isc_req_wrong_db);
+        builder.warning(isc_req_wrong_db);
 
         SQLWarning warning = builder.toSQLException(SQLWarning.class);
         assertNotNull("Expected non-null warning", warning);
@@ -270,7 +267,7 @@ public class TestFbExceptionBuilder {
         exceptionRule.expect(ClassCastException.class);
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
-        builder.exception(ISCConstants.isc_req_wrong_db);
+        builder.exception(isc_req_wrong_db);
 
         builder.toSQLException(SQLWarning.class);
     }
@@ -325,6 +322,34 @@ public class TestFbExceptionBuilder {
 
         FbExceptionBuilder builder = new FbExceptionBuilder();
         builder.toFlatSQLException();
+    }
+
+    @Test
+    public void forException() {
+        SQLException result = FbExceptionBuilder.forException(isc_req_wrong_db).toSQLException();
+
+        assertNotNull(result);
+        assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
+        // Rest covered by test exception_Simple
+    }
+
+    @Test
+    public void forWarning() {
+        SQLException result = FbExceptionBuilder.forWarning(isc_unavailable).toSQLException();
+
+        assertNotNull(result);
+        assertEquals("Expected exception to be SQLWarning (no subclass!)", SQLWarning.class, result.getClass());
+        // Rest covered by test warning_Simple
+    }
+
+    @Test
+    public void exceptionTypeUpgrade_EXCEPTION_to_NON_TRANSIENT() {
+        SQLException result = FbExceptionBuilder.forException(isc_login).toFlatSQLException();
+
+        assertNotNull(result);
+        // Definition to map isc_login to SQLInvalidAuthorizationSpecException is part of NON_TRANSIENT
+        assertEquals("Expected result to be SQLInvalidAuthorizationSpecException (no subclass!)",
+                SQLInvalidAuthorizationSpecException.class, result.getClass());
     }
 
     /**

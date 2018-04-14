@@ -51,6 +51,8 @@ public final class GDSServerVersion implements Serializable {
     public static final String TYPE_BETA = "T";
     @SuppressWarnings("unused")
     public static final String TYPE_DEVELOPMENT = "X";
+    public static final String CONNECTION_OPTION_ENCRYPTED = "C";
+    public static final String CONNECTION_OPTION_COMPRESSION = "Z";
 
     /**
      * GDSServerVersion that can be used as a dummy/invalid object when a version object is required, but none is available.
@@ -58,7 +60,9 @@ public final class GDSServerVersion implements Serializable {
     public static final GDSServerVersion INVALID_VERSION = new GDSServerVersion("INVALID", "", "", "", 0, 0, 0, 0, "", "");
 
     private static final Pattern VERSION_PATTERN = 
-        Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)(-dev)?) ([^-,]+)(?:[-,](.*))?");
+        Pattern.compile("((\\w{2})-(\\w)(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)(-dev)?) ([^-,/]+)(?:[-,/](.*))?");
+
+    private static final Pattern CONNECTION_METADATA_PATTERN = Pattern.compile("/P(\\d+)(?::([^:]+))?$");
     
     private static final int FULL_VERSION_IDX = 1;
     private static final int PLATFORM_IDX = 2;
@@ -132,6 +136,39 @@ public final class GDSServerVersion implements Serializable {
     
     public String getFullVersion() {
     	return fullVersion;
+    }
+
+    /**
+     * @return Protocol version of the connection, or {@code -1} if this information is not available.
+     */
+    public int getProtocolVersion() {
+        if (extendedServerName == null) return -1;
+        Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(extendedServerName);
+        if (connectionMetadataMatcher.find()) {
+            String protocolVersion = connectionMetadataMatcher.group(1);
+            return Integer.parseInt(protocolVersion);
+        }
+        return -1;
+    }
+
+    /**
+     * @return {@code true} if encryption is used, {@code false} if no encryption is used <b>or</b> if this information is not available
+     */
+    public boolean isWireEncryptionUsed() {
+        return getConnectionOptions().contains(CONNECTION_OPTION_ENCRYPTED);
+    }
+
+    public boolean isWireCompressionUsed() {
+        return getConnectionOptions().contains(CONNECTION_OPTION_COMPRESSION);
+    }
+
+    private String getConnectionOptions() {
+        if (extendedServerName == null) return "";
+        Matcher connectionMetadataMatcher = CONNECTION_METADATA_PATTERN.matcher(extendedServerName);
+        if (!connectionMetadataMatcher.find()) return "";
+
+        String connectionOptions = connectionMetadataMatcher.group(2);
+        return connectionOptions != null ? connectionOptions : "";
     }
 
     public int hashCode() {

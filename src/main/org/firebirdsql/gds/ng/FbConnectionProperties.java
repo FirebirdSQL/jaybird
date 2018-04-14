@@ -20,10 +20,13 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.Parameter;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+
+import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -169,7 +172,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
      * @deprecated TODO: This method is only intended to simplify migration of the protocol implementation and needs to be removed.
      */
     @Deprecated
-    public void fromDpb(DatabaseParameterBuffer dpb) {
+    public void fromDpb(DatabaseParameterBuffer dpb) throws SQLException {
         for (Parameter parameter : dpb) {
             switch (parameter.getType()) {
             case isc_dpb_user_name:
@@ -207,6 +210,17 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                 break;
             case isc_dpb_column_label_for_name:
                 setColumnLabelForName(true);
+                break;
+            case isc_dpb_wire_crypt_level:
+                String propertyValue = parameter.getValueAsString();
+                try {
+                    setWireCrypt(WireCrypt.fromString(propertyValue));
+                } catch (IllegalArgumentException e) {
+                    throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidConnectionPropertyValue)
+                            .messageParameter(propertyValue)
+                            .messageParameter("wireCrypt")
+                            .toFlatSQLException();
+                }
                 break;
             case isc_dpb_utf8_filename:
                 // Filter out, handled explicitly in protocol implementation

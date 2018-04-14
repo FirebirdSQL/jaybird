@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,12 +18,15 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +40,9 @@ import static org.junit.Assert.assertNull;
  * @since 3.0
  */
 public class TestFbConnectionProperties {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     private final FbConnectionProperties info = new FbConnectionProperties();
 
@@ -151,12 +155,29 @@ public class TestFbConnectionProperties {
     }
 
     @Test
+    public void testWireCrypt() {
+        assertEquals(WireCrypt.DEFAULT, info.getWireCrypt());
+        final WireCrypt wireCrypt = WireCrypt.DISABLED;
+        info.setWireCrypt(wireCrypt);
+        assertEquals(wireCrypt, info.getWireCrypt());
+    }
+
+    @Test
+    public void testWireCryptNullPointerExceptionOnNull() {
+        expectedException.expect(NullPointerException.class);
+        expectedException.expectMessage("wireCrypt");
+
+        info.setWireCrypt(null);
+    }
+
+    @Test
     public void testCopyConstructor() throws Exception {
         info.setDatabaseName("testValue");
         info.setServerName("xyz");
         info.setPortNumber(1203);
         info.setConnectionDialect((short) 2);
         info.setConnectTimeout(15);
+        info.setWireCrypt(WireCrypt.REQUIRED);
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
         BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);
@@ -171,15 +192,18 @@ public class TestFbConnectionProperties {
     @Test
     public void testAsImmutable() throws Exception {
         // TODO Explicitly test properties instead of using reflection
-        Map<String, Object> testValues = new HashMap<String, Object>();
+        Map<String, Object> testValues = new HashMap<>();
         int intValue = 1;
-        BeanInfo beanInfo = Introspector.getBeanInfo(IConnectionProperties.class);
+        BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class, Object.class);
         for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
             if ("extraDatabaseParameters".equals(descriptor.getName())) {
                 // Property extraDatabaseParameters has no setter
                 continue;
             }
             Method method = descriptor.getWriteMethod();
+            if (method == null) {
+                continue;
+            }
             Class<?> parameterType = method.getParameterTypes()[0];
             if (parameterType == int.class) {
                 Object value = intValue++;
@@ -195,14 +219,20 @@ public class TestFbConnectionProperties {
             } else if (parameterType == boolean.class) {
                 method.invoke(info, true);
                 testValues.put(descriptor.getName(), true);
+            } else if (parameterType == WireCrypt.class) {
+                method.invoke(info, WireCrypt.REQUIRED);
+                testValues.put(descriptor.getName(), WireCrypt.REQUIRED);
             } else {
                 throw new IllegalStateException("Unexpected setter type: " + parameterType);
             }
         }
 
         IConnectionProperties immutable = info.asImmutable();
-        BeanInfo immutableBean = Introspector.getBeanInfo(IConnectionProperties.class);
+        BeanInfo immutableBean = Introspector.getBeanInfo(FbImmutableConnectionProperties.class, Object.class);
         for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
+            if (Arrays.asList("attachObjectName").contains(descriptor.getName())) {
+                continue;
+            }
             if ("extraDatabaseParameters".equals(descriptor.getName())) {
                 // Property extraDatabaseParameters always returns a buffer
                 // TODO: Add or update test(s) to include extraDatabaseParameters

@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.GDSExceptionHelper;
+import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jdbc.FBSQLExceptionInfo;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -27,6 +28,7 @@ import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.JaybirdErrorCodes.*;
 
 /**
  * Builder for exceptions received from Firebird.
@@ -40,6 +42,7 @@ public final class FbExceptionBuilder {
 
     private static final String SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX = "0A";
     private static final String SQLSTATE_SYNTAX_ERROR_PREFIX = "42";
+    private static final String SQLSTATE_CONNECTION_ERROR_PREFIX = "08";
 
     private final List<ExceptionInformation> exceptionInfo = new ArrayList<>();
     private ExceptionInformation current = null;
@@ -363,8 +366,36 @@ public final class FbExceptionBuilder {
      *         The Firebird error code
      */
     private void setNextExceptionInformation(Type type, final int errorCode) {
-        current = new ExceptionInformation(type, errorCode);
+        current = new ExceptionInformation(upgradeType(type, errorCode), errorCode);
         exceptionInfo.add(current);
+    }
+
+    private static final int[] NON_TRANSIENT_CODES = {isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key,
+            isc_wirecrypt_plugin, jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable, jb_cryptInvalidKey,
+            isc_login };
+    static {
+        Arrays.sort(NON_TRANSIENT_CODES);
+    }
+
+    /**
+     * Checks if a more specific exception type is possible (known and compatible) for the specified error code.
+     *
+     * @param type Requested exception type
+     * @param errorCode Error code
+     * @return Upgrade exception type (eg {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
+     */
+    private static Type upgradeType(final Type type, final int errorCode) {
+        switch (type) {
+        case WARNING:
+            return type;
+        case EXCEPTION:
+            if (Arrays.binarySearch(NON_TRANSIENT_CODES, errorCode) >= 0) {
+                return Type.NON_TRANSIENT;
+            }
+            return type;
+        default:
+            return type;
+        }
     }
 
     /**
@@ -488,15 +519,17 @@ public final class FbExceptionBuilder {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 // TODO Replace with a list or chain of processors?
-                if (sqlState != null && sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
-                    // Feature not supported by Firebird
-                    return new SQLFeatureNotSupportedException(message, sqlState, errorCode);
-                } else if (sqlState != null && sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
-                    return new SQLSyntaxErrorException(message, sqlState, errorCode);
-                } else {
+                if (sqlState != null) {
+                    if (sqlState.startsWith(SQLSTATE_FEATURE_NOT_SUPPORTED_PREFIX)) {
+                        // Feature not supported by Firebird
+                        return new SQLFeatureNotSupportedException(message, sqlState, errorCode);
+                    } else if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
+                        return new SQLSyntaxErrorException(message, sqlState, errorCode);
+                    }
                     // TODO Add support for other SQLException types
-                    return new SQLException(message, sqlState, errorCode);
                 }
+
+                return new SQLException(message, sqlState, errorCode);
                 // TODO If sqlState is 01xxx return SQLWarning any way?
             }
         },
@@ -525,7 +558,28 @@ public final class FbExceptionBuilder {
         NON_TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
-                return new SQLNonTransientException(message, sqlState, errorCode);
+                // TODO We probably want these specific exception types also for 'normal' exceptions
+                switch (errorCode) {
+                case isc_wirecrypt_incompatible:
+                case isc_miss_wirecrypt:
+                case isc_wirecrypt_key:
+                case isc_wirecrypt_plugin:
+                case jb_cryptNoCryptKeyAvailable:
+                case jb_cryptAlgorithmNotAvailable:
+                case jb_cryptInvalidKey:
+                    return new FBSQLEncryptException(message, sqlState, errorCode);
+                case isc_login:
+                    return new SQLInvalidAuthorizationSpecException(message, sqlState, errorCode);
+                default:
+                    if (sqlState != null) {
+                        if (sqlState.startsWith(SQLSTATE_SYNTAX_ERROR_PREFIX)) {
+                            return new SQLSyntaxErrorException(message, sqlState, errorCode);
+                        } else if (sqlState.startsWith(SQLSTATE_CONNECTION_ERROR_PREFIX)) {
+                            return new SQLNonTransientConnectionException(message, sqlState, errorCode);
+                        }
+                    }
+                    return new SQLNonTransientException(message, sqlState, errorCode);
+                }
             }
         },
         /**

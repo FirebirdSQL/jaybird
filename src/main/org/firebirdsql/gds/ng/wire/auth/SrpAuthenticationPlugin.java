@@ -86,6 +86,16 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
     }
 
     @Override
+    public boolean generatesSessionKey() {
+        return true;
+    }
+
+    @Override
+    public byte[] getSessionKey() throws SQLException {
+        return srpClient.getSessionKey();
+    }
+
+    @Override
     public String toString() {
         return getClass().getSimpleName() + " : " + getName();
     }

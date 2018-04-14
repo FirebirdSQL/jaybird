@@ -49,9 +49,11 @@ public interface AuthenticationPlugin {
      * by the returned {@link org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin.AuthStatus}.
      * </p>
      *
-     * @param clientAuthBlock Client authentication block.
+     * @param clientAuthBlock
+     *         Client authentication block.
      * @return Status of the authentication
-     * @throws SQLException For authentication failures
+     * @throws SQLException
+     *         For authentication failures
      */
     AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException;
 
@@ -63,14 +65,30 @@ public interface AuthenticationPlugin {
     /**
      * Sets data received from the server.
      *
-     * @param serverData Server data
+     * @param serverData
+     *         Server data
      */
     void setServerData(byte[] serverData);
 
     /**
-     * @return {@code} true if plugin has non-null and non-empty server data
+     * @return {@code true} if plugin has non-null and non-empty server data
      */
     boolean hasServerData();
+
+    /**
+     * @return {@code true} if the plugin generates a session key
+     */
+    boolean generatesSessionKey();
+
+    /**
+     * Session key for encryption.
+     *
+     * @return Session key
+     * @throws SQLException
+     *         If there is currently no session key or the authentication plugin doesn't support session key
+     *         generation.
+     */
+    byte[] getSessionKey() throws SQLException;
 
     /**
      * Status of authentication.

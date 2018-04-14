@@ -183,6 +183,7 @@ public interface ISCConstants {
     int isc_dpb_so_timeout              = 141;
     int isc_dpb_column_label_for_name   = 142;
     int isc_dpb_use_firebird_autocommit = 143;
+    int isc_dpb_wire_crypt_level        = 144;
 
     /*************************************/
     /* Transaction parameter block stuff */

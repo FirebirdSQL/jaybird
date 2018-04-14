@@ -62,6 +62,8 @@ public class TestWireDatabaseConnection extends FBJUnit4TestBase {
         connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setUser(FBTestProperties.DB_USER);
+        connectionInfo.setPassword(FBTestProperties.DB_PASSWORD);
         // TODO consider keeping NONE the default in WireConnection if not specified
         connectionInfo.setEncoding("NONE");
     }

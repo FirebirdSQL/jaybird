@@ -24,14 +24,17 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -284,7 +287,30 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         connection.addServerKeys(serverKeys);
     }
 
+    protected final void clearServerKeys() {
+        connection.clearServerKeys();
+    }
+
     protected final ClientAuthBlock getClientAuthBlock() {
         return connection.getClientAuthBlock();
+    }
+
+    /**
+     * @return Immutable attach properties
+     */
+    protected final IAttachProperties<?> getAttachProperties() {
+        return connection.getAttachProperties().asImmutable();
+    }
+
+    protected final List<EncryptionIdentifier> getEncryptionIdentifiers() {
+        return connection.getEncryptionIdentifiers();
+    }
+
+    protected final WireConnection<?, ?> getConnection() {
+        return connection;
+    }
+
+    protected final WarningMessageCallback getDefaultWarningMessageCallback() {
+        return defaultWarningMessageCallback;
     }
 }

@@ -110,7 +110,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
      * example).
      * 
-     * @deprecated use {@link #setDatabase(String)} instead for the sake of 
+     * @deprecated use {@link #setDatabase(String)} instead for the sake of
      * naming compatibility.
      */
     @Deprecated
@@ -389,6 +389,16 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
         mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
+    @Override
+    public String getWireCrypt() {
+        return mcf.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        mcf.setWireCrypt(wireCrypt);
     }
     
     /*
