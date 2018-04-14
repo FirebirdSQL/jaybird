@@ -226,6 +226,8 @@ The following has been changed or fixed since Jaybird 3.0.3
 
 -   Back-ported wire encryption support from Jaybird 4 ([JDBC-415](http://tracker.firebirdsql.org/browse/JDBC-415))  
     See [Wire encryption support] for more information.
+-   Native/embedded (JNA) connections truncate varchars to length 255 on read ([JDBC-518](http://tracker.firebirdsql.org/browse/JDBC-518))  
+    This fix was contributed by [Artyom Smirnov](https://github.com/artyom-smirnov)
 
 Changes in Jaybird 3.0.3
 ------------------------
