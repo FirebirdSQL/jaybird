@@ -192,9 +192,10 @@ Gotcha's
 During tests we have have observed that using Jaybird 4 with Firebird 4 may
 cause connection hangs when the connection is encrypted (the connection is 
 blocked in a read from the socket). The cause seems related to the Java 
-version (the problem disappeared with Java 9 Update 4). The workaround is 
-to disable wire encryption in Firebird or for the specific connection 
-(see [Wire encryption support]).
+version (the problem disappeared with Java 9 Update 4), or possibly the 
+`TcpRemoteBufferSize` setting in Firebird. The workaround is to disable 
+wire encryption in Firebird or for the specific connection (see 
+[Wire encryption support]).
 
 If you find a problem while upgrading, or other bugs: please report it 
 on <http://tracker.firebirdsql.org/brows/JDBC>.
@@ -275,9 +276,9 @@ column, as it is a pseudo-column.
 Wire encryption support
 -----------------------
 
-Jaybird 4 adds support for the Firebird 3 ARC4 wire encryption. The encryption
-is configured using the connection property `wireCrypt`, with the following
-(case-insensitive) values:
+Jaybird 4 adds support for the Firebird 3 ARC4 wire encryption. This feature has
+been back-ported to Jaybird 3.0.4. The encryption is configured using the 
+connection property `wireCrypt`, with the following (case-insensitive) values:
 
  -  `DEFAULT`: default (value used when `wireCrypt` is not specified; you'd 
     normally not specify this explicitly)
