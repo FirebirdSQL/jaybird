@@ -1273,6 +1273,31 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Check if strings longer than 255 are correctly stored and retrieved (see also JDBC-518)
+     */
+    @Test
+    public void testLongStringInsertAndRetrieve() throws Exception {
+        executeDDL(con, "recreate table long_string ( "
+                + " id integer primary key, "
+                + " stringcolumn varchar(1024)"
+                + ")");
+        char[] chars = new char[1024];
+        Arrays.fill(chars, 'a');
+        final String testvalue = new String(chars);
+        try (PreparedStatement pstmt = con.prepareStatement("insert into long_string (id, stringcolumn) values (?, ?)")) {
+            pstmt.setInt(1, 1);
+            pstmt.setString(2, testvalue);
+            pstmt.executeUpdate();
+        }
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select char_length(stringcolumn), stringcolumn from long_string where id = 1")) {
+            assertTrue("expected a row", rs.next());
+            assertEquals("Unexpected string length in Firebird", chars.length, rs.getInt(1));
+            assertEquals("Selected string value does not match inserted", testvalue, rs.getString(2));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
