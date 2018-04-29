@@ -158,6 +158,26 @@ public class FBServiceManager implements ServiceManager {
         serviceProperties.setPortNumber(port);
     }
 
+    @Override
+    public WireCrypt getWireCrypt() {
+        return serviceProperties.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(WireCrypt wireCrypt) {
+        serviceProperties.setWireCrypt(wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return serviceProperties.getDbCryptConfig();
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        serviceProperties.setDbCryptConfig(dbCryptConfig);
+    }
+
     /**
      * @return Returns the out.
      */

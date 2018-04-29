@@ -258,6 +258,22 @@ public interface IAttachProperties<T extends IAttachProperties> {
     void setWireCrypt(WireCrypt wireCrypt);
 
     /**
+     * Get the database encryption plugin configuration.
+     *
+     * @return Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    String getDbCryptConfig();
+
+    /**
+     * Sets the database encryption plugin configuration.
+     *
+     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    void setDbCryptConfig(String dbCryptConfig);
+
+    /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}
      */
     T asImmutable();

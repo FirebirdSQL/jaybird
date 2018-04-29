@@ -532,6 +532,21 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setWireCrypt(wireCrypt);
         }
     }
+
+    @Override
+    public String getDbCryptConfig() {
+        synchronized (lock) {
+            return connectionProperties.getDbCryptConfig();
+        }
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setDbCryptConfig(dbCryptConfig);
+        }
+    }
     
     /**
      * Method that allows setting non-standard property in the form "key=value"

@@ -35,7 +35,7 @@ import org.firebirdsql.gds.ng.wire.version10.*;
 
 /**
  * The {@link org.firebirdsql.gds.ng.wire.ProtocolDescriptor} for the Firebird version 13 protocol. This version
- * applies to Firebird 2.5, but also works with newer Firebird versions.
+ * applies to Firebird 3.0, but also works with newer Firebird versions.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -48,7 +48,7 @@ public final class Version13Descriptor extends AbstractProtocolDescriptor implem
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
-                2);
+                4);
     }
 
     @Override

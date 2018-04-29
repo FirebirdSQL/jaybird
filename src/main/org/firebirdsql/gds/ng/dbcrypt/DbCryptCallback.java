@@ -22,71 +22,44 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng.wire.crypt;
-
-import java.util.Objects;
-
-import static java.util.Objects.requireNonNull;
+package org.firebirdsql.gds.ng.dbcrypt;
 
 /**
- * Identifier of an encryption type + plugin.
+ * Plugin for Firebird database encryption callback.
+ * <p>
+ * Database encryption callbacks are allowed to be stateful (eg if they require multiple callbacks to work). A new
+ * callback instance is created for each authentication phase of a connection (a connection can have multiple
+ * authentication phases).
+ * </p>
+ * <p>
+ * NOTE: This plugin is currently only internal to Jaybird, consider the API as unstable.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0.4
  */
-public final class EncryptionIdentifier {
-
-    private final String type;
-    private final String pluginName;
-    private final int hashCode;
-
-    public EncryptionIdentifier(String type, String pluginName) {
-        this.type = requireNonNull(type, "type");
-        this.pluginName = requireNonNull(pluginName, "pluginName");
-        hashCode = Objects.hash(type, pluginName);
-    }
+public interface DbCryptCallback {
 
     /**
-     * Type of encryption.
-     * <p>
-     * For example: {@code "Symmetric"}.
-     * </p>
+     * Name of the database encryption callback.
      *
-     * @return Encryption type
+     * @return Name for identifying this callback within Jaybird.
+     * @see DbCryptCallbackSpi#getDbCryptCallbackName()
      */
-    public String getType() {
-        return type;
-    }
+    String getDbCryptCallbackName();
 
     /**
-     * Name of the plugin (or cipher).
+     * Callback method to be called with the server data.
      * <p>
-     * For example: {@code "Arc4"}.
+     * The implementation should reply with a response for the provided data. If the plugin cannot provide a response
+     * (eg because the server data is invalid), use an empty reply (eg use {@link DbCryptData#EMPTY_DATA}, or construct
+     * your own). The plugin should <b>not</b> throw an exception.
      * </p>
      *
-     * @return Name of the plugin
+     * @param serverData
+     *         Data received from the server (never {@code null}).
+     * @return Reply data (never {@code null}, use {@link DbCryptData#EMPTY_DATA} if there is no (valid) reply).
      */
-    public String getPluginName() {
-        return pluginName;
-    }
+    DbCryptData handleCallback(DbCryptData serverData);
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof EncryptionIdentifier)) {
-            return false;
-        }
-        EncryptionIdentifier other = (EncryptionIdentifier) o;
-        return this == other
-                || (this.type.equals(other.type) && this.pluginName.equals(other.pluginName));
-    }
-
-    @Override
-    public int hashCode() {
-        return hashCode;
-    }
-
-    @Override
-    public String toString() {
-        return type + "/" + pluginName;
-    }
 }

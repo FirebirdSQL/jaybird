@@ -27,7 +27,6 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.FbWireAttachment;
-import org.firebirdsql.gds.ng.wire.FbWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
@@ -36,6 +35,8 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 import org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -64,7 +65,8 @@ public class V13WireOperations extends V11WireOperations {
 
     @Override
     public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
-            FbWireOperations.ProcessAttachCallback processAttachCallback) throws SQLException, IOException {
+            DbCryptCallback dbCryptCallback,
+            ProcessAttachCallback processAttachCallback) throws SQLException, IOException {
         assert acceptPacket == null || acceptPacket.operation == op_cond_accept
                 : "Unexpected operation in AcceptPacket";
         final XdrInputStream xdrIn = getXdrIn();
@@ -98,6 +100,10 @@ public class V13WireOperations extends V11WireOperations {
                     log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
                             data.length, pluginName.length(), pluginName));
                     break;
+                case op_crypt_key_callback:
+                    log.debug("Handling db crypt callback using plugin " + dbCryptCallback.getDbCryptCallbackName());
+                    handleCryptKeyCallback(dbCryptCallback);
+                    continue;
                 case op_cond_accept:
                     // Note this is the equivalent of handling the acceptPacket != null above
                     xdrIn.readInt(); // p_acpt_version
@@ -237,4 +243,65 @@ public class V13WireOperations extends V11WireOperations {
 
         readOperationResponse(readNextOperation(), null);
     }
+
+    /**
+     * Handles the database encryption key callback.
+     *
+     * @param dbCryptCallback
+     *         Database encryption callback plugin
+     * @throws IOException
+     *         For errors reading data from the socket
+     * @throws SQLException
+     *         For database errors
+     */
+    protected final void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException {
+        final DbCryptData serverPluginData = readCryptKeyCallback();
+        DbCryptData clientPluginResponse;
+        try {
+            clientPluginResponse = dbCryptCallback.handleCallback(serverPluginData);
+        } catch (Exception e) {
+            log.error("Error during database encryption callback, using default empty response", e);
+            clientPluginResponse = DbCryptData.EMPTY_DATA;
+        }
+        writeCryptKeyCallback(clientPluginResponse);
+    }
+
+    /**
+     * Reads the database encryption callback data from the connection.
+     *
+     * @return Database encryption callback data received from server
+     * @throws IOException
+     *         For errors reading data from the socket
+     * @throws SQLException
+     *         For database errors
+     */
+    protected DbCryptData readCryptKeyCallback() throws IOException, SQLException {
+        final XdrInputStream xdrIn = getXdrIn();
+        final byte[] pluginData = xdrIn.readBuffer(); // p_cc_data
+        try {
+            return new DbCryptData(pluginData, Integer.MIN_VALUE);
+        } catch (RuntimeException e) {
+            throw new FbExceptionBuilder().nonTransientConnectionException(JaybirdErrorCodes.jb_dbCryptDataError)
+                    .cause(e)
+                    .toSQLException();
+        }
+    }
+
+    /**
+     * Writes the database encryption callback response data to the connection.
+     *
+     * @param clientPluginResponse
+     *         Database encryption callback response data to be sent to the server
+     * @throws IOException
+     *         For errors reading data from the socket
+     * @throws SQLException
+     *         For database errors
+     */
+    protected void writeCryptKeyCallback(DbCryptData clientPluginResponse) throws SQLException, IOException {
+        final XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(op_crypt_key_callback);
+        xdrOut.writeBuffer(clientPluginResponse.getPluginData()); // p_cc_data
+        xdrOut.flush();
+    }
+    
 }

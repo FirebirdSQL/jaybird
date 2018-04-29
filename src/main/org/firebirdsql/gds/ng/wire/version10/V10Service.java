@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -253,8 +254,9 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     }
 
     @Override
-    public void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
-        wireOperations.authReceiveResponse(acceptPacket, new FbWireOperations.ProcessAttachCallback() {
+    public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
+        final DbCryptCallback dbCryptCallback = createDbCryptCallback();
+        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, new FbWireOperations.ProcessAttachCallback() {
             @Override
             public void processAttachResponse(GenericResponse response) {
                 V10Service.this.processAttachResponse(response);

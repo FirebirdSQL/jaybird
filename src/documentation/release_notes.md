@@ -224,10 +224,25 @@ Changes in Jaybird 3.0.4
 
 The following has been changed or fixed since Jaybird 3.0.3
 
--   Back-ported wire encryption support from Jaybird 4 ([JDBC-415](http://tracker.firebirdsql.org/browse/JDBC-415))  
+-   New feature: Back-ported wire encryption support from Jaybird 4 ([JDBC-415](http://tracker.firebirdsql.org/browse/JDBC-415))  
     See [Wire encryption support] for more information.
--   Native/embedded (JNA) connections truncate varchars to length 255 on read ([JDBC-518](http://tracker.firebirdsql.org/browse/JDBC-518))  
+-   Fixed: Native/embedded (JNA) connections truncate varchars to length 255 on 
+    read ([JDBC-518](http://tracker.firebirdsql.org/browse/JDBC-518))  
     This fix was contributed by [Artyom Smirnov](https://github.com/artyom-smirnov)
+-   New feature: Database encryption callback support in pure Java protocol ([JDBC-527](http://tracker.firebirdsql.org/browse/JDBC-527))  
+    For more information, see [Database encryption support].  
+    This feature was sponsored by IBPhoenix.
+
+### Known issues in Jaybird 3.0.4
+
+-   When using native or embedded, the default JNA 4.4.0 dependency may not work
+    on some versions of Linux as it requires glibc 2.14. Upgrading the 
+    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
+    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).  
+    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
+    be specified as a Maven dependency or can be downloaded from 
+    <https://github.com/java-native-access/jna#download>
+    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
 
 Changes in Jaybird 3.0.3
 ------------------------
@@ -239,17 +254,6 @@ The following has been changed or fixed since Jaybird 3.0.2
     cause. ([JDBC-512](http://tracker.firebirdsql.org/browse/JDBC-512))
 -   Improved: Added explicit `Automatic-Module-Name: org.firebirdsql.jaybird` to 
     manifest for forwards compatibility with Java 9 modularization. ([JDBC-511](http://tracker.firebirdsql.org/browse/JDBC-511))
-
-### Known issues in Jaybird 3.0.3
-
--   When using native or embedded, the default JNA 4.4.0 dependency may not work
-    on some versions of Linux as it requires glibc 2.14. Upgrading the 
-    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
-    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).  
-    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
-    be specified as a Maven dependency or can be downloaded from 
-    <https://github.com/java-native-access/jna#download>
-    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
 
 Changes in Jaybird 3.0.2
 ------------------------
@@ -412,21 +416,28 @@ The improved support includes
 
 ### Java 9 ###
 
-Jaybird currently does not formally support Java 9 (JDBC 4.3), although most of
-the JDBC 4.3 features have been implemented (in as far as they are supported by 
-Firebird).
+Jaybird currently does not fully support Java 9 and higher (JDBC 4.3), although 
+most of the JDBC 4.3 features have been implemented (in as far as they are 
+supported by Firebird).
 
-For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
+For compatibility with Java 9+ modules, versions 2.2.14 and 3.0.3 introduced the 
 automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
 name for Jaybird, and allows for future modularization of Jaybird.  
 
-You can use the Java 8 driver under Java 9, contrary to earlier Jaybird 3.0 test 
+You can use the Java 8 driver under Java 9+, contrary to earlier Jaybird 3.0 test 
 releases, it is not necessary to add the `java.xml.bind` module using 
-`--add-modules java.xml.bind`, as we removed its use.
+`--add-modules java.xml.bind`, as we removed its use (see caveat below for the 
+Java 7 version of Jaybird).
 
-Jaybird 3.x cannot be fully tested under Java 9 at this moment, as some of our 
+Jaybird 3.x cannot be fully tested under Java 9+ at this moment, as some of our 
 tests fail due to recent changes, that prevent JMock (or specifically cglib) 
 from dynamically generating classes, this has been fixed on master (Jaybird 4).
+
+We recommend to only use the Java 8 version of Jaybird with Java 9+, and not use 
+the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
+JDBC 4.3 features that are implemented in the Java 8 version. In addition, since 
+Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` module, 
+where the Java 8 version doesn't need that module. 
 
 Firebird support
 ----------------
@@ -605,6 +616,72 @@ The implementation comes with a number of caveats:
      (although that in itself would already imply a severe security breach)
  -   the ARC4 encryption - the default provided by Firebird - is considered to 
      be a weak (maybe even broken) cipher these days
+     
+Database encryption support
+---------------------------
+
+Added in 3.0.4. This feature was sponsored by IBPhoenix.
+
+Jaybird 3.0.4 adds support for Firebird 3 database encryption callbacks in the 
+pure Java implementation of the version 13 protocol. 
+
+The current implementation is simple and only supports replying with a static 
+value from a connection property. Be aware that a static value response for 
+database encryption is not very secure as it can easily lead to replay attacks 
+or unintended key exposure. 
+
+Future versions of Jaybird (likely 4, maybe 5) will introduce plugin support for 
+database encryption plugins that require a more complex callback.
+
+The static response value of the encryption callback can be set through the 
+`dbCryptConfig` connection property. Data sources and `ServiceManager` 
+implementations have an equivalent property with the same name. This 
+property can be set as follows:
+
+-   Absent or empty value: empty response to callback (depending on the database 
+    encryption plugin this may just work or yield an error later)
+-   Strings prefixed with `base64:`: rest of the string is decoded as base64 to 
+    bytes. The `=` padding characters are optional, but when present they must
+    be valid (that is: if you use padding, you must use the right number of 
+    padding characters for the length)
+-   Plain string value: string is encoded to bytes using UTF-8, and these bytes
+    are used as the response
+    
+Because of the limitation of connection URL parsing, we strongly suggest to
+avoid plain string values with `&` or `;`. Likewise, avoid `:` so that we can
+support other prefixes similar to `base64:` in the future. If you need these 
+characters, consider using a base64 encoded value instead.
+
+For service operations, as implemented in the `org.firebirdsql.management` 
+package, Firebird requires the `KeyHolderPlugin` configuration to be globally 
+defined in `firebird.conf`. Database-specific configuration in `databases.conf` 
+will be ignored for service operations. Be aware that some service operations on 
+encrypted databases are not supported by Firebird 3 (eg `gstat` equivalents 
+other than `gstat -h` or `gstat -e`).
+
+Other warnings and limitations
+
+-   Database encryption callback support is only available in the pure Java
+    implementation. Support for native and embedded connections will be added
+    in a future version.
+-   The database encryption callback does not require an encrypted connection, 
+    so the key can be exchanged unencrypted if wire protocol encryption has been 
+    disabled client-side or server-side, or if legacy authentication is used. 
+    Consider setting connection property `wireCrypt=REQUIRED` to force 
+    encryption (caveat: see the next point).
+-   Firebird may ask for the database encryption key before the connection has
+    been encrypted (for example if the encrypted database itself is used as the
+    security database). _This applies to v15 protocol support, which is not yet
+    available._
+-   The improvements of the versions 14 and 15 wire protocol are not
+    implemented, and as a result encrypted security databases (external or 
+    security database hosted in the database itself) will not work unless the
+    encryption plugin does not require a callback. Support for the version 15 
+    wire protocol will be added in a future version.
+-   We cannot guarantee that the `dbCryptConfig` value cannot be obtained by 
+    someone with access to your application or the machine hosting your 
+    application (although that in itself would already imply a severe security 
+    breach).
 
 Potentially breaking changes
 ----------------------------

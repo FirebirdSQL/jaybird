@@ -60,6 +60,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String CONNECT_TIMEOUT = "connectTimeout";
     public static final String USE_FIREBIRD_AUTOCOMMIT = "useFirebirdAutocommit";
     public static final String WIRE_CRYPT_LEVEL = "wireCrypt";
+    public static final String DB_CRYPT_CONFIG = "dbCryptConfig";
 
     private Map<String, Object> properties = new HashMap<>();
     private String type;
@@ -369,6 +370,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public void setWireCrypt(String wireCrypt) {
         setStringProperty(WIRE_CRYPT_LEVEL, wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return getStringProperty(DB_CRYPT_CONFIG);
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        setStringProperty(DB_CRYPT_CONFIG, dbCryptConfig);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

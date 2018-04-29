@@ -22,71 +22,48 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng.wire.crypt;
-
-import java.util.Objects;
-
-import static java.util.Objects.requireNonNull;
+package org.firebirdsql.gds.ng.dbcrypt;
 
 /**
- * Identifier of an encryption type + plugin.
+ * Service provider interface for database encryption callback plugins.
+ * <p>
+ * NOTE: This plugin is currently only internal to Jaybird, consider the API as unstable.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0.4
  */
-public final class EncryptionIdentifier {
-
-    private final String type;
-    private final String pluginName;
-    private final int hashCode;
-
-    public EncryptionIdentifier(String type, String pluginName) {
-        this.type = requireNonNull(type, "type");
-        this.pluginName = requireNonNull(pluginName, "pluginName");
-        hashCode = Objects.hash(type, pluginName);
-    }
+public interface DbCryptCallbackSpi {
 
     /**
-     * Type of encryption.
+     * Name of the database encryption callback.
      * <p>
-     * For example: {@code "Symmetric"}.
+     * This name is for identification and selection purposes. As the name will be used in connection properties, we
+     * suggest to use relatively simple/short names, but make sure it is unique enough to prevent name conflicts.
+     * Consider using something like {@code <company-or-author>.<name>}.
      * </p>
      *
-     * @return Encryption type
+     * @return Name for identifying this callback within Jaybird.
      */
-    public String getType() {
-        return type;
-    }
+    String getDbCryptCallbackName();
 
     /**
-     * Name of the plugin (or cipher).
+     * Creates the database encryption callback with a configuration string.
      * <p>
-     * For example: {@code "Arc4"}.
+     * The configuration string of the {@code dbCryptConfig} connection property is plugin specific, but we suggest the
+     * following conventions:
      * </p>
+     * <ul>
+     * <li>For binary data, use prefix {@code base64:} to indicate the rest of the string is base64-encoded</li>
+     * <li>Avoid use of {@code &}, {@code ;} or {@code :}, or 'hide' this by using base64 encoding; this is necessary to
+     * avoid existing limitations in the parsing of connection properties that are added directly to the URL (we
+     * hope to address this in the future), and to allow support for other prefixes similar to {@code base64:}</li>
+     * </ul>
      *
-     * @return Name of the plugin
+     * @param dbCryptConfig
+     *         Configuration string from connection properties, or {@code null} if absent
+     * @return Database encryption callback
      */
-    public String getPluginName() {
-        return pluginName;
-    }
+    DbCryptCallback createDbCryptCallback(String dbCryptConfig);
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof EncryptionIdentifier)) {
-            return false;
-        }
-        EncryptionIdentifier other = (EncryptionIdentifier) o;
-        return this == other
-                || (this.type.equals(other.type) && this.pluginName.equals(other.pluginName));
-    }
-
-    @Override
-    public int hashCode() {
-        return hashCode;
-    }
-
-    @Override
-    public String toString() {
-        return type + "/" + pluginName;
-    }
 }

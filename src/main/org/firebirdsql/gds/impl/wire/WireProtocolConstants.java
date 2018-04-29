@@ -189,9 +189,10 @@ public interface WireProtocolConstants {
        Currently implemented asynchronously only for TCP/IP. */
     int PROTOCOL_VERSION12 = (FB_PROTOCOL_FLAG | 12);
 
-    /* Protocol 13 has support for authentication plugins (op_cont_auth). */
+    /* Protocol 13 has support for authentication plugins (op_cont_auth).
+       It also transfers SQL messages in the packed (null aware) format. */
     int PROTOCOL_VERSION13 = (FB_PROTOCOL_FLAG | 13);
-    
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
     
