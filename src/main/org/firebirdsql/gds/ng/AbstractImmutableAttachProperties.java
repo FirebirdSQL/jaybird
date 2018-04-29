@@ -37,6 +37,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     private final int soTimeout;
     private final int connectTimeout;
     private final WireCrypt wireCrypt;
+    private final String dbCryptConfig;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -60,6 +61,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
         soTimeout = src.getSoTimeout();
         connectTimeout = src.getConnectTimeout();
         wireCrypt = src.getWireCrypt();
+        dbCryptConfig = src.getDbCryptConfig();
     }
 
     @Override
@@ -169,6 +171,16 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public void setWireCrypt(final WireCrypt wireCrypt) {
+        immutable();
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return dbCryptConfig;
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
         immutable();
     }
 

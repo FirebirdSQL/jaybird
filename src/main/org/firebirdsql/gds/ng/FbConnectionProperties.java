@@ -222,6 +222,9 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                             .toFlatSQLException();
                 }
                 break;
+            case isc_dpb_db_crypt_config:
+                setDbCryptConfig(parameter.getValueAsString());
+                break;
             case isc_dpb_utf8_filename:
                 // Filter out, handled explicitly in protocol implementation
                 break;

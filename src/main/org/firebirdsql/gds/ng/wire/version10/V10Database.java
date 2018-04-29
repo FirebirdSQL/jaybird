@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.jdbc.SQLStateConstants;
@@ -563,7 +564,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
-        wireOperations.authReceiveResponse(acceptPacket, new FbWireOperations.ProcessAttachCallback() {
+        final DbCryptCallback dbCryptCallback = createDbCryptCallback();
+        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, new FbWireOperations.ProcessAttachCallback() {
             @Override
             public void processAttachResponse(GenericResponse response) {
                 processAttachOrCreateResponse(response);

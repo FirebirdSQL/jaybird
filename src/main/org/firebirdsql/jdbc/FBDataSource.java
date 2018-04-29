@@ -87,11 +87,18 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
      * @throws SQLException
      *         if a database-access error occurs.
      */
+    @SuppressWarnings("deprecation")
     public Connection getConnection() throws SQLException {
         try {
             return (Connection) cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
         } catch (ResourceException re) {
-            throw new FBSQLException("Problem getting connection: " + re);
+            if (re.getCause() instanceof SQLException) {
+                throw (SQLException) re.getCause();
+            }
+            if (re.getLinkedException() instanceof SQLException) {
+                throw (SQLException) re.getLinkedException();
+            }
+            throw new FBSQLException(re);
         }
     }
 

@@ -173,6 +173,14 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
+    public void testDbCryptConfig() {
+        assertNull(info.getDbCryptConfig());
+        final String dbCryptConfig = "ABCDEF";
+        info.setDbCryptConfig(dbCryptConfig);
+        assertEquals(dbCryptConfig, info.getDbCryptConfig());
+    }
+
+    @Test
     public void testCopyConstructor() throws Exception {
         info.setDatabaseName("testValue");
         info.setServerName("xyz");
@@ -180,6 +188,7 @@ public class FbConnectionPropertiesTest {
         info.setConnectionDialect((short) 2);
         info.setConnectTimeout(15);
         info.setWireCrypt(WireCrypt.REQUIRED);
+        info.setDbCryptConfig("XYZcrypt");
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
         BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);

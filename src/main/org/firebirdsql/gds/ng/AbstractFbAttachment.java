@@ -22,6 +22,9 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
+import org.firebirdsql.gds.ng.dbcrypt.simple.StaticValueDbCryptCallbackSpi;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.logging.Logger;
@@ -31,6 +34,7 @@ import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
 
 /**
  * Common behavior for {@link AbstractFbService} and {@link AbstractFbDatabase}.
@@ -157,4 +161,26 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
             log.debug("Exception on safely detach", ex);
         }
     }
+
+    private static final DbCryptCallbackSpi DEFAULT_DB_CRYPT_CALLBACK_SPI = new StaticValueDbCryptCallbackSpi();
+
+    /**
+     * Creates an instance of {@link DbCryptCallback} for this attachment.
+     *
+     * @return Database encryption callback.
+     * @throws SQLException For errors initializing the callback
+     */
+    protected final DbCryptCallback createDbCryptCallback() throws SQLException {
+        // TODO Make plugin selectable from config
+        try {
+            final String dbCryptConfig = connection.getAttachProperties().getDbCryptConfig();
+            return DEFAULT_DB_CRYPT_CALLBACK_SPI.createDbCryptCallback(dbCryptConfig);
+        } catch (RuntimeException e) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(jb_dbCryptCallbackInitError)
+                    .cause(e)
+                    .toSQLException();
+        }
+    }
+    
 }

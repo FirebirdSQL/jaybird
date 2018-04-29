@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -53,6 +54,7 @@ public class V10WireOperations extends AbstractWireOperations {
 
     @Override
     public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
+            DbCryptCallback dbCryptCallback,
             ProcessAttachCallback processAttachCallback) throws IOException, SQLException {
         assert acceptPacket == null : "Should not be called with non-null acceptPacket in V12 or earlier";
         GenericResponse response = readGenericResponse(null);

@@ -23,7 +23,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -72,4 +74,24 @@ public class ByteArrayHelperTest {
 
         ByteArrayHelper.toHexString(null);
     }
+
+    @Test
+    public void fromBase64String_properlyPadded() {
+        final String base64 = "ZWFzdXJlLg==";
+        final byte[] expectedValue = "easure.".getBytes(StandardCharsets.US_ASCII);
+
+        assertArrayEquals("base64 decoding", expectedValue, ByteArrayHelper.fromBase64String(base64));
+    }
+
+    /**
+     * We expect unpadded base64 (which should have been padded) to work
+     */
+    @Test
+    public void fromBase64String_notCorrectlyPadded() {
+        final String base64 = "ZWFzdXJlLg";
+        final byte[] expectedValue = "easure.".getBytes(StandardCharsets.US_ASCII);
+
+        assertArrayEquals("base64 decoding", expectedValue, ByteArrayHelper.fromBase64String(base64));
+    }
+
 }

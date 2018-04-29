@@ -1,3 +1,21 @@
+/*
+ * Firebird Open Source JavaEE Connector - JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.util;
 
 /**
@@ -7,6 +25,8 @@ package org.firebirdsql.util;
  * @since 3.0
  */
 public final class ByteArrayHelper {
+
+    private static final Base64Decoder BASE_64_DECODER = new Base64DecoderImpl();
 
     //@formatter:off
     private static final char[] BYTE_2_HEX=(
@@ -38,7 +58,8 @@ public final class ByteArrayHelper {
      * Adapted from http://stackoverflow.com/a/21429909/466862 by <a href="http://stackoverflow.com/users/1182868/higginse">higginse</a>
      * </p>
      *
-     * @param bytes byte array (not {@code null}
+     * @param bytes
+     *         byte array (not {@code null}
      * @return String with the content of the byte array in hexadecimal.
      */
     public static String toHexString(byte[] bytes) {
@@ -54,4 +75,16 @@ public final class ByteArrayHelper {
         }
         return new String(chars);
     }
+
+    /**
+     * Decodes a base64 encoded string to a byte array.
+     *
+     * @param base64
+     *         Base64 encoded data
+     * @return byte array after decoding
+     */
+    public static byte[] fromBase64String(String base64) {
+        return BASE_64_DECODER.decodeBase64(base64);
+    }
+
 }

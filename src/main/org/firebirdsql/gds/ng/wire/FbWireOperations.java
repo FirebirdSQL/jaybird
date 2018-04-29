@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -67,7 +68,8 @@ public interface FbWireOperations {
     /**
      * Reads the response from the server when the operation code has already been read.
      *
-     * @param operationCode The operation code
+     * @param operationCode
+     *         The operation code
      * @param callback
      *         Callback object for warnings, <code>null</code> for default callback
      * @return {@link Response} read.
@@ -194,6 +196,8 @@ public interface FbWireOperations {
      * @param acceptPacket
      *         Packet with {@code op_cond_accept} data, or {@code null} when the data should be read from the
      *         connection.
+     * @param dbCryptCallback
+     *         Database encryption callback (ignored by protocols v12 and lower)
      * @param processAttachCallback
      *         Callback for processing the final attach response
      * @throws IOException
@@ -202,7 +206,9 @@ public interface FbWireOperations {
      *         For errors returned from the server, or when attempting to
      *         read.
      */
-    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket, ProcessAttachCallback processAttachCallback)
+    void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
+            DbCryptCallback dbCryptCallback,
+            ProcessAttachCallback processAttachCallback)
             throws IOException, SQLException;
 
     interface ProcessAttachCallback {

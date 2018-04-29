@@ -25,6 +25,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.ng.WireCrypt;
 
 import java.io.OutputStream;
 import java.sql.SQLException;
@@ -123,6 +124,38 @@ public interface ServiceManager {
      *         for the connection to the service manager.
      */
     void setPort(int port);
+
+    /**
+     * Get the wire encryption level.
+     *
+     * @return Wire encryption level
+     * @since 4.0
+     */
+    WireCrypt getWireCrypt();
+
+    /**
+     * Set the wire encryption level.
+     *
+     * @param wireCrypt Wire encryption level ({@code null} not allowed)
+     * @since 4.0
+     */
+    void setWireCrypt(WireCrypt wireCrypt);
+
+    /**
+     * Get the database encryption plugin configuration.
+     *
+     * @return Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    String getDbCryptConfig();
+
+    /**
+     * Sets the database encryption plugin configuration.
+     *
+     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    void setDbCryptConfig(String dbCryptConfig);
 
     /**
      * Returns the logger for the connection to the service manager.
