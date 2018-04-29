@@ -844,7 +844,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
      */
     @Test
     public void testNumeric25_20Column() throws Exception {
-        assertTrue("Test requires extended numeric precision support",
+        assumeTrue("Test requires extended numeric precision support",
                 supportInfoFor(con).supportsDecimalPrecision(34));
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
@@ -862,7 +862,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
      */
     @Test
     public void testDecimal30_5Column() throws Exception {
-        assertTrue("Test requires extended numeric precision support",
+        assumeTrue("Test requires extended numeric precision support",
                 supportInfoFor(con).supportsDecimalPrecision(34));
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
