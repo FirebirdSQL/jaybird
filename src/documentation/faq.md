@@ -12,7 +12,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.3`
+Version: `3.0.4`
 
 For example, for Java 8:
 
@@ -20,7 +20,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.3</version>
+    <version>3.0.4</version>
 </dependency>
 ~~~
 
@@ -32,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.3</version>
+    <version>3.0.4</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -129,7 +129,7 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 3.0 supports Java 7 and 8 and has rudimentary support for Java 9.
+Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9.
 
 Jaybird 2.2 supports Java 6, 7 and 8. 
 
@@ -462,17 +462,18 @@ error.
 
 ### Incompatible wire encryption levels requested on client and server (335545064) ###  
 
-With Jaybird 3.0.x connecting to Firebird 3 or higher, this usually means that 
-the setting `WireCrypt` is set to its (default) value of `Required`.
+With Jaybird 3.0.0 - 3.0.3 connecting to Firebird 3 or higher, this usually 
+means that the setting `WireCrypt` is set to its (default) value of `Required`.
 
-Relax this setting (in `firebird.conf`) to `WireCrypt = Enabled`.
+Upgrade to Jaybird 3.0.4 or higher, or relax this setting (in `firebird.conf`) 
+to `WireCrypt = Enabled`.
 
 See also [Jaybird Wiki - Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
 
-With Jaybird 4, this error means that you have requested a connection with a
-mismatch in encryption settings. For example, you specified connection property 
-`wireCrypt=required` while Firebird is set to `WireCrypt = Disabled` (or vice 
-versa).
+With Jaybird 3.0.4 or higher, or Jaybird 4, this error means that you have 
+requested a connection with a mismatch in encryption settings. For example, you 
+specified connection property `wireCrypt=required` while Firebird is set to 
+`WireCrypt = Disabled` (or vice versa).
 
 ### connection rejected by remote interface (335544421) ###
 
@@ -632,6 +633,24 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
     <module name="javax.api"/>
     <module name="javax.transaction.api"/>
     <module name="javax.resource.api"/>
+  </dependencies>
+</module>
+```
+
+With Jaybird 3.0.4 and higher for Java 7 (but not Java 8!) in Wildfly (or JBoss), 
+you will need to add the module `javax.xml.bind.api` to your module:
+
+``` {.xml}
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
+  <resources>
+    <resource-root path="jaybird-3.0.x.jar"/>
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+    <module name="javax.transaction.api"/>
+    <module name="javax.resource.api"/>
+    <module name="javax.xml.bind.api"/> <!-- Add this -->
   </dependencies>
 </module>
 ```

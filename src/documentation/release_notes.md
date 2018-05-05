@@ -32,7 +32,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.7, and 3.0.2, but should also 
+Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.3, but should also 
 support other Firebird versions from 2.0 and up.
 
 Formal support for Firebird 1.x has been dropped (although in general we expect
@@ -46,16 +46,11 @@ Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1.
 
 ### Notes on Firebird 3 support
 
-Jaybird 3.0 does not support the Firebird 3 wire encryption nor zlib compression.
+Jaybird 3.0.4 added support for wire protocol encryption and database encryption.
+See [Wire encryption support] and [Database encryption support] for more 
+information. 
 
-To be able to connect to Firebird 3, it is necessary to change the `WireCrypt` 
-setting from its default `Required` to `Enabled` in `firebird.conf`:
-                                     
-    WireCrypt = Enabled
-    
-This configuration option can also be set to `Disabled`, but that is not 
-advisable as that will also disable it for clients that do support wire 
-encryption.
+Jaybird 3.0 does not support the Firebird 3 zlib compression.
 
 Supported Java versions
 -----------------------
@@ -63,10 +58,8 @@ Supported Java versions
 Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for 
 earlier Java versions has been dropped.
 
-Rudimentary support for Java 9 (JDBC 4.3) is available using the Java 8 version,
+Basic support for Java 9 (JDBC 4.3) is available using the Java 8 version,
 but real module support will not be available until Jaybird 4 (or later).
-
-Jaybird 3.0 is the last version to support Java 7 (_decision under debate_).
 
 Specification support
 ---------------------
@@ -243,6 +236,11 @@ The following has been changed or fixed since Jaybird 3.0.3
     be specified as a Maven dependency or can be downloaded from 
     <https://github.com/java-native-access/jna#download>
     or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
+-   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
+    or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
+    Wildlfy or JBoss on Java 7, you will need to declare a dependency on JAXB,
+    see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
+    for details.
 
 Changes in Jaybird 3.0.3
 ------------------------
@@ -1330,7 +1328,8 @@ driver to remain functional, but chances are certain metadata (eg
 
 ### Dropping support for Java 7 ###
 
-Jaybird 4 will very likely drop support for Java 7 (this decision is not final yet).
+Jaybird 4 will be the last version to support Java 7, Jaybird 5 will drop 
+support for Java 7.
 
 ### Removal of deprecated methods ###
 
