@@ -58,20 +58,26 @@ What's new in Jaybird 2.2
 Changelog
 ---------
 
-### Changes and fixes in Jaybird 2.2.13
+### Changes and fixes in Jaybird 2.2.15
+
+The following has been changed or fixed in Jaybird 2.2.15:
+
+-   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
+
+**Known issues in Jaybird 2.2.15**
+
+-   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
+    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
+    Workaround is to connect to the IPv4 address instead of the hostname, or to
+    use a Firebird 2.5 or earlier `fbclient.dll`.
+
+### Changes and fixes in Jaybird 2.2.14
 
 The following has been changed or fixed in Jaybird 2.2.14:
 
 -   Fixed: FBTraceManager.loadConfigurationFromFile strips line breaks ([JDBC-493](http://tracker.firebirdsql.org/browse/JDBC-493))
 -   Improved: Added explicit `Automatic-Module-Name: org.firebirdsql.jaybird` to 
     manifest for forwards compatibility with Java 9 modularization. ([JDBC-511](http://tracker.firebirdsql.org/browse/JDBC-511))
-
-**Known issues in Jaybird 2.2.14**
-
--   Connecting to Firebird 2.5 and earlier with a Firebird 3 `fbclient.dll` may
-    be slow with native connections, see [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658).
-    Workaround is to connect to the IPv4 address instead of the hostname, or to
-    use a Firebird 2.5 or earlier `fbclient.dll`.
 
 ### Changes and fixes in Jaybird 2.2.13
 
