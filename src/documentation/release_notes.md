@@ -212,6 +212,29 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.5
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.4
+
+-   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
+
+### Known issues in Jaybird 3.0.5
+
+-   When using native or embedded, the default JNA 4.4.0 dependency may not work
+    on some versions of Linux as it requires glibc 2.14. Upgrading the 
+    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
+    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).  
+    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
+    be specified as a Maven dependency or can be downloaded from 
+    <https://github.com/java-native-access/jna#download>
+    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
+-   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
+    or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
+    Wildlfy or JBoss on Java 7, you will need to declare a dependency on JAXB,
+    see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
+    for details.
+
 Changes in Jaybird 3.0.4
 ------------------------
 

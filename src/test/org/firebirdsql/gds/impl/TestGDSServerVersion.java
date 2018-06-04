@@ -53,6 +53,9 @@ public class TestGDSServerVersion {
     private static final String TEST_INCORRECT_FORMAT =
             "WI-V2.5.2a.26540 Firebird 2.5";
 
+    private static final String TEST_MAC_WITH_REVISION =
+            "UI-V2.5.8.27089-1 Firebird 2.5DUI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10";
+
     @Test
     public void testParse15() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_15);
@@ -140,8 +143,7 @@ public class TestGDSServerVersion {
         assertEquals(3, version.getVariant());
         assertEquals(18185, version.getBuildNumber());
         assertEquals("Firebird 2.1", version.getServerName());
-        assertEquals(null,
-                version.getExtendedServerName());
+        assertNull(version.getExtendedServerName());
         assertEquals("WI-V2.1.3.18185", version.getFullVersion());
         assertEquals(-1, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
@@ -161,9 +163,24 @@ public class TestGDSServerVersion {
         assertEquals(3, version.getVariant());
         assertEquals(18185, version.getBuildNumber());
         assertEquals("Firebird 2.1", version.getServerName());
-        assertEquals(null,
-                version.getExtendedServerName());
+        assertNull(version.getExtendedServerName());
         assertEquals("S4-V2.1.3.18185", version.getFullVersion());
+    }
+
+    @Test
+    public void testMacWithRevision() throws Exception {
+        GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_MAC_WITH_REVISION);
+
+        assertEquals("UI", version.getPlatform());
+        assertEquals("V", version.getType());
+        assertEquals(2, version.getMajorVersion());
+        assertEquals(5, version.getMinorVersion());
+        assertEquals(8, version.getVariant());
+        assertEquals(27089, version.getBuildNumber());
+        assertEquals("Firebird 2.5DUI", version.getServerName());
+        assertEquals("V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10",
+                version.getExtendedServerName());
+        assertEquals("UI-V2.5.8.27089-1", version.getFullVersion());
     }
 
     @Test(expected = GDSServerVersionException.class)
