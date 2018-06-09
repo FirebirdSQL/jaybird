@@ -31,6 +31,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
@@ -66,20 +67,20 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     }
 
     /**
-     * Sets the Firebird version string.
+     * Sets the Firebird version from one or more version string elements.
      * <p>
      * This method should only be called by this instance.
      * </p>
      *
-     * @param versionString
-     *         Raw version string
+     * @param versionStrings
+     *         Raw version strings
      */
-    protected final void setServerVersion(String versionString) {
+    protected final void setServerVersion(String... versionStrings) {
         try {
-            serverVersion = GDSServerVersion.parseRawVersion(versionString);
+            serverVersion = GDSServerVersion.parseRawVersion(versionStrings);
         } catch (GDSServerVersionException e) {
             log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ",
-                    versionString), e);
+                    Arrays.toString(versionStrings)), e);
             serverVersion = GDSServerVersion.INVALID_VERSION;
         }
         serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);

@@ -29,8 +29,10 @@ import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -366,15 +368,22 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     setOdsMinor(value);
                     if (debug) log.debug("isc_info_ods_minor_version:" + value);
                     break;
-                case ISCConstants.isc_info_firebird_version:
-                    // The first two bytes of the version are garbage
-                    len = iscVaxInteger2(info, i) - 2;
-                    i += 4;
-                    String firebirdVersion = new String(info, i, len);
-                    i += len;
-                    setServerVersion(firebirdVersion);
-                    if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
+                case ISCConstants.isc_info_firebird_version: {
+                    len = iscVaxInteger2(info, i);
+                    i += 2;
+                    final int expectedIndex = i + len;
+                    final int versionCount = info[i++] & 0xFF;
+                    final String[] versionParts = new String[versionCount];
+                    for (int versionIndex = 0; versionIndex < versionCount; versionIndex++) {
+                        int versionLength = info[i++] & 0xFF;
+                        versionParts[versionIndex] = new String(info, i, versionLength, StandardCharsets.UTF_8);
+                        i += versionLength;
+                    }
+                    assert i == expectedIndex : "Parsing version information lead to wrong index";
+                    setServerVersion(versionParts);
+                    if (debug) log.debug("isc_info_firebird_version: " + Arrays.toString(versionParts));
                     break;
+                }
                 case ISCConstants.isc_info_truncated:
                     if (debug) log.debug("isc_info_truncated ");
                     return AbstractFbDatabase.this;
