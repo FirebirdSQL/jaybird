@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ng.listeners.ServiceListenerDispatcher;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
@@ -146,14 +147,15 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
             int i = 0;
             while (info[i] != isc_info_end) {
                 switch (info[i++]) {
-                case isc_info_svc_server_version:
+                case isc_info_svc_server_version: {
                     len = iscVaxInteger2(info, i);
                     i += 2;
-                    String firebirdVersion = new String(info, i, len);
+                    String firebirdVersion = new String(info, i, len, StandardCharsets.UTF_8);
                     i += len;
                     setServerVersion(firebirdVersion);
-                    if (debug) log.debug("isc_info_firebird_version:" + firebirdVersion);
+                    if (debug) log.debug("isc_info_svc_server_version:" + firebirdVersion);
                     break;
+                }
                 case isc_info_truncated:
                     log.debug("isc_info_truncated ");
                     return AbstractFbService.this;

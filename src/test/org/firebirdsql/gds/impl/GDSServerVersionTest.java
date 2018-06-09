@@ -35,26 +35,26 @@ import static org.junit.Assert.*;
 
 public class GDSServerVersionTest {
 
-    private static final String TEST_VERSION_15 =
-            "WI-V1.5.2.4731 Firebird 1.5,WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10";
+    private static final String[] TEST_VERSION_15 =
+            { "WI-V1.5.2.4731 Firebird 1.5" , "WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10" };
 
-    private static final String TEST_VERSION_21 =
-            "WI-V2.1.3.18185 Firebird 2.1-WI-V2.1.3.18185 Firebird 2.1/tcp (Ramona)/P10";
+    private static final String[] TEST_VERSION_21 =
+            { "WI-V2.1.3.18185 Firebird 2.1", "WI-V2.1.3.18185 Firebird 2.1/tcp (Ramona)/P10" };
 
-    private static final String TEST_VERSION_30 =
-            "WI-V3.0.2.32703 Firebird 3.0/WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:C";
+    private static final String[] TEST_VERSION_30 =
+            { "WI-V3.0.2.32703 Firebird 3.0", "WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:C" };
 
-    private static final String TEST_NO_EXTENDED_INFO =
-            "WI-V2.1.3.18185 Firebird 2.1";
+    private static final String[] TEST_NO_EXTENDED_INFO =
+            { "WI-V2.1.3.18185 Firebird 2.1" };
 
-    private static final String TEST_NO_EXTENDED_INFO_SPARC =
-            "S4-V2.1.3.18185 Firebird 2.1";
+    private static final String[] TEST_NO_EXTENDED_INFO_SPARC =
+            { "S4-V2.1.3.18185 Firebird 2.1" };
 
-    private static final String TEST_INCORRECT_FORMAT =
-            "WI-V2.5.2a.26540 Firebird 2.5";
+    private static final String[] TEST_INCORRECT_FORMAT =
+            { "WI-V2.5.2a.26540 Firebird 2.5" };
 
-    private static final String TEST_MAC_WITH_REVISION =
-            "UI-V2.5.8.27089-1 Firebird 2.5DUI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10";
+    private static final String[] TEST_MAC_WITH_REVISION =
+            { "UI-V2.5.8.27089-1 Firebird 2.5", "UI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10" };
 
     @Test
     public void testParse15() throws Exception {
@@ -73,6 +73,7 @@ public class GDSServerVersionTest {
         assertEquals(10, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
         assertFalse(version.isWireCompressionUsed());
+        assertEquals("WI-V1.5.2.4731 Firebird 1.5,WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10", version.toString());
     }
 
     @Test
@@ -92,6 +93,7 @@ public class GDSServerVersionTest {
         assertEquals(10, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
         assertFalse(version.isWireCompressionUsed());
+        assertEquals("WI-V2.1.3.18185 Firebird 2.1,WI-V2.1.3.18185 Firebird 2.1/tcp (Ramona)/P10", version.toString());
     }
 
     @Test
@@ -111,11 +113,15 @@ public class GDSServerVersionTest {
         assertEquals(13, version.getProtocolVersion());
         assertTrue(version.isWireEncryptionUsed());
         assertFalse(version.isWireCompressionUsed());
+        assertEquals(
+                "WI-V3.0.2.32703 Firebird 3.0,WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:C", version.toString());
     }
 
     @Test
     public void testParse30WithCompression() throws Exception {
-        GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_30 + "Z");
+        String[] testVersionCompression = TEST_VERSION_30.clone();
+        testVersionCompression[1] = testVersionCompression[1] + "Z";
+        GDSServerVersion version = GDSServerVersion.parseRawVersion(testVersionCompression);
 
         assertEquals("WI", version.getPlatform());
         assertEquals("V", version.getType());
@@ -130,6 +136,8 @@ public class GDSServerVersionTest {
         assertEquals(13, version.getProtocolVersion());
         assertTrue(version.isWireEncryptionUsed());
         assertTrue(version.isWireCompressionUsed());
+        assertEquals(
+                "WI-V3.0.2.32703 Firebird 3.0,WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:CZ", version.toString());
     }
 
     @Test
@@ -147,6 +155,7 @@ public class GDSServerVersionTest {
         assertEquals("WI-V2.1.3.18185", version.getFullVersion());
         assertEquals(-1, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
+        assertEquals("WI-V2.1.3.18185 Firebird 2.1", version.toString());
     }
 
     /**
@@ -165,6 +174,7 @@ public class GDSServerVersionTest {
         assertEquals("Firebird 2.1", version.getServerName());
         assertNull(version.getExtendedServerName());
         assertEquals("S4-V2.1.3.18185", version.getFullVersion());
+        assertEquals("S4-V2.1.3.18185 Firebird 2.1", version.toString());
     }
 
     @Test
@@ -177,10 +187,13 @@ public class GDSServerVersionTest {
         assertEquals(5, version.getMinorVersion());
         assertEquals(8, version.getVariant());
         assertEquals(27089, version.getBuildNumber());
-        assertEquals("Firebird 2.5DUI", version.getServerName());
-        assertEquals("V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10",
+        assertEquals("Firebird 2.5", version.getServerName());
+        assertEquals("UI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10",
                 version.getExtendedServerName());
         assertEquals("UI-V2.5.8.27089-1", version.getFullVersion());
+        assertEquals(
+                "UI-V2.5.8.27089-1 Firebird 2.5,UI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10",
+                version.toString());
     }
 
     @Test(expected = GDSServerVersionException.class)
