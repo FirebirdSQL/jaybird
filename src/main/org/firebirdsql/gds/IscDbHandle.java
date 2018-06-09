@@ -130,13 +130,18 @@ public interface IscDbHandle {
      * @return database server version.
      */
     String getVersion();
-    
+
     /**
-     * 
      * @param version Version string
      * @throws GDSException For failures to parse or process the version string
      */
     void setVersion(String version) throws GDSException;
+    
+    /**
+     * @param version Version strings
+     * @throws GDSException For failures to parse or process the version string
+     */
+    void setVersion(String... version) throws GDSException;
 
     /**
      * Retrieve whether this handle is valid.

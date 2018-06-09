@@ -63,6 +63,7 @@ Changelog
 The following has been changed or fixed in Jaybird 2.2.15:
 
 -   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
+-   Fixed: Incorrect parsing of Firebird version numbers ([JDBC-535](http://tracker.firebirdsql.org/browse/JDBC-535))
 
 **Known issues in Jaybird 2.2.15**
 

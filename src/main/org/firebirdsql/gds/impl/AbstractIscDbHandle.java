@@ -119,8 +119,12 @@ public abstract class AbstractIscDbHandle implements IscDbHandle {
     public String getVersion() {
         return serverVersion.toString();
     }
-    
+
     public void setVersion(String version) throws GDSException {
+        setVersion(new String[] { version });
+    }
+    
+    public void setVersion(String... version) throws GDSException {
         this.serverVersion = GDSServerVersion.parseRawVersion(version);
     }
 

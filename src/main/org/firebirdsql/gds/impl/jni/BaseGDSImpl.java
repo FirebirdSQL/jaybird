@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.impl.jni;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.*;
@@ -43,9 +44,6 @@ public abstract class BaseGDSImpl extends AbstractGDS {
         ISCConstants.isc_info_firebird_version,
         ISCConstants.isc_info_ods_version,
         ISCConstants.isc_info_ods_minor_version,
-        ISCConstants.isc_info_implementation,
-        ISCConstants.isc_info_db_class, 
-        ISCConstants.isc_info_base_level,
         ISCConstants.isc_info_end };
 
 
@@ -1168,38 +1166,22 @@ public abstract class BaseGDSImpl extends AbstractGDS {
                     if (debug)
                         log.debug("isc_info_ods_minor_version:" + value);
                     break;
-                case ISCConstants.isc_info_firebird_version:
+                case ISCConstants.isc_info_firebird_version:{
                     len = iscVaxInteger(info, i, 2);
                     i += 2;
-                    byte[] fb_vers = new byte[len - 2];
-                    System.arraycopy(info, i + 2, fb_vers, 0, len - 2);
-                    i += len;
-                    String fb_versS = new String(fb_vers);
-                    db.setVersion(fb_versS);
-                    if (debug)
-                        log.debug("isc_info_firebird_version:" + fb_versS);
+                    final int expectedIndex = i + len;
+                    final int versionCount = info[i++] & 0xFF;
+                    final String[] versionParts = new String[versionCount];
+                    for (int versionIndex = 0; versionIndex < versionCount; versionIndex++) {
+                        int versionLength = info[i++] & 0xFF;
+                        versionParts[versionIndex] = new String(info, i, versionLength);
+                        i += versionLength;
+                    }
+                    assert i == expectedIndex : "Parsing version information lead to wrong index";
+                    db.setVersion(versionParts);
+                    if (debug) log.debug("isc_info_firebird_version: " + Arrays.toString(versionParts));
                     break;
-                case ISCConstants.isc_info_implementation:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] impl = new byte[len - 2];
-                    System.arraycopy(info, i + 2, impl, 0, len - 2);
-                    i += len;
-                    break;
-                case ISCConstants.isc_info_db_class:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] db_class = new byte[len - 2];
-                    System.arraycopy(info, i + 2, db_class, 0, len - 2);
-                    i += len;
-                    break;
-                case ISCConstants.isc_info_base_level:
-                    len = iscVaxInteger(info, i, 2);
-                    i += 2;
-                    byte[] base_level = new byte[len - 2];
-                    System.arraycopy(info, i + 2, base_level, 0, len - 2);
-                    i += len;
-                    break;
+                }
                 case ISCConstants.isc_info_truncated:
                     if (debug) log.debug("isc_info_truncated ");
                     return;
