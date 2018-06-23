@@ -185,8 +185,9 @@ public final class ClientAuthBlock {
     }
 
     public void writePluginDataTo(OutputStream userId) throws IOException {
-        if (attachProperties.getUser() != null) {
-            final byte[] loginBytes = attachProperties.getUser().getBytes(StandardCharsets.UTF_8);
+        final String user = getLogin();
+        if (user != null) {
+            final byte[] loginBytes = user.getBytes(StandardCharsets.UTF_8);
             userId.write(CNCT_login);
             int loginLength = Math.min(loginBytes.length, 255);
             userId.write(loginLength);
@@ -237,7 +238,10 @@ public final class ClientAuthBlock {
     private static List<AuthenticationPluginSpi> getSupportedPluginProviders() {
         // TODO Create from service provider interface; use properties?
         return Collections.unmodifiableList(
-                Arrays.<AuthenticationPluginSpi>asList(new SrpAuthenticationPluginSpi(), new LegacyAuthenticationPluginSpi()));
+                Arrays.<AuthenticationPluginSpi>asList(
+                        new Srp256AuthenticationPluginSpi(),
+                        new SrpAuthenticationPluginSpi(),
+                        new LegacyAuthenticationPluginSpi()));
     }
 
     public boolean switchPlugin(String pluginName) {

@@ -390,6 +390,38 @@ Other warnings and limitations
     someone with access to your application or the machine hosting your 
     application (although that in itself would already imply a severe security 
     breach).
+    
+Authentication plugin improvements
+----------------------------------
+
+Jaybird 4 has added support for the new `SrpNNN` (with NNN is 224, 256, 384 and 
+512) authentication plugins added in Firebird 4 (backported to Firebird 3.0.4).
+
+The original `Srp` plugin used SHA-1, the new Srp-variants use SHA-224, SHA-256,
+SHA-384 and SHA-512 respectively[^srpHash].
+
+[^srpHash]: Internally `SrpNNN` continues to uses SHA-1, only the client-proof 
+applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/browse/CORE-5788)).
+
+Be aware, support for these plugins depends on support of these hash algorithms 
+in the JVM. For example, SHA-224 is not supported in Oracle Java 7.
+
+### Default authentication plugins ###
+
+The default plugins applied by Jaybird are now - in order - `Srp256`, `Srp` and 
+`Legacy_Auth`. 
+
+When connecting to Firebird 3 versions earlier than 3.0.4, or if `Srp256` has 
+been removed from the `AuthServer` setting in Firebird, this might result in a 
+slower authentication because more roundtrips to the server are needed because 
+the attempt to use `Srp256` fails, and authentication then 
+continues with `Srp`.
+
+Firebird 2.5 and earlier are not affected.
+
+### Configure authentication plugins ###
+
+_Still TODO_
      
 Firebird 4 DECFLOAT support
 ---------------------------

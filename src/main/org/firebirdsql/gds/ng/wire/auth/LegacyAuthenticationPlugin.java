@@ -30,11 +30,10 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class LegacyAuthenticationPlugin implements AuthenticationPlugin {
+class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(LegacyAuthenticationPlugin.class);
 
-    public static final String LEGACY_AUTH_NAME = "Legacy_Auth";
     public static final String LEGACY_PASSWORD_SALT = "9z";
 
     private byte[] clientData;
@@ -42,7 +41,7 @@ public class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
     @Override
     public String getName() {
-        return LEGACY_AUTH_NAME;
+        return LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME;
     }
 
     @Override

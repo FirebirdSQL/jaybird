@@ -19,21 +19,23 @@
 package org.firebirdsql.gds.ng.wire.auth;
 
 /**
- * Legacy authentication plugin service provider.
+ * Srp256 authentication plugin service provider.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 3.0.5
  */
-public class LegacyAuthenticationPluginSpi implements AuthenticationPluginSpi {
+public class Srp256AuthenticationPluginSpi implements AuthenticationPluginSpi {
 
-    public static final String LEGACY_AUTH_NAME = "Legacy_Auth";
+    public static final String SRP_AUTH_NAME = "Srp256";
 
     @Override
     public String getPluginName() {
-        return LEGACY_AUTH_NAME;
+        return SRP_AUTH_NAME;
     }
 
     @Override
     public AuthenticationPlugin createPlugin() {
-        return new LegacyAuthenticationPlugin();
+        return new SrpAuthenticationPlugin(SRP_AUTH_NAME, "SHA-256");
     }
+    
 }

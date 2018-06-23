@@ -90,15 +90,15 @@ public class V13ParameterConverter extends V12ParameterConverter {
                     "populateAuthenticationProperties should have been called with a WireConnection instance, was "
                             + connection.getClass().getName());
         }
+        ClientAuthBlock clientAuthBlock = ((WireConnection) connection).getClientAuthBlock();
+        if (clientAuthBlock == null || clientAuthBlock.isAuthComplete()) {
+            return;
+        }
+        
         IAttachProperties props = connection.getAttachProperties();
         ParameterTagMapping tagMapping = pb.getTagMapping();
         if (props.getUser() != null) {
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
-        }
-
-        ClientAuthBlock clientAuthBlock = ((WireConnection) connection).getClientAuthBlock();
-        if (clientAuthBlock.isAuthComplete()) {
-            return;
         }
 
         clientAuthBlock.authFillParametersBlock(pb);

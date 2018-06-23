@@ -185,6 +185,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      *         For errors reading or writing database information.
      */
     protected final void afterAttachActions() throws SQLException {
+        connection.clearAuthData();
         getDatabaseInfo(getDescribeDatabaseInfoBlock(), 1024, getDatabaseInformationProcessor());
         // During connect and attach the socketTimeout might be set to the connectTimeout, now reset to 'normal' socketTimeout
         connection.resetSocketTimeout();
