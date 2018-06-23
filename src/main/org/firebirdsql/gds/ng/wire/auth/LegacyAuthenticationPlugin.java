@@ -34,7 +34,7 @@ class LegacyAuthenticationPlugin implements AuthenticationPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(LegacyAuthenticationPlugin.class);
 
-    public static final String LEGACY_PASSWORD_SALT = "9z";
+    private static final String LEGACY_PASSWORD_SALT = "9z";
 
     private byte[] clientData;
     private boolean hasServerData;
