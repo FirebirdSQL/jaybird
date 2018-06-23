@@ -26,16 +26,16 @@ package org.firebirdsql.gds.ng.wire.auth;
  */
 public class Srp512AuthenticationPluginSpi implements AuthenticationPluginSpi {
 
-    public static final String SRP_AUTH_NAME = "Srp512";
+    public static final String SRP_512_AUTH_NAME = "Srp512";
 
     @Override
     public String getPluginName() {
-        return SRP_AUTH_NAME;
+        return SRP_512_AUTH_NAME;
     }
 
     @Override
     public AuthenticationPlugin createPlugin() {
-        return new SrpAuthenticationPlugin(SRP_AUTH_NAME, "SHA-512");
+        return new SrpAuthenticationPlugin(SRP_512_AUTH_NAME, "SHA-512");
     }
     
 }

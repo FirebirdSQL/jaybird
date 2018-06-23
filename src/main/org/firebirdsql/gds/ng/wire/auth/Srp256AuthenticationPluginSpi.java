@@ -26,16 +26,16 @@ package org.firebirdsql.gds.ng.wire.auth;
  */
 public class Srp256AuthenticationPluginSpi implements AuthenticationPluginSpi {
 
-    public static final String SRP_AUTH_NAME = "Srp256";
+    public static final String SRP_256_AUTH_NAME = "Srp256";
 
     @Override
     public String getPluginName() {
-        return SRP_AUTH_NAME;
+        return SRP_256_AUTH_NAME;
     }
 
     @Override
     public AuthenticationPlugin createPlugin() {
-        return new SrpAuthenticationPlugin(SRP_AUTH_NAME, "SHA-256");
+        return new SrpAuthenticationPlugin(SRP_256_AUTH_NAME, "SHA-256");
     }
     
 }
