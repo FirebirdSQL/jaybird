@@ -69,9 +69,9 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
-    private final ClientAuthBlock clientAuthBlock;
     // Micro-optimization: we usually expect at most 1 (Firebird 3), and usually 0 (Firebird 2.5 and earlier)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(1);
+    private ClientAuthBlock clientAuthBlock;
     private Socket socket;
     private ProtocolCollection protocols;
     private int protocolVersion;
@@ -332,6 +332,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             throw new FbExceptionBuilder().exception(ISCConstants.isc_network_error)
                     .messageParameter(getServerName()).cause(ioex).toSQLException();
         }
+    }
+
+    /**
+     * Clear authentication data.
+     */
+    public final void clearAuthData() {
+        clientAuthBlock = null;
+        clearServerKeys();
     }
 
     private byte[] createUserIdentificationBlock() throws IOException, SQLException {

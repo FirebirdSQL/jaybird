@@ -28,23 +28,40 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 
 /**
- * Authentication plugin for authentication with SRP.
+ * Authentication plugin for authentication with Srp.
+ * <p>
+ * Supports multiple hash algorithms for the client proof.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class SrpAuthenticationPlugin implements AuthenticationPlugin {
+class SrpAuthenticationPlugin implements AuthenticationPlugin {
 
     private static final Logger log = LoggerFactory.getLogger(SrpAuthenticationPlugin.class);
 
-    public static final String SRP_AUTH_NAME = "Srp";
-
+    private final String pluginName;
+    private final String clientProofHashAlgorithm;
     private byte[] clientData;
     private SrpClient srpClient;
     private byte[] serverData;
 
+    /**
+     * Initializes the SRP authentication plugin.
+     *
+     * @param pluginName
+     *         Firebird name of the plugin
+     * @param clientProofHashAlgorithm
+     *         Hash algorithm name (as accepted by {@code MessageDigest.getInstance}) for
+     *         creating the client proof.
+     */
+    SrpAuthenticationPlugin(String pluginName, String clientProofHashAlgorithm) {
+        this.pluginName = pluginName;
+        this.clientProofHashAlgorithm = clientProofHashAlgorithm;
+    }
+
     @Override
     public String getName() {
-        return SRP_AUTH_NAME;
+        return pluginName;
     }
 
     @Override
@@ -54,7 +71,7 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
             if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
                 return AuthStatus.AUTH_CONTINUE;
             }
-            srpClient = new SrpClient();
+            srpClient = new SrpClient(clientProofHashAlgorithm);
             clientData = srpClient.getPublicKeyHex().getBytes(StandardCharsets.US_ASCII);
             return AuthStatus.AUTH_MORE_DATA;
         } else if (srpClient.getSessionKey() != null) {
@@ -66,7 +83,6 @@ public class SrpAuthenticationPlugin implements AuthenticationPlugin {
         log.debug("SRP phase 2");
         clientData = toHex(srpClient.clientProof(clientAuthBlock.getLogin(), clientAuthBlock.getPassword(), serverData))
                 .getBytes(StandardCharsets.US_ASCII);
-        // TODO store key as in the Firebird sources?
         return AuthStatus.AUTH_SUCCESS;
     }
 

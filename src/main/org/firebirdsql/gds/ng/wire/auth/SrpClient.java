@@ -26,6 +26,7 @@
 package org.firebirdsql.gds.ng.wire.auth;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.util.ByteArrayHelper;
@@ -39,9 +40,13 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
+ * SRP client handshake implementation.
+ *
  * @author <a href="mailto:nakagami@gmail.com">Hajime Nakagami</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public final class SrpClient {
+    
     private static final int SRP_KEY_SIZE = 128;
     private static final int SRP_SALT_SIZE = 32;
     private static final int EXPECTED_AUTH_DATA_LENGTH = (SRP_SALT_SIZE + SRP_KEY_SIZE + 2) * 2;
@@ -51,26 +56,23 @@ public final class SrpClient {
     private static final BigInteger k = new BigInteger("1277432915985975349439481660349303019122249719989");
 
     private static final SecureRandom random = new SecureRandom();
-    private static final byte[] SEPARATOR_BYTES = ":".getBytes(StandardCharsets.UTF_8);
+    private static final byte SEPARATOR_BYTE = (byte) ':';
 
-    private BigInteger publicKey;   /* A */
-    private BigInteger privateKey;  /* a */
+    private final MessageDigest sha1Md;
+    private final String clientProofHashAlgorithm;
+    private final BigInteger publicKey;   /* A */
+    private final BigInteger privateKey;  /* a */
     private byte[] sessionKey;      /* K */
 
-    static class KeyPair {
-        private BigInteger pub, secret;
-
-        private KeyPair(BigInteger pub, BigInteger secret) {
-            this.pub = pub;
-            this.secret = secret;
-        }
-
-        BigInteger getPublicKey() {
-            return pub;
-        }
-
-        BigInteger getPrivateKey() {
-            return secret;
+    public SrpClient(String clientProofHashAlgorithm) {
+        this.clientProofHashAlgorithm = clientProofHashAlgorithm;
+        privateKey = getSecret();
+        publicKey = g.modPow(privateKey, N);
+        try {
+            sha1Md = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException e) {
+            // Should not happen
+            throw new RuntimeException("SHA-1 MessageDigest not available", e);
         }
     }
 
@@ -97,15 +99,20 @@ public final class SrpClient {
         return hexString;
     }
 
-    private static byte[] sha1(byte[]... ba) {
+    private byte[] sha1(byte[] bytes) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            for (byte[] b : ba) {
-                md.update(b);
-            }
-            return md.digest();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-1 MessageDigest not available", e);
+            return sha1Md.digest(bytes);
+        } finally {
+            sha1Md.reset();
+        }
+    }
+
+    private byte[] sha1(byte[] bytes1, byte[] bytes2) {
+        try {
+            sha1Md.update(bytes1);
+            return sha1Md.digest(bytes2);
+        } finally {
+            sha1Md.reset();
         }
     }
 
@@ -117,7 +124,7 @@ public final class SrpClient {
         return bn;
     }
 
-    private static BigInteger getScramble(BigInteger x, BigInteger y) {
+    private BigInteger getScramble(BigInteger x, BigInteger y) {
         return fromBigByteArray(sha1(pad(x), pad(y)));
     }
 
@@ -131,14 +138,20 @@ public final class SrpClient {
         return b;
     }
 
-    private static BigInteger getUserHash(String user, String password, byte[] salt) {
-        final byte[] hash1 = sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8), SEPARATOR_BYTES,
-                password.getBytes(StandardCharsets.UTF_8));
+    private BigInteger getUserHash(String user, String password, byte[] salt) {
+        final byte[] hash1;
+        try {
+            sha1Md.update(user.toUpperCase().getBytes(StandardCharsets.UTF_8));
+            sha1Md.update(SEPARATOR_BYTE);
+            hash1 = sha1Md.digest(password.getBytes(StandardCharsets.UTF_8));
+        } finally {
+            sha1Md.reset();
+        }
         final byte[] hash2 = sha1(salt, hash1);
         return fromBigByteArray(hash2);
     }
 
-    static KeyPair serverSeed(String user, String password, byte[] salt) {
+    KeyPair serverSeed(String user, String password, byte[] salt) {
         final BigInteger v = g.modPow(getUserHash(user, password, salt), N);
         final BigInteger b = getSecret();
         final BigInteger gb = g.modPow(b, N);
@@ -147,7 +160,7 @@ public final class SrpClient {
         return new KeyPair(B, b);
     }
 
-    static byte[] getServerSessionKey(String user, String password, byte[] salt, BigInteger A, BigInteger B,
+    byte[] getServerSessionKey(String user, String password, byte[] salt, BigInteger A, BigInteger B,
             BigInteger b) {
         final BigInteger u = getScramble(A, B);
         final BigInteger v = g.modPow(getUserHash(user, password, salt), N);
@@ -155,11 +168,6 @@ public final class SrpClient {
         final BigInteger Avu = A.multiply(vu).mod(N);
         final BigInteger sessionSecret = Avu.modPow(b, N);
         return sha1(toBigByteArray(sessionSecret));
-    }
-
-    public SrpClient() {
-        privateKey = getSecret();
-        publicKey = g.modPow(privateKey, N);
     }
 
     public BigInteger getPublicKey() {
@@ -186,16 +194,35 @@ public final class SrpClient {
         return ByteArrayHelper.toHexString(pad(publicKey));
     }
 
-    byte[] clientProof(String user, String password, byte[] salt, BigInteger serverPublicKey) {
+    byte[] clientProof(String user, String password, byte[] salt, BigInteger serverPublicKey) throws SQLException {
         final byte[] K = getClientSessionKey(user, password, salt, serverPublicKey);
         final BigInteger n1 = fromBigByteArray(sha1(toBigByteArray(N)));
         final BigInteger n2 = fromBigByteArray(sha1(toBigByteArray(g)));
-        final byte[] M = sha1(toBigByteArray(n1.modPow(n2, N)),
-                sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8)), salt,
-                toBigByteArray(publicKey), toBigByteArray(serverPublicKey), K);
+        final byte[] M = clientProofHash(
+                toBigByteArray(n1.modPow(n2, N)),
+                sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8)),
+                salt,
+                toBigByteArray(publicKey),
+                toBigByteArray(serverPublicKey),
+                K);
 
         sessionKey = K;
         return M;
+    }
+
+    private byte[] clientProofHash(byte[]... ba) throws SQLException {
+        try {
+            MessageDigest md = MessageDigest.getInstance(clientProofHashAlgorithm);
+            for (byte[] b : ba) {
+                md.update(b);
+            }
+            return md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_hashAlgorithmNotAvailable)
+                    .messageParameter(clientProofHashAlgorithm)
+                    .cause(e)
+                    .toFlatSQLException();
+        }
     }
 
     byte[] clientProof(String user, String password, byte[] authData) throws SQLException {
@@ -240,4 +267,21 @@ public final class SrpClient {
         return sessionKey;
     }
 
+    static class KeyPair {
+        private BigInteger pub, secret;
+
+        private KeyPair(BigInteger pub, BigInteger secret) {
+            this.pub = pub;
+            this.secret = secret;
+        }
+
+        BigInteger getPublicKey() {
+            return pub;
+        }
+
+        BigInteger getPrivateKey() {
+            return secret;
+        }
+    }
+    
 }

@@ -219,6 +219,13 @@ The following has been changed or fixed since Jaybird 3.0.4
 
 -   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
 -   Fixed: Incorrect parsing of Firebird version numbers ([JDBC-535](http://tracker.firebirdsql.org/browse/JDBC-535))
+-   New feature: Added support for the Srp256 authentication plugin ([JDBC-536](http://tracker.firebirdsql.org/browse/JDBC-536))  
+    Firebird 4 by default will only authenticate with Srp256, and support will 
+    be added in Firebird 3.0.4. Support for the other SrpNNN plugins introduced 
+    in Firebird 4 will be added in Jaybird 4.  
+    The addition of this plugin may lead to slightly slower authentication with 
+    Firebird 3 versions that don't support Srp256 or that don't have it in the 
+    `AuthServer` setting as additional roundtrips to the server are needed.
 
 ### Known issues in Jaybird 3.0.5
 

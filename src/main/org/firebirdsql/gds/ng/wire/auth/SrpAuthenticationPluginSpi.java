@@ -19,19 +19,24 @@
 package org.firebirdsql.gds.ng.wire.auth;
 
 /**
- * SRP authentication plugin service provider.
+ * Srp (Srp using SHA-1) authentication plugin service provider.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public class SrpAuthenticationPluginSpi implements AuthenticationPluginSpi {
+
+    @SuppressWarnings("WeakerAccess")
+    public static final String SRP_AUTH_NAME = "Srp";
+
     @Override
     public String getPluginName() {
-        return SrpAuthenticationPlugin.SRP_AUTH_NAME;
+        return SRP_AUTH_NAME;
     }
 
     @Override
     public AuthenticationPlugin createPlugin() {
-        return new SrpAuthenticationPlugin();
+        return new SrpAuthenticationPlugin(SRP_AUTH_NAME, "SHA-1");
     }
+
 }

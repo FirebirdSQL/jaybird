@@ -21,6 +21,8 @@ package org.firebirdsql.gds.ng.wire.auth;
 import org.firebirdsql.util.ByteArrayHelper;
 import org.junit.Test;
 
+import java.sql.SQLException;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -30,15 +32,15 @@ import static org.junit.Assert.assertEquals;
  */
 public class SrpClientTest {
     @Test
-    public void testSessionKey() {
+    public void testSessionKey() throws SQLException {
         String user = "SYSDBA";
         String password = "masterkey";
 
-        SrpClient srp = new SrpClient();
+        SrpClient srp = new SrpClient("SHA-1");
         byte[] salt = SrpClient.getSalt();
-        SrpClient.KeyPair server_key_pair = SrpClient.serverSeed(user, password, salt);
+        SrpClient.KeyPair server_key_pair = srp.serverSeed(user, password, salt);
 
-        byte[] serverSessionKey = SrpClient.getServerSessionKey(user, password, salt, srp.getPublicKey(),
+        byte[] serverSessionKey = srp.getServerSessionKey(user, password, salt, srp.getPublicKey(),
                 server_key_pair.getPublicKey(), server_key_pair.getPrivateKey());
 
         byte[] proof = srp.clientProof(user, password, salt, server_key_pair.getPublicKey());
