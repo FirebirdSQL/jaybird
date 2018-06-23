@@ -25,7 +25,6 @@ import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
-import org.firebirdsql.gds.ng.wire.auth.LegacyAuthenticationPlugin;
 import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
 
 import java.sql.SQLException;
@@ -38,6 +37,8 @@ import java.sql.SQLException;
  */
 public class V10ParameterConverter extends AbstractParameterConverter<WireDatabaseConnection, WireServiceConnection> {
 
+    private static final String LEGACY_PASSWORD_SALT = "9z";
+
     @Override
     protected void populateAuthenticationProperties(final AbstractConnection connection,
             final ConnectionParameterBuffer pb) throws SQLException {
@@ -48,7 +49,7 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
         }
         if (props.getPassword() != null) {
             pb.addArgument(tagMapping.getEncryptedPasswordTag(), UnixCrypt.crypt(props.getPassword(),
-                    LegacyAuthenticationPlugin.LEGACY_PASSWORD_SALT).substring(2, 13));
+                    LEGACY_PASSWORD_SALT).substring(2, 13));
         }
     }
 
