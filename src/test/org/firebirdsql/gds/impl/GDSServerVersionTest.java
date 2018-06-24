@@ -218,4 +218,22 @@ public class GDSServerVersionTest {
 
         assertEquals("Serialized version should be equal to original", version, serializedVersion);
     }
+
+    @Test
+    public void testIsEqualOrAbove() throws Exception {
+        GDSServerVersion fb258Version = GDSServerVersion.parseRawVersion("WI-V2.5.8.1 Firebird 2.5");
+        GDSServerVersion fb303Version = GDSServerVersion.parseRawVersion("WI-V3.0.3.1 Firebird 3.0");
+        GDSServerVersion fb304Version = GDSServerVersion.parseRawVersion("WI-V3.0.4.1 Firebird 3.0");
+        GDSServerVersion fb400Version = GDSServerVersion.parseRawVersion("WI-V4.0.0.0 Firebird 4.0");
+
+        assertFalse("2.5.8 >= 3.0", fb258Version.isEqualOrAbove(3, 0));
+        assertTrue("3.0.3 >= 3.0", fb303Version.isEqualOrAbove(3, 0));
+        assertTrue("3.0.4 >= 3.0", fb304Version.isEqualOrAbove(3, 0));
+        assertTrue("4.0.0 >= 3.0", fb400Version.isEqualOrAbove(3, 0));
+        
+        assertFalse("2.5.8 >= 3.0.4", fb258Version.isEqualOrAbove(3, 0, 4));
+        assertFalse("3.0.3 >= 3.0.4", fb303Version.isEqualOrAbove(3, 0, 4));
+        assertTrue("3.0.4 >= 3.0.4", fb304Version.isEqualOrAbove(3, 0, 4));
+        assertTrue("4.0.0 >= 3.0.4", fb400Version.isEqualOrAbove(3, 0, 4));
+    }
 }

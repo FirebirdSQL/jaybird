@@ -178,6 +178,16 @@ public class FBServiceManager implements ServiceManager {
         serviceProperties.setDbCryptConfig(dbCryptConfig);
     }
 
+    @Override
+    public String getAuthPlugins() {
+        return serviceProperties.getDbCryptConfig();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        serviceProperties.setAuthPlugins(authPlugins);
+    }
+
     /**
      * @return Returns the out.
      */

@@ -16,26 +16,27 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.auth;
+package org.firebirdsql.gds.ng.wire.auth.legacy;
+
+import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
+import org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi;
 
 /**
- * Srp384 authentication plugin service provider.
+ * Legacy authentication plugin service provider.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
  */
-public class Srp384AuthenticationPluginSpi implements AuthenticationPluginSpi {
+public class LegacyAuthenticationPluginSpi implements AuthenticationPluginSpi {
 
-    public static final String SRP_384_AUTH_NAME = "Srp384";
+    public static final String LEGACY_AUTH_NAME = "Legacy_Auth";
 
     @Override
     public String getPluginName() {
-        return SRP_384_AUTH_NAME;
+        return LEGACY_AUTH_NAME;
     }
 
     @Override
     public AuthenticationPlugin createPlugin() {
-        return new SrpAuthenticationPlugin(SRP_384_AUTH_NAME, "SHA-384");
+        return new LegacyAuthenticationPlugin();
     }
-    
 }

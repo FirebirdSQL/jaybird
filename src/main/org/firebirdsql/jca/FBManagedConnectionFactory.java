@@ -427,6 +427,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setDbCryptConfig(dbCryptConfig);
     }
 
+    @Override
+    public String getAuthPlugins() {
+        return connectionProperties.getAuthPlugins();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        connectionProperties.setAuthPlugins(authPlugins);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

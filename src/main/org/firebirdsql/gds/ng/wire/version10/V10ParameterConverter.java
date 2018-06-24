@@ -25,7 +25,7 @@ import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
-import org.firebirdsql.gds.ng.wire.auth.UnixCrypt;
+import org.firebirdsql.gds.ng.wire.auth.legacy.UnixCrypt;
 
 import java.sql.SQLException;
 

@@ -22,10 +22,12 @@ import org.firebirdsql.gds.ConnectionParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
-import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.gds.ng.WireCrypt;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for JNA.
@@ -47,10 +49,31 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
             pb.addArgument(tagMapping.getPasswordTag(), props.getPassword());
         }
 
+        Map<String, String> configMap = new HashMap<>();
+
         if (props.getWireCrypt() != WireCrypt.DEFAULT) {
-            // Need to do this differently when having to add multiple configs
-            String configString = "WireCrypt = " + props.getWireCrypt();
+            configMap.put("WireCrypt", props.getWireCrypt().name());
+        }
+
+        String authPlugins = props.getAuthPlugins();
+        if (authPlugins != null && !authPlugins.isEmpty()) {
+            configMap.put("AuthClient", authPlugins);
+        }
+
+        if (!configMap.isEmpty()) {
+            String configString = buildConfigString(configMap);
             pb.addArgument(tagMapping.getConfigTag(), configString);
         }
+    }
+
+    private String buildConfigString(Map<String, String> configMap) {
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<String, String> configEntry : configMap.entrySet()) {
+            builder.append(configEntry.getKey())
+                    .append('=')
+                    .append(configEntry.getValue())
+                    .append('\n');
+        }
+        return builder.toString();
     }
 }

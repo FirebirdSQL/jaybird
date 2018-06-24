@@ -402,7 +402,17 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setDbCryptConfig(String dbCryptConfig) {
         mcf.setDbCryptConfig(dbCryptConfig);
     }
-    
+
+    @Override
+    public String getAuthPlugins() {
+        return mcf.getAuthPlugins();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        mcf.setAuthPlugins(authPlugins);
+    }
+
     /*
      * INTERFACES IMPLEMENTATION
      */

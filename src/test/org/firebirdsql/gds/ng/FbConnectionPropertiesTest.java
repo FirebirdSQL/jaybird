@@ -181,6 +181,14 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
+    public void testAuthPlugins() {
+        assertNull(info.getAuthPlugins());
+        final String authPlugins = "XYZ,ABC";
+        info.setAuthPlugins(authPlugins);
+        assertEquals(authPlugins, info.getAuthPlugins());
+    }
+
+    @Test
     public void testCopyConstructor() throws Exception {
         info.setDatabaseName("testValue");
         info.setServerName("xyz");
@@ -189,6 +197,7 @@ public class FbConnectionPropertiesTest {
         info.setConnectTimeout(15);
         info.setWireCrypt(WireCrypt.REQUIRED);
         info.setDbCryptConfig("XYZcrypt");
+        info.setAuthPlugins("XXXauth");
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
         BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);

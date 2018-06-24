@@ -16,8 +16,10 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.auth;
+package org.firebirdsql.gds.ng.wire.auth.legacy;
 
+import org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin;
+import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

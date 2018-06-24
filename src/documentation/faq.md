@@ -506,6 +506,12 @@ setting `AuthServer` does not include the `Legacy_Auth` plugin.
 Enable `Legacy_Auth` (in `firebird.conf`) by adding this value to the property 
 `AuthServer`, for example: `AuthServer = Srp, Legacy_Auth`.
 
+With Jaybird 4 and higher this can also mean that none of the default 
+authentication plugins or those specified using connection property 
+`authPlugins`, are listed in the `AuthServer` setting. Either revise the
+Firebird configuration, or explicitly configure connection property `authPlugins`
+with authentication plugins that are configured in Firebird.
+
 You also need to make sure your user is created with the legacy user manager,
 see [Jaybird Wiki - Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3) 
 for details.
@@ -662,3 +668,5 @@ you will need to add the module `javax.xml.bind.api` to your module:
   </dependencies>
 </module>
 ```
+
+Alternatively, use Jaybird for Java 8 (or higher).

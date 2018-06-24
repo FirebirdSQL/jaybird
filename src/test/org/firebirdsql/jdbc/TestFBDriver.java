@@ -18,10 +18,15 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
+import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.*;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -29,16 +34,16 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.*;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -266,6 +271,79 @@ public class TestFBDriver {
         assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
         assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
         assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+    }
+
+    @Test
+    public void testConnectionLegacy_Auth() throws Exception {
+        // Might fail if plugin not enabled
+        checkAuthenticationPlugin(LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME);
+    }
+
+    @Test
+    public void testConnectionSrp() throws Exception {
+        // Might fail if plugin not enabled
+        checkAuthenticationPlugin(SrpAuthenticationPluginSpi.SRP_AUTH_NAME);
+    }
+
+    @Test
+    public void testConnectionSrp224() throws Exception {
+        // Might fail if plugin not enabled
+        assumeThat("Srp224 not supported in Java 7 (SHA-224 not available by default)",
+                System.getProperty("java.version"), not(startsWith("1.7")));
+        checkAuthenticationPlugin(Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME);
+    }
+
+    @Test
+    public void testConnectionSrp256() throws Exception {
+        // Might fail if plugin not enabled
+        checkAuthenticationPlugin(Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME);
+    }
+
+    @Test
+    public void testConnectionSrp384() throws Exception {
+        // Might fail if plugin not enabled
+        checkAuthenticationPlugin(Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME);
+    }
+
+    @Test
+    public void testConnectionSrp512() throws Exception {
+        // Might fail if plugin not enabled
+        checkAuthenticationPlugin(Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME);
+    }
+
+    private void checkAuthenticationPlugin(String pluginName) throws Exception {
+        assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
+        // NOTE: If the test still fails, then this plugin is not enabled in the Firebird AuthServer config
+        assumeTrue("Test requires support for authentication plugin " + pluginName,
+                getDefaultSupportInfo().supportsAuthenticationPlugin(pluginName));
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("authPlugins", pluginName);
+        /* For JNA connections both authPlugins and wireCrypt setting generate content for a single config string
+         * Setting both values explicitly here ensures that we also check if that config string gets generated correctly
+         */
+        props.setProperty("wireCrypt",
+                pluginName.equals(LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME) ? "DISABLED" : "REQUIRED");
+        connection = DriverManager.getConnection(getUrl(), props);
+
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery(
+                     "select mon$auth_method from mon$attachments where mon$attachment_id = current_connection")) {
+            assertTrue("expected row", rs.next());
+            assertEquals("Unexpected authentication method", pluginName, rs.getString(1));
+        }
+    }
+
+    @Test
+    public void testAuthPluginsUnknown_pureJava() throws Exception {
+        assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE,
+                isIn(Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME)));
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("authPlugins", "flup");
+
+        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_noKnownAuthPlugins));
+
+        connection = DriverManager.getConnection(getUrl(), props);
     }
 
 }

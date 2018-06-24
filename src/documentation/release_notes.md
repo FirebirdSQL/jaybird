@@ -338,11 +338,11 @@ value from a connection property. Be aware that a static value response for
 database encryption is not very secure as it can easily lead to replay attacks 
 or unintended key exposure. 
 
-Future versions of Jaybird (likely 4, maybe 5) will introduce plugin support for 
+Future versions of Jaybird (likely 5, maybe 4) will introduce plugin support for 
 database encryption plugins that require a more complex callback.
 
 The static response value of the encryption callback can be set through the 
-`dbCryptConfig` connection property. Data sources and `ServiceManager` 
+`dbCryptConfig` connection property. `DataSource` and `ServiceManager` 
 implementations have an equivalent property with the same name. This 
 property can be set as follows:
 
@@ -394,35 +394,108 @@ Other warnings and limitations
 Authentication plugin improvements
 ----------------------------------
 
-Jaybird 4 has added support for the new `SrpNNN` (with NNN is 224, 256, 384 and 
-512) authentication plugins added in Firebird 4 (backported to Firebird 3.0.4).
+Jaybird 4 has added support for the new `SrpNNN` (with NNN is 224, 256, 384 
+and 512) authentication plugins added in Firebird 4 (backported to Firebird 
+3.0.4).
 
-The original `Srp` plugin used SHA-1, the new Srp-variants use SHA-224, SHA-256,
+The original `Srp` plugin uses SHA-1, the new Srp-variants use SHA-224, SHA-256,
 SHA-384 and SHA-512 respectively[^srpHash].
 
 [^srpHash]: Internally `SrpNNN` continues to uses SHA-1, only the client-proof 
 applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/browse/CORE-5788)).
 
 Be aware, support for these plugins depends on support of these hash algorithms 
-in the JVM. For example, SHA-224 is not supported in Oracle Java 7.
+in the JVM. For example, SHA-224 is not supported in Oracle Java 7 by default 
+and maybe require additional JCE libraries.
 
 ### Default authentication plugins ###
 
+_TODO_: Remove Legacy_Auth from default?
+
 The default plugins applied by Jaybird are now - in order - `Srp256`, `Srp` and 
-`Legacy_Auth`. 
+`Legacy_Auth`. This applies only for the pure Java protocol. The native 
+implementation will use its own default or the value configured through its 
+`firebird.conf`. 
 
 When connecting to Firebird 3 versions earlier than 3.0.4, or if `Srp256` has 
-been removed from the `AuthServer` setting in Firebird, this might result in a 
-slower authentication because more roundtrips to the server are needed because 
-the attempt to use `Srp256` fails, and authentication then 
-continues with `Srp`.
+been removed from the `AuthServer` setting in Firebird, this might result in 
+slower authentication because more roundtrips to the server are needed. After 
+the attempt to use `Srp256` fails, authentication continues with `Srp`.
 
-Firebird 2.5 and earlier are not affected.
+To avoid this, consider explicitly configuring the authentication plugins to 
+use, see [Configure authentication plugins] for details.
+
+Firebird 2.5 and earlier are not affected and will always use legacy 
+authentication.
 
 ### Configure authentication plugins ###
 
-_Still TODO_
-     
+Jaybird 4 introduces the connection property `authPlugins` (alias 
+`auth_plugin_list`) to specify the authentication plugins to try when 
+connecting. The value of this property is a comma-separated[^authPluginSeparator] 
+list with the plugin names.
+
+[^authPluginSeparator]: The `authPlugins` values can be separated by comma, 
+space, tab, or semi-colon. The semi-colon should not be used in a JDBC URL as 
+there the semi-colon is a separator between connection properties.
+
+Unknown or unsupported plugins will be logged and skipped. When no known plugins
+are specified, Jaybird will throw an exception with:
+
+-   For pure Java
+
+    _Cannot authenticate. No known authentication plugins, requested plugins: \[&lt;plugin-names&gt;] \[SQLState:28000, ISC error code:337248287]_
+
+-   For native
+
+    _Error occurred during login, please check server firebird.log for details \[SQLState:08006, ISC error code:335545106]_
+
+The `authPlugins` property only affects connecting to Firebird 3 or later. It 
+will be ignored when connecting to Firebird 2.5 or earlier. The setting will
+also be ignored for native connections when using a fbclient library of 
+version 2.5 or earlier.
+
+Examples:
+
+-   JDBC URL to connect using `Srp256`-only:
+
+        jdbc:firebirdsql://localhost/employee?authPlugins=Srp256
+
+-   JDBC URL to try `Legacy_Auth` before `Srp512` (this order is unsafe!)
+
+        jdbc:firebirdsql://localhost/employee?authPlugins=Legacy_Auth,Srp512
+        
+The property is also supported by the data sources, service managers and event 
+manager.
+
+### External authentication plugin support (experimental) ###
+
+If you develop your own Firebird authentication plugin (or use a third-party 
+authentication plugin), it is possible - for pure Java only - to add your own 
+authentication plugin by implementing the interfaces 
+ 
+-   `org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
+-   `org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin`
+
+The SPI implementation needs to listed in `META-INF/services/org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
+in your jar.
+
+This support is experimental and comes with a number of caveats:
+
+-   We haven't tested this extensively (except for loading Jaybird's own 
+    plugins internally)
+-   The authentication plugin (and provider) interfaces should be considered 
+    unstable; they may change with point-releases (although we will try to avoid 
+    that) 
+-   For now it will be necessary for the jar containing the authentication 
+    plugin to be loaded by the same class loader as Jaybird itself
+
+If you implement a custom authentication plugin and run into problems, contact 
+us on the Firebird-Java mailing list.
+
+If you use a native connection, check the Firebird documentation how to add
+third-party authentication plugins to fbclient.
+
 Firebird 4 DECFLOAT support
 ---------------------------
 

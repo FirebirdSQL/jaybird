@@ -16,26 +16,22 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.auth;
+package org.firebirdsql.gds.ng.wire.auth.srp;
+
+import java.sql.SQLException;
 
 /**
- * Srp (Srp using SHA-1) authentication plugin service provider.
+ * Srp512 authentication plugin service provider.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 4.0
  */
-public class SrpAuthenticationPluginSpi implements AuthenticationPluginSpi {
+public class Srp512AuthenticationPluginSpi extends AbstractSrpAuthenticationPluginSpi {
 
-    public static final String SRP_AUTH_NAME = "Srp";
+    public static final String SRP_512_AUTH_NAME = "Srp512";
 
-    @Override
-    public String getPluginName() {
-        return SRP_AUTH_NAME;
+    public Srp512AuthenticationPluginSpi() throws SQLException {
+        super(SRP_512_AUTH_NAME, "SHA-512");
     }
 
-    @Override
-    public AuthenticationPlugin createPlugin() {
-        return new SrpAuthenticationPlugin(SRP_AUTH_NAME, "SHA-1");
-    }
-    
 }

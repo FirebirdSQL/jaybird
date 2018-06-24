@@ -416,7 +416,8 @@ public interface FirebirdConnectionProperties {
      * Invalid values are accepted, but will cause an error when a connection is established.
      * </p>
      *
-     * @param wireCrypt Wire encryption level
+     * @param wireCrypt
+     *         Wire encryption level
      * @since 4.0
      */
     void setWireCrypt(String wireCrypt);
@@ -432,9 +433,30 @@ public interface FirebirdConnectionProperties {
     /**
      * Sets the database encryption plugin configuration.
      *
-     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @param dbCryptConfig
+     *         Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
 
+    /**
+     * Get the list of authentication plugins to try.
+     *
+     * @return comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getAuthPlugins();
+
+    /**
+     * Sets the authentication plugins to try.
+     * <p>
+     * Invalid names are skipped during authentication.
+     * </p>
+     *
+     * @param authPlugins
+     *         comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    void setAuthPlugins(String authPlugins);
+    
 }

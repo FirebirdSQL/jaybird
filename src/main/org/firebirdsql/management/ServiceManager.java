@@ -35,6 +35,7 @@ import java.sql.SQLException;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public interface ServiceManager {
 
@@ -156,6 +157,26 @@ public interface ServiceManager {
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
+
+    /**
+     * Get the list of authentication plugins to try.
+     *
+     * @return comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getAuthPlugins();
+
+    /**
+     * Sets the authentication plugins to try.
+     * <p>
+     * Invalid names are skipped during authentication.
+     * </p>
+     *
+     * @param authPlugins
+     *         comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    void setAuthPlugins(String authPlugins);
 
     /**
      * Returns the logger for the connection to the service manager.

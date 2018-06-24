@@ -263,4 +263,27 @@ public final class GDSServerVersion implements Serializable {
                 (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
     }
 
+    /**
+     * Convenience method to check if the major.minor.variant of this version is equal to or larger than the specified
+     * required version.
+     *
+     * @param requiredMajorVersion
+     *         Required major version
+     * @param requiredMinorVersion
+     *         Required minor version
+     * @param requiredVariant
+     *         Required variant version
+     * @return {@code true} when current major is larger than required, or major is same and minor is equal to required
+     * and variant equal to or larger than required, or major is same and minor is larger than required
+     */
+    public boolean isEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion, int requiredVariant) {
+        return majorVersion > requiredMajorVersion ||
+                (majorVersion == requiredMajorVersion &&
+                        (minorVersion == requiredMinorVersion && variant >= requiredVariant ||
+                                minorVersion > requiredMinorVersion
+                        )
+                );
+
+    }
+
 }

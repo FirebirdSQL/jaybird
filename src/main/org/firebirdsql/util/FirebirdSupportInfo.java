@@ -20,6 +20,12 @@ package org.firebirdsql.util;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp224AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp256AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp384AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.Srp512AuthenticationPluginSpi;
+import org.firebirdsql.gds.ng.wire.auth.srp.SrpAuthenticationPluginSpi;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.PageSizeConstants;
 
@@ -67,6 +73,22 @@ public final class FirebirdSupportInfo {
      */
     public boolean isVersionEqualOrAbove(int majorVersion, int minorVersion) {
         return serverVersion.isEqualOrAbove(majorVersion, minorVersion);
+    }
+
+    /**
+     * Check if the major.minor.variant of this version is equal to or larger than the specified required version.
+     *
+     * @param requiredMajorVersion
+     *         Required major version
+     * @param requiredMinorVersion
+     *         Required minor version
+     * @param requiredVariant
+     *         Required variant version
+     * @return {@code true} when current major is larger than required, or major is same and minor is equal to required
+     * and variant equal to or larger than required, or major is same and minor is larger than required
+     */
+    public boolean isVersionEqualOrAbove(int requiredMajorVersion, int requiredMinorVersion, int requiredVariant) {
+        return serverVersion.isEqualOrAbove(requiredMajorVersion, requiredMinorVersion, requiredVariant);
     }
 
     /**
@@ -393,6 +415,35 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsPSQLFunctions() {
         return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * Checks whether the Firebird version supports a plugin name.
+     * <p>
+     * Firebird version 2.5 and earlier are considered to support only {@code Legacy_Auth}.
+     * </p>
+     * <p>
+     * NOTE: This method only checks if the specified plugin was shipped with a Firebird version, it does not
+     * check whether the plugin is enabled, nor if additional plugins are installed.
+     * </p>
+     *
+     * @param pluginName Authentication plugin name (case-sensitive)
+     * @return {@code true} if supported, {@code false} otherwise.
+     */
+    public boolean supportsAuthenticationPlugin(String pluginName) {
+        switch (pluginName) {
+        case LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME:
+            return true;
+        case SrpAuthenticationPluginSpi.SRP_AUTH_NAME:
+            return isVersionEqualOrAbove(3, 0);
+        case Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME:
+        case Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME:
+        case Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME:
+        case Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME:
+            return isVersionEqualOrAbove(3, 0, 4);
+        default:
+            return false;
+        }
     }
 
     /**

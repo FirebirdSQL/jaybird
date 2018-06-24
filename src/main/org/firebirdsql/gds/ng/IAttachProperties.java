@@ -31,6 +31,7 @@ package org.firebirdsql.gds.ng;
  * @since 3.0
  */
 public interface IAttachProperties<T extends IAttachProperties> {
+
     int DEFAULT_PORT = 3050;
     String DEFAULT_SERVER_NAME = "localhost";
     int DEFAULT_SOCKET_BUFFER_SIZE = -1;
@@ -272,6 +273,26 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
+
+    /**
+     * Get the list of authentication plugins to try.
+     *
+     * @return comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getAuthPlugins();
+
+    /**
+     * Sets the authentication plugins to try.
+     * <p>
+     * Invalid names are skipped during authentication.
+     * </p>
+     *
+     * @param authPlugins
+     *         comma-separated list of authentication plugins, or {@code null} for driver default
+     * @since 4.0
+     */
+    void setAuthPlugins(String authPlugins);
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}

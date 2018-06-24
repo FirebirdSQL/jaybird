@@ -58,7 +58,7 @@ public class FBDriver implements FirebirdDriver {
      * standard connection.
      */
 
-    private final Map<FBConnectionProperties, SoftReference<FBDataSource>> mcfToDataSourceMap =
+    private final Map<FBConnectionProperties, Reference<FBDataSource>> mcfToDataSourceMap =
             new ConcurrentHashMap<>();
     private final ReferenceQueue<FBDataSource> dataSourceReferenceQueue = new ReferenceQueue<>();
     private final Object createDataSourceLock = new Object();
@@ -167,7 +167,7 @@ public class FBDriver implements FirebirdDriver {
     }
 
     private FBDataSource dataSourceFromCache(final FBConnectionProperties cacheKey) {
-        final SoftReference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(cacheKey);
+        final Reference<FBDataSource> dataSourceReference = mcfToDataSourceMap.get(cacheKey);
         return dataSourceReference != null ? dataSourceReference.get() : null;
     }
 
@@ -250,7 +250,7 @@ public class FBDriver implements FirebirdDriver {
      * @return this driver's major version number
      */
     public int getMajorVersion() {
-        return 3;
+        return 4;
     }
 
     /**

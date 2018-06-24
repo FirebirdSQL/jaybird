@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.auth;
+package org.firebirdsql.gds.ng.wire.auth.srp;
 
 import org.firebirdsql.util.ByteArrayHelper;
 import org.junit.Test;

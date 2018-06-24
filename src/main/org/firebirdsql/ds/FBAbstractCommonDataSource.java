@@ -533,6 +533,21 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setDbCryptConfig(dbCryptConfig);
         }
     }
+
+    @Override
+    public String getAuthPlugins() {
+        synchronized (lock) {
+            return connectionProperties.getAuthPlugins();
+        }
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setAuthPlugins(authPlugins);
+        }
+    }
     
     /**
      * Method that allows setting non-standard property in the form "key=value"
