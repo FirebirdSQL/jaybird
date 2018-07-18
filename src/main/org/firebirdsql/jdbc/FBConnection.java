@@ -142,8 +142,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      */
     void notifyStatementClosed(FBStatement stmt) {
         if (!activeStatements.remove(stmt)) {
-            // NOTE: This can also happen if the statement object was intercepted and replaced by a proxy
-            // Examples: some of the tests in the Hibernate test suite (although that should be fixed now)
+            if (stmt instanceof FBPreparedStatement && ((FBPreparedStatement) stmt).isParamSet == null) {
+                // Close was likely triggered by finalizer of a prepared statement that failed on prepare in
+                // the constructor: Do not log warning
+                return;
+            }
             log.warn("Specified statement was not created by this connection: " + stmt);
         }
     }
@@ -1182,9 +1185,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
             checkHoldability(resultSetType, resultSetHoldability);
 
-            FBObjectListener.StatementListener coordinator = txCoordinator;
-            if (metaData)
-                coordinator = new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator);
+            FBObjectListener.StatementListener coordinator = metaData
+                    ? new InternalTransactionCoordinator.MetaDataTransactionCoordinator(txCoordinator)
+                    : txCoordinator;
 
             FBObjectListener.BlobListener blobCoordinator = metaData ? null : txCoordinator;
 

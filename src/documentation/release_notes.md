@@ -226,6 +226,8 @@ The following has been changed or fixed since Jaybird 3.0.4
     The addition of this plugin may lead to slightly slower authentication with 
     Firebird 3 versions that don't support Srp256 or that don't have it in the 
     `AuthServer` setting as additional roundtrips to the server are needed.
+-   Fixed: Incorrect warning _"Specified statement was not created by this connection"_
+    logged for statements that fail with an exception on prepare ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-538))
 
 ### Known issues in Jaybird 3.0.5
 
