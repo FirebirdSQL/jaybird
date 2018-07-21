@@ -32,7 +32,7 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
 
     public String getPluginName() {
-        return "GDS implementation for OpenOffice.";
+        return "GDS implementation for OpenOffice.org/LibreOffice.";
     }
 
     public String getTypeName() {
@@ -53,11 +53,12 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {
-        if (server == null)
+        if (server == null) {
             throw new GDSException("Server name/address is required for pure Java implementation.");
-
-        if (path == null)
+        }
+        if (path == null) {
             throw new GDSException("Database name/path is required.");
+        }
 
         StringBuilder sb = new StringBuilder();
 

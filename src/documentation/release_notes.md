@@ -477,7 +477,7 @@ authentication plugin by implementing the interfaces
 -   `org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
 -   `org.firebirdsql.gds.ng.wire.auth.AuthenticationPlugin`
 
-The SPI implementation needs to listed in `META-INF/services/org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
+The SPI implementation needs to be listed in `META-INF/services/org.firebirdsql.gds.ng.wire.auth.AuthenticationPluginSpi`
 in your jar.
 
 This support is experimental and comes with a number of caveats:
@@ -842,6 +842,34 @@ as is, in current Firebird versions, this means the value will be equivalent to
 -   Unsupported/unknown _SQLtype_ values (or invalid length or precision and 
 scale) are passed as is to cast, resulting in an error from the Firebird engine 
 if the resulting cast is invalid
+
+New JDBC protocol prefix jdbc:firebird:
+---------------------------------------
+
+Historically, the JDBC protocols supported by Jaybird have used the prefix 
+`jdbc:firebirdsql:`. We have now added support for `jdbc:firebird:` as an 
+alternative prefix. This prefix was previously only supported in the 
+OpenOffice.org/LibreOffice pure Java variant.
+
+Jaybird now supports the following URL prefixes (or JDBC protocols):
+
+-   Pure Java
+    -    `jdbc:firebirdsql:`
+    -    `jdbc:firebirdsql:java`
+    -    `jdbc:firebird:` (new)
+    -    `jdbc:firebird:java:` (new)
+-   Native
+    -    `jdbc:firebirdsql:native:`
+    -    `jdbc:firebird:native:` (new)
+-   Embedded
+    -    `jdbc:firebirdsql:embedded:`
+    -    `jdbc:firebird:embedded:` (new)
+-   Local
+    -    `jdbc:firebirdsql:local:`
+    -    `jdbc:firebird:local:` (new)
+-   OpenOffice.org/LibreOffice pure Java variant
+    -    `jdbc:firebird:oo:`
+    -    `jdbc:firebirdsql:oo:`
 
 Potentially breaking changes
 ----------------------------

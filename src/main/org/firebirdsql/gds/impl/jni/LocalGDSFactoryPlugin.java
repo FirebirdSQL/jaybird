@@ -28,10 +28,11 @@ public class LocalGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     private static final String[] TYPE_ALIASES = new String[0];
     private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:local:"};
+            "jdbc:firebirdsql:local:", "jdbc:firebird:local:"
+    };
     
     public String getPluginName() {
-        return "JNI-based GDS implementation using IPC communication.";
+        return "JNA-based GDS implementation using IPC communication.";
     }
 
     public String getTypeName() {
@@ -46,7 +47,11 @@ public class LocalGDSFactoryPlugin extends BaseGDSFactoryPlugin {
         return JDBC_PROTOCOLS;
     }
     
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException{
+    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
+        if (path == null) {
+            throw new GDSException("Database name/path is required.");
+        }
+        
         return path;
     }
 

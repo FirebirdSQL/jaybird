@@ -23,7 +23,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
@@ -36,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -98,7 +98,7 @@ public class TestJnaService {
     @Test
     public void basicStatusVectorProcessing_wrongLogin() throws Exception {
         assumeThat("Embedded on windows does not use authentication",
-                FBTestProperties.GDS_TYPE, is(not(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+                FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         // set invalid password
         connectionInfo.setPassword("abcd");
         try (JnaService service = factory.serviceConnect(connectionInfo)) {

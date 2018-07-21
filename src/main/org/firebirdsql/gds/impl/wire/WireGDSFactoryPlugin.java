@@ -27,7 +27,9 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
     private static final String[] TYPE_ALIASES = new String[] { "TYPE4" };
     private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:";
-    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebirdsql:java:", DEFAULT_PROTOCOL };
+    private static final String[] JDBC_PROTOCOLS = new String[] {
+            "jdbc:firebirdsql:java:", "jdbc:firebird:java:", "jdbc:firebird:", DEFAULT_PROTOCOL
+    };
 
     @Override
     public String getPluginName() {
@@ -51,7 +53,7 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String getDefaultProtocol() {
-        return "jdbc:firebirdsql:";
+        return DEFAULT_PROTOCOL;
     }
 
     @Override
