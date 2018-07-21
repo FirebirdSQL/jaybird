@@ -53,16 +53,17 @@ Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 Supported Java versions
 -----------------------
 
-Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 (JDBC 4.3). 
-Support for earlier Java versions has been dropped.
+Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 - 10 (JDBC 
+4.3). Support for earlier Java versions has been dropped.
 
-For the time being, snapshots will not be released as specific Java 9 builds,
-the Java 8 builds have the same source and all JDBC 4.3 related functionality. 
+For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
+have the same source and all JDBC 4.3 related functionality.
 
-Jaybird 4 is not (yet) modularized, but all versions declare the automatic 
-module name `org.firebirdsql.jaybird`.
+Given the limited support period for Java 9 and higher versions, we may limit
+support on those versions.
 
-Jaybird 4 will probably drop support Java 7 later in the development cycle.
+Jaybird 4 is not modularized, but all versions declare the automatic module name 
+`org.firebirdsql.jaybird`.
 
 Specification support
 ---------------------
@@ -1004,21 +1005,32 @@ The following constants have been removed in Jaybird 4:
     `FBDriverNotCapableException` will be removed. Use equivalent constants in
     `org.firebirdsql.jdbc.SQLStateConstants`.
 
-Breaking changes for Jaybird 4
-------------------------------
-
-*TODO: Section to be removed*
-
-With Jaybird 4 the following breaking changes will be introduced.
-
-### Dropping support for Java 7 ###
-
-Jaybird 4 will very likely drop support for Java 7 (this decision is not final yet).
-
 Breaking changes for Jaybird 5
 ------------------------------
 
 With Jaybird 5 the following breaking changes will be introduced.
+
+### Dropping support for Java 7 ###
+
+Jaybird 5 will drop support for Java 7.
+
+### Dropping support for Java 8 (tentative) ###
+
+Jaybird 5 may drop support for Java 8, depending on the actual release time line.
+
+This decision is not final yet.
+
+### Dropping or restricting JCA (Java Connector Architecture) support ###
+
+Jaybird is currently built around a JCA (Java Connector Architecture) 
+implementation. As such, it is both a JDBC driver and a JCA driver. The current
+structure requires a dependency on JCA for non-JCA usage.
+
+We are currently considering removing support for JCA entirely, or restructuring 
+Jaybird so the dependency on JCA is only needed when Jaybird is used as a JCA 
+driver.
+
+Please let us know on Firebird-Java if you use Jaybird as a JCA driver. 
 
 ### Removal of deprecated methods ###
 
