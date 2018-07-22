@@ -228,6 +228,7 @@ The following has been changed or fixed since Jaybird 3.0.4
     `AuthServer` setting as additional roundtrips to the server are needed.
 -   Fixed: Incorrect warning _"Specified statement was not created by this connection"_
     logged for statements that fail with an exception on prepare ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-538))
+-   Fixed: `FBManager` does not accept page size of 32768 (Firebird 4 and higher) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
 
 ### Known issues in Jaybird 3.0.5
 

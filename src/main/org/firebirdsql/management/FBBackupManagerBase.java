@@ -198,24 +198,18 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     }
 
     /**
-     * Set the page size that will be used for a restored database. The value for <code>pageSize</code> must be
-     * one of: 1024, 2048, 4096, 8192, 16384 or 32768. The default value depends on the Firebird version.
+     * Set the page size that will be used for a restored database. The value for {@code pageSize} must be
+     * one of {@link PageSizeConstants}. The default value depends on the Firebird version.
      * <p>
      * Be aware that not all page sizes are supported by all Firebird versions.
      * </p>
      *
      * @param pageSize
-     *        The page size to be used in a restored database, one of 1024, 2048, 4196, 8192, 16384 or 32768
+     *        The page size to be used in a restored database, see {@link PageSizeConstants}
      * @see PageSizeConstants
      */
     public void setRestorePageSize(int pageSize) {
-        if (pageSize != PageSizeConstants.SIZE_1K && pageSize != PageSizeConstants.SIZE_2K
-                && pageSize != PageSizeConstants.SIZE_4K && pageSize != PageSizeConstants.SIZE_8K
-                && pageSize != PageSizeConstants.SIZE_16K && pageSize != PageSizeConstants.SIZE_32K) {
-            throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4096, 8192, 16384 or 32768");
-        }
-        this.restorePageSize = pageSize;
+        this.restorePageSize = PageSizeConstants.requireValidPageSize(pageSize);
     }
 
     /**

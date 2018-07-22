@@ -32,6 +32,7 @@ import java.sql.DriverManager;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
+import static org.firebirdsql.management.PageSizeConstants.*;
 import static org.junit.Assert.*;
 
 /**
@@ -96,20 +97,15 @@ public class TestFBManager {
 
             // check create
             m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
-            try {
-                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
-                        getDefaultPropertiesForConnection());
-                try {
-                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
-                    final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
-                            new byte[] { ISCConstants.isc_info_page_size }, 10);
-                    assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
-                    int length = iscVaxInteger2(databaseInfo, 1);
-                    int pageSize = iscVaxInteger(databaseInfo, 3, length);
-                    assertEquals("Unexpected page size", 16384, pageSize);
-                } finally {
-                    connection.close();
-                }
+            try (FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                    getDefaultPropertiesForConnection())) {
+                final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
+                        new byte[] { ISCConstants.isc_info_page_size }, 10);
+                assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+                int length = iscVaxInteger2(databaseInfo, 1);
+                int pageSize = iscVaxInteger(databaseInfo, 3, length);
+                assertEquals("Unexpected page size", 16384, pageSize);
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
@@ -130,7 +126,7 @@ public class TestFBManager {
     public void testSetPageSize_ValidValues() {
         FBManager m = createFBManager();
 
-        final int[] pageSizes = {1024, 2048, 4096, 8192, 16384};
+        final int[] pageSizes = { SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K };
         for (int pageSize : pageSizes) {
             m.setPageSize(pageSize);
         }
@@ -150,15 +146,10 @@ public class TestFBManager {
 
             // check create
             m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
-            try {
-                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
-                        getDefaultPropertiesForConnection());
-                try {
-                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
-                    assertEquals("Unexpected database dialect", 3, currentDatabase.getDatabaseDialect());
-                } finally {
-                    connection.close();
-                }
+            try (FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                    getDefaultPropertiesForConnection())) {
+                final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                assertEquals("Unexpected database dialect", 3, currentDatabase.getDatabaseDialect());
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
@@ -181,15 +172,10 @@ public class TestFBManager {
 
             // check create
             m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
-            try {
-                FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
-                        getDefaultPropertiesForConnection());
-                try {
-                    final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
-                    assertEquals("Unexpected database dialect", 1, currentDatabase.getDatabaseDialect());
-                } finally {
-                    connection.close();
-                }
+            try (FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
+                    getDefaultPropertiesForConnection())) {
+                final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
+                assertEquals("Unexpected database dialect", 1, currentDatabase.getDatabaseDialect());
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
