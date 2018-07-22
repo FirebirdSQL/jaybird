@@ -145,18 +145,18 @@ public class FBStreamingBackupManager extends FBBackupManagerBase implements Bac
 
     /**
      * Set the page size that will be used for a restored database. The value
-     * for <code>pageSize</code> must be one of: 4096, 8192 or 16384. The
+     * for {@code pageSize} must be one at least 4096, see als {@link PageSizeConstants}. The
      * default value depends on the Firebird version. Pages smaller than 4096
      * were dropped in 2006 and are by definition unavailable with the streaming
      * functionality of the Services API
      *
      * @param pageSize
-     *        The page size to be used in a restored database, one of 4196, 8192 or 16384
+     *        The page size to be used in a restored database, see {@link PageSizeConstants} with a minimum of 4096
      * @see PageSizeConstants
      */
     @Override
     public void setRestorePageSize(int pageSize) {
-        if (pageSize < 4096) {
+        if (pageSize < PageSizeConstants.SIZE_4K) {
             throw new IllegalArgumentException(
                     "FirebirdSQL versions with streaming restore support don't support pages below 4096");
         }

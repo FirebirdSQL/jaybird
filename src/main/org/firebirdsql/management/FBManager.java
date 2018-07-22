@@ -41,7 +41,7 @@ import java.sql.SQLException;
 public class FBManager implements FBManagerMBean {
 
     private static final int DEFAULT_PORT = 3050;
-    private final static Logger log = LoggerFactory.getLogger(FBManager.class);
+    private static final Logger log = LoggerFactory.getLogger(FBManager.class);
 
     private FbDatabaseFactory dbFactory;
     private String host = "localhost";
@@ -190,31 +190,12 @@ public class FBManager implements FBManagerMBean {
         return dialect;
     }
 
-    /**
-     * Set the page size that will be used for the database. The value
-     * for <code>pageSize</code> must be one of: 1024, 2048, 4096, 8192 or 16384. The
-     * default value depends on the Firebird version.
-     * <p>
-     * Some values are not valid on all Firebird versions.
-     * </p>
-     *
-     * @param pageSize
-     *         The page size to be used in a restored database,
-     *         one of 1024, 2048, 4196, 8192 or 16384
-     * @see PageSizeConstants
-     */
+    @Override
     public void setPageSize(int pageSize) {
-        if (pageSize != 1024 && pageSize != 2048
-                && pageSize != 4096 && pageSize != 8192 && pageSize != 16384) {
-            throw new IllegalArgumentException(
-                    "Page size must be one of 1024, 2048, 4096, 8192 or 16384");
-        }
-        this.pageSize = pageSize;
+        this.pageSize = PageSizeConstants.requireValidPageSize(pageSize);
     }
 
-    /**
-     * @return The page size to be used when creating a database, or {@code -1} if the database default is used.
-     */
+    @Override
     public int getPageSize() {
         return pageSize;
     }
