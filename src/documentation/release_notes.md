@@ -407,16 +407,14 @@ applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/br
 
 Be aware, support for these plugins depends on support of these hash algorithms 
 in the JVM. For example, SHA-224 is not supported in Oracle Java 7 by default 
-and maybe require additional JCE libraries.
+and may require additional JCE libraries.
 
 ### Default authentication plugins ###
 
-_TODO_: Remove Legacy_Auth from default?
-
-The default plugins applied by Jaybird are now - in order - `Srp256`, `Srp` and 
-`Legacy_Auth`. This applies only for the pure Java protocol. The native 
-implementation will use its own default or the value configured through its 
-`firebird.conf`. 
+The default plugins applied by Jaybird are now - in order - `Srp256`, `Srp`. 
+This applies only for the pure Java protocol and only when connecting to 
+Firebird 3 or higher. The native implementation will use its own default or the 
+value configured through its `firebird.conf`. 
 
 When connecting to Firebird 3 versions earlier than 3.0.4, or if `Srp256` has 
 been removed from the `AuthServer` setting in Firebird, this might result in 
@@ -425,6 +423,12 @@ the attempt to use `Srp256` fails, authentication continues with `Srp`.
 
 To avoid this, consider explicitly configuring the authentication plugins to 
 use, see [Configure authentication plugins] for details.
+
+When connecting to Firebird 3 or higher, the pure Java protocol in Jaybird will 
+no longer try the `Legacy_Auth` plugin by default as it is an unsafe 
+authentication mechanism. We strongly suggest to use SRP users only, but if you 
+really need to use legacy authentication, you can specify connection property 
+`authPlugins=Legacy_Auth`, see [Configure authentication plugins] for details.
 
 Firebird 2.5 and earlier are not affected and will always use legacy 
 authentication.
@@ -458,9 +462,13 @@ version 2.5 or earlier.
 
 Examples:
 
--   JDBC URL to connect using `Srp256`-only:
+-   JDBC URL to connect using `Srp256` only:
 
         jdbc:firebirdsql://localhost/employee?authPlugins=Srp256
+        
+-   JDBC URL to connect using `Legacy_Auth` only (this is unsafe!)
+
+        jdbc:firebirdsql://localhost/employee?authPlugins=Legacy_Auth
 
 -   JDBC URL to try `Legacy_Auth` before `Srp512` (this order is unsafe!)
 
@@ -557,7 +565,7 @@ applied:
 
 -   Zero values can have a non-zero exponent, and if the exponent is out of 
 range, the exponent value is 'clamped' to the minimum or maximum exponent
-supported. This behavior is subject to change, and future release may
+supported. This behavior is subject to change, and future releases may
 'round' to exact `0` (or `0E0`)
 
 -   Values with a precision larger than the target precision are rounded to the 
@@ -921,6 +929,14 @@ expect the driver to remain functional, but chances are certain metadata (eg
 In general we will no longer fix issues that only occur with Firebird 2.1 or
 earlier.
 
+Removed Legacy_Auth from default authentication plugins
+-------------------------------------------------------
+
+The pure Java protocol in Jaybird will - by default - no longer try the 
+`Legacy_Auth` plugin when connecting to Jaybird 3 or higher.
+
+See [Default authentication plugins] for more information.
+
 RDB$DB_KEY columns no longer of Types.BINARY
 --------------------------------------------
 
@@ -931,8 +947,8 @@ the exception of `getObject`, which will return a `java.sql.RowId` instead.
 
 Unfortunately this does not apply to parameters, see also [JDBC RowId support].
 
-Due to the method of identification, real columns of type `char character set 
-octets` with the name `DB_KEY` will also be identified as a `ROWID` column.
+Due to the method of identification, real columns of type `char character set octets` 
+with the name `DB_KEY` will also be identified as a `ROWID` column.
 
 Removal of character mapping
 ----------------------------

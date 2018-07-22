@@ -78,6 +78,7 @@ public class TestV13Authentication {
         Properties connectionProperties = getDefaultPropertiesForConnection();
         connectionProperties.setProperty("user", username);
         connectionProperties.setProperty("password", password);
+        connectionProperties.setProperty("authPlugins", "Legacy_Auth");
         try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
@@ -104,6 +105,7 @@ public class TestV13Authentication {
         fbServiceManager.setPort(FBTestProperties.DB_SERVER_PORT);
         fbServiceManager.setUser(username);
         fbServiceManager.setPassword(password);
+        fbServiceManager.setAuthPlugins("Legacy_Auth");
 
         final GDSServerVersion serverVersion = fbServiceManager.getServerVersion();
 

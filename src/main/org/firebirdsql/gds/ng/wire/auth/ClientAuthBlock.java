@@ -52,7 +52,7 @@ public final class ClientAuthBlock {
     private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
-    private static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp,Legacy_Auth";
+    private static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
     private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
 
     private final IAttachProperties<?> attachProperties;
