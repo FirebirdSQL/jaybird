@@ -190,8 +190,9 @@ public final class GDSExceptionHelper {
             while (matcher.find()) {
                 final int paramIndex = Integer.parseInt(matcher.group(1));
                 String parameterValue = isValidParameterIndex(paramIndex) ? params[paramIndex] : null;
-                matcher.appendReplacement(messageBuffer,
-                        parameterValue != null ? Matcher.quoteReplacement(parameterValue) : "(null)");
+                matcher.appendReplacement(messageBuffer, "");
+                // Append separately to avoid having to quote the replacement string
+                messageBuffer.append(parameterValue != null ? parameterValue : "(null)");
             }
             matcher.appendTail(messageBuffer);
             // Include extra parameters at the end of the message

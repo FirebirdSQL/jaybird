@@ -83,4 +83,14 @@ public class TestGDSMessage {
 
         assertThat(message.toString(), equalTo(expected));
     }
+
+    @Test
+    public void parameterValuesWithSlashesAndDollarSign() {
+        final String template = "Template with {0} and {1} trailing text";
+        final String expected = "Template with D:\\value and $1 trailing text";
+        GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(template);
+        message.setParameters(Arrays.asList("D:\\value", "$1"));
+
+        assertThat(message.toString(), equalTo(expected));
+    }
 }
