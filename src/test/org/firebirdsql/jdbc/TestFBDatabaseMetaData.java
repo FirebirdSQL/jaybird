@@ -19,19 +19,17 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.*;
 
 import java.sql.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.FBTestProperties.getProperty;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
@@ -43,7 +41,12 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
+public class TestFBDatabaseMetaData {
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+
+    private static final Logger log = LoggerFactory.getLogger(TestFBDatabaseMetaData.class);
 
     private Connection connection;
     private boolean supportsComment;
@@ -563,6 +566,11 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     private void createProcedure(String procedureName, boolean returnsData) throws Exception {
         try (Statement stmt = connection.createStatement()) {
+            try {
+                stmt.execute("drop procedure " + procedureName);
+            } catch (SQLException e) {
+                // ignore
+            }
             if (returnsData) {
 
                 stmt.execute("CREATE PROCEDURE " + procedureName
@@ -677,9 +685,9 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetExportedKeys_NoForeignKeys() throws Exception {
-        createTable("table1");
+        createTable("tablenofk1");
 
-        ResultSet rs = dmd.getExportedKeys(null, null, "TABLE1");
+        ResultSet rs = dmd.getExportedKeys(null, null, "TABLENOFK1");
 
         assertFalse("Expected no exported keys for table without foreign key references", rs.next());
     }
@@ -708,27 +716,27 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
 
     @Test
     public void testGetCrossReference_NoForeignKeys() throws Exception {
-        createTable("table1");
-        createTable("table2");
+        createTable("tablenofk1");
+        createTable("tablenofk2");
 
-        ResultSet rs = dmd.getCrossReference(null, null, "TABLE1", null, null, "TABLE2");
+        ResultSet rs = dmd.getCrossReference(null, null, "TABLENOFK1", null, null, "TABLENOFK2");
 
         assertFalse("Expected no cross reference for tables without foreign key references", rs.next());
     }
 
     @Test
     public void testGetCrossReference_WithForeignKey() throws Exception {
-        createTable("table1");
-        createTable("table2", "FOREIGN KEY (c6) REFERENCES table1 (c1)");
+        createTable("tablewithfk1");
+        createTable("tablewithfk2", "FOREIGN KEY (c6) REFERENCES tablewithfk1 (c1)");
 
-        ResultSet rs = dmd.getCrossReference(null, null, "TABLE1", null, null, "TABLE2");
+        ResultSet rs = dmd.getCrossReference(null, null, "TABLEWITHFK1", null, null, "TABLEWITHFK2");
 
         // TODO Extend to verify columns as defined in JDBC
         assertTrue("Expected at least one row", rs.next());
 
-        assertEquals("Unexpected PKTABLE_NAME", "TABLE1", rs.getString("PKTABLE_NAME"));
+        assertEquals("Unexpected PKTABLE_NAME", "TABLEWITHFK1", rs.getString("PKTABLE_NAME"));
         assertEquals("Unexpected PKCOLUMN_NAME", "C1", rs.getString("PKCOLUMN_NAME"));
-        assertEquals("Unexpected FKTABLE_NAME", "TABLE2", rs.getString("FKTABLE_NAME"));
+        assertEquals("Unexpected FKTABLE_NAME", "TABLEWITHFK2", rs.getString("FKTABLE_NAME"));
         assertEquals("Unexpected FKCOLUMN_NAME", "C6", rs.getString("FKCOLUMN_NAME"));
         assertEquals("Unexpected KEY_SEQ", 1, rs.getInt("KEY_SEQ"));
         assertEquals("Unexpected UPDATE_RULE", DatabaseMetaData.importedKeyNoAction, rs.getShort("UPDATE_RULE"));
