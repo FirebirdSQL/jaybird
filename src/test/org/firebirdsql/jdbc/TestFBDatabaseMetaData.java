@@ -776,4 +776,32 @@ public class TestFBDatabaseMetaData extends FBJUnit4TestBase {
         // Note: we are not testing behavior for absence of antlr-runtime
         assertEquals(supportInfoFor(connection).supportsInsertReturning(), dmd.supportsGetGeneratedKeys());
     }
+
+    @Test
+    public void testGetJDBCMajorVersion() throws Exception {
+        assertEquals("JDBCMajorVersion", 4, dmd.getJDBCMajorVersion());
+    }
+
+    @Test
+    public void testGetJDBCMinorVersion() throws Exception {
+        String javaVersion = System.getProperty("java.specification.version");
+        int expectedMinor;
+        switch (javaVersion) {
+        case "1.7":
+            expectedMinor = 1;
+            break;
+        case "1.8":
+            expectedMinor = 2;
+            break;
+        case "9":
+        case "10":
+        case "11":
+            expectedMinor = 3;
+            break;
+        default:
+            throw new AssertionError("Unexpected java.specification.version: " + javaVersion + " revise test case");
+        }
+
+        assertEquals("JDBCMinorVersion", expectedMinor, dmd.getJDBCMinorVersion());
+    }
 }

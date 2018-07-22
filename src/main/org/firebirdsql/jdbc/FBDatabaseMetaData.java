@@ -4942,20 +4942,27 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int JDBC_MAJOR_VERSION = 4;
     private static final int JDBC_MINOR_VERSION;
     static {
-        // JDK 1.7 (or lower): JDBC 4.1
-        int tempVersion = 1;
+        int tempVersion;
         try {
             String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
-            if (javaImplementation != null) {
-                // TODO Convert to double and use that for comparison, check below won't work for Java 10
-                if ("9".compareTo(javaImplementation) <= 0) {
+            if (javaImplementation == null) {
+                // Assume minimum: JDBC 4.1
+                tempVersion = 1;
+            } else {
+                int javaVersionMajor;
+                try {
+                    javaVersionMajor = (int) Double.parseDouble(javaImplementation);
+                } catch (NumberFormatException e) {
+                    javaVersionMajor = 1;
+                }
+                if (javaVersionMajor >= 9) {
                     // JDK 9 or higher: JDBC 4.3
                     tempVersion = 3;
                 } else if ("1.8".compareTo(javaImplementation) <= 0) {
                     // JDK 1.8 or higher: JDBC 4.2
                     tempVersion = 2;
-                } else if ("1.7".compareTo(javaImplementation) <= 0) {
-                    // JDK 1.7: JDBC 4.1
+                } else {
+                    // JDK 1.7 (or lower): JDBC 4.1
                     tempVersion = 1;
                 }
             }
