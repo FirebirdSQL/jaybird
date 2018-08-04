@@ -1,3 +1,7 @@
+body {
+    margin: 0 15px;
+}
+
 table td {
     vertical-align: text-top;
 }
