@@ -519,10 +519,10 @@ There are four distinct use-cases:
     as is. It is possible to retrieve the result set using
     `getGeneratedKeys()`.
 
-    This functionality will only be available if the ANTLR 3.4 runtime
-    classes are on the classpath. Except for calling methods with
-    `NO_GENERATED_KEYS`, absence of the ANTLR runtime will throw
-    `FBDriverNotCapableException`.
+This functionality will only be available if the ANTLR 3.4 runtime
+classes are on the classpath. Except for calling methods with
+`NO_GENERATED_KEYS`, absence of the ANTLR runtime will throw
+`FBDriverNotCapableException`.
 
 This functionality should work for `INSERT` (from Firebird 2.0), and for
 `UPDATE`, `UPDATE OR INSERT` and `DELETE` (from Firebird 2.1).
