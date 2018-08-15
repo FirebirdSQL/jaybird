@@ -935,7 +935,7 @@ Removed Legacy_Auth from default authentication plugins
 -------------------------------------------------------
 
 The pure Java protocol in Jaybird will - by default - no longer try the 
-`Legacy_Auth` plugin when connecting to Jaybird 3 or higher.
+`Legacy_Auth` plugin when connecting to Firebird 3 or higher.
 
 See [Default authentication plugins] for more information.
 
