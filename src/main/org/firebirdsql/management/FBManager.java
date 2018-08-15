@@ -77,15 +77,17 @@ public class FBManager implements FBManagerMBean {
     public void start() throws Exception {
         dbFactory = GDSFactory.getDatabaseFactoryForType(type);
         state = STARTED;
-        if (isCreateOnStart()) {
-            createDatabase(getFileName(), getUserName(), getPassword());
+        String fileName = getFileName();
+        if (isCreateOnStart() && fileName != null) {
+            createDatabase(fileName, getUserName(), getPassword());
         }
     }
 
     @Override
     public void stop() throws Exception {
-        if (isDropOnStop()) {
-            dropDatabase(getFileName(), getUserName(), getPassword());
+        String fileName = getFileName();
+        if (isDropOnStop() && fileName != null) {
+            dropDatabase(fileName, getUserName(), getPassword());
         }
 
         dbFactory = null;
