@@ -45,11 +45,13 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
@@ -104,7 +106,7 @@ public class FBConnectionTest {
 
             conA.commit();
 
-            try (Connection conB = getConnectionViaDriverManager()) {
+            try (FirebirdConnection conB = getConnectionViaDriverManager()) {
                 conB.setAutoCommit(false);
 
                 /*
@@ -122,7 +124,7 @@ public class FBConnectionTest {
                 ((FirebirdConnection)conB).setTransactionParameters(tpb);
                 */
 
-                ((FirebirdConnection) conB).setTransactionParameters(
+                conB.setTransactionParameters(
                         Connection.TRANSACTION_READ_COMMITTED,
                         new int[] {
                                 FirebirdConnection.TPB_READ_COMMITTED,
@@ -263,7 +265,7 @@ public class FBConnectionTest {
     @Test
     public void testTransactionCoordinatorAutoCommitChange() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
-            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM rdb$database")) {
+            try (PreparedStatement ignored = connection.prepareStatement("SELECT * FROM rdb$database")) {
                 connection.setAutoCommit(false);
             }
             // TODO This doesn't seem to test anything
@@ -402,7 +404,7 @@ public class FBConnectionTest {
         try {
             System.setProperty("org.firebirdsql.jdbc.requireConnectionEncoding", "true");
             //noinspection EmptyTryBlock
-            try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
                 // Using try-with-resources just in case connection is created
             }
         } finally {
@@ -579,26 +581,27 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testWireCrypt_DISABLED_FB3_0_and_later() throws Exception {
+    public void testWireCrypt_DISABLED_FB3_0_and_later() {
         testWireCrypt_FB3_0_and_later(WireCrypt.DISABLED);
     }
 
     @Test
-    public void testWireCrypt_ENABLED_FB3_0_and_later() throws Exception {
+    public void testWireCrypt_ENABLED_FB3_0_and_later() {
         testWireCrypt_FB3_0_and_later(WireCrypt.ENABLED);
     }
 
     @Test
-    public void testWireCrypt_DEFAULT_FB3_0_and_later() throws Exception {
+    public void testWireCrypt_DEFAULT_FB3_0_and_later() {
         testWireCrypt_FB3_0_and_later(WireCrypt.DEFAULT);
     }
 
     @Test
-    public void testWireCrypt_REQUIRED_FB3_0_and_later() throws Exception {
+    public void testWireCrypt_REQUIRED_FB3_0_and_later() {
         testWireCrypt_FB3_0_and_later(WireCrypt.REQUIRED);
     }
 
-    private void testWireCrypt_FB3_0_and_later(WireCrypt wireCrypt) throws Exception {
+    private void testWireCrypt_FB3_0_and_later(WireCrypt wireCrypt) {
+        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Test for Firebird versions with wire encryption support",
                 getDefaultSupportInfo().supportsWireEncryption());
         Properties props = getDefaultPropertiesForConnection();
@@ -654,6 +657,7 @@ public class FBConnectionTest {
 
     @Test
     public void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_tryLegacy_AuthOnly() throws Exception {
+        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Test for Firebird versions with wire encryption support",
                 getDefaultSupportInfo().supportsWireEncryption());
         final String user = "legacy_auth";
@@ -670,13 +674,14 @@ public class FBConnectionTest {
         expectedException.expect(errorCodeEquals(ISCConstants.isc_miss_wirecrypt));
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }
 
     @Test
     public void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_trySrpFirst() throws Exception {
+        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Test for Firebird versions with wire encryption support",
                 getDefaultSupportInfo().supportsWireEncryption());
         final String user = "legacy_auth";
@@ -693,7 +698,7 @@ public class FBConnectionTest {
         expectedException.expect(errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible));
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }
@@ -709,7 +714,7 @@ public class FBConnectionTest {
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidConnectionPropertyValue, "NOT_A_VALID_VALUE", "wireCrypt")));
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }
@@ -723,7 +728,7 @@ public class FBConnectionTest {
         expectedException.expectMessage("No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null");
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }
@@ -738,7 +743,7 @@ public class FBConnectionTest {
         expectedException.expectMessage("No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST");
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }
@@ -761,7 +766,7 @@ public class FBConnectionTest {
         expectedException.expect(errorCodeEquals(ISCConstants.isc_login));
 
         //noinspection EmptyTryBlock
-        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
         }
     }

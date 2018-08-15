@@ -23,8 +23,6 @@ import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.*;
 import org.junit.After;
@@ -34,13 +32,17 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.*;
-import java.util.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Properties;
+import java.util.TimeZone;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -312,6 +314,7 @@ public class TestFBDriver {
     }
 
     private void checkAuthenticationPlugin(String pluginName) throws Exception {
+        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
         // NOTE: If the test still fails, then this plugin is not enabled in the Firebird AuthServer config
         assumeTrue("Test requires support for authentication plugin " + pluginName,
@@ -336,8 +339,7 @@ public class TestFBDriver {
 
     @Test
     public void testAuthPluginsUnknown_pureJava() throws Exception {
-        assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE,
-                isIn(Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME)));
+        assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE, isPureJavaType());
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("authPlugins", "flup");
 

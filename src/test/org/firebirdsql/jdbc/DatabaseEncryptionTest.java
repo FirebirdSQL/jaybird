@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.matchers.SQLExceptionMatchers;
 import org.firebirdsql.common.rules.DatabaseExistsRule;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.ds.FBConnectionPoolDataSource;
 import org.firebirdsql.ds.FBSimpleDataSource;
@@ -76,7 +77,8 @@ public class DatabaseEncryptionTest {
 
     @ClassRule
     public static final TestRule requiresCryptTestDB = RuleChain
-            .outerRule(RequireProtocol.requireProtocolVersion(13))
+            .outerRule(GdsTypeRule.excludesNativeOnly())
+            .around(RequireProtocol.requireProtocolVersion(13))
             .around(DatabaseExistsRule.requireExistence(CRYPTTEST_DB));
 
     @Rule
