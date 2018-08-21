@@ -125,19 +125,9 @@ public class AsynchronousProcessor {
 
                     if (selector.select() == 0) continue;
 
-                    final Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                    synchronized (selectedKeys) {
-                        Iterator<SelectionKey> selectedKeysIterator = selectedKeys.iterator();
-                        while (selectedKeysIterator.hasNext()) {
-                            final SelectionKey selectionKey = selectedKeysIterator.next();
-                            selectedKeysIterator.remove();
-                            if (!selectionKey.isValid()) continue;
-
-                            handleReadable(selectionKey);
-                        }
-                    }
+                    handleReadableKeys(selector.selectedKeys());
                 } catch (IOException ex) {
-                    // TODO check necessary handling
+                    // TODO check any other necessary handling
                     log.error("IOException in async event processing", ex);
                 }
             }
@@ -146,6 +136,19 @@ public class AsynchronousProcessor {
             } catch (IOException e) {
                 // ignore
                 log.error("IOException closing event selector", e);
+            }
+        }
+
+        private void handleReadableKeys(final Set<SelectionKey> selectedKeys) {
+            synchronized (selectedKeys) {
+                Iterator<SelectionKey> selectedKeysIterator = selectedKeys.iterator();
+                while (selectedKeysIterator.hasNext()) {
+                    final SelectionKey selectionKey = selectedKeysIterator.next();
+                    selectedKeysIterator.remove();
+                    if (!selectionKey.isValid()) continue;
+
+                    handleReadable(selectionKey);
+                }
             }
         }
 
@@ -182,13 +185,16 @@ public class AsynchronousProcessor {
                 // Channel closed
                 log.debug("AsynchronousCloseException reading from event channel; cancelling key", e);
                 selectionKey.cancel();
-            } catch (IOException e) {
-                // TODO handle?
-                log.error("IOException reading from event channel; ignored", e);
             } catch (CancelledKeyException e) {
-                // ignore
+                // ignore; key cancelled as part of close
             } catch (Exception e) {
-                log.error("Exception reading from event channel; ignored", e);
+                log.error(e.getClass().getName() + " reading from event channel; attempting to close async channel", e);
+                FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
+                try {
+                    channel.close();
+                } catch (Exception e1) {
+                    log.error("Attempt to close async channel failed", e1);
+                }
             }
         }
 

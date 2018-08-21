@@ -217,6 +217,7 @@ Changes in Jaybird 3.0.5
 
 The following has been changed or fixed since Jaybird 3.0.4
 
+-   Fixed: `FBManager` does not accept page size of 32768 (Firebird 4 and higher) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
 -   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
 -   Fixed: Incorrect parsing of Firebird version numbers ([JDBC-535](http://tracker.firebirdsql.org/browse/JDBC-535))
 -   New feature: Added support for the Srp256 authentication plugin ([JDBC-536](http://tracker.firebirdsql.org/browse/JDBC-536))  
@@ -228,7 +229,9 @@ The following has been changed or fixed since Jaybird 3.0.4
     `AuthServer` setting as additional roundtrips to the server are needed.
 -   Fixed: Incorrect warning _"Specified statement was not created by this connection"_
     logged for statements that fail with an exception on prepare ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-538))
--   Fixed: `FBManager` does not accept page size of 32768 (Firebird 4 and higher) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
+-   Fixed: Remote close of event channel (eg on Firebird server stop or crash) leads
+    to high CPU usage and excessive error logging as socket channel is not 
+    removed from selector ([JDBC-542](http://tracker.firebirdsql.org/browse/JDBC-542))
 
 ### Known issues in Jaybird 3.0.5
 
@@ -242,7 +245,7 @@ The following has been changed or fixed since Jaybird 3.0.4
     or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
 -   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
     or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
-    Wildlfy or JBoss on Java 7, you will need to declare a dependency on JAXB,
+    Wildfly or JBoss on Java 7, you will need to declare a dependency on JAXB,
     see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
     for details.
 
