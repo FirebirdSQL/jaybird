@@ -232,6 +232,8 @@ The following has been changed or fixed since Jaybird 3.0.4
 -   Fixed: Remote close of event channel (eg on Firebird server stop or crash) leads
     to high CPU usage and excessive error logging as socket channel is not 
     removed from selector ([JDBC-542](http://tracker.firebirdsql.org/browse/JDBC-542))
+-   Fixed: Properties `wireCrypt` and `dbCryptConfig` not available on
+    `FBEventManager` ([JDBC-544](http://tracker.firebirdsql.org/browse/JDBC-544))
 
 ### Known issues in Jaybird 3.0.5
 

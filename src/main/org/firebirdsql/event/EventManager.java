@@ -40,6 +40,8 @@
  */
 package org.firebirdsql.event;
 
+import org.firebirdsql.gds.ng.WireCrypt;
+
 import java.sql.SQLException;
 
 /**
@@ -118,6 +120,38 @@ public interface EventManager {
      * @param port for the connection to the database.
      */
     public void setPort(int port);
+
+    /**
+     * Get the wire encryption level.
+     *
+     * @return Wire encryption level
+     * @since 3.0.4
+     */
+    public WireCrypt getWireCrypt();
+
+    /**
+     * Set the wire encryption level.
+     *
+     * @param wireCrypt Wire encryption level ({@code null} not allowed)
+     * @since 3.0.4
+     */
+    public void setWireCrypt(WireCrypt wireCrypt);
+
+    /**
+     * Get the database encryption plugin configuration.
+     *
+     * @return Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    public String getDbCryptConfig();
+
+    /**
+     * Sets the database encryption plugin configuration.
+     *
+     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    public void setDbCryptConfig(String dbCryptConfig);
 
     /**
      * Register an EventListener that will be called when an event occurs.

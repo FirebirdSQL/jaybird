@@ -41,10 +41,7 @@ package org.firebirdsql.event;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -182,6 +179,26 @@ public class FBEventManager implements EventManager {
 
     public void setPort(int port) {
         connectionProperties.setPortNumber(port);
+    }
+
+    @Override
+    public WireCrypt getWireCrypt() {
+        return connectionProperties.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(WireCrypt wireCrypt) {
+        connectionProperties.setWireCrypt(wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return connectionProperties.getDbCryptConfig();
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        connectionProperties.setDbCryptConfig(dbCryptConfig);
     }
 
     /**
