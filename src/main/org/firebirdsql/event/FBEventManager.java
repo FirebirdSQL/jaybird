@@ -27,10 +27,7 @@ package org.firebirdsql.event;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.FbConnectionProperties;
-import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -72,6 +69,7 @@ public class FBEventManager implements EventManager {
         this.gdsType = gdsType;
     }
 
+    @Override
     public void connect() throws SQLException {
         if (connected) {
             throw new IllegalStateException("Connect called while already connected");
@@ -88,6 +86,7 @@ public class FBEventManager implements EventManager {
         dispatchThread.start();
     }
 
+    @Override
     public void disconnect() throws SQLException {
         if (!connected) {
             throw new IllegalStateException("Disconnect called while not connected");
@@ -131,44 +130,74 @@ public class FBEventManager implements EventManager {
         return connected;
     }
 
+    @Override
     public void setUser(String user) {
         connectionProperties.setUser(user);
     }
 
+    @Override
     public String getUser() {
         return connectionProperties.getUser();
     }
 
+    @Override
     public void setPassword(String password) {
         connectionProperties.setPassword(password);
     }
 
+    @Override
     public String getPassword() {
         return connectionProperties.getPassword();
     }
 
+    @Override
     public void setDatabase(String database) {
         connectionProperties.setDatabaseName(database);
     }
 
+    @Override
     public String getDatabase() {
         return connectionProperties.getDatabaseName();
     }
 
+    @Override
     public String getHost() {
         return connectionProperties.getServerName();
     }
 
+    @Override
     public void setHost(String host) {
         connectionProperties.setServerName(host);
     }
 
+    @Override
     public int getPort() {
         return connectionProperties.getPortNumber();
     }
 
+    @Override
     public void setPort(int port) {
         connectionProperties.setPortNumber(port);
+    }
+
+    @Override
+    public WireCrypt getWireCrypt() {
+        return connectionProperties.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(WireCrypt wireCrypt) {
+        connectionProperties.setWireCrypt(wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return connectionProperties.getDbCryptConfig();
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        connectionProperties.setDbCryptConfig(dbCryptConfig);
     }
 
     @Override
@@ -303,6 +332,7 @@ public class FBEventManager implements EventManager {
             cancelled = true;
         }
 
+        @Override
         public synchronized void eventOccurred(EventHandle eventHandle) {
             if (!cancelled) {
                 try {
@@ -334,6 +364,7 @@ public class FBEventManager implements EventManager {
             running = false;
         }
 
+        @Override
         public void run() {
             running = true;
             DatabaseEvent event;
@@ -368,6 +399,7 @@ class OneTimeEventListener implements EventListener {
         this.lock = lock;
     }
 
+    @Override
     public void eventOccurred(DatabaseEvent event) {
         if (eventCount == -1) {
             eventCount = event.getEventCount();
@@ -393,14 +425,17 @@ class DatabaseEventImpl implements DatabaseEvent {
         this.eventCount = eventCount;
     }
 
+    @Override
     public int getEventCount() {
         return this.eventCount;
     }
 
+    @Override
     public String getEventName() {
         return this.eventName;
     }
 
+    @Override
     public String toString() {
         return "DatabaseEvent['" + eventName + " * " + eventCount + "]";
     }

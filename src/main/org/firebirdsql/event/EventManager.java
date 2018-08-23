@@ -24,6 +24,8 @@
  */
 package org.firebirdsql.event;
 
+import org.firebirdsql.gds.ng.WireCrypt;
+
 import java.sql.SQLException;
 
 /**
@@ -114,6 +116,38 @@ public interface EventManager {
      *         for the connection to the database.
      */
     void setPort(int port);
+
+    /**
+     * Get the wire encryption level.
+     *
+     * @return Wire encryption level
+     * @since 3.0.4
+     */
+    WireCrypt getWireCrypt();
+
+    /**
+     * Set the wire encryption level.
+     *
+     * @param wireCrypt Wire encryption level ({@code null} not allowed)
+     * @since 3.0.4
+     */
+    void setWireCrypt(WireCrypt wireCrypt);
+
+    /**
+     * Get the database encryption plugin configuration.
+     *
+     * @return Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    String getDbCryptConfig();
+
+    /**
+     * Sets the database encryption plugin configuration.
+     *
+     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @since 3.0.4
+     */
+    void setDbCryptConfig(String dbCryptConfig);
 
     /**
      * Get the list of authentication plugins to try.
