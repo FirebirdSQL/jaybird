@@ -326,6 +326,10 @@ The implementation comes with a number of caveats:
      (although that in itself would already imply a severe security breach)
  -   the ARC4 encryption - the default provided by Firebird - is considered to 
      be a weak (maybe even broken) cipher these days
+ -   the encryption cipher uses ARCFOUR with a 160 bits key, this means that the 
+     unlimited Cryptographic Jurisdiction Policy needs to be used (or at minimum 
+     a custom policy that allows ARCFOUR with 160 bits keys). See also FAQ entry 
+     [Encryption key did not meet algorithm requirements of Symmetric/Arc4 (337248282)](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#encryption-key-did-not-meet-algorithm-requirements-of-symmetricarc4-337248282) 
      
 Database encryption support
 ---------------------------

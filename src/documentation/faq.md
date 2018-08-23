@@ -516,6 +516,34 @@ You also need to make sure your user is created with the legacy user manager,
 see [Jaybird Wiki - Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3) 
 for details.
 
+### Encryption key did not meet algorithm requirements of Symmetric/Arc4 (337248282) ###
+
+If the exception cause is _java.security.InvalidKeyException: Illegal key size 
+or default parameters_, this means that your Java install applies a security 
+policy that does not allow ARCFOUR with a 160 bit encryption key.
+
+If `wireCrypt=ENABLED` (the default), this is just logged as a warning. The 
+connection will succeed, but it does mean that the connection will not be 
+encrypted. If `wireCrypt=REQUIRED`, this is thrown as an exception, and the 
+connection will fail.
+
+This could indicate that your Java version applies the limited strength 
+Cryptographic Jurisdiction Policy (this was the default in Java 8 Update 152 and 
+earlier), or has been explicitly configured to apply the limited policy, or has
+a custom security policy to restrict the cryptographic key size. 
+
+Solutions and workarounds:
+
+- Apply the unlimited Cryptographic Jurisdiction Policy, see [this Stack 
+Overflow answer](https://stackoverflow.com/a/3864276/466862)
+- Relax your custom security policy to allow 160 bit keys for ARCFOUR
+- Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in 
+`firebird.conf`
+- Set `wireCrypt=DISABLED` in the connection properties
+
+Be aware that the first two options may have legal implications depending on the
+local law in your country regarding cryptography.
+
 JDBC Support
 ============
 
