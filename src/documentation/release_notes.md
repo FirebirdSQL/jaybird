@@ -55,11 +55,17 @@ Jaybird 3.0 does not support the Firebird 3 zlib compression.
 Supported Java versions
 -----------------------
 
-Jaybird 3.0 supports Java 7 (JDBC 4.1) and Java 8 (JDBC 4.2). Support for 
-earlier Java versions has been dropped.
+Jaybird 3 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 - 11 (JDBC 
+4.3). Support for earlier Java versions has been dropped.
 
-Basic support for Java 9 (JDBC 4.3) is available using the Java 8 version,
-but real module support will not be available until Jaybird 4 (or later).
+For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
+have the same source and all JDBC 4.3 related functionality.
+
+Given the limited support period for Java 9 and higher versions, we may limit
+support on those versions.
+
+Jaybird 3.0 is not modularized, but since Jaybird 3.0.3, it declares the 
+automatic module name `org.firebirdsql.jaybird`.
 
 Specification support
 ---------------------
@@ -68,7 +74,7 @@ Jaybird supports the following specifications:
 
 |Specification|Notes
 |-------------|----------------------------------------------------------------
-| JDBC 4.3    | Driver implements all JDBC 4.3 methods for features supported by Firebird; Java 9 supported using the Java 8 driver.
+| JDBC 4.3    | Driver implements all JDBC 4.3 methods for features supported by Firebird; Java 9 and higher supported using the Java 8 driver.
 | JDBC 4.2    | Driver implements all JDBC 4.2 methods for features supported by Firebird.
 | JDBC 4.1    | Driver implements all JDBC 4.1 methods for features supported by Firebird.
 | JDBC 4.0    | Driver implements all JDBC 4.0 interfaces and supports exception chaining.
@@ -198,13 +204,12 @@ If you manage your dependencies manually, you need to do the following:
 Gotcha's
 --------
 
-During tests we have have observed that using Jaybird 4 with Firebird 3.0.4 may
+During tests we have have observed that using Jaybird with Firebird 3 and 4 may
 cause connection hangs when the connection is encrypted (the connection is 
-blocked in a read from the socket). The cause seems related to the Java 
-version (the problem disappeared with Java 9 Update 4), or possibly the 
-`TcpRemoteBufferSize` setting in Firebird. The workaround is to disable 
-wire encryption in Firebird or for the specific connection (see 
-[Wire encryption support]).
+blocked in a read from the socket). The cause seems related to non-standard 
+values for the `TcpRemoteBufferSize` setting in Firebird. The workaround is to 
+disable wire encryption in Firebird or for the specific connection (see 
+[Wire encryption support]), or to use the default value for `TcpRemoteBufferSize`.
 
 If you find a problem while upgrading, or other bugs: please report it 
 on <http://tracker.firebirdsql.org/brows/JDBC>.
@@ -240,19 +245,7 @@ The following has been changed or fixed since Jaybird 3.0.4
 
 ### Known issues in Jaybird 3.0.5
 
--   When using native or embedded, the default JNA 4.4.0 dependency may not work
-    on some versions of Linux as it requires glibc 2.14. Upgrading the 
-    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
-    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).  
-    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
-    be specified as a Maven dependency or can be downloaded from 
-    <https://github.com/java-native-access/jna#download>
-    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
--   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
-    or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
-    Wildfly or JBoss on Java 7, you will need to declare a dependency on JAXB,
-    see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
-    for details.
+See [Known Issues]
 
 Changes in Jaybird 3.0.4
 ------------------------
@@ -438,7 +431,7 @@ The improved support includes
     (long) length beyond `Integer.MAX_VALUE`
 -   Support for large update counts (but not `setLargeMaxRows`)
 
-### Java 9 ###
+### Java 9 and higher ###
 
 Jaybird currently does not fully support Java 9 and higher (JDBC 4.3), although 
 most of the JDBC 4.3 features have been implemented (in as far as they are 
@@ -453,9 +446,8 @@ releases, it is not necessary to add the `java.xml.bind` module using
 `--add-modules java.xml.bind`, as we removed its use (see caveat below for the 
 Java 7 version of Jaybird).
 
-Jaybird 3.x cannot be fully tested under Java 9+ at this moment, as some of our 
-tests fail due to recent changes, that prevent JMock (or specifically cglib) 
-from dynamically generating classes, this has been fixed on master (Jaybird 4).
+Given the limited support period for Java 9 and higher versions, we may limit
+support on those versions.
 
 We recommend to only use the Java 8 version of Jaybird with Java 9+, and not use 
 the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
@@ -790,9 +782,10 @@ Other fixes and changes
     Possible values for `JB_IDENTITY_TYPE` are:
     
     *   `null` : not an identity column, or unknown identity type, 
-    *   `ALWAYS` : a `GENERATED ALWAYS AS IDENTITY` column (NOTE: not yet 
-        supported by Firebird),
-    *   `BY DEFAULT` : a `GENERATED BY DEFAULT AS IDENTITY` column.
+    *   `ALWAYS` : a `GENERATED ALWAYS AS IDENTITY` column (introduced in 
+        Firebird 4),
+    *   `BY DEFAULT` : a `GENERATED BY DEFAULT AS IDENTITY` column (introduced 
+        in Firebird 3).
     
     You should always retrieve these columns by name, as their position will 
     change when the JDBC specification adds new columns.
@@ -821,6 +814,22 @@ Known Issues
     Firebird 2.5 or earlier `fbclient.dll`.
     
     This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
+    
+-   When using native or embedded, the default JNA 4.4.0 dependency may not work
+    on some versions of Linux as it requires glibc 2.14. Upgrading the 
+    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
+    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).
+      
+    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
+    be specified as a Maven dependency or can be downloaded from 
+    <https://github.com/java-native-access/jna#download>
+    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
+    
+-   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
+    or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
+    Wildfly or JBoss on Java 7, you will need to declare a dependency on JAXB,
+    see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
+    for details.
 
 Compatibility changes
 =====================
@@ -892,8 +901,8 @@ higher will default to connection character set `NONE`. Be aware that `NONE` in
 Jaybird 3 does not behave the same as in Jaybird 2.2 and earlier, see 
 [Connection character set NONE] for information.
 
-Note that using `NONE` can result in incorrect character set handling when the 
-database is used from different locales.
+Using `NONE` can result in incorrect character set handling when the database is 
+used from different locales.
 
 You can explicitly set the connection character set using one of the following 
 options:
@@ -1074,12 +1083,15 @@ _Unless explicitly indicated, changes also apply to `PreparedStatement` and
     <span id="generated-query-types">This applies to statements executed (or
     prepared) using:</span>
 
-    * `Statement.execute(String, int)` or `Statement.executeUpdate(String, int)`
+    * `Statement.execute(String, int)`, `Statement.executeUpdate(String, int)`
+      or `Statement.executeLargeUpdate(String ,int)` 
       with value `Statement.RETURN_GENERATED_KEYS`,
-    * `Statement.execute(String, int[])` or
-      `Statement.executeUpdate(String, int[])`,
-    * `Statement.execute(String, String[])` or
-      `Statement.executeUpdate(String, String[])`,
+    * `Statement.execute(String, int[])`,
+      `Statement.executeUpdate(String, int[])` or
+      `Statement.executeLargeUpdate(String, int[])`,
+    * `Statement.execute(String, String[])`m
+      `Statement.executeUpdate(String, String[])` or
+      `Statement.executeLargeUpdate(String, String[])`,
     * `Connection.prepareStatement(String, int)` with value
       `Statement.RETURN_GENERATED_KEYS`,
     * `Connection.prepareStatement(String, int[])`,
