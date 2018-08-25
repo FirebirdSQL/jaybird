@@ -221,9 +221,9 @@ The following has been changed or fixed since Jaybird 3.0.4
 -   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
 -   Fixed: Incorrect parsing of Firebird version numbers ([JDBC-535](http://tracker.firebirdsql.org/browse/JDBC-535))
 -   New feature: Added support for the Srp256 authentication plugin ([JDBC-536](http://tracker.firebirdsql.org/browse/JDBC-536))  
-    Firebird 4 by default will only authenticate with Srp256, and support will 
-    be added in Firebird 3.0.4. Support for the other SrpNNN plugins introduced 
-    in Firebird 4 will be added in Jaybird 4.  
+    Firebird 4 by default will only authenticate with Srp256, and support for 
+    Srp256 will be added in Firebird 3.0.4. Support for the other SrpNNN plugins 
+    introduced in Firebird 4 will be added in Jaybird 4.  
     The addition of this plugin may lead to slightly slower authentication with 
     Firebird 3 versions that don't support Srp256 or that don't have it in the 
     `AuthServer` setting as additional roundtrips to the server are needed.
@@ -234,6 +234,9 @@ The following has been changed or fixed since Jaybird 3.0.4
     removed from selector ([JDBC-542](http://tracker.firebirdsql.org/browse/JDBC-542))
 -   Fixed: Properties `wireCrypt` and `dbCryptConfig` not available on
     `FBEventManager` ([JDBC-544](http://tracker.firebirdsql.org/browse/JDBC-544))
+-   Documentation: wire protocol encryption requires unlimited strength 
+    Cryptographic Jurisdiction Policy (or equivalent), this was previously not
+    documented ([JDBC-545](http://tracker.firebirdsql.org/browse/JDBC-545))
 
 ### Known issues in Jaybird 3.0.5
 
@@ -264,22 +267,6 @@ The following has been changed or fixed since Jaybird 3.0.3
 -   New feature: Database encryption callback support in pure Java protocol ([JDBC-527](http://tracker.firebirdsql.org/browse/JDBC-527))  
     For more information, see [Database encryption support].  
     This feature was sponsored by IBPhoenix.
-
-### Known issues in Jaybird 3.0.4
-
--   When using native or embedded, the default JNA 4.4.0 dependency may not work
-    on some versions of Linux as it requires glibc 2.14. Upgrading the 
-    dependency to JNA 4.5.x will solve this, as it requires glibc 2.7. See 
-    [JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509).  
-    We decided not to upgrade the dependency in a point release. JNA 4.5.x can
-    be specified as a Maven dependency or can be downloaded from 
-    <https://github.com/java-native-access/jna#download>
-    or from [Maven Central](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22net.java.dev.jna%22%20AND%20a%3A%22jna%22)
--   Jaybird 3.0.4 for Java 7 introduced a dependency on JAXB. When using Java 9
-    or higher make sure to use the Jaybird 3.0.4 binaries for Java 8. If you use
-    Wildlfy or JBoss on Java 7, you will need to declare a dependency on JAXB,
-    see [FAQ: Compatibility Notes > Wildfly](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#wildfly)
-    for details.
 
 Changes in Jaybird 3.0.3
 ------------------------
