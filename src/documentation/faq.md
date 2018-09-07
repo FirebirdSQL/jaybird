@@ -12,7 +12,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
-Version: `3.0.4`
+Version: `3.0.5`
 
 For example, for Java 8:
 
@@ -20,7 +20,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.4</version>
+    <version>3.0.5</version>
 </dependency>
 ~~~
 
@@ -32,7 +32,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.4</version>
+    <version>3.0.5</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
