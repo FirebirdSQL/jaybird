@@ -5,14 +5,8 @@ private boolean _inReturning;
 protected boolean _defaultValues;
 protected JaybirdStatementModel statementModel = new JaybirdStatementModel();
 
-protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
-
 public JaybirdStatementModel getStatementModel() {
     return statementModel;
-}
-
-public java.util.Collection getErrorMessages() {
-    return _errorMessages;
 }
 
 public String getColumn(int index) {
@@ -27,12 +21,10 @@ public String getTableName() {
     return statementModel.getTableName();
 }
 
-public void emitErrorMessage(String msg) {
-    _errorMessages.add(msg);
-}
 }
 
 @lexer::members {
+
 protected java.util.ArrayList _errorMessages = new java.util.ArrayList();
 
 public java.util.Collection getErrorMessages() {
@@ -42,86 +34,95 @@ public java.util.Collection getErrorMessages() {
 public void emitErrorMessage(String msg) {
     _errorMessages.add(msg);
 }
+
+boolean ahead(String text) {
+    for (int i = 0; i < text.length(); i++) {
+        if (_input.LA(i + 1) != text.charAt(i)) {
+            return false;
+        }
+    }
+    return true;
+}
 }
 
-ALL : [Aa][Ll][Ll];
-AND : [Aa][Nn][Dd];
-AS : [Aa][Ss];
-AVG: [Aa][Vv][Gg];
+ALL : A L L;
+AND : A N D;
+AS : A S;
+AVG: A V G;
 
-BOTH: [Bb][Oo][Tt][Hh];
+BOTH: B O T H;
 
-CAST: [Cc][Aa][Ss][Tt];
-CHARACTER: [Cc][Hh][Aa][Rr][Aa][Cc][Tt][Ee][Rr];
-COUNT: [Cc][Oo][Uu][Nn][Tt];
-COLLATE: [Cc][Oo][Ll][Ll][Aa][Tt][Ee];
+CAST: C A S T;
+CHARACTER: C H A R A C T E R;
+COUNT: C O U N T;
+COLLATE: C O L L A T E;
 
-DEFAULT: [Dd][Ee][Ff][Aa][Uu][Ll][Tt];
-DELETE: [Dd][Ee][Ll][Ee][Tt][Ee];
-DISTINCT: [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt];
-DB_KEY: [Dd][Bb][_][Kk][Ee][Yy];
+DEFAULT: D E F A U L T;
+DELETE: D E L E T E;
+DISTINCT: D I S T I N C T;
+DB_KEY: D B '_' K E Y;
 
-EXTRACT: [Ee][Xx][Tt][Rr][Aa][Cc][Tt];
-EXECUTE: [Ee][Xx][Ee][Cc][Uu][Tt][Ee];
+EXTRACT: E X T R A C T;
+EXECUTE: E X E C U T E;
 
-FOR: [Ff][Oo][Rr];
-FROM: [Ff][Rr][Oo][Mm];
+FOR: F O R;
+FROM: F R O M;
 
-GEN_ID: [Gg][Ee][Nn][_][Ii][Dd];
+GEN_ID: G E N '_' I D;
 
-INSERT : [Ii][Nn][Ss][Ee][Rr][Tt];
-INTO : [Ii][Nn][Tt][Oo];
+INSERT: I N S E R T;
+INTO: I N T O;
 
-LEADING: [Ll][Ee][Aa][Dd][Ii][Nn][Gg];
+LEADING: L E A D I N G;
 
-MATCHING: [Mm][Aa][Tt][Cc][Hh][Ii][Nn][Gg];
-MINIMUM: [Mm][Ii][Nn];
-MAXIMUM: [Mm][Aa][Xx];
+MATCHING: M A T C H I N G;
+MINIMUM: M I N;
+MAXIMUM: M A X;
 
-NULL: [Nn][Uu][Ll][Ll];
-NEXT: [Nn][Ee][Xx][Tt];
+NULL: N U L L;
+NEXT: N E X T;
 
-OR: [Oo][Rr];
+OR: O R;
 
-PROCEDURE: [Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee];
+PROCEDURE: P R O C E D U R E;
 
-RETURNING: [Rr][Ee][Tt][Uu][Rr][Nn][Ii][Nn][Gg];
+RETURNING: R E T U R N I N G;
 
-SEGMENT: [Ss][Ee][Gg][Mm][Ee][Nn][Tt];
-SELECT: [Ss][Ee][Ll][Ee][Cc][Tt];
-SET: [Ss][Ee][Tt];
-SUBSTRING: [Ss][Uu][Bb][Ss][Tt][Rr][Ii][Nn][Gg];
-SUB_TYPE: [Ss][Uu][Bb][_][Tt][Yy][Pp][Ee];
-SUM: [Ss][Uu][Mm];
+SEGMENT: S E G M E N T;
+SELECT: S E L E C T;
+SET: S E T;
+SUBSTRING: S U B S T R I N G;
+SUB_TYPE: S U B '_' T Y P E;
+SUM: S U M;
 
-TRIM: [Tt][Rr][Ii][Mm];
-TRAILING: [Tt][Rr][Aa][Ii][Ll][Ii][Nn][Gg];
+TRIM: T R I M;
+TRAILING: T R A I L I N G;
 
-UNKNOWN: [Uu][Nn][Kk][Nn][Oo][Ww][Nn];
-UPDATE: [Uu][Pp][Dd][Aa][Tt][Ee];
+UNKNOWN: U N K N O W N;
+UPDATE: U P D A T E;
 
-VALUE: [Vv][Aa][Ll][Uu][Ee];
-VALUES: [Vv][Aa][Ll][Uu][Ee][Ss];
+VALUE: V A L U E;
+VALUES: V A L U E S;
 
-KW_BLOB: [Bb][Ll][Oo][Bb];
-KW_BIGINT: [Bb][Ii][Gg][Ii][Nn][Tt];
-KW_BOOLEAN: [Bb][Oo][Oo][Ll][Ee][Aa][Nn];
-KW_CHAR: [Cc][Hh][Aa][Rr];
-KW_DATE: [Dd][Aa][Tt][Ee];
-KW_DECIMAL: [Dd][Ee][Cc][Ii][Mm][Aa][Ll];
-KW_DOUBLE: [Dd][Oo][Uu][Bb][Ll][Ee];
-KW_PRECISION: [Pp][Rr][Ee][Cc][Ii][Ss][Ii][Oo][Nn];
-KW_FLOAT: [Ff][Ll][Oo][Aa][Tt];
-KW_INTEGER: [Ii][Nn][Tt][Ee][Gg][Ee][Rr];
-KW_INT: [Ii][Nn][Tt];
-KW_NCHAR: [Nn][Cc][Hh][Aa][Rr];
-KW_NUMERIC: [Nn][Uu][Mm][Ee][Rr][Ii][Cc];
-KW_NVARCHAR: [Nn][Vv][Aa][Rr][Cc][Hh][Aa][Rr];
-KW_SMALLINT: [Ss][Mm][Aa][Ll][Ll][Ii][Nn][Tt];
-KW_TIME: [Tt][Ii][Mm][Ee];
-KW_TIMESTAMP: [Tt][Ii][Mm][Ee][Ss][Tt][Aa][Mm][Pp];
-KW_VARCHAR: [Vv][Aa][Rr][Cc][Hh][Aa][Rr];
-KW_SIZE: [Ss][Ii][Zz][Ee];
+KW_BLOB: B L O B;
+KW_BIGINT: B I G I N T;
+KW_BOOLEAN: B O O L E A N;
+KW_CHAR: C H A R;
+KW_DATE: D A T E;
+KW_DECIMAL: D E C I M A L;
+KW_DOUBLE: D O U B L E;
+KW_PRECISION: P R E C I S I O N;
+KW_FLOAT: F L O A T;
+KW_INTEGER: I N T E G E R;
+KW_INT: I N T;
+KW_NCHAR: N C H A R;
+KW_NUMERIC: N U M E R I C;
+KW_NVARCHAR: N V A R C H A R;
+KW_SMALLINT: S M A L L I N T;
+KW_TIME: T I M E;
+KW_TIMESTAMP: T I M E S T A M P;
+KW_VARCHAR: V A R C H A R;
+KW_SIZE: S I Z E;
 
 LEFT_PAREN
         :    '('
@@ -149,12 +150,21 @@ STRING  :    '\'' (~'\''|'\'\'')* '\''
         ;
 
 BINARY_STRING
-        :    [Xx]'\'' (HEXIT HEXIT)* '\''
+        :    X '\'' (HEXIT HEXIT)* '\''
         ;
 
+fragment QS_OTHER_CH: ~('<' | '{' | '[' | '(' | ' ' | '\t' | '\n' | '\r');
+Q_STRING : Q ['] ( QUOTED_TEXT ) ['];
+fragment QUOTED_TEXT
+    : '<' .*? '>'
+    | '{' .*? '}'
+    | '[' .*? ']'
+    | '(' .*? ')'
+    | QS_OTHER_CH ({!ahead(getText().charAt(2) + "'")}? .)* ({ahead(getText().charAt(2) + "'")}? .) ;
+
 TRUTH_VALUE
-        : [Tt][Rr][Uu][Ee]
-        | [Ff][Aa][Ll][Ss][Ee]
+        : T R U E
+        | F A L S E
         ;
 
 GENERIC_ID
@@ -164,6 +174,33 @@ GENERIC_ID
 QUOTED_ID
         : '"' ( ID_QUOTED_UNICODE )+ '"'
         ;
+
+fragment A: [aA];
+fragment B: [bB];
+fragment C: [cC];
+fragment D: [dD];
+fragment E: [eE];
+fragment F: [fF];
+fragment G: [gG];
+fragment H: [hH];
+fragment I: [iI];
+fragment J: [jJ];
+fragment K: [kK];
+fragment L: [lL];
+fragment M: [mM];
+fragment N: [nN];
+fragment O: [oO];
+fragment P: [pP];
+fragment Q: [qQ];
+fragment R: [rR];
+fragment S: [sS];
+fragment T: [tT];
+fragment U: [uU];
+fragment V: [vV];
+fragment W: [wW];
+fragment X: [xX];
+fragment Y: [yY];
+fragment Z: [zZ];
 
 fragment HEXIT
         : DIGIT
@@ -186,6 +223,8 @@ fragment ID_QUOTED_UNICODE
         | '\u0023' .. '\uFFFF'
         | '""'
         ;
+
+fragment NEWLINE: '\r'? '\n';
 
 statement
         :    insertStatement
@@ -431,6 +470,7 @@ simpleValue
         :    TRUTH_VALUE
         |    STRING
         |    BINARY_STRING
+        |    Q_STRING
         |    INTEGER
         |    NUMERIC
         |    REAL
@@ -559,6 +599,6 @@ selectClause
         :    SELECT
         ;
 
-SL_COMMENT : '--' .*? '\r'? '\n' -> skip ; // Match "--" stuff '\n'
+SL_COMMENT : '--' ( ~('\r' | '\n') )* (NEWLINE|EOF) -> skip ; // Match "--" stuff '\n'
 COMMENT : '/*' .*? '*/' -> skip ; // Match "/*" stuff "*/"
 WS : [ \t\r\n]+ -> skip ;

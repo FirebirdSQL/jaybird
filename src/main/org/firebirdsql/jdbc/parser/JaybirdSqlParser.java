@@ -29,7 +29,6 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
@@ -52,8 +51,8 @@ public class JaybirdSqlParser extends Parser {
 		KW_NCHAR=64, KW_NUMERIC=65, KW_NVARCHAR=66, KW_SMALLINT=67, KW_TIME=68, 
 		KW_TIMESTAMP=69, KW_VARCHAR=70, KW_SIZE=71, LEFT_PAREN=72, RIGHT_PAREN=73, 
 		COMMA=74, INTEGER=75, NUMERIC=76, REAL=77, STRING=78, BINARY_STRING=79, 
-		TRUTH_VALUE=80, GENERIC_ID=81, QUOTED_ID=82, SL_COMMENT=83, COMMENT=84, 
-		WS=85;
+		Q_STRING=80, TRUTH_VALUE=81, GENERIC_ID=82, QUOTED_ID=83, SL_COMMENT=84, 
+		COMMENT=85, WS=86;
 	public static final int
 		RULE_statement = 0, RULE_deleteStatement = 1, RULE_updateStatement = 2, 
 		RULE_assignments = 3, RULE_assignment = 4, RULE_updateOrInsertStatement = 5, 
@@ -102,8 +101,8 @@ public class JaybirdSqlParser extends Parser {
 		"KW_DATE", "KW_DECIMAL", "KW_DOUBLE", "KW_PRECISION", "KW_FLOAT", "KW_INTEGER", 
 		"KW_INT", "KW_NCHAR", "KW_NUMERIC", "KW_NVARCHAR", "KW_SMALLINT", "KW_TIME", 
 		"KW_TIMESTAMP", "KW_VARCHAR", "KW_SIZE", "LEFT_PAREN", "RIGHT_PAREN", 
-		"COMMA", "INTEGER", "NUMERIC", "REAL", "STRING", "BINARY_STRING", "TRUTH_VALUE", 
-		"GENERIC_ID", "QUOTED_ID", "SL_COMMENT", "COMMENT", "WS"
+		"COMMA", "INTEGER", "NUMERIC", "REAL", "STRING", "BINARY_STRING", "Q_STRING", 
+		"TRUTH_VALUE", "GENERIC_ID", "QUOTED_ID", "SL_COMMENT", "COMMENT", "WS"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -155,14 +154,8 @@ public class JaybirdSqlParser extends Parser {
 	protected boolean _defaultValues;
 	protected JaybirdStatementModel statementModel = new JaybirdStatementModel();
 
-	protected ArrayList _errorMessages = new ArrayList();
-
 	public JaybirdStatementModel getStatementModel() {
 	    return statementModel;
-	}
-
-	public java.util.Collection getErrorMessages() {
-	    return _errorMessages;
 	}
 
 	public String getColumn(int index) {
@@ -177,9 +170,6 @@ public class JaybirdSqlParser extends Parser {
 	    return statementModel.getTableName();
 	}
 
-	public void emitErrorMessage(String msg) {
-	    _errorMessages.add(msg);
-	}
 
 	public JaybirdSqlParser(TokenStream input) {
 		super(input);
@@ -1647,6 +1637,7 @@ public class JaybirdSqlParser extends Parser {
 		public TerminalNode TRUTH_VALUE() { return getToken(JaybirdSqlParser.TRUTH_VALUE, 0); }
 		public TerminalNode STRING() { return getToken(JaybirdSqlParser.STRING, 0); }
 		public TerminalNode BINARY_STRING() { return getToken(JaybirdSqlParser.BINARY_STRING, 0); }
+		public TerminalNode Q_STRING() { return getToken(JaybirdSqlParser.Q_STRING, 0); }
 		public TerminalNode INTEGER() { return getToken(JaybirdSqlParser.INTEGER, 0); }
 		public TerminalNode NUMERIC() { return getToken(JaybirdSqlParser.NUMERIC, 0); }
 		public TerminalNode REAL() { return getToken(JaybirdSqlParser.REAL, 0); }
@@ -1673,7 +1664,7 @@ public class JaybirdSqlParser extends Parser {
 			{
 			setState(282);
 			_la = _input.LA(1);
-			if ( !(((((_la - 75)) & ~0x3f) == 0 && ((1L << (_la - 75)) & ((1L << (INTEGER - 75)) | (1L << (NUMERIC - 75)) | (1L << (REAL - 75)) | (1L << (STRING - 75)) | (1L << (BINARY_STRING - 75)) | (1L << (TRUTH_VALUE - 75)))) != 0)) ) {
+			if ( !(((((_la - 75)) & ~0x3f) == 0 && ((1L << (_la - 75)) & ((1L << (INTEGER - 75)) | (1L << (NUMERIC - 75)) | (1L << (REAL - 75)) | (1L << (STRING - 75)) | (1L << (BINARY_STRING - 75)) | (1L << (Q_STRING - 75)) | (1L << (TRUTH_VALUE - 75)))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -3482,7 +3473,7 @@ public class JaybirdSqlParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3W\u0209\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3X\u0209\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
@@ -3518,7 +3509,7 @@ public class JaybirdSqlParser extends Parser {
 		")\3*\3*\3*\3*\3*\3*\3*\5*\u01ee\n*\3*\3*\3+\3+\3+\5+\u01f5\n+\3+\3+\3"+
 		"+\5+\u01fa\n+\3+\3+\3,\3,\3,\3,\3,\3,\3,\3-\3-\3.\3.\3.\5hw\u00aa\3&/"+
 		"\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH"+
-		"JLNPRTVXZ\2\t\3\2ST\4\2&&\63\63\3\2MR\4\2::BB\4\2DDHH\4\2\16\16\31\31"+
+		"JLNPRTVXZ\2\t\3\2TU\4\2&&\63\63\3\2MS\4\2::BB\4\2DDHH\4\2\16\16\31\31"+
 		"\5\2\22\22\"\"\62\62\2\u0230\2`\3\2\2\2\4b\3\2\2\2\6p\3\2\2\2\b\177\3"+
 		"\2\2\2\n\u0087\3\2\2\2\f\u008b\3\2\2\2\16\u009c\3\2\2\2\20\u009f\3\2\2"+
 		"\2\22\u00b5\3\2\2\2\24\u00ba\3\2\2\2\26\u00bf\3\2\2\2\30\u00c4\3\2\2\2"+
@@ -3625,9 +3616,9 @@ public class JaybirdSqlParser extends Parser {
 		"\u0180\7L\2\2\u0180\u0182\7M\2\2\u0181\u017f\3\2\2\2\u0181\u0182\3\2\2"+
 		"\2\u0182\u0183\3\2\2\2\u0183\u0185\7K\2\2\u0184\u0172\3\2\2\2\u0184\u017c"+
 		"\3\2\2\2\u0185A\3\2\2\2\u0186\u0187\7/\2\2\u0187\u018b\7M\2\2\u0188\u0189"+
-		"\7/\2\2\u0189\u018b\7S\2\2\u018a\u0186\3\2\2\2\u018a\u0188\3\2\2\2\u018b"+
+		"\7/\2\2\u0189\u018b\7T\2\2\u018a\u0186\3\2\2\2\u018a\u0188\3\2\2\2\u018b"+
 		"C\3\2\2\2\u018c\u018d\7+\2\2\u018d\u018e\7I\2\2\u018e\u018f\7M\2\2\u018f"+
-		"E\3\2\2\2\u0190\u0191\7\24\2\2\u0191\u0192\7-\2\2\u0192\u0193\7S\2\2\u0193"+
+		"E\3\2\2\2\u0190\u0191\7\24\2\2\u0191\u0192\7-\2\2\u0192\u0193\7T\2\2\u0193"+
 		"G\3\2\2\2\u0194\u0195\5:\36\2\u0195\u0196\7\13\2\2\u0196\u0197\5J&\2\u0197"+
 		"\u0199\7\f\2\2\u0198\u019a\5F$\2\u0199\u0198\3\2\2\2\u0199\u019a\3\2\2"+
 		"\2\u019a\u01a1\3\2\2\2\u019b\u019c\5> \2\u019c\u019d\7\13\2\2\u019d\u019e"+
