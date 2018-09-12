@@ -54,48 +54,50 @@ class FBCachedFetcher implements FBFetcher {
             if (fetchSize == 0)
                 fetchSize = MAX_FETCH_ROWS;
             this.fetchSize = fetchSize;
+            try {
+                // the following if, is only for callable statement
+                if (!stmt_handle.isAllRowsFetched() && stmt_handle.size() == 0) {
+                    do {
+                        if (maxRows != 0 && fetchSize > maxRows - rowsCount)
+                            fetchSize = maxRows - rowsCount;
+                        gdsHelper.fetch(stmt_handle, fetchSize);
 
-            // the following if, is only for callable statement				
-            if (!stmt_handle.isAllRowsFetched() && stmt_handle.size() == 0) {
-                do {
-                    if (maxRows != 0 && fetchSize > maxRows - rowsCount)
-                        fetchSize = maxRows - rowsCount;
-                    gdsHelper.fetch(stmt_handle, fetchSize);
-
-                    final int fetchedRowCount = stmt_handle.size();
-                    if (fetchedRowCount > 0){
-                        byte[][][] rows = stmt_handle.getRows();
-                        // Copy of right length when less rows fetched than requested
-                        if (rows.length > fetchedRowCount) {
-                            final byte[][][] tempRows = new byte[fetchedRowCount][][];
-                            System.arraycopy(rows, 0, tempRows, 0, fetchedRowCount);
-                            rows = tempRows;
+                        final int fetchedRowCount = stmt_handle.size();
+                        if (fetchedRowCount > 0) {
+                            byte[][][] rows = stmt_handle.getRows();
+                            // Copy of right length when less rows fetched than requested
+                            if (rows.length > fetchedRowCount) {
+                                final byte[][][] tempRows = new byte[fetchedRowCount][][];
+                                System.arraycopy(rows, 0, tempRows, 0, fetchedRowCount);
+                                rows = tempRows;
+                            }
+                            rowsSets.add(rows);
+                            rowsCount += fetchedRowCount;
+                            stmt_handle.removeRows();
                         }
-                        rowsSets.add(rows);
-                        rowsCount += fetchedRowCount;
-                        stmt_handle.removeRows();
+                    } while (!stmt_handle.isAllRowsFetched() && (maxRows == 0 || rowsCount < maxRows));
+
+                    // now create one list with known capacity
+                    int rowCount = 0;
+                    rowsArray = new Object[rowsCount];
+                    for (int i = 0; i < rowsSets.size(); i++) {
+                        final Object[] oneSet = (Object[]) rowsSets.get(i);
+                        final int toCopy = Math.min(oneSet.length, rowsCount - rowCount);
+                        System.arraycopy(oneSet, 0, rowsArray, rowCount, toCopy);
+                        rowCount += toCopy;
                     }
-                } while (!stmt_handle.isAllRowsFetched() && (maxRows == 0 || rowsCount <maxRows));
-
-                // now create one list with known capacity					 
-                int rowCount = 0;
-                rowsArray = new Object[rowsCount];
-                for (int i = 0; i < rowsSets.size(); i++){
-                    final Object[] oneSet = (Object[]) rowsSets.get(i);
-                    final int toCopy = Math.min(oneSet.length, rowsCount - rowCount);
-                    System.arraycopy(oneSet, 0, rowsArray, rowCount, toCopy);
-                    rowCount += toCopy;
+                    rowsSets.clear();
+                } else {
+                    rowsArray = stmt_handle.getRows();
+                    stmt_handle.removeRows();
                 }
-                rowsSets.clear();
-            } else {
-                rowsArray = stmt_handle.getRows();
-                stmt_handle.removeRows();
-            }
 
-            if (hasBlobs){
-                cacheBlobs(gdsHelper, xsqlvars, isBlob);
+                if (hasBlobs) {
+                    cacheBlobs(gdsHelper, xsqlvars, isBlob);
+                }
+            } finally {
+                gdsHelper.closeStatement(stmt_handle, false);
             }
-            gdsHelper.closeStatement(stmt_handle, false);
         } catch (GDSException ge) {
             throw new FBSQLException(ge);
         }

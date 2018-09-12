@@ -62,6 +62,9 @@ Changelog
 
 The following has been changed or fixed in Jaybird 2.2.15:
 
+-   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
+    metadata) prevented prepared statement reuse/re-execute with error _"Attempt to reopen an open 
+    cursor"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
 -   Fixed: Jaybird cannot parse Firebird version numbers with revisions ([JDBC-534](http://tracker.firebirdsql.org/browse/JDBC-534))
 -   Fixed: Incorrect parsing of Firebird version numbers ([JDBC-535](http://tracker.firebirdsql.org/browse/JDBC-535))
 

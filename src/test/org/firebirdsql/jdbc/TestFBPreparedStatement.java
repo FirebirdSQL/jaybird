@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.gds.ISCConstants;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -32,6 +33,7 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.*;
@@ -1120,6 +1122,57 @@ public class TestFBPreparedStatement extends FBJUnit4TestBase {
     }
 
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
+
+    /**
+     * Tests if reexecuting a prepared statement after fetch failure works for holdable result set.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-531">JDBC-531</a>
+     * </p>
+     */
+    @Test
+    public void testReexecuteStatementAfterFailure() throws Exception {
+        executeDDL(con, "recreate table encoding_error ("
+                + " id integer primary key, "
+                + " stringcolumn varchar(10) character set NONE"
+                + ")");
+        PreparedStatement pstmt = con.prepareStatement("insert into encoding_error (id, stringcolumn) values (?, ?)");
+        try {
+            pstmt.setInt(1, 1);
+            pstmt.setBytes(2, new byte[] { (byte) 0xFF, (byte) 0xFF });
+            pstmt.executeUpdate();
+
+            pstmt.setInt(1, 2);
+            pstmt.executeUpdate();
+        } finally {
+            pstmt.close();
+        }
+        con.setAutoCommit(false);
+
+        pstmt = con.prepareStatement(
+                "select cast(stringcolumn as varchar(10) character set UTF8) from encoding_error",
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        try {
+            try {
+                ResultSet rs = pstmt.executeQuery();
+
+                rs.next();
+            } catch (SQLException e) {
+                // ignore
+            }
+
+            try {
+                ResultSet rs2 = pstmt.executeQuery();
+                rs2.next();
+            } catch (SQLException e) {
+                if (e.getErrorCode() != 335544849) {
+                    e.printStackTrace();
+                    fail("Unexpected exception: " + e);
+                }
+            }
+        } finally {
+            pstmt.close();
+        }
+    }
 
     private void prepareTestData() throws SQLException {
         PreparedStatement pstmt = con.prepareStatement(INSERT_DATA);
