@@ -62,7 +62,7 @@ public class TestV12Database extends TestV11Database {
      * Tests if {@link org.firebirdsql.gds.ng.wire.version12.V12Database#cancelOperation(int)} with value {@link org.firebirdsql.gds.ISCConstants#fb_cancel_raise}
      * doesn't throw an {@code SQLFeatureNotSupportedException}.
      * <p>
-     * Actual functioning of cancel is tested through {@link org.firebirdsql.jdbc.TestFBPreparedStatement#testCancelStatement()}.
+     * Actual functioning of cancel is tested through {@link org.firebirdsql.jdbc.FBPreparedStatementTest#testCancelStatement()}.
      * </p>
      */
     @Test
