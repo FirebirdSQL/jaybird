@@ -1298,6 +1298,46 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Tests if reexecuting a prepared statement after fetch failure works for holdable result set.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-531">JDBC-531</a>
+     * </p>
+     */
+    @Test
+    public void testReexecuteStatementAfterFailure() throws Exception {
+        executeDDL(con, "recreate table encoding_error ("
+                + " id integer primary key, "
+                + " stringcolumn varchar(10) character set NONE"
+                + ")");
+        try (PreparedStatement pstmt = con.prepareStatement("insert into encoding_error (id, stringcolumn) values (?, ?)")) {
+            pstmt.setInt(1, 1);
+            pstmt.setBytes(2, new byte[] { (byte) 0xFF, (byte) 0xFF });
+            pstmt.executeUpdate();
+
+            pstmt.setInt(1, 2);
+            pstmt.executeUpdate();
+        }
+        con.setAutoCommit(false);
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(stringcolumn as varchar(10) character set UTF8) from encoding_error",
+                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT)) {
+            try {
+                ResultSet rs = pstmt.executeQuery();
+
+                rs.next();
+            } catch (SQLException e) {
+                // ignore
+            }
+
+            expectedException.expect(allOf(
+                    errorCodeEquals(ISCConstants.isc_malformed_string),
+                    fbMessageStartsWith(ISCConstants.isc_malformed_string)));
+            ResultSet rs2 = pstmt.executeQuery();
+            rs2.next();
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
