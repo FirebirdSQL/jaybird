@@ -217,6 +217,19 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.6
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.5
+
+-   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
+    metadata) prevented prepared statement reuse/re-execute with error _"Statement state CURSOR_OPEN 
+    only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+    
+### Known issues in Jaybird 3.0.6
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.5
 ------------------------
 
@@ -242,10 +255,6 @@ The following has been changed or fixed since Jaybird 3.0.4
 -   Documentation: wire protocol encryption requires unlimited strength 
     Cryptographic Jurisdiction Policy (or equivalent), this was previously not
     documented ([JDBC-545](http://tracker.firebirdsql.org/browse/JDBC-545))
-
-### Known issues in Jaybird 3.0.5
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.4
 ------------------------

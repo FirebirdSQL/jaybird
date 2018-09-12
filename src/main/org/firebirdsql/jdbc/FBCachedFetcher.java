@@ -59,28 +59,31 @@ class FBCachedFetcher implements FBFetcher {
             fetchSize = MAX_FETCH_ROWS;
         this.fetchSize = fetchSize;
 
-        RowListener rowListener = new RowListener();
-        stmt_handle.addStatementListener(rowListener);
         try {
-            int actualFetchSize = getFetchSize();
-            while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
-                if (maxRows > 0) {
-                    actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
+            RowListener rowListener = new RowListener();
+            stmt_handle.addStatementListener(rowListener);
+            try {
+                int actualFetchSize = getFetchSize();
+                while (!rowListener.isAllRowsFetched() && (maxRows == 0 || rowListener.size() < maxRows)) {
+                    if (maxRows > 0) {
+                        actualFetchSize = Math.min(actualFetchSize, maxRows - rowListener.size());
+                    }
+                    assert actualFetchSize > 0 : "actualFetchSize should be > 0";
+                    stmt_handle.fetchRows(actualFetchSize);
                 }
-                assert actualFetchSize > 0 : "actualFetchSize should be > 0";
-                stmt_handle.fetchRows(actualFetchSize);
+                rows = rowListener.getRows();
+            } finally {
+                stmt_handle.removeStatementListener(rowListener);
             }
-            rows = rowListener.getRows();
-        } finally {
-            stmt_handle.removeStatementListener(rowListener);
-        }
 
-        if (hasBlobs) {
-            for (RowValue row : rows) {
-                cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
+            if (hasBlobs) {
+                for (RowValue row : rows) {
+                    cacheBlobsInRow(gdsHelper, rowDescriptor, isBlob, row);
+                }
             }
+        } finally {
+            stmt_handle.closeCursor();
         }
-        stmt_handle.closeCursor();
     }
 
     /**
