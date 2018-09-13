@@ -1,7 +1,7 @@
 <project
-	xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.firebirdsql.jdbc</groupId>
 	<artifactId>@ARTIFACT_ID@</artifactId>
@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 	<name>Jaybird JDBC Driver</name>
 	<description>JDBC Driver for the Firebird RDBMS</description>
-	<url>http://www.firebirdsql.org/en/devel-jdbc-driver/</url>
+	<url>https://www.firebirdsql.org/en/devel-jdbc-driver/</url>
 	<!--
 		Initial check-in was 2001-05-09 by "d_jencks" according to commit here:
 		https://github.com/FirebirdSQL/jaybird/commit/5e215213f916bc2c46d891da661131e18fb65f14
@@ -132,39 +132,39 @@
 			<url>https://github.com/artyom-smirnov</url>
 		</contributor>
 	</contributors>
-	
+
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License</name>
-			<url>http://www.gnu.org/copyleft/lesser.html</url>
+			<url>https://www.gnu.org/copyleft/lesser.html</url>
 			<distribution>repo</distribution>
 			<comments>
-                The JayBird JCA/JDBC driver is distributed free of charge under the 
-                GNU Lesser General Public License (LGPL). Text of the license can be 
-                obtained from http://www.gnu.org/copyleft/lesser.html
+				The Jaybird JCA/JDBC driver is distributed free of charge under the
+				GNU Lesser General Public License (LGPL). Text of the license can be
+				obtained from https://www.gnu.org/copyleft/lesser.html
 			</comments>
 		</license>
 		<license>
 			<name>Modified BSD (3-clause) License</name>
-			<url>http://www.opensource.org/licenses/BSD-3-Clause</url>
+			<url>https://opensource.org/licenses/BSD-3-Clause</url>
 			<distribution>repo</distribution>
 			<comments>
 				The extension interfaces of Jaybird are defined under a modified BSD license
 			</comments>
 		</license>
 	</licenses>
-	
+
 	<scm>
-        <connection>scm:git:https://github.com/FirebirdSQL/jaybird.git</connection>
-        <developerConnection>scm:git:git@github.com:FirebirdSQL/jaybird.git</developerConnection>
-        <url>https://github.com/FirebirdSQL/jaybird</url>
-    </scm>
-	
+		<connection>scm:git:https://github.com/FirebirdSQL/jaybird.git</connection>
+		<developerConnection>scm:git:git@github.com:FirebirdSQL/jaybird.git</developerConnection>
+		<url>https://github.com/FirebirdSQL/jaybird</url>
+	</scm>
+
 	<issueManagement>
 		<system>JIRA Tracker</system>
 		<url>http://tracker.firebirdsql.org/browse/JDBC</url>
 	</issueManagement>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.resource</groupId>
