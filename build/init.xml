@@ -240,7 +240,7 @@
          For details see: http://blog.joda.org/2014/02/turning-off-doclint-in-jdk-8-javadoc.html
         -->
         <condition property="javadoc.additionalparam" value="-Xdoclint:none" else="">
-            <equals arg1="${jdk1.8}" arg2="true"/>
+            <javaversion exactly="1.8"/>
         </condition>
 
     </target>
