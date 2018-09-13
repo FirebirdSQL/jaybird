@@ -35,23 +35,29 @@
   <!-- =================================================================== -->
   <!-- Puts the files in the right place for a (manual) Maven release      -->
   <!-- =================================================================== -->
-  <target name="mavenPrepare" depends="jars,javadocs">
-    <mkdir dir="${build.maven}"/>
-    <copy file="${build.lib}/${archive.name.simple}" tofile="${build.maven}/${archive.maven.simple}"/>
-    <copy file="${build.lib}/${archive.name.sources}" tofile="${build.maven}/${archive.maven.sources}"/>
-    <copy file="${build.lib}/${archive.name.javadoc}" tofile="${build.maven}/${archive.maven.javadoc}"/>
-    <copy file="${maven.pom.template}" tofile="${build.maven}/${maven.pom.target}">
-      <filterset>
-        <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
-        <filter token="VERSION" value="${version.maven}"/>
-      </filterset>
+  <target name="mavenPrepare" depends="mavenDist,mavenRelocation"/>
+
+  <target name="mavenDist" depends="jars">
+    <mkdir dir="${maven.artifact.location}"/>
+    <copy file="${build.lib}/${archive.name.simple}" tofile="${maven.artifact.location}/${archive.maven.simple}"/>
+    <copy file="${build.lib}/${archive.name.sources}" tofile="${maven.artifact.location}/${archive.maven.sources}"/>
+    <copy file="${build.lib}/${archive.name.javadoc}" tofile="${maven.artifact.location}/${archive.maven.javadoc}"/>
+    <copy file="${maven.pom.template}" tofile="${maven.artifact.location}/${maven.pom.target}">
+      <filterset refid="maven.filterSet"/>
+    </copy>
+  </target>
+
+  <target name="mavenRelocation" depends="init" if="maven.generateRelocation">
+    <mkdir dir="${maven.relocation.location}"/>
+    <copy file="${maven.relocation.template}" tofile="${maven.relocation.location}/${maven.relocation.target}">
+      <filterset refid="maven.filterSet"/>
     </copy>
   </target>
 
   <!-- =================================================================== -->
   <!-- Creates the distribution                                            -->
   <!-- =================================================================== -->
-  <target name="dist" depends="jars,javadocs,buildalldocs,mavenPrepare">
+  <target name="dist" depends="jars,buildalldocs,mavenPrepare">
     <mkdir dir="${build.dist}"/>
     <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
       <fileset dir="${build.lib}">
