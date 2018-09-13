@@ -1,0 +1,58 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird</artifactId>
+    <version>@VERSION@</version>
+    <distributionManagement>
+        <relocation>
+            <artifactId>@ARTIFACT_ID@</artifactId>
+        </relocation>
+    </distributionManagement>
+    <packaging>pom</packaging>
+    <name>Jaybird JDBC Driver</name>
+    <description>JDBC Driver for the Firebird RDBMS</description>
+    <url>https://www.firebirdsql.org/en/devel-jdbc-driver/</url>
+    <developers>
+        <developer>
+            <id>mrotteveel</id>
+            <name>Mark Rotteveel</name>
+            <email>mark@lawinegevaar.nl</email>
+            <roles>
+                <role>Administrator</role>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <url>https://www.gnu.org/copyleft/lesser.html</url>
+            <distribution>repo</distribution>
+            <comments>
+                The Jaybird JCA/JDBC driver is distributed free of charge under the
+                GNU Lesser General Public License (LGPL). Text of the license can be
+                obtained from http://www.gnu.org/copyleft/lesser.html
+            </comments>
+        </license>
+        <license>
+            <name>Modified BSD (3-clause) License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+            <comments>
+                The extension interfaces of Jaybird are defined under a modified BSD license
+            </comments>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/FirebirdSQL/jaybird.git</connection>
+        <developerConnection>scm:git:git@github.com:FirebirdSQL/jaybird.git</developerConnection>
+        <url>https://github.com/FirebirdSQL/jaybird</url>
+    </scm>
+
+    <issueManagement>
+        <system>JIRA Tracker</system>
+        <url>http://tracker.firebirdsql.org/browse/JDBC</url>
+    </issueManagement>
+</project>

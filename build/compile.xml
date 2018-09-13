@@ -124,21 +124,13 @@
 
         <mkdir dir="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}"/>
         <copy file="${source.etc}/META-INF/maven/org.firebirdsql.jdbc/ARTIFACT_ID/pom.properties"
-              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.properties"
-              filtering="true">
-            <filterset>
-                <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
-                <filter token="VERSION" value="${version.maven}"/>
-            </filterset>
+              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.properties">
+            <filterset refid="maven.filterSet"/>
         </copy>
 
         <copy file="${maven.pom.template}"
-              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.xml"
-              filtering="true">
-            <filterset>
-                <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
-                <filter token="VERSION" value="${version.maven}"/>
-            </filterset>
+              tofile="${build.etc}/META-INF/maven/org.firebirdsql.jdbc/${maven.artifactId}/pom.xml">
+            <filterset refid="maven.filterSet"/>
         </copy>
     </target>
 
