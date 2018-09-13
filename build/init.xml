@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <project name="init">
     <target name="init">
-        <echo message="${ant.java.version}"/>
+        <echo message="Java version: ${ant.java.version}"/>
+        <echo message="Ant version: ${ant.version}"/>
         <!-- External build properties
              All properties can be overridden by adding them to build-local.properties
         -->
@@ -16,53 +17,49 @@
         <property name="build.id" value="${build.number}"/>
 
         <!-- Java 7 specific properties -->
-        <condition property="jdk1.7" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.7"/>
-        </condition>
         <condition property="maven.jdkversion" value="jdk17">
-            <istrue value="${jdk1.7}"/>
+            <javaversion exactly="1.7"/>
         </condition>
         <condition property="javac.level" value="1.7">
-            <istrue value="${jdk1.7}"/>
+            <javaversion exactly="1.7"/>
         </condition>
 
         <!-- Java 8 specific properties -->
-        <condition property="jdk1.8" value="true">
-            <equals arg1="${ant.java.version}" arg2="1.8"/>
-        </condition>
         <condition property="maven.jdkversion" value="jdk18">
-            <istrue value="${jdk1.8}"/>
+            <javaversion exactly="1.8"/>
         </condition>
         <condition property="javac.level" value="1.8">
-            <istrue value="${jdk1.8}"/>
+            <javaversion exactly="1.8"/>
         </condition>
 
         <!-- Java 9 specific properties -->
-        <condition property="jdk9" value="true">
-            <equals arg1="${ant.java.version}" arg2="9"/>
-        </condition>
         <condition property="maven.jdkversion" value="jdk9">
-            <istrue value="${jdk9}"/>
+            <javaversion atleast="9"/>
         </condition>
         <condition property="javac.level" value="9">
-            <istrue value="${jdk9}"/>
+            <javaversion atleast="9"/>
         </condition>
 
         <condition property="java.module.arg" value="" else="">
-            <istrue value="${jdk9}"/>
+            <javaversion atleast="9"/>
         </condition>
 
         <condition property="jdbc.41" value="true">
-            <istrue value="${jdk1.7}"/>
+            <javaversion exactly="1.7"/>
         </condition>
 
         <condition property="jdbc.42" value="true">
             <or>
-                <istrue value="${jdk1.8}"/>
+                <javaversion exactly="1.8"/>
                 <!-- temp fix TODO remove -->
-                <istrue value="${jdk9}"/>
+                <javaversion atleast="9"/>
             </or>
         </condition>
+
+        <echo message="maven.jdkversion: ${maven.jdkversion}"/>
+        <echo message="javac.level: ${javac.level}"/>
+        <echo message="jdbc.41: ${jdbc.41}"/>
+        <echo message="jdbc.42: ${jdbc.42}"/>
 
         <property name="Name" value="Jaybird"/>
         <property name="name" value="jaybird"/>
@@ -75,13 +72,13 @@
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
         <condition property="specification.version" value="4.1">
-            <istrue value="${jdk1.7}"/>
+            <javaversion exactly="1.7"/>
         </condition>
         <condition property="specification.version" value="4.2">
-            <istrue value="${jdk1.8}"/>
+            <javaversion exactly="1.8"/>
         </condition>
         <condition property="specification.version" value="4.3">
-            <istrue value="${jdk9}"/>
+            <javaversion atleast="9"/>
         </condition>
         <property name="specification.vendor" value="Oracle Corporation"/>
 
@@ -163,8 +160,22 @@
         <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
         <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
         <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
+        <property name="maven.artifact.location" value="${build.maven}/${maven.artifactId}"/>
         <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-template.pom"/>
         <property name="maven.pom.target" value="${maven.artifactId}-${version.maven}.pom"/>
+
+        <filterset id="maven.filterSet">
+            <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
+            <filter token="VERSION" value="${version.maven}"/>
+        </filterset>
+
+        <!-- generate maven relocation artifact for org.firebirdsql.jdbc:jaybird -->
+        <condition property="maven.generateRelocation" value="true">
+            <javaversion exactly="1.8"/>
+        </condition>
+        <property name="maven.relocation.location" value="${build.maven}/relocation"/>
+        <property name="maven.relocation.template" value="${module.root}/build/maven-release/jaybird-relocation.pom"/>
+        <property name="maven.relocation.target" value="jaybird-${version.maven}.pom"/>
 
         <property name="junit.timeout" value="600000"/>
         <!-- 10 minutes -->
@@ -232,5 +243,10 @@
             <equals arg1="${jdk1.8}" arg2="true"/>
         </condition>
 
+    </target>
+
+    <!-- dumps all properties to console, both defined by init and standard ant properties -->
+    <target name="showProperties" depends="init">
+        <echoproperties/>
     </target>
 </project>
