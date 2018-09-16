@@ -18,12 +18,20 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
@@ -33,7 +41,7 @@ import static org.junit.Assume.assumeTrue;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatabaseMetaDataTables.TableMetaData> {
+public class TestFBDatabaseMetaDataTables {
 
     // Valid values for TABLE_TYPE (separate from those defined in FBDatabaseMetaData for testing)
     private static final String VIEW = "VIEW";
@@ -41,51 +49,73 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     private static final String SYSTEM_TABLE = "SYSTEM TABLE";
     private static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
 
-    public TestFBDatabaseMetaDataTables() {
-        super(TableMetaData.class);
-    }
-    
-    public static final String CREATE_NORMAL_TABLE =
+    //@formatter:off
+    private static final String CREATE_NORMAL_TABLE =
             "CREATE TABLE test_normal_table (" + 
             "    id INTEGER PRIMARY KEY," + 
             "    varchar_field VARCHAR(100)" + 
             ")";
-    
-    public static final String CREATE_QUOTED_NORMAL_TABLE =
+
+    private static final String CREATE_QUOTED_NORMAL_TABLE =
             "CREATE TABLE \"test_quoted_normal_table\" (\r\n" + 
             "    id INTEGER PRIMARY KEY,\r\n" + 
             "    varchar_field VARCHAR(100)\r\n" + 
             ")";
-    
-    public static final String CREATE_NORMAL_VIEW =
+
+    private static final String CREATE_NORMAL_VIEW =
             "CREATE VIEW test_normal_view (id, varchar_1, varchar_2) " + 
             "AS " + 
             "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
             "FROM test_normal_table t1 " + 
             "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
-    
-    public static final String CREATE_QUOTED_NORMAL_VIEW =
+
+    private static final String CREATE_QUOTED_NORMAL_VIEW =
             "CREATE VIEW \"test_quoted_normal_view\" (id, varchar_1, varchar_2) " + 
             "AS " + 
             "SELECT t1.id, t1.varchar_field, t2.varchar_field " + 
             "FROM test_normal_table t1 " + 
             "INNER JOIN \"test_quoted_normal_table\" t2 ON t1.id = t2.id";
 
-    public static final String CREATE_GTT_ON_COMMIT_DELETE =
+    private static final String CREATE_GTT_ON_COMMIT_DELETE =
             "create global temporary table test_gtt_on_commit_delete (" +
             "    id INTEGER PRIMARY KEY," +
             "    varchar_field VARCHAR(100)" +
             ") on commit delete rows";
 
-    public static final String CREATE_GTT_ON_COMMIT_PRESERVE =
+    private static final String CREATE_GTT_ON_COMMIT_PRESERVE =
             "create global temporary table test_gtt_on_commit_preserve (" +
             "    id INTEGER PRIMARY KEY," +
             "    varchar_field VARCHAR(100)" +
             ") on commit delete rows";
+    //@formatter:on
+
+    private static final MetaDataTestSupport<TableMetaData> metaDataTestSupport =
+            new MetaDataTestSupport<>(TableMetaData.class);
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+
+    private static Connection con;
+    private static DatabaseMetaData dbmd;
+
+    @BeforeClass
+    public static void setUp() throws SQLException {
+        con = getConnectionViaDriverManager();
+        dbmd = con.getMetaData();
+    }
+
+    @AfterClass
+    public static void tearDown() throws SQLException {
+        try {
+            con.close();
+        } finally {
+            con = null;
+            dbmd = null;
+        }
+    }
     
-    protected List<String> getCreateStatements() {
-        List<String> createStatements = new ArrayList<>();
-        createStatements.addAll(Arrays.asList(
+    private static List<String> getCreateStatements() {
+        List<String> createStatements = new ArrayList<>(Arrays.asList(
                 CREATE_NORMAL_TABLE,
                 CREATE_QUOTED_NORMAL_TABLE,
                 CREATE_NORMAL_VIEW,
@@ -104,7 +134,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
     @Test
     public void testTableMetaDataColumns() throws Exception {
         try (ResultSet tables = dbmd.getTables(null, null, "doesnotexist", null)) {
-            validateResultSetColumns(tables);
+            metaDataTestSupport.validateResultSetColumns(tables);
         }
     }
 
@@ -165,7 +195,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
 
                 updateTableRules(tableName, rules);
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertTrue("getTables() did not return some expected tables: " + expectedTables,
@@ -220,7 +250,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                     fail("Only expect tablenames starting with RDB$ or MON$, retrieved " + tableName);
                 }
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertTrue("getTables() did not return some expected tables: " + expectedTables, expectedTables.isEmpty());
@@ -274,7 +304,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                     fail("Only expect normal tables, not starting with RDB$ or MON$, retrieved " + tableName);
                 }
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertEquals("getTables() did not return expected tables: ",
@@ -328,7 +358,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                     fail("Only expect views, not starting with RDB$ or MON$, retrieved " + tableName);
                 }
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertEquals("getTables() did not return expected tables: ",
@@ -388,11 +418,11 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
      */
     private void validateTableMetaDataSingleRow(String tableNamePattern, String[] types,
             Map<TableMetaData, Object> validationRules) throws Exception {
-        
-        checkValidationRulesComplete(validationRules);
+
+        metaDataTestSupport.checkValidationRulesComplete(validationRules);
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
             assertTrue("Expected row in table metadata", tables.next());
-            validateRowValues(tables, validationRules);
+            metaDataTestSupport.validateRowValues(tables, validationRules);
             assertFalse("Expected only one row in result set", tables.next());
         }
     }
@@ -441,7 +471,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                         tableName != null && tableName.length() > 0);
                 retrievedTables.add(tableName);
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertEquals("getTables() did not return expected tables: ", expectedGtt, retrievedTables);
@@ -468,7 +498,7 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
                 Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
                 updateTableRules(expectedTableName, rules);
 
-                validateRowValues(tables, rules);
+                metaDataTestSupport.validateRowValues(tables, rules);
             }
 
             assertEquals("getTables() did not return some expected tables", expectedTables.size(), indexExpected);
@@ -526,14 +556,14 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    protected Map<TableMetaData, Object> getDefaultValueValidationRules() throws Exception {
+    private static Map<TableMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     /**
      * Columns defined for the getTables() metadata.
      */
-    enum TableMetaData implements MetaDataInfo {
+    private enum TableMetaData implements MetaDataInfo {
         TABLE_CAT(1, String.class), 
         TABLE_SCHEM(2, String.class), 
         TABLE_NAME(3, String.class),
@@ -555,14 +585,17 @@ public class TestFBDatabaseMetaDataTables extends FBMetaDataTestBase<TestFBDatab
             this.columnClass = columnClass;
         }
 
+        @Override
         public int getPosition() {
             return position;
         }
 
+        @Override
         public Class<?> getColumnClass() {
             return columnClass;
         }
 
+        @Override
         public MetaDataValidator<?> getValidator() {
             return new MetaDataValidator<>(this);
         }

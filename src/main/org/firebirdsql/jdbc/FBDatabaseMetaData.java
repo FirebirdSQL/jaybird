@@ -5023,8 +5023,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return RowIdLifetime.ROWID_VALID_TRANSACTION;
     }
 
-    private static final int JDBC_MAJOR_VERSION = 4;
-    private static final int JDBC_MINOR_VERSION;
+    static final int JDBC_MAJOR_VERSION = 4;
+    static final int JDBC_MINOR_VERSION;
     static {
         int tempVersion;
         try {

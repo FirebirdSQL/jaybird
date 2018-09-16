@@ -18,13 +18,20 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertEquals;
 
@@ -33,14 +40,10 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDatabaseMetaDataProcedures extends
-        FBMetaDataTestBase<TestFBDatabaseMetaDataProcedures.ProcedureMetaData> {
+public class TestFBDatabaseMetaDataProcedures {
 
-    public TestFBDatabaseMetaDataProcedures() {
-        super(ProcedureMetaData.class);
-    }
-
-    public static final String CREATE_NORMAL_PROC_NO_RETURN = 
+    //@formatter:off
+    private static final String CREATE_NORMAL_PROC_NO_RETURN =
             "CREATE PROCEDURE normal_proc_no_return\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
@@ -49,7 +52,7 @@ public class TestFBDatabaseMetaDataProcedures extends
             "  dummy = 1 + 1;\n" +
             "END";
 
-    public static final String CREATE_NORMAL_PROC_WITH_RETURN = 
+    private static final String CREATE_NORMAL_PROC_WITH_RETURN =
             "CREATE PROCEDURE normal_proc_with_return\n" +
             " ( param1 VARCHAR(100))\n" +
             "RETURNS (return1 VARCHAR(200), return2 INTEGER)\n" +
@@ -59,7 +62,7 @@ public class TestFBDatabaseMetaDataProcedures extends
             "  return2 = 1;\n" +
             "END";
 
-    public static final String CREATE_QUOTED_PROC_NO_RETURN = 
+    private static final String CREATE_QUOTED_PROC_NO_RETURN =
             "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
@@ -68,11 +71,36 @@ public class TestFBDatabaseMetaDataProcedures extends
             "  dummy = 1 + 1;\n" +
             "END";
 
-    public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN = 
+    private static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN =
             "COMMENT ON PROCEDURE normal_proc_with_return IS 'Some comment'";
+    //@formatter:on
 
-    @Override
-    protected List<String> getCreateStatements() {
+    private static final MetaDataTestSupport<ProcedureMetaData> metaDataTestSupport =
+            new MetaDataTestSupport<>(ProcedureMetaData.class);
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+
+    private static Connection con;
+    private static DatabaseMetaData dbmd;
+
+    @BeforeClass
+    public static void setUp() throws SQLException {
+        con = getConnectionViaDriverManager();
+        dbmd = con.getMetaData();
+    }
+
+    @AfterClass
+    public static void tearDown() throws SQLException {
+        try {
+            con.close();
+        } finally {
+            con = null;
+            dbmd = null;
+        }
+    }
+
+    private static List<String> getCreateStatements() {
         List<String> createDDL = new ArrayList<>();
         for (ProcedureTestData testData : ProcedureTestData.values()) {
             createDDL.addAll(testData.getCreateDDL());
@@ -87,7 +115,7 @@ public class TestFBDatabaseMetaDataProcedures extends
     @Test
     public void testProcedureMetaDataColumns() throws Exception {
         try (ResultSet procedures = dbmd.getProcedures(null, null, "doesnotexist")) {
-            validateResultSetColumns(procedures);
+            metaDataTestSupport.validateResultSetColumns(procedures);
         }
     }
 
@@ -156,8 +184,8 @@ public class TestFBDatabaseMetaDataProcedures extends
                 if (procedureCount < expectedProcedures.size()) {
                     ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
                     Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
-                    checkValidationRulesComplete(rules);
-                    validateRowValues(procedures, rules);
+                    metaDataTestSupport.checkValidationRulesComplete(rules);
+                    metaDataTestSupport.validateRowValues(procedures, rules);
                 }
                 procedureCount++;
             }
@@ -180,15 +208,14 @@ public class TestFBDatabaseMetaDataProcedures extends
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    @Override
-    protected Map<ProcedureMetaData, Object> getDefaultValueValidationRules() throws Exception {
+    private static Map<ProcedureMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
     /**
      * Columns defined for the getProcedures() metadata.
      */
-    enum ProcedureMetaData implements MetaDataInfo {
+    private enum ProcedureMetaData implements MetaDataInfo {
         PROCEDURE_CAT(1, String.class),
         PROCEDURE_SCHEM(2, String.class), 
         PROCEDURE_NAME(3, String.class),
@@ -208,14 +235,17 @@ public class TestFBDatabaseMetaDataProcedures extends
             this.columnClass = columnClass;
         }
 
+        @Override
         public int getPosition() {
             return position;
         }
 
+        @Override
         public Class<?> getColumnClass() {
             return columnClass;
         }
 
+        @Override
         public MetaDataValidator<?> getValidator() {
             return new MetaDataValidator<>(this);
         }

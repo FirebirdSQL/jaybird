@@ -22,7 +22,11 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.management.FBManager;
 import org.junit.rules.ExternalResource;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -37,6 +41,7 @@ public final class UsesDatabase extends ExternalResource {
 
     private final boolean initialCreate;
     private FBManager fbManager = null;
+    private final List<String> initStatements = new ArrayList<>();
     private final List<String> databasesToDrop = new ArrayList<>();
 
     private UsesDatabase(boolean initialCreate) {
@@ -56,6 +61,24 @@ public final class UsesDatabase extends ExternalResource {
     public void createDefaultDatabase() throws Exception {
         addDatabase(getDatabasePath());
         defaultDatabaseSetUp(fbManager);
+        executeInitStatements();
+    }
+
+    private void executeInitStatements() throws SQLException {
+        if (initStatements.isEmpty()) return;
+
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            for (String initStatement : initStatements) {
+                if ("COMMIT WORK".equalsIgnoreCase(initStatement)) {
+                    connection.commit();
+                    continue;
+                }
+                stmt.execute(initStatement);
+            }
+            connection.commit();
+        }
     }
 
     /**
@@ -104,6 +127,46 @@ public final class UsesDatabase extends ExternalResource {
      */
     public static UsesDatabase usesDatabase() {
         return new UsesDatabase(true);
+    }
+
+    /**
+     * Create a rule to intialize (and drop) a test database with specific initialization statements.
+     * <p>
+     * Statements are executed in a single transaction. If you need intermediate commits, add statement
+     * {@code COMMIT WORK} (case insensitive).
+     * </p>
+     * <p>
+     * Statements will be executed only for the default database, not for databases registered with
+     * {@link #addDatabase(String)}.
+     * </p>
+     *
+     * @param initializationStatements Statements to initialize database.
+     * @return a UsesDatabase rule
+     * @since 4.0
+     */
+    public static UsesDatabase usesDatabase(String... initializationStatements) {
+        return usesDatabase(Arrays.asList(initializationStatements));
+    }
+
+    /**
+     * Create a rule to intialize (and drop) a test database with specific initialization statements.
+     * <p>
+     * Statements are executed in a single transaction. If you need intermediate commits, add statement
+     * {@code COMMIT WORK} (case insensitive).
+     * </p>
+     * <p>
+     * Statements will be executed only for the default database, not for databases registered with
+     * {@link #addDatabase(String)}.
+     * </p>
+     *
+     * @param initializationStatements Statements to initialize database.
+     * @return a UsesDatabase rule
+     * @since 4.0
+     */
+    public static UsesDatabase usesDatabase(List<String> initializationStatements) {
+        UsesDatabase rule = new UsesDatabase(true);
+        rule.initStatements.addAll(initializationStatements);
+        return rule;
     }
 
     /**

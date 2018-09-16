@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -27,33 +25,33 @@ import java.sql.Types;
 import static org.junit.Assert.*;
 
 /**
- * Validator for columns of metadata resultsets.
- * 
+ * Validator for columns of metadata result sets.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  *
  * @param <T> Enum type, implementing {@link MetaDataInfo} for metadata column information
  */
-public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
-    
+class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInfo> {
+
     private T mdi;
-    
+
     protected MetaDataValidator(T mdi) {
         this.mdi = mdi;
     }
-    
+
     /**
      * Asserts the expected position of this column in the resultset.
-     * 
+     *
      * @param rs ResultSet to use for asserting the column position
      * @throws SQLException
      */
     public void assertColumnPosition(ResultSet rs) throws SQLException {
         assertEquals(String.format("Unexpected column position for %s", mdi), mdi.getPosition(), rs.findColumn(mdi.name()));
     }
-    
+
     /**
      * Asserts the type of this column as reported by the ResultSetMetaData of this ResultSet.
-     * 
+     *
      * @param rs ResultSet
      * @throws SQLException
      */
@@ -65,7 +63,7 @@ public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInf
 
     /**
      * Asserts the value of this column on the current row of the resultset.
-     * 
+     *
      * @param rs ResultSet
      * @param expectedValue Value expected
      * @throws SQLException
@@ -118,7 +116,7 @@ public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInf
         String value = rs.getString(mdi.name());
         assertEquals(String.format("Unexpected value for %s", mdi), expectedValue, value);
     }
-    
+
     private boolean isAllowedSqlType(int sqlType) {
         if (mdi.getColumnClass() == String.class) {
             return (sqlType == Types.CHAR || sqlType == Types.VARCHAR || sqlType == Types.LONGVARCHAR);
@@ -129,24 +127,24 @@ public class MetaDataValidator<T extends Enum<T> & MetaDataValidator.MetaDataInf
         }
         return false;
     }
-    
+
     /**
      * Interface for the information enums for metadata columns should be able to provide for the {@link MetaDataValidator}.
      */
     public interface MetaDataInfo {
-        
+
         /**
          * Position of this metadata column in the resultset
-         * 
+         *
          * @return 1-based position of the column
          */
         int getPosition();
-        
+
         /**
          * Java class of the expected column type (String=> Varchar, Integer=> Integer, Short=> Smallint)
          */
         Class<?> getColumnClass();
-        
+
         /**
          * @return MetaDataValidator for this MetaDataInfo instance
          */

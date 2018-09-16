@@ -19,16 +19,18 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.*;
 
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,19 +41,15 @@ import static org.junit.Assume.assumeTrue;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBDatabaseMetaDataColumns.ColumnMetaData> {
+public class TestFBDatabaseMetaDataColumns {
 
-    public static final String TEST_TABLE = "TEST_COLUMN_METADATA";
+    private static final String TEST_TABLE = "TEST_COLUMN_METADATA";
 
-    public TestFBDatabaseMetaDataColumns() {
-        super(ColumnMetaData.class);
-    }
-
-    public static final String CREATE_DOMAIN_WITH_DEFAULT =
+    private static final String CREATE_DOMAIN_WITH_DEFAULT =
             "CREATE DOMAIN DOMAIN_WITH_DEFAULT AS VARCHAR(100) DEFAULT 'this is a default'";
 
     //@formatter:off
-    public static final String CREATE_COLUMN_METADATA_TEST_TABLE =
+    private static final String CREATE_COLUMN_METADATA_TEST_TABLE =
             "CREATE TABLE " + TEST_TABLE + " (" +
             "    col_integer INTEGER," + 
             "    col_bigint BIGINT," + 
@@ -98,10 +96,53 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             ")";
     //@formatter:on
 
-    public static final String ADD_COMMENT_ON_COLUMN = 
+    private static final String ADD_COMMENT_ON_COLUMN =
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
-    protected List<String> getCreateStatements() {
+    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA;
+    private static final Set<ColumnMetaData> JDBC_40_COLUMN_METADATA;
+    static {
+        JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
+                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATLOG)));
+        JDBC_40_COLUMN_METADATA = Collections.unmodifiableSet(
+                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATALOG)));
+    }
+
+    private static final MetaDataTestSupport<ColumnMetaData> metaDataTestSupport =
+            new MetaDataTestSupport<>(ColumnMetaData.class, getRequiredMetaData());
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+
+    private static Connection con;
+    private static DatabaseMetaData dbmd;
+
+    @BeforeClass
+    public static void setUp() throws SQLException {
+        con = getConnectionViaDriverManager();
+        dbmd = con.getMetaData();
+    }
+
+    @AfterClass
+    public static void tearDown() throws SQLException {
+        try {
+            con.close();
+        } finally {
+            con = null;
+            dbmd = null;
+        }
+    }
+
+    private static Set<ColumnMetaData> getRequiredMetaData() {
+        if (FBDatabaseMetaData.JDBC_MAJOR_VERSION > 4
+                || FBDatabaseMetaData.JDBC_MAJOR_VERSION == 4 && FBDatabaseMetaData.JDBC_MINOR_VERSION >= 1) {
+            return EnumSet.copyOf(JDBC_41_COLUMN_METADATA);
+        } else {
+            return EnumSet.copyOf(JDBC_40_COLUMN_METADATA);
+        }
+    }
+
+    private static List<String> getCreateStatements() {
         FirebirdSupportInfo supportInfo = FBTestProperties.getDefaultSupportInfo();
         List<String> statements = new ArrayList<>();
         statements.add(CREATE_DOMAIN_WITH_DEFAULT);
@@ -136,7 +177,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     @Test
     public void testColumnMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getColumns(null, null, "doesnotexist", null)) {
-            validateResultSetColumns(columns);
+            metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
@@ -888,11 +929,11 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
     private void validate(String tableName, String columnName, Map<ColumnMetaData, Object> validationRules) throws Exception {
         validationRules.put(ColumnMetaData.TABLE_NAME, tableName);
         validationRules.put(ColumnMetaData.COLUMN_NAME, columnName);
-        checkValidationRulesComplete(validationRules);
+        metaDataTestSupport.checkValidationRulesComplete(validationRules);
 
         try (ResultSet columns = dbmd.getColumns(null, null, tableName, columnName)) {
             assertTrue("Expected row in column metadata", columns.next());
-            validateRowValues(columns, validationRules);
+            metaDataTestSupport.validateRowValues(columns, validationRules);
             assertFalse("Expected only one row in resultset", columns.next());
         }
     }
@@ -923,7 +964,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    protected Map<ColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
+    private static Map<ColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
         Map<ColumnMetaData, Object> defaults = new EnumMap<>(DEFAULT_COLUMN_VALUES);
         if (dbmd.getJDBCMajorVersion() > 4 || dbmd.getJDBCMajorVersion() == 4 && dbmd.getJDBCMinorVersion() >= 1) {
             defaults.put(ColumnMetaData.SCOPE_CATALOG, null);
@@ -933,27 +974,10 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
         return defaults;
     }
     
-    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA;
-    private static final Set<ColumnMetaData> JDBC_40_COLUMN_METADATA;
-    static {
-        JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
-                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATLOG)));
-        JDBC_40_COLUMN_METADATA = Collections.unmodifiableSet(
-                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATALOG)));
-    }
-    
-    protected Set<ColumnMetaData> getRequiredMetaData() throws Exception {
-        if (dbmd.getJDBCMajorVersion() > 4 || dbmd.getJDBCMajorVersion() == 4 && dbmd.getJDBCMinorVersion() >= 1) {
-            return EnumSet.copyOf(JDBC_41_COLUMN_METADATA);
-        } else {
-            return EnumSet.copyOf(JDBC_40_COLUMN_METADATA);
-        }
-    }
-
     /**
      * Columns defined for the getColumns() metadata.
      */
-    enum ColumnMetaData implements MetaDataInfo {
+    private enum ColumnMetaData implements MetaDataInfo {
         TABLE_CAT(1, String.class), 
         TABLE_SCHEM(2, String.class), 
         TABLE_NAME(3, String.class), 
@@ -990,14 +1014,17 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             this.columnClass = columnClass;
         }
 
+        @Override
         public int getPosition() {
             return position;
         }
-        
+
+        @Override
         public Class<?> getColumnClass() {
             return columnClass;
         }
-        
+
+        @Override
         public MetaDataValidator<?> getValidator() {
             return new MetaDataValidator<>(this);
         }

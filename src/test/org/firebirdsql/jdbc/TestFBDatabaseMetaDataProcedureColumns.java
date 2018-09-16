@@ -18,21 +18,19 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
+import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-import static org.firebirdsql.common.JdbcResourceHelper.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
+import java.sql.*;
+import java.util.*;
+
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -41,16 +39,13 @@ import static org.junit.Assert.assertFalse;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<TestFBDatabaseMetaDataProcedureColumns.ProcedureColumnMetaData> {
+public class TestFBDatabaseMetaDataProcedureColumns {
     
     // TODO This test will need to be expanded with version dependent features 
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
 
-    public TestFBDatabaseMetaDataProcedureColumns() {
-        super(ProcedureColumnMetaData.class);
-    }
-    
-    public static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN =
+    //@formatter:off
+    private static final String CREATE_NORMAL_PROC_NO_ARG_NO_RETURN =
             "CREATE PROCEDURE proc_no_arg_no_return\n" + 
             "AS\n" + 
             "DECLARE VARIABLE dummy INTEGER;\n" + 
@@ -58,7 +53,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             "  dummy = 1 + 1;\n" + 
             "END";
     
-    public static final String CREATE_NORMAL_PROC_NO_RETURN = 
+    private static final String CREATE_NORMAL_PROC_NO_RETURN =
             "CREATE PROCEDURE normal_proc_no_return\n" +
             " ( param1 VARCHAR(100),\n" +
             "   \"param2\" INTEGER)\n" +
@@ -68,7 +63,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             "  dummy = 1 + 1;\n" +
             "END";
 
-    public static final String CREATE_NORMAL_PROC_WITH_RETURN = 
+    private static final String CREATE_NORMAL_PROC_WITH_RETURN =
             "CREATE PROCEDURE normal_proc_with_return\n" +
             " ( param1 VARCHAR(100),\n" +
             "   param2 DECIMAL(18,2),\n" +
@@ -81,7 +76,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             "  return2 = 1;\n" +
             "END";
 
-    public static final String CREATE_QUOTED_PROC_NO_RETURN = 
+    private static final String CREATE_QUOTED_PROC_NO_RETURN =
             "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
             " ( param1 VARCHAR(100))\n" +
             "AS\n" +
@@ -90,18 +85,42 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             "  dummy = 1 + 1;\n" +
             "END";
     
-    public static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2 = 
+    private static final String ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2 =
             "COMMENT ON PARAMETER normal_proc_with_return.param2 IS 'Some comment'";
+    //@formatter:on
 
-    @Override
-    protected List<String> getCreateStatements() {
-        List<String> statements = new ArrayList<>();
-        statements.addAll(Arrays.asList(
+    private static final MetaDataTestSupport<ProcedureColumnMetaData> metaDataTestSupport =
+            new MetaDataTestSupport<>(ProcedureColumnMetaData.class);
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+
+    private static Connection con;
+    private static DatabaseMetaData dbmd;
+
+    @BeforeClass
+    public static void setUp() throws SQLException {
+        con = getConnectionViaDriverManager();
+        dbmd = con.getMetaData();
+    }
+
+    @AfterClass
+    public static void tearDown() throws SQLException {
+        try {
+            con.close();
+        } finally {
+            con = null;
+            dbmd = null;
+        }
+    }
+
+    private static List<String> getCreateStatements() {
+        List<String> statements = new ArrayList<>(Arrays.asList(
                 CREATE_NORMAL_PROC_NO_ARG_NO_RETURN,
                 CREATE_NORMAL_PROC_NO_RETURN,
                 CREATE_NORMAL_PROC_WITH_RETURN,
                 CREATE_QUOTED_PROC_NO_RETURN));
-        if (supportInfoFor(con).supportsComment()) {
+        if (getDefaultSupportInfo().supportsComment()) {
             statements.add(ADD_COMMENT_ON_NORMAL_PROC_WITH_RETURN_PARAM2);
         }
         return statements;
@@ -114,7 +133,7 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
     @Test
     public void testProcedureColumnsMetaDataColumns() throws Exception {
         try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "doesnotexist", "%")) {
-            validateResultSetColumns(procedureColumns);
+            metaDataTestSupport.validateResultSetColumns(procedureColumns);
         }
     }
     
@@ -290,8 +309,8 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
             while(procedureColumns.next()) {
                 if (parameterCount < expectedColumns.size()) {
                     Map<ProcedureColumnMetaData, Object> rules = expectedColumns.get(parameterCount);
-                    checkValidationRulesComplete(rules);
-                    validateRowValues(procedureColumns, rules);
+                    metaDataTestSupport.checkValidationRulesComplete(rules);
+                    metaDataTestSupport.validateRowValues(procedureColumns, rules);
                 }
                 parameterCount++;
             }
@@ -319,15 +338,14 @@ public class TestFBDatabaseMetaDataProcedureColumns extends FBMetaDataTestBase<T
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    @Override
-    protected Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
+    private static Map<ProcedureColumnMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
     
     /**
      * Columns defined for the getProcedureColumns() metadata.
      */
-    enum ProcedureColumnMetaData implements MetaDataInfo {
+    private enum ProcedureColumnMetaData implements MetaDataInfo {
         PROCEDURE_CAT(1, String.class), 
         PROCEDURE_SCHEM(2, String.class), 
         PROCEDURE_NAME(3, String.class), 

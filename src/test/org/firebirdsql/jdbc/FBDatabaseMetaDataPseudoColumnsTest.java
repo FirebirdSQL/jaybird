@@ -18,14 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.rules.UsesDatabase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.sql.PseudoColumnUsage;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.*;
 
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
@@ -34,8 +36,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataPseudoColumnsTest
-        extends FBMetaDataTestBase<FBDatabaseMetaDataPseudoColumnsTest.PseudoColumnMetaData> {
+public class FBDatabaseMetaDataPseudoColumnsTest {
 
     //@formatter:off
     private static final String NORMAL_TABLE_NAME = "NORMAL_TABLE";
@@ -70,24 +71,39 @@ public class FBDatabaseMetaDataPseudoColumnsTest
             + " on commit delete rows ";
     //@formatter:on
 
+    private static final MetaDataTestSupport<PseudoColumnMetaData> metaDataTestSupport =
+            new MetaDataTestSupport<>(PseudoColumnMetaData.class);
+
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(
+            CREATE_NORMAL_TABLE,
+            CREATE_NORMAL_TABLE2,
+            CREATE_SINGLE_VIEW,
+            CREATE_MULTI_VIEW,
+            CREATE_EXTERNAL_TABLE,
+            CREATE_GTT_PRESERVE,
+            CREATE_GTT_DELETE);
+
     private boolean supportsRecordVersion = getDefaultSupportInfo()
             .supportsRecordVersionPseudoColumn();
 
-    public FBDatabaseMetaDataPseudoColumnsTest() {
-        super(PseudoColumnMetaData.class);
+    private static Connection con;
+    private static DatabaseMetaData dbmd;
+
+    @BeforeClass
+    public static void setUp() throws SQLException {
+        con = getConnectionViaDriverManager();
+        dbmd = con.getMetaData();
     }
 
-    @Override
-    protected List<String> getCreateStatements() {
-        return Arrays.asList(
-                CREATE_NORMAL_TABLE,
-                CREATE_NORMAL_TABLE2,
-                CREATE_SINGLE_VIEW,
-                CREATE_MULTI_VIEW,
-                CREATE_EXTERNAL_TABLE,
-                CREATE_GTT_PRESERVE,
-                CREATE_GTT_DELETE
-        );
+    @AfterClass
+    public static void tearDown() throws SQLException {
+        try {
+            con.close();
+        } finally {
+            con = null;
+            dbmd = null;
+        }
     }
 
     /**
@@ -96,7 +112,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest
     @Test
     public void testPseudoColumnsMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getPseudoColumns(null, null, "doesnotexist", null)) {
-            validateResultSetColumns(columns);
+            metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
@@ -291,8 +307,8 @@ public class FBDatabaseMetaDataPseudoColumnsTest
             while (pseudoColumns.next()) {
                 if (columnCount < expectedPseudoColumns.size()) {
                     Map<PseudoColumnMetaData, Object> rules = expectedPseudoColumns.get(columnCount);
-                    checkValidationRulesComplete(rules);
-                    validateRowValues(pseudoColumns, rules);
+                    metaDataTestSupport.checkValidationRulesComplete(rules);
+                    metaDataTestSupport.validateRowValues(pseudoColumns, rules);
                 }
                 columnCount++;
             }
@@ -317,8 +333,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    @Override
-    protected Map<PseudoColumnMetaData, Object> getDefaultValueValidationRules() {
+    private static Map<PseudoColumnMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
 
@@ -347,7 +362,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest
     /**
      * Columns defined for the getPseudoColumns() metadata.
      */
-    enum PseudoColumnMetaData implements MetaDataValidator.MetaDataInfo {
+    private enum PseudoColumnMetaData implements MetaDataValidator.MetaDataInfo {
         TABLE_CAT(1, String.class),
         TABLE_SCHEM(2, String.class),
         TABLE_NAME(3, String.class),
@@ -384,14 +399,17 @@ public class FBDatabaseMetaDataPseudoColumnsTest
             this.columnClass = columnClass;
         }
 
+        @Override
         public int getPosition() {
             return position;
         }
 
+        @Override
         public Class<?> getColumnClass() {
             return columnClass;
         }
 
+        @Override
         public MetaDataValidator<?> getValidator() {
             return new MetaDataValidator<>(this);
         }
