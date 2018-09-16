@@ -28,6 +28,7 @@ import java.sql.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -78,7 +79,7 @@ public class TestRowIdSupport extends FBJUnit4TestBase {
                 assertEquals("TABLE_NAME", "TESTROWID", rs.getString("TABLE_NAME"));
                 assertEquals("DATA_TYPE", Types.ROWID, rs.getObject("DATA_TYPE"));
                 assertEquals("COLUMN_SIZE", 8, rs.getObject("COLUMN_SIZE"));
-                assertEquals("DECIMAL_DIGITS", 0, rs.getObject("DECIMAL_DIGITS"));
+                assertNull("DECIMAL_DIGITS", rs.getObject("DECIMAL_DIGITS"));
                 assertEquals("NUM_PREC_RADIX", 10, rs.getObject("NUM_PREC_RADIX"));
                 assertEquals("COLUMN_USAGE", "NO_USAGE_RESTRICTIONS", rs.getString("COLUMN_USAGE"));
                 assertEquals("CHAR_OCTET_LENGTH", 8, rs.getObject("CHAR_OCTET_LENGTH"));
@@ -102,7 +103,7 @@ public class TestRowIdSupport extends FBJUnit4TestBase {
                 assertEquals("TABLE_NAME", "TESTROWIDVIEW", rs.getString("TABLE_NAME"));
                 assertEquals("DATA_TYPE", Types.ROWID, rs.getObject("DATA_TYPE"));
                 assertEquals("COLUMN_SIZE", 16, rs.getObject("COLUMN_SIZE"));
-                assertEquals("DECIMAL_DIGITS", 0, rs.getObject("DECIMAL_DIGITS"));
+                assertNull("DECIMAL_DIGITS", rs.getObject("DECIMAL_DIGITS"));
                 assertEquals("NUM_PREC_RADIX", 10, rs.getObject("NUM_PREC_RADIX"));
                 assertEquals("COLUMN_USAGE", "NO_USAGE_RESTRICTIONS", rs.getString("COLUMN_USAGE"));
                 assertEquals("CHAR_OCTET_LENGTH", 16, rs.getObject("CHAR_OCTET_LENGTH"));
