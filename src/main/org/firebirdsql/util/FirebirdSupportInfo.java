@@ -447,6 +447,38 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when {@code RDB$RECORD_VERSION} pseudo column is supported
+     */
+    public boolean supportsRecordVersionPseudoColumn() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * The number of system tables (including monitoring tables).
+     *
+     * @return Number of system tables, or {@code -1} if the Firebird version is not known/supported.
+     */
+    public int getSystemTableCount() {
+        final int databaseMajorVersion = serverVersion.getMajorVersion();
+        final int databaseMinorVersion = serverVersion.getMinorVersion();
+        if (databaseMajorVersion < 2) {
+            return 32;
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 0) {
+            return 33;
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 1) {
+            return 40;
+        } else if (databaseMajorVersion == 2 && databaseMinorVersion == 5) {
+            return 42;
+        } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
+            return 50;
+        } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
+            return 50;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class TestFBDatabaseMetaDataColumns extends FBMetaDataTestBase<TestFBData
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
     protected List<String> getCreateStatements() {
-        FirebirdSupportInfo supportInfo = supportInfoFor(con);
+        FirebirdSupportInfo supportInfo = FBTestProperties.getDefaultSupportInfo();
         List<String> statements = new ArrayList<>();
         statements.add(CREATE_DOMAIN_WITH_DEFAULT);
         String createTable = CREATE_COLUMN_METADATA_TEST_TABLE;

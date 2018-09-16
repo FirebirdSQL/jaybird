@@ -34,6 +34,7 @@ import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.firebirdsql.util.SqlLikeMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -1364,7 +1365,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @exception SQLException if a database access error occurs
      */
     public  boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
-        return false; // Blob sizes are not included in rowsize 
+        return false; // Blob sizes are not included in rowsize
     }
 
     /**
@@ -4721,65 +4722,146 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     //@formatter:off
-    private static final String GET_PSEUDO_COLUMNS_START =
-            "select "
-            + " cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT, "
-            + " cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM, "
-            + " TABLE_NAME, "
-            + " COLUMN_NAME, "
-            + " DATA_TYPE, "
-            + " COLUMN_SIZE, "
-            + " DECIMAL_DIGITS, "
-            + " NUM_PREC_RADIX, "
-            + " COLUMN_USAGE, "
-            + " cast(null as blob sub_type text) as REMARKS,"
-            + " CHAR_OCTET_LENGTH, "
-            + " IS_NULLABLE "
-            + "from ( " ;
 
-    private static final String GET_PSEUDO_DB_KEY_FRAGMENT =
+    // Suitable for Firebird 2.5 and earlier
+    private static final String GET_PSEUDO_COLUMNS_FRAGMENT_FB_25 =
             "select "
-            + " cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME, "
-            + " cast('RDB$DB_KEY' as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME, "
-            + " " + Types.ROWID + " as DATA_TYPE, "
-            + " RDB$DBKEY_LENGTH as COLUMN_SIZE, "
-            + " 0 as DECIMAL_DIGITS, "
-            + " 10 as NUM_PREC_RADIX, "
-            + " '" + PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name() + "' as COLUMN_USAGE, "
-            + " RDB$DBKEY_LENGTH as CHAR_OCTET_LENGTH, "
-            + " cast('NO' as varchar(3)) as IS_NULLABLE "
+            + " RDB$RELATION_NAME, "
+            + " RDB$DBKEY_LENGTH, "
+            + " 'F' AS HAS_RECORD_VERSION, "
+            + " '' AS RECORD_VERSION_NULLABLE " // unknown nullability (and doesn't matter, no RDB$RECORD_VERSION)
             + "from rdb$relations ";
 
-    private static final String GET_PSEUDO_COLUMNS_END = " ) a ";
+    // Suitable for Firebird 3 and higher
+    private static final String GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 =
+            "select "
+            + " RDB$RELATION_NAME, "
+            + " RDB$DBKEY_LENGTH, "
+            + " RDB$DBKEY_LENGTH = 8 as HAS_RECORD_VERSION, "
+            + " case "
+            + "   when RDB$RELATION_TYPE in (0, 1, 4, 5) then 'NO' " // table, view, GTT preserve + delete: never null
+            + "   when RDB$RELATION_TYPE in (2, 3) then 'YES' " // external + virtual: always null
+            + "   else ''" // unknown or unsupported (by Jaybird) type: unknown nullability
+            + " end as RECORD_VERSION_NULLABLE "
+            + "from rdb$relations ";
+
+    private static final String GET_PSEUDO_COLUMNS_END = " order by RDB$RELATION_NAME";
 
     //@formatter:on
 
+    @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
 
+        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(12, datatypeCoder)
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "PSEUDOCOLUMNS").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "PSEUDOCOLUMNS").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "PSEUDOCOLUMNS").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "PSEUDOCOLUMNS").addField()
+                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "PSEUDOCOLUMNS").addField()
+                .at(5).simple(SQL_LONG, 0, "COLUMN_SIZE", "PSEUDOCOLUMNS").addField()
+                .at(6).simple(SQL_LONG, 0, "DECIMAL_DIGITS", "PSEUDOCOLUMNS").addField()
+                .at(7).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "PSEUDOCOLUMNS").addField()
+                .at(8).simple(SQL_VARYING, 50, "COLUMN_USAGE", "PSEUDOCOLUMNS").addField()
+                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
+                .at(9).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "PSEUDOCOLUMNS").addField()
+                .at(10).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "PSEUDOCOLUMNS").addField()
+                .at(11).simple(SQL_VARYING, 3, "IS_NULLABLE", "PSEUDOCOLUMNS").addField()
+                .toRowDescriptor();
+
+        if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
+            // Matching table and/or column not possible
+            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        }
+
+        final boolean supportsRecordVersion = firebirdSupportInfo.supportsRecordVersionPseudoColumn();
+        final boolean retrieveDbKey;
+        final boolean retrieveRecordVersion;
+
+        if (isAllCondition(columnNamePattern)) {
+            retrieveDbKey = true;
+            retrieveRecordVersion = supportsRecordVersion;
+        } else {
+            SqlLikeMatcher matcher = SqlLikeMatcher.compile(columnNamePattern);
+            retrieveDbKey = matcher.matches("RDB$DB_KEY");
+            retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
+        }
+
+        if (!(retrieveDbKey || retrieveRecordVersion)) {
+            // No matching columns
+            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        }
+
         Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-        Clause columnNameClause = new Clause("COLUMN_NAME", columnNamePattern);
-        // TODO Add other Firebird 3 pseudo column
-        String sql = GET_PSEUDO_COLUMNS_START +
-                GET_PSEUDO_DB_KEY_FRAGMENT +
+        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25) +
                 (tableNameClause.hasCondition() ? " where " + tableNameClause.getCondition(false) : "") +
-                GET_PSEUDO_COLUMNS_END +
-                (columnNameClause.hasCondition() ? " where " + columnNameClause.getCondition(false) : "");
-        List<String> params = new ArrayList<>(2);
-        if (tableNameClause.hasCondition()) {
-            params.add(tableNameClause.getValue());
+                GET_PSEUDO_COLUMNS_END;
+        List<String> params = tableNameClause.hasCondition()
+                ? Collections.singletonList(tableNameClause.getValue())
+                : Collections.emptyList();
+
+        try (ResultSet rs = doQuery(sql, params)) {
+            if (!rs.next()) {
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            }
+
+            byte[] dbKeyBytes = retrieveDbKey ? getBytes("RDB$DB_KEY") : null;
+            byte[] dbKeyRemark = retrieveDbKey
+                    ? getBytes("The RDB$DB_KEY column in a select list will be renamed by Firebird to DB_KEY in the "
+                    + "result set (both as column name and label). Result set getters in Jaybird will map this, but "
+                    + "in introspection of ResultSetMetaData, DB_KEY will be reported. Identification as a "
+                    + "Types.ROWID will only work in a select list (ResultSetMetaData), not for parameters "
+                    + "(ParameterMetaData), but Jaybird will allow setting a RowId value.")
+                    : null;
+            byte[] recordVersionBytes = retrieveRecordVersion ? getBytes("RDB$RECORD_VERSION") : null;
+            byte[] noUsageRestrictions = getBytes(PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name());
+
+            List<RowValue> rows = new ArrayList<>();
+            RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                byte[] tableNameBytes = getBytes(rs.getString("RDB$RELATION_NAME"));
+
+                if (retrieveDbKey) {
+                    int dbKeyLength = rs.getInt("RDB$DBKEY_LENGTH");
+                    byte[] dbKeyLengthBytes = createInt(dbKeyLength);
+                    valueBuilder
+                            .at(2).set(tableNameBytes)
+                            .at(3).set(dbKeyBytes)
+                            .at(4).set(createInt(Types.ROWID))
+                            .at(5).set(dbKeyLengthBytes)
+                            .at(7).set(RADIX_TEN)
+                            .at(8).set(noUsageRestrictions)
+                            .at(9).set(dbKeyRemark)
+                            .at(10).set(dbKeyLengthBytes)
+                            .at(11).set(NO_BYTES);
+                    rows.add(valueBuilder.toRowValue(true));
+                }
+
+                if (retrieveRecordVersion && rs.getBoolean("HAS_RECORD_VERSION")) {
+                    valueBuilder
+                            .at(2).set(tableNameBytes)
+                            .at(3).set(recordVersionBytes)
+                            .at(4).set(createInt(Types.BIGINT))
+                            .at(5).set(BIGINT_PRECISION)
+                            .at(6).set(INT_ZERO)
+                            .at(7).set(RADIX_TEN)
+                            .at(8).set(noUsageRestrictions)
+                            .at(11).set(getBytes(rs.getString("RECORD_VERSION_NULLABLE")));
+                    rows.add(valueBuilder.toRowValue(true));
+                }
+            } while (rs.next());
+
+            return new FBResultSet(rowDescriptor, rows);
         }
-        if (columnNameClause.hasCondition()) {
-            params.add(columnNameClause.getValue());
-        }
-        return doQuery(sql, params);
     }
 
+    @Override
     public boolean generatedKeyAlwaysReturned() throws SQLException {
         // TODO Double check if this is correct
         return false;
     }
 
+    @Override
     public String getProcedureSourceCode(String procedureName) throws SQLException {
         String sResult = null;
         String sql = "Select RDB$PROCEDURE_SOURCE From RDB$PROCEDURES Where "
@@ -4793,6 +4875,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
+    @Override
     public String getTriggerSourceCode(String triggerName) throws SQLException {
         String sResult = null;
         String sql = "Select RDB$TRIGGER_SOURCE From RDB$TRIGGERS Where RDB$TRIGGER_NAME = ?";
@@ -4805,6 +4888,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
+    @Override
     public String getViewSourceCode(String viewName) throws SQLException {
         String sResult = null;
         String sql = "Select RDB$VIEW_SOURCE From RDB$RELATIONS Where RDB$RELATION_NAME = ?";
@@ -4973,10 +5057,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         JDBC_MINOR_VERSION = tempVersion;
     }
 
+    @Override
     public int getJDBCMajorVersion() {
         return JDBC_MAJOR_VERSION;
     }
 
+    @Override
     public int getJDBCMinorVersion() {
         return JDBC_MINOR_VERSION;
     }

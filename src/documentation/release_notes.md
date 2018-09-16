@@ -281,6 +281,13 @@ Support has also been added to `DatabaseMetaData`:
 Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
 column, as it is a pseudo-column.
 
+In result sets, Jaybird will now also automatically map request for columns by 
+name `RDB$DB_KEY` (case insensitive) to `DB_KEY` as Firebird automatically 
+applies this alias for the `RDB$DB_KEY` column(s) in a select-list.
+
+Be aware that result set metadata will still report `DB_KEY` as the column name 
+and label.
+
 Wire encryption support
 -----------------------
 
@@ -752,7 +759,19 @@ up to a precision of 34.
 
 Values set on a field or parameter will be rounded using `RoundingMode.HALF_EVEN` 
 to the target scale of the field. Values exceeding a precision of 34 will be
-rejected with a `TypeConversionException`. 
+rejected with a `TypeConversionException`.
+
+JDBC DatabaseMetaData.getPseudoColumns implemented
+--------------------------------------------------
+
+The `DatabaseMetaData.getPseudoColumns` method (introduced in JDBC 4.1) has now
+been implemented.
+
+For Firebird 2.5 and earlier it will only report on `RDB$DB_KEY`, for Firebird 3
+and higher it will also report on `RDB$RECORD_VERSION`.
+
+The pseudo-column `RDB$RECORD_VERSION` was introduced in Firebird 3, its value
+is the transaction that last updated the row.
 
 Improved JDBC function escape support
 -------------------------------------
