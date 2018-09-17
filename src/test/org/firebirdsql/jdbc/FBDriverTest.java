@@ -53,7 +53,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBDriver {
+public class FBDriverTest {
 
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
