@@ -7,4 +7,6 @@ classes/
 *.iml
 *.eml
 *.fdb
+*.FDB
 .settings/
+/junit*.properties
