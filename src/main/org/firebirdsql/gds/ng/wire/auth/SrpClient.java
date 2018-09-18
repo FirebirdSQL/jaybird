@@ -141,7 +141,7 @@ public final class SrpClient {
     private BigInteger getUserHash(String user, String password, byte[] salt) {
         final byte[] hash1;
         try {
-            sha1Md.update(user.toUpperCase().getBytes(StandardCharsets.UTF_8));
+            sha1Md.update(user.getBytes(StandardCharsets.UTF_8));
             sha1Md.update(SEPARATOR_BYTE);
             hash1 = sha1Md.digest(password.getBytes(StandardCharsets.UTF_8));
         } finally {
@@ -200,7 +200,7 @@ public final class SrpClient {
         final BigInteger n2 = fromBigByteArray(sha1(toBigByteArray(g)));
         final byte[] M = clientProofHash(
                 toBigByteArray(n1.modPow(n2, N)),
-                sha1(user.toUpperCase().getBytes(StandardCharsets.UTF_8)),
+                sha1(user.getBytes(StandardCharsets.UTF_8)),
                 salt,
                 toBigByteArray(publicKey),
                 toBigByteArray(serverPublicKey),
@@ -260,7 +260,7 @@ public final class SrpClient {
                 StandardCharsets.US_ASCII);
         final BigInteger serverPublicKey = new BigInteger(padHexBinary(hexServerPublicKey), 16);
 
-        return clientProof(user.toUpperCase(), password, salt, serverPublicKey);
+        return clientProof(user, password, salt, serverPublicKey);
     }
 
     public byte[] getSessionKey() {

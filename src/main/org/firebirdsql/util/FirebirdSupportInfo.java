@@ -30,6 +30,7 @@ import java.sql.SQLException;
  * <p>
  * Intended as a repository for Jaybird to check for functionality support, or tests to check their assumptions, or
  * decide on test or application behavior based on functionality support.
+ * </p>
  * <p>
  * Primary reason for existence of this class is to support version dependent functionality in Jaybird or
  * version dependent tests in the Jaybird test suite, so feature checks are only added when they are necessary for
@@ -336,6 +337,13 @@ public final class FirebirdSupportInfo {
     }
 
     public boolean supportsWireEncryption() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports case sensitive user names.
+     */
+    public boolean supportsCaseSensitiveUserNames() {
         return isVersionEqualOrAbove(3, 0);
     }
 

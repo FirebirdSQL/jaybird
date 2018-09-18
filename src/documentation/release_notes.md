@@ -225,6 +225,8 @@ The following has been changed or fixed since Jaybird 3.0.5
 -   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
     metadata) prevented prepared statement reuse/re-execute with error _"Statement state CURSOR_OPEN 
     only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+-   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
+    See [Case sensitive user names] for more information.
     
 ### Known issues in Jaybird 3.0.6
 
@@ -711,6 +713,32 @@ Other warnings and limitations
     someone with access to your application or the machine hosting your 
     application (although that in itself would already imply a severe security 
     breach).
+    
+Case sensitive user names
+-------------------------
+
+Jaybird 3.0.6 adds support for case sensitive user names.
+
+Case sensitive user names were introduced in Firebird 3. A case sensitive user 
+name must be enclosed in double quotes. Similar to other quoted object names in
+Firebird, quoted user names can contain (almost) the full range of `UNICODE_FSS` 
+characters, including whitespace, etc. 
+
+For example, to login with the case sensitive user name `CaseSensitive`, use:
+
+``` {.java}
+DriverManager.getConnection(url, "\"CaseSensitive\"", password); 
+```
+
+Normal, case insensitive, user names can also be enclosed in double quotes. This 
+follows the same rules as applied to table, column and other object names in 
+Firebird, so the user name must then be in upper case, eg instead of `sysdba`, 
+use `"SYSDBA"`. 
+
+If a user name contains double quotes, it must be escaped by another double 
+quote. A singular double quote within a user name is a syntax error and will
+truncate the user name, leading to a login failure (unless a user exists with
+the truncated name and the same password).  
 
 Potentially breaking changes
 ----------------------------
