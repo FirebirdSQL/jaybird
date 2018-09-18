@@ -71,6 +71,10 @@ public final class ClientAuthBlock {
         return attachProperties.getUser();
     }
 
+    public String getNormalizedLogin() {
+        return normalizeLogin(getLogin());
+    }
+
     public String getPassword() {
         return attachProperties.getPassword();
     }
@@ -316,6 +320,47 @@ public final class ClientAuthBlock {
             throw new SQLException("No authentication plugin available");
         }
         return currentPlugin.getSessionKey();
+    }
+
+    /**
+     * Normalizes a login by uppercasing unquoted user names, or stripping and unescaping (double) quoted user names.
+     *
+     * @param login Login to process
+     * @return Normalized login
+     */
+    static String normalizeLogin(String login) {
+        if (login == null || login.isEmpty()) {
+            return login;
+        }
+        // Contrary to Firebird, check if login is enclosed in double quotes, not just starting with a double quote
+        if (login.length() > 2 && login.charAt(0) == '"' && login.charAt(login.length() - 1) == '"') {
+            return normalizeQuotedLogin(login);
+        }
+        return login.toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizeQuotedLogin(String login) {
+        final StringBuilder sb = new StringBuilder(login.length() - 2);
+        sb.append(login, 1, login.length() - 1);
+
+        for (int idx = 0; idx < sb.length(); idx++) {
+            // Double double quotes ("") escape a double quote in a quoted string
+            if (sb.charAt(idx) == '"') {
+                // Strip double quote escape
+                sb.deleteCharAt(idx);
+                if (idx < sb.length() && sb.charAt(idx) == '"') {
+                    // Retain escaped double quote
+                    idx += 1;
+                } else {
+                    // The character after escape is not a double quote, we terminate the conversion and truncate.
+                    // Firebird does this as well (see common/utils.cpp#dpbItemUpper)
+                    sb.setLength(idx);
+                    return sb.toString();
+                }
+            }
+        }
+
+        return sb.toString();
     }
 
     private void extractDataToParameterBuffer(ConnectionParameterBuffer pb) {

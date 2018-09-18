@@ -479,6 +479,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports case sensitive user names.
+     */
+    public boolean supportsCaseSensitiveUserNames() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

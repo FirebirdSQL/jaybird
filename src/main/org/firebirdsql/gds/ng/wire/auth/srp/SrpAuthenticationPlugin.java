@@ -83,8 +83,8 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
         }
 
         log.debug("SRP phase 2");
-        clientData = toHex(srpClient.clientProof(clientAuthBlock.getLogin(), clientAuthBlock.getPassword(), serverData))
-                .getBytes(StandardCharsets.US_ASCII);
+        clientData = toHex(srpClient.clientProof(clientAuthBlock.getNormalizedLogin(), clientAuthBlock.getPassword(),
+                serverData)).getBytes(StandardCharsets.US_ASCII);
         return AuthStatus.AUTH_SUCCESS;
     }
 
