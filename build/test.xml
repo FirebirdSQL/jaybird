@@ -54,6 +54,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/jni/Test*.class"/>
                     <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
@@ -121,6 +122,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/wire/Test*.class"/>
                     <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
@@ -191,6 +193,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
+                    <include name="**/*Test.class"/>
                     <exclude name="**/wire/Test*.class"/>
                     <exclude name="**/TestAll.class"/>
                     <exclude name="**/TestXABase*.class"/>
@@ -251,6 +254,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                     <exclude name="org/firebirdsql/*/*$$*.class"/>
                 </fileset>
             </batchtest>
@@ -305,6 +309,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                 </fileset>
             </batchtest>
         </junit>
@@ -354,6 +359,7 @@
 
                 <fileset dir="${build.test}">
                     <include name="org/firebirdsql/*/Test${test}*.class"/>
+                    <include name="org/firebirdsql/*/${test}*Test.class"/>
                 </fileset>
             </batchtest>
         </junit>
