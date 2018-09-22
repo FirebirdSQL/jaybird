@@ -76,7 +76,7 @@ public class SqlLikeMatcherParameterizedTest {
 
     @Test
     public void testSqlLikeMatcher() {
-        SqlLikeMatcher sqlLikeMatcher = SqlLikeMatcher.compile(likePattern);
+        final SqlLikeMatcher sqlLikeMatcher = SqlLikeMatcher.compile(likePattern);
         Matcher<String> matchesSqlLikePattern = new TypeSafeMatcher<String>() {
             @Override
             protected boolean matchesSafely(String s) {

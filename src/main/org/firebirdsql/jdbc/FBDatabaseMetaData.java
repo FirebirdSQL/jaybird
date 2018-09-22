@@ -4797,8 +4797,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 (tableNameClause.hasCondition() ? " where " + tableNameClause.getCondition(false) : "") +
                 GET_PSEUDO_COLUMNS_END;
         List<String> params = tableNameClause.hasCondition()
-                ? Collections.singletonList(tableNameClause.getValue())
-                : Collections.emptyList();
+                ? Collections.<String>singletonList(tableNameClause.getValue())
+                : Collections.<String>emptyList();
 
         try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {

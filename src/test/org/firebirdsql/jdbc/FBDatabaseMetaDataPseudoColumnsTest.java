@@ -193,13 +193,13 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     public void testPattern_noMatchingColumns() throws Exception {
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "ABC");
-        validate(pseudoColumns, Collections.emptyList());
+        validate(pseudoColumns, Collections.<Map<PseudoColumnMetaData, Object>>emptyList());
     }
 
     @Test
     public void testPattern_noMatchingTables() throws Exception {
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "ABC", "%");
-        validate(pseudoColumns, Collections.emptyList());
+        validate(pseudoColumns, Collections.<Map<PseudoColumnMetaData, Object>>emptyList());
     }
 
     @Test
@@ -232,8 +232,8 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     public void testPattern_usingEscape_recordVersionOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = supportsRecordVersion
-                ? Collections.singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
-                : Collections.emptyList();
+                ? Collections.<Map<PseudoColumnMetaData, Object>>singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
+                : Collections.<Map<PseudoColumnMetaData, Object>>emptyList();
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "RDB$RECORD\\_VERSION");
         validate(pseudoColumns, validationRules);
@@ -242,8 +242,8 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     @Test
     public void testPattern_singleWildCard_recordVersionOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = supportsRecordVersion
-                ? Collections.singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
-                : Collections.emptyList();
+                ? Collections.<Map<PseudoColumnMetaData, Object>>singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
+                : Collections.<Map<PseudoColumnMetaData, Object>>emptyList();
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "RDB$RECORD_VERSION");
         validate(pseudoColumns, validationRules);
