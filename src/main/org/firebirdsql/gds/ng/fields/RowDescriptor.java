@@ -33,8 +33,7 @@ import java.util.*;
  * The class {@code RowDescriptor} is a java mapping of the XSQLDA server data structure used to describe the row
  * metadata of one row for input or output.
  * <p>
- * RowDescriptor is an immutable, values of a row are maintained separately in a collection of {@link FieldValue}
- * instances.
+ * RowDescriptor is an immutable, values of a row are maintained separately in a {@link RowValue}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -104,23 +103,20 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
     }
 
     /**
-     * Creates a {@link List} with default {@link FieldValue} instances as returned by
-     * {@link FieldDescriptor#createDefaultFieldValue()}.
+     * Creates a {@link RowValue} instance with default ({@code null}) values for each field.
      * <p>
-     * The (0-based) index of the FieldValue in the list corresponds with the (0-based) index of the
+     * All fields are marked as uninitialized.
+     * </p>
+     * <p>
+     * The (0-based) index of the each field value in the {@link RowValue} corresponds with the (0-based) index of the
      * {@link FieldDescriptor} within this {@code RowDescriptor}.
      * </p>
      *
-     * @return Default {@code FieldValue} instances for the {@code FieldDescriptor} instance contained in this
-     * instance.
+     * @return Uninitialized and empty {@code RowValue} instance for a row described by this descriptor.
+     * @see RowValue#defaultFor(RowDescriptor) 
      */
     public RowValue createDefaultFieldValues() {
-        if (getCount() == 0) return RowValue.EMPTY_ROW_VALUE;
-        FieldValue[] fieldValues = new FieldValue[getCount()];
-        for (int i = 0; i < fieldDescriptors.length; i++) {
-            fieldValues[i] = fieldDescriptors[i].createDefaultFieldValue();
-        }
-        return new RowValue(fieldValues);
+        return RowValue.defaultFor(this);
     }
 
     @Override

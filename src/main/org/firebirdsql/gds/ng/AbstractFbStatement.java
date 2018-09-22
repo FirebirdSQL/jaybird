@@ -19,7 +19,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
@@ -463,15 +462,14 @@ public abstract class AbstractFbStatement implements FbStatement {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
         final int actualSize = parameters.getCount();
-        // TODO Externalize sqlstates
+        // TODO Externalize sqlstates and error messages
         if (actualSize != expectedSize) {
             // TODO use HY021 (inconsistent descriptor information) instead?
             throw new SQLNonTransientException(String.format("Invalid number of parameters, expected %d, got %d",
                     expectedSize, actualSize), "07008"); // invalid descriptor count
         }
         for (int fieldIndex = 0; fieldIndex < actualSize; fieldIndex++) {
-            FieldValue fieldValue = parameters.getFieldValue(fieldIndex);
-            if (fieldValue == null || !fieldValue.isInitialized()) {
+            if (!parameters.isInitialized(fieldIndex)) {
                 // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
                 // TODO use HY000 (dynamic parameter value needed) instead?
                 throw new SQLTransientException(String.format("Parameter with index %d was not set",

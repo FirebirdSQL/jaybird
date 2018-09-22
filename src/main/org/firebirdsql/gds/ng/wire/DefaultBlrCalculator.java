@@ -71,9 +71,9 @@ public class DefaultBlrCalculator implements BlrCalculator {
         final ByteArrayOutputStream bout = getByteArrayOutputStream(rowValue.getCount());
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
-            final FieldValue fieldValue = rowValue.getFieldValue(idx);
+            final byte[] fieldData = rowValue.getFieldData(idx);
             final FieldDescriptor field = rowDescriptor.getFieldDescriptor(idx);
-            final int actualDataLength = fieldValue.getFieldData() != null ? fieldValue.getFieldData().length : 0;
+            final int actualDataLength = fieldData != null ? fieldData.length : 0;
             calculateFieldBlr(bout, field, actualDataLength);
         }
 
@@ -233,11 +233,11 @@ public class DefaultBlrCalculator implements BlrCalculator {
     }
 
     @Override
-    public int calculateIoLength(FieldDescriptor fieldDescriptor, FieldValue fieldValue) throws SQLException {
+    public int calculateIoLength(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException {
         final int fieldType = fieldDescriptor.getType() & ~1;
         if (fieldType == SQL_TEXT) {
             // Use actual data length for SQL_TEXT
-            return (fieldValue.getFieldData() != null ? fieldValue.getFieldData().length : 0) + 1;
+            return (fieldData != null ? fieldData.length : 0) + 1;
         }
         return calculateIoLength(fieldDescriptor);
     }

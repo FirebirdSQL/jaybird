@@ -22,7 +22,6 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
@@ -639,12 +638,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         checkValidity();
         if (fieldValues == null) return;
 
-        // TODO Remove: should be based on FieldValue#isInitialized
+        // TODO Remove: should be based on RowValue#isInitialized(int)
         Arrays.fill(isParamSet, false);
 
-        for (FieldValue fieldValue : fieldValues) {
-            fieldValue.reset();
-        }
+        fieldValues.reset();
     }
 
     // ----------------------------------------------------------------------
@@ -833,18 +830,19 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public void addBatch() throws SQLException {
         checkValidity();
         boolean allParamsSet = true;
-        // TODO Replace with check of FieldValue#isInitialized
+        // TODO Replace with check of RowValue#isInitialized
         for (boolean anIsParamSet : isParamSet) {
             allParamsSet &= anIsParamSet;
         }
 
         if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
 
-        final RowValue batchedValues = fieldValues.deepCopy();
+        final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
         for (int i = 0; i < batchedValues.getCount(); i++) {
             FBField field = getField(i + 1);
-            if (field instanceof FBFlushableField)
-                batchedValues.getFieldValue(i).setCachedObject(((FBFlushableField) field).getCachedObject());
+            if (field instanceof FBFlushableField) {
+                batchedValues.setCachedObject(i, ((FBFlushableField) field).getCachedObject());
+            }
         }
 
         batchList.add(batchedValues);
@@ -886,7 +884,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
                 try {
                     while (iter.hasNext()) {
-                        RowValue data = (RowValue) iter.next();
+                        BatchedRowValue data = (BatchedRowValue) iter.next();
 
                         executeSingleForBatch(data, results);
                     }
@@ -912,18 +910,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
     }
 
-    private void executeSingleForBatch(RowValue data, List<Long> results) throws SQLException {
+    private void executeSingleForBatch(BatchedRowValue data, List<Long> results) throws SQLException {
+        fieldValues.reset();
         for (int i = 0; i < fieldValues.getCount(); i++) {
-            FieldValue fieldValue = fieldValues.getFieldValue(i);
-            fieldValue.reset();
-
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField) {
                 // Explicitly set to null to ensure initialized property set to true
-                fieldValue.setFieldData(null);
-                ((FBFlushableField) field).setCachedObject((CachedObject) data.getFieldValue(i).getCachedObject());
+                fieldValues.setFieldData(i, null);
+                ((FBFlushableField) field).setCachedObject((CachedObject) data.getCachedObject(i));
             } else {
-                fieldValue.setFieldData(data.getFieldValue(i).getFieldData());
+                fieldValues.setFieldData(i, data.getFieldData(i));
             }
             isParamSet[i] = true;
         }
@@ -1232,12 +1228,23 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         RowDescriptor rowDescriptor = fbStatement.getParameterDescriptor();
         assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
 
-        isParamSet = new boolean[rowDescriptor.getCount()];
+        int fieldCount = rowDescriptor.getCount();
+        isParamSet = new boolean[fieldCount];
         fieldValues = rowDescriptor.createDefaultFieldValues();
-        fields = new FBField[rowDescriptor.getCount()];
+        fields = new FBField[fieldCount];
 
-        for (int i = 0; i < isParamSet.length; i++) {
-            FieldDataProvider dataProvider = fieldValues.getFieldValue(i);
+        for (int i = 0; i < fieldCount; i++) {
+            final int fieldPosition = i;
+
+            FieldDataProvider dataProvider = new FieldDataProvider() {
+                public byte[] getFieldData() {
+                    return fieldValues.getFieldData(fieldPosition);
+                }
+
+                public void setFieldData(byte[] data) {
+                    fieldValues.setFieldData(fieldPosition, data);
+                }
+            };
 
             // FIXME check if we can safely pass cached here
             fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
@@ -1363,5 +1370,47 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         public List<RowValue> getRows() {
             return new ArrayList<>(rows);
         }
+    }
+
+
+    private static final class BatchedRowValue {
+
+        private final RowValue rowValue;
+        private Object[] cachedObjects;
+
+        private BatchedRowValue(RowValue rowValue) {
+            this.rowValue = rowValue;
+        }
+
+        private int getCount() {
+            return rowValue.getCount();
+        }
+
+        private byte[] getFieldData(int index) {
+            return rowValue.getFieldData(index);
+        }
+
+        private void setCachedObject(int index, Object object) {
+            checkBounds(index);
+            if (cachedObjects == null) {
+                cachedObjects = new Object[getCount()];
+            }
+            cachedObjects[index] = object;
+        }
+
+        private Object getCachedObject(int index) {
+            checkBounds(index);
+            if (cachedObjects == null) {
+                return null;
+            }
+            return cachedObjects[index];
+        }
+
+        private void checkBounds(int index) {
+            if (index < 0 || index >= getCount()) {
+                throw new ArrayIndexOutOfBoundsException(index);
+            }
+        }
+
     }
 }

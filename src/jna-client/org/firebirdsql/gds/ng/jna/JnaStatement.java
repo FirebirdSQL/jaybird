@@ -223,8 +223,7 @@ public class JnaStatement extends AbstractFbStatement {
             // Zero-fill sqldata
             xSqlVar.getSqlData().clear();
 
-            FieldValue value = parameters.getFieldValue(idx);
-            byte[] fieldData = value.getFieldData();
+            byte[] fieldData = parameters.getFieldData(idx);
             if (fieldData == null) {
                 // Note this only works because we mark the type as nullable in allocateXSqlDa
                 xSqlVar.sqlind.setValue(XSQLVAR.SQLIND_NULL);
@@ -309,30 +308,31 @@ public class JnaStatement extends AbstractFbStatement {
      * @return Row value
      */
     protected RowValue toRowValue(RowDescriptor rowDescriptor, XSQLDA xSqlDa) {
-        final RowValueBuilder row = new RowValueBuilder(rowDescriptor);
+        final RowValue row = rowDescriptor.createDefaultFieldValues();
 
         for (int idx = 0; idx < xSqlDa.sqlvar.length; idx++) {
             final XSQLVAR xSqlVar = xSqlDa.sqlvar[idx];
 
-            row.setFieldIndex(idx);
-
             if (xSqlVar.sqlind.getValue() == XSQLVAR.SQLIND_NULL) {
-                row.set(null);
+                row.setFieldData(idx, null);
             } else {
-                int bufferOffset = 0;
-                int bufferLength = xSqlVar.sqllen;
+                int bufferOffset;
+                int bufferLength;
 
                 if (rowDescriptor.getFieldDescriptor(idx).isVarying()) {
                     bufferOffset = 2;
                     bufferLength = xSqlVar.sqldata.getShort(0) & 0xffff;
+                } else {
+                    bufferOffset = 0;
+                    bufferLength = xSqlVar.sqllen;
                 }
 
                 byte[] data = new byte[bufferLength];
                 xSqlVar.sqldata.read(bufferOffset, data, 0, bufferLength);
-                row.set(data);
+                row.setFieldData(idx, data);
             }
         }
-        return row.toRowValue(false);
+        return row;
     }
 
     /**

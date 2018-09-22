@@ -18,74 +18,126 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Arrays;
 
 /**
- * Collection of {@link FieldValue}. Usually a row or set of parameters.
- * <p>
- * A <code>RowValue</code> itself is unmodifiable, but the {@link FieldValue} elements it contains are modifiable!
- * </p>
+ * Collection of values of fields. Usually a row or set of parameters.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class RowValue implements Iterable<FieldValue> {
-
-    public static final RowValue EMPTY_ROW_VALUE = new RowValue(new FieldValue[0]);
-
-    private final FieldValue[] fieldValues;
+public final class RowValue {
 
     /**
-     * Creates a new <code>RowValues</code> object.
+     * Marker array object for uninitialized fields
+     */
+    private static final byte[] NOT_INITIALIZED = new byte[0];
+
+    public static final RowValue EMPTY_ROW_VALUE = new RowValue(0, false);
+
+    private final byte[][] fieldData;
+
+    /**
+     * Creates an empty row value with {@code size} fields.
      * <p>
-     * The array is copied, but the {@link FieldValue} elements in it are not
-     * </p>
-     * <p>
-     * The implementation assumes, but does not check that all elements are not null
+     * Use {@link #EMPTY_ROW_VALUE} for size 0.
      * </p>
      *
-     * @param fieldValues
-     *         Field value elements
+     * @param size
+     *         Number of fields
+     * @param markUninitialized
+     *         {@code true} to mark all fields as not initialized
      */
-    public RowValue(FieldValue[] fieldValues) {
-        this.fieldValues = fieldValues.clone();
+    private RowValue(int size, boolean markUninitialized) {
+        this.fieldData = new byte[size][];
+        if (markUninitialized) {
+            Arrays.fill(this.fieldData, NOT_INITIALIZED);
+        }
     }
 
     /**
      * @return The number of fields.
      */
     public int getCount() {
-        return fieldValues.length;
+        return fieldData.length;
     }
 
     /**
-     * Gets the {@link FieldValue} at the specified (0-based) index.
+     * Sets the data of the field with {@code index}.
      *
      * @param index
-     *         0-based index of the field
-     * @return FieldValue
+     *         Index of the field
+     * @param data
+     *         byte array with data for field, or {@code null}
      * @throws java.lang.IndexOutOfBoundsException
-     *         if index is not <code>0 &lt;= index &lt; getCount</code>
+     *         if index is not {@code 0 <= index > getCount()}
      */
-    public FieldValue getFieldValue(int index) {
-        return fieldValues[index];
-    }
-
-    @Override
-    public Iterator<FieldValue> iterator() {
-        return new RowValuesIterator();
+    public void setFieldData(int index, byte[] data) {
+        fieldData[index] = data;
     }
 
     /**
-     * Convenience method to construct a <code>RowValues</code> object with varargs parameters
+     * Get the data of the field with {@code index}.
+     * <p>
+     * For uninitialized fields, returns {@code null}. To distinguish between uninitialized or initialized with
+     * {@code null}, use {@link #isInitialized(int)}.
+     * </p>
      *
-     * @param fieldValues
-     *         Field value elements
-     * @return new <code>RowValues</code> object
+     * @param index
+     *         Index of the field
+     * @return byte array with data for field, or {@code null}
+     * @throws java.lang.IndexOutOfBoundsException
+     *         if index is not {@code 0 <= index > getCount()}
      */
-    public static RowValue of(final FieldValue... fieldValues) {
-        return new RowValue(fieldValues);
+    public byte[] getFieldData(int index) {
+        byte[] data = fieldData[index];
+        return data != NOT_INITIALIZED ? data : null;
+    }
+
+    /**
+     * Resets the state of this row value to uninitialized.
+     */
+    public void reset() {
+        Arrays.fill(fieldData, NOT_INITIALIZED);
+    }
+
+    /**
+     * Initializes uninitialized fields with {@code null}.
+     */
+    void initializeFields() {
+        for (int idx = 0; idx < fieldData.length; idx++) {
+            if (fieldData[idx] == NOT_INITIALIZED) {
+                fieldData[idx] = null;
+            }
+        }
+    }
+
+    /**
+     * Is the field with {@code index} initialized.
+     *
+     * @param index
+     *         Index of the field
+     * @return {@code true} if the field is initialized
+     * @throws IndexOutOfBoundsException
+     *         if index is not {@code 0 <= index > getCount()}
+     */
+    public boolean isInitialized(int index) {
+        return fieldData[index] != NOT_INITIALIZED;
+    }
+
+    /**
+     * Convenience method for creating a default, uninitialized, row value for a {@link RowDescriptor}.
+     *
+     * @param rowDescriptor
+     *         The row descriptor
+     * @return {@code RowValue} object
+     */
+    public static RowValue defaultFor(RowDescriptor rowDescriptor) {
+        int count = rowDescriptor.getCount();
+        if (count == 0) {
+            return EMPTY_ROW_VALUE;
+        }
+        return new RowValue(count, true);
     }
 
     /**
@@ -94,71 +146,83 @@ public final class RowValue implements Iterable<FieldValue> {
      * Note this method, and the similar {@link org.firebirdsql.gds.ng.fields.RowValueBuilder} are mainly intended for
      * use in {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
      * </p>
+     * <p>
+     * Compared to {@link #of(byte[]...)}, this method has the advantage that it checks if the number of byte arrays
+     * is consistent with the row descriptor.
+     * </p>
      *
      * @param rowDescriptor
      *         The row descriptor
      * @param rowData
      *         An array of byte arrays with the field data.
-     * @return new <code>RowValues</code> object
+     * @return new {@code RowValue} object
+     * @throws IllegalArgumentException
+     *         If the {@code rowData} byte array count does not match field count of the row descriptor
      * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
      */
     public static RowValue of(RowDescriptor rowDescriptor, byte[]... rowData) {
-        if (rowDescriptor.getCount() != rowData.length) {
+        final int size = rowDescriptor.getCount();
+        if (size != rowData.length) {
             throw new IllegalArgumentException("Expected RowDescriptor count and rowData length to be the same");
         }
-        final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
-        for (int i = 0; i < rowData.length; i++) {
-            rowValue.getFieldValue(i).setFieldData(rowData[i]);
+        if (size == 0) {
+            return EMPTY_ROW_VALUE;
+        }
+        final RowValue rowValue = new RowValue(size, false);
+        for (int i = 0; i < size; i++) {
+            rowValue.setFieldData(i, rowData[i]);
         }
         return rowValue;
     }
 
     /**
-     * Copies this <code>RowValue</code> and the {@link FieldValue} elements it contains.
+     * Convenience method for populating a row value from byte arrays.
      * <p>
-     * The {@link FieldValue} elements are copied by use of {@link FieldValue#clone()}.
+     * This method is mainly intended for use with direct manipulation in the low-level gds-ng API.
      * </p>
+     *
+     * @param rowData
+     *         An array of byte arrays with the field data.
+     * @return new {@code RowValue} object
+     * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
+     * @see #of(RowDescriptor, byte[]...)
+     */
+    public static RowValue of(byte[]... rowData) {
+        if (rowData.length == 0) {
+            return EMPTY_ROW_VALUE;
+        }
+        RowValue newRowValue = new RowValue(rowData.length, false);
+        for (int idx = 0; idx < rowData.length; idx++) {
+            newRowValue.setFieldData(idx, rowData[idx]);
+        }
+        return newRowValue;
+    }
+
+    /**
+     * Copies this {@code RowValue} and the values it contains.
      * <p>
-     * As <code>FieldValue</code> is mutable, it is important to consider whether you need to be able
+     * As the field values are mutable, it is important to consider whether you need to be able
      * to see modifications to the field data, or if you need fields with the same original data. If the former,
      * pass the original, if the latter use this method to obtain a copy.
      * </p>
      *
-     * @return Copy of this object with cloned field values
-     * @see FieldValue#clone() For caveats
+     * @return Copy of this object with cloned field values, for empty rows (count is 0) {@link #EMPTY_ROW_VALUE}.
      */
     public RowValue deepCopy() {
+        final int size = getCount();
+        if (size == 0) {
+            return EMPTY_ROW_VALUE;
+        }
         // Implementation note: I decided not to override clone here because it didn't "feel right"
-        FieldValue[] fieldValueCopy = new FieldValue[fieldValues.length];
-        for (int i = 0; i < fieldValues.length; i++) {
-            fieldValueCopy[i] = fieldValues[i].clone();
-        }
-        return new RowValue(fieldValueCopy);
-    }
-
-    /**
-     * Iterator implementation to iterate over the internal array
-     */
-    private final class RowValuesIterator implements Iterator<FieldValue> {
-
-        private int index = 0;
-
-        @Override
-        public boolean hasNext() {
-            return index < fieldValues.length;
-        }
-
-        @Override
-        public FieldValue next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
+        RowValue newRowValue = new RowValue(size, false);
+        for (int idx = 0; idx < size; idx++) {
+            byte[] value = fieldData[idx];
+            if (value != null && value != NOT_INITIALIZED) {
+                value = value.clone();
             }
-            return fieldValues[index++];
+            newRowValue.fieldData[idx] = value;
         }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove() method is not supported");
-        }
+        return newRowValue;
     }
+
 }

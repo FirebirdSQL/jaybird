@@ -23,7 +23,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Before;
@@ -364,9 +363,10 @@ public class TestJnaBlob extends BaseTestBlob {
 
                 statement.prepare(INSERT_BLOB_TABLE);
                 final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
-                FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
-                statement.execute(RowValue.of(param1, param2));
+                RowValue rowValue = RowValue.of(
+                        datatypeCoder.encodeInt(testId),
+                        datatypeCoder.encodeLong(blob.getBlobId()));
+                statement.execute(rowValue);
                 statement.close();
             } finally {
                 transaction.commit();

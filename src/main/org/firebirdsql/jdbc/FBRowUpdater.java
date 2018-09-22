@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
@@ -65,6 +64,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     private static final int PARAMETER_UNUSED = 0;
     private static final int PARAMETER_USED = 1;
     private static final int PARAMETER_DBKEY = 2;
+    private static final byte[][] EMPTY_2D_BYTES = new byte[0][];
 
     private final FBConnection connection;
     private final GDSHelper gdsHelper;
@@ -117,20 +117,20 @@ public class FBRowUpdater implements FirebirdRowUpdater {
                 @Override
                 public byte[] getFieldData() {
                     if (!updatedFlags[fieldPos]) {
-                        return oldRow.getFieldValue(fieldPos).getFieldData();
+                        return oldRow.getFieldData(fieldPos);
                     } else if (inInsertRow) {
-                        return insertRow.getFieldValue(fieldPos).getFieldData();
+                        return insertRow.getFieldData(fieldPos);
                     } else {
-                        return newRow.getFieldValue(fieldPos).getFieldData();
+                        return newRow.getFieldData(fieldPos);
                     }
                 }
 
                 @Override
                 public void setFieldData(byte[] data) {
                     if (inInsertRow) {
-                        insertRow.getFieldValue(fieldPos).setFieldData(data);
+                        insertRow.setFieldData(fieldPos, data);
                     } else {
-                        newRow.getFieldValue(fieldPos).setFieldData(data);
+                        newRow.setFieldData(fieldPos, data);
                     }
                     updatedFlags[fieldPos] = true;
                 }
@@ -551,13 +551,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
         stmt.prepare(sql);
 
-        List<FieldValue> params = new ArrayList<>();
+        List<byte[]> params = new ArrayList<>();
 
         if (statementType == UPDATE_STATEMENT_TYPE) {
             for (int i = 0; i < rowDescriptor.getCount(); i++) {
                 if (!updatedFlags[i]) continue;
 
-                params.add(newRow.getFieldValue(i).clone());
+                params.add(newRow.getFieldData(i));
             }
         }
 
@@ -567,14 +567,11 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             } else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE) {
                 continue;
             }
-            if (statementType == INSERT_STATEMENT_TYPE) {
-                params.add(insertRow.getFieldValue(i).clone());
-            } else {
-                params.add(oldRow.getFieldValue(i).clone());
-            }
+            RowValue source = statementType == INSERT_STATEMENT_TYPE ? insertRow : oldRow;
+            params.add(source.getFieldData(i));
         }
 
-        stmt.execute(new RowValue(params.toArray(new FieldValue[0])));
+        stmt.execute(RowValue.of(params.toArray(EMPTY_2D_BYTES)));
     }
 
     @Override
@@ -594,15 +591,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     @Override
     public RowValue getNewRow() {
-        FieldValue[] fieldValues = new FieldValue[oldRow.getCount()];
-        for (int i = 0; i < fieldValues.length; i++) {
-            if (updatedFlags[i]) {
-                fieldValues[i] = newRow.getFieldValue(i).clone();
-            } else {
-                fieldValues[i] = oldRow.getFieldValue(i).clone();
-            }
+        RowValue newRow = rowDescriptor.createDefaultFieldValues();
+        for (int i = 0; i < rowDescriptor.getCount(); i++) {
+            RowValue source = updatedFlags[i] ? newRow : oldRow;
+            byte[] fieldData = source.getFieldData(i);
+            newRow.setFieldData(i, fieldData != null ? fieldData.clone() : null);
         }
-        return new RowValue(fieldValues);
+        return newRow;
     }
 
     @Override

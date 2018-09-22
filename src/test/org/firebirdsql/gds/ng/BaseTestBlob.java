@@ -25,7 +25,6 @@ import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Before;
@@ -163,9 +162,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
         statement.addStatementListener(listener);
         statement.prepare(SELECT_BLOB_TABLE);
 
-        FieldValue param1 = new FieldValue(db.getDatatypeCoder().encodeInt(testId));
-
-        statement.execute(RowValue.of(param1));
+        statement.execute(RowValue.of(db.getDatatypeCoder().encodeInt(testId)));
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
 
@@ -173,8 +170,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
         assertEquals("Expected a row", 1, listener.getRows().size());
 
         RowValue row = listener.getRows().get(0);
-        FieldValue blobIdFieldValue = row.getFieldValue(0);
-        return db.getDatatypeCoder().decodeLong(blobIdFieldValue.getFieldData());
+        return db.getDatatypeCoder().decodeLong(row.getFieldData(0));
     }
 
     @Before
@@ -288,9 +284,10 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
                 statement.prepare(INSERT_BLOB_TABLE);
                 final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
-                FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
-                statement.execute(RowValue.of(param1, param2));
+                RowValue rowValue = RowValue.of(
+                        datatypeCoder.encodeInt(testId),
+                        datatypeCoder.encodeLong(blob.getBlobId()));
+                statement.execute(rowValue);
                 statement.close();
             } finally {
                 transaction.commit();
@@ -327,9 +324,10 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
             statement.prepare(INSERT_BLOB_TABLE);
             final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-            FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
-            FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
-            statement.execute(RowValue.of(param1, param2));
+            RowValue rowValue = RowValue.of(
+                    datatypeCoder.encodeInt(testId),
+                    datatypeCoder.encodeLong(blob.getBlobId()));
+            statement.execute(rowValue);
             statement.close();
         } finally {
             transaction.commit();

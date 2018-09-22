@@ -24,7 +24,6 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.junit.After;
 import org.junit.Before;
@@ -194,12 +193,11 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
         try {
             statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-            FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
-            FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
-            parameter1.setFieldData(db.getDatatypeCoder().encodeInt(key));
-            parameter2.setFieldData(db.getEncoding().encodeToCharset(value));
+            RowValue rowValue = RowValue.of(
+                    db.getDatatypeCoder().encodeInt(key),
+                    db.getEncoding().encodeToCharset(value));
 
-            statement.execute(RowValue.of(parameter1, parameter2));
+            statement.execute(rowValue);
         } finally {
             statement.close();
         }

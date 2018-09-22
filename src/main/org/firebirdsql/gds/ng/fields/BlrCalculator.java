@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,10 +76,10 @@ public interface BlrCalculator {
      *         Field descriptor
      * @return The io length
      */
-    public int calculateIoLength(FieldDescriptor fieldDescriptor) throws SQLException;
+    int calculateIoLength(FieldDescriptor fieldDescriptor) throws SQLException;
 
     /**
-     * Calculates the io length for the field descriptor.
+     * Calculates the io length for the field descriptor and actual data.
      * <p>
      * The return value indicates the length and padding of the type in the buffer
      * <ul>
@@ -101,9 +99,11 @@ public interface BlrCalculator {
      *
      * @param fieldDescriptor
      *         Field descriptor
-     * @param fieldValue
-     *         Field value
+     * @param fieldData
+     *         byte array (can be {@code null}) with field data.
      * @return The io length
+     * @since 4.0
      */
-    public int calculateIoLength(FieldDescriptor fieldDescriptor, FieldValue fieldValue) throws SQLException;
+    int calculateIoLength(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException;
+    
 }

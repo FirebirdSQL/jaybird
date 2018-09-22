@@ -43,13 +43,7 @@ public class V13Statement extends V12Statement {
         super(database);
     }
 
-    /**
-     * Reads a single row from the database.
-     *
-     * @return Row as a list of {@link FieldValue} instances
-     * @throws SQLException
-     * @throws IOException
-     */
+    @Override
     protected RowValue readSqlData() throws SQLException, IOException {
         final RowDescriptor rowDescriptor = getFieldDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
@@ -63,36 +57,25 @@ public class V13Statement extends V12Statement {
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final FieldValue fieldValue = rowValue.getFieldValue(idx);
             if (nullBits.get(idx)) {
-                fieldValue.setFieldData(null);
-                continue;
+                rowValue.setFieldData(idx, null);
+            } else {
+                final int len = blrCalculator.calculateIoLength(fieldDescriptor);
+                final byte[] buffer = readColumnData(xdrIn, len);
+                rowValue.setFieldData(idx, buffer);
             }
-            final int len = blrCalculator.calculateIoLength(fieldDescriptor);
-            final byte[] buffer = readColumnData(xdrIn, len);
-            fieldValue.setFieldData(buffer);
         }
         return rowValue;
     }
 
-    /**
-     * Write a set of SQL data from a list of {@link FieldValue} instances.
-     *
-     * @param rowDescriptor
-     *         The row descriptor
-     * @param fieldValues
-     *         The List containing the SQL data to be written
-     * @throws IOException
-     *         if an error occurs while writing to the underlying output stream
-     */
+    @Override
     protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues) throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
         // null indicator bitmap
         final BitSet nullBits = new BitSet(fieldValues.getCount());
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
-            final FieldValue fieldValue = fieldValues.getFieldValue(idx);
-            nullBits.set(idx, fieldValue.getFieldData() == null);
+            nullBits.set(idx, fieldValues.getFieldData(idx) == null);
         }
         final byte[] nullBitsBytes = nullBits.toByteArray(); // Note only amount of bytes necessary for highest bit set
         xdrOut.write(nullBitsBytes);
@@ -104,15 +87,13 @@ public class V13Statement extends V12Statement {
         xdrOut.writeAlignment(requiredBytes);
 
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
-            if (nullBits.get(idx)) {
-                continue;
+            if (!nullBits.get(idx)) {
+                final byte[] buffer = fieldValues.getFieldData(idx);
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                final int len = blrCalculator.calculateIoLength(fieldDescriptor, buffer);
+                final int fieldType = fieldDescriptor.getType();
+                writeColumnData(xdrOut, len, buffer, fieldType);
             }
-            final FieldValue fieldValue = fieldValues.getFieldValue(idx);
-            final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
-            final byte[] buffer = fieldValue.getFieldData();
-            final int fieldType = fieldDescriptor.getType();
-            writeColumnData(xdrOut, len, buffer, fieldType);
         }
     }
 }

@@ -74,7 +74,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
         }
 
         public byte[] getFieldData() {
-            return rows.get(row).getFieldValue(fieldPos).getFieldData();
+            return rows.get(row).getFieldData(fieldPos);
         }
 
         public void setFieldData(byte[] data) {

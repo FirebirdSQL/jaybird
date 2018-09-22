@@ -146,8 +146,8 @@ class FBCachedFetcher implements FBFetcher {
         //ugly blob caching workaround.
         for (int j = 0; j < localRow.getCount(); j++) {
             // if field is blob and there is a value to cache
-            if (isBlob[j] && localRow.getFieldValue(j).getFieldData() != null) {
-                final byte[] tempData = localRow.getFieldValue(j).getFieldData();
+            final byte[] tempData = localRow.getFieldData(j);
+            if (isBlob[j] && tempData != null) {
                 final FieldDataProvider dataProvider = new FieldDataProvider() {
                     @Override
                     public byte[] getFieldData() {
@@ -164,7 +164,7 @@ class FBCachedFetcher implements FBFetcher {
                 final FBFlushableField blob = (FBFlushableField) FBField.createField(
                         rowDescriptor.getFieldDescriptor(j), dataProvider, gdsHelper, false);
                 // TODO setCachedObject instead?
-                localRow.getFieldValue(j).setFieldData(blob.getCachedData());
+                localRow.setFieldData(j, blob.getCachedData());
             }
         }
     }

@@ -26,7 +26,6 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
@@ -256,10 +255,11 @@ public abstract class AbstractStatementTest {
                         "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
 
         final DatatypeCoder coder = db.getDatatypeCoder();
-        FieldValue param1 = new FieldValue(coder.encodeShort(3)); // smallint = 3 (id of UNICODE_FSS)
-        FieldValue param2 = new FieldValue(coder.encodeShort(1)); // smallint = 1 (single byte character sets)
-
-        statement.execute(RowValue.of(param1, param2));
+        RowValue rowValue = RowValue.of(
+                coder.encodeShort(3),  // smallint = 3 (id of UNICODE_FSS)
+                coder.encodeShort(1)); // smallint = 1 (single byte character sets)
+        
+        statement.execute(rowValue);
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
@@ -314,10 +314,9 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
-        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(1)); // Byte representation of 1
-
-        statement.execute(RowValue.of(parameter1));
+        RowValue rowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(1)); // Byte representation of 1
+        statement.execute(rowValue);
 
         assertTrue("Expected singleton result for executable stored procedure", listener.hasSingletonResult());
         assertFalse("Expected no result set for executable stored procedure", listener.hasResultSet());
@@ -325,8 +324,8 @@ public abstract class AbstractStatementTest {
         assertEquals("Expected 1 row", 1, listener.getRows().size());
         RowValue fieldValues = listener.getRows().get(0);
         assertEquals("Expected one field", 1, fieldValues.getCount());
-        FieldValue value = fieldValues.getFieldValue(0);
-        assertEquals("Expected byte representation of 2", 2, db.getDatatypeCoder().decodeInt(value.getFieldData()));
+        assertEquals("Expected byte representation of 2", 2,
+                db.getDatatypeCoder().decodeInt(fieldValues.getFieldData(0)));
     }
 
     @Test
@@ -426,12 +425,11 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(listener);
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
-        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4096));
-        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
-
-        statement.execute(RowValue.of(parameter1, parameter2));
+        RowValue rowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(4096),
+                db.getEncoding().encodeToCharset("test"));
+        
+        statement.execute(rowValue);
 
         assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
 
@@ -598,21 +596,21 @@ public abstract class AbstractStatementTest {
 
         // Insert UTF8 columns
         statement.prepare(INSERT_THEUTFVALUE);
-        final RowDescriptor parametersInsert = statement.getParameterDescriptor();
-        final RowValue parameterValuesInsert = parametersInsert.createDefaultFieldValues();
-        parameterValuesInsert.getFieldValue(0).setFieldData(db.getDatatypeCoder().encodeInt(1));
         final Encoding utf8Encoding = db.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         final String aEuro = "a\u20AC";
         final byte[] insertFieldData = utf8Encoding.encodeToCharset(aEuro);
-        parameterValuesInsert.getFieldValue(1).setFieldData(insertFieldData);
-        parameterValuesInsert.getFieldValue(2).setFieldData(insertFieldData);
+        final RowDescriptor parametersInsert = statement.getParameterDescriptor();
+        final RowValue parameterValuesInsert = RowValue.of(parametersInsert,
+                db.getDatatypeCoder().encodeInt(1),
+                insertFieldData,
+                insertFieldData);
         statement.execute(parameterValuesInsert);
 
         // Retrieve the just inserted UTF8 values from the database for comparison
         statement.prepare(SELECT_THEUTFVALUE);
         final RowDescriptor parametersSelect = statement.getParameterDescriptor();
-        final RowValue parameterValuesSelect = parametersSelect.createDefaultFieldValues();
-        parameterValuesSelect.getFieldValue(0).setFieldData(db.getDatatypeCoder().encodeInt(1));
+        final RowValue parameterValuesSelect = RowValue.of(parametersSelect,
+                db.getDatatypeCoder().encodeInt(1));
         final SimpleStatementListener statementListener = new SimpleStatementListener();
         statement.addStatementListener(statementListener);
         statement.execute(parameterValuesSelect);
@@ -621,8 +619,8 @@ public abstract class AbstractStatementTest {
         final List<RowValue> rows = statementListener.getRows();
         assertEquals("Expected a row", 1, rows.size());
         final RowValue selectResult = rows.get(0);
-        final byte[] selectVarcharFieldData = selectResult.getFieldValue(0).getFieldData();
-        final byte[] selectCharFieldData = selectResult.getFieldValue(1).getFieldData();
+        final byte[] selectVarcharFieldData = selectResult.getFieldData(0);
+        final byte[] selectCharFieldData = selectResult.getFieldData(1);
         assertEquals("Length of selected varchar field data", 4, selectVarcharFieldData.length);
         assertEquals("Length of selected char field data", 20, selectCharFieldData.length);
 
@@ -643,28 +641,29 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
-        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4096));
-        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
+        RowValue rowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(4096),
+                db.getEncoding().encodeToCharset("test"));
 
         // Insert value
-        statement.execute(RowValue.of(parameter1, parameter2));
+        statement.execute(rowValue);
         try {
             // Insert value again
-            statement.execute(RowValue.of(parameter1, parameter2));
+            statement.execute(rowValue);
             fail("Expected exception");
         } catch (SQLException e) {
             // ignore
         }
 
         statement.addStatementListener(listener);
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4097));
 
         listener.clear();
 
         // Insert another value
-        statement.execute(RowValue.of(parameter1, parameter2));
+        RowValue differentRowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(4097),
+                db.getEncoding().encodeToCharset("test"));
+        statement.execute(differentRowValue);
 
         assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
 
@@ -679,24 +678,25 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
-        FieldValue parameter1 = statement.getParameterDescriptor().getFieldDescriptor(0).createDefaultFieldValue();
-        FieldValue parameter2 = statement.getParameterDescriptor().getFieldDescriptor(1).createDefaultFieldValue();
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4096));
-        parameter2.setFieldData(db.getEncoding().encodeToCharset("test"));
+        RowValue rowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(4096),
+                db.getEncoding().encodeToCharset("test"));
 
         // Insert value
-        statement.execute(RowValue.of(parameter1, parameter2));
+        statement.execute(rowValue);
         try {
             // Insert value again
-            statement.execute(RowValue.of(parameter1, parameter2));
+            statement.execute(rowValue);
             fail("Expected exception");
         } catch (SQLException e) {
             // ignore
         }
 
         statement.prepare("INSERT INTO keyvalue (thekey, theUTFVarcharValue) VALUES (?, ?)");
-        parameter1.setFieldData(db.getDatatypeCoder().encodeInt(4097));
-        statement.execute(RowValue.of(parameter1, parameter2));
+        RowValue differentRowValue = RowValue.of(
+                db.getDatatypeCoder().encodeInt(4097),
+                db.getEncoding().encodeToCharset("test"));
+        statement.execute(differentRowValue);
     }
 
     @Test

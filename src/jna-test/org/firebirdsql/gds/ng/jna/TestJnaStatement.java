@@ -23,7 +23,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.ClassRule;
@@ -206,10 +205,11 @@ public class TestJnaStatement extends AbstractStatementTest {
                         "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
 
         final DatatypeCoder coder = db.getDatatypeCoder();
-        FieldValue param1 = new FieldValue(coder.encodeShort(3)); // smallint = 3 (id of UNICODE_FSS)
-        FieldValue param2 = new FieldValue(coder.encodeShort(1)); // smallint = 1 (single byte character sets)
+        RowValue rowValue = RowValue.of(
+                coder.encodeShort(3),  // smallint = 3 (id of UNICODE_FSS)
+                coder.encodeShort(1)); // smallint = 1 (single byte character sets)
 
-        statement.execute(RowValue.of(param1, param2));
+        statement.execute(rowValue);
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
@@ -221,7 +221,7 @@ public class TestJnaStatement extends AbstractStatementTest {
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(100);
 
-        assertEquals("Expected allRowsFetched to haven't been called yet", null, listener.isAllRowsFetched());
+        assertNull("Expected allRowsFetched to haven't been called yet", listener.isAllRowsFetched());
         assertEquals("Expected a single row to have been fetched", 1, listener.getRows().size());
 
         // 100 should be sufficient to fetch all character sets; limit to prevent infinite loop with bugs in fetchRows

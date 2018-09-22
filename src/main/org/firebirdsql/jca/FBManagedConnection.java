@@ -1015,9 +1015,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             DataProvider dataProvider1 = new DataProvider(1);
             stmtHandle2.addStatementListener(dataProvider1);
 
-            final RowValue parameters = stmtHandle2.getParameterDescriptor().createDefaultFieldValues();
             FBXid tempXid = new FBXid(externalXid);
-            parameters.getFieldValue(0).setFieldData(tempXid.toBytes());
+            final RowValue parameters = RowValue.of(stmtHandle2.getParameterDescriptor(),
+                    tempXid.toBytes());
             stmtHandle2.execute(parameters);
             stmtHandle2.fetchRows(1);
 
@@ -1067,7 +1067,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
         
         public byte[] getFieldData() {
-            return rows.get(row).getFieldValue(fieldPos).getFieldData();
+            return rows.get(row).getFieldData(fieldPos);
         }
 
         public void setFieldData(byte[] data) {

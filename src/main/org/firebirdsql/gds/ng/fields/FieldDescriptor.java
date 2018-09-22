@@ -37,8 +37,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
  * data structure used to describe one column for input or output.
  * <p>
- * FieldDescriptor is an immutable type, the value of a field is maintained separately in an instance of {@link
- * FieldValue}.
+ * FieldDescriptor is an immutable type, the value of a field is maintained separately in {@link RowValue}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -252,15 +251,6 @@ public final class FieldDescriptor {
         default:
             return -1;
         }
-    }
-
-    /**
-     * Creates a default, uninitialized {@link FieldValue}
-     *
-     * @return A new {@link FieldValue}
-     */
-    public FieldValue createDefaultFieldValue() {
-        return new FieldValue();
     }
 
     /**

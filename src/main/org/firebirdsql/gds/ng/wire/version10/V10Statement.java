@@ -502,7 +502,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     /**
      * Reads a single row from the database.
      *
-     * @return Row as a list of {@link FieldValue} instances
+     * @return Row as a {@link RowValue}
      * @throws SQLException
      * @throws IOException
      */
@@ -515,12 +515,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
         for (int idx = 0; idx < rowDescriptor.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final FieldValue fieldValue = rowValue.getFieldValue(idx);
             final int len = blrCalculator.calculateIoLength(fieldDescriptor);
             byte[] buffer = readColumnData(xdrIn, len);
-            if (xdrIn.readInt() == NULL_INDICATOR_NULL)
+            if (xdrIn.readInt() == NULL_INDICATOR_NULL) {
                 buffer = null;
-            fieldValue.setFieldData(buffer);
+            }
+            rowValue.setFieldData(idx, buffer);
         }
         return rowValue;
     }
@@ -548,7 +548,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Write a set of SQL data from a list of {@link FieldValue} instances.
+     * Write a set of SQL data from a {@link RowValue}.
      *
      * @param rowDescriptor
      *         The row descriptor
@@ -561,10 +561,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final XdrOutputStream xdrOut = getXdrOut();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
-            final FieldValue fieldValue = fieldValues.getFieldValue(idx);
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-            final int len = blrCalculator.calculateIoLength(fieldDescriptor, fieldValue);
-            final byte[] buffer = fieldValue.getFieldData();
+            final byte[] buffer = fieldValues.getFieldData(idx);
+            final int len = blrCalculator.calculateIoLength(fieldDescriptor, buffer);
             final int fieldType = fieldDescriptor.getType();
             writeColumnData(xdrOut, len, buffer, fieldType);
             // sqlind (null indicator)

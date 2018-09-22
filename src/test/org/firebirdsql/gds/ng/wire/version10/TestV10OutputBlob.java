@@ -26,7 +26,6 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
-import org.firebirdsql.gds.ng.fields.FieldValue;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
@@ -204,9 +203,10 @@ public class TestV10OutputBlob extends BaseTestV10Blob {
 
                 statement.prepare(INSERT_BLOB_TABLE);
                 final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                FieldValue param1 = new FieldValue(datatypeCoder.encodeInt(testId));
-                FieldValue param2 = new FieldValue(datatypeCoder.encodeLong(blob.getBlobId()));
-                statement.execute(RowValue.of(param1, param2));
+                RowValue rowValue = RowValue.of(
+                        datatypeCoder.encodeInt(testId),
+                        datatypeCoder.encodeLong(blob.getBlobId()));
+                statement.execute(rowValue);
                 statement.close();
             } finally {
                 transaction.commit();

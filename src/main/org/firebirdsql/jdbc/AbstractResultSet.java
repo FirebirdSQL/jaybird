@@ -241,14 +241,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPosition = i;
 
-            // anonymous implementation of the FieldDataProvider interface
             FieldDataProvider dataProvider = new FieldDataProvider() {
                 public byte[] getFieldData() {
-                    return row.getFieldValue(fieldPosition).getFieldData();
+                    return row.getFieldData(fieldPosition);
                 }
 
                 public void setFieldData(byte[] data) {
-                    row.getFieldValue(fieldPosition).setFieldData(data);
+                    row.setFieldData(fieldPosition, data);
                 }
             };
 
@@ -742,7 +741,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         final FBField field = getField(columnIndex, true);
 
         wasNullValid = true;
-        wasNull = row == null || row.getFieldValue(columnIndex - 1).getFieldData() == null;
+        wasNull = row == null || row.getFieldData(columnIndex - 1) == null;
 
         return field;
     }
@@ -794,7 +793,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 ? rowUpdater.getField(fieldNum - 1)
                 : fields[fieldNum - 1];
         wasNullValid = true;
-        wasNull = row == null || row.getFieldValue(fieldNum - 1).getFieldData() == null;
+        wasNull = row == null || row.getFieldData(fieldNum - 1) == null;
         return field;
     }
 

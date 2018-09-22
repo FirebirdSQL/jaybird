@@ -23,12 +23,12 @@ package org.firebirdsql.gds.ng.fields;
 /**
  * Builder for {@link RowValue} instances.
  * <p>
- * This class allows for sparse population of column values (ie: <code>null</code> values can be skipped). It is
+ * This class allows for sparse population of column values (ie: {@code null} values can be skipped). It is
  * intended for use in tests and classes like {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
  * </p>
  * <p>
- * Its main advantage over {@link RowValue#of(RowDescriptor, byte[][])} is that it is clearer to which field
- * the value is assigned, and it sparse population (ie: skipping <code>null</code> values).
+ * The main advantage over {@link RowValue#of(RowDescriptor, byte[][])} is that it is clearer to which field
+ * the value is assigned, and it allows for sparse population (ie: skipping {@code null} values).
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -59,12 +59,10 @@ public class RowValueBuilder {
      *         Index of the field
      * @return this builder
      * @throws IndexOutOfBoundsException
-     *         When <code>index</code> is not between 0 (inclusive) and {@link #getSize()} (exclusive)
+     *         When {@code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
     public RowValueBuilder setFieldIndex(int index) {
-        if (index < 0 || index >= rowDescriptor.getCount()) {
-            throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", index, rowDescriptor.getCount()));
-        }
+        checkBounds(index);
         currentIndex = index;
         return this;
     }
@@ -89,7 +87,7 @@ public class RowValueBuilder {
      * @return this builder
      */
     public RowValueBuilder set(byte[] fieldData) {
-        rowValue.getFieldValue(currentIndex).setFieldData(fieldData);
+        rowValue.setFieldData(currentIndex, fieldData);
         return this;
     }
 
@@ -100,30 +98,15 @@ public class RowValueBuilder {
      *         Index
      * @return The field data
      * @throws java.lang.IndexOutOfBoundsException
-     *         When <code>index</code> is not between 0 (inclusive) and {@link #getSize()} (exclusive)
+     *         When @{code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
     public byte[] get(int index) {
-        if (index < 0 || index >= rowDescriptor.getCount()) {
-            throw new IndexOutOfBoundsException(String.format("The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder", index, rowDescriptor.getCount()));
-        }
-        return rowValue.getFieldValue(index).getFieldData();
-    }
-
-    /**
-     * Resets to current field to its default uninitialized state.
-     *
-     * @return this builder
-     */
-    public RowValueBuilder resetField() {
-        rowValue.getFieldValue(currentIndex).reset();
-        return this;
+        checkBounds(index);
+        return rowValue.getFieldData(index);
     }
 
     /**
      * Resets this builder to a new RowValue. All previous values set are cleared.
-     * <p>
-     * Not to be confused with {@link #resetField()}.
-     * </p>
      *
      * @return this builder.
      */
@@ -143,24 +126,28 @@ public class RowValueBuilder {
      * Returns the populated {@link RowValue} and resets the RowValueBuilder.
      *
      * @param initialize
-     *         <code>true</code> set field data to null for all uninitialized
-     *         {@link org.firebirdsql.gds.ng.fields.FieldValue}, <code>false</code> leaves to fields uninitialized. In
-     *         most cases you want to use <code>true</code>.
+     *         {@code true} set field data to null for all uninitialized fields, {@code false} leaves fields
+     *         uninitialized. In most cases you want to use {@code true}.
      * @return The row value object
      * @see #reset()
      */
     public RowValue toRowValue(boolean initialize) {
         try {
             if (initialize) {
-                for (FieldValue fieldValue : rowValue) {
-                    if (!fieldValue.isInitialized()) {
-                        fieldValue.setFieldData(null);
-                    }
-                }
+                rowValue.initializeFields();
             }
             return rowValue;
         } finally {
             reset();
         }
     }
+
+    private void checkBounds(int index) {
+        if (index < 0 || index >= rowDescriptor.getCount()) {
+            throw new IndexOutOfBoundsException(String.format(
+                    "The index '%d' exceeds the expected size (%d) of this RowDescriptorBuilder",
+                    index, rowDescriptor.getCount()));
+        }
+    }
+
 }
