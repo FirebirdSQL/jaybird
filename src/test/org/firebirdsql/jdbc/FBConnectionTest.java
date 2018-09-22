@@ -53,6 +53,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
@@ -695,7 +696,9 @@ public class FBConnectionTest {
         props.setProperty("authPlugins", "Srp,Legacy_Auth");
 
         expectedException.expect(FBSQLEncryptException.class);
-        expectedException.expect(errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible));
+        // TODO Check if we can make behavior consistent between native and pure java
+        expectedException.expect(anyOf(errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible),
+                errorCodeEquals(ISCConstants.isc_miss_wirecrypt)));
 
         //noinspection EmptyTryBlock
         try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
