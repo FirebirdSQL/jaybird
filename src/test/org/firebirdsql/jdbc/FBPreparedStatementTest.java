@@ -535,7 +535,7 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
 
     /**
      * Test if failure in setting the parameter leaves the driver in correct
-     * state (i.e. "not all params were set").
+     * state (i.e. "Parameter with index 1 was not set").
      */
     @Test
     public void testBindParameter() throws Exception {
@@ -544,7 +544,9 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
 
         try (PreparedStatement ps = con.prepareStatement("UPDATE testtab SET field1 = ? WHERE id = ?")) {
             try {
+                // Failure to set leaves parameter uninitialized
                 ps.setString(1, "veeeeeeeeeeeeeeeeeeeeery looooooooooooooooooooooong striiiiiiiiiiiiiiiiiiing");
+                fail("Expected data truncation");
             } catch (DataTruncation ex) {
                 // ignore
             }
@@ -553,7 +555,11 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
 
             try {
                 ps.execute();
-            } catch (FBMissingParameterException ex) {
+                fail("expected exception on execute");
+            } catch (SQLException ex) {
+                if (!ex.getMessage().startsWith("Parameter with index 1 was not set")) {
+                    throw ex;
+                }
                 // correct (not using expected exception here due to following statements!)
             }
         }

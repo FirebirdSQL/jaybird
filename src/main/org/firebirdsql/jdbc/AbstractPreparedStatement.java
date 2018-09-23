@@ -69,11 +69,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     private final boolean generatedKeys;
 
-    // this array contains either true or false indicating if parameter
-    // was initialized, executeQuery, executeUpdate and execute methods
-    // will throw an exception if this array contains at least one false value.
-    protected boolean[] isParamSet;
-
     private FBField[] fields = null;
 
     // we need to handle procedure execution separately,
@@ -237,25 +232,21 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
         getField(parameterIndex).setNull();
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream, length);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
         getField(parameterIndex).setBinaryStream(inputStream);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -270,7 +261,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         getField(parameterIndex).setBytes(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -285,7 +275,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         getField(parameterIndex).setBoolean(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -300,7 +289,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setByte(int parameterIndex, byte x) throws SQLException {
         getField(parameterIndex).setByte(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -315,7 +303,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setDate(int parameterIndex, Date x) throws SQLException {
         getField(parameterIndex).setDate(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -330,7 +317,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setDouble(int parameterIndex, double x) throws SQLException {
         getField(parameterIndex).setDouble(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -345,7 +331,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setFloat(int parameterIndex, float x) throws SQLException {
         getField(parameterIndex).setFloat(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -360,7 +345,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setInt(int parameterIndex, int x) throws SQLException {
         getField(parameterIndex).setInteger(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -375,7 +359,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setLong(int parameterIndex, long x) throws SQLException {
         getField(parameterIndex).setLong(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -390,7 +373,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setObject(int parameterIndex, Object x) throws SQLException {
         getField(parameterIndex).setObject(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -405,7 +387,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -420,7 +401,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -438,11 +418,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setStringForced(int parameterIndex, String x) throws SQLException {
         FBField field = getField(parameterIndex);
-        if (field instanceof FBWorkaroundStringField)
+        if (field instanceof FBWorkaroundStringField) {
             ((FBWorkaroundStringField) field).setStringForced(x);
-        else
+        } else {
             field.setString(x);
-        isParamSet[parameterIndex - 1] = true;
+        }
     }
 
     /**
@@ -457,7 +437,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -472,7 +451,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         getField(parameterIndex).setTimestamp(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -487,7 +465,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
         getField(parameterIndex).setBigDecimal(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -636,12 +613,9 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void clearParameters() throws SQLException {
         checkValidity();
-        if (fieldValues == null) return;
-
-        // TODO Remove: should be based on RowValue#isInitialized(int)
-        Arrays.fill(isParamSet, false);
-
-        fieldValues.reset();
+        if (fieldValues != null) {
+            fieldValues.reset();
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -686,7 +660,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
         // Workaround for JBuilder DataSets
         setObject(parameterIndex, x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -707,7 +680,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
         // well, for now
         setObject(parameterIndex, x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -770,14 +742,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @throws SQLException
      */
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
-        boolean canExecute = true;
-        // TODO replace with FieldValue#isInitialized
-        for (boolean anIsParamSet : isParamSet) {
-            canExecute = canExecute && anIsParamSet;
-        }
-
-        if (!canExecute)
-            throw new FBMissingParameterException("Not all parameters were set.", isParamSet);
+        checkAllParametersSet();
 
         synchronized (getSynchronizationObject()) {
             flushFields();
@@ -792,6 +757,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
     }
 
+    private void checkAllParametersSet() throws SQLException {
+        // This relies on FBFlushableField explicitly initializing the field with null when setting a cached object
+        // This way we avoid flushing cached objects unless we are really going to execute
+        fbStatement.validateParameters(fieldValues);
+    }
+
     @Override
     protected boolean isGeneratedKeyQuery() {
         return generatedKeys;
@@ -804,12 +775,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     private void flushFields() throws SQLException {
         // flush any cached data that can be hanging
-        for (int i = 0; i < isParamSet.length; i++) {
-            FBField field = getField(i + 1);
+        for (int i = 0; i < fields.length; i++) {
+            FBField field = fields[i];
 
-            if (!(field instanceof FBFlushableField)) continue;
-
-            ((FBFlushableField) field).flushCachedData();
+            if (field instanceof FBFlushableField) {
+                ((FBFlushableField) field).flushCachedData();
+            }
         }
     }
 
@@ -829,13 +800,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void addBatch() throws SQLException {
         checkValidity();
-        boolean allParamsSet = true;
-        // TODO Replace with check of RowValue#isInitialized
-        for (boolean anIsParamSet : isParamSet) {
-            allParamsSet &= anIsParamSet;
-        }
-
-        if (!allParamsSet) throw new FBSQLException("Not all parameters set.");
+        checkAllParametersSet();
 
         final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
         for (int i = 0; i < batchedValues.getCount(); i++) {
@@ -915,13 +880,10 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         for (int i = 0; i < fieldValues.getCount(); i++) {
             FBField field = getField(i + 1);
             if (field instanceof FBFlushableField) {
-                // Explicitly set to null to ensure initialized property set to true
-                fieldValues.setFieldData(i, null);
                 ((FBFlushableField) field).setCachedObject((CachedObject) data.getCachedObject(i));
             } else {
                 fieldValues.setFieldData(i, data.getFieldData(i));
             }
-            isParamSet[i] = true;
         }
 
         if (internalExecute(isExecuteProcedureStatement)) {
@@ -936,19 +898,16 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader, length);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader);
-        isParamSet[parameterIndex - 1] = true;
     }
     
     /**
@@ -993,7 +952,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         } 
         
         getField(parameterIndex).setBlob((FBBlob) blob);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
@@ -1032,7 +990,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         } 
         
         getField(parameterIndex).setClob((FBClob) clob);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     @Override
@@ -1122,7 +1079,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
         getField(parameterIndex).setDate(x, cal);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -1150,7 +1106,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
         getField(parameterIndex).setTime(x, cal);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -1179,7 +1134,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      */
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
         getField(parameterIndex).setTimestamp(x, cal);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     /**
@@ -1229,7 +1183,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         assert rowDescriptor != null : "RowDescriptor should not be null after prepare";
 
         int fieldCount = rowDescriptor.getCount();
-        isParamSet = new boolean[fieldCount];
         fieldValues = rowDescriptor.createDefaultFieldValues();
         fields = new FBField[fieldCount];
 
@@ -1290,7 +1243,6 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
         getField(parameterIndex).setRowId(x);
-        isParamSet[parameterIndex - 1] = true;
     }
 
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
@@ -1352,6 +1304,15 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();
         return getLargeUpdateCount();
+    }
+
+    /**
+     * This method is for internal implementation use only.
+     *
+     * @return {@code true} if this prepared statement was initialized (ie: prepared).
+     */
+    boolean isInitialized() {
+        return fields != null;
     }
 
     private static class BatchStatementListener extends DefaultStatementListener {

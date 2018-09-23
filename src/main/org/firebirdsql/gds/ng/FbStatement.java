@@ -131,6 +131,17 @@ public interface FbStatement extends ExceptionListenable {
     void prepare(String statementText) throws SQLException;
 
     /**
+     * Validates if the number of parameters matches the expected number and types, and if all values have been set.
+     *
+     * @param parameters
+     *         Parameter values to validate
+     * @throws SQLException
+     *         When the number or type of parameters does not match {@link #getParameterDescriptor()}, or when a
+     *         parameter has not been set.
+     */
+    void validateParameters(final RowValue parameters) throws SQLException;
+
+    /**
      * Execute the statement.
      *
      * @param parameters

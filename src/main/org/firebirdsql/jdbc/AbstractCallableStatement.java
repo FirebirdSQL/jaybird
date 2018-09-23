@@ -339,8 +339,6 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                 } else {
                     field.setObject(value);
                 }
-
-                isParamSet[counter - 1] = true;
             }
         }
 

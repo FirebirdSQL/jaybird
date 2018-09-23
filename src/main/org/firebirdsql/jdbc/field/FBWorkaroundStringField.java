@@ -67,18 +67,21 @@ public final class FBWorkaroundStringField extends FBStringField {
     }
 
     public void setString(String value) throws SQLException {
-        byte[] data = setStringForced(value);
+        if (value == null) {
+            setNull();
+            return;
+        }
+        byte[] data = getDatatypeCoder().encodeString(value);
 
-        if (value == null) return;
-
-        assert data != null : "Expected non-null data here";
         if (data.length > fieldDescriptor.getLength() && !isSystemTable(fieldDescriptor.getOriginalTableName())) {
             // special handling for the LIKE ? queries with CHAR(1) fields
             if (!(value.length() <= fieldDescriptor.getLength() + 2
-                    && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%')))
+                    && (value.charAt(0) == '%' || value.charAt(value.length() - 1) == '%'))) {
                 throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, data.length,
                         fieldDescriptor.getLength());
+            }
         }
+        setFieldData(data);
     }    
     
     /**
@@ -89,14 +92,13 @@ public final class FBWorkaroundStringField extends FBStringField {
      * 
      * @throws SQLException if something went wrong.
      */
-    public byte[] setStringForced(String value) throws SQLException {
+    public void setStringForced(String value) throws SQLException {
         if (value == null) {
             setNull();
-            return null;
+            return;
         }
         byte[] data = getDatatypeCoder().encodeString(value);
         setFieldData(data);
-        return data;
     }   
     
     /**

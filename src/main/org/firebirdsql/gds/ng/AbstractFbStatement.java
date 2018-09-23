@@ -450,15 +450,8 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     protected abstract void free(int option) throws SQLException;
 
-    /**
-     * Validates if the number of parameters matches the expected number and types, and if all values have been set.
-     *
-     * @param parameters
-     *         Parameter values to validate
-     * @throws SQLException
-     *         When the number or type of parameters does not match {@link #getParameterDescriptor()}, or when a parameter has not been set.
-     */
-    protected void validateParameters(final RowValue parameters) throws SQLException {
+    @Override
+    public final void validateParameters(final RowValue parameters) throws SQLException {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
         final int actualSize = parameters.getCount();
