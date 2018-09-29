@@ -147,7 +147,7 @@ public final class RowValue {
      * use in {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
      * </p>
      * <p>
-     * Compared to {@link #of(byte[]...)}, this method has the advantage that it checks if the number of byte arrays
+     * Compared to {@link #of(byte[][])}, this method has the advantage that it checks if the number of byte arrays
      * is consistent with the row descriptor.
      * </p>
      *
@@ -185,7 +185,7 @@ public final class RowValue {
      *         An array of byte arrays with the field data.
      * @return new {@code RowValue} object
      * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
-     * @see #of(RowDescriptor, byte[]...)
+     * @see #of(RowDescriptor, byte[][])
      */
     public static RowValue of(byte[]... rowData) {
         if (rowData.length == 0) {
