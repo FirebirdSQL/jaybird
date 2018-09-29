@@ -901,8 +901,8 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value String value to return
      * @param encoding Encoding to use
      */
-    protected final void toReturnStringExpectations(final String value, Encoding encoding) throws SQLException {
-        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeString(value, encoding));
+    protected final void toReturnStringExpectations(final String value, Encoding encoding) {
+        toReturnValueExpectations(encoding.encodeToCharset(value));
     }
 
     /**
@@ -910,8 +910,8 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * @param value String value that is expected to be set
      * @param encoding Encoding to use
      */
-    protected final void setStringExpectations(final String value, Encoding encoding) throws SQLException {
-        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeString(value, encoding));
+    protected final void setStringExpectations(final String value, Encoding encoding) {
+        setValueExpectations(encoding.encodeToCharset(value));
     }
 
     protected void ignoringFieldData() {

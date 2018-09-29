@@ -29,7 +29,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -186,18 +185,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public double decodeDouble(byte[] byte_int) {
         return parentCoder.decodeDouble(byte_int);
-    }
-
-    @Override
-    @Deprecated
-    public byte[] encodeString(String value, Encoding encoding) throws SQLException {
-        return parentCoder.encodeString(value, encoding);
-    }
-
-    @Override
-    @Deprecated
-    public String decodeString(byte[] value, Encoding encoding) throws SQLException {
-        return parentCoder.decodeString(value, encoding);
     }
 
     @Override

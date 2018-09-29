@@ -29,7 +29,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -48,7 +47,6 @@ public interface DatatypeCoder {
     int FRACTIONS_PER_SECOND = 1000 * FRACTIONS_PER_MILLISECOND;
     int FRACTIONS_PER_MINUTE = 60 * FRACTIONS_PER_SECOND;
     int FRACTIONS_PER_HOUR = 60 * FRACTIONS_PER_MINUTE;
-
 
     /**
      * Encode a {@code short} value as a {@code byte} array.
@@ -140,19 +138,6 @@ public interface DatatypeCoder {
     double decodeDouble(byte[] byte_int);
 
     /**
-     * Encode a {@code String} value into a {@code byte} array using a given encoding.
-     *
-     * @param value The {@code String} to be encoded
-     * @param encoding The encoding to use in the encoding process
-     * @return The value of {@code value} as a {@code byte} array
-     * @throws java.sql.SQLException if the given encoding cannot be found, or an error
-     *         occurs during the encoding
-     * @deprecated To be removed
-     */
-    @Deprecated
-    byte[] encodeString(String value, Encoding encoding) throws SQLException;
-
-    /**
      * Encode a {@code String} value into a {@code byte} array using the encoding of this datatype coder.
      *
      * @param value The {@code String} to be encoded
@@ -170,19 +155,6 @@ public interface DatatypeCoder {
      * @since 4.0
      */
     Writer createWriter(OutputStream outputStream);
-
-    /**
-     * Decode an encoded {@code byte} array into a {@code String} using a given encoding.
-     *
-     * @param value The value to be decoded
-     * @param encoding The encoding to be used in the decoding process
-     * @return The decoded {@code String}
-     * @throws java.sql.SQLException if the given encoding cannot be found, or an
-     *         error occurs during the decoding
-     * @deprecated To be removed
-     */
-    @Deprecated
-    String decodeString(byte[] value, Encoding encoding) throws SQLException;
 
     /**
      * Decode an encoded {@code byte} array into a {@code String} using the encoding of this datatype coder.

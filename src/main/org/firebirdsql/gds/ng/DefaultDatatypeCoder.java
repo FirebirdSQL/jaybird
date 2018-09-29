@@ -32,7 +32,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -192,11 +191,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeString(String value, Encoding encoding) throws SQLException {
-        return encoding.encodeToCharset(value);
-    }
-
-    @Override
     public final byte[] encodeString(String value) {
         return encoding.encodeToCharset(value);
     }
@@ -204,11 +198,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public final Writer createWriter(OutputStream outputStream) {
         return encoding.createWriter(outputStream);
-    }
-
-    @Override
-    public String decodeString(byte[] value, Encoding encoding) throws SQLException {
-        return encoding.decodeFromCharset(value);
     }
 
     @Override
