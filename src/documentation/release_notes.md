@@ -767,11 +767,40 @@ JDBC DatabaseMetaData.getPseudoColumns implemented
 The `DatabaseMetaData.getPseudoColumns` method (introduced in JDBC 4.1) has now
 been implemented.
 
+The JDBC API specifies this method as:
+
+> Retrieves a description of the pseudo or hidden columns available in a given 
+> table within the specified catalog and schema. Pseudo or hidden columns may 
+> not always be stored within a table and are not visible in a `ResultSet` 
+> unless they are specified in the query's outermost `SELECT` list. Pseudo or 
+> hidden columns may not necessarily be able to be modified. If there are no 
+> pseudo or hidden columns, an empty `ResultSet` is returned. 
+
 For Firebird 2.5 and earlier it will only report on `RDB$DB_KEY`, for Firebird 3
 and higher it will also report on `RDB$RECORD_VERSION`.
 
 The pseudo-column `RDB$RECORD_VERSION` was introduced in Firebird 3, its value
 is the transaction that last updated the row.
+
+JDBC DatabaseMetaData.getVersionColumns implemented
+---------------------------------------------------
+
+The `DatabaseMetaData.getVersionColumns` method has now been implemented.
+
+The JDBC API specifies this method as:
+
+> Retrieves a description of a table's columns that are automatically updated 
+> when any value in a row is updated. They are unordered. 
+
+For Firebird 2.5 and earlier it will only report on `RDB$DB_KEY`, for Firebird 3
+and higher it will also report on `RDB$RECORD_VERSION`.
+
+The pseudo-column `RDB$RECORD_VERSION` was introduced in Firebird 3, its value
+is the transaction that last updated the row.
+
+Jaybird only returns pseudo-column as version columns, so 'last updated' columns 
+updated by a trigger, calculated columns, or other forms of change tracking are 
+not reported by this method.
 
 Improved JDBC function escape support
 -------------------------------------

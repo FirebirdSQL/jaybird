@@ -3010,41 +3010,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Gets a description of a table's columns that are automatically
-     * updated when any value in a row is updated.  They are
-     * unordered.
-     *
-     * <P>Each column description has the following columns:
-     *  <OL>
-     *  <LI><B>SCOPE</B> short => is not used
-     *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>DATA_TYPE</B> short => SQL data type from java.sql.Types
-     *  <LI><B>TYPE_NAME</B> String => Data source dependent type name
-     *  <LI><B>COLUMN_SIZE</B> int => precision
-     *  <LI><B>BUFFER_LENGTH</B> int => length of column value in bytes
-     *  <LI><B>DECIMAL_DIGITS</B> short  => scale
-     *  <LI><B>PSEUDO_COLUMN</B> short => is this a pseudo column
-     *      like an Oracle ROWID
-     *      <UL>
-     *      <LI> versionColumnUnknown - may or may not be pseudo column
-     *      <LI> versionColumnNotPseudo - is NOT a pseudo column
-     *      <LI> versionColumnPseudo - is a pseudo column
-     *      </UL>
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those without a schema
-     * @param table a table name
-     * @return <code>ResultSet</code> - each row is a column description
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Jaybird considers both {@code RDB$DB_KEY} and {@code RDB$RECORD_VERSION} (Firebird 3 and higher) as version
+     * columns.
+     * </p>
+     * <p>
+     * Jaybird only returns pseudo-column as version columns, so 'last updated' columns updated by a trigger,
+     * calculated columns, or other forms of change tracking are not reported by this method.
+     * </p>
      */
+    @Override
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        // TODO Return FB 3 RDB$RECORD_VERSION
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
                 .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "VERSIONCOL").addField()
-                .at(2).simple(SQL_SHORT, 0, "DATA_TYPE", "VERSIONCOL").addField()
+                .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "VERSIONCOL").addField()
                 .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL").addField()
                 .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL").addField()
                 .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL").addField()
@@ -3052,7 +3033,37 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        if (table == null || "".equals(table)) {
+            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        }
+
+        try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "%")) {
+            if (!pseudoColumns.next()) {
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            }
+
+            List<RowValue> rowValues = new ArrayList<>(2);
+            RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
+            do {
+                String columnName = pseudoColumns.getString(4);
+                boolean isDbKey = "RDB$DB_KEY".equals(columnName);
+                boolean isRecordVersion = !isDbKey && "RDB$RECORD_VERSION".equals(columnName);
+                // Protect against future addition of other pseudo columns
+                if (!(isDbKey || isRecordVersion)) continue;
+
+                rowValueBuilder
+                        .at(1).set(getBytes(columnName))
+                        .at(2).set(createInt(pseudoColumns.getInt(5)))
+                        .at(3).set(getBytes(isDbKey ? "CHAR" : "BIGINT"))
+                        .at(4).set(createInt(pseudoColumns.getInt(6)))
+                        .at(5).set(createInt(isDbKey ? pseudoColumns.getInt(11) : 8))
+                        .at(6).set(isRecordVersion ? SHORT_ZERO : null)
+                        .at(7).set(createShort(DatabaseMetaData.versionColumnPseudo));
+                rowValues.add(rowValueBuilder.toRowValue(true));
+            } while (pseudoColumns.next());
+
+            return new FBResultSet(rowDescriptor, rowValues);
+        }
     }
 
     private static final String GET_PRIMARY_KEYS = "select "

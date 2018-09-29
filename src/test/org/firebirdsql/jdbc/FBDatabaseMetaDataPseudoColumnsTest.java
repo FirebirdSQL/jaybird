@@ -33,9 +33,6 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
-/**
- * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- */
 public class FBDatabaseMetaDataPseudoColumnsTest {
 
     //@formatter:off
@@ -107,7 +104,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     /**
-     * Tests the ordinal positions and types for the metadata columns of getColumns().
+     * Tests the ordinal positions and types for the metadata columns of getPseudoColumns().
      */
     @Test
     public void testPseudoColumnsMetaDataColumns() throws Exception {
