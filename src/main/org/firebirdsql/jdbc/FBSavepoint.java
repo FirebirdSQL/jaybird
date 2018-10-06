@@ -101,10 +101,8 @@ public class FBSavepoint implements FirebirdSavepoint {
     String getServerSavepointId() {
         return serverId;
     }
-    
-    /**
-     * Get ID of the savepoint.
-     */
+
+    @Override
     public int getSavepointId() throws SQLException {
         if (name == null)
             return savepointId;
@@ -112,9 +110,7 @@ public class FBSavepoint implements FirebirdSavepoint {
             throw new SQLException("Savepoint is named.");
     }
 
-    /**
-     * Get name of the savepoint.
-     */
+    @Override
     public String getSavepointName() throws SQLException {
         if (name == null)
             throw new SQLException("Savepoint is unnamed.");
@@ -156,6 +152,7 @@ public class FBSavepoint implements FirebirdSavepoint {
      * 
      * @return <code>true</code> if <code>obj</code> is equal to this object.
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof FBSavepoint)) return false;
@@ -166,10 +163,8 @@ public class FBSavepoint implements FirebirdSavepoint {
             this.savepointId == that.savepointId : 
             this.name.equals(that.name); 
     }
-    
-    /**
-     * Get hash code of this instance.
-     */
+
+    @Override
     public int hashCode() {
         return name == null ? savepointId : name.hashCode();
     }

@@ -27,6 +27,7 @@ import java.io.*;
 /**
  * This class represents a cached blob field.
  */
+@SuppressWarnings("RedundantThrows")
 public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
 
     private static final byte[] BYTES_NULL_VALUE = null;
@@ -53,6 +54,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * As <code>FBCachedBlob</code> is already detached, it will return itself.
      * </p>
      */
+    @Override
     public FirebirdBlob detach() throws SQLException {
         return this;
     }
@@ -63,6 +65,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * An instance of <code>FBCachedBlob</code> returns <code>false</code> always.
      * </p>
      */
+    @Override
     public boolean isSegmented() throws SQLException {
         return false;
     }
@@ -72,18 +75,12 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      *
      * @return length of the cached blob field or -1 if the field is null.
      */
+    @Override
     public long length() throws SQLException {
         return blobData != null ? blobData.length : -1;
     }
 
-    /**
-     * Get part of the blob field.
-     *
-     * @param pos
-     *            starting position to copy.
-     * @param length
-     *            amount of bytes to copy.
-     */
+    @Override
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
             throw new SQLException("Expected value of pos > 0, got " + pos,
@@ -108,6 +105,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, not yet implemented.
      */
+    @Override
     public long position(byte[] pattern, long start) throws SQLException {
         throw new FBDriverNotCapableException("Method Method position(byte[], long) is not supported");
     }
@@ -118,16 +116,19 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, not yet implemented.
      */
+    @Override
     public long position(Blob pattern, long start) throws SQLException {
         throw new FBDriverNotCapableException("Method position(Blob, long) is not supported");
     }
 
+    @Override
     public InputStream getBinaryStream() throws SQLException {
         if (blobData == null) return STREAM_NULL_VALUE;
 
         return new ByteArrayInputStream(blobData);
     }
 
+    @Override
     public InputStream getBinaryStream(long pos, long length) throws SQLException {
         throw new FBDriverNotCapableException("Method getBinaryStream(long, long) is not supported");
     }
@@ -138,6 +139,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, set methods are not relevant in cached state.
      */
+    @Override
     public int setBytes(long pos, byte[] bytes) throws SQLException {
         throw new FBSQLException(BLOB_READ_ONLY);
     }
@@ -148,6 +150,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, set methods are not relevant in cached state.
      */
+    @Override
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
         throw new FBSQLException(BLOB_READ_ONLY);
     }
@@ -158,6 +161,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, set methods are not relevant in cached state.
      */
+    @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
         throw new FBSQLException(BLOB_READ_ONLY);
     }
@@ -168,14 +172,17 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @throws SQLException
      *             always, truncate is not relevant in cached state.
      */
+    @Override
     public void truncate(long length) throws SQLException {
         throw new FBDriverNotCapableException("Method truncate(long) is not supported");
     }
 
+    @Override
     public final Object getSynchronizationObject() {
         return syncObject;
     }
 
+    @Override
     public void free() throws SQLException {
         this.blobData = null;
     }

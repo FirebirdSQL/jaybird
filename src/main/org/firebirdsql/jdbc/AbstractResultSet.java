@@ -18,29 +18,34 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.io.*;
-import java.math.*;
-import java.net.*;
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.field.*;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
- * Implementation of {@link ResultSet} interface.
+ * Implementation of {@link ResultSet}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
@@ -164,11 +169,14 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * Current implementation will ensure that strings will be trimmed on retrieval.
      * </p>
      *
-     * @param rowDescriptor Column definition
-     * @param rows Row data
+     * @param rowDescriptor
+     *         Column definition
+     * @param rows
+     *         Row data
      * @throws SQLException
      */
-    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows, FBObjectListener.ResultSetListener listener) throws SQLException {
+    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows,
+            FBObjectListener.ResultSetListener listener) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         connection = null;
         gdsHelper = null;
@@ -196,8 +204,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * Current implementation will ensure that strings will be trimmed on retrieval.
      * </p>
      *
-     * @param rowDescriptor Column definition
-     * @param rows Row data
+     * @param rowDescriptor
+     *         Column definition
+     * @param rows
+     *         Row data
      * @throws SQLException
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
@@ -213,10 +223,14 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * Current implementation will ensure that strings will be trimmed on retrieval.
      * </p>
      *
-     * @param rowDescriptor Column definition
-     * @param connection Connection (cannot be null when {@code retrieveBlobs} is {@code true}
-     * @param rows Row data
-     * @param retrieveBlobs {@code true} retrieves the blob data
+     * @param rowDescriptor
+     *         Column definition
+     * @param connection
+     *         Connection (cannot be null when {@code retrieveBlobs} is {@code true}
+     * @param rows
+     *         Row data
+     * @param retrieveBlobs
+     *         {@code true} retrieves the blob data
      * @throws SQLException
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
@@ -242,10 +256,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             final int fieldPosition = i;
 
             FieldDataProvider dataProvider = new FieldDataProvider() {
+                @Override
                 public byte[] getFieldData() {
                     return row.getFieldData(fieldPosition);
                 }
 
+                @Override
                 public void setFieldData(byte[] data) {
                     row.setFieldData(fieldPosition, data);
                 }
@@ -268,7 +284,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Check if statement is open and prepare statement for cursor move.
      *
-     * @throws SQLException if statement is closed.
+     * @throws SQLException
+     *         if statement is closed.
      */
     protected void checkCursorMove() throws SQLException {
         checkOpen();
@@ -303,7 +320,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Close the fields if they were open (applies mainly to the stream fields).
      *
-     * @throws SQLException if something wrong happened.
+     * @throws SQLException
+     *         if something wrong happened.
      */
     protected void closeFields() throws SQLException {
         // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
@@ -329,22 +347,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return fbStatement.getSynchronizationObject();
     }
 
-    /**
-     * Moves the cursor down one row from its current position.
-     * A <code>ResultSet</code> cursor is initially positioned
-     * before the first row; the first call to the method
-     * <code>next</code> makes the first row the current row; the
-     * second call makes the second row the current row, and so on.
-     *
-     * <P>If an input stream is open for the current row, a call
-     * to the method <code>next</code> will
-     * implicitly close it. A <code>ResultSet</code> object's
-     * warning chain is cleared when a new row is read.
-     *
-     * @return <code>true</code> if the new current row is valid;
-     * <code>false</code> if there are no more rows
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean next() throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.next();
@@ -355,25 +358,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return result;
     }
 
-    /**
-     * Releases this <code>ResultSet</code> object's database and
-     * JDBC resources immediately instead of waiting for
-     * this to happen when it is automatically closed.
-     *
-     * <P><B>Note:</B> A <code>ResultSet</code> object
-     * is automatically closed by the
-     * <code>Statement</code> object that generated it when
-     * that <code>Statement</code> object is closed,
-     * re-executed, or is used to retrieve the next result from a
-     * sequence of multiple results. A <code>ResultSet</code> object
-     * is also automatically closed when it is garbage collected.
-     *
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public void close() throws SQLException {
         close(true);
     }
 
+    @Override
     public boolean isClosed() throws SQLException {
         return closed;
     }
@@ -427,18 +417,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         }
     }
 
-    /**
-     * Reports whether
-     * the last column read had a value of SQL <code>NULL</code>.
-     * Note that you must first call one of the <code>getXXX</code> methods
-     * on a column to try to read its value and then call
-     * the method <code>wasNull</code> to see if the value read was
-     * SQL <code>NULL</code>.
-     *
-     * @return <code>true</code> if the last column value read was SQL
-     *         <code>NULL</code> and <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean wasNull() throws SQLException {
         if (!wasNullValid) {
             throw new SQLException("Look at a column before testing null.");
@@ -450,214 +429,82 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Retrieves the value of the designated column in the current row of this
-     * ResultSet object as a stream of ASCII characters. The value can then be
-     * read in chunks from the stream. This method is particularly suitable
-     * for retrieving large LONGVARCHAR values.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return a stream of ascii characters
-     * @throws SQLException if this parameter cannot be retrieved as an ASCII
-     * stream
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #getBinaryStream(int)}.
+     * </p>
      */
     @Override
     public final InputStream getAsciiStream(int columnIndex) throws SQLException {
         return getBinaryStream(columnIndex);
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a BigDecimal object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a BigDecimal
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a BigDecimal
-     */
+    @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
         return getField(columnIndex).getBigDecimal();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a binary InputStream.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a binary input stream
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a binary InputStream
-     */
+    @Override
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getBinaryStream();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a Blob object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The value of the field as a Blob object
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a Blob
-     */
+    @Override
     public Blob getBlob(int columnIndex) throws SQLException {
         return getField(columnIndex).getBlob();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>boolean</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>boolean</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>boolean</code>
-     */
+    @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
         return getField(columnIndex).getBoolean();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>byte</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>byte</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>byte</code>
-     */
+    @Override
     public byte getByte(int columnIndex) throws SQLException {
         return getField(columnIndex).getByte();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>byte</code> array.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>byte</code> array value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>byte</code> array
-     */
+    @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
         return getField(columnIndex).getBytes();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Date</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Date</code> object of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>Date</code> object
-     */
+    @Override
     public Date getDate(int columnIndex) throws SQLException {
         return getField(columnIndex).getDate();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>double</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>double</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>double</code>
-     */
+    @Override
     public double getDouble(int columnIndex) throws SQLException {
         return getField(columnIndex).getDouble();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>float</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>float</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>float</code>
-     */
+    @Override
     public float getFloat(int columnIndex) throws SQLException {
         return getField(columnIndex).getFloat();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as an <code>int</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>int</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * an <code>int</code>
-     */
+    @Override
     public int getInt(int columnIndex) throws SQLException {
         return getField(columnIndex).getInt();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>long</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>long</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>long</code>
-     */
+    @Override
     public long getLong(int columnIndex) throws SQLException {
         return getField(columnIndex).getLong();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as an <code>Object</code>.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Object</code> representation of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * an <code>Object</code>
-     */
+    @Override
     public Object getObject(int columnIndex) throws SQLException {
         return getField(columnIndex).getObject();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>short</code> value.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>short</code> value of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>short</code>
-     */
+    @Override
     public short getShort(int columnIndex) throws SQLException {
         return getField(columnIndex).getShort();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>String</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>String</code> representation of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>String</code>
-     */
+    @Override
     public String getString(int columnIndex) throws SQLException {
         if (trimStrings) {
             String result = getField(columnIndex).getString();
@@ -677,30 +524,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return getString(columnIndex);
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Time</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Time</code> representation of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>Time</code> object
-     */
+    @Override
     public Time getTime(int columnIndex) throws SQLException {
         return getField(columnIndex).getTime();
     }
 
-    /**
-     * Retrieve the value of the designated column in the current row of
-     * this ResultSet as a <code>Timestamp</code> object.
-     *
-     * @param columnIndex The index of the parameter to retrieve, first
-     * parameter is 1, second is 2, ...
-     * @return The <code>Timestamp</code> representation of the field
-     * @throws SQLException if this paramater cannot be retrieved as
-     * a <code>Timestamp</code> object
-     */
+    @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getField(columnIndex).getTimestamp();
     }
@@ -712,7 +541,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * use {@link #getCharacterStream(int)}.
      * </p>
      *
-     * @throws SQLFeatureNotSupportedException Always
+     * @throws SQLFeatureNotSupportedException
+     *         Always
      * @deprecated
      */
     @Deprecated
@@ -734,8 +564,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Get the <code>FBField</code> object at the given column index
      *
-     * @param columnIndex The index of the parameter, 1 is the first index
-     * @throws SQLException If there is an error accessing the field
+     * @param columnIndex
+     *         The index of the parameter, 1 is the first index
+     * @throws SQLException
+     *         If there is an error accessing the field
      */
     public FBField getField(int columnIndex) throws SQLException {
         final FBField field = getField(columnIndex, true);
@@ -770,8 +602,10 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Get a <code>FBField</code> by name.
      *
-     * @param columnName The name of the field to be retrieved
-     * @throws SQLException if the field cannot be retrieved
+     * @param columnName
+     *         The name of the field to be retrieved
+     * @throws SQLException
+     *         if the field cannot be retrieved
      */
     public FBField getField(String columnName) throws SQLException {
         checkOpen();
@@ -798,39 +632,24 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     /**
-     * Gets the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as
-     * a <code>java.math.BigDecimal</code> in the Java programming language.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param scale the number of digits to the right of the decimal point
-     * @return the column value; if the value is SQL <code>NULL</code>, the
-     * value returned is <code>null</code>
-     * @exception SQLException if a database access error occurs
-     * @deprecated
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: ignores {@code scale} and behaves identical to {@link #getBigDecimal(int)}.
+     * </p>
      */
     @Deprecated
+    @Override
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         return getField(columnIndex).getBigDecimal(scale);
     }
 
-    //======================================================================
-    // Methods for accessing results by column name
-    //======================================================================
-
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>String</code>.
-     *
-     * @param columnName The SQL name of the column
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public String getString(String columnName) throws SQLException {
+        String result = getField(columnName).getString();
         if (trimStrings) {
-            String result = getField(columnName).getString();
             return result != null ? result.trim() : null;
-        } else
-            return getField(columnName).getString();
+        }
+        return result;
     }
 
     /**
@@ -844,159 +663,78 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return getString(columnLabel);
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>boolean</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>String</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public boolean getBoolean(String columnName) throws SQLException {
         return getField(columnName).getBoolean();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>byte</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>byte</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public byte getByte(String columnName) throws SQLException {
         return getField(columnName).getByte();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>short</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return THe <code>short</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public short getShort(String columnName) throws SQLException {
         return getField(columnName).getShort();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as an <code>int</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>int</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public int getInt(String columnName) throws SQLException {
         return getField(columnName).getInt();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>long</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>long</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public long getLong(String columnName) throws SQLException {
         return getField(columnName).getLong();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>float</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>float</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public float getFloat(String columnName) throws SQLException {
         return getField(columnName).getFloat();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>double</code> value.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>double</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public double getDouble(String columnName) throws SQLException {
         return getField(columnName).getDouble();
     }
 
     /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>BigDecimal</code>.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>BigDecimal</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     * @deprecated
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: ignores {@code scale} and behaves identical to {@link #getBigDecimal(String)}.
+     * </p>
      */
     @Deprecated
+    @Override
     public BigDecimal getBigDecimal(String columnName, int scale) throws SQLException {
         return getField(columnName).getBigDecimal(scale);
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>byte</code> array.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>byte</code> array value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public byte[] getBytes(String columnName) throws SQLException {
         return getField(columnName).getBytes();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>Date</code>.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Date</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public Date getDate(String columnName) throws SQLException {
         return getField(columnName).getDate();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>Time</code> object.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Time</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public Time getTime(String columnName) throws SQLException {
         return getField(columnName).getTime();
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a <code>Timestamp</code> object.
-     *
-     * @param columnName The SQL name of the column
-     * @return The <code>Timestamp</code> value
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public Timestamp getTimestamp(String columnName) throws SQLException {
         return getField(columnName).getTimestamp();
     }
 
     /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as an <code>InputStream</code>.
-     *
-     * @param columnName The SQL name of the column
-     * @return The value as an <code>InputStream</code>
-     * @throws SQLException if the given column cannot be retrieved
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #getBinaryStream(String)}.
+     * </p>
      */
     @Override
     public final InputStream getAsciiStream(String columnName) throws SQLException {
@@ -1010,10 +748,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * use {@link #getCharacterStream(String)}.
      * </p>
      *
-     * @throws SQLFeatureNotSupportedException Always
+     * @throws SQLFeatureNotSupportedException
+     *         Always
      * @deprecated
      */
     @Deprecated
+    @Override
     public InputStream getUnicodeStream(String columnName) throws SQLException {
         throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
     }
@@ -1029,132 +769,42 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return getCharacterStream(columnLabel);
     }
 
-    /**
-     * Retrieves the value of the designated column in the current row of this
-     * <code>ResultSet</code> object as a binary <code>InputStream</code>.
-     *
-     * @param columnName The SQL name of the column
-     * @return The value as a binary <code>InputStream</code>
-     * @throws SQLException if the given column cannot be retrieved
-     */
+    @Override
     public InputStream getBinaryStream(String columnName) throws SQLException {
         return getField(columnName).getBinaryStream();
     }
 
-    //=====================================================================
-    // Advanced features:
-    //=====================================================================
-
-    /**
-     * Returns the first warning reported by calls on this
-     * <code>ResultSet</code> object.
-     * Subsequent warnings on this <code>ResultSet</code> object
-     * will be chained to the <code>SQLWarning</code> object that
-     * this method returns.
-     *
-     * <P>The warning chain is automatically cleared each time a new
-     * row is read.
-     *
-     * <P><B>Note:</B> This warning chain only covers warnings caused
-     * by <code>ResultSet</code> methods.  Any warning caused by
-     * <code>Statement</code> methods
-     * (such as reading OUT parameters) will be chained on the
-     * <code>Statement</code> object.
-     *
-     * @return the first <code>SQLWarning</code> object reported or <code>null</code>
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public SQLWarning getWarnings() throws SQLException {
         return firstWarning;
     }
 
-    /**
-     * Clears all warnings reported on this <code>ResultSet</code> object.
-     * After this method is called, the method <code>getWarnings</code>
-     * returns <code>null</code> until a new warning is
-     * reported for this <code>ResultSet</code> object.
-     *
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public void clearWarnings() throws SQLException {
         firstWarning = null;
     }
 
-    /**
-     * Gets the name of the SQL cursor used by this <code>ResultSet</code>
-     * object.
-     *
-     * <P>In SQL, a result table is retrieved through a cursor that is
-     * named. The current row of a result set can be updated or deleted
-     * using a positioned update/delete statement that references the
-     * cursor name. To insure that the cursor has the proper isolation
-     * level to support update, the cursor's <code>select</code> statement should be
-     * of the form 'select for update'. If the 'for update' clause is
-     * omitted, the positioned updates may fail.
-     *
-     * <P>The JDBC API supports this SQL feature by providing the name of the
-     * SQL cursor used by a <code>ResultSet</code> object.
-     * The current row of a <code>ResultSet</code> object
-     * is also the current row of this SQL cursor.
-     *
-     * <P><B>Note:</B> If positioned update is not supported, a
-     * <code>SQLException</code> is thrown.
-     *
-     * @return the SQL name for this <code>ResultSet</code> object's cursor
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public String getCursorName() throws SQLException {
         return cursorName;
     }
 
+    @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkOpen();
         return new FBResultSetMetaData(rowDescriptor, connection);
     }
 
-    /**
-     * <p>Gets the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as
-     * an <code>Object</code> in the Java programming language.
-     *
-     * <p>This method will return the value of the given column as a
-     * Java object.  The type of the Java object will be the default
-     * Java object type corresponding to the column's SQL type,
-     * following the mapping for built-in types specified in the JDBC
-     * specification.
-     *
-     * <p>This method may also be used to read datatabase-specific
-     * abstract data types.
-     *
-     * In the JDBC 2.0 API, the behavior of the method
-     * <code>getObject</code> is extended to materialize
-     * data of SQL user-defined types.  When a column contains
-     * a structured or distinct value, the behavior of this method is as
-     * if it were a call to: <code>getObject(columnIndex,
-     * this.getStatement().getConnection().getTypeMap())</code>.
-     *
-     * @param columnName the SQL name of the column
-     * @return a <code>java.lang.Object</code> holding the column value
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Object getObject(String columnName) throws SQLException {
         return getField(columnName).getObject();
     }
 
-    //----------------------------------------------------------------
-
-    /**
-     * Maps the given <code>ResultSet</code> column name to its
-     * <code>ResultSet</code> column index.
-     *
-     * @param columnName the name of the column
-     * @return the column index of the given column name
-     * @exception SQLException if a database access error occurs
-     */
     // See section 14.2.3 of jdbc-3.0 specification
     // "Column names supplied to getter methods are case insensitive
     // If a select list contains the same column more than once, 
     // the first instance of the column will be returned
+    @Override
     public int findColumn(String columnName) throws SQLException {
         if (columnName == null || columnName.equals("")) {
             throw new SQLException("Empty string does not identify column.", SQLStateConstants.SQL_STATE_INVALID_COLUMN);
@@ -1185,7 +835,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 }
             }
         }
-        
+
         if ("RDB$DB_KEY".equalsIgnoreCase(columnName)) {
             // Fix up: RDB$DB_KEY is identified as DB_KEY in the result set
             return findColumn("DB_KEY");
@@ -1195,179 +845,56 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 SQLStateConstants.SQL_STATE_INVALID_COLUMN);
     }
 
-    //--------------------------JDBC 2.0-----------------------------------
-
-    //---------------------------------------------------------------------
-    // Getters and Setters
-    //---------------------------------------------------------------------
-
-    /**
-     * Gets the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a
-     * <code>java.io.Reader</code> object.
-     * @return a <code>java.io.Reader</code> object that contains the column
-     * value; if the value is SQL <code>NULL</code>, the value returned is
-     * <code>null</code> in the Java programming language.
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Reader getCharacterStream(int columnIndex) throws SQLException {
         return getField(columnIndex).getCharacterStream();
     }
 
-    /**
-     * Gets the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a
-     * <code>java.io.Reader</code> object.
-     *
-     * @param columnName the name of the column
-     * @return a <code>java.io.Reader</code> object that contains the column
-     * value; if the value is SQL <code>NULL</code>, the value returned is
-     * <code>null</code> in the Java programming language.
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Reader getCharacterStream(String columnName) throws SQLException {
         return getField(columnName).getCharacterStream();
     }
 
-    /**
-     * Gets the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a
-     * <code>java.math.BigDecimal</code> with full precision.
-     *
-     * @param columnName the column name
-     * @return the column value (full precision);
-     * if the value is SQL <code>NULL</code>, the value returned is
-     * <code>null</code> in the Java programming language.
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     *
-     */
+    @Override
     public BigDecimal getBigDecimal(String columnName) throws SQLException {
         return getField(columnName).getBigDecimal();
     }
 
-    //---------------------------------------------------------------------
-    // Traversal/Positioning
-    //---------------------------------------------------------------------
-
-    /**
-     * Indicates whether the cursor is before the first row in
-     * this <code>ResultSet</code> object.
-     *
-     * @return <code>true</code> if the cursor is before the first row;
-     * <code>false</code> if the cursor is at any other position or the
-     * result set contains no rows
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean isBeforeFirst() throws SQLException {
         return fbFetcher.isBeforeFirst();
     }
 
-    /**
-     * Indicates whether the cursor is after the last row in
-     * this <code>ResultSet</code> object.
-     *
-     * @return <code>true</code> if the cursor is after the last row;
-     * <code>false</code> if the cursor is at any other position or the
-     * result set contains no rows
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean isAfterLast() throws SQLException {
         return fbFetcher.isAfterLast();
     }
 
-    /**
-     * Indicates whether the cursor is on the first row of
-     * this <code>ResultSet</code> object.
-     *
-     * @return <code>true</code> if the cursor is on the first row;
-     * <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean isFirst() throws SQLException {
         return fbFetcher.isFirst();
     }
 
-    /**
-     * Indicates whether the cursor is on the last row of
-     * this <code>ResultSet</code> object.
-     * Note: Calling the method <code>isLast</code> may be expensive
-     * because the JDBC driver
-     * might need to fetch ahead one row in order to determine
-     * whether the current row is the last row in the result set.
-     *
-     * @return <code>true</code> if the cursor is on the last row;
-     * <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean isLast() throws SQLException {
         return fbFetcher.isLast();
     }
 
-    /**
-     * Moves the cursor to the front of
-     * this <code>ResultSet</code> object, just before the
-     * first row. This method has no effect if the result set contains no rows.
-     *
-     * @exception SQLException if a database access error
-     * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void beforeFirst() throws SQLException {
         checkCursorMove();
         fbFetcher.beforeFirst();
         notifyRowUpdater();
     }
 
-    /**
-     * Moves the cursor to the end of
-     * this <code>ResultSet</code> object, just after the
-     * last row. This method has no effect if the result set contains no rows.
-     * @exception SQLException if a database access error
-     * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void afterLast() throws SQLException {
         checkCursorMove();
         fbFetcher.afterLast();
         notifyRowUpdater();
     }
 
-    /**
-     * Moves the cursor to the first row in
-     * this <code>ResultSet</code> object.
-     *
-     * @return <code>true</code> if the cursor is on a valid row;
-     * <code>false</code> if there are no rows in the result set
-     * @exception SQLException if a database access error
-     * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean first() throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.first();
@@ -1376,18 +903,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return result;
     }
 
-    /**
-     * Moves the cursor to the last row in
-     * this <code>ResultSet</code> object.
-     *
-     * @return <code>true</code> if the cursor is on a valid row;
-     * <code>false</code> if there are no rows in the result set
-     * @exception SQLException if a database access error
-     * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean last() throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.last();
@@ -1396,69 +912,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return result;
     }
 
-    /**
-     * Retrieves the current row number.  The first row is number 1, the
-     * second number 2, and so on.
-     * <p>
-     * <strong>Note:</strong>Support for the <code>getRow</code> method
-     * is optional for <code>ResultSet</code>s with a result
-     * set type of <code>TYPE_FORWARD_ONLY</code>
-     *
-     * @return the current row number; <code>0</code> if there is no current row
-     * @exception SQLException if a database access error occurs
-     * or this method is called on a closed result set
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.2
-     */
+    @Override
     public int getRow() throws SQLException {
         checkOpen();
         return fbFetcher.getRowNum();
     }
 
-    /**
-     * Moves the cursor to the given row number in
-     * this <code>ResultSet</code> object.
-     *
-     * <p>If the row number is positive, the cursor moves to
-     * the given row number with respect to the
-     * beginning of the result set.  The first row is row 1, the second
-     * is row 2, and so on.
-     *
-     * <p>If the given row number is negative, the cursor moves to
-     * an absolute row position with respect to
-     * the end of the result set.  For example, calling the method
-     * <code>absolute(-1)</code> positions the
-     * cursor on the last row; calling the method <code>absolute(-2)</code>
-     * moves the cursor to the next-to-last row, and so on.
-     *
-     * <p>If the row number specified is zero, the cursor is moved to
-     * before the first row.
-     *
-     * <p>An attempt to position the cursor beyond the first/last row in
-     * the result set leaves the cursor before the first row or after
-     * the last row.
-     *
-     * <p><B>Note:</B> Calling <code>absolute(1)</code> is the same
-     * as calling <code>first()</code>. Calling <code>absolute(-1)</code>
-     * is the same as calling <code>last()</code>.
-     *
-     * @param row the number of the row to which the cursor should move.
-     *        A value of zero indicates that the cursor will be positioned
-     *        before the first row; a positive number indicates the row number
-     *        counting from the beginning of the result set; a negative number
-     *        indicates the row number counting from the end of the result set
-     * @return <code>true</code> if the cursor is moved to a position in this
-     * <code>ResultSet</code> object;
-     * <code>false</code> if the cursor is before the first row or after the
-     * last row
-     * @exception SQLException if a database access error
-     * occurs; this method is called on a closed result set
-     * or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.2
-     */
+    @Override
     public boolean absolute(int row) throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.absolute(row);
@@ -1467,29 +927,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return result;
     }
 
-    /**
-     * Moves the cursor a relative number of rows, either positive or negative.
-     * Attempting to move beyond the first/last row in the
-     * result set positions the cursor before/after the
-     * the first/last row. Calling <code>relative(0)</code> is valid, but does
-     * not change the cursor position.
-     *
-     * <p>Note: Calling the method <code>relative(1)</code>
-     * is different from calling the method <code>next()</code>
-     * because is makes sense to call <code>next()</code> when there
-     * is no current row,
-     * for example, when the cursor is positioned before the first row
-     * or after the last row of the result set.
-     *
-     * @return <code>true</code> if the cursor is on a row;
-     * <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs,
-     * there is no current row, or the result set type is
-     * <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean relative(int rows) throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.relative(rows);
@@ -1498,22 +936,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return result;
     }
 
-    /**
-     * Moves the cursor to the previous row in this
-     * <code>ResultSet</code> object.
-     *
-     * <p><B>Note:</B> Calling the method <code>previous()</code> is not the same as
-     * calling the method <code>relative(-1)</code> because it
-     * makes sense to call</code>previous()</code> when there is no current row.
-     *
-     * @return <code>true</code> if the cursor is on a valid row;
-     * <code>false</code> if it is off the result set
-     * @exception SQLException if a database access error
-     * occurs or the result set type is <code>TYPE_FORWARD_ONLY</code>
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean previous() throws SQLException {
         checkCursorMove();
         boolean result = fbFetcher.previous();
@@ -1521,10 +944,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             notifyRowUpdater();
         return result;
     }
-
-    //---------------------------------------------------------------------
-    // Properties
-    //---------------------------------------------------------------------
 
     @Override
     public void setFetchDirection(int direction) throws SQLException {
@@ -1551,23 +970,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return fetchDirection;
     }
 
-    /**
-     * Gives the JDBC driver a hint as to the number of rows that should
-     * be fetched from the database when more rows are needed for this
-     * <code>ResultSet</code> object.
-     * If the fetch size specified is zero, the JDBC driver
-     * ignores the value and is free to make its own best guess as to what
-     * the fetch size should be.  The default value is set by the
-     * <code>Statement</code> object
-     * that created the result set.  The fetch size may be changed at any time.
-     *
-     * @param rows the number of rows to fetch
-     * @exception SQLException if a database access error occurs; this method
-     * is called on a closed result set or the
-     * condition <code>rows >= 0 </code> is not satisfied
-     * @since 1.2
-     * @see #getFetchSize
-     */
+    @Override
     public void setFetchSize(int rows) throws SQLException {
         checkOpen();
         if (rows < 0) {
@@ -1576,125 +979,40 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         fbFetcher.setFetchSize(rows);
     }
 
-    /**
-     * Retrieves the fetch size for this
-     * <code>ResultSet</code> object.
-     *
-     * @return the current fetch size for this <code>ResultSet</code> object
-     * @exception SQLException if a database access error occurs
-     * or this method is called on a closed result set
-     * @since 1.2
-     * @see #setFetchSize
-     */
+    @Override
     public int getFetchSize() throws SQLException {
         checkOpen();
         return fbFetcher.getFetchSize();
     }
 
-    /**
-     * Returns the type of this <code>ResultSet</code> object.
-     * The type is determined by the <code>Statement</code> object
-     * that created the result set.
-     *
-     * @return <code>TYPE_FORWARD_ONLY</code>,
-     * <code>TYPE_SCROLL_INSENSITIVE</code>,
-     * or <code>TYPE_SCROLL_SENSITIVE</code>
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public int getType() throws SQLException {
         return rsType;
     }
 
-    /**
-     * Returns the concurrency mode of this <code>ResultSet</code> object.
-     * The concurrency used is determined by the
-     * <code>Statement</code> object that created the result set.
-     *
-     * @return the concurrency type, either <code>CONCUR_READ_ONLY</code>
-     * or <code>CONCUR_UPDATABLE</code>
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public int getConcurrency() throws SQLException {
         return rsConcurrency;
     }
 
-    /**
-     * Retrieves the holdability of this <code>ResultSet</code> object
-     *
-     * @return  either <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     *
-     * @throws SQLException if a database access error occurs
-     * or this method is called on a closed result set
-     *
-     * @since 1.6
-     */
+    @Override
     public int getHoldability() throws SQLException {
         return rsHoldability;
     }
 
-    //---------------------------------------------------------------------
-    // Updates
-    //---------------------------------------------------------------------
-
-    /**
-     * Indicates whether the current row has been updated.  The value returned
-     * depends on whether or not the result set can detect updates.
-     *
-     * @return <code>true</code> if the row has been visibly updated
-     * by the owner or another, and updates are detected
-     * @exception SQLException if a database access error occurs
-     *
-     * @see DatabaseMetaData#updatesAreDetected
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean rowUpdated() throws SQLException {
         checkUpdatable();
         return rowUpdater.rowUpdated();
     }
 
-    /**
-     * Indicates whether the current row has had an insertion.
-     * The value returned depends on whether or not this
-     * <code>ResultSet</code> object can detect visible inserts.
-     *
-     * @return <code>true</code> if a row has had an insertion
-     * and insertions are detected; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     *
-     * @see DatabaseMetaData#insertsAreDetected
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean rowInserted() throws SQLException {
         checkUpdatable();
         return rowUpdater.rowUpdated();
     }
 
-    /**
-     * Indicates whether a row has been deleted.  A deleted row may leave
-     * a visible "hole" in a result set.  This method can be used to
-     * detect holes in a result set.  The value returned depends on whether
-     * or not this <code>ResultSet</code> object can detect deletions.
-     *
-     * @return <code>true</code> if a row was deleted and deletions are detected;
-     * <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     *
-     * @see DatabaseMetaData#deletesAreDetected
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public boolean rowDeleted() throws SQLException {
         checkUpdatable();
         return rowUpdater.rowUpdated();
@@ -1703,7 +1021,8 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Checks if the result set is updatable, throwing {@link FBResultSetNotUpdatableException} otherwise.
      *
-     * @throws FBResultSetNotUpdatableException When this result set is not updatable
+     * @throws FBResultSetNotUpdatableException
+     *         When this result set is not updatable
      */
     private void checkUpdatable() throws FBResultSetNotUpdatableException {
         if (rowUpdater == null) {
@@ -1711,270 +1030,85 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         }
     }
 
-    /**
-     * Gives a nullable column a null value.
-     *
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code>
-     * or <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateNull(int columnIndex) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setNull();
     }
 
-    /**
-     * Updates the designated column with a <code>boolean</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBoolean(int columnIndex, boolean x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBoolean(x);
     }
 
-    /**
-     * Updates the designated column with a <code>byte</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateByte(int columnIndex, byte x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setByte(x);
     }
 
-    /**
-     * Updates the designated column with a <code>short</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateShort(int columnIndex, short x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setShort(x);
     }
 
-    /**
-     * Updates the designated column with an <code>int</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateInt(int columnIndex, int x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setInteger(x);
     }
 
-    /**
-     * Updates the designated column with a <code>long</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateLong(int columnIndex, long x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setLong(x);
     }
 
-    /**
-     * Updates the designated column with a <code>float</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateFloat(int columnIndex, float x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setFloat(x);
     }
 
-    /**
-     * Updates the designated column with a <code>double</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateDouble(int columnIndex, double x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setDouble(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.math.BigDecimal</code>
-     * value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBigDecimal(x);
     }
 
-    /**
-     * Updates the designated column with a <code>String</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateString(int columnIndex, String x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setString(x);
     }
 
-    /**
-     * Updates the designated column with a <code>byte</code> array value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBytes(int columnIndex, byte x[]) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setBytes(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Date</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateDate(int columnIndex, Date x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setDate(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Time</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateTime(int columnIndex, Time x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setTime(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Timestamp</code>
-     * value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setTimestamp(x);
@@ -2016,233 +1150,72 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnLabel).setBinaryStream(x);
     }
 
-    /**
-     * Updates the designated column with an <code>Object</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @param scale for <code>java.sql.Types.DECIMA</code>
-     *  or <code>java.sql.Types.NUMERIC</code> types,
-     *  this is the number of digits after the decimal point.  For all other
-     *  types this value will be ignored.
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateObject(int columnIndex, Object x, int scale) throws SQLException {
-        checkUpdatable();
-        getField(columnIndex).setObject(x);
+        updateObject(columnIndex, x);
     }
 
-    /**
-     * Updates the designated column with an <code>Object</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateObject(int columnIndex, Object x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setObject(x);
     }
 
-    /**
-     * Updates the designated column with a <code>null</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateNull(String columnName) throws SQLException {
         checkUpdatable();
         getField(columnName).setNull();
     }
 
-    /**
-     * Updates the designated column with a <code>boolean</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBoolean(String columnName, boolean x) throws SQLException {
         checkUpdatable();
         getField(columnName).setBoolean(x);
     }
 
-    /**
-     * Updates the designated column with a <code>byte</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateByte(String columnName, byte x) throws SQLException {
         checkUpdatable();
         getField(columnName).setByte(x);
     }
 
-    /**
-     * Updates the designated column with a <code>short</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateShort(String columnName, short x) throws SQLException {
         checkUpdatable();
         getField(columnName).setShort(x);
     }
 
-    /**
-     * Updates the designated column with an <code>int</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateInt(String columnName, int x) throws SQLException {
         checkUpdatable();
         getField(columnName).setInteger(x);
     }
 
-    /**
-     * Updates the designated column with a <code>long</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateLong(String columnName, long x) throws SQLException {
         checkUpdatable();
         getField(columnName).setLong(x);
     }
 
-    /**
-     * Updates the designated column with a <code>float </code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateFloat(String columnName, float x) throws SQLException {
         checkUpdatable();
         getField(columnName).setFloat(x);
     }
 
-    /**
-     * Updates the designated column with a <code>double</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateDouble(String columnName, double x) throws SQLException {
         checkUpdatable();
         getField(columnName).setDouble(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.BigDecimal</code>
-     * value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBigDecimal(String columnName, BigDecimal x) throws SQLException {
         checkUpdatable();
         getField(columnName).setBigDecimal(x);
     }
 
-    /**
-     * Updates the designated column with a <code>String</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateString(String columnName, String x) throws SQLException {
         checkUpdatable();
         getField(columnName).setString(x);
@@ -2270,117 +1243,91 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateString(columnLabel, string);
     }
 
-    /**
-     * Updates the designated column with a <code>boolean</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * JDBC 2.0
-     *
-     * Updates a column with a byte array value.
-     *
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row, or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or <code>insertRow</code>
-     * methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateBytes(String columnName, byte x[]) throws SQLException {
         checkUpdatable();
         getField(columnName).setBytes(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Date</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateDate(String columnName, Date x) throws SQLException {
         checkUpdatable();
         getField(columnName).setDate(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Time</code> value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateTime(String columnName, Time x) throws SQLException {
         checkUpdatable();
         getField(columnName).setTime(x);
     }
 
-    /**
-     * Updates the designated column with a <code>java.sql.Timestamp</code>
-     * value.
-     * The <code>updateXXX</code> methods are used to update column values in the
-     * current row or the insert row.  The <code>updateXXX</code> methods do not
-     * update the underlying database; instead the <code>updateRow</code> or
-     * <code>insertRow</code> methods are called to update the database.
-     *
-     * @param columnName the name of the column
-     * @param x the new column value
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateTimestamp(String columnName, Timestamp x) throws SQLException {
         checkUpdatable();
         getField(columnName).setTimestamp(x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(int, InputStream, int)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
         updateBinaryStream(columnIndex, x, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(String, InputStream, int)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(String columnName, InputStream x, int length) throws SQLException {
         updateBinaryStream(columnName, x, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(int, InputStream, long)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
         updateBinaryStream(columnIndex, x, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(int, InputStream)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
         updateBinaryStream(columnIndex, x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(String, InputStream, long)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
         updateBinaryStream(columnLabel, x, length);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: works identical to {@link #updateBinaryStream(String, InputStream)}.
+     * </p>
+     */
     @Override
     public final void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
         updateBinaryStream(columnLabel, x);
@@ -2466,29 +1413,24 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateCharacterStream(columnLabel, reader);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #updateObject(String, Object)}.
+     * </p>
+     */
+    @Override
     public void updateObject(String columnName, Object x, int scale) throws SQLException {
-        checkUpdatable();
-        getField(columnName).setObject(x);
+        updateObject(columnName, x);
     }
 
+    @Override
     public void updateObject(String columnName, Object x) throws SQLException {
         checkUpdatable();
         getField(columnName).setObject(x);
     }
 
-    /**
-     * Inserts the contents of the insert row into this
-     * <code>ResultSet</code> objaect and into the database.
-     * The cursor must be on the insert row when this method is called.
-     *
-     * @exception SQLException if a database access error occurs,
-     * if this method is called when the cursor is not on the insert row,
-     * or if not all of non-nullable columns in
-     * the insert row have been given a value
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void insertRow() throws SQLException {
         checkUpdatable();
 
@@ -2497,17 +1439,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         notifyRowUpdater();
     }
 
-    /**
-     * Updates the underlying database with the new contents of the
-     * current row of this <code>ResultSet</code> object.
-     * This method cannot be called when the cursor is on the insert row.
-     *
-     * @exception SQLException if a database access error occurs or
-     * if this method is called when the cursor is on the insert row
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void updateRow() throws SQLException {
         checkUpdatable();
 
@@ -2516,17 +1448,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         notifyRowUpdater();
     }
 
-    /**
-     * Deletes the current row from this <code>ResultSet</code> object
-     * and from the underlying database.  This method cannot be called when
-     * the cursor is on the insert row.
-     *
-     * @exception SQLException if a database access error occurs
-     * or if this method is called when the cursor is on the insert row
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void deleteRow() throws SQLException {
         checkUpdatable();
 
@@ -2535,33 +1457,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         notifyRowUpdater();
     }
 
-    /**
-     * Refreshes the current row with its most recent value in
-     * the database.  This method cannot be called when
-     * the cursor is on the insert row.
-     *
-     * <P>The <code>refreshRow</code> method provides a way for an
-     * application to
-     * explicitly tell the JDBC driver to refetch a row(s) from the
-     * database.  An application may want to call <code>refreshRow</code> when
-     * caching or prefetching is being done by the JDBC driver to
-     * fetch the latest value of a row from the database.  The JDBC driver
-     * may actually refresh multiple rows at once if the fetch size is
-     * greater than one.
-     *
-     * <P> All values are refetched subject to the transaction isolation
-     * level and cursor sensitivity.  If <code>refreshRow</code> is called after
-     * calling an <code>updateXXX</code> method, but before calling
-     * the method <code>updateRow</code>, then the
-     * updates made to the row are lost.  Calling the method
-     * <code>refreshRow</code> frequently will likely slow performance.
-     *
-     * @exception SQLException if a database access error
-     * occurs or if this method is called when the cursor is on the insert row
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void refreshRow() throws SQLException {
         checkUpdatable();
 
@@ -2572,379 +1468,110 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         notifyRowUpdater();
     }
 
-    /**
-     * Cancels the updates made to the current row in this
-     * <code>ResultSet</code> object.
-     * This method may be called after calling an
-     * <code>updateXXX</code> method(s) and before calling
-     * the method <code>updateRow</code> to roll back
-     * the updates made to a row.  If no updates have been made or
-     * <code>updateRow</code> has already been called, this method has no
-     * effect.
-     *
-     * @exception SQLException if a database access error
-     * occurs or if this method is called when the cursor is on the insert row
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void cancelRowUpdates() throws SQLException {
         checkUpdatable();
         rowUpdater.cancelRowUpdates();
     }
 
-    /**
-     * Moves the cursor to the insert row.  The current cursor position is
-     * remembered while the cursor is positioned on the insert row.
-     *
-     * The insert row is a special row associated with an updatable
-     * result set.  It is essentially a buffer where a new row may
-     * be constructed by calling the <code>updateXXX</code> methods prior to
-     * inserting the row into the result set.
-     *
-     * Only the <code>updateXXX</code>, <code>getXXX</code>,
-     * and <code>insertRow</code> methods may be
-     * called when the cursor is on the insert row.  All of the columns in
-     * a result set must be given a value each time this method is
-     * called before calling <code>insertRow</code>.
-     * An <code>updateXXX</code> method must be called before a
-     * <code>getXXX</code> method can be called on a column value.
-     *
-     * @exception SQLException if a database access error occurs
-     * or the result set is not updatable
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void moveToInsertRow() throws SQLException {
         checkUpdatable();
         rowUpdater.moveToInsertRow();
     }
 
-    /**
-     * Moves the cursor to the remembered cursor position, usually the
-     * current row.  This method has no effect if the cursor is not on
-     * the insert row.
-     *
-     * @exception SQLException if a database access error occurs
-     * or the result set is not updatable
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public void moveToCurrentRow() throws SQLException {
         checkUpdatable();
         rowUpdater.moveToCurrentRow();
     }
 
-    /**
-     * Returns the <code>Statement</code> object that produced this
-     * <code>ResultSet</code> object.
-     * If the result set was generated some other way, such as by a
-     * <code>DatabaseMetaData</code> method, this method returns
-     * <code>null</code>.
-     *
-     * @return the <code>Statement</code> object that produced
-     * this <code>ResultSet</code> object or <code>null</code>
-     * if the result set was produced some other way
-     */
+    @Override
     public Statement getStatement() {
         return fbStatement;
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as an <code>Object</code>
-     * in the Java programming language.
-     * This method uses the given <code>Map</code> object
-     * for the custom mapping of the
-     * SQL structured or distinct type that is being retrieved.
-     *
-     * @param i the first column is 1, the second is 2, ...
-     * @param map a <code>java.util.Map</code> object that contains the mapping
-     * from SQL type names to classes in the Java programming language
-     * @return an <code>Object</code> in the Java programming language
-     * representing the SQL value
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Object getObject(int i, Map<String, Class<?>> map) throws SQLException {
         return getField(i).getObject(map);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>Ref</code> object
-     * in the Java programming language.
-     *
-     * @param i the first column is 1, the second is 2, ...
-     * @return a <code>Ref</code> object representing an SQL <code>REF</code> value
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Ref getRef(int i) throws SQLException {
         return getField(i).getRef();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>Clob</code> object
-     * in the Java programming language.
-     *
-     * @param i the first column is 1, the second is 2, ...
-     * @return a <code>Clob</code> object representing the SQL <code>CLOB</code> value in
-     *         the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Clob getClob(int i) throws SQLException {
         return getField(i).getClob();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as an <code>Array</code> object
-     * in the Java programming language.
-     *
-     * @param i the first column is 1, the second is 2, ...
-     * @return an <code>Array</code> object representing the SQL <code>ARRAY</code> value in
-     *         the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Array getArray(int i) throws SQLException {
         return getField(i).getArray();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as an <code>Object</code>
-     * in the Java programming language.
-     * This method uses the specified <code>Map</code> object for
-     * custom mapping if appropriate.
-     *
-     * @param columnName the name of the column from which to retrieve the value
-     * @param map a <code>java.util.Map</code> object that contains the mapping
-     * from SQL type names to classes in the Java programming language
-     * @return an <code>Object</code> representing the SQL value in the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Object getObject(String columnName, Map<String, Class<?>> map) throws SQLException {
         return getField(columnName).getObject(map);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>Ref</code> object
-     * in the Java programming language.
-     *
-     * @param columnName the column name
-     * @return a <code>Ref</code> object representing the SQL <code>REF</code> value in
-     *         the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Ref getRef(String columnName) throws SQLException {
         return getField(columnName).getRef();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>Blob</code> object
-     * in the Java programming language.
-     *
-     * @param columnName the name of the column from which to retrieve the value
-     * @return a <code>Blob</code> object representing the SQL <code>BLOB</code> value in
-     *         the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Blob getBlob(String columnName) throws SQLException {
         return getField(columnName).getBlob();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>Clob</code> object
-     * in the Java programming language.
-     *
-     * @param columnName the name of the column from which to retrieve the value
-     * @return a <code>Clob</code> object representing the SQL <code>CLOB</code>
-     * value in the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Clob getClob(String columnName) throws SQLException {
         return getField(columnName).getClob();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as an <code>Array</code> object
-     * in the Java programming language.
-     *
-     * @param columnName the name of the column from which to retrieve the value
-     * @return an <code>Array</code> object representing the SQL <code>ARRAY</code> value in
-     *         the specified column
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Array getArray(String columnName) throws SQLException {
         return getField(columnName).getArray();
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Date</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the date if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the date
-     * @return the column value as a <code>java.sql.Date</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Date getDate(int columnIndex, Calendar cal) throws SQLException {
         return getField(columnIndex).getDate(cal);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Date</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the date if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnName the SQL name of the column from which to retrieve the value
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the date
-     * @return the column value as a <code>java.sql.Date</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Date getDate(String columnName, Calendar cal) throws SQLException {
         return getField(columnName).getDate(cal);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Time</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the time if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the time
-     * @return the column value as a <code>java.sql.Time</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
         return getField(columnIndex).getTime(cal);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Time</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the time if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnName the SQL name of the column
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the time
-     * @return the column value as a <code>java.sql.Time</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Time getTime(String columnName, Calendar cal) throws SQLException {
         return getField(columnName).getTime(cal);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Timestamp</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the timestamp if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnIndex the first column is 1, the second is 2, ...
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the timestamp
-     * @return the column value as a <code>java.sql.Timestamp</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
         return getField(columnIndex).getTimestamp(cal);
     }
 
-    /**
-     * Returns the value of the designated column in the current row
-     * of this <code>ResultSet</code> object as a <code>java.sql.Timestamp</code> object
-     * in the Java programming language.
-     * This method uses the given calendar to construct an appropriate millisecond
-     * value for the timestamp if the underlying database does not store
-     * timezone information.
-     *
-     * @param columnName the SQL name of the column
-     * @param cal the <code>java.util.Calendar</code> object
-     * to use in constructing the date
-     * @return the column value as a <code>java.sql.Timestamp</code> object;
-     * if the value is SQL <code>NULL</code>,
-     * the value returned is <code>null</code> in the Java programming language
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC
-     *      2.0 API</a>
-     */
+    @Override
     public Timestamp getTimestamp(String columnName, Calendar cal) throws SQLException {
         return getField(columnName).getTimestamp(cal);
     }
 
+    @Override
     public URL getURL(int param1) throws SQLException {
         throw new FBDriverNotCapableException("Type URL not supported");
     }
 
+    @Override
     public URL getURL(String param1) throws SQLException {
         throw new FBDriverNotCapableException("Type URL not supported");
     }
@@ -2959,10 +1586,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return getField(columnLabel).getObject(type);
     }
 
+    @Override
     public void updateRef(int param1, Ref param2) throws SQLException {
         throw new FBDriverNotCapableException("Type REF not supported");
     }
 
+    @Override
     public void updateRef(String param1, Ref param2) throws SQLException {
         throw new FBDriverNotCapableException("Type REF not supported");
     }
@@ -3065,10 +1694,12 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         getField(columnLabel).setCharacterStream(reader);
     }
 
+    @Override
     public void updateArray(int param1, Array param2) throws SQLException {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
+    @Override
     public void updateArray(String param1, Array param2) throws SQLException {
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
@@ -3095,18 +1726,22 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return (NClob) getClob(columnLabel);
     }
 
+    @Override
     public RowId getRowId(int columnIndex) throws SQLException {
         return getField(columnIndex).getRowId();
     }
 
+    @Override
     public RowId getRowId(String columnLabel) throws SQLException {
         return getField(columnLabel).getRowId();
     }
 
+    @Override
     public SQLXML getSQLXML(int columnIndex) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
+    @Override
     public SQLXML getSQLXML(String columnLabel) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
@@ -3177,24 +1812,29 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateClob(columnLabel, reader);
     }
 
+    @Override
     public void updateRowId(int columnIndex, RowId x) throws SQLException {
         checkUpdatable();
         throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
     }
 
+    @Override
     public void updateRowId(String columnLabel, RowId x) throws SQLException {
         checkUpdatable();
         throw new FBDriverNotCapableException("Firebird rowId (RDB$DB_KEY) is not updatable");
     }
 
+    @Override
     public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
+    @Override
     public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }
 
+    @Override
     public String getExecutionPlan() throws SQLException {
         checkCursorMove();
 
@@ -3204,20 +1844,18 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         return fbStatement.getExecutionPlan();
     }
 
-    // java.sql.Wrapper interface
-
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(this.getClass());
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
 
         return iface.cast(this);
     }
-
-    //--------------------------------------------------------------------
 
     protected void addWarning(SQLWarning warning) {
         if (firstWarning == null) {

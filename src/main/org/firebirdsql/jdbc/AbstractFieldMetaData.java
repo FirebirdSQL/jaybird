@@ -445,7 +445,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
          */
         public boolean equals(Object obj) {
             if (obj == this) return true;
-            if (obj == null || !(obj instanceof FieldKey)) return false;
+            if (!(obj instanceof FieldKey)) return false;
 
             FieldKey that = (FieldKey) obj;
 

@@ -67,6 +67,7 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
      * @param ref
      *         The JNDI reference for this DataSource
      */
+    @Override
     public void setReference(Reference ref) {
         this.jndiReference = ref;
     }
@@ -76,18 +77,13 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
      *
      * @return The JNDI reference
      */
+    @Override
     public Reference getReference() {
         return jndiReference;
     }
 
-    /**
-     * <p>Attempt to establish a database connection.
-     *
-     * @return a Connection to the database
-     * @throws SQLException
-     *         if a database-access error occurs.
-     */
     @SuppressWarnings("deprecation")
+    @Override
     public Connection getConnection() throws SQLException {
         try {
             return (Connection) cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
@@ -102,19 +98,8 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
         }
     }
 
-    /**
-     * <p>Attempt to establish a database connection.
-     *
-     * @param username
-     *         the database user on whose behalf the Connection is
-     *         being made
-     * @param password
-     *         the user's password
-     * @return a Connection to the database
-     * @throws SQLException
-     *         if a database-access error occurs.
-     */
     @SuppressWarnings("deprecation")
+    @Override
     public Connection getConnection(String username, String password) throws SQLException {
         try {
             //mcf makes a copy for us.
@@ -133,46 +118,22 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
         }
     }
 
-    /**
-     * <p>Sets the maximum time in seconds that this data source will wait
-     * while attempting to connect to a database.  A value of zero
-     * specifies that the timeout is the default system timeout
-     * if there is one; otherwise it specifies that there is no timeout.
-     * When a DataSource object is created the login timeout is
-     * initially zero.
-     *
-     * @param seconds
-     *         the data source login time limit
-     * @throws SQLException
-     *         if a database access error occurs.
-     */
+    @Override
     public void setLoginTimeout(int seconds) throws SQLException {
         loginTimeout = seconds;
     }
 
-
-    /**
-     * Gets the maximum time in seconds that this data source can wait
-     * while attempting to connect to a database.  A value of zero
-     * means that the timeout is the default system timeout
-     * if there is one; otherwise it means that there is no timeout.
-     * When a DataSource object is created the login timeout is
-     * initially zero.
-     *
-     * @return the data source login time limit
-     * @throws SQLException
-     *         if a database access error occurs.
-     */
+    @Override
     public int getLoginTimeout() throws SQLException {
         return loginTimeout;
     }
 
-    // JDBC 4.0
-
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
@@ -181,8 +142,3 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
     }
 
 }
-
-
-
-
-

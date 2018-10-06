@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -58,14 +56,17 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         }
     }
 
+    @Override
     public FirebirdBlob getBlob() {
         return owner;
     }
 
+    @Override
     public void seek(int position) throws IOException {
         seek(position, FbBlob.SeekMode.ABSOLUTE);
     }
 
+    @Override
     public void seek(int position, int seekMode) throws IOException {
         seek(position, FbBlob.SeekMode.getById(seekMode));
     }
@@ -81,6 +82,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         }
     }
 
+    @Override
     public long length() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             checkClosed();
@@ -92,6 +94,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         }
     }
 
+    @Override
     public int available() throws IOException {
         assert buffer != null : "Buffer should never be null";
         return buffer.length - pos;
@@ -124,6 +127,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         }
     }
 
+    @Override
     public int read() throws IOException {
         if (checkBuffer() == -1) {
             return -1;
@@ -131,6 +135,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         return buffer[pos++] & 0xFF;
     }
 
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (b == null) {
             throw new NullPointerException();
@@ -149,6 +154,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         return toCopy;
     }
 
+    @Override
     public void readFully(byte[] b, int off, int len) throws IOException {
         if (b == null) {
             throw new NullPointerException();
@@ -174,10 +180,12 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
             throw new EOFException();
     }
 
+    @Override
     public void readFully(byte[] b) throws IOException {
         readFully(b, 0, b.length);
     }
 
+    @Override
     public void close() throws IOException {
         synchronized (owner.getSynchronizationObject()) {
             if (blobHandle != null) {

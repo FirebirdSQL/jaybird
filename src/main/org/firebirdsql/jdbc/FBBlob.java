@@ -28,7 +28,6 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import java.io.*;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +36,7 @@ import java.util.HashSet;
 /**
  * Firebird implementation of {@link java.sql.Blob}.
  */
+@SuppressWarnings("RedundantThrows")
 public class FBBlob implements FirebirdBlob, Synchronizable {
 
     public static final boolean SEGMENTED = true;
@@ -108,23 +108,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         return gdsHelper.getSynchronizationObject();
     }
 
-    /**
-     * This method frees the <code>Blob</code> object and releases the resources that
-     * it holds. The object is invalid once the <code>free</code>
-     * method is called.
-     *<p>
-     * After <code>free</code> has been called, any attempt to invoke a
-     * method other than <code>free</code> will result in a <code>SQLException</code>
-     * being thrown.  If <code>free</code> is called multiple times, the subsequent
-     * calls to <code>free</code> are treated as a no-op.
-     *<p>
-     *
-     * @throws SQLException if an error occurs releasing
-     * the Blob's resources
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.6
-     */
+    @Override
     public void free() throws SQLException {
         synchronized (getSynchronizationObject()) {
             SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
@@ -143,22 +127,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-    /**
-     * Returns an <code>InputStream</code> object that contains a partial <code>Blob</code> value,
-     * starting  with the byte specified by pos, which is length bytes in length.
-     *
-     * @param pos the offset to the first byte of the partial value to be retrieved.
-     *  The first byte in the <code>Blob</code> is at position 1
-     * @param length the length in bytes of the partial value to be retrieved
-     * @return <code>InputStream</code> through which the partial <code>Blob</code> value can be read.
-     * @throws SQLException if pos is less than 1 or if pos is greater than the number of bytes
-     * in the <code>Blob</code> or if pos + length is greater than the number of bytes
-     * in the <code>Blob</code>
-     *
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.6
-     */
+    @Override
     public InputStream getBinaryStream(long pos, long length) throws SQLException {
         throw new FBDriverNotCapableException("Method getBinaryStream(long, long) is not supported");
     }
@@ -189,18 +158,9 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
-    public static final byte[] BLOB_LENGTH_REQUEST = new byte[] { ISCConstants.isc_info_blob_total_length };
+    private static final byte[] BLOB_LENGTH_REQUEST = new byte[] { ISCConstants.isc_info_blob_total_length };
 
-    /**
-     * Returns the number of bytes in the <code>BLOB</code> value
-     * designated by this <code>Blob</code> object.
-     * @return length of the <code>BLOB</code> in bytes
-     * @exception SQLException if there is an error accessing the
-     * length of the <code>BLOB</code>
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @since 1.2
-     */
+    @Override
     public long length() throws SQLException {
         byte[] info = getInfo(BLOB_LENGTH_REQUEST, 20);
         return interpretLength(info, 0);
@@ -224,14 +184,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         return VaxEncoding.iscVaxLong(info, position + 3, dataLength);
     }
 
-    /**
-     * Check if blob is segmented.
-     *
-     * @return <code>true</code> if this blob is segmented,
-     * otherwise <code>false</code>
-     *
-     * @throws SQLException if something went wrong.
-     */
+    @Override
     public boolean isSegmented() throws SQLException {
         byte[] info = getInfo(new byte[] { ISCConstants.isc_info_blob_type }, 20);
 
@@ -243,49 +196,12 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         return type == ISCConstants.isc_bpb_type_segmented;
     }
 
-    /**
-     * Detach this blob. This method creates new instance of the same blob
-     * database object that is not under result set control. When result set
-     * is closed, all associated resources are also released, including open
-     * blob streams. This method creates an new instance of blob object with
-     * the same blob ID that can be used even when result set is closed.
-     * <p>
-     * Note, detached blob will not remember the stream position of this object.
-     * This means that you cannot start reading data from the blob, then detach
-     * it, and then continue reading. Reading from detached blob will begin at
-     * the blob start.
-     *
-     * @return instance of {@link FBBlob} that is not under result set control.
-     *
-     * @throws SQLException if Blob cannot be detached.
-     */
+    @Override
     public FirebirdBlob detach() throws SQLException {
         return new FBBlob(gdsHelper, blob_id, blobListener);
     }
 
-    /**
-     * Retrieves all or part of the <code>BLOB</code>
-     * value that this <code>Blob</code> object represents, as an array of
-     * bytes.  This <code>byte</code> array contains up to <code>length</code>
-     * consecutive bytes starting at position <code>pos</code>.
-     *
-     * @param pos the ordinal position of the first byte in the
-     *        <code>BLOB</code> value to be extracted; the first byte is at
-     *        position 1
-     * @param length the number of consecutive bytes to be copied; the value
-     * for length must be 0 or greater
-     * @return a byte array containing up to <code>length</code>
-     *         consecutive bytes from the <code>BLOB</code> value designated
-     *         by this <code>Blob</code> object, starting with the
-     *         byte at position <code>pos</code>
-     * @exception SQLException if there is an error accessing the
-     *            <code>BLOB</code> value; if pos is less than 1 or length is
-     * less than 0
-     * @exception SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     * @see #setBytes
-     * @since 1.2
-     */
+    @Override
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1)
             throw new FBSQLException("Blob position should be >= 1");
@@ -317,6 +233,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
+    @Override
     public InputStream getBinaryStream() throws SQLException {
         synchronized (getSynchronizationObject()) {
             FBBlobInputStream blobstream = new FBBlobInputStream(this);
@@ -325,22 +242,27 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
+    @Override
     public long position(byte pattern[], long start) throws SQLException {
         throw new FBDriverNotCapableException("Method position(byte[], long) is not supported");
     }
 
+    @Override
     public long position(Blob pattern, long start) throws SQLException {
         throw new FBDriverNotCapableException("Method position(Blob, long) is not supported");
     }
 
+    @Override
     public void truncate(long len) throws SQLException {
         throw new FBDriverNotCapableException("Method truncate(long) is not supported");
     }
 
+    @Override
     public int setBytes(long pos, byte[] bytes) throws SQLException {
         return setBytes(pos, bytes, 0, bytes.length);
     }
 
+    @Override
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
         try (OutputStream out = setBinaryStream(pos)) {
             out.write(bytes, offset, len);
@@ -350,6 +272,7 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
         }
     }
 
+    @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
         blobListener.executionStarted(this);
 
@@ -373,8 +296,6 @@ public class FBBlob implements FirebirdBlob, Synchronizable {
 
         return blobOut;
     }
-
-    //package methods
 
     /**
      * Get the identifier for this <code>Blob</code>

@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -50,11 +48,25 @@ public class FBPreparedStatement extends AbstractPreparedStatement {
         super(c, sql, rsType, rsConcurrency, rsHoldability, statementListener, blobListener, metaDataQuery, standaloneStatement, generatedKeys);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #setObject(int, Object, int, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
     @Override
     public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
         setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber(), scaleOrLength);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #setObject(int, Object, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
     @Override
     public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
         setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber());

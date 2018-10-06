@@ -115,17 +115,6 @@ public interface FirebirdStatement extends Statement {
     String getLastExecutionPlan() throws SQLException;
     
     /**
-     * Retrieves whether this <code>Statement</code> object has been closed. A <code>Statement</code> is closed if the
-     * method close has been called on it, or if it is automatically closed.
-     * <p>
-     * Provided here for compatibility with Java 5
-     * </p>
-     * @return true if this <code>Statement</code> object is closed; false if it is still open
-     * @throws SQLException if a database access error occurs
-     */
-    boolean isClosed() throws SQLException;
-
-    /**
      * The local statement id is intended to identify the statement for internal implementation purposes.
      * <p>
      * NOTE: This method is only included in this interface to try and avoid problems with proxied and bytecode enhanced

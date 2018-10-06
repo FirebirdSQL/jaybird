@@ -35,35 +35,7 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 
 /**
- * The interface used to execute SQL stored procedures.  The JDBC API
- * provides a stored procedure SQL escape syntax that allows stored procedures
- * to be called in a standard way for all RDBMSs. This escape syntax has one
- * form that includes a result parameter and one that does not. If used, the result
- * parameter must be registered as an OUT parameter. The other parameters
- * can be used for input, output or both. Parameters are referred to
- * sequentially, by number, with the first parameter being 1.
- * <PRE>
- *   {?= call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
- *   {call &lt;procedure-name&gt;[(&lt;arg1&gt;,&lt;arg2&gt;, ...)]}
- * </PRE>
- * <P>
- * IN parameter values are set using the <code>set</code> methods inherited from
- * {@link PreparedStatement}.  The type of all OUT parameters must be
- * registered prior to executing the stored procedure; their values
- * are retrieved after execution via the <code>get</code> methods provided here.
- * <P>
- * A <code>CallableStatement</code> can return one {@link ResultSet} object or
- * multiple <code>ResultSet</code> objects.  Multiple
- * <code>ResultSet</code> objects are handled using operations
- * inherited from {@link Statement}.
- * <P>
- * For maximum portability, a call's <code>ResultSet</code> objects and
- * update counts should be processed prior to getting the values of output
- * parameters.
- * <P>
- *
- * @see Connection#prepareCall
- * @see ResultSet
+ * Abstract implementation of {@link java.sql.CallableStatement}.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -170,10 +142,12 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         results.add(getLargeUpdateCount());
     }
 
+    @Override
     public void setSelectableProcedure(boolean selectableProcedure) {
         this.selectableProcedure = selectableProcedure;
     }
 
+    @Override
     public boolean isSelectableProcedure() {
         return selectableProcedure;
     }
@@ -204,6 +178,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * This is an workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
+    @Override
     protected void prepareFixedStatement(String sql) throws SQLException {
         if (fbStatement != null) return;
 
@@ -218,6 +193,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * data for the callable statement is obtained.
      * </p>
      */
+    @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
         synchronized (getSynchronizationObject()) {
@@ -229,16 +205,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return super.getMetaData();
     }
 
-    /**
-     * Executes an execute stored procedure.
-     * Some prepared statements return multiple results; the <code>execute</code>
-     * method handles these complex statements as well as the simpler
-     * form of statements handled by the methods <code>executeQuery</code>
-     * and <code>executeUpdate</code>.
-     *
-     * @exception SQLException if a database access error occurs
-     * @see Statement#execute
-     */
+    @Override
     public boolean execute() throws SQLException {
         procedureCall.checkParameters();
         boolean hasResultSet = false;
@@ -261,10 +228,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     }
 
-    /**
-     * Execute query. This method prepares statement before execution. Rest of
-     * the processing is done by superclass.
-     */
+    //This method prepares statement before execution. Rest of the processing is done by superclass.
+    @Override
     public ResultSet executeQuery() throws SQLException {
         procedureCall.checkParameters();
         synchronized (getSynchronizationObject()) {
@@ -281,10 +246,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
 
-    /**
-     * Execute query. This method prepares statement before execution. Rest of
-     * the processing is done by superclass.
-     */
+    // This method prepares statement before execution. Rest of the processing is done by superclass.
+    @Override
     public int executeUpdate() throws SQLException {
         procedureCall.checkParameters();
         synchronized (getSynchronizationObject()) {
@@ -314,10 +277,8 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
 
-    /**
-     * Execute statement internally. This method sets cached parameters. Rest of
-     * the processing is done by superclass.
-     */
+    // Execute statement internally. This method sets cached parameters. Rest of the processing is done by superclass.
+    @Override
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
         currentRs = null;
         singletonRs = null;
@@ -388,648 +349,436 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         }
     }
 
-    /**
-     * Registers the OUT parameter in ordinal position
-     * <code>parameterIndex</code> to the JDBC type
-     * <code>sqlType</code>.  All OUT parameters must be registered
-     * before a stored procedure is executed.
-     * <p>
-     * The JDBC type specified by <code>sqlType</code> for an OUT
-     * parameter determines the Java type that must be used
-     * in the <code>get</code> method to read the value of that parameter.
-     * <p>
-     * If the JDBC type expected to be returned to this output parameter
-     * is specific to this particular database, <code>sqlType</code>
-     * should be <code>java.sql.Types.OTHER</code>.  The method
-     * {@link #getObject} retrieves the value.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param sqlType the JDBC type code defined by <code>java.sql.Types</code>.
-     * If the parameter is of JDBC type <code>NUMERIC</code>
-     * or <code>DECIMAL</code>, the version of
-     * <code>registerOutParameter</code> that accepts a scale value
-     * should be used.
-     * @exception SQLException if a database access error occurs
-     * @see Types
-     */
+    @Override
     public void registerOutParameter(int parameterIndex, int sqlType) throws SQLException {
         procedureCall.registerOutParam(parameterIndex, sqlType);
     }
 
     /**
-     * Registers the parameter in ordinal position
-     * <code>parameterIndex</code> to be of JDBC type
-     * <code>sqlType</code>.  This method must be called
-     * before a stored procedure is executed.
+     * {@inheritDoc}
      * <p>
-     * The JDBC type specified by <code>sqlType</code> for an OUT
-     * parameter determines the Java type that must be used
-     * in the <code>get</code> method to read the value of that parameter.
-     * <p>
-     * This version of <code>registerOutParameter</code> should be
-     * used when the parameter is of JDBC type <code>NUMERIC</code>
-     * or <code>DECIMAL</code>.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param sqlType SQL type code defined by <code>java.sql.Types</code>.
-     * @param scale the desired number of digits to the right of the
-     * decimal point.  It must be greater than or equal to zero.
-     * @exception SQLException if a database access error occurs
-     * @see Types
+     * Implementation note: This method will behave the same as calling {@link #registerOutParameter(int, int)}.
+     * </p>
      */
+    @Override
     public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
-        procedureCall.registerOutParam(parameterIndex, sqlType);
+        registerOutParameter(parameterIndex, sqlType);
     }
 
-    /**
-     * Indicates whether or not the last OUT parameter read had the value of
-     * SQL <code>NULL</code>.  Note that this method should be called only after
-     * calling a <code>getXXX</code> method; otherwise, there is no value to use in
-     * determining whether it is <code>null</code> or not.
-     * @return <code>true</code> if the last parameter read was SQL
-     * <code>NULL</code>; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean wasNull() throws SQLException {
         return getAndAssertSingletonResultSet().wasNull();
     }
 
-    /**
-     * Retrieves the value of a JDBC <code>CHAR</code>, <code>VARCHAR</code>,
-     * or <code>LONGVARCHAR</code> parameter as a <code>String</code> in
-     * the Java programming language.
-     * <p>
-     * For the fixed-length type JDBC <code>CHAR</code>,
-     * the <code>String</code> object
-     * returned has exactly the same value the JDBC
-     * <code>CHAR</code> value had in the
-     * database, including any padding added by the database.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value. If the value is SQL <code>NULL</code>, the result
-     * is <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public String getString(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getString(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>BIT</code> parameter as a <code>boolean</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is <code>false</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean getBoolean(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getBoolean(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>TINYINT</code> parameter as a <code>byte</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public byte getByte(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getByte(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>SMALLINT</code> parameter as a <code>short</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public short getShort(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getShort(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>INTEGER</code> parameter as an <code>int</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getInt(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getInt(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>BIGINT</code> parameter as a <code>long</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public long getLong(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getLong(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>FLOAT</code> parameter as a <code>float</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public float getFloat(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getFloat(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>DOUBLE</code> parameter as a <code>double</code>
-     * in the Java programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is 0.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public double getDouble(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getDouble(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>NUMERIC</code> parameter as a
-     * <code>java.math.BigDecimal</code> object with scale digits to
-     * the right of the decimal point.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param scale the number of digits to the right of the decimal point
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result is
-     * <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     * @deprecated
-     */
     @SuppressWarnings("deprecation")
     @Deprecated
+    @Override
     public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getBigDecimal(parameterIndex, scale);
     }
 
-    /**
-     * Gets the value of a JDBC <code>BINARY</code> or <code>VARBINARY</code>
-     * parameter as an array of <code>byte</code> values in the Java
-     * programming language.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result is
-     *  <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public byte[] getBytes(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getBytes(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>DATE</code> parameter as a
-     * <code>java.sql.Date</code> object.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public java.sql.Date getDate(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getDate(parameterIndex);
     }
 
-    /**
-     * Get the value of a JDBC <code>TIME</code> parameter as a
-     * <code>java.sql.Time</code> object.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Time getTime(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getTime(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>TIMESTAMP</code> parameter as a
-     * <code>java.sql.Timestamp</code> object.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result
-     * is <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Timestamp getTimestamp(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getTimestamp(parameterIndex);
     }
 
     /**
-     * Gets the value of a parameter as an <code>Object</code> in the Java
-     * programming language.
+     * {@inheritDoc}
      * <p>
-     * This method returns a Java object whose type corresponds to the JDBC
-     * type that was registered for this parameter using the method
-     * <code>registerOutParameter</code>.  By registering the target JDBC
-     * type as <code>java.sql.Types.OTHER</code>, this method can be used
-     * to read database-specific abstract data types.
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @return A <code>java.lang.Object</code> holding the OUT parameter value.
-     * @exception SQLException if a database access error occurs
-     * @see Types
+     * Implementation note: the registered type is ignored, and the type derived from the actual datatype will be used.
+     * </p>
      */
+    @Override
     public Object getObject(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getObject(parameterIndex);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: the registered type is ignored, and the type derived from the actual datatype will be used.
+     * </p>
+     */
+    @Override
     public Object getObject(String colName) throws SQLException {
         return getObject(findOutParameter(colName));
     }
-    
-   /**
-    *
-    * Returns an object representing the value of OUT parameter
-    * <code>i</code> and uses <code>map</code> for the custom
-    * mapping of the parameter value.
-    * <p>
-    * This method returns a Java object whose type corresponds to the
-    * JDBC type that was registered for this parameter using the method
-    * <code>registerOutParameter</code>.  By registering the target
-    * JDBC type as <code>java.sql.Types.OTHER</code>, this method can
-    * be used to read database-specific abstract data types.
-    * @param parameterIndex the first parameter is 1, the second is 2, and so on
-    * @param map the mapping from SQL type names to Java classes
-    * @return a <code>java.lang.Object</code> holding the OUT parameter value
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: the registered type is ignored, and the type derived from the actual datatype will be used.
+     * </p>
+     */
+    @Override
     public Object getObject(int parameterIndex, Map<String, Class<?>> map) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getObject(parameterIndex, map);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: the registered type is ignored, and the type derived from the actual datatype will be used.
+     * </p>
+     */
+    @Override
     public Object getObject(String colName, Map<String, Class<?>> map) throws SQLException {
         return getObject(findOutParameter(colName), map);
     }
-    
+
+    @Override
     public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
-        // NOTE: Cast required for Java 6 compatibility
-        //noinspection RedundantCast
-        return ((FBResultSet) getAndAssertSingletonResultSet()).getObject(parameterIndex, type);
+        return getAndAssertSingletonResultSet().getObject(parameterIndex, type);
     }
 
+    @Override
     public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
         return getObject(findOutParameter(parameterName), type);
     }
 
-    /**
-    *
-    * Gets the value of a JDBC <code>NUMERIC</code> parameter as a
-    * <code>java.math.BigDecimal</code> object with as many digits to the
-    * right of the decimal point as the value contains.
-    * @param parameterIndex the first parameter is 1, the second is 2,
-    * and so on
-    * @return the parameter value in full precision.  If the value is
-    * SQL <code>NULL</code>, the result is <code>null</code>.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+    @Override
     public BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getBigDecimal(parameterIndex);
     }
-    
-   /**
-    *
-    * Gets the value of a JDBC <code>REF(&lt;structured-type&gt;)</code>
-    * parameter as a {@link Ref} object in the Java programming language.
-    * @param parameterIndex the first parameter is 1, the second is 2,
-    * and so on
-    * @return the parameter value as a <code>Ref</code> object in the
-    * Java programming language.  If the value was SQL <code>NULL</code>, the value
-    * <code>null</code> is returned.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+
+    @Override
     public Ref getRef(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getRef(parameterIndex);
     }
 
-    /**
-    *
-    * Gets the value of a JDBC <code>BLOB</code> parameter as a
-    * {@link Blob} object in the Java programming language.
-    * @param parameterIndex the first parameter is 1, the second is 2, and so on
-    * @return the parameter value as a <code>Blob</code> object in the
-    * Java programming language.  If the value was SQL <code>NULL</code>, the value
-    * <code>null</code> is returned.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+    @Override
     public Blob getBlob(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getBlob(parameterIndex);
     }
 
-    /**
-    *
-    * Gets the value of a JDBC <code>CLOB</code> parameter as a
-    * <code>Clob</code> object in the Java programming language.
-    * @param parameterIndex the first parameter is 1, the second is 2, and
-    * so on
-    * @return the parameter value as a <code>Clob</code> object in the
-    * Java programming language.  If the value was SQL <code>NULL</code>, the
-    * value <code>null</code> is returned.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+    @Override
     public Clob getClob(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getClob(parameterIndex);
     }
 
-    /**
-    *
-    * Gets the value of a JDBC <code>ARRAY</code> parameter as an
-    * {@link Array} object in the Java programming language.
-    * @param parameterIndex the first parameter is 1, the second is 2, and
-    * so on
-    * @return the parameter value as an <code>Array</code> object in
-    * the Java programming language.  If the value was SQL <code>NULL</code>, the
-    * value <code>null</code> is returned.
-    * @exception SQLException if a database access error occurs
-    * @since 1.2
-    * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-    */
+    @Override
     public Array getArray(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getArray(parameterIndex);
     }
 
-    /**
-     * Gets the value of a JDBC <code>DATE</code> parameter as a
-     * <code>java.sql.Date</code> object, using
-     * the given <code>Calendar</code> object
-     * to construct the date.
-     * With a <code>Calendar</code> object, the driver
-     * can calculate the date taking into account a custom timezone and locale.
-     * If no <code>Calendar</code> object is specified, the driver uses the
-     * default timezone and locale.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param cal the <code>Calendar</code> object the driver will use
-     *            to construct the date
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result is
-     * <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public java.sql.Date getDate(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getDate(parameterIndex, cal);
     }
 
-    /**
-     * Gets the value of a JDBC <code>TIME</code> parameter as a
-     * <code>java.sql.Time</code> object, using
-     * the given <code>Calendar</code> object
-     * to construct the time.
-     * With a <code>Calendar</code> object, the driver
-     * can calculate the time taking into account a custom timezone and locale.
-     * If no <code>Calendar</code> object is specified, the driver uses the
-     * default timezone and locale.
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param cal the <code>Calendar</code> object the driver will use
-     *            to construct the time
-     * @return the parameter value; if the value is SQL <code>NULL</code>, the result is
-     * <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Time getTime(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getTime(parameterIndex, cal);
     }
 
-    /**
-     * Gets the value of a JDBC <code>TIMESTAMP</code> parameter as a
-     * <code>java.sql.Timestamp</code> object, using
-     * the given <code>Calendar</code> object to construct
-     * the <code>Timestamp</code> object.
-     * With a <code>Calendar</code> object, the driver
-     * can calculate the timestamp taking into account a custom timezone and locale.
-     * If no <code>Calendar</code> object is specified, the driver uses the
-     * default timezone and locale.
-     *
-     *
-     * @param parameterIndex the first parameter is 1, the second is 2,
-     * and so on
-     * @param cal the <code>Calendar</code> object the driver will use
-     *            to construct the timestamp
-     * @return the parameter value.  If the value is SQL <code>NULL</code>, the result is
-     * <code>null</code>.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Timestamp getTimestamp(int parameterIndex, Calendar cal) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getTimestamp(parameterIndex, cal);
     }
 
+    @Override
     public URL getURL(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getURL(parameterIndex);
     }
 
+    @Override
     public String getString(String colName) throws SQLException {
         return getString(findOutParameter(colName));
     }
 
+    @Override
     public boolean getBoolean(String colName) throws SQLException {
         return getBoolean(findOutParameter(colName));
     }
 
+    @Override
     public byte getByte(String colName) throws SQLException {
         return getByte(findOutParameter(colName));
     }
 
+    @Override
     public short getShort(String colName) throws SQLException {
         return getShort(findOutParameter(colName));
     }
 
+    @Override
     public int getInt(String colName) throws SQLException {
         return getInt(findOutParameter(colName));
     }
 
+    @Override
     public long getLong(String colName) throws SQLException {
         return getLong(findOutParameter(colName));
     }
 
+    @Override
     public float getFloat(String colName) throws SQLException {
         return getFloat(findOutParameter(colName));
     }
 
+    @Override
     public double getDouble(String colName) throws SQLException {
         return getDouble(findOutParameter(colName));
     }
 
+    @Override
     public byte[] getBytes(String colName) throws SQLException {
         return getBytes(findOutParameter(colName));
     }
 
+    @Override
     public Date getDate(String colName) throws SQLException {
         return getDate(findOutParameter(colName));
     }
 
+    @Override
     public Time getTime(String colName) throws SQLException {
         return getTime(findOutParameter(colName));
     }
 
+    @Override
     public Timestamp getTimestamp(String colName) throws SQLException {
         return getTimestamp(findOutParameter(colName));
     }
 
+    @Override
     public BigDecimal getBigDecimal(String colName) throws SQLException {
         return getBigDecimal(findOutParameter(colName));
     }
 
+    @Override
     public Ref getRef(String colName) throws SQLException {
         return getRef(findOutParameter(colName));
     }
 
+    @Override
     public Blob getBlob(String colName) throws SQLException {
         return getBlob(findOutParameter(colName));
     }
 
+    @Override
     public Clob getClob(String colName) throws SQLException {
         return getClob(findOutParameter(colName));
     }
 
+    @Override
     public Array getArray(String colName) throws SQLException {
         return getArray(findOutParameter(colName));
     }
 
+    @Override
     public Date getDate(String colName, Calendar cal) throws SQLException {
         return getDate(findOutParameter(colName), cal);
     }
 
+    @Override
     public Time getTime(String colName, Calendar cal) throws SQLException {
         return getTime(findOutParameter(colName), cal);
     }
 
+    @Override
     public Timestamp getTimestamp(String colName, Calendar cal) throws SQLException {
         return getTimestamp(findOutParameter(colName), cal);
     }
 
+    @Override
     public URL getURL(String colName) throws SQLException {
         return getURL(findOutParameter(colName));
     }
 
+    @Override
     public Reader getCharacterStream(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getCharacterStream(parameterIndex);
     }
 
+    @Override
     public Reader getCharacterStream(String parameterName) throws SQLException {
         return getCharacterStream(findOutParameter(parameterName));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getCharacterStream(int)}.
+     * </p>
+     */
+    @Override
     public Reader getNCharacterStream(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getNCharacterStream(parameterIndex);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getCharacterStream(String)} .
+     * </p>
+     */
+    @Override
     public Reader getNCharacterStream(String parameterName) throws SQLException {
         return getNCharacterStream(findOutParameter(parameterName));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getString(int)}.
+     * </p>
+     */
+    @Override
     public String getNString(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getNString(parameterIndex);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getString(String)}.
+     * </p>
+     */
+    @Override
     public String getNString(String parameterName) throws SQLException {
         return getNString(findOutParameter(parameterName));
     }
 
+    @Override
     public void setAsciiStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setAsciiStream(String parameterName, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBinaryStream(String parameterName, InputStream x, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBinaryStream(String parameterName, InputStream x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBlob(String parameterName, Blob x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBlob(String parameterName, InputStream inputStream, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBlob(String parameterName, InputStream inputStream) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setCharacterStream(String parameterName, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setCharacterStream(String parameterName, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setClob(String parameterName, Clob x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setClob(String parameterName, Reader reader, long length) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setClob(String parameterName, Reader reader) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
@@ -1084,127 +833,158 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
      * Implementation note: This method behaves exactly the same as {@link #setString(String, String)}.
      * </p>
      */
+    @Override
     public void setNString(String parameterName, String value) throws SQLException {
         setString(parameterName, value);
     }
 
+    @Override
     public void registerOutParameter(String param1, int param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void registerOutParameter(String param1, int param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void registerOutParameter(String param1, int param2, String param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setURL(String param1, URL param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setNull(String param1, int param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBoolean(String param1, boolean param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setByte(String param1, byte param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setShort(String param1, short param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setInt(String param1, int param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setLong(String param1, long param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setFloat(String param1, float param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setDouble(String param1, double param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBigDecimal(String param1, BigDecimal param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setString(String param1, String param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBytes(String param1, byte[] param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setDate(String param1, Date param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setTime(String param1, Time param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setTimestamp(String param1, Timestamp param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setAsciiStream(String param1, InputStream param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setBinaryStream(String param1, InputStream param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setObject(String param1, Object param2, int param3, int param4) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setObject(String param1, Object param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setObject(String param1, Object param2) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setCharacterStream(String param1, Reader param2, int param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setDate(String param1, Date param2, Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setTime(String param1, Time param2, Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setTimestamp(String param1, Timestamp param2, Calendar param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setNull(String param1, int param2, String param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void registerOutParameter(int parameterIndex, int sqlType, String typeName) throws SQLException {
         // TODO Can we implement this, how?
         throw new FBDriverNotCapableException();
     }
 
+    @Override
     public ResultSet getGeneratedKeys() throws SQLException {
         throw new FBDriverNotCapableException("getGeneratedKeys is not supported on CallableStatement");
     }
@@ -1236,6 +1016,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     // this method doesn't give an exception if it is called twice.
+    @Override
     public ResultSet getCurrentResultSet() throws SQLException {
         if (currentRs == null)
             currentRs = super.getResultSet();
@@ -1265,171 +1046,193 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     /**
-     * Returns the current result as a <code>ResultSet</code> object.
-     * This method should be called only once per result.
+     * {@inheritDoc}
+     * <p>
      * Calling this method twice with autocommit on and used will probably
      * throw an inappropriate or uninformative exception.
-     *
-     * @return the current result as a <code>ResultSet</code> object;
-     * <code>null</code> if the result is an update count or there are no more results
-     * @exception SQLException if a database access error occurs
-     * @see #execute
+     * </p>
      */
+    @Override
     public ResultSet getResultSet() throws SQLException {
         return getCurrentResultSet();
     }
 
-    public void setArray(int i, Array x) throws SQLException {
-        procedureCall.getInputParam(i).setValue(x);
-    }
-
+    @Override
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream inputStream) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(inputStream);
     }
 
+    @Override
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(blob);
     }
 
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(inputStream, length));
     }
 
+    @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(inputStream);
     }
 
+    @Override
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setByte(int parameterIndex, byte x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(reader);
     }
 
+    @Override
     public void setClob(int parameterIndex, Clob x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithLong(reader, length));
     }
 
+    @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(reader);
     }
 
+    @Override
     public void setDate(int parameterIndex, java.sql.Date x, Calendar cal) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithCalendar(x, cal));
     }
 
+    @Override
     public void setDate(int parameterIndex, java.sql.Date x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setDouble(int parameterIndex, double x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setFloat(int parameterIndex, float x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setInt(int parameterIndex, int x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setLong(int parameterIndex, long x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(null);
     }
 
+    @Override
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(null);
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
-    public void setRef(int parameterIndex, Ref x) throws SQLException {
-        procedureCall.getInputParam(parameterIndex).setValue(x);
-    }
-
+    @Override
     public void setShort(int parameterIndex, short x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setString(int parameterIndex, String x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithCalendar(x, cal));
     }
 
+    @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
+    @Override
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(new WrapperWithCalendar(x, cal));
     }
 
+    @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         procedureCall.getInputParam(parameterIndex).setValue(x);
     }
 
     /**
-     * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE
-     * @throws SQLException 
+     * Set the selectability of this stored procedure from RDB$PROCEDURE_TYPE.
+     *
+     * @throws SQLException If no selectability information is available
      */
     private void setSelectabilityAutomatically(StoredProcedureMetaData storedProcMetaData) throws SQLException {
         selectableProcedure = storedProcMetaData.isSelectable(procedureCall.getName());
     }
     
     /**
-     * Helper method to identify the right resultset column for the give OUT
-     * parameter name.
+     * Helper method to identify the right result set column for the give OUT parameter name.
      * 
      * @param paramName
      *            Name of the OUT parameter
@@ -1438,29 +1241,47 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return getAndAssertSingletonResultSet().findColumn(paramName);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getClob(int)}.
+     * </p>
+     */
+    @Override
     public NClob getNClob(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getNClob(parameterIndex);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #getClob(String)}.
+     * </p>
+     */
+    @Override
     public NClob getNClob(String parameterName) throws SQLException {
         return getNClob(findOutParameter(parameterName));
     }
 
+    @Override
     public RowId getRowId(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getRowId(parameterIndex);
     }
 
+    @Override
     public RowId getRowId(String parameterName) throws SQLException {
         return getRowId(findOutParameter(parameterName));
     }
 
+    @Override
     public SQLXML getSQLXML(int parameterIndex) throws SQLException {
         parameterIndex = procedureCall.mapOutParamIndexToPosition(parameterIndex);
         return getAndAssertSingletonResultSet().getSQLXML(parameterIndex);
     }
 
+    @Override
     public SQLXML getSQLXML(String parameterName) throws SQLException {
         return getSQLXML(findOutParameter(parameterName));
     }
@@ -1476,10 +1297,12 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         setClob(parameterName, value);
     }
 
+    @Override
     public void setRowId(String parameterName, RowId x) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
     }
 
+    @Override
     public void setSQLXML(String parameterName, SQLXML xmlObject) throws SQLException {
         throw new FBDriverNotCapableException("Type SQLXML not supported");
     }

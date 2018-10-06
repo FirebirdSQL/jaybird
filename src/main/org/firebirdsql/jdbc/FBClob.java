@@ -31,18 +31,7 @@ import java.sql.NClob;
 import java.sql.SQLException;
 
 /**
- * The mapping in the JavaTM programming language for the SQL CLOB type. An SQL
- * CLOB is a built-in type that stores a Character Large Object as a column
- * value in a row of a database table. <b>CLOBS are not currently supported by
- * the Jaybird driver</b>.
- * <p>
- * The Clob interface provides methods for getting the length of an SQL CLOB
- * (Character Large Object) value, for materializing a CLOB value on the client,
- * and for searching for a substring or CLOB object within a CLOB value. Methods
- * in the interfaces ResultSet, CallableStatement, and PreparedStatement, such
- * as getClob and setClob allow a programmer to access an SQL CLOB value. In
- * addition, this interface has methods for updating a CLOB value.
- * </p>
+ * Implementation of {@link Clob}.
  * <p>
  * This class also implements {@link NClob} so it can be used with the {@code set/get/updateNClob} methods
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
@@ -59,53 +48,23 @@ public class FBClob implements Clob, NClob {
 		this.wrappedBlob = blob;
 	}
 
-	/**
-	 * Returns the number of characters in the <code>CLOB</code> value
-	 * designated by this <code>Clob</code> object.
-	 * 
-	 * @return length of the <code>CLOB</code> in characters
-	 * @exception SQLException
-	 *                if there is an error accessing the length of the
-	 *                <code>CLOB</code>
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-	 */
+	@Override
 	public long length() throws SQLException {
 		throw new FBDriverNotCapableException("Cannot determine length for CLOB");
 	}
 
 	/**
-	 * <b>This operation is not currently supported</b> Truncate this
-	 * <code>Clob</code> to a given length.
-	 * 
-	 * @param param1
-	 *            The length to truncate this Clob to
-	 * @exception java.sql.SQLException
-	 *                this operation is not supported
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>This operation is not currently supported</b>
+	 * </p>
 	 */
+	@Override
 	public void truncate(long param1) throws SQLException {
 		throw new FBDriverNotCapableException("Method truncate(long) is not supported");
 	}
 
-	/**
-	 * Returns a copy of the specified substring in the <code>CLOB</code>
-	 * value designated by this <code>Clob</code> object. The substring begins
-	 * at position <code>pos</code> and has up to <code>length</code>
-	 * consecutive characters.
-	 * 
-	 * @param pos
-	 *            the first character of the substring to be extracted. The
-	 *            first character is at position 1.
-	 * @param length
-	 *            the number of consecutive characters to be copied
-	 * @return a <code>String</code> that is the specified substring in the
-	 *         <code>CLOB</code> value designated by this <code>Clob</code>
-	 *         object
-	 * @exception SQLException
-	 *                if there is an error accessing the <code>CLOB</code>
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-	 */
+	@Override
 	public String getSubString(long pos, int length) throws SQLException {
 		try (Reader reader = getCharacterStream()) {
 			long toSkip = pos - 1; // 1-based index
@@ -125,17 +84,7 @@ public class FBClob implements Clob, NClob {
 		}
 	}
 
-	/**
-	 * Gets the <code>CLOB</code> value designated by this <code>Clob</code>
-	 * object as a Unicode stream.
-	 * 
-	 * @return a Unicode stream containing the <code>CLOB</code> data
-	 * @exception SQLException
-	 *                if there is an error accessing the <code>CLOB</code>
-	 *                value
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-	 */
+	@Override
 	public Reader getCharacterStream() throws SQLException {
 		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
 		InputStream inputStream = wrappedBlob.getBinaryStream();
@@ -150,17 +99,7 @@ public class FBClob implements Clob, NClob {
 		}
 	}
 
-	/**
-	 * Gets the <code>CLOB</code> value designated by this <code>Clob</code>
-	 * object as a stream of Ascii bytes.
-	 * 
-	 * @return an ascii stream containing the <code>CLOB</code> data
-	 * @exception SQLException
-	 *                if there is an error accessing the <code>CLOB</code>
-	 *                value
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-	 */
+	@Override
 	public InputStream getAsciiStream() throws SQLException {
 		InputStream inputStream = null;
 		if (wrappedBlob != null) {
@@ -170,47 +109,23 @@ public class FBClob implements Clob, NClob {
 	}
 
 	/**
-	 * Determines the character position at which the specified substring
-	 * <code>searchstr</code> appears in the SQL <code>CLOB</code> value
-	 * represented by this <code>Clob</code> object. The search begins at
-	 * position <code>start</code>.
-	 * 
-	 * @param searchstr
-	 *            the substring for which to search
-	 * @param start
-	 *            the position at which to begin searching; the first position
-	 *            is 1
-	 * @return the position at which the substring appears, else -1; the first
-	 *         position is 1
-	 * @exception SQLException
-	 *                if there is an error accessing the <code>CLOB</code>
-	 *                value
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
+	 * {@inheritDoc}
+	 * <p>
+	 * Jaybird currently does not support this method.
+	 * </p>
 	 */
+	@Override
 	public long position(String searchstr, long start) throws SQLException {
 		throw new FBDriverNotCapableException("Method position(String, long) is not supported");
 	}
 
 	/**
-	 * Determines the character position at which the specified
-	 * <code>Clob</code> object <code>searchstr</code> appears in this
-	 * <code>Clob</code> object. The search begins at position
-	 * <code>start</code>.
-	 * 
-	 * @param searchstr
-	 *            the <code>Clob</code> object for which to search
-	 * @param start
-	 *            the position at which to begin searching; the first position
-	 *            is 1
-	 * @return the position at which the <code>Clob</code> object appears,
-	 *         else -1; the first position is 1
-	 * @exception SQLException
-	 *                if there is an error accessing the <code>CLOB</code>
-	 *                value
-	 * @since 1.2
-	 * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
+	 * {@inheritDoc}
+	 * <p>
+	 * Jaybird currently does not support this method.
+	 * </p>
 	 */
+	@Override
 	public long position(Clob searchstr, long start) throws SQLException {
 		throw new FBDriverNotCapableException("Method position(Clob, long) is not supported");
 	}
@@ -221,6 +136,7 @@ public class FBClob implements Clob, NClob {
      * Jaybird currently does not support this method.
      * </p>
      */
+	@Override
 	public int setString(long pos, String str) throws SQLException {
         return setString(1, str, 0, str.length());
 	}
@@ -231,6 +147,7 @@ public class FBClob implements Clob, NClob {
      * Jaybird currently does not support this method.
      * </p>
      */
+	@Override
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
         try (Writer charStream = setCharacterStream(pos)) {
         	charStream.write(str, offset, len);
@@ -240,28 +157,12 @@ public class FBClob implements Clob, NClob {
 		}
 	}
 
-	/**
-	 * Set a byte stream to write the contents of this Clob.
-	 * 
-	 * @param pos
-	 *            The position at which writing is to start.
-	 * @return <description>
-	 * @exception java.sql.SQLException
-	 *                <description>
-	 */
+	@Override
 	public OutputStream setAsciiStream(long pos) throws SQLException {
 		return wrappedBlob.setBinaryStream(pos);
 	}
 
-	/**
-	 * Create a writer to add character data to this Clob.
-	 * 
-	 * @param position
-	 *            The position at which the Writer should start writing
-	 * @return <description>
-	 * @exception java.sql.SQLException
-	 *                <description>
-	 */
+	@Override
 	public Writer setCharacterStream(long position) throws SQLException {
 		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
@@ -277,10 +178,12 @@ public class FBClob implements Clob, NClob {
 		}
 	}
 
+	@Override
 	public void free() throws SQLException {
 		wrappedBlob.free();
 	}
 
+	@Override
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
 		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);

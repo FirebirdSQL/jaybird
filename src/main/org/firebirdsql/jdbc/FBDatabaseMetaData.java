@@ -48,27 +48,10 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 /**
  * Comprehensive information about the database as a whole.
  *
- * <P>Many of the methods here return lists of information in
- * the form of <code>ResultSet</code> objects.
- * You can use the normal <code>ResultSet</code> methods such as getString and getInt
- * to retrieve the data from these <code>ResultSet</code>.  If a given form of
- * metadata is not available, these methods should throw an SQLException.
- *
- * <P>Some of these methods take arguments that are String patterns.  These
- * arguments all have names such as fooPattern.  Within a pattern String, "%"
- * means match any substring of 0 or more characters, and "_" means match
- * any one character. Only metadata entries matching the search pattern
- * are returned. If a search pattern argument is set to a null ref,
- * that argument's criteria will be dropped from the search.
- *
- * <P>An <code>SQLException</code> will be thrown if a driver does not support a meta
- * data method.  In the case of methods that return a <code>ResultSet</code>,
- * either a <code>ResultSet</code> (which may be empty) is returned or a
- * SQLException is thrown.
- *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
@@ -162,7 +145,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 try {
                     stmt.close();
                 } catch (SQLException e) {
-                   log.warn("error in DatabaseMetaData.close", e);
+                    log.warn("error in DatabaseMetaData.close", e);
                 }
             }
         } finally {
@@ -170,325 +153,175 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    //----------------------------------------------------------------------
-    // First, a variety of minor information about the target database.
-
-    /**
-     * Can all the procedures returned by getProcedures be called by the
-     * current user?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean allProceduresAreCallable() throws SQLException {
+    @Override
+    public boolean allProceduresAreCallable() throws SQLException {
         //returns all procedures whether or not you have execute permission
         return false;
     }
 
-    /**
-     * Can all the tables returned by getTable be SELECTed by the
-     * current user?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean allTablesAreSelectable() throws SQLException {
+    @Override
+    public boolean allTablesAreSelectable() throws SQLException {
         //returns all tables matching criteria independent of access permissions.
         return false;
     }
 
-    /**
-     * What's the url for this database?
-     *
-     * @return the url or null if it cannot be generated
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getURL() throws SQLException {
-        // TODO Think of a less complex way to obtain the url
+    @Override
+    public String getURL() throws SQLException {
+        // TODO Think of a less complex way to obtain the url or just return null?
         GDSType gdsType = ((FBManagedConnectionFactory) connection.mc.getManagedConnectionFactory()).getGDSType();
         return GDSFactory.getJdbcUrl(gdsType, connection.mc.getDatabase());
     }
 
-    /**
-     * What's our user name as known to the database?
-     *
-     * @return our database user name
-     * @exception SQLException
-     *                if a database access error occurs
-     */
-    public  String getUserName() throws SQLException {
+    @Override
+    public String getUserName() throws SQLException {
         return gdsHelper.getUserName();
     }
 
-    /**
-     * Is the database in read-only mode?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean isReadOnly() throws SQLException {
+    @Override
+    public boolean isReadOnly() throws SQLException {
         return false;//could be true, not yetimplemented
     }
 
-    /**
-     * Are NULL values sorted high?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean nullsAreSortedHigh() throws SQLException {
+    @Override
+    public boolean nullsAreSortedHigh() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
         return false;
     }
 
-    /**
-     * Are NULL values sorted low?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean nullsAreSortedLow() throws SQLException {
+    @Override
+    public boolean nullsAreSortedLow() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
         return gdsHelper.compareToVersion(2, 0) >= 0;
     }
 
-    /**
-     * Are NULL values sorted at the start regardless of sort order?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean nullsAreSortedAtStart() throws SQLException {
+    @Override
+    public boolean nullsAreSortedAtStart() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
         return false;
     }
 
-    /**
-     * Are NULL values sorted at the end regardless of sort order?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean nullsAreSortedAtEnd() throws SQLException {
+    @Override
+    public boolean nullsAreSortedAtEnd() throws SQLException {
         // in Firebird 1.5.x NULLs are always sorted at the end
         // in Firebird 2.0.x NULLs are sorted low
         return gdsHelper.compareToVersion(2, 0) < 0;
     }
 
-    /**
-     * What's the name of this database product?
-     *
-     * @return database product name
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getDatabaseProductName() throws SQLException {
+    @Override
+    public String getDatabaseProductName() throws SQLException {
         return gdsHelper.getDatabaseProductName();
     }
 
-    /**
-     * What's the version of this database product?
-     *
-     * @return database version
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getDatabaseProductVersion() throws SQLException {
+    @Override
+    public String getDatabaseProductVersion() throws SQLException {
         return gdsHelper.getDatabaseProductVersion();
     }
 
-    /**
-     * What's the name of this JDBC driver?
-     *
-     * @return JDBC driver name
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getDriverName() throws SQLException {
+    @Override
+    public String getDriverName() throws SQLException {
         return "Jaybird JCA/JDBC driver";
     }
 
-    /**
-     * What's the version of this JDBC driver?
-     *
-     * @return JDBC driver version
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getDriverVersion() throws SQLException {
+    @Override
+    public String getDriverVersion() throws SQLException {
+        // TODO Return full version?
         return DRIVER_VERSION;
     }
 
-    /**
-     * What's this JDBC driver's major version number?
-     *
-     * @return JDBC driver major version
-     */
-    public  int getDriverMajorVersion() {
+    @Override
+    public int getDriverMajorVersion() {
         return DRIVER_MAJOR_VERSION;
     }
 
-    /**
-     * What's this JDBC driver's minor version number?
-     *
-     * @return JDBC driver minor version number
-     */
-    public  int getDriverMinorVersion() {
+    @Override
+    public int getDriverMinorVersion() {
         return DRIVER_MINOR_VERSION;
     }
 
-    /**
-     * Does the database store tables in a local file?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean usesLocalFiles() throws SQLException {
+    @Override
+    public boolean usesLocalFiles() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database use a file for each table?
-     *
-     * @return true if the database uses a local file for each table
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean usesLocalFilePerTable() throws SQLException {
+    @Override
+    public boolean usesLocalFilePerTable() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database treat mixed case unquoted SQL identifiers as
-     * case sensitive and as a result store them in mixed case?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver will always return false.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsMixedCaseIdentifiers() throws SQLException {
+    @Override
+    public boolean supportsMixedCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * @return a <code>boolean</code> value
-     * @exception SQLException if an error occurs
-     * TODO implement statement pooling on the server.. then in the driver
-     */
+    // TODO implement statement pooling on the server.. then in the driver
+    @Override
     public boolean supportsStatementPooling() throws SQLException {
         return false;
     }
 
+    @Override
     public boolean locatorsUpdateCopy() throws SQLException {
         // Firebird creates a new blob when making changes
         return true;
     }
 
-    /**
-     * Does the database treat mixed case unquoted SQL identifiers as
-     * case insensitive and store them in upper case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesUpperCaseIdentifiers() throws SQLException {
+    @Override
+    public boolean storesUpperCaseIdentifiers() throws SQLException {
         return true;
     }
 
-    /**
-     * Does the database treat mixed case unquoted SQL identifiers as
-     * case insensitive and store them in lower case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesLowerCaseIdentifiers() throws SQLException {
+    @Override
+    public boolean storesLowerCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database treat mixed case unquoted SQL identifiers as
-     * case insensitive and store them in mixed case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesMixedCaseIdentifiers() throws SQLException {
+    @Override
+    public boolean storesMixedCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database treat mixed case quoted SQL identifiers as
-     * case sensitive and as a result store them in mixed case?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver will always return true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
+    @Override
+    public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
         return true;
     }
 
-    /**
-     * Does the database treat mixed case quoted SQL identifiers as
-     * case insensitive and store them in upper case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
+    @Override
+    public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database treat mixed case quoted SQL identifiers as
-     * case insensitive and store them in lower case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
+    @Override
+    public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * Does the database treat mixed case quoted SQL identifiers as
-     * case insensitive and store them in mixed case?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
+    @Override
+    public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * What's the string used to quote SQL identifiers?
-     * This returns a space " " if identifier quoting isn't supported.
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup>
-     * driver always uses a double quote character.
-     *
-     * @return the quoting string
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getIdentifierQuoteString() throws SQLException {
+    @Override
+    public String getIdentifierQuoteString() throws SQLException {
+        // TODO Return " " when connected with dialect 1?
         return "\"";
     }
 
     @Override
-    public  String getSQLKeywords() throws SQLException {
+    public String getSQLKeywords() throws SQLException {
         return versionMetaData.getSqlKeywords();
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
      * are installed.
-     * <p>
-     * {@inheritDoc}
      * </p>
      */
+    @Override
     public String getNumericFunctions() throws SQLException {
         return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedNumericFunctions());
     }
@@ -504,668 +337,357 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
      * are installed.
-     * <p>
-     * {@inheritDoc}
      * </p>
      */
+    @Override
     public String getStringFunctions() throws SQLException {
         return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedStringFunctions());
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
      * are installed.
-     * <p>
-     * {@inheritDoc}
      * </p>
      */
+    @Override
     public String getSystemFunctions() throws SQLException {
         return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedSystemFunctions());
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
      * NOTE: Some of the functions listed may only work on Firebird 2.1 or higher, or when equivalent UDFs
      * are installed.
-     * <p>
-     * {@inheritDoc}
      * </p>
      */
+    @Override
     public String getTimeDateFunctions() throws SQLException {
         return collectionToCommaSeparatedList(FBEscapedFunctionHelper.getSupportedTimeDateFunctions());
     }
 
-    /**
-     * Gets the string that can be used to escape wildcard characters.
-     * This is the string that can be used to escape '_' or '%' in
-     * the string pattern style catalog search parameters.
-     *
-     * <P>The '_' character represents any single character.
-     * <P>The '%' character represents any sequence of zero or
-     * more characters.
-     *
-     * @return the string used to escape wildcard characters
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getSearchStringEscape() throws SQLException {
+    @Override
+    public String getSearchStringEscape() throws SQLException {
         return "\\";
     }
 
-    /**
-     * Gets all the "extra" characters that can be used in unquoted
-     * identifier names (those beyond a-z, A-Z, 0-9 and _).
-     *
-     * @return the string containing the extra characters
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getExtraNameCharacters() throws SQLException {
+    @Override
+    public String getExtraNameCharacters() throws SQLException {
         return "$";
     }
 
-    //--------------------------------------------------------------------
-    // Functions describing which features are supported.
-
-    /**
-     * Is "ALTER TABLE" with add column supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsAlterTableWithAddColumn() throws SQLException {
+    @Override
+    public boolean supportsAlterTableWithAddColumn() throws SQLException {
         return true;
     }
 
-    /**
-     * Is "ALTER TABLE" with drop column supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsAlterTableWithDropColumn() throws SQLException {
+    @Override
+    public boolean supportsAlterTableWithDropColumn() throws SQLException {
         return true;
     }
 
-    /**
-     * Is column aliasing supported?
-     *
-     * <P>If so, the SQL AS clause can be used to provide names for
-     * computed columns or to provide alias names for columns as
-     * required.
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsColumnAliasing() throws SQLException {
+    @Override
+    public boolean supportsColumnAliasing() throws SQLException {
         return true;
     }
 
-    /**
-     * Retrieves whether concatenations between NULL and non-NULL values
-     * equal NULL. For SQL-92 compliance, a JDBC technology-enabled driver will
-     * return <code>true</code>.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean nullPlusNonNullIsNull() throws SQLException {
+    @Override
+    public boolean nullPlusNonNullIsNull() throws SQLException {
         return true;
     }
 
-    /**
-     * Is the CONVERT function between SQL types supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsConvert() throws SQLException {
+    @Override
+    public boolean supportsConvert() throws SQLException {
         // TODO: Set true after JDBC-294 has been done
         return false;   // Support is broken right now
     }
 
-    /**
-     * Retrieves whether CONVERT between the given SQL types supported.
-     *
-     * @param fromType the type to convert from
-     * @param toType the type to convert to
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @see Types
-     */
-    public  boolean supportsConvert(int fromType, int toType) throws SQLException {
+    @Override
+    public boolean supportsConvert(int fromType, int toType) throws SQLException {
         // TODO: implement actual mapping with JDBC-294
         return false;   // Support is broken right now
     }
 
-    /**
-     * Are table correlation names supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsTableCorrelationNames() throws SQLException {
+    @Override
+    public boolean supportsTableCorrelationNames() throws SQLException {
         return true;
     }
 
-    /**
-     * If table correlation names are supported, are they restricted
-     * to be different from the names of the tables?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsDifferentTableCorrelationNames() throws SQLException {
-        return false; //I think
-    }
-
-    /**
-     * Are expressions in "ORDER BY" lists supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsExpressionsInOrderBy() throws SQLException {
-        return false; //coming soon
-    }
-
-    /**
-     * Can an "ORDER BY" clause use columns not in the SELECT statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsOrderByUnrelated() throws SQLException {
-        return true;
-    }
-
-    /**
-     * Is some form of "GROUP BY" clause supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsGroupBy() throws SQLException {
-        return true;
-    }
-
-    /**
-     * Can a "GROUP BY" clause use columns not in the SELECT?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsGroupByUnrelated() throws SQLException {
+    @Override
+    public boolean supportsDifferentTableCorrelationNames() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a "GROUP BY" clause add columns not in the SELECT
-     * provided it specifies all the columns in the SELECT?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsGroupByBeyondSelect() throws SQLException {
+    @Override
+    public boolean supportsExpressionsInOrderBy() throws SQLException {
+        return firebirdSupportInfo.isVersionEqualOrAbove(1, 5);
+    }
+
+    @Override
+    public boolean supportsOrderByUnrelated() throws SQLException {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGroupBy() throws SQLException {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGroupByUnrelated() throws SQLException {
+        // TODO Verify
         return false;
     }
 
-    /**
-     * Is the escape character in "LIKE" clauses supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsLikeEscapeClause() throws SQLException {
-        return true;
-    }
-
-    /**
-     * Are multiple <code>ResultSet</code> from a single execute supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsMultipleResultSets() throws SQLException {
+    @Override
+    public boolean supportsGroupByBeyondSelect() throws SQLException {
+        // TODO Verify
         return false;
     }
 
-    /**
-     * Can we have multiple transactions open at once (on different
-     * connections)?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsMultipleTransactions() throws SQLException {
+    @Override
+    public boolean supportsLikeEscapeClause() throws SQLException {
         return true;
     }
 
-    /**
-     * Can columns be defined as non-nullable?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsNonNullableColumns() throws SQLException {
+    @Override
+    public boolean supportsMultipleResultSets() throws SQLException {
+        return false;
+    }
+
+    @Override
+    public boolean supportsMultipleTransactions() throws SQLException {
         return true;
     }
 
-    /**
-     * Is the ODBC Minimum SQL grammar supported?
-     *
-     * All JDBC Compliant<sup><font size=-2>TM</font></sup> drivers must return true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsMinimumSQLGrammar() throws SQLException {
-        return true; //lets see what the tests say
+    @Override
+    public boolean supportsNonNullableColumns() throws SQLException {
+        return true;
     }
 
-    /**
-     * Is the ODBC Core SQL grammar supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCoreSQLGrammar() throws SQLException {
-        return true; //lets see what the tests say
+    @Override
+    public boolean supportsMinimumSQLGrammar() throws SQLException {
+        return true;
     }
 
-    /**
-     * Is the ODBC Extended SQL grammar supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsExtendedSQLGrammar() throws SQLException {
-        return true; //lets see what the tests say
+    @Override
+    public boolean supportsCoreSQLGrammar() throws SQLException {
+        return true;
     }
 
-    /**
-     * Is the ANSI92 entry level SQL grammar supported?
-     *
-     * All JDBC Compliant<sup><font size=-2>TM</font></sup> drivers must return true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsANSI92EntryLevelSQL() throws SQLException {
-        return true; //lets see what the tests say
+    @Override
+    public boolean supportsExtendedSQLGrammar() throws SQLException {
+        return true;
     }
 
-    /**
-     * Is the ANSI92 intermediate SQL grammar supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsANSI92IntermediateSQL() throws SQLException {
-        return false; //lets see what the tests say
+    @Override
+    public boolean supportsANSI92EntryLevelSQL() throws SQLException {
+        return true;
     }
 
-    /**
-     * Is the ANSI92 full SQL grammar supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsANSI92FullSQL() throws SQLException {
-        return false; //Nah, but lets see what the tests say
+    @Override
+    public boolean supportsANSI92IntermediateSQL() throws SQLException {
+        // TODO Verify
+        return false;
     }
 
-    /**
-     * Is the SQL Integrity Enhancement Facility supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsIntegrityEnhancementFacility() throws SQLException {
+    @Override
+    public boolean supportsANSI92FullSQL() throws SQLException {
+        // TODO Verify
+        return false;
+    }
+
+    @Override
+    public boolean supportsIntegrityEnhancementFacility() throws SQLException {
         return true; // rrokytskyy: yep, they call so foreign keys + cascade deletes
     }
 
-    public  boolean supportsOuterJoins() throws SQLException {
+    @Override
+    public boolean supportsOuterJoins() throws SQLException {
         return true;
     }
 
-    public  boolean supportsFullOuterJoins() throws SQLException {
+    @Override
+    public boolean supportsFullOuterJoins() throws SQLException {
         return true;
     }
 
-    public  boolean supportsLimitedOuterJoins() throws SQLException {
+    @Override
+    public boolean supportsLimitedOuterJoins() throws SQLException {
         return true;
     }
 
     /**
-     * What's the database vendor's preferred term for "schema"?
+     * {@inheritDoc}
      *
-     * @return the vendor term, always <code>null</code> because
-     * schemas are not supported by database server (see JDBC CTS
+     * @return the vendor term, always {@code null} because schemas are not supported by database server (see JDBC CTS
      * for details).
-     * @exception SQLException if a database access error occurs
      */
-    public  String getSchemaTerm() throws  SQLException {
+    @Override
+    public String getSchemaTerm() throws SQLException {
         return null;
     }
 
-    /**
-     * What's the database vendor's preferred term for "procedure"?
-     *
-     * @return the vendor term
-     * @exception SQLException if a database access error occurs
-     */
-    public  String getProcedureTerm() throws SQLException {
+    @Override
+    public String getProcedureTerm() throws SQLException {
         return "PROCEDURE";
     }
 
     /**
-     * What's the database vendor's preferred term for "catalog"?
+     * {@inheritDoc}
      *
-     * @return the vendor term, always <code>null</code> because
-     * catalogs are not supported by database server (see JDBC CTS
+     * @return the vendor term, always {@code null} because catalogs are not supported by database server (see JDBC CTS
      * for details).
-     *
-     * @exception SQLException if a database access error occurs
      */
-    public  String getCatalogTerm() throws  SQLException {
+    @Override
+    public String getCatalogTerm() throws SQLException {
         return null;
     }
 
-    /**
-     * Does a catalog appear at the start of a qualified table name?
-     * (Otherwise it appears at the end)
-     *
-     * @return true if it appears at the start
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean isCatalogAtStart() throws SQLException {
+    @Override
+    public boolean isCatalogAtStart() throws SQLException {
         return false;
     }
 
     /**
-     * What's the separator between catalog and table name?
+     * {@inheritDoc}
      *
-     * @return the separator string, always <code>null</code> because
-     * catalogs are not supported by database server (see JDBC CTS
-     * for details).
-
-     * @exception SQLException if a database access error occurs
+     * @return the separator string, always {@code null} because catalogs are not supported by database server (see
+     * JDBC CTS for details).
      */
-    public  String getCatalogSeparator() throws SQLException {
+    @Override
+    public String getCatalogSeparator() throws SQLException {
         return null;
     }
 
-    /**
-     * Can a schema name be used in a data manipulation statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     *
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSchemasInDataManipulation() throws SQLException {
+    @Override
+    public boolean supportsSchemasInDataManipulation() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a schema name be used in a procedure call statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSchemasInProcedureCalls() throws SQLException {
+    @Override
+    public boolean supportsSchemasInProcedureCalls() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a schema name be used in a table definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSchemasInTableDefinitions() throws SQLException {
+    @Override
+    public boolean supportsSchemasInTableDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a schema name be used in an index definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSchemasInIndexDefinitions() throws SQLException {
+    @Override
+    public boolean supportsSchemasInIndexDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a schema name be used in a privilege definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
+    @Override
+    public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a catalog name be used in a data manipulation statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCatalogsInDataManipulation() throws SQLException {
+    @Override
+    public boolean supportsCatalogsInDataManipulation() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a catalog name be used in a procedure call statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCatalogsInProcedureCalls() throws SQLException {
+    @Override
+    public boolean supportsCatalogsInProcedureCalls() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a catalog name be used in a table definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCatalogsInTableDefinitions() throws SQLException {
+    @Override
+    public boolean supportsCatalogsInTableDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a catalog name be used in an index definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCatalogsInIndexDefinitions() throws SQLException {
+    @Override
+    public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Can a catalog name be used in a privilege definition statement?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
+    @Override
+    public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
         return false;
     }
 
-    /**
-     * Is positioned DELETE supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsPositionedDelete() throws SQLException {
+    @Override
+    public boolean supportsPositionedDelete() throws SQLException {
         return true;
     }
 
-    /**
-     * Is positioned UPDATE supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsPositionedUpdate() throws SQLException {
+    @Override
+    public boolean supportsPositionedUpdate() throws SQLException {
         return true;
     }
 
-    /**
-     * Is SELECT for UPDATE supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSelectForUpdate() throws SQLException {
+    @Override
+    public boolean supportsSelectForUpdate() throws SQLException {
         return true;
     }
 
-    /**
-     * Are stored procedure calls using the stored procedure escape
-     * syntax supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsStoredProcedures() throws SQLException {
+    @Override
+    public boolean supportsStoredProcedures() throws SQLException {
         return true;
     }
 
-    /**
-     * Are subqueries in comparison expressions supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSubqueriesInComparisons() throws SQLException {
+    @Override
+    public boolean supportsSubqueriesInComparisons() throws SQLException {
         return true;
     }
 
-    /**
-     * Are subqueries in 'exists' expressions supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSubqueriesInExists() throws SQLException {
+    @Override
+    public boolean supportsSubqueriesInExists() throws SQLException {
         return true;
     }
 
-    /**
-     * Are subqueries in 'in' statements supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSubqueriesInIns() throws SQLException {
+    @Override
+    public boolean supportsSubqueriesInIns() throws SQLException {
         return true;
     }
 
-    /**
-     * Are subqueries in quantified expressions supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsSubqueriesInQuantifieds() throws SQLException {
+    @Override
+    public boolean supportsSubqueriesInQuantifieds() throws SQLException {
         return true;
     }
 
-    /**
-     * Are correlated subqueries supported?
-     *
-     * A JDBC Compliant<sup><font size=-2>TM</font></sup> driver always returns true.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsCorrelatedSubqueries() throws SQLException {
+    @Override
+    public boolean supportsCorrelatedSubqueries() throws SQLException {
         return true;
     }
 
-    /**
-     * Is SQL UNION supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsUnion() throws SQLException {
+    @Override
+    public boolean supportsUnion() throws SQLException {
         return true;
     }
 
-    /**
-     * Is SQL UNION ALL supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsUnionAll() throws SQLException {
+    @Override
+    public boolean supportsUnionAll() throws SQLException {
         return true;
     }
 
-    /**
-     * Can cursors remain open across commits?
-     *
-     * @return <code>true</code> if cursors always remain open;
-     *       <code>false</code> if they might not remain open
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsOpenCursorsAcrossCommit() throws SQLException {
+    @Override
+    public boolean supportsOpenCursorsAcrossCommit() throws SQLException {
         return false;//only when commit retaining is executed I think
     }
 
-    /**
-     * Can cursors remain open across rollbacks?
-     *
-     * @return <code>true</code> if cursors always remain open;
-     *       <code>false</code> if they might not remain open
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsOpenCursorsAcrossRollback() throws SQLException {
+    @Override
+    public boolean supportsOpenCursorsAcrossRollback() throws SQLException {
         return false;//commit retaining only.
     }
 
-    /**
-     * Can statements remain open across commits?
-     *
-     * @return <code>true</code> if statements always remain open;
-     *       <code>false</code> if they might not remain open
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsOpenStatementsAcrossCommit() throws SQLException {
+    @Override
+    public boolean supportsOpenStatementsAcrossCommit() throws SQLException {
         return true;
     }
 
-    /**
-     * Can statements remain open across rollbacks?
-     *
-     * @return <code>true</code> if statements always remain open;
-     *       <code>false</code> if they might not remain open
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsOpenStatementsAcrossRollback() throws SQLException {
+    @Override
+    public boolean supportsOpenStatementsAcrossRollback() throws SQLException {
         return true;
     }
 
@@ -1175,36 +697,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     // Unless otherwise specified, a result of zero means there is no
     // limit, or the limit is not known.
 
-    /**
-     * How many hex characters can you have in an inline binary literal?
-     *
-     * @return max binary literal length in hex characters;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxBinaryLiteralLength() throws SQLException {
+    @Override
+    public int getMaxBinaryLiteralLength() throws SQLException {
         return 0; // TODO 32764 Test (assumed on length/2 and max string literal length)
     }
 
-    /**
-     * What's the max length for a character literal?
-     *
-     * @return max literal length;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxCharLiteralLength() throws SQLException {
+    @Override
+    public int getMaxCharLiteralLength() throws SQLException {
         return 32765;
     }
 
-    /**
-     * What's the limit on column name length?
-     *
-     * @return max column name length;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getMaxColumnNameLength() throws SQLException {
+        return getMaxObjectNameLength();
+    }
+
+    private int getMaxObjectNameLength() {
         if (gdsHelper.compareToVersion(4, 0) < 0) {
             return OBJECT_NAME_LENGTH_BEFORE_V4_0;
         } else {
@@ -1212,93 +720,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     * What's the maximum number of columns in a "GROUP BY" clause?
-     *
-     * @return max number of columns;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxColumnsInGroupBy() throws SQLException {
+    @Override
+    public int getMaxColumnsInGroupBy() throws SQLException {
         return 0; //I don't know
     }
 
-    /**
-     * What's the maximum number of columns allowed in an index?
-     *
-     * @return max number of columns;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxColumnsInIndex() throws SQLException {
+    @Override
+    public int getMaxColumnsInIndex() throws SQLException {
         return 0; //I don't know
     }
 
-    /**
-     * What's the maximum number of columns in an "ORDER BY" clause?
-     *
-     * @return max number of columns;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxColumnsInOrderBy() throws SQLException {
+    @Override
+    public int getMaxColumnsInOrderBy() throws SQLException {
         return 0; //I don't know
     }
 
-    /**
-     * What's the maximum number of columns in a "SELECT" list?
-     *
-     * @return max number of columns;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxColumnsInSelect() throws SQLException {
+    @Override
+    public int getMaxColumnsInSelect() throws SQLException {
         return 0; //I don't know
     }
 
-    /**
-     * What's the maximum number of columns in a table?
-     *
-     * @return max number of columns;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxColumnsInTable() throws SQLException {
+    @Override
+    public int getMaxColumnsInTable() throws SQLException {
         return 32767; // Depends on datatypes and sizes, at most 64 kbyte excluding blobs (but including blob ids)
     }
 
-    /**
-     * How many active connections can we have at a time to this database?
-     *
-     * @return max number of active connections;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxConnections() throws SQLException {
+    @Override
+    public int getMaxConnections() throws SQLException {
         return 0; //I don't know
     }
 
-    /**
-     * What's the maximum cursor name length?
-     *
-     * @return max cursor name length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxCursorNameLength() throws SQLException {
+    @Override
+    public int getMaxCursorNameLength() throws SQLException {
         return 31;
     }
 
-    /**
-     * Retrieves the maximum number of bytes for an index, including all
-     * of the parts of the index.
-     *
-     * @return max index length in bytes, which includes the composite of all
-     *      the constituent parts of the index;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxIndexLength() throws SQLException {
+    @Override
+    public int getMaxIndexLength() throws SQLException {
         if (gdsHelper.compareToVersion(2, 0) < 0) {
             return 252; // See http://www.firebirdsql.org/en/firebird-technical-specifications/
         } else {
@@ -1306,163 +764,76 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     * What's the maximum length allowed for a schema name?
-     *
-     * @return max name length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxSchemaNameLength() throws SQLException {
+    @Override
+    public int getMaxSchemaNameLength() throws SQLException {
         return 0; //No schemas
     }
 
-    /**
-     * What's the maximum length of a procedure name?
-     *
-     * @return max name length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxProcedureNameLength() throws SQLException {
-        if (gdsHelper.compareToVersion(4, 0) < 0) {
-            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
-        } else {
-            return OBJECT_NAME_LENGTH_V4_0;
-        }
+    @Override
+    public int getMaxProcedureNameLength() throws SQLException {
+        return getMaxObjectNameLength();
     }
 
-    /**
-     * What's the maximum length of a catalog name?
-     *
-     * @return max name length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxCatalogNameLength() throws SQLException {
+    @Override
+    public int getMaxCatalogNameLength() throws SQLException {
         return 0; //No catalogs
     }
 
-    /**
-     * What's the maximum length of a single row?
-     *
-     * @return max row size in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxRowSize() throws SQLException {
+    @Override
+    public int getMaxRowSize() throws SQLException {
         if (gdsHelper.compareToVersion(1, 5) >= 0)
             return 65531;
         else
             return 0;
     }
 
-    /**
-     * Did getMaxRowSize() include LONGVARCHAR and LONGVARBINARY
-     * blobs?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
+    @Override
+    public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
         return false; // Blob sizes are not included in rowsize
     }
 
-    /**
-     * What's the maximum length of an SQL statement?
-     *
-     * @return max length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxStatementLength() throws SQLException {
+    @Override
+    public int getMaxStatementLength() throws SQLException {
         // TODO 10MB (or 2GB?) for Firebird 3 (test if we don't need to change anything else to support this)
         return 65536;
     }
 
-    /**
-     * How many active statements can we have open at one time to this
-     * database?
-     *
-     * @return the maximum number of statements that can be open at one time;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxStatements() throws SQLException {
+    @Override
+    public int getMaxStatements() throws SQLException {
+        // Limited by max handles, but this includes other objects than statements
         return 0;
     }
 
-    /**
-     * What's the maximum length of a table name?
-     *
-     * @return max name length in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxTableNameLength() throws SQLException {
-        if (gdsHelper.compareToVersion(4, 0) < 0) {
-            return OBJECT_NAME_LENGTH_BEFORE_V4_0;
-        } else {
-            return OBJECT_NAME_LENGTH_V4_0;
-        }
+    @Override
+    public int getMaxTableNameLength() throws SQLException {
+        return getMaxObjectNameLength();
     }
 
-    /**
-     * What's the maximum number of tables in a SELECT statement?
-     *
-     * @return the maximum number of tables allowed in a SELECT statement;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxTablesInSelect() throws SQLException {
+    @Override
+    public int getMaxTablesInSelect() throws SQLException {
+        // TODO Check if there is a max
         return 0;
     }
 
-    /**
-     * What's the maximum length of a user name?
-     *
-     * @return max user name length  in bytes;
-     *      a result of zero means that there is no limit or the limit is not known
-     * @exception SQLException if a database access error occurs
-     */
-    public  int getMaxUserNameLength() throws SQLException {
+    @Override
+    public int getMaxUserNameLength() throws SQLException {
+        // TODO getMaxObjectNameLength?
         return 31;//I don't know??
     }
 
     //----------------------------------------------------------------------
 
-    /**
-     * What's the database's default transaction isolation level?  The
-     * values are defined in <code>java.sql.Connection</code>.
-     *
-     * @return the default isolation level
-     * @exception SQLException if a database access error occurs
-     * @see Connection
-     */
-    public  int getDefaultTransactionIsolation() throws SQLException {
-        return Connection.TRANSACTION_READ_COMMITTED;//close enough to snapshot.
+    @Override
+    public int getDefaultTransactionIsolation() throws SQLException {
+        return Connection.TRANSACTION_READ_COMMITTED;
     }
 
-    /**
-     * Are transactions supported? If not, invoking the method
-     * <code>commit</code> is a noop and the
-     * isolation level is TRANSACTION_NONE.
-     *
-     * @return <code>true</code> if transactions are supported; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
-    public  boolean supportsTransactions() throws SQLException {
+    @Override
+    public boolean supportsTransactions() throws SQLException {
         return true;
     }
 
-    /**
-     * Does this database support the given transaction isolation level?
-     *
-     * @param level the values are defined in <code>java.sql.Connection</code>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @see Connection
-     */
+    @Override
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
         switch (level) {
             case Connection.TRANSACTION_NONE: return false;
@@ -1475,44 +846,41 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Are both data definition and data manipulation statements
-     * within a transaction supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Although Firebird supports both DML and DDL in transactions, it is not possible to use objects in the same
+     * transaction that defines them. For example, it is not possible to insert into a table in the same transaction
+     * that created it.
+     * </p>
      */
+    @Override
     public boolean supportsDataDefinitionAndDataManipulationTransactions() throws SQLException {
-        return true;//but not on the tables you defined in the transaction!
+        return true;
     }
 
-    /**
-     * Are only data manipulation statements within a transaction
-     * supported?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsDataManipulationTransactionsOnly() throws SQLException {
         return false;
     }
 
     /**
-     * Does a data definition statement within a transaction force the
-     * transaction to commit?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Read the note on {@link #supportsDataDefinitionAndDataManipulationTransactions()}.
+     * </p>
      */
+    @Override
     public boolean dataDefinitionCausesTransactionCommit() throws SQLException {
-        return false;//but you can't use the table till the transaction is committed.
+        return false;
     }
 
     /**
-     * Is a data definition statement within a transaction ignored?
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Read the note on {@link #supportsDataDefinitionAndDataManipulationTransactions()}.
+     * </p>
      */
+    @Override
     public boolean dataDefinitionIgnoredInTransactions() throws SQLException {
         return false;
     }
@@ -1526,41 +894,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "where ";
     private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
 
-    /**
-     * Gets a description of the stored procedures available in a
-     * catalog.
-     *
-     * <P>Only procedure descriptions matching the schema and
-     * procedure name criteria are returned.  They are ordered by
-     * PROCEDURE_SCHEM, and PROCEDURE_NAME.
-     *
-     * <P>Each procedure description has the the following columns:
-     *  <OL>
-     *  <LI><B>PROCEDURE_CAT</B> String => procedure catalog (may be null)
-     *  <LI><B>PROCEDURE_SCHEM</B> String => procedure schema (may be null)
-     *  <LI><B>PROCEDURE_NAME</B> String => procedure name
-     *  <LI> reserved for future use
-     *  <LI> reserved for future use
-     *  <LI> reserved for future use
-     *  <LI><B>REMARKS</B> String => explanatory comment on the procedure
-     *  <LI><B>PROCEDURE_TYPE</B> short => kind of procedure:
-     *      <UL>
-     *      <LI> procedureResultUnknown - May return a result
-     *      <LI> procedureNoResult - Does not return a result
-     *      <LI> procedureReturnsResult - Returns a result
-     *      </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String => The name which uniquely identifies this procedure within its schema.
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param procedureNamePattern a procedure name pattern
-     * @return <code>ResultSet</code> - each row is a procedure description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     */
+    @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, datatypeCoder)
@@ -1630,98 +964,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "PP.RDB$PARAMETER_TYPE desc,"
         + "PP.RDB$PARAMETER_NUMBER ";
 
-    /**
-     * Retrieves a description of the given catalog's stored procedure parameter
-     * and result columns.
-     *
-     * <P>Only descriptions matching the schema, procedure and
-     * parameter name criteria are returned.  They are ordered by
-     * PROCEDURE_CAT, PROCEDURE_SCHEM, PROCEDURE_NAME and SPECIFIC_NAME. Within this, the return value,
-     * if any, is first. Next are the parameter descriptions in call
-     * order. The column descriptions follow in column number order.
-     *
-     * <P>Each row in the <code>ResultSet</code> is a parameter description or
-     * column description with the following fields:
-     *  <OL>
-     *  <LI><B>PROCEDURE_CAT</B> String => procedure catalog (may be <code>null</code>)
-     *  <LI><B>PROCEDURE_SCHEM</B> String => procedure schema (may be <code>null</code>)
-     *  <LI><B>PROCEDURE_NAME</B> String => procedure name
-     *  <LI><B>COLUMN_NAME</B> String => column/parameter name
-     *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
-     *      <UL>
-     *      <LI> procedureColumnUnknown - nobody knows
-     *      <LI> procedureColumnIn - IN parameter
-     *      <LI> procedureColumnInOut - INOUT parameter
-     *      <LI> procedureColumnOut - OUT parameter
-     *      <LI> procedureColumnReturn - procedure return value
-     *      <LI> procedureColumnResult - result column in <code>ResultSet</code>
-     *      </UL>
-     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
-     *  <LI><B>TYPE_NAME</B> String => SQL type name, for a UDT type the
-     *  type name is fully qualified
-     *  <LI><B>PRECISION</B> int => precision
-     *  <LI><B>LENGTH</B> int => length in bytes of data
-     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where
-     * SCALE is not applicable.
-     *  <LI><B>RADIX</B> short => radix
-     *  <LI><B>NULLABLE</B> short => can it contain NULL.
-     *      <UL>
-     *      <LI> procedureNoNulls - does not allow NULL values
-     *      <LI> procedureNullable - allows NULL values
-     *      <LI> procedureNullableUnknown - nullability unknown
-     *      </UL>
-     *  <LI><B>REMARKS</B> String => comment describing parameter/column
-     *  <LI><B>COLUMN_DEF</B> String => default value for the column, which should be interpreted as a string when the value is enclosed in single quotes (may be <code>null</code>)
-     *      <UL>
-     *      <LI> The string NULL (not enclosed in quotes) - if NULL was specified as the default value
-     *      <LI> TRUNCATE (not enclosed in quotes)        - if the specified default value cannot be represented without truncation
-     *      <LI> NULL                                     - if a default value was not specified
-     *      </UL>
-     *  <LI><B>SQL_DATA_TYPE</B> int  => reserved for future use
-     *  <LI><B>SQL_DATETIME_SUB</B> int  => reserved for future use
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary and character based columns.  For any other datatype the returned value is a
-     * NULL
-     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting from 1, for the input and output parameters for a procedure. A value of 0
-     *is returned if this row describes the procedure's return value.  For result set columns, it is the
-     *ordinal position of the column in the result set starting from 1.  If there are
-     *multiple result sets, the column ordinal positions are implementation
-     * defined.
-     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine the nullability for a column.
-     *       <UL>
-     *       <LI> YES           --- if the parameter can include NULLs
-     *       <LI> NO            --- if the parameter cannot include NULLs
-     *       <LI> empty string  --- if the nullability for the
-     * parameter is unknown
-     *       </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies this procedure within its schema.
-     *  </OL>
-     *
-     * <P><B>Note:</B> Some databases may not return the column
-     * descriptions for a procedure.
-     *
-     * <p>The PRECISION column represents the specified column size for the given column.
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
-     * this is the length in bytes. Null is returned for data types where the
-     * column size is not applicable.
-     * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
-     * @param schemaPattern a schema name pattern; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
-     * @param procedureNamePattern a procedure name pattern; must match the
-     *        procedure name as it is stored in the database
-     * @param columnNamePattern a column name pattern; must match the column name
-     *        as it is stored in the database
-     * @return <code>ResultSet</code> - each row describes a stored procedure parameter or
-     *      column
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     */
+    @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, datatypeCoder)
@@ -1887,52 +1130,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @SuppressWarnings("unused")
     public static final String[] ALL_TYPES = ALL_TYPES_2_5;
 
-    /**
-     * Retrieves a description of the tables available in the given catalog.
-     * Only table descriptions matching the catalog, schema, table
-     * name and type criteria are returned.  They are ordered by
-     * <code>TABLE_TYPE</code>, <code>TABLE_CAT</code>,
-     * <code>TABLE_SCHEM</code> and <code>TABLE_NAME</code>.
-     * <P>
-     * Each table description has the following columns:
-     * <OL>
-     * <LI><B>TABLE_CAT</B> String {@code =>} table catalog (may be <code>null</code>)
-     * <LI><B>TABLE_SCHEM</B> String {@code =>} table schema (may be <code>null</code>)
-     * <LI><B>TABLE_NAME</B> String {@code =>} table name
-     * <LI><B>TABLE_TYPE</B> String {@code =>} table type.  Typical types are "TABLE",
-     * "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
-     * "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-     * <LI><B>REMARKS</B> String {@code =>} explanatory comment on the table
-     * <LI><B>TYPE_CAT</B> String {@code =>} the types catalog (may be <code>null</code>)
-     * <LI><B>TYPE_SCHEM</B> String {@code =>} the types schema (may be <code>null</code>)
-     * <LI><B>TYPE_NAME</B> String {@code =>} type name (may be <code>null</code>)
-     * <LI><B>SELF_REFERENCING_COL_NAME</B> String {@code =>} name of the designated
-     * "identifier" column of a typed table (may be <code>null</code>)
-     * <LI><B>REF_GENERATION</B> String {@code =>} specifies how values in
-     * SELF_REFERENCING_COL_NAME are created. Values are
-     * "SYSTEM", "USER", "DERIVED". (may be <code>null</code>)
-     * </OL>
-     *
-     * <P><B>Note:</B> Some databases may not return information for
-     * all tables.
-     *
-     * @param catalog a catalog name; must match the catalog name as it
-     *         is stored in the database; "" retrieves those without a catalog;
-     *         <code>null</code> means that the catalog name should not be used to narrow
-     *         the search
-     * @param schemaPattern a schema name pattern; must match the schema name
-     *         as it is stored in the database; "" retrieves those without a schema;
-     *         <code>null</code> means that the schema name should not be used to narrow
-     *         the search
-     * @param tableNamePattern a table name pattern; must match the
-     *         table name as it is stored in the database
-     * @param types a list of table types, which must be from the list of table types
-     *         returned from {@link #getTableTypes},to include; <code>null</code> returns
-     *         all types
-     * @return <code>ResultSet</code> - each row is a table description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     */
+    @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
             throws SQLException {
         if (hasGlobalTemporaryTables()) {
@@ -2018,7 +1216,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 typeCondition.append(" 1 = 0 ");
             }
 
-            sql = sql + (nameClause.hasCondition() ?  " (" + typeCondition + ") " : " where " + typeCondition + " ");
+            sql = sql + (nameClause.hasCondition() ? " (" + typeCondition + ") " : " where " + typeCondition + " ");
         } else if (nameClause.hasCondition()) {
             // Clause condition always ends in "and"
             sql += " 1=1 ";
@@ -2133,38 +1331,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return doQuery(sql, params);
     }
 
-    /**
-     * Gets the schema names available in this database.  The results
-     * are ordered by schema name.
-     *
-     * <P>The schema columns are:
-     *  <OL>
-     *  <LI><B>TABLE_SCHEM</B> String => schema name
-     *  <LI><B>TABLE_CATALOG</B> String => catalog name (may be <code>null</code>)
-     *  </OL>
-     *
-     * @return <code>ResultSet</code> - each row has a single String column that is a
-     * schema name
-     * @exception SQLException if a database access error occurs
-     */
-    public  ResultSet getSchemas() throws SQLException {
+    @Override
+    public ResultSet getSchemas() throws SQLException {
         return getSchemas(null, null);
     }
 
-    /**
-     * Gets the catalog names available in this database.  The results
-     * are ordered by catalog name.
-     *
-     * <P>The catalog column is:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => catalog name
-     *  </OL>
-     *
-     * @return <code>ResultSet</code> - each row has a single String column that is a
-     * catalog name
-     * @exception SQLException if a database access error occurs
-     */
-    public  ResultSet getCatalogs() throws SQLException {
+    @Override
+    public ResultSet getCatalogs() throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
                 .toRowDescriptor();
@@ -2172,22 +1345,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Gets the table types available in this database.  The results
-     * are ordered by table type.
-     *
-     * <P>The table type is:
-     *  <OL>
-     *  <LI><B>TABLE_TYPE</B> String => table type.  Typical types are "TABLE",
-     *          "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
-     *          "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-     *  </OL>
-     *
-     * @return <code>ResultSet</code> - each row has a single String column that is a
-     * table type
-     * @exception SQLException if a database access error occurs
-     */
-    public  ResultSet getTableTypes() throws SQLException {
+    @Override
+    public ResultSet getTableTypes() throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
                 .toRowDescriptor();
@@ -2248,108 +1407,32 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //@formatter:on
 
     /**
-     * Retrieves a description of table columns available in
-     * the specified catalog.
+     * {@inheritDoc}
      *
-     * <P>Only column descriptions matching the catalog, schema, table
-     * and column name criteria are returned.  They are ordered by
-     * <code>TABLE_CAT</code>,<code>TABLE_SCHEM</code>,
-     * <code>TABLE_NAME</code>, and <code>ORDINAL_POSITION</code>.
-     *
-     * <P>Each column description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be <code>null</code>)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be <code>null</code>)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
-     *  <LI><B>TYPE_NAME</B> String => Data source dependent type name,
-     *  for a UDT the type name is fully qualified
-     *  <LI><B>COLUMN_SIZE</B> int => column size.
-     *  <LI><B>BUFFER_LENGTH</B> is not used.
-     *  <LI><B>DECIMAL_DIGITS</B> int => the number of fractional digits. Null is returned for data types where
-     * DECIMAL_DIGITS is not applicable.
-     *  <LI><B>NUM_PREC_RADIX</B> int => Radix (typically either 10 or 2)
-     *  <LI><B>NULLABLE</B> int => is NULL allowed.
-     *      <UL>
-     *      <LI> columnNoNulls - might not allow <code>NULL</code> values
-     *      <LI> columnNullable - definitely allows <code>NULL</code> values
-     *      <LI> columnNullableUnknown - nullability unknown
-     *      </UL>
-     *  <LI><B>REMARKS</B> String => comment describing column (may be <code>null</code>)
-     *  <LI><B>COLUMN_DEF</B> String => default value for the column, which should be interpreted as a string when the value is enclosed in single quotes (may be <code>null</code>)
-     *  <LI><B>SQL_DATA_TYPE</B> int => unused
-     *  <LI><B>SQL_DATETIME_SUB</B> int => unused
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int => for char types the
-     *       maximum number of bytes in the column
-     *  <LI><B>ORDINAL_POSITION</B> int => index of column in table
-     *      (starting at 1)
-     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine the nullability for a column.
-     *       <UL>
-     *       <LI> YES           --- if the column can include NULLs
-     *       <LI> NO            --- if the column cannot include NULLs
-     *       <LI> empty string  --- if the nullability for the
-     * column is unknown
-     *       </UL>
-     *  <LI><B>SCOPE_CATALOG</B> String => catalog of table that is the scope
-     *      of a reference attribute (<code>null</code> if DATA_TYPE isn't REF)
-     *  <LI><B>SCOPE_SCHEMA</B> String => schema of table that is the scope
-     *      of a reference attribute (<code>null</code> if the DATA_TYPE isn't REF)
-     *  <LI><B>SCOPE_TABLE</B> String => table name that this the scope
-     *      of a reference attribute (<code>null</code> if the DATA_TYPE isn't REF)
-     *  <LI><B>SOURCE_DATA_TYPE</B> short => source type of a distinct type or user-generated
-     *      Ref type, SQL type from java.sql.Types (<code>null</code> if DATA_TYPE
-     *      isn't DISTINCT or user-generated REF)
-     *   <LI><B>IS_AUTOINCREMENT</B> String  => Indicates whether this column is auto incremented
-     *       <UL>
-     *       <LI> YES           --- if the column is auto incremented
-     *       <LI> NO            --- if the column is not auto incremented
-     *       <LI> empty string  --- if it cannot be determined whether the column is auto incremented
-     *       </UL>
-     *   <LI><B>IS_GENERATEDCOLUMN</B> String  => Indicates whether this is a generated column
-     *       <UL>
-     *       <LI> YES           --- if this a generated column
-     *       <LI> NO            --- if this not a generated column
-     *       <LI> empty string  --- if it cannot be determined whether this is a generated column
-     *       </UL>
-     *  <LI><B>JB_IS_IDENTITY</B> String  => Indicates whether this column is an identity column (<b>NOTE: Jaybird specific column; retrieve by name!</b>).
-     *      There is subtle difference with the meaning of {@code IS_AUTOINCREMENT}. This column indicates if the column
-     *      is a true identity column.
-     *       <UL>
-     *       <LI> YES           --- if the column is an identity column
-     *       <LI> NO            --- if the column is not an identity column
-     *       </UL>
-     *  <LI><B>JB_IDENTITY_TYPE</B> String  => Type of identity column (<b>NOTE: Jaybird specific column; retrieve by name!</b>)
-     *       <UL>
-     *       <LI> ALWAYS        --- for a GENERATED ALWAYS AS IDENTITY column (not yet supported in Firebird 3!)
-     *       <LI> BY DEFAULT    --- for a GENERATED BY DEFAULT AS IDENTITY column
-     *       <LI> null          --- if the column is not an identity type (or the identity type is unknown)
-     *       </UL>
-     *  </OL>
-     *
-     * <p>The COLUMN_SIZE column specifies the column size for the given column.
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
-     * this is the length in bytes. Null is returned for data types where the
-     * column size is not applicable.
-     *
-     * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
-     * @param schemaPattern a schema name pattern; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
-     * @param tableNamePattern a table name pattern; must match the
-     *        table name as it is stored in the database
-     * @param columnNamePattern a column name pattern; must match the column
-     *        name as it is stored in the database
-     * @return <code>ResultSet</code> - each row is a column description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="25">
+     * <li><b>JB_IS_IDENTITY</b> String  => Indicates whether this column is an identity column (<b>NOTE: Jaybird
+     * specific column; retrieve by name!</b>).
+     * There is a subtle difference with the meaning of {@code IS_AUTOINCREMENT}. This column indicates if the column
+     * is a true identity column.
+     * <ul>
+     * <li> YES           --- if the column is an identity column</li>
+     * <li> NO            --- if the column is not an identity column</li>
+     * </ul>
+     * </li>
+     * <li><b>JB_IDENTITY_TYPE</b> String  => Type of identity column (<b>NOTE: Jaybird specific column; retrieve by
+     * name!</b>)
+     * <ul>
+     * <li> ALWAYS        --- for a GENERATED ALWAYS AS IDENTITY column (not yet supported in Firebird 3!)</li>
+     * <li> BY DEFAULT    --- for a GENERATED BY DEFAULT AS IDENTITY column</li>
+     * <li> null          --- if the column is not an identity type (or the identity type is unknown)</li>
+     * </ul>
+     * </li>
+     * </ol>
+     * </p>
      */
+    @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(26, datatypeCoder)
@@ -2728,42 +1811,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Maps the (one character) Firebird privilege to the equivalent JDBC privilege.
      *
-     * @param firebirdPrivilege Firebird privilege
+     * @param firebirdPrivilege
+     *         Firebird privilege
      * @return JDBC privilege encoded as byte array
      */
     private static byte[] mapPrivilege(String firebirdPrivilege) {
         return PRIVILEGE_MAPPING.get(firebirdPrivilege);
     }
 
-    /**
-     * Gets a description of the access rights for a table's columns.
-     *
-     * <P>Only privileges matching the column name criteria are
-     * returned.  They are ordered by COLUMN_NAME and PRIVILEGE.
-     *
-     * <P>Each privilige description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>GRANTOR</B> => grantor of access (may be null)
-     *  <LI><B>GRANTEE</B> String => grantee of access
-     *  <LI><B>PRIVILEGE</B> String => name of access (SELECT,
-     *      INSERT, UPDATE, REFRENCES, ...)
-     *  <LI><B>IS_GRANTABLE</B> String => "YES" if grantee is permitted
-     *      to grant to others; "NO" if not; null if unknown
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those without a schema
-     * @param table a table name
-     * @param columnNamePattern a column name pattern
-     * @return <code>ResultSet</code> - each row is a column privilege description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     */
+    @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
@@ -2827,39 +1883,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + " RDB$FIELD_NAME is null "
         + "order by 1, 4";
 
-    /**
-     * Gets a description of the access rights for each table available
-     * in a catalog. Note that a table privilege applies to one or
-     * more columns in the table. It would be wrong to assume that
-     * this priviledge applies to all columns (this may be true for
-     * some systems but is not true for all.)
-     *
-     * <P>Only privileges matching the schema and table name
-     * criteria are returned.  They are ordered by TABLE_SCHEM,
-     * TABLE_NAME, and PRIVILEGE.
-     *
-     * <P>Each privilige description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>GRANTOR</B> => grantor of access (may be null)
-     *  <LI><B>GRANTEE</B> String => grantee of access
-     *  <LI><B>PRIVILEGE</B> String => name of access (SELECT,
-     *      INSERT, UPDATE, REFRENCES, ...)
-     *  <LI><B>IS_GRANTABLE</B> String => "YES" if grantee is permitted
-     *      to grant to others; "NO" if not; null if unknown
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schemaPattern a schema name pattern; "" retrieves those
-     * without a schema
-     * @param tableNamePattern a table name pattern
-     * @return <code>ResultSet</code> - each row is a table privilege description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     */
+    @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
             throws SQLException {
         final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
@@ -2977,16 +2001,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Get primary key of the table as best row identifier.
      *
-     * @param table name of the table.
-     * @param scope scope, we just include it in the result set.
-     * @param valueBuilder Builder for row values
-     *
+     * @param table
+     *         name of the table.
+     * @param scope
+     *         scope, we just include it in the result set.
+     * @param valueBuilder
+     *         Builder for row values
      * @return list of result set values, when size is 0, no primary key has
      * been defined for a table.
-     *
-     * @throws SQLException if something went wrong.
+     * @throws SQLException
+     *         if something went wrong.
      */
-    private List<RowValue> getPrimaryKeyIdentifier(String table, int scope, final RowValueBuilder valueBuilder) throws SQLException {
+    private List<RowValue> getPrimaryKeyIdentifier(String table, int scope,
+            final RowValueBuilder valueBuilder) throws SQLException {
         try (ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Collections.singletonList(table))) {
             final List<RowValue> rows = new ArrayList<>();
             while (rs.next()) {
@@ -3080,28 +2107,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
-    /**
-     * Gets a description of a table's primary key columns.  They
-     * are ordered by COLUMN_NAME.
-     *
-     * <P>Each primary key column description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>COLUMN_NAME</B> String => column name
-     *  <LI><B>KEY_SEQ</B> short => sequence number within primary key
-     *  <LI><B>PK_NAME</B> String => primary key name (may be null)
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those
-     * without a schema
-     * @param table a table name
-     * @return <code>ResultSet</code> - each row is a primary key column description
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
         RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
@@ -3178,81 +2184,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Maps the Firebird action name to the equivalent JDBC action.
      *
-     * @param fbAction Firebird action
+     * @param fbAction
+     *         Firebird action
      * @return JDBC action encoded as byte array
      */
     private static byte[] mapAction(String fbAction) {
         return ACTION_MAPPING.get(fbAction);
     }
 
-    /**
-     * Gets a description of the primary key columns that are
-     * referenced by a table's foreign key columns (the primary keys
-     * imported by a table).  They are ordered by PKTABLE_CAT,
-     * PKTABLE_SCHEM, PKTABLE_NAME, and KEY_SEQ.
-     *
-     * <P>Each primary key column description has the following columns:
-     *  <OL>
-     *  <LI><B>PKTABLE_CAT</B> String => primary key table catalog
-     *      being imported (may be null)
-     *  <LI><B>PKTABLE_SCHEM</B> String => primary key table schema
-     *      being imported (may be null)
-     *  <LI><B>PKTABLE_NAME</B> String => primary key table name
-     *      being imported
-     *  <LI><B>PKCOLUMN_NAME</B> String => primary key column name
-     *      being imported
-     *  <LI><B>FKTABLE_CAT</B> String => foreign key table catalog (may be null)
-     *  <LI><B>FKTABLE_SCHEM</B> String => foreign key table schema (may be null)
-     *  <LI><B>FKTABLE_NAME</B> String => foreign key table name
-     *  <LI><B>FKCOLUMN_NAME</B> String => foreign key column name
-     *  <LI><B>KEY_SEQ</B> short => sequence number within foreign key
-     *  <LI><B>UPDATE_RULE</B> short => What happens to
-     *       foreign key when primary is updated:
-     *      <UL>
-     *      <LI> importedNoAction - do not allow update of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - change imported key to agree
-     *               with primary key update
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been updated
-     *      <LI> importedKeySetDefault - change imported key to default values
-     *               if its primary key has been updated
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      </UL>
-     *  <LI><B>DELETE_RULE</B> short => What happens to
-     *      the foreign key when primary is deleted.
-     *      <UL>
-     *      <LI> importedKeyNoAction - do not allow delete of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - delete rows that import a deleted key
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been deleted
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      <LI> importedKeySetDefault - change imported key to default if
-     *               its primary key has been deleted
-     *      </UL>
-     *  <LI><B>FK_NAME</B> String => foreign key name (may be null)
-     *  <LI><B>PK_NAME</B> String => primary key name (may be null)
-     *  <LI><B>DEFERRABILITY</B> short => can the evaluation of foreign key
-     *      constraints be deferred until commit
-     *      <UL>
-     *      <LI> importedKeyInitiallyDeferred - see SQL92 for definition
-     *      <LI> importedKeyInitiallyImmediate - see SQL92 for definition
-     *      <LI> importedKeyNotDeferrable - see SQL92 for definition
-     *      </UL>
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those
-     * without a schema
-     * @param table a table name
-     * @return <code>ResultSet</code> - each row is a primary key column description
-     * @exception SQLException if a database access error occurs
-     * @see #getExportedKeys
-     */
+    @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
@@ -3329,74 +2269,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
     +"order by 3, 5 ";
 
-    /**
-     * Gets a description of the foreign key columns that reference a
-     * table's primary key columns (the foreign keys exported by a
-     * table).  They are ordered by FKTABLE_CAT, FKTABLE_SCHEM,
-     * FKTABLE_NAME, and KEY_SEQ.
-     *
-     * <P>Each foreign key column description has the following columns:
-     *  <OL>
-     *  <LI><B>PKTABLE_CAT</B> String => primary key table catalog (may be null)
-     *  <LI><B>PKTABLE_SCHEM</B> String => primary key table schema (may be null)
-     *  <LI><B>PKTABLE_NAME</B> String => primary key table name
-     *  <LI><B>PKCOLUMN_NAME</B> String => primary key column name
-     *  <LI><B>FKTABLE_CAT</B> String => foreign key table catalog (may be null)
-     *      being exported (may be null)
-     *  <LI><B>FKTABLE_SCHEM</B> String => foreign key table schema (may be null)
-     *      being exported (may be null)
-     *  <LI><B>FKTABLE_NAME</B> String => foreign key table name
-     *      being exported
-     *  <LI><B>FKCOLUMN_NAME</B> String => foreign key column name
-     *      being exported
-     *  <LI><B>KEY_SEQ</B> short => sequence number within foreign key
-     *  <LI><B>UPDATE_RULE</B> short => What happens to
-     *       foreign key when primary is updated:
-     *      <UL>
-     *      <LI> importedNoAction - do not allow update of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - change imported key to agree
-     *               with primary key update
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been updated
-     *      <LI> importedKeySetDefault - change imported key to default values
-     *               if its primary key has been updated
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      </UL>
-     *  <LI><B>DELETE_RULE</B> short => What happens to
-     *      the foreign key when primary is deleted.
-     *      <UL>
-     *      <LI> importedKeyNoAction - do not allow delete of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - delete rows that import a deleted key
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been deleted
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      <LI> importedKeySetDefault - change imported key to default if
-     *               its primary key has been deleted
-     *      </UL>
-     *  <LI><B>FK_NAME</B> String => foreign key name (may be null)
-     *  <LI><B>PK_NAME</B> String => primary key name (may be null)
-     *  <LI><B>DEFERRABILITY</B> short => can the evaluation of foreign key
-     *      constraints be deferred until commit
-     *      <UL>
-     *      <LI> importedKeyInitiallyDeferred - see SQL92 for definition
-     *      <LI> importedKeyInitiallyImmediate - see SQL92 for definition
-     *      <LI> importedKeyNotDeferrable - see SQL92 for definition
-     *      </UL>
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those
-     * without a schema
-     * @param table a table name
-     * @return <code>ResultSet</code> - each row is a foreign key column description
-     * @exception SQLException if a database access error occurs
-     * @see #getImportedKeys
-     */
+    @Override
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
@@ -3474,82 +2347,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
     +"order by 3, 5 ";
 
-    /**
-     * Gets a description of the foreign key columns in the foreign key
-     * table that reference the primary key columns of the primary key
-     * table (describe how one table imports another's key). This
-     * should normally return a single foreign key/primary key pair
-     * (most tables only import a foreign key from a table once.)  They
-     * are ordered by FKTABLE_CAT, FKTABLE_SCHEM, FKTABLE_NAME, and
-     * KEY_SEQ.
-     *
-     * <P>Each foreign key column description has the following columns:
-     *  <OL>
-     *  <LI><B>PKTABLE_CAT</B> String => primary key table catalog (may be null)
-     *  <LI><B>PKTABLE_SCHEM</B> String => primary key table schema (may be null)
-     *  <LI><B>PKTABLE_NAME</B> String => primary key table name
-     *  <LI><B>PKCOLUMN_NAME</B> String => primary key column name
-     *  <LI><B>FKTABLE_CAT</B> String => foreign key table catalog (may be null)
-     *      being exported (may be null)
-     *  <LI><B>FKTABLE_SCHEM</B> String => foreign key table schema (may be null)
-     *      being exported (may be null)
-     *  <LI><B>FKTABLE_NAME</B> String => foreign key table name
-     *      being exported
-     *  <LI><B>FKCOLUMN_NAME</B> String => foreign key column name
-     *      being exported
-     *  <LI><B>KEY_SEQ</B> short => sequence number within foreign key
-     *  <LI><B>UPDATE_RULE</B> short => What happens to
-     *       foreign key when primary is updated:
-     *      <UL>
-     *      <LI> importedNoAction - do not allow update of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - change imported key to agree
-     *               with primary key update
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been updated
-     *      <LI> importedKeySetDefault - change imported key to default values
-     *               if its primary key has been updated
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      </UL>
-     *  <LI><B>DELETE_RULE</B> short => What happens to
-     *      the foreign key when primary is deleted.
-     *      <UL>
-     *      <LI> importedKeyNoAction - do not allow delete of primary
-     *               key if it has been imported
-     *      <LI> importedKeyCascade - delete rows that import a deleted key
-     *      <LI> importedKeySetNull - change imported key to NULL if
-     *               its primary key has been deleted
-     *      <LI> importedKeyRestrict - same as importedKeyNoAction
-     *                                 (for ODBC 2.x compatibility)
-     *      <LI> importedKeySetDefault - change imported key to default if
-     *               its primary key has been deleted
-     *      </UL>
-     *  <LI><B>FK_NAME</B> String => foreign key name (may be null)
-     *  <LI><B>PK_NAME</B> String => primary key name (may be null)
-     *  <LI><B>DEFERRABILITY</B> short => can the evaluation of foreign key
-     *      constraints be deferred until commit
-     *      <UL>
-     *      <LI> importedKeyInitiallyDeferred - see SQL92 for definition
-     *      <LI> importedKeyInitiallyImmediate - see SQL92 for definition
-     *      <LI> importedKeyNotDeferrable - see SQL92 for definition
-     *      </UL>
-     *  </OL>
-     *
-     * @param primaryCatalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param primarySchema a schema name; "" retrieves those
-     * without a schema
-     * @param primaryTable the table name that exports the key
-     * @param foreignCatalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param foreignSchema a schema name; "" retrieves those
-     * without a schema
-     * @param foreignTable the table name that imports the key
-     * @return <code>ResultSet</code> - each row is a foreign key column description
-     * @exception SQLException if a database access error occurs
-     * @see #getImportedKeys
-     */
+    @Override
     public ResultSet getCrossReference(
             String primaryCatalog, String primarySchema, String primaryTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
@@ -3602,7 +2400,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Function to convert integer values to encoded byte arrays for shorts.
      *
-     * @param value integer value to convert
+     * @param value
+     *         integer value to convert
      * @return encoded byte array representing the value
      */
     private static byte[] createShort(int value) {
@@ -3613,60 +2412,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Function to convert integer values to encoded byte arrays for integers.
      *
-     * @param value integer value to convert
+     * @param value
+     *         integer value to convert
      * @return encoded byte array representing the value
      */
     private static byte[] createInt(int value) {
         return datatypeCoder.encodeInt(value);
     }
 
-    /**
-     * Gets a description of all the standard SQL types supported by
-     * this database. They are ordered by DATA_TYPE and then by how
-     * closely the data type maps to the corresponding JDBC SQL type.
-     *
-     * <P>Each type description has the following columns:
-     *  <OL>
-     *  <LI><B>TYPE_NAME</B> String => Type name
-     *  <LI><B>DATA_TYPE</B> short => SQL data type from java.sql.Types
-     *  <LI><B>PRECISION</B> int => maximum precision
-     *  <LI><B>LITERAL_PREFIX</B> String => prefix used to quote a literal
-     *      (may be null)
-     *  <LI><B>LITERAL_SUFFIX</B> String => suffix used to quote a literal
-            (may be null)
-     *  <LI><B>CREATE_PARAMS</B> String => parameters used in creating
-     *      the type (may be null)
-     *  <LI><B>NULLABLE</B> short => can you use NULL for this type?
-     *      <UL>
-     *      <LI> typeNoNulls - does not allow NULL values
-     *      <LI> typeNullable - allows NULL values
-     *      <LI> typeNullableUnknown - nullability unknown
-     *      </UL>
-     *  <LI><B>CASE_SENSITIVE</B> boolean=> is it case sensitive?
-     *  <LI><B>SEARCHABLE</B> short => can you use "WHERE" based on this type:
-     *      <UL>
-     *      <LI> typePredNone - No support
-     *      <LI> typePredChar - Only supported with WHERE .. LIKE
-     *      <LI> typePredBasic - Supported except for WHERE .. LIKE
-     *      <LI> typeSearchable - Supported for all WHERE ..
-     *      </UL>
-     *  <LI><B>UNSIGNED_ATTRIBUTE</B> boolean => is it unsigned?
-     *  <LI><B>FIXED_PREC_SCALE</B> boolean => can it be a money value?
-     *  <LI><B>AUTO_INCREMENT</B> boolean => can it be used for an
-     *      auto-increment value?
-     *  <LI><B>LOCAL_TYPE_NAME</B> String => localized version of type name
-     *      (may be null)
-     *  <LI><B>MINIMUM_SCALE</B> short => minimum scale supported
-     *  <LI><B>MAXIMUM_SCALE</B> short => maximum scale supported
-     *  <LI><B>SQL_DATA_TYPE</B> int => unused
-     *  <LI><B>SQL_DATETIME_SUB</B> int => unused
-     *  <LI><B>NUM_PREC_RADIX</B> int => usually 2 or 10
-     *  </OL>
-     *
-     * @return <code>ResultSet</code> - each row is an SQL type description
-     * @exception SQLException if a database access error occurs
-     */
-    public  ResultSet getTypeInfo() throws SQLException {
+    @Override
+    public ResultSet getTypeInfo() throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(18, datatypeCoder)
                 .at(0).simple(SQL_VARYING, 31, "TYPE_NAME", "TYPEINFO").addField()
                 .at(1).simple(SQL_SHORT, 0, "DATA_TYPE", "TYPEINFO").addField()
@@ -3843,58 +2598,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "CAST(ind.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
         + "ORDER BY 2, 3, 4";
 
-    /**
-     * Gets a description of a table's indices and statistics. They are
-     * ordered by NON_UNIQUE, TYPE, INDEX_NAME, and ORDINAL_POSITION.
-     *
-     * <P>Each index column description has the following columns:
-     *  <OL>
-     *  <LI><B>TABLE_CAT</B> String => table catalog (may be null)
-     *  <LI><B>TABLE_SCHEM</B> String => table schema (may be null)
-     *  <LI><B>TABLE_NAME</B> String => table name
-     *  <LI><B>NON_UNIQUE</B> boolean => Can index values be non-unique?
-     *      false when TYPE is tableIndexStatistic
-     *  <LI><B>INDEX_QUALIFIER</B> String => index catalog (may be null);
-     *      null when TYPE is tableIndexStatistic
-     *  <LI><B>INDEX_NAME</B> String => index name; null when TYPE is
-     *      tableIndexStatistic
-     *  <LI><B>TYPE</B> short => index type:
-     *      <UL>
-     *      <LI> tableIndexStatistic - this identifies table statistics that are
-     *           returned in conjuction with a table's index descriptions
-     *      <LI> tableIndexClustered - this is a clustered index
-     *      <LI> tableIndexHashed - this is a hashed index
-     *      <LI> tableIndexOther - this is some other style of index
-     *      </UL>
-     *  <LI><B>ORDINAL_POSITION</B> short => column sequence number
-     *      within index; zero when TYPE is tableIndexStatistic
-     *  <LI><B>COLUMN_NAME</B> String => column name; null when TYPE is
-     *      tableIndexStatistic
-     *  <LI><B>ASC_OR_DESC</B> String => column sort sequence, "A" => ascending,
-     *      "D" => descending, may be null if sort sequence is not supported;
-     *      null when TYPE is tableIndexStatistic
-     *  <LI><B>CARDINALITY</B> int => When TYPE is tableIndexStatistic, then
-     *      this is the number of rows in the table; otherwise, it is the
-     *      number of unique values in the index.
-     *  <LI><B>PAGES</B> int => When TYPE is  tableIndexStatisic then
-     *      this is the number of pages used for the table, otherwise it
-     *      is the number of pages used for the current index.
-     *  <LI><B>FILTER_CONDITION</B> String => Filter condition, if any.
-     *      (may be null)
-     *  </OL>
-     *
-     * @param catalog a catalog name; "" retrieves those without a
-     * catalog; null means drop catalog name from the selection criteria
-     * @param schema a schema name; "" retrieves those without a schema
-     * @param table a table name
-     * @param unique when true, return only indices for unique values;
-     *     when false, return indices regardless of whether unique or not
-     * @param approximate when true, result is allowed to reflect approximate
-     *     or out of data values; when false, results are requested to be
-     *     accurate
-     * @return <code>ResultSet</code> - each row is an index column description
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, datatypeCoder)
@@ -3962,17 +2666,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     * Does the database support the given result set type?
-     *
-     * @param type defined in <code>java.sql.ResultSet</code>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @see Connection
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean supportsResultSetType(int type) throws SQLException {
+        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         switch (type){
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
@@ -3983,19 +2679,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     * Does the database support the concurrency type in combination
-     * with the given result set type?
-     *
-     * @param type defined in <code>java.sql.ResultSet</code>
-     * @param concurrency type defined in <code>java.sql.ResultSet</code>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @see Connection
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean supportsResultSetConcurrency(int type, int concurrency) throws SQLException {
+        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         switch(type) {
             case ResultSet.TYPE_FORWARD_ONLY:
             case ResultSet.TYPE_SCROLL_INSENSITIVE :
@@ -4007,166 +2693,71 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    /**
-     *
-     * Indicates whether a result set's own updates are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if updates are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
+        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+                ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
-    /**
-     *
-     * Indicates whether a result set's own deletes are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if deletes are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean ownDeletesAreVisible(int type) throws SQLException {
+        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+                ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
-    /**
-     *
-     * Indicates whether a result set's own inserts are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if inserts are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean ownInsertsAreVisible(int type) throws SQLException {
+        // TODO Return false for TYPE_SCROLL_SENSITVE as we only support it by downgrading to INSENSITIVE?
         return ResultSet.TYPE_SCROLL_INSENSITIVE == type ||
-            ResultSet.TYPE_SCROLL_SENSITIVE == type;
+                ResultSet.TYPE_SCROLL_SENSITIVE == type;
     }
 
-    /**
-     *
-     * Indicates whether updates made by others are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if updates made by others
-     * are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean othersUpdatesAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether deletes made by others are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if deletes made by others
-     * are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean othersDeletesAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether inserts made by others are visible.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if inserts made by others
-     * are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean othersInsertsAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether or not a visible row update can be detected by
-     * calling the method <code>ResultSet.rowUpdated</code>.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if changes are detected by the result set type;
-     *         <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean updatesAreDetected(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether or not a visible row delete can be detected by
-     * calling ResultSet.rowDeleted().  If deletesAreDetected()
-     * returns false, then deleted rows are removed from the result set.
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if changes are detected by the resultset type
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean deletesAreDetected(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether or not a visible row insert can be detected
-     * by calling ResultSet.rowInserted().
-     *
-     * @param type result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if changes are detected by the resultset type
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean insertsAreDetected(int type) throws SQLException {
         return false;
     }
 
-    /**
-     *
-     * Indicates whether the driver supports batch updates.
-     * @return true if the driver supports batch updates; false otherwise
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public boolean supportsBatchUpdates() throws SQLException {
         return true;
     }
 
     /**
-     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
-     *
      * {@inheritDoc}
+     * <p>
+     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
+     * </p>
      */
-    public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types) throws SQLException {
+    @Override
+    public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
+            throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "UDT").addField()
                 .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "UDT").addField()
@@ -4180,24 +2771,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves the connection that produced this metadata object.
-     *
-     * @return the connection that produced this metadata object
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public Connection getConnection() throws SQLException {
         return connection;
     }
 
-    //jdbc 3 methods
-
     /**
-     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
-     *
      * {@inheritDoc}
+     * <p>
+     * UDTs are not supported by Firebird. This method will always return an empty ResultSet.
+     * </p>
      */
+    @Override
     public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern,
             String attributeNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(21, datatypeCoder)
@@ -4227,54 +2812,34 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves whether this database supports savepoints.
-     *
-     * @return true if savepoints are supported; false otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsSavepoints() throws SQLException {
         return firebirdSupportInfo.supportsSavepoint();
     }
 
-    /**
-     * Retrieve whether this database supports named parameters.
-     *
-     * @return true if named parameters are supported, false otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsNamedParameters() throws SQLException {
         return false;
     }
 
-    /**
-     * Retrieves whether it is possible to have multiple <code>ResultSet</code>
-     * objects returned from a <code>CallableStatement</code> object
-     * simultaneously.
-     *
-     * @return true if multiple open ResultSets are supported, false otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsMultipleOpenResults() throws SQLException {
         return false;
     }
 
-    /**
-     * Retrieves whether auto-generated keys can be retrieved after creation.
-     *
-     * @return true if auto-generated keys can be retrieved, false otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsGetGeneratedKeys() throws SQLException {
         return AbstractGeneratedKeysQuery.isGeneratedKeysSupportLoaded()
                 && firebirdSupportInfo.supportsInsertReturning();
     }
 
     /**
-     * Supertypes are not supported by Firebird. This method will always return an empty ResultSet.
-     *
      * {@inheritDoc}
+     * <p>
+     * Supertypes are not supported by Firebird. This method will always return an empty ResultSet.
+     * </p>
      */
+    @Override
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "SUPERTYPES").addField()
@@ -4289,10 +2854,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Supertables are not supported by Firebird. This method will always return an empty ResultSet.
-     *
      * {@inheritDoc}
+     * <p>
+     * Supertables are not supported by Firebird. This method will always return an empty ResultSet.
+     * </p>
      */
+    @Override
     public ResultSet getSuperTables(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "SUPERTABLES").addField()
@@ -4304,28 +2871,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves whether this database supports the given results holdability.
-     *
-     * @param holdability one of the following constants:
-     * <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     * <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return <code>true</code> if the holdability is supported,
-     *         <code>false</code> otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
         return holdability == ResultSet.CLOSE_CURSORS_AT_COMMIT ||
-            holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
+                holdability == ResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
-    /**
-     * Retrieves the default holdability of this <code>ResultSet</code>.
-     *
-     * @return the default holdability
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getResultSetHoldability() throws SQLException {
+        // TODO Retrieve default holdable connection property
         return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
@@ -4346,7 +2900,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getOdsMinorVersion() throws SQLException {
-    	return gdsHelper.getCurrentDatabase().getOdsMinor();
+        return gdsHelper.getCurrentDatabase().getOdsMinor();
     }
 
     @Override
@@ -4360,50 +2914,35 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Indicates whether the SQLSTATEs returned by SQLException.getSQLState is
-     * X/Open (now known as Open Group) SQL CLI or SQL99
-     *
-     * @return the type of SQLSTATEs
-     * @exception SQLException should never be thrown in this implementation
+     * {@inheritDoc}
+     * <p>
+     * Firebird primarily uses SQL standard SQL states, but may occasionally use values from X/Open.
+     * </p>
      */
+    @Override
     public int getSQLStateType() throws SQLException {
-        return DatabaseMetaData.sqlStateSQL99;
+        return DatabaseMetaData.sqlStateSQL;
     }
 
-    //-------------------------- JDBC 4.0 -------------------------------------
-
+    @Override
     public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The holdable result sets remain open, others are closed, but this happens before the statement is executed.
+     * </p>
+     */
+    @Override
     public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
         // the holdable result sets remain open, others are closed, but this
         // happens before the statement is executed
         return false;
     }
 
-    /**
-     * Retrieves a list of the client info properties
-     * that the driver supports.  The result set contains the following columns
-     * <p>
-     * <ol>
-     * <li><b>NAME</b> String=> The name of the client info property<br>
-     * <li><b>MAX_LEN</b> int=> The maximum length of the value for the property<br>
-     * <li><b>DEFAULT_VALUE</b> String=> The default value of the property<br>
-     * <li><b>DESCRIPTION</b> String=> A description of the property.  This will typically
-     *                      contain information as to where this property is
-     *                      stored in the database.
-     * </ol>
-     * <p>
-     * The <code>ResultSet</code> is sorted by the NAME column
-     * <p>
-     * @return  A <code>ResultSet</code> object; each row is a supported client info
-     * property
-     * <p>
-     *  @exception SQLException if a database access error occurs
-     * <p>
-     * @since 1.6
-     */
+    @Override
     public ResultSet getClientInfoProperties() throws SQLException {
         // TODO Return context info?
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
@@ -4416,100 +2955,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves a description of the given catalog's system or user
-     * function parameters and return type.
-     *
-     * <P>Only descriptions matching the schema,  function and
-     * parameter name criteria are returned. They are ordered by
-     * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
-     * <code>FUNCTION_NAME</code> and
-     * <code>SPECIFIC_ NAME</code>. Within this, the return value,
-     * if any, is first. Next are the parameter descriptions in call
-     * order. The column descriptions follow in column number order.
-     *
-     * <P>Each row in the <code>ResultSet</code>
-     * is a parameter description, column description or
-     * return type description with the following fields:
-     *  <OL>
-     *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
-     *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
-     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name
-     * used to invoke the function
-     *  <LI><B>COLUMN_NAME</B> String => column/parameter name
-     *  <LI><B>COLUMN_TYPE</B> Short => kind of column/parameter:
-     *      <UL>
-     *      <LI> functionColumnUnknown - nobody knows
-     *      <LI> functionColumnIn - IN parameter
-     *      <LI> functionColumnInOut - INOUT parameter
-     *      <LI> functionColumnOut - OUT parameter
-     *      <LI> functionColumnReturn - function return value
-     *      <LI> functionColumnResult - Indicates that the parameter or column
-     *  is a column in the <code>ResultSet</code>
-     *      </UL>
-     *  <LI><B>DATA_TYPE</B> int => SQL type from java.sql.Types
-     *  <LI><B>TYPE_NAME</B> String => SQL type name, for a UDT type the
-     *  type name is fully qualified
-     *  <LI><B>PRECISION</B> int => precision
-     *  <LI><B>LENGTH</B> int => length in bytes of data
-     *  <LI><B>SCALE</B> short => scale -  null is returned for data types where
-     * SCALE is not applicable.
-     *  <LI><B>RADIX</B> short => radix
-     *  <LI><B>NULLABLE</B> short => can it contain NULL.
-     *      <UL>
-     *      <LI> functionNoNulls - does not allow NULL values
-     *      <LI> functionNullable - allows NULL values
-     *      <LI> functionNullableUnknown - nullability unknown
-     *      </UL>
-     *  <LI><B>REMARKS</B> String => comment describing column/parameter
-     *  <LI><B>CHAR_OCTET_LENGTH</B> int  => the maximum length of binary
-     * and character based parameters or columns.  For any other datatype the returned value
-     * is a NULL
-     *  <LI><B>ORDINAL_POSITION</B> int  => the ordinal position, starting
-     * from 1, for the input and output parameters. A value of 0
-     * is returned if this row describes the function's return value.
-     * For result set columns, it is the
-     * ordinal position of the column in the result set starting from 1.
-     *  <LI><B>IS_NULLABLE</B> String  => ISO rules are used to determine
-     * the nullability for a parameter or column.
-     *       <UL>
-     *       <LI> YES           --- if the parameter or column can include NULLs
-     *       <LI> NO            --- if the parameter or column  cannot include NULLs
-     *       <LI> empty string  --- if the nullability for the
-     * parameter  or column is unknown
-     *       </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies
-     * this function within its schema.  This is a user specified, or DBMS
-     * generated, name that may be different then the <code>FUNCTION_NAME</code>
-     * for example with overload functions
-     *  </OL>
-     *
-     * <p>The PRECISION column represents the specified column size for the given
-     * parameter or column.
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.  For the ROWID datatype,
-     * this is the length in bytes. Null is returned for data types where the
-     * column size is not applicable.
-     * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
-     * @param schemaPattern a schema name pattern; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
-     * @param functionNamePattern a procedure name pattern; must match the
-     *        function name as it is stored in the database
-     * @param columnNamePattern a parameter name pattern; must match the
-     * parameter or column name as it is stored in the database
-     * @return <code>ResultSet</code> - each row describes a
-     * user function parameter, column  or return type
-     *
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     * @since 1.6
-     */
+    @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         // FIXME implement this method to return actual result
@@ -4536,54 +2982,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves a description of the  system and user functions available
-     * in the given catalog.
-     * <P>
-     * Only system and user function descriptions matching the schema and
-     * function name criteria are returned.  They are ordered by
-     * <code>FUNCTION_CAT</code>, <code>FUNCTION_SCHEM</code>,
-     * <code>FUNCTION_NAME</code> and
-     * <code>SPECIFIC_ NAME</code>.
-     *
-     * <P>Each function description has the the following columns:
-     *  <OL>
-     *  <LI><B>FUNCTION_CAT</B> String => function catalog (may be <code>null</code>)
-     *  <LI><B>FUNCTION_SCHEM</B> String => function schema (may be <code>null</code>)
-     *  <LI><B>FUNCTION_NAME</B> String => function name.  This is the name
-     * used to invoke the function
-     *  <LI><B>REMARKS</B> String => explanatory comment on the function
-     * <LI><B>FUNCTION_TYPE</B> short => kind of function:
-     *      <UL>
-     *      <LI>functionResultUnknown - Cannot determine if a return value
-     *       or table will be returned
-     *      <LI> functionNoTable- Does not return a table
-     *      <LI> functionReturnsTable - Returns a table
-     *      </UL>
-     *  <LI><B>SPECIFIC_NAME</B> String  => the name which uniquely identifies
-     *  this function within its schema.  This is a user specified, or DBMS
-     * generated, name that may be different then the <code>FUNCTION_NAME</code>
-     * for example with overload functions
-     *  </OL>
-     * <p>
-     * A user may not have permission to execute any of the functions that are
-     * returned by <code>getFunctions</code>
-     *
-     * @param catalog a catalog name; must match the catalog name as it
-     *        is stored in the database; "" retrieves those without a catalog;
-     *        <code>null</code> means that the catalog name should not be used to narrow
-     *        the search
-     * @param schemaPattern a schema name pattern; must match the schema name
-     *        as it is stored in the database; "" retrieves those without a schema;
-     *        <code>null</code> means that the schema name should not be used to narrow
-     *        the search
-     * @param functionNamePattern a function name pattern; must match the
-     *        function name as it is stored in the database
-     * @return <code>ResultSet</code> - each row is a function description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     * @since 1.6
-     */
+    @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
         // FIXME implement this method to return actual result
@@ -4599,30 +2998,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
-    /**
-     * Retrieves the schema names available in this database.  The results
-     * are ordered by <code>TABLE_CATALOG</code> and
-     * <code>TABLE_SCHEM</code>.
-     *
-     * <P>The schema columns are:
-     *  <OL>
-     *  <LI><B>TABLE_SCHEM</B> String => schema name
-     *  <LI><B>TABLE_CATALOG</B> String => catalog name (may be <code>null</code>)
-     *  </OL>
-     *
-     *
-     * @param catalog a catalog name; must match the catalog name as it is stored
-     * in the database;"" retrieves those without a catalog; null means catalog
-     * name should not be used to narrow down the search.
-     * @param schemaPattern a schema name; must match the schema name as it is
-     * stored in the database; null means
-     * schema name should not be used to narrow down the search.
-     * @return a <code>ResultSet</code> object in which each row is a
-     *         schema description
-     * @exception SQLException if a database access error occurs
-     * @see #getSearchStringEscape
-     * @since 1.6
-     */
+    @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLESCHEMAS").addField()
@@ -4632,10 +3008,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(FBDatabaseMetaData.class);
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
@@ -4651,9 +3029,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Determine if there are no SQL wildcard characters ('%' or '_') in the
      * given pattern.
      *
-     * @param pattern The pattern to be checked for wildcards
+     * @param pattern
+     *         The pattern to be checked for wildcards
      * @return <code>true</code> if there are no wildcards in the pattern,
-     *         <code>false</code> otherwise
+     * <code>false</code> otherwise
      */
     public static boolean hasNoWildcards(String pattern) {
         if (pattern == null) return true;
@@ -4676,7 +3055,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Strips all backslash-escapes from a string.
      *
-     * @param pattern The string to be stripped
+     * @param pattern
+     *         The string to be stripped
      * @return pattern with all backslash-escapes removed
      */
     public static String stripEscape(String pattern) {
@@ -4698,7 +3078,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
      *
-     * @param objectName Object name to escape (not {@code null}).
+     * @param objectName
+     *         Object name to escape (not {@code null}).
      * @return Object name with wildcards escaped.
      */
     public static String escapeWildcards(String objectName) {
@@ -4958,8 +3339,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
     }
 
-    protected static byte[] getBytes(String value){
-        return value != null ? value.getBytes(StandardCharsets.UTF_8): null;
+    protected static byte[] getBytes(String value) {
+        return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
     }
 
     private FBPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
@@ -4974,7 +3355,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
-            new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
+                new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
 
         s = new FBPreparedStatement(gdsHelper, sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
                 ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator, metaDataTransactionCoordinator,
@@ -4991,11 +3372,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Execute an sql query with a given set of parameters.
      *
      * @param sql
-     *            The sql statement to be used for the query
+     *         The sql statement to be used for the query
      * @param params
-     *            The parameters to be used in the query
+     *         The parameters to be used in the query
      * @throws SQLException
-     *             if a database access error occurs
+     *         if a database access error occurs
      */
     protected ResultSet doQuery(String sql, List<String> params) throws SQLException {
         return doQuery(sql, params, false);
@@ -5005,13 +3386,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * Execute an sql query with a given set of parameters.
      *
      * @param sql
-     *            The sql statement to be used for the query
+     *         The sql statement to be used for the query
      * @param params
-     *            The parameters to be used in the query
+     *         The parameters to be used in the query
      * @param standalone
-     *            The query to be executed is a standalone query (should not be cached and be closed asap)
+     *         The query to be executed is a standalone query (should not be cached and be closed asap)
      * @throws SQLException
-     *             if a database access error occurs
+     *         if a database access error occurs
      */
     protected ResultSet doQuery(String sql, List<String> params, boolean standalone) throws SQLException {
         FBPreparedStatement s = getStatement(sql, standalone);
@@ -5030,6 +3411,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * however, will always report {@link RowIdLifetime#ROWID_VALID_TRANSACTION}.
      * </p>
      */
+    @Override
     public RowIdLifetime getRowIdLifetime() throws SQLException {
         return RowIdLifetime.ROWID_VALID_TRANSACTION;
     }
@@ -5080,9 +3462,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged(new PrivilegedAction<String>() {
-           public String run() {
-               return System.getProperty(propertyName);
-           }
+            public String run() {
+                return System.getProperty(propertyName);
+            }
         });
     }
 }

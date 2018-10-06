@@ -38,6 +38,7 @@ import java.util.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 public class FBResultSetMetaData extends AbstractFieldMetaData implements FirebirdResultSetMetaData {
 
     private static final int ID_UNICODE_FSS = 3;
@@ -76,29 +77,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return gdsHelper != null && gdsHelper.getConnectionProperties().isColumnLabelForName();
     }
 
-    /**
-     * Returns the number of columns in this <code>ResultSet</code> object.
-     *
-     * @return the number of columns
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public int getColumnCount() throws SQLException {
         return getFieldCount();
     }
 
     /**
-     * Indicates whether the designated column is automatically numbered.
+     * {@inheritDoc}
      * <p>
      * The current implementation always returns <code>false</code>.
      * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
      */
     @Override
     public boolean isAutoIncrement(int column) throws SQLException {
@@ -106,31 +94,16 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     }
 
     /**
-     * Indicates whether a column's case matters.
+     * {@inheritDoc}
      * <p>
      * The current implementation always returns <code>true</code>.
      * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
      */
     @Override
     public boolean isCaseSensitive(int column) throws SQLException {
         return true;
     }
 
-    /**
-     * Indicates whether the designated column can be used in a where clause.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public boolean isSearchable(int column) throws SQLException {
         final int sqlType = getFieldDescriptor(column).getType() & ~1;
@@ -138,30 +111,11 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 || (sqlType == ISCConstants.SQL_BLOB));
     }
 
-    /**
-     * Indicates whether the designated column is a cash value.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public boolean isCurrency(int column) throws SQLException {
         return false;
     }
 
-    /**
-     * Indicates the nullability of values in the designated column.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return the nullability status of the given column; one of <code>columnNoNulls</code>,
-     * <code>columnNullable</code> or <code>columnNullableUnknown</code>
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public int isNullable(int column) throws SQLException {
         return (getFieldDescriptor(column).getType() & 1) == 1
@@ -169,30 +123,11 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
                 : ResultSetMetaData.columnNoNulls;
     }
 
-    /**
-     * Indicates whether values in the designated column are signed numbers.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public boolean isSigned(int column) throws SQLException {
         return isSignedInternal(column);
     }
 
-    /**
-     * Indicates the designated column's normal maximum width in characters.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return the normal maximum number of characters allowed as the width
-     * of the designated column
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public int getColumnDisplaySize(int column) throws SQLException {
         final int colType = getColumnType(column);
@@ -221,49 +156,20 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         }
     }
 
-    /**
-     * Gets the designated column's suggested title for use in printouts and
-     * displays. The suggested title is usually specified by the SQL <code>AS</code>
-     * clause.  If a SQL <code>AS</code> is not specified, the value returned from
-     * <code>getColumnLabel</code> will be the same as the value returned by the
-     * <code>getColumnName</code> method.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return the suggested column title
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public String getColumnLabel(int column) throws SQLException {
         return columnStrategy.getColumnLabel(getFieldDescriptor(column));
     }
 
-    /**
-     * Get the designated column's name.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return column name
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public String getColumnName(int column) throws SQLException {
         return columnStrategy.getColumnName(getFieldDescriptor(column));
     }
 
     /**
-     * Get the designated column's table's schema.
-     * <p>
-     * Firebird has no schemas. This method always returns the empty string.
-     * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return schema name or "" if not applicable
-     * @throws SQLException
-     *         if a database access error occurs
+     * {@inheritDoc}
+     * 
+     * @return Always {@code ""} as schemas are not supported.
      */
     @Override
     public String getSchemaName(int column) throws SQLException {
@@ -271,55 +177,23 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     }
 
     /**
-     * Get the designated column's specified column size.
-     * <p>
-     * For numeric data, this is the maximum precision.  For character data, this is the length in characters.
-     * For datetime datatypes, this is the length in characters of the String representation (assuming the
-     * maximum allowed precision of the fractional seconds component). For binary data, this is the length in bytes.
-     * For the ROWID datatype, this is the length in bytes. 0 is returned for data types where the
-     * column size is not applicable.
-     * </p>
+     * {@inheritDoc}
      * <p>
      * <b>NOTE</b> For <code>NUMERIC</code> and <code>DECIMAL</code> we attempt to retrieve the exact precision from the
      * metadata, if this is not possible (eg the column is dynamically defined in the query), the reported precision is
      * the maximum precision allowed by the underlying storage data type.
      * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return precision
-     * @throws SQLException
-     *         if a database access error occurs
      */
     @Override
     public int getPrecision(int column) throws SQLException {
         return getPrecisionInternal(column);
     }
 
-    /**
-     * Gets the designated column's number of digits to right of the decimal point.
-     * 0 is returned for data types where the scale is not applicable.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return scale
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public int getScale(int column) throws SQLException {
         return getScaleInternal(column);
     }
 
-    /**
-     * Gets the designated column's table name.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return table name or "" if not applicable
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public String getTableName(int column) throws SQLException {
         String result = getFieldDescriptor(column).getOriginalTableName();
@@ -335,93 +209,47 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
     }
 
     /**
-     * Gets the designated column's table's catalog name.
-     * <p>
-     * Firebird has no catalogs. This method always returns the empty string.
-     * </p>
+     * {@inheritDoc}
      *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return the name of the catalog for the table in which the given column
-     * appears or "" if not applicable
-     * @throws SQLException
-     *         if a database access error occurs
+     * @return Always {@code ""} as catalogs are not supported
      */
     @Override
     public String getCatalogName(int column) throws SQLException {
         return "";
     }
 
-    /**
-     * Retrieves the designated column's SQL type.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return SQL type from java.sql.Types
-     * @throws SQLException
-     *         if a database access error occurs
-     * @see Types
-     */
     @Override
     public int getColumnType(int column) throws SQLException {
         return getFieldType(column);
     }
 
-    /**
-     * Retrieves the designated column's database-specific type name.
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return type name used by the database. If the column type is
-     * a user-defined type, then a fully-qualified type name is returned.
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public String getColumnTypeName(int column) throws SQLException {
         return getFieldTypeName(column);
     }
 
     /**
-     * Indicates whether the designated column is definitely not writable.
+     * {@inheritDoc}
      * <p>
      * The current implementation always returns <code>false</code>, except for a DB_KEY column.
      * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
      */
     @Override
     public boolean isReadOnly(int column) throws SQLException {
         // TODO Need to consider privileges!!
-        if (getFieldDescriptor(column).isDbKey()) {
-            return true;
-        }
-        return false;
+        return getFieldDescriptor(column).isDbKey();
     }
 
     /**
-     * Indicates whether it is possible for a write on the designated column to succeed.
+     * {@inheritDoc}
      * <p>
      * The current implementation always returns <code>true</code>, except for a DB_KEY column.
      * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException
-     *         if a database access error occurs
      */
     @Override
     public boolean isWritable(int column) throws SQLException {
         // TODO Needs privileges?
-        if (getFieldDescriptor(column).isDbKey()) {
-            return false;
-        }
-        return true;
+        return !getFieldDescriptor(column).isDbKey();
     }
 
     @Override
@@ -429,24 +257,6 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         return isWritable(column);
     }
 
-    /**
-     * Returns the fully-qualified name of the Java class whose instances
-     * are manufactured if the method <code>ResultSet.getObject</code>
-     * is called to retrieve a value from the column.
-     * <p>
-     * <code>ResultSet.getObject</code> may return a subclass of the
-     * class returned by this method.
-     * </p>
-     *
-     * @param column
-     *         the first column is 1, the second is 2, ...
-     * @return the fully-qualified name of the class in the Java programming
-     * language that would be used by the method
-     * <code>ResultSet.getObject</code> to retrieve the value in the specified
-     * column. This is the class name used for custom mapping.
-     * @throws SQLException
-     *         if a database access error occurs
-     */
     @Override
     public String getColumnClassName(int column) throws SQLException {
         return getFieldClassName(column);

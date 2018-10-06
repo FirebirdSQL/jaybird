@@ -46,11 +46,12 @@ import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIRE
 
 /**
  * The class <code>FBConnection</code> is a handle to a 
- * {@link FBManagedConnection}.
+ * {@link FBManagedConnection} and implements {@link Connection}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 public class FBConnection implements FirebirdConnection, Synchronizable {
 
     private static final Logger log = LoggerFactory.getLogger(FBConnection.class);
@@ -103,7 +104,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public FBObjectListener.StatementListener getStatementListener() {
         return txCoordinator;
     }
-    
+
+    @Override
     public int getHoldability() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -111,6 +113,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
+    @Override
     public void setHoldability(int holdability) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -200,13 +203,6 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Get connection handle for direct Firebird API access
-     *
-     * @return internal handle for connection
-     * @throws SQLException
-     *         if handle needed to be created and creation failed
-     */
     @Override
     public FbDatabase getFbDatabase() throws SQLException {
         return getGDSHelper().getCurrentDatabase();
@@ -222,6 +218,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     @Deprecated
+    @Override
 	public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -234,7 +231,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             setTransactionParameters(isolationLevel, tpbParams);
         }
 	}
-    
+
+    @Override
     public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -242,13 +240,15 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
+    @Override
     public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
             return getFbDatabase().createTransactionParameterBuffer();
         }
     }
-    
+
+    @Override
     public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -259,7 +259,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             mc.setTransactionParameters(isolationLevel, tpb);
         }
     }
-    
+
+    @Override
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -275,121 +276,48 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Creates a <code>Statement</code> object for sending
-     * SQL statements to the database.
-     * SQL statements without parameters are normally
-     * executed using Statement objects. If the same SQL statement
-     * is executed many times, it is more efficient to use a
-     * <code>PreparedStatement</code> object.
-     *<P>
-     *
-     * Result sets created using the returned <code>Statement</code>
-     * object will by default have forward-only type and read-only concurrency.
-     *
-     * @return a new Statement object
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public Statement createStatement() throws SQLException {
         return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, resultSetHoldability);
     }
 
-    /**
-     * Creates a <code>PreparedStatement</code> object for sending
-     * parameterized SQL statements to the database.
-     *
-     * A SQL statement with or without IN parameters can be
-     * pre-compiled and stored in a PreparedStatement object. This
-     * object can then be used to efficiently execute this statement
-     * multiple times.
-     *
-     * <P><B>Note:</B> This method is optimized for handling
-     * parametric SQL statements that benefit from precompilation. If
-     * the driver supports precompilation,
-     * the method <code>prepareStatement</code> will send
-     * the statement to the database for precompilation. Some drivers
-     * may not support precompilation. In this case, the statement may
-     * not be sent to the database until the <code>PreparedStatement</code> is
-     * executed.  This has no direct effect on users; however, it does
-     * affect which method throws certain SQLExceptions.
-     *
-     *
-     * Result sets created using the returned PreparedStatement will have
-     * forward-only type and read-only concurrency, by default.
-     *
-     * @param sql a SQL statement that may contain one or more '?' IN
-     * parameter placeholders
-     * @return a new PreparedStatement object containing the
-     * pre-compiled statement
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
         return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
-    /**
-     * Creates a <code>CallableStatement</code> object for calling
-     * database stored procedures.
-     * The <code>CallableStatement</code> object provides
-     * methods for setting up its IN and OUT parameters, and
-     * methods for executing the call to a stored procedure.
-     *
-     * <P><B>Note:</B> This method is optimized for handling stored
-     * procedure call statements. Some drivers may send the call
-     * statement to the database when the method <code>prepareCall</code>
-     * is done; others
-     * may wait until the <code>CallableStatement</code> object
-     * is executed. This has no
-     * direct effect on users; however, it does affect which method
-     * throws certain SQLExceptions.
-     *
-     * Result sets created using the returned CallableStatement will have
-     * forward-only type and read-only concurrency, by default.
-     *
-     * @param sql a SQL statement that may contain one or more '?'
-     * parameter placeholders. Typically this  statement is a JDBC
-     * function call escape string.
-     * @return a new CallableStatement object containing the
-     * pre-compiled SQL statement
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
         return prepareCall(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
-    
+
+    @Override
     public Blob createBlob() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
             return new FBBlob(getGDSHelper(), txCoordinator);
         }
     }
-    
+
+    @Override
     public Clob createClob() throws SQLException {
         FBBlob blob = (FBBlob)createBlob();
         return new FBClob(blob);
     }
-    
+
+    @Override
     public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException("Type STRUCT not supported");
     }
-    
+
+    @Override
     public Array createArrayOf(String typeName, Object[] elements) throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException("Type ARRAY not yet supported");
     }
 
-    /**
-     * Converts the given SQL statement into the system's native SQL grammar.
-     * A driver may convert the JDBC sql grammar into its system's
-     * native SQL grammar prior to sending it; this method returns the
-     * native form of the statement that the driver would have sent.
-     *
-     * @param sql a SQL statement that may contain one or more '?'
-     * parameter placeholders
-     * @return the native form of this statement
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public String nativeSQL(String sql) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -413,29 +341,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return escapedParser;
     }
 
-    /**
-     * Sets this connection's auto-commit mode.
-     * If a connection is in auto-commit mode, then all its SQL
-     * statements will be executed and committed as individual
-     * transactions.  Otherwise, its SQL statements are grouped into
-     * transactions that are terminated by a call to either
-     * the method <code>commit</code> or the method <code>rollback</code>.
-     * By default, new connections are in auto-commit
-     * mode.
-     *
-     * The commit occurs when the statement completes or the next
-     * execute occurs, whichever comes first. In the case of
-     * statements returning a ResultSet, the statement completes when
-     * the last row of the ResultSet has been retrieved or the
-     * ResultSet has been closed. In advanced cases, a single
-     * statement may return multiple results as well as output
-     * parameter values. In these cases the commit occurs when all results and
-     * output parameter values have been retrieved.
-     *
-     * @param autoCommit true enables auto-commit; false disables
-     * auto-commit.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -461,13 +367,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Gets the current auto-commit state.
-     *
-     * @return the current state of auto-commit mode
-     * @exception SQLException if a database access error occurs
-     * @see #setAutoCommit
-     */
+    @Override
     public boolean getAutoCommit() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (isClosed()) {
@@ -477,15 +377,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Makes all changes made since the previous
-     * commit/rollback permanent and releases any database locks
-     * currently held by the Connection. This method should be
-     * used only when auto-commit mode has been disabled.
-     *
-     * @exception SQLException if a database access error occurs
-     * @see #setAutoCommit
-     */
+    @Override
     public void commit() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (isClosed()) {
@@ -503,15 +395,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Drops all changes made since the previous
-     * commit/rollback and releases any database locks currently held
-     * by this Connection. This method should be used only when auto-
-     * commit has been disabled.
-     *
-     * @exception SQLException if a database access error occurs
-     * @see #setAutoCommit
-     */
+    @Override
     public void rollback() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (isClosed()) {
@@ -538,16 +422,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     /**
-     * Releases a Connection's database and JDBC resources
-     * immediately instead of waiting for
-     * them to be automatically released.
-     *
-     * <P><B>Note:</B> A Connection is automatically closed when it is
-     * garbage collected. Certain fatal errors also result in a closed
-     * Connection.
-     *
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: Certain fatal errors also result in a closed Connection.
+     * </p>
      */
+    @Override
     public void close() throws SQLException {
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
         synchronized (getSynchronizationObject()) {
@@ -590,15 +470,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Tests to see if a Connection is closed.
-     * 
-     * @return true if the connection is closed; false if it's still open
-     */
+    @Override
     public boolean isClosed() {
         return mc == null;
     }
-    
+
+    @Override
     public boolean isValid(int timeout) throws SQLException {
         if (timeout < 0) {
             throw new SQLException("Timeout should be >= 0", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
@@ -623,20 +500,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    //======================================================================
-    // Advanced features:
-
-    /**
-     * Gets the metadata regarding this connection's database.
-     * A Connection's database is able to provide information
-     * describing its tables, its supported SQL grammar, its stored
-     * procedures, the capabilities of this connection, and so on. This
-     * information is made available through a DatabaseMetaData
-     * object.
-     *
-     * @return a DatabaseMetaData object for this Connection
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public DatabaseMetaData getMetaData() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -646,18 +510,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-
-    /**
-     * Puts this connection in read-only mode as a hint to enable
-     * database optimizations.
-     *
-     * <P><B>Note:</B> This method cannot be called while in the
-     * middle of a transaction.
-     *
-     * @param readOnly true enables read-only mode; false disables
-     * read-only mode.
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -673,13 +526,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-
-    /**
-     * Tests to see if the connection is in read-only mode.
-     *
-     * @return true if connection is read-only and false otherwise
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public boolean isReadOnly() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -687,47 +534,29 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-
     /**
-     * Sets a catalog name in order to select
-     * a subspace of this Connection's database in which to work.
-     * If the driver does not support catalogs, it will
-     * silently ignore this request.
-     *
-     * @exception SQLException if a database access error occurs
+     * {@inheritDoc}
+     * <p>
+     * Implementation ignores calls to this method as catalogs are not supported.
+     * </p>
      */
+    @Override
     public void setCatalog(String catalog) throws SQLException {
         checkValidity();
     }
 
-
     /**
-     * Returns the Connection's current catalog name.
+     * {@inheritDoc}
      *
-     * @return the current catalog name or null
-     * @exception SQLException if a database access error occurs
+     * @return Always {@code null} as catalogs are not supported.
      */
+    @Override
     public String getCatalog() throws SQLException {
         checkValidity();
         return null;
     }
 
-
-
-    /**
-     * Attempts to change the transaction
-     * isolation level to the one given.
-     * The constants defined in the interface <code>Connection</code>
-     * are the possible transaction isolation levels.
-     *
-     * <P>Calling this method will commit any current transaction.
-     *
-     * @param level one of the TRANSACTION_* isolation values with the
-     * exception of TRANSACTION_NONE; some databases may not support
-     * other values
-     * @exception SQLException if a database access error occurs
-     * @see DatabaseMetaData#supportsTransactionIsolationLevel
-     */
+    @Override
     public void setTransactionIsolation(int level) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -744,12 +573,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     * Gets this Connection's current transaction isolation level.
-     *
-     * @return the current TRANSACTION_* mode value
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public int getTransactionIsolation() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -761,16 +585,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-
-    /**
-     * Returns the first warning reported by calls on this Connection.
-     *
-     * <P><B>Note:</B> Subsequent warnings will be chained to this
-     * SQLWarning.
-     *
-     * @return the first SQLWarning or null
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public SQLWarning getWarnings() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -778,15 +593,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-
-    /**
-     * Clears all warnings reported for this <code>Connection</code> object.
-     * After a call to this method, the method <code>getWarnings</code>
-     * returns null until a new warning is
-     * reported for this Connection.
-     *
-     * @exception SQLException if a database access error occurs
-     */
+    @Override
     public void clearWarnings() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -794,57 +601,13 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     *
-     * Creates a <code>Statement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type and concurrency.
-     * This method is the same as the <code>createStatement</code> method
-     * above, but it allows the default result set
-     * type and result set concurrency type to be overridden.
-     *
-     * @param resultSetType a result set type; see ResultSet.TYPE_XXX
-     * @param resultSetConcurrency a concurrency type; see ResultSet.CONCUR_XXX
-     * @return a new Statement object
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
-    
+    @Override
     public Statement createStatement(int resultSetType,
             int resultSetConcurrency) throws SQLException {
         return createStatement(resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
-    
-    /**
-     * Creates a <code>Statement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type, concurrency,
-     * and holdability.
-     * This method is the same as the <code>createStatement</code> method
-     * above, but it allows the default result set
-     * type, concurrency, and holdability to be overridden.
-     *
-     * @param resultSetType one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.TYPE_FORWARD_ONLY</code>, 
-     *         <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *         <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @param resultSetConcurrency one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.CONCUR_READ_ONLY</code> or
-     *         <code>ResultSet.CONCUR_UPDATABLE</code>
-     * @param resultSetHoldability one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return a new <code>Statement</code> object that will generate
-     *         <code>ResultSet</code> objects with the given type,
-     *         concurrency, and holdability
-     * @exception SQLException if a database access error occurs
-     *            or the given parameters are not <code>ResultSet</code> 
-     *            constants indicating type, concurrency, and holdability
-     * @see ResultSet
-     * @since 1.4
-     */
+
+    @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
             throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -896,67 +659,13 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                     "for scrollable insensitive result sets.");
     }
 
-
-    /**
-     *
-     * Creates a <code>PreparedStatement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type and concurrency.
-     * This method is the same as the <code>prepareStatement</code> method
-     * above, but it allows the default result set
-     * type and result set concurrency type to be overridden.
-     *
-     * @param resultSetType a result set type; see ResultSet.TYPE_XXX
-     * @param resultSetConcurrency a concurrency type; see ResultSet.CONCUR_XXX
-     * @return a new PreparedStatement object containing the
-     * pre-compiled SQL statement
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
         return prepareStatement(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
 
-    /**
-     * Creates a <code>PreparedStatement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type, concurrency,
-     * and holdability.
-     * <P>
-     * This method is the same as the <code>prepareStatement</code> method
-     * above, but it allows the default result set
-     * type, concurrency, and holdability to be overridden.
-     *
-     * @param sql a <code>String</code> object that is the SQL statement to
-     *            be sent to the database; may contain one or more '?' IN
-     *            parameters
-     * @param resultSetType one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.TYPE_FORWARD_ONLY</code>, 
-     *         <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *         <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @param resultSetConcurrency one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.CONCUR_READ_ONLY</code> or
-     *         <code>ResultSet.CONCUR_UPDATABLE</code>
-     * @param resultSetHoldability one of the following <code>ResultSet</code> 
-     *        constants:
-     *         <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
-     * @return a new <code>PreparedStatement</code> object, containing the
-     *         pre-compiled SQL statement, that will generate
-     *         <code>ResultSet</code> objects with the given type,
-     *         concurrency, and holdability
-     * @exception SQLException if a database access error occurs, this 
-     * method is called on a closed connection 
-     *            or the given parameters are not <code>ResultSet</code> 
-     *            constants indicating type, concurrency, and holdability
-      * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method or this method is not supported for the specified result 
-     * set type, result set holdability and result set concurrency.
-     * @see ResultSet
-     * @since 1.4
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql,
             int resultSetType, int resultSetConcurrency,
             int resultSetHoldability) throws SQLException {
@@ -964,56 +673,16 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return prepareStatement(sql, resultSetType, resultSetConcurrency,
             resultSetHoldability, false, false);
     }
-    
+
+    // TODO Why unused? Remove?
     protected PreparedStatement prepareMetaDataStatement(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
         
         return prepareStatement(sql, resultSetType, resultSetConcurrency,
             resultSetHoldability, true, false);
     }
-    
-    /**
-     * Creates a default <code>PreparedStatement</code> object that has
-     * the capability to retrieve auto-generated keys. The given constant
-     * tells the driver whether it should make auto-generated keys
-     * available for retrieval.  This parameter is ignored if the SQL statement
-     * is not an <code>INSERT</code> statement, or an SQL statement able to return
-     * auto-generated keys (the list of such statements is vendor-specific).
-     * <P>
-     * <B>Note:</B> This method is optimized for handling
-     * parametric SQL statements that benefit from precompilation. If
-     * the driver supports precompilation,
-     * the method <code>prepareStatement</code> will send
-     * the statement to the database for precompilation. Some drivers
-     * may not support precompilation. In this case, the statement may
-     * not be sent to the database until the <code>PreparedStatement</code> 
-     * object is executed.  This has no direct effect on users; however, it does
-     * affect which methods throw certain SQLExceptions.
-     * <P>
-     * Result sets created using the returned <code>PreparedStatement</code>
-     * object will by default be type <code>TYPE_FORWARD_ONLY</code>
-     * and have a concurrency level of <code>CONCUR_READ_ONLY</code>. 
-     * The holdability of the created result sets can be determined by 
-     * calling {@link #getHoldability}.
-     *
-     * @param sql an SQL statement that may contain one or more '?' IN
-     *        parameter placeholders
-     * @param autoGeneratedKeys a flag indicating whether auto-generated keys 
-     *        should be returned; one of
-     *        <code>Statement.RETURN_GENERATED_KEYS</code> or
-     *        <code>Statement.NO_GENERATED_KEYS</code>  
-     * @return a new <code>PreparedStatement</code> object, containing the
-     *         pre-compiled SQL statement, that will have the capability of
-     *         returning auto-generated keys
-     * @exception SQLException if a database access error occurs, this
-     *  method is called on a closed connection 
-     *         or the given parameter is not a <code>Statement</code>
-     *         constant indicating whether auto-generated keys should be
-     *         returned
-     * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method with a constant of Statement.RETURN_GENERATED_KEYS
-     * @since 1.4
-     */
+
+    @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
             throws SQLException {
     	
@@ -1026,51 +695,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return prepareStatement(query);
     }
 
-    /**
-     * Creates a default <code>PreparedStatement</code> object capable
-     * of returning the auto-generated keys designated by the given array.
-     * This array contains the indexes of the columns in the target
-     * table that contain the auto-generated keys that should be made
-     * available.  The driver will ignore the array if the SQL statement
-     * is not an <code>INSERT</code> statement, or an SQL statement able to return
-     * auto-generated keys (the list of such statements is vendor-specific).
-     *<p>
-     * An SQL statement with or without IN parameters can be
-     * pre-compiled and stored in a <code>PreparedStatement</code> object. This
-     * object can then be used to efficiently execute this statement
-     * multiple times.
-     * <P>
-     * <B>Note:</B> This method is optimized for handling
-     * parametric SQL statements that benefit from precompilation. If
-     * the driver supports precompilation,
-     * the method <code>prepareStatement</code> will send
-     * the statement to the database for precompilation. Some drivers
-     * may not support precompilation. In this case, the statement may
-     * not be sent to the database until the <code>PreparedStatement</code> 
-     * object is executed.  This has no direct effect on users; however, it does
-     * affect which methods throw certain SQLExceptions.
-     * <P>
-     * Result sets created using the returned <code>PreparedStatement</code>
-     * object will by default be type <code>TYPE_FORWARD_ONLY</code>
-     * and have a concurrency level of <code>CONCUR_READ_ONLY</code>. 
-     * The holdability of the created result sets can be determined by 
-     * calling {@link #getHoldability}.
-     *
-     * @param sql an SQL statement that may contain one or more '?' IN
-     *        parameter placeholders
-     * @param columnIndexes an array of column indexes indicating the columns
-     *        that should be returned from the inserted row or rows 
-     * @return a new <code>PreparedStatement</code> object, containing the
-     *         pre-compiled statement, that is capable of returning the
-     *         auto-generated keys designated by the given array of column
-     *         indexes
-     * @exception SQLException if a database access error occurs 
-     * or this method is called on a closed connection
-     * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     *
-     * @since 1.4
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
             throws SQLException {
     	checkValidity();
@@ -1080,51 +705,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return prepareStatement(query);
     }
 
-    /**
-     * Creates a default <code>PreparedStatement</code> object capable
-     * of returning the auto-generated keys designated by the given array.
-     * This array contains the names of the columns in the target
-     * table that contain the auto-generated keys that should be returned.
-     * The driver will ignore the array if the SQL statement
-     * is not an <code>INSERT</code> statement, or an SQL statement able to return
-     * auto-generated keys (the list of such statements is vendor-specific).
-     * <P>
-     * An SQL statement with or without IN parameters can be
-     * pre-compiled and stored in a <code>PreparedStatement</code> object. This
-     * object can then be used to efficiently execute this statement
-     * multiple times.
-     * <P>
-     * <B>Note:</B> This method is optimized for handling
-     * parametric SQL statements that benefit from precompilation. If
-     * the driver supports precompilation,
-     * the method <code>prepareStatement</code> will send
-     * the statement to the database for precompilation. Some drivers
-     * may not support precompilation. In this case, the statement may
-     * not be sent to the database until the <code>PreparedStatement</code> 
-     * object is executed.  This has no direct effect on users; however, it does
-     * affect which methods throw certain SQLExceptions.
-     * <P>
-     * Result sets created using the returned <code>PreparedStatement</code>
-     * object will by default be type <code>TYPE_FORWARD_ONLY</code>
-     * and have a concurrency level of <code>CONCUR_READ_ONLY</code>. 
-     * The holdability of the created result sets can be determined by 
-     * calling {@link #getHoldability}.
-     *
-     * @param sql an SQL statement that may contain one or more '?' IN
-     *        parameter placeholders
-     * @param columnNames an array of column names indicating the columns
-     *        that should be returned from the inserted row or rows 
-     * @return a new <code>PreparedStatement</code> object, containing the
-     *         pre-compiled statement, that is capable of returning the
-     *         auto-generated keys designated by the given array of column
-     *         names
-     * @exception SQLException if a database access error occurs 
-     * or this method is called on a closed connection
-     * @exception java.sql.SQLFeatureNotSupportedException if the JDBC driver does not support
-     * this method
-     *
-     * @since 1.4
-     */
+    @Override
     public PreparedStatement prepareStatement(String sql, String[] columnNames)
             throws SQLException {
         checkValidity();
@@ -1199,27 +780,13 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     *
-     * Creates a <code>CallableStatement</code> object that will generate
-     * <code>ResultSet</code> objects with the given type and concurrency.
-     * This method is the same as the <code>prepareCall</code> method
-     * above, but it allows the default result set
-     * type and result set concurrency type to be overridden.
-     *
-     * @param resultSetType a result set type; see ResultSet.TYPE_XXX
-     * @param resultSetConcurrency a concurrency type; see ResultSet.CONCUR_XXX
-     * @return a new CallableStatement object containing the
-     * pre-compiled SQL statement
-     * @exception SQLException if a database access error occurs
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public CallableStatement prepareCall(String sql,
             int resultSetType, int resultSetConcurrency) throws SQLException {
         return prepareCall(sql, resultSetType, resultSetConcurrency, this.resultSetHoldability);
     }
 
+    @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
             int resultSetHoldability) throws SQLException {
         synchronized (getSynchronizationObject()) {
@@ -1258,30 +825,17 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    /**
-     *
-     * Gets the type map object associated with this connection.
-     * Unless the application has added an entry to the type map,
-     * the map returned will be empty.
-     *
-     * @return the <code>java.util.Map</code> object associated
-     *         with this <code>Connection</code> object
-     * @since 1.2
-     * @see <a href="package-summary.html#2.0 API">What Is in the JDBC 2.0 API</a>
-     */
+    @Override
     public Map<String,Class<?>> getTypeMap() throws SQLException {
     	return new HashMap<>();
     }
 
-    public void setTypeMap(Map<String,Class<?>> map) throws SQLException {
+    @Override
+    public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
         throw new FBDriverNotCapableException();
     }
 
     private Set<String> clientInfoPropNames = new HashSet<>();
-    
-    /*
-     * Savepoint stuff.  
-     */
     
     private final AtomicInteger savepointCounter = new AtomicInteger();
     private final List<FBSavepoint> savepoints = new ArrayList<>();
@@ -1289,7 +843,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     private int getNextSavepointCounter() {
         return savepointCounter.getAndIncrement();
     }
-    
+
+    @Override
     public Savepoint setSavepoint() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1324,6 +879,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         savepoints.add(savepoint);
     }
 
+    @Override
     public Savepoint setSavepoint(String name) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1333,7 +889,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             return savepoint;
         }
     }
-    
+
+    @Override
     public void rollback(Savepoint savepoint) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1361,6 +918,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
+    @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1417,12 +975,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    // java.sql.Wrapper interface
-    
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(FBConnection.class);
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
@@ -1430,17 +988,29 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return iface.cast(this);
     }
 
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation ignores calls to this method as schemas are not supported.
+     * </p>
+     */
+    @Override
     public void setSchema(String schema) throws SQLException {
         // Ignore: no schema support
         checkValidity();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return Always {@code null} as schemas ar not supported
+     */
+    @Override
     public String getSchema() throws SQLException {
         checkValidity();
         return null;
     }
-
-    //package methods
 
     /**
      * Check if this connection is currently involved in a transaction
@@ -1448,12 +1018,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public boolean inTransaction() throws SQLException {
         return getGDSHelper().inTransaction();
     }
-   
-    /**
-     * Get the encoding that is being used for this connection.
-     *
-     * @return The name of the encoding used
-     */
+
+    @Override
     public String getIscEncoding() throws SQLException {
         return getGDSHelper().getIscEncoding();
     }
@@ -1475,10 +1041,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * Implementation note: This method behaves exactly the same as {@link #createClob()}.
      * </p>
      */
+    @Override
     public NClob createNClob() throws SQLException {
         return (NClob) createClob();
     }
 
+    @Override
     public SQLXML createSQLXML() throws SQLException {
         checkValidity();
         throw new FBDriverNotCapableException("Type SQLXML not supported");
@@ -1497,7 +1065,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
         return dpb != null && dpb.hasArgument(USE_FIREBIRD_AUTOCOMMIT);
     }
-    
+
+    @Override
     protected void finalize() throws Throwable {
         try {
             close();
@@ -1517,7 +1086,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                     "Required functionality (RDB$SET_CONTEXT()) only available in Firebird 2.0 or higher");
         }
     }
-    
+
+    @Override
     public Properties getClientInfo() throws SQLException {
         checkValidity();
         checkClientInfoSupport();
@@ -1532,6 +1102,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return result;
     }
 
+    @Override
     public String getClientInfo(String name) throws SQLException {
         checkValidity();
         checkClientInfoSupport();
@@ -1565,6 +1136,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     
     }
 
+    @Override
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
         SQLExceptionChainBuilder<SQLClientInfoException> chain = new SQLExceptionChainBuilder<>();
         try {
@@ -1591,6 +1163,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             throw chain.getException();
     }
 
+    @Override
     public void setClientInfo(String name, String value) throws SQLClientInfoException {
         try {
             checkValidity();
@@ -1623,18 +1196,21 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
+    @Override
     public void abort(Executor executor) throws SQLException {
         // TODO Write implementation
         checkValidity();
         throw new FBDriverNotCapableException();
     }
 
+    @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
         // TODO Write implementation
         checkValidity();
         throw new FBDriverNotCapableException();
     }
 
+    @Override
     public int getNetworkTimeout() throws SQLException {
         // TODO Write implementation
         checkValidity();

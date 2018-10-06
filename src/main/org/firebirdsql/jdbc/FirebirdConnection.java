@@ -55,11 +55,9 @@ public interface FirebirdConnection extends Connection {
     int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
     
     /**
-     * Create Blob object.
+     * {@inheritDoc}
      * 
      * @return instance of {@link FirebirdBlob}.
-     * 
-     * @throws SQLException if something went wrong.
      */
     Blob createBlob() throws SQLException;
     
