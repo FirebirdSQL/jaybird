@@ -189,6 +189,9 @@ public interface ISCConstants {
     int isc_dpb_wire_crypt_level        = 144;
     int isc_dpb_db_crypt_config         = 145;
 
+    // NOTE: Update this when adding new Jaybird specific DPB items
+    int jaybirdMaxIscDpbValue = isc_dpb_db_crypt_config;
+
     /*************************************/
     /* Transaction parameter block stuff */
     /*************************************/

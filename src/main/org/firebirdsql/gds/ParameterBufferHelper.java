@@ -57,20 +57,26 @@ public class ParameterBufferHelper {
      * their values. This operation should be executed only once.
      */
     static {
-        final Map<String, Integer> tempDpbTypes = new HashMap<>();
-        final Map<String, Integer> tempTpbTypes = new HashMap<>();
-        Class<ISCConstants> iscClass = ISCConstants.class;
+        final Map<String, Integer> tempDpbTypes = new HashMap<>(512);
+        final Map<String, Integer> tempTpbTypes = new HashMap<>(64);
 
-        Field[] fields = iscClass.getFields();
+        final Field[] fields = ISCConstants.class.getFields();
 
         for (Field field : fields) {
-            if (!field.getType().getName().equals("int"))
+            final String name = field.getName();
+            if (!(name.startsWith(DPB_PREFIX) || name.startsWith(TPB_PREFIX))
+                    || !field.getType().equals(int.class)) {
                 continue;
+            }
 
-            String name = field.getName();
-            Integer value;
+            final Integer value;
             try {
-                value = (Integer) field.get(null);
+                int tempValue = field.getInt(null);
+                if (tempValue > ISCConstants.jaybirdMaxIscDpbValue) {
+                    // Likely an error code that also starts with isc_tpb_ or isc_dpb_
+                    continue;
+                }
+                value = tempValue;
             } catch (IllegalAccessException iaex) {
                 continue;
             }
@@ -203,7 +209,7 @@ public class ParameterBufferHelper {
             log.error("Could not load " + ISC_DPB_TYPES_RESOURCE, ex);
             return Collections.emptyMap();
         }
-        final Map<String, DpbParameterType> tempDpbParameterTypes = new HashMap<>();
+        final Map<String, DpbParameterType> tempDpbParameterTypes = new HashMap<>(128);
 
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String key = (String) entry.getKey();
