@@ -97,7 +97,7 @@ public class FBEscapedFunctionHelper {
         // System
         functionMap.put("DATABASE", null); // TODO Implement with RDB$GET_CONTEXT
 
-        FUNCTION_MAP = Collections.unmodifiableMap(new HashMap<>(functionMap));
+        FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
     }
 
     private static Map<String, SQLFunction> getNumericFunctions() {
