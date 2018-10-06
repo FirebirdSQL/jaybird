@@ -424,9 +424,8 @@ public final class ClientAuthBlock {
     // TODO Move plugin loading to separate class?
 
     private static Map<String, AuthenticationPluginSpi> getAvailableAuthenticationPlugins() {
-        List<AuthenticationPluginSpi> authenticationPluginSpis = getAvailableAuthenticationPluginSpis();
-        Map<String, AuthenticationPluginSpi> pluginMapping = new HashMap<>(authenticationPluginSpis.size());
-        for (AuthenticationPluginSpi pluginSpi : authenticationPluginSpis) {
+        Map<String, AuthenticationPluginSpi> pluginMapping = new HashMap<>();
+        for (AuthenticationPluginSpi pluginSpi : getAvailableAuthenticationPluginSpis()) {
             String pluginName = pluginSpi.getPluginName();
             if (pluginMapping.containsKey(pluginName)) {
                 log.warn("Authentication plugin provider for " + pluginName + " already registered. Skipping "

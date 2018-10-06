@@ -1797,7 +1797,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final Map<String, byte[]> PRIVILEGE_MAPPING;
     static {
-        Map<String, byte[]> tempMapping = new HashMap<>(7);
+        Map<String, byte[]> tempMapping = new HashMap<>();
         tempMapping.put("A", getBytes("ALL"));
         tempMapping.put("S", getBytes("SELECT"));
         tempMapping.put("D", getBytes("DELETE"));
