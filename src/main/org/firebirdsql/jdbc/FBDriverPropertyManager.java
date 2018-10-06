@@ -84,8 +84,8 @@ class FBDriverPropertyManager {
     private static final Map<String, PropertyInfo> dpbMap;
 
     static {
-        final Map<String, PropertyInfo> tempAliases = new HashMap<>();
-        final Map<String, PropertyInfo> tempDpbMap = new HashMap<>();
+        final Map<String, PropertyInfo> tempAliases = new HashMap<>(64);
+        final Map<String, PropertyInfo> tempDpbMap = new HashMap<>(256);
         // process aliases and descriptions first
         if (info != null) {
             for (Enumeration<String> en = info.getKeys(); en.hasMoreElements(); ) {
