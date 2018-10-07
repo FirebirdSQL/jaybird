@@ -23,16 +23,14 @@ import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.hamcrest.Matcher;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.*;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
@@ -290,7 +288,6 @@ public class TestFBDriver {
         Properties connectionProperties = getDefaultPropertiesForConnection();
         connectionProperties.setProperty("user", username);
         connectionProperties.setProperty("password", password);
-        connectionProperties.setProperty("authPlugins", authPlugin);
         try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
@@ -299,7 +296,10 @@ public class TestFBDriver {
                              + "where MON$ATTACHMENT_ID = CURRENT_CONNECTION")
         ) {
             assertTrue("Expected a row with attachment information", resultSet.next());
-            assertEquals("Unexpected authentication method", authPlugin, resultSet.getString(1));
+            Matcher<String> authMethodMatcher = "Srp".equalsIgnoreCase(authPlugin)
+                    ? anyOf(equalTo("Srp"), equalTo("Srp256"))
+                    : equalTo(authPlugin);
+            assertThat("Unexpected authentication method", resultSet.getString(1), authMethodMatcher);
             assertEquals("Unexpected user name", "CaseSensitiveUser", resultSet.getString(2).trim());
         }
     }
