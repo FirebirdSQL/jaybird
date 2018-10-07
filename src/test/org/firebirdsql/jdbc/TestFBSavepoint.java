@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,215 +12,278 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.rules.UsesDatabase;
+import org.junit.*;
+import org.junit.rules.ExpectedException;
+
 import java.sql.*;
+import java.util.Properties;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for savepoint handling.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class TestFBSavepoint extends FBJUnit4TestBase {
+public class TestFBSavepoint {
 
-    private FirebirdConnection connection;
-    
+    @ClassRule
+    public static final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
+    private Connection connection;
+
+    @BeforeClass
+    public static void initDatabase() throws Exception {
+        assumeTrue("Test requires SAVEPOINT support", getDefaultSupportInfo().supportsSavepoint());
+        usesDatabase.createDefaultDatabase();
+
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, "CREATE TABLE test_svpt(id INTEGER)");
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
-        assumeTrue("Test requires SAVEPOINT support", supportInfoFor(connection).supportsSavepoint());
-
-        Statement stmt = connection.createStatement();
-        try {
-            stmt.execute("CREATE TABLE test_svpt(id INTEGER)");
-        } catch(SQLException ex) {
-            // ignore, most likely table exists
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from test_svpt");
         }
+        // Most tests require auto commit disabled
+        connection.setAutoCommit(false);
     }
 
     @After
     public void tearDown() throws Exception {
-        closeQuietly(connection);
+        connection.close();
+    }
+
+    @Test
+    public void testSavePointCreationNotAllowedInAutoCommit() throws Exception {
+        connection.setAutoCommit(true);
+
+        expectedException.expect(allOf(
+                isA(SQLException.class),
+                message(equalTo("Connection.setSavepoint() method cannot be used in auto-commit mode."))));
+
+        connection.setSavepoint();
+    }
+
+    @Test
+    public void testGetSavePointIdOnUnnamedSavePoint() throws Exception {
+        Savepoint savepoint1 = connection.setSavepoint();
+        Savepoint savepoint2 = connection.setSavepoint();
+
+        assertEquals(0, savepoint1.getSavepointId());
+        assertEquals(1, savepoint2.getSavepointId());
+    }
+
+    @Test
+    public void getSavePointNameOnUnnamedSavePointThrowsException() throws Exception {
+        Savepoint savepoint = connection.setSavepoint();
+
+        expectedException.expect(allOf(
+                isA(SQLException.class),
+                message(equalTo("Savepoint is unnamed."))));
+
+        savepoint.getSavepointName();
     }
 
     /**
      * Test if basic savepoint handling works.
-     * 
-     * @throws Exception if something went wrong.
      */
     @Test
     public void testBasicSavepoint() throws Exception {
-        
-        connection.setAutoCommit(true);
-        try {
-            connection.setSavepoint();
-            assertTrue("Setting savepoint should not work in auto-commit mode", false);
-        } catch(SQLException e) {
-            // everything is fine
-        }
-            
-        connection.setAutoCommit(false);
-            
-        PreparedStatement stmt = connection.prepareStatement(
-            "INSERT INTO test_svpt VALUES(?)");
-            
-        try {
+        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO test_svpt VALUES(?)")) {
             stmt.setInt(1, 1);
             stmt.execute();
-                
+
             Savepoint svpt1 = connection.setSavepoint();
-            
-            try {
-                svpt1.getSavepointName();
-            } catch(SQLException ex) {
-                // everything is fine
-            }
-                
-            stmt.clearParameters();
-    
+
             stmt.setInt(1, 2);
             stmt.execute();
-            
+
+            checkRowCount(2);
+
             connection.rollback(svpt1);
-            connection.commit();
-            
+
             checkRowCount(1);
-            
-        } finally {
-            stmt.close();
+
+            connection.commit();
+
+            checkRowCount(1);
         }
     }
-   
+
+    @Test
+    public void getSavePointNameOnNamedSavePoint() throws Exception {
+        final String name = "named";
+        Savepoint savepoint = connection.setSavepoint(name);
+
+        assertEquals(name, savepoint.getSavepointName());
+    }
+
+    @Test
+    public void getSavePointIdOnNamedSavePointThrowsException() throws Exception {
+        Savepoint savepoint = connection.setSavepoint("named");
+
+        expectedException.expect(allOf(
+                isA(SQLException.class),
+                message(equalTo("Savepoint is named."))));
+
+        savepoint.getSavepointId();
+    }
+
     /**
      * Test if named savepoint handling works.
-     * 
-     * @throws Exception if something went wrong.
      */
     @Test
     public void testNamedSavepoint() throws Exception {
-        
-        connection.setAutoCommit(false);
-            
-        PreparedStatement stmt = connection.prepareStatement(
-            "INSERT INTO test_svpt VALUES(?)");
-            
-        try {
+        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO test_svpt VALUES(?)")) {
             stmt.setInt(1, 1);
             stmt.execute();
-                
+
             Savepoint svpt1 = connection.setSavepoint("test");
-            
-            try {
-                svpt1.getSavepointId();
-            } catch(SQLException ex) {
-                // everything is fine
-            }
-                
-            stmt.clearParameters();
-    
+
             stmt.setInt(1, 2);
             stmt.execute();
-            
+
+            checkRowCount(2);
+
             Savepoint svpt2 = connection.setSavepoint("test");
-            
-            assertTrue("Savepoints should be equal.", svpt1.equals(svpt2));
-            
-            stmt.clearParameters();
+
+            assertEquals("Savepoints should be equal.", svpt1, svpt2);
+
             stmt.setInt(1, 3);
             stmt.execute();
-            
+
+            checkRowCount(3);
+
             connection.rollback(svpt1);
-            connection.commit();
-            
+
             checkRowCount(2);
-            
-        } finally {
-            stmt.close();
+
+            connection.commit();
+
+            checkRowCount(2);
         }
     }
-    
+
     /**
      * Test if savepoints are released correctly.
-     * 
-     * @throws Exception if something went wrong.
      */
     @Test
     public void testSavepointRelease() throws Exception {
-        connection.setAutoCommit(false);
-        
         Savepoint svpt1 = connection.setSavepoint("test");
-        
+
         connection.releaseSavepoint(svpt1);
-        
+
         checkInvalidSavepoint(svpt1);
-        
+
         Savepoint svpt2 = connection.setSavepoint();
-        
+
         connection.releaseSavepoint(svpt2);
-        
+
         checkInvalidSavepoint(svpt2);
-        
+
         Savepoint svpt3 = connection.setSavepoint();
-        
+
         connection.commit();
-        
+
         checkInvalidSavepoint(svpt3);
     }
-        
+
+    @Test
+    public void testNamedSavePointInDialect1() throws Exception {
+        connection.close();
+        Properties info = getDefaultPropertiesForConnection();
+        info.setProperty("sql_dialect", "1");
+        connection = DriverManager.getConnection(getUrl(), info);
+        connection.setAutoCommit(false);
+
+        connection.setSavepoint("named");
+    }
+
+    @Test
+    public void testNamedSavePointRequiresQuoting() throws Exception {
+        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO test_svpt VALUES(?)")) {
+            stmt.setInt(1, 1);
+            stmt.execute();
+
+            Savepoint svpt1 = connection.setSavepoint("test\" 1");
+
+            stmt.setInt(1, 2);
+            stmt.execute();
+
+            checkRowCount(2);
+
+            Savepoint svpt2 = connection.setSavepoint("test\" 1");
+
+            assertEquals("Savepoints should be equal.", svpt1, svpt2);
+
+            stmt.setInt(1, 3);
+            stmt.execute();
+
+            checkRowCount(3);
+
+            connection.rollback(svpt1);
+
+            checkRowCount(2);
+
+            connection.commit();
+
+            checkRowCount(2);
+        }
+    }
+
     private void checkInvalidSavepoint(Savepoint savepoint) {
         try {
             connection.rollback(savepoint);
-            assertTrue("Released savepoint should not work.", false);
-        } catch(SQLException ex) {
+            fail("Released savepoint should not work.");
+        } catch (SQLException ex) {
             // everything is fine
         }
 
         try {
             connection.releaseSavepoint(savepoint);
-            assertTrue("Released savepoint should not work.", false);
-        } catch(SQLException ex) {
+            fail("Released savepoint should not work.");
+        } catch (SQLException ex) {
             // everything is fine
         }
     }
 
     /**
      * Check if table contains correct number of rows.
-     * 
-     * @param testRowCount expected number of rows.
-     * 
-     * @throws SQLException if something went wrong when counting rows.
+     *
+     * @param testRowCount
+     *         expected number of rows.
+     * @throws SQLException
+     *         if something went wrong when counting rows.
      */
     private void checkRowCount(int testRowCount) throws SQLException {
-        Statement stmt = connection.createStatement();
-        try {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM test_svpt");
-            
-            int counter = 0;
-            while(rs.next())
-                counter++;
-                
-            assertTrue("Incorrect result set, expecting " + testRowCount + 
-                " rows, obtained " + counter + ".", testRowCount == counter);
-            
-        } finally {
-            stmt.close();
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT count(*) FROM test_svpt");
+
+            int count = rs.next() ? rs.getInt(1) : 0;
+
+            assertEquals("Incorrect result set, expecting " + testRowCount +
+                    " rows, obtained " + count + ".", testRowCount, count);
+
         }
     }
 }
