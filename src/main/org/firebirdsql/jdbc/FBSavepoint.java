@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -24,154 +22,124 @@ import java.sql.SQLException;
 
 /**
  * Savepoint implementation.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
 public class FBSavepoint implements FirebirdSavepoint {
-    public static final String SAVEPOINT_ID_PREFIX = "svpt";
 
+    private static final String SAVEPOINT_ID_PREFIX = "SVPT";
+
+    private final boolean named;
+    private final int savepointId;
+    private final String name;
     private boolean valid = true;
-    private int savepointId;
-    private String name;
-    private String serverId;
-    
+
     /**
      * Create instance of this class.
-     * 
-     * @param id ID of the savepoint.
+     *
+     * @param savepointId
+     *         ID of the savepoint.
      */
-    public FBSavepoint(int id) {
-        savepointId = id;
-        serverId = getSavepointServerId(id);
-    }
-    
-    /**
-     * Create instance of this class for the specified name.
-     * 
-     * @param name name of the savepoint.
-     */
-    public FBSavepoint(String name) {
-        this.name = name;
-        serverId = getSavepointServerId(name);
-    }
-    
-    /**
-     * Generate a savepoint ID for the specified savepoint counter.
-     *  
-     * @param counter savepoint counter.
-     * @return valid savepoint ID.
-     */
-    private String getSavepointServerId(int counter) {
-        return SAVEPOINT_ID_PREFIX + counter;
-    }
-    
-    /**
-     * Generate a savepoint ID for the specified name.
-     * 
-     * @param name name of the savepoint.
-     * 
-     * @return valid savepoint ID.
-     */
-    private String getSavepointServerId(String name) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append('"');
-        
-        for (int i = 0; i < name.length(); i++) {
-            char currentChar = name.charAt(i);
-            // we have to double quote quotes
-            if (currentChar == '"') {
-            	sb.append('"');
-            }
-            
-            sb.append(currentChar);
-        }
-        
-        sb.append('"');
-        
-        return sb.toString();
-    }
-    
-    /**
-     * Get SQL server savepoint ID. This method generates correct ID for the 
-     * savepoint that can be directly used in the SQL statement.
-     * 
-     * @return valid server-side ID for the savepoint.
-     */
-    String getServerSavepointId() {
-        return serverId;
-    }
-    
-    /**
-     * Get ID of the savepoint.
-     */
-    public int getSavepointId() throws SQLException {
-        if (name == null)
-            return savepointId;
-        else
-            throw new SQLException("Savepoint is named.");
+    public FBSavepoint(int savepointId) {
+        this(false, savepointId, getSavepointServerId(savepointId));
     }
 
     /**
-     * Get name of the savepoint.
+     * Create instance of this class for the specified name.
+     *
+     * @param name
+     *         name of the savepoint.
      */
-    public String getSavepointName() throws SQLException {
-        if (name == null)
-            throw new SQLException("Savepoint is unnamed.");
-        else
-            return name;
+    public FBSavepoint(String name) {
+        this(true, -1, name);
     }
-    
+
+    private FBSavepoint(boolean named, int savepointId, String name) {
+        this.named = named;
+        this.savepointId = savepointId;
+        this.name = name;
+    }
+
     /**
-     * Check if this savepoint is named. This method is used internally to avoid
-     * unnecessary exception throwing.
-     * 
-     * @return <code>true</code> if savepoint is named.
+     * Generate a savepoint name for the specified savepoint id.
+     *
+     * @param savePointId
+     *         savepoint id.
+     * @return valid savepoint name.
      */
-    boolean isNamed() {
-        return name == null;
+    private static String getSavepointServerId(int savePointId) {
+        if (savePointId >= 0) {
+            return SAVEPOINT_ID_PREFIX + savePointId;
+        }
+        return SAVEPOINT_ID_PREFIX + '_' + Math.abs(savePointId);
     }
-    
+
+    /**
+     * Get server savepoint name.
+     * <p>
+     * This method generates correct name for the savepoint that can be used in the SQL statement after
+     * dialect-appropriate quoting.
+     * </p>
+     *
+     * @return valid server-side name for the savepoint.
+     */
+    String getServerSavepointId() {
+        return name;
+    }
+
+    @Override
+    public int getSavepointId() throws SQLException {
+        if (named) {
+            throw new SQLException("Savepoint is named.");
+        }
+        return savepointId;
+    }
+
+    @Override
+    public String getSavepointName() throws SQLException {
+        if (!named) {
+            throw new SQLException("Savepoint is unnamed.");
+        }
+        return name;
+    }
+
     /**
      * Check if the savepoint is valid.
-     * 
-     * @return <code>true</code> if savepoint is valid.
+     *
+     * @return {@code true} if savepoint is valid.
      */
     boolean isValid() {
         return valid;
     }
-    
+
     /**
-     * Make this savepoint invalid. 
+     * Make this savepoint invalid.
      */
     void invalidate() {
         this.valid = false;
     }
-    
+
     /**
-     * Check if objects are equal. For unnamed savepoints their IDs are checked,
-     * otherwise their names.
-     * 
-     * @param obj object to test.
-     * 
-     * @return <code>true</code> if <code>obj</code> is equal to this object.
+     * Check if objects are equal. For unnamed savepoints their IDs are checked, otherwise their names.
+     *
+     * @param obj
+     *         object to test.
+     * @return {@code true} if {@code obj} is equal to this object.
      */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof FBSavepoint)) return false;
-        
-        FBSavepoint that = (FBSavepoint)obj;
-        
-        return this.name == null ? 
-            this.savepointId == that.savepointId : 
-            this.name.equals(that.name); 
+
+        FBSavepoint that = (FBSavepoint) obj;
+
+        return this.named == that.named &&
+                this.name.equals(that.name);
     }
-    
-    /**
-     * Get hash code of this instance.
-     */
+
+    @Override
     public int hashCode() {
-        return name == null ? savepointId : name.hashCode();
+        return name.hashCode();
     }
 
 }

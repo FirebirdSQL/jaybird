@@ -1289,7 +1289,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     private int getNextSavepointCounter() {
         return savepointCounter.getAndIncrement();
     }
-    
+
+    @Override
     public Savepoint setSavepoint() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1320,10 +1321,38 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
         txCoordinator.ensureTransaction();
 
-        getGDSHelper().executeImmediate("SAVEPOINT " + savepoint.getServerSavepointId());
+        StringBuilder setSavepoint = new StringBuilder("SAVEPOINT ");
+        getQuoteStrategy().appendQuoted(savepoint.getServerSavepointId(), setSavepoint);
+
+        getGDSHelper().executeImmediate(setSavepoint.toString());
         savepoints.add(savepoint);
     }
 
+    /**
+     * Creates a named savepoint.
+     * <p>
+     * Savepoint names need to be valid Firebird identifiers, and the maximum length is restricted to the maximum
+     * identifier length (see {@link DatabaseMetaData#getMaxColumnNameLength()}. The implementation will take care of
+     * quoting the savepoint name appropriately for the connection dialect. The {@code name} should be passed unquoted.
+     * </p>
+     * <p>
+     * With connection dialect 1, the name is restricted to the rules for unquoted identifier names, that is, its
+     * characters are restricted to {@code A-Za-z0-9$_} and handled case insensitive.
+     * </p>
+     * <p>
+     * For dialect 2 and 3, the name is restricted to the rules for Firebird quoted identifiers (essentially any
+     * printable character and space is valid), and the name is handled case sensitive.
+     * </p>
+     *
+     * @param name
+     *         Savepoint name
+     * @return Savepoint object
+     * @throws SQLException
+     *         if a database access error occurs, this method is called while participating in a distributed
+     *         transaction, this method is called on a closed connection or this {@code Connection} object is currently
+     *         in auto-commit mode
+     */
+    @Override
     public Savepoint setSavepoint(String name) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1333,7 +1362,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             return savepoint;
         }
     }
-    
+
+    @Override
     public void rollback(Savepoint savepoint) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1354,13 +1384,17 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
             FBSavepoint fbSavepoint = (FBSavepoint) savepoint;
 
-            if (!fbSavepoint.isValid())
+            if (!fbSavepoint.isValid()) {
                 throw new SQLException("Savepoint is no longer valid.");
+            }
 
-            getGDSHelper().executeImmediate("ROLLBACK TO " + fbSavepoint.getServerSavepointId());
+            StringBuilder rollbackSavepoint = new StringBuilder("ROLLBACK TO ");
+            getQuoteStrategy().appendQuoted(fbSavepoint.getServerSavepointId(), rollbackSavepoint);
+            getGDSHelper().executeImmediate(rollbackSavepoint.toString());
         }
     }
 
+    @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
@@ -1380,7 +1414,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                 throw new SQLException("Savepoint is no longer valid.");
             }
 
-            getGDSHelper().executeImmediate("RELEASE SAVEPOINT " + fbSavepoint.getServerSavepointId() + " ONLY");
+            StringBuilder rollbackSavepoint = new StringBuilder("RELEASE SAVEPOINT ");
+            getQuoteStrategy().appendQuoted(fbSavepoint.getServerSavepointId(), rollbackSavepoint).append(" ONLY");
+            getGDSHelper().executeImmediate(rollbackSavepoint.toString());
 
             fbSavepoint.invalidate();
 
@@ -1649,6 +1685,10 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         } else {
             return this;
         }
+    }
+
+    private QuoteStrategy getQuoteStrategy() throws SQLException {
+        return QuoteStrategy.forDialect(getGDSHelper().getDialect());
     }
 
     protected class GeneratedKeysQuery extends AbstractGeneratedKeysQuery {

@@ -227,6 +227,7 @@ The following has been changed or fixed since Jaybird 3.0.5
     only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
 -   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
     See [Case sensitive user names] for more information.
+-   Fixed: Savepoints did not work in connection dialect 1 as savepoint names were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
     
 ### Known issues in Jaybird 3.0.6
 

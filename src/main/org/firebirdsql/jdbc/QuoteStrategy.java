@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -36,6 +34,11 @@ public enum QuoteStrategy {
         public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
             return sb.append(objectName);
         }
+
+        @Override
+        public String quoteObjectName(String objectName) {
+            return objectName;
+        }
     },
     /**
      * Dialect 3 (and 2) supports quoting of object names.
@@ -43,23 +46,52 @@ public enum QuoteStrategy {
     QUOTES {
         @Override
         public StringBuilder appendQuoted(final String objectName, final StringBuilder sb) {
-            return sb.append('"').append(objectName).append('"');
+            sb.append('"');
+            for (int i = 0; i < objectName.length(); i++) {
+                char currentChar = objectName.charAt(i);
+                // we have to double quote quotes
+                if (currentChar == '"') {
+                    sb.append('"');
+                }
+
+                sb.append(currentChar);
+            }
+            sb.append('"');
+            return sb;
+        }
+
+        @Override
+        public String quoteObjectName(String objectName) {
+            return appendQuoted(objectName, new StringBuilder(objectName.length() + 2)).toString();
         }
     };
 
     /**
      * Appends the {@code objectName} with (or in the case of dialect 1: without) quotes to {@code sb}.
      *
-     * @param objectName The object name to append
-     * @param sb StringBuilder for appending
+     * @param objectName
+     *         The object name to append
+     * @param sb
+     *         StringBuilder for appending
      * @return The StringBuilder for method chaining
      */
     public abstract StringBuilder appendQuoted(String objectName, StringBuilder sb);
 
     /**
+     * Returns the object name appropriately quoted according to this quote strategy.
+     *
+     * @param objectName
+     *         The object name
+     * @return The transformed object name.
+     * @since 3.0.6
+     */
+    public abstract String quoteObjectName(String objectName);
+
+    /**
      * Obtain the {@link QuoteStrategy} for the specified dialect.
      *
-     * @param dialect Dialect
+     * @param dialect
+     *         Dialect
      * @return Appropriate {@link QuoteStrategy}
      */
     public static QuoteStrategy forDialect(final int dialect) {
