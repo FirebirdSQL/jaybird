@@ -232,7 +232,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         FBDatabaseMetaData metaData = (FBDatabaseMetaData) connection.getMetaData();
 
         try (ResultSet bestRowIdentifier = metaData.getBestRowIdentifier("", "", tableName,
-                DatabaseMetaData.bestRowSession, true)) {
+                DatabaseMetaData.bestRowTransaction, true)) {
             int[] result = new int[rowDescriptor.getCount()];
             boolean hasParams = false;
             while (bestRowIdentifier.next()) {

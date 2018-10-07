@@ -1955,10 +1955,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
     //@formatter:on
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird considers the primary key (scoped as {@code bestRowSession} as the best identifier for all scopes.
+     * Pseudo column {@code RDB$DB_KEY} (scoped as {@code bestRowTransaction} is considered the second-best alternative
+     * for scopes {@code bestRowTemporary} and {@code bestRowTransaction} if {@code table} has no primary key.
+     * </p>
+     * <p>
+     * Jaybird currently considers {@code RDB$DB_KEY} to be {@link DatabaseMetaData#bestRowTransaction} even if the
+     * dbkey_scope is set to 1 (session). This may change in the future. See also {@link #getRowIdLifetime()}.
+     * </p>
+     */
     @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        // TODO Handling of scope is wrong
         final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
                 .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
                 .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "ROWIDENTIFIER").addField()
@@ -1970,29 +1981,35 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER").addField()
                 .toRowDescriptor();
 
-        List<RowValue> rows;
         final RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
-        // Check if table exists, need to escape as getTables takes a pattern
-        String quoteLikeTable = escapeWildcards(table);
-        try (ResultSet tables = getTables(catalog, schema, quoteLikeTable, null)) {
-            if (!tables.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
-            }
-            rows = getPrimaryKeyIdentifier(tables.getString(3), scope, rowValueBuilder);
-        }
+
+        final List<RowValue> rows = getPrimaryKeyIdentifier(table, rowValueBuilder);
 
         // if no primary key exists, add RDB$DB_KEY as pseudo-column
         if (rows.size() == 0) {
-            rows.add(rowValueBuilder
-                    .at(0).set(createShort(scope))
-                    .at(1).set(getBytes("RDB$DB_KEY"))
-                    .at(2).set(createShort(Types.ROWID))
-                    .at(3).set(getBytes(getDataTypeName(char_type, 0, CS_BINARY)))
-                    .at(4).set(createInt(8)) // TODO Consider querying RDB$RELATIONS for the actual size of the DB_KEY
-                    .at(6).set(createShort(0))
-                    .at(7).set(createShort(bestRowPseudo))
-                    .toRowValue(true)
-            );
+            // NOTE: Currently is always ROWID_VALID_TRANSACTION
+            final RowIdLifetime rowIdLifetime = getRowIdLifetime();
+            if (rowIdLifetime == RowIdLifetime.ROWID_VALID_TRANSACTION && scope == DatabaseMetaData.bestRowSession) {
+                // consider RDB$DB_KEY scope transaction
+                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            }
+
+            try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "RDB$DB\\_KEY")) {
+                if (!pseudoColumns.next()) {
+                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                }
+                rows.add(rowValueBuilder
+                        .at(0).set(createShort(
+                                rowIdLifetime == RowIdLifetime.ROWID_VALID_TRANSACTION
+                                        ? DatabaseMetaData.bestRowTransaction
+                                        : DatabaseMetaData.bestRowSession))
+                        .at(1).set(getBytes("RDB$DB_KEY"))
+                        .at(2).set(createShort(Types.ROWID))
+                        .at(3).set(getBytes(getDataTypeName(char_type, 0, CS_BINARY)))
+                        .at(4).set(createInt(pseudoColumns.getInt(6)))
+                        .at(7).set(createShort(DatabaseMetaData.bestRowPseudo))
+                        .toRowValue(true));
+            }
         }
 
         return new FBResultSet(rowDescriptor, rows);
@@ -2003,17 +2020,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      *
      * @param table
      *         name of the table.
-     * @param scope
-     *         scope, we just include it in the result set.
      * @param valueBuilder
      *         Builder for row values
-     * @return list of result set values, when size is 0, no primary key has
-     * been defined for a table.
+     * @return list of result set values, when empty, no primary key has been defined for a table or the table does not
+     * exist. The returned list can be modified by caller if needed.
      * @throws SQLException
      *         if something went wrong.
      */
-    private List<RowValue> getPrimaryKeyIdentifier(String table, int scope,
-            final RowValueBuilder valueBuilder) throws SQLException {
+    private List<RowValue> getPrimaryKeyIdentifier(String table, final RowValueBuilder valueBuilder)
+            throws SQLException {
         try (ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Collections.singletonList(table))) {
             final List<RowValue> rows = new ArrayList<>();
             while (rs.next()) {
@@ -2022,7 +2037,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 short fieldScale = rs.getShort("FIELD_SCALE");
                 int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
                 rows.add(valueBuilder
-                        .at(0).set(createShort(scope))
+                        .at(0).set(createShort(DatabaseMetaData.bestRowSession))
                         .at(1).set(getBytes(rs.getString("COLUMN_NAME")))
                         .at(2).set(createShort(getDataType(fieldType, fieldSubType, fieldScale, characterSetId)))
                         .at(3).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))

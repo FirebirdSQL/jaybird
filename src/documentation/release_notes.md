@@ -1004,6 +1004,29 @@ Unfortunately this does not apply to parameters, see also [JDBC RowId support].
 Due to the method of identification, real columns of type `char character set octets` 
 with the name `DB_KEY` will also be identified as a `ROWID` column.
 
+DatabaseMetaData.getBestRowIdentifier scope handling
+----------------------------------------------------
+
+Previously, the Jaybird implementation of `DatabaseMetaData.getBestRowIdentifier`
+used the `scope` parameter to populate the `SCOPE` column of its result set, 
+instead of using it to filter on the required scope.
+
+This has been changed to instead filter on `scope`. In this implementation,
+the columns of the primary key are considered the best row identifier, with
+scope `bestRowSession`. It will be returned for all values of `scope`.
+
+If a table does not have a primary key, the `RDB$DB_KEY` is considered the
+second-best alternative, with scope `bestRowTransaction`. It will only be 
+returned for scopes `bestRowTemporary` and `bestRowTransaction`. See also
+[JDBC RowId support].
+
+If you are currently using `DatabaseMetaData.getBestRowIdentifier` with 
+`scope` value `DatabaseMetaData.bestRowSession`, consider if you need to
+use `bestRowTransaction` instead.
+
+If you are relying on the `SCOPE` column containing the value for the requested
+scope, change your logic to remove that dependency.
+
 Removal of character mapping
 ----------------------------
 

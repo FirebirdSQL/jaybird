@@ -617,17 +617,32 @@ public class TestFBDatabaseMetaData {
         createTable("best_row_pk");
         createTable("best_row_no_pk", null);
 
-        try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", DatabaseMetaData.bestRowSession, true)) {
-            assertTrue("Should have rows", rs.next());
-            assertEquals("Column name should be C1", "C1", rs.getString(2));
-            assertEquals("Column type should be INTEGER", "INTEGER", rs.getString(4));
-            assertFalse("Should have only one row", rs.next());
+        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction,
+                DatabaseMetaData.bestRowTransaction }) {
+            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_PK", scope, true)) {
+                assertTrue("Should have rows", rs.next());
+                assertEquals("Column name should be C1", "C1", rs.getString(2));
+                assertEquals("Column type should be INTEGER", "INTEGER", rs.getString(4));
+                assertEquals("Scope should be bestRowSession", DatabaseMetaData.bestRowSession, rs.getInt(1));
+                assertEquals("Pseudo column should be bestRowNotPseudo",
+                        DatabaseMetaData.bestRowNotPseudo, rs.getInt(8));
+                assertFalse("Should have only one row", rs.next());
+            }
+        }
+
+        for (int scope : new int[] { DatabaseMetaData.bestRowTemporary, DatabaseMetaData.bestRowTransaction }) {
+            try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", scope, true)) {
+                assertTrue("Should have rows", rs.next());
+                assertEquals("Column name should be RDB$DB_KEY", "RDB$DB_KEY", rs.getString(2));
+                assertEquals("Scope should be bestRowTransaction", DatabaseMetaData.bestRowTransaction, rs.getInt(1));
+                assertEquals("Pseudo column should be bestRowPseudo",
+                        DatabaseMetaData.bestRowPseudo, rs.getInt(8));
+                assertFalse("Should have only one row", rs.next());
+            }
         }
 
         try (ResultSet rs = dmd.getBestRowIdentifier("", "", "BEST_ROW_NO_PK", DatabaseMetaData.bestRowSession, true)) {
-            assertTrue("Should have rows", rs.next());
-            assertEquals("Column name should be RDB$DB_KEY", "RDB$DB_KEY", rs.getString(2));
-            assertFalse("Should have only one row", rs.next());
+            assertFalse("Should have no rows", rs.next());
         }
     }
 
