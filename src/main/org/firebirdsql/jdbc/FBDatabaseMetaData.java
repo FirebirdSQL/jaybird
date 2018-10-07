@@ -142,7 +142,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private FBConnection connection;
     private final FirebirdSupportInfo firebirdSupportInfo;
 
-    protected final Map<String, FBPreparedStatement> statements = new HashMap<>();
+    private static final int STATEMENT_CACHE_SIZE = 12;
+    private final Map<String, FBPreparedStatement> statements = new LruPreparedStatementCache(STATEMENT_CACHE_SIZE);
     private final FirebirdVersionMetaData versionMetaData;
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
@@ -154,16 +155,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public void close() {
-        try {
-            for (FBStatement stmt : new ArrayList<>(statements.values())) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                   log.warn("error in DatabaseMetaData.close", e);
-                }
+        synchronized (statements) {
+            if (statements.isEmpty()) {
+                return;
             }
-        } finally {
-            statements.clear();
+            try {
+                for (FBStatement stmt : statements.values()) {
+                    try {
+                        stmt.close();
+                    } catch (Exception e) {
+                        log.warn("error closing cached statements in DatabaseMetaData.close", e);
+                    }
+                }
+            } finally {
+                statements.clear();
+            }
         }
     }
 
@@ -4788,28 +4794,33 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private FBPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
-        FBPreparedStatement s = statements.get(sql);
+        synchronized (statements) {
+            if (!standalone) {
+                // Check cache
+                FBPreparedStatement cachedStatement = statements.get(sql);
 
-        if (s != null) {
-            if (s.isClosed()) {
-                statements.remove(sql);
-            } else {
-                return s;
+                if (cachedStatement != null) {
+                    if (cachedStatement.isClosed()) {
+                        statements.remove(sql);
+                    } else {
+                        return cachedStatement;
+                    }
+                }
             }
+
+            InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
+                    new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
+
+            FBPreparedStatement newStatement = new FBPreparedStatement(gdsHelper, sql,
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.CLOSE_CURSORS_AT_COMMIT,
+                    metaDataTransactionCoordinator, metaDataTransactionCoordinator, true, standalone, false);
+
+            if (!standalone) {
+                statements.put(sql, newStatement);
+            }
+
+            return newStatement;
         }
-
-        InternalTransactionCoordinator.MetaDataTransactionCoordinator metaDataTransactionCoordinator =
-            new InternalTransactionCoordinator.MetaDataTransactionCoordinator(connection.txCoordinator);
-
-        s = new FBPreparedStatement(gdsHelper, sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                ResultSet.CLOSE_CURSORS_AT_COMMIT, metaDataTransactionCoordinator, metaDataTransactionCoordinator,
-                true, standalone, false);
-
-        if (!standalone) {
-            statements.put(sql, s);
-        }
-
-        return s;
     }
 
     /**
@@ -4919,5 +4930,28 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                return System.getProperty(propertyName);
            }
         });
+    }
+
+    private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {
+        private final int maxCapacity;
+
+        private LruPreparedStatementCache(int maxCapacity) {
+            super(16, 0.75f, true);
+            this.maxCapacity = maxCapacity;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, FBPreparedStatement> eldest) {
+            if (size() <= maxCapacity) {
+                return false;
+            }
+            try {
+                FBPreparedStatement statement = eldest.getValue();
+                statement.close();
+            } catch (Exception e) {
+                log.debug("Closing eldest cached metadata statement yielded an exception; ignored", e);
+            }
+            return true;
+        }
     }
 }

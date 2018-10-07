@@ -228,6 +228,9 @@ The following has been changed or fixed since Jaybird 3.0.5
 -   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
     See [Case sensitive user names] for more information.
 -   Fixed: Savepoints did not work in connection dialect 1 as savepoint names were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
+-   Changed: The `DatabaseMetaData` statement cache introduced in Jaybird 3 was unlimited, it is now 
+    limited to 12 prepared statements; the least recently used statement will be closed and removed 
+    when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557)) 
     
 ### Known issues in Jaybird 3.0.6
 
