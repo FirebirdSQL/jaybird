@@ -1002,6 +1002,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return enquoteLiteral(val);
     }
 
+    // NOTE: This intentionally does not take case sensitivity into account
     private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("[\\p{Alpha}][\\p{Alnum}_$]*");
 
     /**
@@ -1024,25 +1025,26 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      */
     public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
         int len = identifier.length();
-        if (len < 1 || len > getConnection().getMetaData().getMaxColumnNameLength()) {
+        if (len < 1 || len > connection.getMetaData().getMaxColumnNameLength()) {
             throw new SQLException("Invalid name");
         }
         if (!alwaysQuote && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches()) {
             return identifier;
         }
-        if (gdsHelper.getCurrentDatabase().getDatabaseDialect() == 1) {
+        QuoteStrategy quoteStrategy = connection.getQuoteStrategy();
+        if (quoteStrategy == QuoteStrategy.NO_QUOTES) {
             throw new SQLFeatureNotSupportedException("Quoted identifiers not supported in dialect 1");
         }
         if (identifier.matches("^\".+\"$")) {
             // We assume double quotes are already properly escaped within
             return identifier;
         }
-        return "\"" + identifier.replace("\"", "\"\"") + "\"";
+        return quoteStrategy.quoteObjectName(identifier);
     }
 
     public boolean isSimpleIdentifier(String identifier) throws SQLException {
         int len = identifier.length();
-        return len >= 1 && len <= getConnection().getMetaData().getMaxColumnNameLength()
+        return len >= 1 && len <= connection.getMetaData().getMaxColumnNameLength()
                 && SIMPLE_IDENTIFIER_PATTERN.matcher(identifier).matches();
     }
 

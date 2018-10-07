@@ -1259,7 +1259,14 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
-    private QuoteStrategy getQuoteStrategy() throws SQLException {
+    /**
+     * Get the quote strategy appropriate for the dialect of this connection.
+     *
+     * @return Quote strategy
+     * @throws SQLException
+     *         If the connection is closed
+     */
+    QuoteStrategy getQuoteStrategy() throws SQLException {
         return QuoteStrategy.forDialect(getGDSHelper().getDialect());
     }
 
