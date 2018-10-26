@@ -164,7 +164,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     try {
                         stmt.close();
                     } catch (Exception e) {
-                        log.warn("error closing cached statements in DatabaseMetaData.close", e);
+                        log.warn("error closing cached statements in DatabaseMetaData.close; "
+                                + "see debug level for stacktrace");
+                        log.debug("error closing cached statements in DatabaseMetaData.close", e);
                     }
                 }
             } finally {
