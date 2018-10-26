@@ -138,8 +138,9 @@ public class FBResultSetMetaData extends AbstractFieldMetaData implements Firebi
         case Types.NUMERIC:
             return precision + 2; // sign + decimal separator
         case Types.FLOAT:
+            return precision + 6; // 6: sign + decimal separator + E + sign exp + exp (2 pos)
         case Types.DOUBLE:
-            return precision + 2; // sign + decimal separator
+            return precision + 7; // 7: sign + decimal separator + E + sign exp + exp (3 pos)
         case Types.INTEGER:
         case Types.BIGINT:
         case Types.SMALLINT:

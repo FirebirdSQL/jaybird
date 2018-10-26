@@ -945,7 +945,10 @@ Other fixes and changes
 -   The distribution zip no longer includes the jaybird-@VERSION@.rar. This file
 was an example JCA Resource Archive.
 -   Added support for Firebird 4 page size 32768 (32KB) in `FBManager` and backup 
-managers (backported to Jaybird 3.0.5) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468)) 
+managers (backported to Jaybird 3.0.5) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
+-   Changed: The value returned by `ResultSetMetaData.getColumnDisplaySize` was 
+revised for `REAL`/`FLOAT` and `DOUBLE PRECISION` to take scientific notation 
+into account ([JDBC-514](http://tracker.firebirdsql.org/browse/JDBC-514))
 
 Removal of deprecated classes and packages
 ------------------------------------------
