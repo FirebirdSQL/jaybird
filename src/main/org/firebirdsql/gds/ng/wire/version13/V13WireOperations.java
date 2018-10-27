@@ -223,7 +223,8 @@ public class V13WireOperations extends V11WireOperations {
                     : "Wire encryption established, but some plugins failed; see other loglines for details");
             SQLException current = chainBuilder.getException();
             do {
-                log.warn("Encryption plugin failed", current);
+                log.warn("Encryption plugin failed: " + current + "; see debug level for stacktrace");
+                log.debug("Encryption plugin failed", current);
             } while ((current = current.getNextException()) != null);
         }
     }

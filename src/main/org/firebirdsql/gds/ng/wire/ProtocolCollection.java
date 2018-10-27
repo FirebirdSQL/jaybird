@@ -57,7 +57,9 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                         supportedProtocols.add(protocol);
                     }
                 } catch (Exception | ServiceConfigurationError e) {
-                    log.error("Could not load protocol descriptor (skipping): " + e.getMessage(), e);
+                    String message = "Could not load protocol descriptor (skipping)";
+                    log.error(message + ": " + e + "; see debug level for stacktrace");
+                    log.debug(message, e);
                 }
             }
         }
@@ -116,7 +118,10 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.newInstance();
                 protocols.add(protocol);
             } catch (Exception e) {
-                log.warn(String.format("Unable to load protocol %s in loadProtocolsFallback; skipping", className), e);
+                String message =
+                        String.format("Unable to load protocol %s in loadProtocolsFallback; skipping", className);
+                log.warn(message + ": " + e + "; see debug level for stacktrace");
+                log.debug(message, e);
             }
         }
         return protocols;

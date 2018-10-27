@@ -790,7 +790,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                         break;
                     }
                 } catch(FBIncorrectXidException ex) {
-                    log.warn("incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
+                    String message = "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
+                    log.warn(message + ": " + ex + "; see debug level for stacktrace");
+                    log.debug(message, ex);
                 }
 
                 row++;

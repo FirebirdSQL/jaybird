@@ -337,8 +337,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                 // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
                                 // We don't expect any more responses after this
                                 expectedResponseCount = 0;
-                                SQLWarning sqlWarning = new SQLWarning("Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                log.warn(sqlWarning.getMessage(), sqlWarning);
+                                SQLWarning sqlWarning = new SQLWarning(
+                                        "Expected an SqlResponse, instead received a " + response.getClass().getName());
+                                log.warn(sqlWarning.toString() + "; see debug level for stacktrace");
+                                log.debug(sqlWarning.toString(), sqlWarning);
                                 statementWarningCallback.processWarning(sqlWarning);
                             }
                             setAllRowsFetched(true);

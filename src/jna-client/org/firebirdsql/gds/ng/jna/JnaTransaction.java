@@ -91,8 +91,11 @@ public class JnaTransaction extends AbstractFbTransaction {
         } finally {
             final TransactionState transactionState = getState();
             if (transactionState != TransactionState.COMMITTED) {
-                log.warn("Commit not completed, state was " + transactionState,
-                        new RuntimeException("Commit not completed"));
+                String message = "Commit not completed, state was " + transactionState;
+                log.warn(message + "; see debug level for stacktrace");
+                if (log.isDebugEnabled()) {
+                    log.debug(message, new RuntimeException("Commit not completed"));
+                }
             }
         }
     }
@@ -114,8 +117,11 @@ public class JnaTransaction extends AbstractFbTransaction {
         } finally {
             final TransactionState transactionState = getState();
             if (transactionState != TransactionState.ROLLED_BACK) {
-                log.warn("Rollback not completed, state was " + transactionState,
-                        new RuntimeException("Rollback not completed"));
+                String message = "Rollback not completed, state was " + transactionState;
+                log.warn(message + "; see debug level for stacktrace");
+                if (log.isDebugEnabled()) {
+                    log.debug(message, new RuntimeException("Rollback not completed"));
+                }
             }
         }
     }
@@ -142,7 +148,11 @@ public class JnaTransaction extends AbstractFbTransaction {
             throw e;
         } finally {
             if (getState() != TransactionState.PREPARED) {
-                log.warn("Prepare not completed", new RuntimeException("Prepare not completed"));
+                String message = "Prepare not completed";
+                log.warn(message + "; see debug level for stacktrace");
+                if (log.isDebugEnabled()) {
+                    log.debug(message, new RuntimeException(message));
+                }
             }
         }
     }

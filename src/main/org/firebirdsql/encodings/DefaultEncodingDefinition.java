@@ -174,9 +174,11 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             // Prevent further attempts
             encoding = null;
-            logger.warn(String.format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or "
+            String message = String.format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or "
                             + "unsupported character set name, handling as information-only",
-                    charsetName, firebirdEncodingName), e);
+                    charsetName, firebirdEncodingName);
+            logger.warn(message + ": " + e + "; see debug level for stacktrace");
+            logger.debug(message, e);
         }
     }
 

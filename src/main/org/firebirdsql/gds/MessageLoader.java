@@ -120,7 +120,9 @@ final class MessageLoader {
 
                 resourceType.store(errorCode, value, this);
             } catch (NumberFormatException e) {
-                log.warn("Key " + key + " is not a number; ignored", e);
+                String message = "Key " + key + " is not a number; ignored";
+                log.warn(message + "; see debug level for stacktrace");
+                log.debug(message, e);
             }
         }
     }

@@ -63,7 +63,9 @@ public abstract class AbstractGeneratedKeysQuery {
         } catch (Throwable ex) {
             // Unable to load class of parser implementation, antlr4-runtime not in path
             Logger log = LoggerFactory.getLogger(AbstractGeneratedKeysQuery.class);
-            log.error("Unable to load generated key parser. " + GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE , ex);
+            String message = "Unable to load generated key parser. " + GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE;
+            log.error(message + ": " + ex + "; see debug level for stacktrace");
+            log.debug(message, ex);
         } finally {
             parser = temp;
         }

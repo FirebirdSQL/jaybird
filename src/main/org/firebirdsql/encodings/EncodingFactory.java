@@ -381,7 +381,9 @@ public final class EncodingFactory implements IEncodingFactory {
                 final EncodingSet encodingSet = encodingSetIterator.next();
                 encodingSets.add(encodingSet);
             } catch (Exception | ServiceConfigurationError e) {
-                log.error("Could not load encoding set (skipping): " + e.getMessage(), e);
+                String message = "Could not load encoding set (skipping)";
+                log.error(message + ": " + e + "; see debug level for stacktrace");
+                log.debug(message, e);
             }
         }
         return encodingSets;

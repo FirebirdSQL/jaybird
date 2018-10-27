@@ -338,7 +338,9 @@ public class FBEventManager implements EventManager {
                 try {
                     fbDatabase.countEvents(eventHandle);
                 } catch (SQLException e) {
-                    log.warn("Exception processing event counts", e);
+                    String message = "Exception processing event counts";
+                    log.warn(message + ": " + e + "; see debug level for stacktrace");
+                    log.debug(message, e);
                 }
 
                 if (initialized && !cancelled) {
@@ -350,7 +352,9 @@ public class FBEventManager implements EventManager {
                 try {
                     register();
                 } catch (SQLException e) {
-                    log.warn("Exception registering for event", e);
+                    String message = "Exception registering for event";
+                    log.warn(message + ": " + e + "; see debug level for stacktrace");
+                    log.debug(message, e);
                 }
             }
         }
