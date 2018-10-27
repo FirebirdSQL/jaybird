@@ -412,14 +412,260 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsConvert() throws SQLException {
-        // TODO: Set true after JDBC-294 has been done
-        return false;   // Support is broken right now
+        return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * See also {@link org.firebirdsql.jdbc.escape.ConvertFunction} for caveats.
+     * </p>
+     */
     @Override
     public boolean supportsConvert(int fromType, int toType) throws SQLException {
-        // TODO: implement actual mapping with JDBC-294
-        return false;   // Support is broken right now
+        switch (fromType) {
+        case JaybirdTypeCodes.DECFLOAT:
+            if (!firebirdSupportInfo.supportsDecfloat()) {
+                return false;
+            }
+            // Intentional fallthrough
+        case Types.TINYINT: // Doesn't exist in Firebird; handled as if SMALLINT
+        case Types.SMALLINT:
+        case Types.INTEGER:
+        case Types.BIGINT:
+        case Types.FLOAT:
+        case Types.REAL:
+        case Types.DOUBLE:
+        case Types.NUMERIC:
+        case Types.DECIMAL:
+            // Numerical values all convertible to the same types.
+            switch (toType) {
+            case Types.TINYINT: // Doesn't exist in Firebird; handled as if SMALLINT
+            case Types.SMALLINT:
+            case Types.INTEGER:
+            case Types.BIGINT:
+            case Types.FLOAT:
+            case Types.REAL:
+            case Types.DOUBLE:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.NVARCHAR:
+            case Types.NCLOB:
+                return true;
+            // casting numerical values to binary types will result in ASCII bytes of string conversion, not to the
+            // binary representation of the number (eg 1 will be converted to binary 0x31 (ASCII '1'), not 0x01)
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+            case Types.BLOB:
+                return true;
+            case JaybirdTypeCodes.DECFLOAT:
+                return firebirdSupportInfo.supportsDecfloat();
+            default:
+                return false;
+            }
+
+        case Types.CHAR:
+        case Types.VARCHAR:
+        case Types.LONGVARCHAR:
+        case Types.CLOB:
+        case Types.NCHAR:
+        case Types.LONGNVARCHAR:
+        case Types.NVARCHAR:
+        case Types.NCLOB:
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.LONGVARBINARY:
+        case Types.BLOB:
+        case Types.ROWID: // Internally rowid is not discernible from BINARY
+            // String and binary values all convertible to the same types
+            // Be aware though that casting of binary to non-string/binary will perform the same conversion as
+            // if it is an ASCII string value. Eg the binary string value 0x31 cast to integer will be 1, not 49.
+            switch (toType) {
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.NVARCHAR:
+            case Types.NCLOB:
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+            case Types.BLOB:
+                return true;
+            case Types.TINYINT: // Doesn't exist in Firebird; handled as if SMALLINT
+            case Types.SMALLINT:
+            case Types.INTEGER:
+            case Types.BIGINT:
+            case Types.FLOAT:
+            case Types.REAL:
+            case Types.DOUBLE:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.DATE:
+            case Types.TIME:
+            case Types.TIMESTAMP:
+                return fromType != Types.ROWID;
+            case JaybirdTypeCodes.DECFLOAT:
+                return fromType != Types.ROWID && firebirdSupportInfo.supportsDecfloat();
+            case Types.BOOLEAN:
+                return fromType != Types.ROWID && firebirdSupportInfo.supportsBoolean();
+            case Types.ROWID:
+                // As size of rowid is context dependent, we can't cast to it using the convert escape
+                return false;
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
+                // TODO JDBC-540
+                return false;
+            default:
+                return false;
+            }
+
+        case Types.DATE:
+            switch(toType) {
+            case Types.DATE:
+            case Types.TIMESTAMP:
+                return true;
+            case Types.TIME:
+            case Types.TIME_WITH_TIMEZONE:
+                return false;
+            case Types.TIMESTAMP_WITH_TIMEZONE:
+                // TODO JDBC-540
+                return false;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.NVARCHAR:
+            case Types.NCLOB:
+                return true;
+            // casting date/time values to binary types will result in ASCII bytes of string conversion
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+            case Types.BLOB:
+                return true;
+            default:
+                return false;
+            }
+        case Types.TIME:
+            switch(toType) {
+            case Types.TIMESTAMP:
+            case Types.TIME:
+                return true;
+            case Types.DATE:
+                return false;
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
+                // TODO JDBC-540
+                return false;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.NVARCHAR:
+            case Types.NCLOB:
+                return true;
+            // casting date/time values to binary types will result in ASCII bytes of string conversion
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+            case Types.BLOB:
+                return true;
+            default:
+                return false;
+            }
+        case Types.TIMESTAMP:
+            switch(toType) {
+            case Types.TIMESTAMP:
+            case Types.TIME:
+            case Types.DATE:
+                return true;
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
+                // TODO JDBC-540
+                return false;
+            case Types.CHAR:
+            case Types.VARCHAR:
+            case Types.LONGVARCHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.NVARCHAR:
+            case Types.NCLOB:
+                return true;
+            // casting date/time values to binary types will result in ASCII bytes of string conversion
+            case Types.BINARY:
+            case Types.VARBINARY:
+            case Types.LONGVARBINARY:
+            case Types.BLOB:
+                return true;
+            default:
+                return false;
+            }
+
+        case Types.NULL:
+            // If a type can be cast to itself, then null can be cast to it as well
+            return toType != Types.NULL && supportsConvert(toType, toType);
+
+        case Types.BOOLEAN:
+            if (firebirdSupportInfo.supportsBoolean()) {
+                switch (toType) {
+                case Types.BOOLEAN:
+                case Types.CHAR:
+                case Types.VARCHAR:
+                case Types.LONGVARCHAR:
+                case Types.CLOB:
+                case Types.NCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NVARCHAR:
+                case Types.NCLOB:
+                    return true;
+                // casting boolean values to binary types will result in ASCII bytes of string conversion
+                case Types.BINARY:
+                case Types.VARBINARY:
+                case Types.LONGVARBINARY:
+                case Types.BLOB:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            return false;
+
+        case Types.TIME_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
+            // TODO JDBC-540
+            return false;
+
+        case Types.ARRAY:
+            // Arrays are not supported by Jaybird (and casting would be tricky anyway)
+            return false;
+        // Unsupported types
+        case Types.BIT:
+        case Types.OTHER:
+        case Types.JAVA_OBJECT:
+        case Types.DISTINCT:
+        case Types.STRUCT:
+        case Types.REF:
+        case Types.DATALINK:
+        case Types.SQLXML:
+        case Types.REF_CURSOR:
+        default:
+            return false;
+        }
     }
 
     @Override
