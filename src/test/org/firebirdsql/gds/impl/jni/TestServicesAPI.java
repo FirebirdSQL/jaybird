@@ -45,33 +45,31 @@ import static org.junit.Assert.assertTrue;
  * Initial tests for Services API. Currently run only against embedded server.
  * TODO: Make run against other types
  */
-public class TestServicesAPI {
-
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+public abstract class TestServicesAPI {
 
     @Rule
     public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private String mAbsoluteDatabasePath;
-    private String mAbsoluteBackupPath;
-    private FBManager fbManager;
-    private GDSType gdsType;
-    private FbDatabaseFactory dbFactory;
-    private File logFolder;
+    protected String mAbsoluteDatabasePath;
+    protected String mAbsoluteBackupPath;
+    protected FBManager fbManager;
+    protected String protocol;
+    protected GDSType gdsType;
+    protected int port = 5066;
+    protected FbDatabaseFactory dbFactory;
+    protected File logFolder;
 
     @Before
     public void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
-        gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
 
         fbManager = new FBManager(gdsType);
 
         fbManager.setServer("localhost");
-        fbManager.setPort(5066);
+        fbManager.setPort(port);
         fbManager.start();
 
         File dbFolder = temporaryFolder.newFolder("db");
@@ -119,8 +117,8 @@ public class TestServicesAPI {
         connectToDatabase();
     }
 
-    private void connectToDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE",
+    protected void connectToDatabase() throws SQLException {
+        Connection connection = DriverManager.getConnection(protocol + mAbsoluteDatabasePath + "?encoding=NONE",
                 "SYSDBA", "masterkey");
         connection.close();
     }

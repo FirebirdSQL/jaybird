@@ -437,7 +437,7 @@ public class TestJnaBlob extends BaseTestBlob {
 
     @Override
     protected JnaDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
-        final JnaDatabase db = factory.connect(connectionInfo);
+        final JnaDatabase db = (JnaDatabase) factory.connect(connectionInfo);
         db.attach();
         return db;
     }

@@ -434,7 +434,8 @@ public class TestV10Database {
     private static void safelyClose(FbDatabase db) {
         if (db == null) return;
         try {
-            db.close();
+            if (db.isAttached())
+                db.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
         }

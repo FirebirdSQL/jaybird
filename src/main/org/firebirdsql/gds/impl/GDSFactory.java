@@ -146,6 +146,9 @@ public class GDSFactory {
                 "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.FbOONativeGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.FbOOLocalGDSFactoryPlugin",
+                "org.firebirdsql.gds.impl.jni.FbOOEmbeddedGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
         };
         for (String className : pluginClasses) {

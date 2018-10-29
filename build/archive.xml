@@ -76,6 +76,9 @@
             <fileset dir="${source.jna-client}">
                 <include name="**/*.java"/>
             </fileset>
+            <fileset dir="${source.nativeoo}">
+                <include name="**/*.java"/>
+            </fileset>
             <fileset dir="${toString:source.java.openoffice}">
                 <include name="**/*.java"/>
             </fileset>

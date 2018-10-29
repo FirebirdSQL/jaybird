@@ -95,7 +95,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
 
     @Test
     public void testCreateEventHandle() throws Exception {
-        db = factory.connect(connectionInfo);
+        db = (JnaDatabase) factory.connect(connectionInfo);
         db.attach();
 
         JnaEventHandle eventHandle = db.createEventHandle("TEST_EVENT", new EventHandler() {
@@ -109,7 +109,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
 
     @Test
     public void testQueueEvent_andNotification() throws Exception {
-        db = factory.connect(connectionInfo);
+        db = (JnaDatabase) factory.connect(connectionInfo);
         db.attach();
 
         FbTransaction transaction = getTransaction(db);
@@ -176,7 +176,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
 
     @Test
     public void cancelAfterCallback_directJNA() throws Exception {
-        db = factory.connect(connectionInfo);
+        db = (JnaDatabase) factory.connect(connectionInfo);
         db.attach();
 
         FbClientLibrary lib = db.getClientLibrary();

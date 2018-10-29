@@ -55,6 +55,7 @@
             <src path="${source.java}"/>
             <src path="${source.extern}"/>
             <src path="${source.jna-client}"/>
+            <src path="${source.nativeoo}"/>
             <src refid="source.java.openoffice"/>
             <src refid="source.java.additional"/>
         </javac>
@@ -87,6 +88,7 @@
             <classpath refid="javac.test.classpath"/>
             <src path="${source.test}"/>
             <src path="${source.test.jna}"/>
+            <src path="${source.test.nativeoo}"/>
             <src refid="source.test.additional"/>
         </javac>
 

@@ -72,7 +72,7 @@ public class TestJnaService {
 
     @Test
     public void testBasicAttach() throws Exception {
-        try (JnaService service = factory.serviceConnect(connectionInfo)) {
+        try (JnaService service = (JnaService)factory.serviceConnect(connectionInfo)) {
             service.attach();
 
             assertTrue("Expected isAttached() to return true", service.isAttached());
@@ -87,7 +87,7 @@ public class TestJnaService {
         expectedException.expect(SQLException.class);
         expectedException.expectMessage(equalTo("Already attached to a service"));
 
-        try (JnaService service = factory.serviceConnect(connectionInfo)) {
+        try (JnaService service = (JnaService)factory.serviceConnect(connectionInfo)) {
             service.attach();
 
             //Second attach should throw exception
@@ -101,7 +101,7 @@ public class TestJnaService {
                 FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         // set invalid password
         connectionInfo.setPassword("abcd");
-        try (JnaService service = factory.serviceConnect(connectionInfo)) {
+        try (JnaService service = (JnaService)factory.serviceConnect(connectionInfo)) {
 
             expectedException.expect(allOf(
                     isA(SQLException.class),
@@ -118,7 +118,7 @@ public class TestJnaService {
         // set invalid database
         final String invalidServiceName = "doesnotexist";
         connectionInfo.setServiceName(invalidServiceName);
-        try (JnaService service = factory.serviceConnect(connectionInfo)) {
+        try (JnaService service = (JnaService)factory.serviceConnect(connectionInfo)) {
 
             expectedException.expect(allOf(
                     isA(SQLException.class),
@@ -139,7 +139,7 @@ public class TestJnaService {
     public void testStartServiceAction() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try (JnaService service = factory.serviceConnect(connectionInfo)) {
+        try (JnaService service = (JnaService)factory.serviceConnect(connectionInfo)) {
             service.attach();
 
             ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();

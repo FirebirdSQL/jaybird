@@ -19,6 +19,7 @@
                 <pathelement path="${source.java}"/>
                 <pathelement path="${source.extern}"/>
                 <pathelement path="${source.jna-client}"/>
+                <pathelement path="${source.nativeoo}"/>
             </sourcepath>
             <sourcepath refid="source.java.openoffice"/>
             <sourcepath refid="source.java.additional"/>

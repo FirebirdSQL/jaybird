@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.gds.ng.IAttachProperties;
-import org.firebirdsql.gds.ng.IConnectionProperties;
-import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.sql.SQLException;
@@ -35,14 +32,14 @@ import java.sql.SQLException;
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
     @Override
-    public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
+    public FbDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
         final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
                 filterProperties(connectionProperties));
         return jnaDatabaseConnection.identify();
     }
 
     @Override
-    public JnaService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
         final JnaServiceConnection jnaServiceConnection = new JnaServiceConnection(getClientLibrary(),
                 filterProperties(serviceProperties));
         return jnaServiceConnection.identify();

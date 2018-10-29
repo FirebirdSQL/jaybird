@@ -26,6 +26,7 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.ptr.ShortByReference;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -752,4 +753,10 @@ public interface FbClientLibrary extends com.sun.jna.Library {
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:1306</i>
 	 */
 	int isc_get_client_minor_version();
+
+	/**
+	 * Original signature : <code>extern "C" IMaster* ISC_EXPORT fb_get_master_interface();</code><br>
+	 * <i>native declaration : firebird/include/firebird/interface.h:364</i>
+	 */
+	FbInterface.IMaster fb_get_master_interface();
 }
