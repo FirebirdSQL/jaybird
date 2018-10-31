@@ -34,7 +34,7 @@ import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.firebirdsql.util.SqlLikeMatcher;
+import org.firebirdsql.util.MetadataPatternMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -3443,7 +3443,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             retrieveDbKey = true;
             retrieveRecordVersion = supportsRecordVersion;
         } else {
-            SqlLikeMatcher matcher = SqlLikeMatcher.compile(columnNamePattern);
+            MetadataPatternMatcher matcher = MetadataPatternMatcher.compile(columnNamePattern);
             retrieveDbKey = matcher.matches("RDB$DB_KEY");
             retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
         }

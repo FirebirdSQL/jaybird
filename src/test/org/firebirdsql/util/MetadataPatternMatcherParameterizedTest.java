@@ -34,15 +34,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(Parameterized.class)
-public class SqlLikeMatcherParameterizedTest {
+public class MetadataPatternMatcherParameterizedTest {
 
-    private final String likePattern;
+    private final String metadataPattern;
     private final String expectedRegexPattern;
     private final List<String> expectedMatches;
 
-    public SqlLikeMatcherParameterizedTest(String likePattern, String expectedRegexPattern,
+    public MetadataPatternMatcherParameterizedTest(String metadataPattern, String expectedRegexPattern,
             List<String> expectedMatches) {
-        this.likePattern = likePattern;
+        this.metadataPattern = metadataPattern;
         this.expectedRegexPattern = expectedRegexPattern;
         this.expectedMatches = expectedMatches;
     }
@@ -69,27 +69,27 @@ public class SqlLikeMatcherParameterizedTest {
     }
 
     @Test
-    public void testSqlLikeToRegex() {
-        assertEquals("Unexpected regex pattern for '" + likePattern + "'",
-                expectedRegexPattern, SqlLikeMatcher.sqlLikeToRegex(likePattern));
+    public void testPatternToRegex() {
+        assertEquals("Unexpected regex pattern for '" + metadataPattern + "'",
+                expectedRegexPattern, MetadataPatternMatcher.patternToRegex(metadataPattern));
     }
 
     @Test
-    public void testSqlLikeMatcher() {
-        final SqlLikeMatcher sqlLikeMatcher = SqlLikeMatcher.compile(likePattern);
-        Matcher<String> matchesSqlLikePattern = new TypeSafeMatcher<String>() {
+    public void testMetadataPatternMatcher() {
+        final MetadataPatternMatcher metadataPatternMatcher = MetadataPatternMatcher.compile(metadataPattern);
+        Matcher<String> matchesMetadataPattern = new TypeSafeMatcher<String>() {
             @Override
             protected boolean matchesSafely(String s) {
-                return sqlLikeMatcher.matches(s);
+                return metadataPatternMatcher.matches(s);
             }
 
             @Override
             public void describeTo(Description description) {
-                description.appendText("matches pattern").appendValue(likePattern);
+                description.appendText("matches pattern").appendValue(metadataPattern);
             }
         };
 
-        assertThat(expectedMatches, everyItem(matchesSqlLikePattern));
+        assertThat(expectedMatches, everyItem(matchesMetadataPattern));
     }
 
     private static Object[] testCase(String likePattern, String expectedRegexPattern, List<String> expectedMatches) {

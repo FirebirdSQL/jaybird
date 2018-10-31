@@ -24,31 +24,34 @@ import java.util.regex.Pattern;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Emulates behavior of a SQL {@code LIKE} pattern, assuming an {@code ESCAPE '\'} clause.
+ * Emulates behavior of a database metadata pattern.
+ * <p>
+ * This behaves similar to (but not 100% identical to) a SQL {@code LIKE} pattern with {@code ESCAPE '\'} clause.
+ * </p>
  * <p>
  * This implementation is not thread-safe.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class SqlLikeMatcher {
+public abstract class MetadataPatternMatcher {
 
-    private SqlLikeMatcher() {
+    private MetadataPatternMatcher() {
         // Only allow derivation in nested classes
     }
 
     /**
-     * Compiles a SQL {@code LIKE} pattern.
+     * Compiles a database metadata pattern.
      *
-     * @param sqlLikePattern
-     *         SQL {@code LIKE} pattern (non-null)
-     * @return Matcher for {@code sqlLikePattern}
+     * @param pattern
+     *         database metadata pattern (non-null)
+     * @return Matcher for {@code pattern}
      */
-    public static SqlLikeMatcher compile(String sqlLikePattern) {
-        if (containsLikeSpecialChars(requireNonNull(sqlLikePattern, "sqlLikePattern"))) {
-            return new RegexMatcher(sqlLikePattern);
+    public static MetadataPatternMatcher compile(String pattern) {
+        if (containsPatternSpecialChars(requireNonNull(pattern, "pattern"))) {
+            return new RegexMatcher(pattern);
         }
-        return new SimpleEqualsMatcher(sqlLikePattern);
+        return new SimpleEqualsMatcher(pattern);
     }
 
     /**
@@ -66,13 +69,13 @@ public abstract class SqlLikeMatcher {
     /**
      * Scans string to determine if string contains any of {@code \_%} that indicates additional processing is needed.
      *
-     * @param sqlLikePattern
+     * @param pattern
      *         SQL like pattern (assuming escape {@code \})
      * @return {@code true} if the string contains any like special characters
      */
-    static boolean containsLikeSpecialChars(String sqlLikePattern) {
-        for (int idx = 0; idx < sqlLikePattern.length(); idx++) {
-            if (isLikeSpecialChar(sqlLikePattern.charAt(idx))) {
+    static boolean containsPatternSpecialChars(String pattern) {
+        for (int idx = 0; idx < pattern.length(); idx++) {
+            if (isPatternSpecialChar(pattern.charAt(idx))) {
                 return true;
             }
         }
@@ -80,37 +83,37 @@ public abstract class SqlLikeMatcher {
     }
 
     /**
-     * Checks if character is a SQL like special.
+     * Checks if character is a database metadata pattern special.
      *
      * @param charVal
      *         Character to check
      * @return {@code true} if {@code charVal} is a SQL like special ({@code \_%})
      */
-    static boolean isLikeSpecialChar(char charVal) {
+    static boolean isPatternSpecialChar(char charVal) {
         return charVal == '%' || charVal == '_' || charVal == '\\';
     }
 
-    private static final class SimpleEqualsMatcher extends SqlLikeMatcher {
+    private static final class SimpleEqualsMatcher extends MetadataPatternMatcher {
 
-        private final String sqlLikePattern;
+        private final String pattern;
 
-        private SimpleEqualsMatcher(String sqlLikePattern) {
-            this.sqlLikePattern = sqlLikePattern;
+        private SimpleEqualsMatcher(String pattern) {
+            this.pattern = pattern;
         }
 
         @Override
         public boolean matches(String value) {
-            return sqlLikePattern.equals(value);
+            return pattern.equals(value);
         }
 
     }
 
-    private static final class RegexMatcher extends SqlLikeMatcher {
+    private static final class RegexMatcher extends MetadataPatternMatcher {
 
         private final Matcher regexMatcher;
 
-        private RegexMatcher(String sqlLikePattern) {
-            String regexPattern = SqlLikeMatcher.sqlLikeToRegex(sqlLikePattern);
+        private RegexMatcher(String pattern) {
+            String regexPattern = MetadataPatternMatcher.patternToRegex(pattern);
             Pattern compiledPattern = Pattern.compile(regexPattern);
             regexMatcher = compiledPattern.matcher("");
         }
@@ -126,19 +129,19 @@ public abstract class SqlLikeMatcher {
     }
 
     /**
-     * Creates a regular expression pattern equivalent to the provided SQL {@code LIKE} pattern.
+     * Creates a regular expression pattern equivalent to the provided database metadata pattern.
      *
-     * @param sqlLike
-     *         SQL like pattern (assuming escape {@code \})
+     * @param metadataPattern
+     *         database metadata pattern
      * @return Pattern for the provided like string.
      */
-    static String sqlLikeToRegex(String sqlLike) {
-        final int sqlLikeLength = sqlLike.length();
+    static String patternToRegex(final String metadataPattern) {
+        final int patternLength = metadataPattern.length();
         // Derivation of additional 10: 8 chars for 2x quote pair (\Q..\E) + 2 chars for .*
-        final StringBuilder patternString = new StringBuilder(sqlLikeLength + 10);
+        final StringBuilder patternString = new StringBuilder(patternLength + 10);
         final StringBuilder subPattern = new StringBuilder();
-        for (int idx = 0; idx < sqlLikeLength; idx++) {
-            char charVal = sqlLike.charAt(idx);
+        for (int idx = 0; idx < patternLength; idx++) {
+            char charVal = metadataPattern.charAt(idx);
             switch (charVal) {
             case '_':
             case '%':
@@ -150,17 +153,15 @@ public abstract class SqlLikeMatcher {
                 break;
             case '\\':
                 idx += 1;
-                if (idx < sqlLikeLength) {
-                    char nextChar = sqlLike.charAt(idx);
-                    if (!isLikeSpecialChar(nextChar)) {
-                        // backslash before non-escapable character
-                        // technically invalid escape, but add escape character as normal character
+                if (idx < patternLength) {
+                    char nextChar = metadataPattern.charAt(idx);
+                    if (!isPatternSpecialChar(nextChar)) {
+                        // backslash before non-escapable character, handle as normal, see JDBC-562 and ODBC spec
                         subPattern.append('\\');
                     }
                     subPattern.append(nextChar);
                 } else {
-                    // backslash at end of string,
-                    // technically invalid escape, but add escape character as normal character
+                    // backslash at end of string, handled as normal, see JDBC-562 and ODBC spec
                     subPattern.append('\\');
                 }
                 break;

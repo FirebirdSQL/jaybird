@@ -31,59 +31,59 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class SqlLikeMatcherTest {
+public class MetadataPatternMatcherTest {
 
     @Test
-    public void testIsLikeSpecialChar_noSpecials() {
-        assertFalse("No LIKE special char", SqlLikeMatcher.isLikeSpecialChar('a'));
+    public void testIsPatternSpecialChar_noSpecials() {
+        assertFalse("No pattern special char", MetadataPatternMatcher.isPatternSpecialChar('a'));
     }
 
     @Test
-    public void testIsLikeSpecialChar_underscore() {
-        assertTrue("LIKE special char", SqlLikeMatcher.isLikeSpecialChar('_'));
+    public void testIsPatternSpecialChar_underscore() {
+        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('_'));
     }
 
     @Test
-    public void testIsLikeSpecialChar_percent() {
-        assertTrue("LIKE special char", SqlLikeMatcher.isLikeSpecialChar('%'));
+    public void testIsPatternSpecialChar_percent() {
+        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('%'));
     }
 
     @Test
-    public void testIsLikeSpecialChar_backslash() {
-        assertTrue("LIKE special char", SqlLikeMatcher.isLikeSpecialChar('\\'));
+    public void testIsPatternSpecialChar_backslash() {
+        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('\\'));
     }
 
     @Test
-    public void containsLikeSpecialChars_noSpecials() {
+    public void containsPatternSpecialChars_noSpecials() {
         assertThat(Arrays.asList("abcd#*&$^", "", "xyz with spaces"),
-                everyItem(not(ContainsLikeSpecialCharMatcher.containsLikeSpecialCharMatcher())));
+                everyItem(not(ContainsPatternSpecialCharMatcher.containsPatternSpecialCharMatcher())));
     }
 
     @Test
-    public void containsLikeSpecialChars_withSpecials() {
+    public void containsPatternSpecialChars_withSpecials() {
         assertThat(Arrays.asList("%", "_", "\\", "abc%", "_ab%", "a\\_b"),
-                everyItem(ContainsLikeSpecialCharMatcher.containsLikeSpecialCharMatcher()));
+                everyItem(ContainsPatternSpecialCharMatcher.containsPatternSpecialCharMatcher()));
     }
 
     /**
-     * Matcher implementation serving as test harness for {@link SqlLikeMatcher#containsLikeSpecialChars(String)} .
+     * Matcher implementation serving as test harness for {@link MetadataPatternMatcher#containsPatternSpecialChars(String)} .
      */
-    private static class ContainsLikeSpecialCharMatcher extends TypeSafeMatcher<String> {
+    private static class ContainsPatternSpecialCharMatcher extends TypeSafeMatcher<String> {
 
-        private static final ContainsLikeSpecialCharMatcher INSTANCE = new ContainsLikeSpecialCharMatcher();
+        private static final ContainsPatternSpecialCharMatcher INSTANCE = new ContainsPatternSpecialCharMatcher();
 
         @Override
         protected boolean matchesSafely(String s) {
-            return SqlLikeMatcher.containsLikeSpecialChars(s);
+            return MetadataPatternMatcher.containsPatternSpecialChars(s);
         }
 
         @Override
         public void describeTo(Description description) {
-            description.appendText("containsLikeSpecialChars");
+            description.appendText("containsPatternSpecialChars");
         }
 
         @Factory
-        public static ContainsLikeSpecialCharMatcher containsLikeSpecialCharMatcher() {
+        public static ContainsPatternSpecialCharMatcher containsPatternSpecialCharMatcher() {
             return INSTANCE;
         }
     }
