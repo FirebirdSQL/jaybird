@@ -1552,35 +1552,42 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (types == null) {
             types = ALL_TYPES_2_1;
         }
+        MetadataPattern metadataPattern = MetadataPattern.compile(tableNamePattern);
         String sql;
         List<String> params;
-        if (isAllCondition(tableNamePattern)) {
+        switch (metadataPattern.getConditionType()) {
+        case NONE:
             sql = GET_TABLES_ALL_2_1;
             params = new ArrayList<>(3);
             params.add(getWantsSystemTables(types));
             params.add(getWantsTables(types));
             params.add(getWantsViews(types));
-        } else if (hasNoWildcards(tableNamePattern)) {
-            tableNamePattern = stripEscape(tableNamePattern);
+            break;
+        case SQL_EQUALS:
+            String equalsValue = metadataPattern.getConditionValue();
             sql = GET_TABLES_EXACT_2_1;
             params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
-            params.add(tableNamePattern);
+            params.add(equalsValue);
             params.add(getWantsTables(types));
-            params.add(tableNamePattern);
+            params.add(equalsValue);
             params.add(getWantsViews(types));
-            params.add(tableNamePattern);
-        } else {
+            params.add(equalsValue);
+            break;
+        case SQL_LIKE:
             // See also comment in Clause for explanation
-            tableNamePattern = tableNamePattern + SPACES_15 + "%";
+            String likeValue = metadataPattern.getConditionValue() + SPACES_15 + "%";
             sql = GET_TABLES_LIKE_2_1;
             params = new ArrayList<>(6);
             params.add(getWantsSystemTables(types));
-            params.add(tableNamePattern);
+            params.add(likeValue);
             params.add(getWantsTables(types));
-            params.add(tableNamePattern);
+            params.add(likeValue);
             params.add(getWantsViews(types));
-            params.add(tableNamePattern);
+            params.add(likeValue);
+            break;
+        default:
+            throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
         }
         return doQuery(sql, params);
     }
@@ -3290,19 +3297,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return iface.cast(this);
     }
 
-    protected static boolean isAllCondition(String pattern) {
-        return pattern == null || "%".equals(pattern);
-    }
-
     /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the
-     * given pattern.
+     * Determine if there are no SQL wildcard characters ('%' or '_') in the given pattern.
      *
      * @param pattern
      *         The pattern to be checked for wildcards
      * @return <code>true</code> if there are no wildcards in the pattern,
      * <code>false</code> otherwise
+     * @deprecated Will be removed in Jaybird 5
      */
+    @Deprecated
     public static boolean hasNoWildcards(String pattern) {
         if (pattern == null) return true;
 
@@ -3327,7 +3331,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @param pattern
      *         The string to be stripped
      * @return pattern with all backslash-escapes removed
+     * @deprecated Will be removed in Jaybird 5
      */
+    @Deprecated
     public static String stripEscape(String pattern) {
         if (pattern == null) return null;
         StringBuilder stripped = new StringBuilder(pattern.length());
@@ -3439,7 +3445,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         final boolean retrieveDbKey;
         final boolean retrieveRecordVersion;
 
-        if (isAllCondition(columnNamePattern)) {
+        if (MetadataPattern.isAllCondition(columnNamePattern)) {
             retrieveDbKey = true;
             retrieveRecordVersion = supportsRecordVersion;
         } else {
@@ -3567,18 +3573,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         private final String value;
 
         public Clause(String columnName, String pattern) {
-            if (isAllCondition(pattern)) {
+            MetadataPattern metadataPattern = MetadataPattern.compile(pattern);
+            switch (metadataPattern.getConditionType()) {
+            case NONE:
                 condition = "";
                 value = null;
-            } else if (hasNoWildcards(pattern)) {
-                value = stripEscape(pattern);
+                break;
+            case SQL_EQUALS:
+                value = metadataPattern.getConditionValue();
                 // We are casting to VARCHAR( max object length + 10) to accommodate slightly larger object names
                 condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? ";
-            } else {
+                break;
+            case SQL_LIKE:
                 // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
                 // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
-                value = pattern + SPACES_15 + "%";
+                value = metadataPattern.getConditionValue() + SPACES_15 + "%";
                 condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' ";
+                break;
+            default:
+                throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
             }
         }
 

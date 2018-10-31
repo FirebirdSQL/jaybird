@@ -70,10 +70,10 @@ public abstract class MetadataPatternMatcher {
      * Scans string to determine if string contains any of {@code \_%} that indicates additional processing is needed.
      *
      * @param pattern
-     *         SQL like pattern (assuming escape {@code \})
+     *         metadata pattern
      * @return {@code true} if the string contains any like special characters
      */
-    static boolean containsPatternSpecialChars(String pattern) {
+    public static boolean containsPatternSpecialChars(String pattern) {
         for (int idx = 0; idx < pattern.length(); idx++) {
             if (isPatternSpecialChar(pattern.charAt(idx))) {
                 return true;
@@ -87,9 +87,9 @@ public abstract class MetadataPatternMatcher {
      *
      * @param charVal
      *         Character to check
-     * @return {@code true} if {@code charVal} is a SQL like special ({@code \_%})
+     * @return {@code true} if {@code charVal} is a pattern special ({@code \_%})
      */
-    static boolean isPatternSpecialChar(char charVal) {
+    public static boolean isPatternSpecialChar(char charVal) {
         return charVal == '%' || charVal == '_' || charVal == '\\';
     }
 
