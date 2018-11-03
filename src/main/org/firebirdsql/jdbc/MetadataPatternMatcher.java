@@ -108,7 +108,7 @@ abstract class MetadataPatternMatcher {
 
         @Override
         boolean matches(String value) {
-            return value.startsWith(pattern);
+            return value != null && value.startsWith(pattern);
         }
 
     }

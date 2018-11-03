@@ -29,9 +29,11 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.everyItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 @RunWith(Parameterized.class)
 public class MetadataPatternMatcherParameterizedTest {
@@ -50,6 +52,8 @@ public class MetadataPatternMatcherParameterizedTest {
     @Parameterized.Parameters(name = "{index}: {0} => {1}")
     public static List<Object[]> parameters() {
         return asList(
+                testCase(null, null, asList("", "a", "XYZ", "a_x")),
+                testCase("%", ".*", asList("", "a", "XYZ", "a_x")),
                 testCase("abc", "\\Qabc\\E", singletonList("abc")),
                 testCase("ab_c", "\\Qab\\E.\\Qc\\E", asList("abac", "ab_c", "abDc")),
                 testCase("ab%c", "\\Qab\\E.*\\Qc\\E", asList("abc", "ab%c", "ab_c", "ab123456789cabc")),
@@ -70,6 +74,7 @@ public class MetadataPatternMatcherParameterizedTest {
 
     @Test
     public void testPatternToRegex() {
+        assumeThat("patternToRegex not supported for this pattern", metadataPattern, is(notNullValue()));
         assertEquals("Unexpected regex pattern for '" + metadataPattern + "'",
                 expectedRegexPattern, MetadataPatternMatcher.patternToRegex(metadataPattern));
     }
@@ -86,11 +91,16 @@ public class MetadataPatternMatcherParameterizedTest {
 
             @Override
             public void describeTo(Description description) {
-                description.appendText("matches pattern").appendValue(metadataPattern);
+                description.appendText("matches pattern ").appendValue(metadataPattern);
             }
         };
 
         assertThat(expectedMatches, everyItem(matchesMetadataPattern));
+        if (metadataPattern == null || "%".equals(metadataPattern)) {
+            assertTrue("All pattern should match null", metadataPatternMatcher.matches(null));
+        } else {
+            assertFalse("Pattern should not match null", metadataPatternMatcher.matches(null));
+        }
     }
 
     private static Object[] testCase(String likePattern, String expectedRegexPattern, List<String> expectedMatches) {
