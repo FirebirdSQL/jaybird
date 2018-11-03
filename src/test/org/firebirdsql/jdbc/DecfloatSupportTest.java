@@ -199,7 +199,7 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
     }
 
     /**
-     * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for BOOLEAN).
+     * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for DECFLOAT).
      */
     @Test
     public void databaseMetaData_TypeInfo() throws Exception {
@@ -225,7 +225,7 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                     assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
                     // Not testing other values
                 }
-                assertTrue("Expected to find boolean type in typeInfo", foundDecfloatType);
+                assertTrue("Expected to find decfloat type in typeInfo", foundDecfloatType);
             }
         }
     }
