@@ -356,7 +356,7 @@ public abstract class AbstractGeneratedKeysQuery {
     private String normalizeObjectName(String objectName) {
         if (objectName == null) return null;
         objectName = objectName.trim();
-        objectName = FBDatabaseMetaData.escapeWildcards(objectName);
+        objectName = MetadataPattern.escapeWildcards(objectName);
         if (objectName.length() > 2 && objectName.charAt(0) == '"' && objectName.charAt(objectName.length() - 1) == '"') {
             return objectName.substring(1, objectName.length() - 1).replaceAll("\"\"", "\"");
         }

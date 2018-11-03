@@ -178,8 +178,7 @@ public class TestFBDatabaseMetaData {
 
     @Test
     public void testEscapeWildcards() {
-        assertEquals("escape wildcard incorrect", "test\\\\me", FBDatabaseMetaData.escapeWildcards("test\\me"));
-        assertEquals("escape wildcard incorrect", "test\\%me", FBDatabaseMetaData.escapeWildcards("test%me"));
+        // NOTE: fully tested in MetadataPatternTest#testEscapeWildcards
         assertEquals("escape wildcard incorrect", "test\\_me", FBDatabaseMetaData.escapeWildcards("test_me"));
     }
 
@@ -251,7 +250,7 @@ public class TestFBDatabaseMetaData {
             String name = rs.getString(3);
             String column = rs.getString(4);
             if (log != null) log.info("table name: " + name);
-            assertTrue("wrong column found: " + column, "my_ column2".equals(column));
+            assertEquals("wrong column found: " + column, "my_ column2", column);
             assertFalse("Expected only one row in resultset", rs.next());
         }
     }
@@ -289,7 +288,7 @@ public class TestFBDatabaseMetaData {
             assertEquals("NO", rs.getString("IS_AUTOINCREMENT"));
             assertEquals("NO", rs.getString("IS_GENERATEDCOLUMN"));
             assertEquals("NO", rs.getString("JB_IS_IDENTITY"));
-            assertEquals(null, rs.getString("JB_IDENTITY_TYPE"));
+            assertNull(rs.getString("JB_IDENTITY_TYPE"));
         }
     }
 

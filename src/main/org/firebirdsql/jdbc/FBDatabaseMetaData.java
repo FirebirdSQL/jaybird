@@ -34,7 +34,6 @@ import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.firebirdsql.util.MetadataPatternMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -55,11 +54,13 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
-    private static final String SPACES_31 = "                               "; // 31 spaces
-    private static final String SPACES_15 = "               "; // 15 spaces
     private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
     private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
     private static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
+    // Extra space to allow for longer patterns (avoids string right truncation errors)
+    static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
+    private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
+    private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
 
     private static final int DRIVER_MAJOR_VERSION = 4;
     private static final int DRIVER_MINOR_VERSION = 0;
@@ -1140,7 +1141,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + "cast(RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
+        + "cast(RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
         + "RDB$DESCRIPTION as REMARKS,"
         + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from "
@@ -1195,8 +1196,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "cast(PP.RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
-        + "cast(PP.RDB$PARAMETER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(PP.RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
         + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
         + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
@@ -1401,9 +1402,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String LEGACY_IS_VIEW = " rdb$relation_type is null and rdb$view_blr is not null ";
 
     private static final String TABLE_COLUMNS_2_5 =
-            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+            " select cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
             + "cast(case"
             + "  when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
             + "  when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'"
@@ -1412,12 +1413,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
             + "end as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as " + OBJECT_NAME_TYPE + ") as OWNER_NAME "
             + "from RDB$RELATIONS ";
     //@formatter:on
 
@@ -1483,17 +1484,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String TABLE_COLUMNS_FORMAT_2_1 =
-            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+            " select cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
             + "cast('%s' as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as " + OBJECT_NAME_TYPE + ") as OWNER_NAME "
             + "from RDB$RELATIONS ";
 
     private static final String TABLE_COLUMNS_SYSTEM_2_1 =
@@ -1519,29 +1520,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_TABLES_EXACT_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + " union"
             + TABLE_COLUMNS_NORMAL
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + " union"
             + TABLE_COLUMNS_VIEW
             + " where ? = 'T' and rdb$view_blr is not null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + GET_TABLE_ORDER_BY;
 
     private static final String GET_TABLES_LIKE_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
             + " union"
             + TABLE_COLUMNS_NORMAL
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
             + " union"
             + TABLE_COLUMNS_VIEW
             + " where ? = 'T' and rdb$view_blr is not null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
+            + GET_TABLE_ORDER_BY;
+
+    private static final String GET_TABLES_STARTING_WITH_2_1 =
+            TABLE_COLUMNS_SYSTEM_2_1
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
+            + " union"
+            + TABLE_COLUMNS_NORMAL
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
+            + " union"
+            + TABLE_COLUMNS_VIEW
+            + " where ? = 'T' and rdb$view_blr is not null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
             + GET_TABLE_ORDER_BY;
     //@formatter:on
 
@@ -1555,39 +1570,35 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         MetadataPattern metadataPattern = MetadataPattern.compile(tableNamePattern);
         String sql;
         List<String> params;
-        switch (metadataPattern.getConditionType()) {
-        case NONE:
+        MetadataPattern.ConditionType conditionType = metadataPattern.getConditionType();
+        if (conditionType == MetadataPattern.ConditionType.NONE) {
             sql = GET_TABLES_ALL_2_1;
-            params = new ArrayList<>(3);
-            params.add(getWantsSystemTables(types));
-            params.add(getWantsTables(types));
-            params.add(getWantsViews(types));
-            break;
-        case SQL_EQUALS:
-            String equalsValue = metadataPattern.getConditionValue();
-            sql = GET_TABLES_EXACT_2_1;
-            params = new ArrayList<>(6);
-            params.add(getWantsSystemTables(types));
-            params.add(equalsValue);
-            params.add(getWantsTables(types));
-            params.add(equalsValue);
-            params.add(getWantsViews(types));
-            params.add(equalsValue);
-            break;
-        case SQL_LIKE:
-            // See also comment in Clause for explanation
-            String likeValue = metadataPattern.getConditionValue() + SPACES_15 + "%";
-            sql = GET_TABLES_LIKE_2_1;
-            params = new ArrayList<>(6);
-            params.add(getWantsSystemTables(types));
-            params.add(likeValue);
-            params.add(getWantsTables(types));
-            params.add(likeValue);
-            params.add(getWantsViews(types));
-            params.add(likeValue);
-            break;
-        default:
-            throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
+            params = Arrays.asList(
+                    getWantsSystemTables(types),
+                    getWantsTables(types),
+                    getWantsViews(types));
+        } else {
+            switch (conditionType) {
+            case SQL_EQUALS:
+                sql = GET_TABLES_EXACT_2_1;
+                break;
+            case SQL_LIKE:
+                sql = GET_TABLES_LIKE_2_1;
+                break;
+            case SQL_STARTING_WITH:
+                sql = GET_TABLES_STARTING_WITH_2_1;
+                break;
+            default:
+                throw new AssertionError("Unexpected condition type " + conditionType);
+            }
+            String conditionValue = metadataPattern.getConditionValue();
+            params = Arrays.asList(
+                    getWantsSystemTables(types),
+                    conditionValue,
+                    getWantsTables(types),
+                    conditionValue,
+                    getWantsViews(types),
+                    conditionValue);
         }
         return doQuery(sql, params);
     }
@@ -1630,8 +1641,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String GET_COLUMNS_COMMON =
-            "SELECT cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS RELATION_NAME," +
-            "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS FIELD_NAME," +
+            "SELECT cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS RELATION_NAME," +
+            "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") AS FIELD_NAME," +
             "F.RDB$FIELD_TYPE AS FIELD_TYPE," +
             "F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
             "F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
@@ -2034,12 +2045,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        /*+ "null as TABLE_CAT,"
-        + "null as TABLE_SCHEM,"*/
-        + "cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
-        + "cast(UP.RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
-        + "cast(UP.RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
+        + "cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
+        + "cast(UP.RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
         + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
@@ -2051,7 +2060,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ((";
+        + "UP.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER + " and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -2130,11 +2139,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_TABLE_PRIVILEGES_START = "select "
-        /*+ " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM,"*/
-        + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
-        + "cast(RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
+        + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
+        + "cast(RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
         + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
@@ -2200,7 +2207,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //@formatter:off
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS varchar(" + OBJECT_NAME_LENGTH + ")) AS column_name," +
+            "CAST(rf.rdb$field_name AS " + OBJECT_NAME_TYPE + ") AS column_name," +
             "f.rdb$field_type AS field_type," +
             "f.rdb$field_sub_type AS field_sub_type," +
             "f.rdb$field_scale AS field_scale," +
@@ -2212,7 +2219,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
             "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
             "WHERE " +
-            "CAST(rc.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? " +
+            "rc.rdb$relation_name = " + OBJECT_NAME_PARAMETER +
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
     //@formatter:on
 
@@ -2370,17 +2377,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PRIMARY_KEYS = "select "
-        /*+ " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM, "*/
-        + "cast(RC.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(ISGMT.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(RC.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME "
+        + "cast(RC.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC "
         + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
-        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-        + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
+        + "where RC.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+        + "and RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
     @Override
@@ -2418,28 +2423,23 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_IMPORTED_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -2517,27 +2517,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_EXPORTED_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+    +"WHERE PK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
     +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -2594,29 +2589,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_CROSS_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME"
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME"
     +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) +")) = ? and "
-    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE PK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -2860,18 +2850,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
-        + "cast(ind.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS TABLE_NAME"
+        + "cast(ind.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",cast(ind.RDB$INDEX_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as INDEX_NAME"
+        + ",cast(ind.RDB$INDEX_NAME as " + OBJECT_NAME_TYPE + ") as INDEX_NAME"
         + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",cast(ise.rdb$field_name as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME"
+        + ",cast(ise.rdb$field_name as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME"
         + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
         + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         + "WHERE "
-        + "CAST(ind.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+        + "ind.rdb$relation_name = " + OBJECT_NAME_PARAMETER
         + "ORDER BY 2, 3, 4";
 
     @Override
@@ -3352,13 +3342,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
+     * <p>
+     * Primary purpose is to escape object names with wildcards for use in metadata patterns for literal matches, but
+     * it can also be used to escape for SQL {@code LIKE}.
+     * </p>
      *
      * @param objectName
-     *         Object name to escape (not {@code null}).
+     *         Object name to escape.
      * @return Object name with wildcards escaped.
      */
     public static String escapeWildcards(String objectName) {
-        return objectName != null ? objectName.replaceAll("([\\\\_%])", "\\\\$1") : null;
+        return MetadataPattern.escapeWildcards(objectName);
     }
 
     protected String getWantsSystemTables(String[] types) {
@@ -3442,17 +3436,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         final boolean supportsRecordVersion = firebirdSupportInfo.supportsRecordVersionPseudoColumn();
-        final boolean retrieveDbKey;
-        final boolean retrieveRecordVersion;
-
-        if (MetadataPattern.isAllCondition(columnNamePattern)) {
-            retrieveDbKey = true;
-            retrieveRecordVersion = supportsRecordVersion;
-        } else {
-            MetadataPatternMatcher matcher = MetadataPatternMatcher.compile(columnNamePattern);
-            retrieveDbKey = matcher.matches("RDB$DB_KEY");
-            retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
-        }
+        final MetadataPatternMatcher matcher = MetadataPattern.compile(columnNamePattern).toMetadataPatternMatcher();
+        final boolean retrieveDbKey = matcher.matches("RDB$DB_KEY");
+        final boolean retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
 
         if (!(retrieveDbKey || retrieveRecordVersion)) {
             // No matching columns
@@ -3460,9 +3446,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25) +
-                (tableNameClause.hasCondition() ? " where " + tableNameClause.getCondition(false) : "") +
-                GET_PSEUDO_COLUMNS_END;
+        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25);
+        if (tableNameClause.hasCondition()) {
+            sql += " where " + tableNameClause.getCondition(false);
+        }
+        sql += GET_PSEUDO_COLUMNS_END;
         List<String> params = tableNameClause.hasCondition()
                 ? Collections.<String>singletonList(tableNameClause.getValue())
                 : Collections.<String>emptyList();
@@ -3574,25 +3562,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         public Clause(String columnName, String pattern) {
             MetadataPattern metadataPattern = MetadataPattern.compile(pattern);
-            switch (metadataPattern.getConditionType()) {
-            case NONE:
-                condition = "";
-                value = null;
-                break;
-            case SQL_EQUALS:
-                value = metadataPattern.getConditionValue();
-                // We are casting to VARCHAR( max object length + 10) to accommodate slightly larger object names
-                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? ";
-                break;
-            case SQL_LIKE:
-                // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
-                // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
-                value = metadataPattern.getConditionValue() + SPACES_15 + "%";
-                condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' ";
-                break;
-            default:
-                throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
-            }
+            condition = metadataPattern.renderCondition(columnName);
+            value = metadataPattern.getConditionValue();
         }
 
         /**

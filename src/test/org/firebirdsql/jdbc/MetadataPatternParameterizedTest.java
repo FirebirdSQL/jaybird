@@ -41,7 +41,7 @@ public class MetadataPatternParameterizedTest {
         this.expectedConditionValue = expectedConditionValue;
     }
 
-    @Parameterized.Parameters(name = "{0} => {1} value {2}")
+    @Parameterized.Parameters(name = "{index}: {0} => {1} value {2}")
     public static List<Object[]> parameters() {
         return asList(
                 testCase(null, MetadataPattern.ConditionType.NONE, null),
@@ -51,7 +51,14 @@ public class MetadataPatternParameterizedTest {
                 testCase("\\", MetadataPattern.ConditionType.SQL_EQUALS, "\\"),
                 testCase("\\\\", MetadataPattern.ConditionType.SQL_EQUALS, "\\"),
                 testCase("a", MetadataPattern.ConditionType.SQL_EQUALS, "a"),
-                testCase("a%", MetadataPattern.ConditionType.SQL_LIKE, "a%"),
+                testCase("a%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "a"),
+                testCase("\\a%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "\\a"),
+                testCase("ab c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab c"),
+                testCase("ab\\_c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab_c"),
+                testCase("ab\\%c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab%c"),
+                testCase("a_b%", MetadataPattern.ConditionType.SQL_LIKE, "a_b%"),
+                testCase("a%b%", MetadataPattern.ConditionType.SQL_LIKE, "a%b%"),
+                testCase("a\\__b%", MetadataPattern.ConditionType.SQL_LIKE, "a\\__b%"),
                 testCase("a_", MetadataPattern.ConditionType.SQL_LIKE, "a_"),
                 testCase("%abc", MetadataPattern.ConditionType.SQL_LIKE, "%abc"),
                 testCase("_abc", MetadataPattern.ConditionType.SQL_LIKE, "_abc"),
@@ -61,6 +68,8 @@ public class MetadataPatternParameterizedTest {
                 testCase("_ab\\%", MetadataPattern.ConditionType.SQL_LIKE, "_ab\\%"),
                 testCase("ab\\%cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab%cd"),
                 testCase("ab\\_cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab_cd"),
+                testCase("ab\\_\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab_\\cd"),
+                testCase("a_\\_\\cd", MetadataPattern.ConditionType.SQL_LIKE, "a_\\_\\\\cd"),
                 testCase("ab\\\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\cd"),
                 testCase("ab\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\cd"),
                 testCase("ab\\", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\")

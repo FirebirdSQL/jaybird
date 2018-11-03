@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jdbc;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -47,7 +47,7 @@ public class MetadataPatternMatcherParameterizedTest {
         this.expectedMatches = expectedMatches;
     }
 
-    @Parameterized.Parameters(name = "{0} => {1}")
+    @Parameterized.Parameters(name = "{index}: {0} => {1}")
     public static List<Object[]> parameters() {
         return asList(
                 testCase("abc", "\\Qabc\\E", singletonList("abc")),
@@ -57,13 +57,13 @@ public class MetadataPatternMatcherParameterizedTest {
                 testCase("ab\\\\c", "\\Qab\\c\\E", singletonList("ab\\c")),
                 testCase("AB%", "\\QAB\\E.*", asList("AB", "ABC", "AB%", "AB_", "ABCDEFGHIJK...")),
                 testCase("%AB%", ".*\\QAB\\E.*", asList("AB", "ABAB", "ABABAB", "%AB%", "1234AB1234AB123")),
-                // Syntax error in LIKE, but accepted
+                // Syntax error in LIKE, but accepted in metadata pattern
                 testCase("ab\\c", "\\Qab\\c\\E", singletonList("ab\\c")),
-                // Syntax error in LIKE, but accepted
+                // Syntax error in LIKE, but accepted in metadata patter
                 testCase("ab\\", "\\Qab\\\\E", singletonList("ab\\")),
-                // Regex quote edge cases; Syntax error in LIKE, but accepted
+                // Regex quote edge cases; Syntax error in LIKE, but accepted in metadata patter
                 testCase("\\Qabc\\E", "\\Q\\Qabc\\E\\\\E\\Q\\E", singletonList("\\Qabc\\E")),
-                // Regex quote edge cases; Syntax error in LIKE, but accepted
+                // Regex quote edge cases; Syntax error in LIKE, but accepted in metadata patter
                 testCase("abc\\Edef", "\\Qabc\\E\\\\E\\Qdef\\E", singletonList("abc\\Edef"))
         );
     }
@@ -76,7 +76,8 @@ public class MetadataPatternMatcherParameterizedTest {
 
     @Test
     public void testMetadataPatternMatcher() {
-        final MetadataPatternMatcher metadataPatternMatcher = MetadataPatternMatcher.compile(metadataPattern);
+        final MetadataPatternMatcher metadataPatternMatcher =
+                MetadataPattern.compile(metadataPattern).toMetadataPatternMatcher();
         Matcher<String> matchesMetadataPattern = new TypeSafeMatcher<String>() {
             @Override
             protected boolean matchesSafely(String s) {

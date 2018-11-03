@@ -16,12 +16,10 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jdbc;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Emulates behavior of a database metadata pattern.
@@ -33,25 +31,34 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0
  */
-public abstract class MetadataPatternMatcher {
+abstract class MetadataPatternMatcher {
 
     private MetadataPatternMatcher() {
         // Only allow derivation in nested classes
     }
 
     /**
-     * Compiles a database metadata pattern.
+     * Derives a metadata pattern matcher from a metadata pattern instance.
      *
-     * @param pattern
-     *         database metadata pattern (non-null)
-     * @return Matcher for {@code pattern}
+     * @param metadataPattern
+     *         Metadata pattern instance
+     * @return Matcher for {@code metadataPattern}
      */
-    public static MetadataPatternMatcher compile(String pattern) {
-        if (containsPatternSpecialChars(requireNonNull(pattern, "pattern"))) {
-            return new RegexMatcher(pattern);
+    static MetadataPatternMatcher fromPattern(MetadataPattern metadataPattern) {
+        switch (metadataPattern.getConditionType()) {
+        case NONE:
+            return AllMatcher.INSTANCE;
+        case SQL_EQUALS:
+            return new EqualsMatcher(metadataPattern.getConditionValue());
+        case SQL_STARTING_WITH:
+            return new StartingWithMatcher(metadataPattern.getConditionValue());
+        case SQL_LIKE:
+            return new LikeMatcher(metadataPattern.getConditionValue());
+        default:
+            throw new AssertionError("Unexpected condition type " + metadataPattern.getConditionType());
         }
-        return new SimpleEqualsMatcher(pattern);
     }
 
     /**
@@ -64,62 +71,60 @@ public abstract class MetadataPatternMatcher {
      *         Value to check
      * @return {@code true} if {@code value} matches this pattern, {@code false} otherwise
      */
-    public abstract boolean matches(String value);
+    abstract boolean matches(String value);
 
-    /**
-     * Scans string to determine if string contains any of {@code \_%} that indicates additional processing is needed.
-     *
-     * @param pattern
-     *         metadata pattern
-     * @return {@code true} if the string contains any like special characters
-     */
-    public static boolean containsPatternSpecialChars(String pattern) {
-        for (int idx = 0; idx < pattern.length(); idx++) {
-            if (isPatternSpecialChar(pattern.charAt(idx))) {
-                return true;
-            }
+    private static final class AllMatcher extends MetadataPatternMatcher {
+
+        private static final AllMatcher INSTANCE = new AllMatcher();
+
+        @Override
+        boolean matches(String value) {
+            return true;
         }
-        return false;
     }
 
-    /**
-     * Checks if character is a database metadata pattern special.
-     *
-     * @param charVal
-     *         Character to check
-     * @return {@code true} if {@code charVal} is a pattern special ({@code \_%})
-     */
-    public static boolean isPatternSpecialChar(char charVal) {
-        return charVal == '%' || charVal == '_' || charVal == '\\';
-    }
-
-    private static final class SimpleEqualsMatcher extends MetadataPatternMatcher {
+    private static final class EqualsMatcher extends MetadataPatternMatcher {
 
         private final String pattern;
 
-        private SimpleEqualsMatcher(String pattern) {
+        private EqualsMatcher(String pattern) {
             this.pattern = pattern;
         }
 
         @Override
-        public boolean matches(String value) {
+        boolean matches(String value) {
             return pattern.equals(value);
         }
 
     }
 
-    private static final class RegexMatcher extends MetadataPatternMatcher {
+    private static final class StartingWithMatcher extends MetadataPatternMatcher {
+
+        private final String pattern;
+
+        private StartingWithMatcher(String pattern) {
+            this.pattern = pattern;
+        }
+
+        @Override
+        boolean matches(String value) {
+            return value.startsWith(pattern);
+        }
+
+    }
+
+    private static final class LikeMatcher extends MetadataPatternMatcher {
 
         private final Matcher regexMatcher;
 
-        private RegexMatcher(String pattern) {
+        private LikeMatcher(String pattern) {
             String regexPattern = MetadataPatternMatcher.patternToRegex(pattern);
             Pattern compiledPattern = Pattern.compile(regexPattern);
             regexMatcher = compiledPattern.matcher("");
         }
 
         @Override
-        public boolean matches(String value) {
+        boolean matches(String value) {
             if (value == null) {
                 return false;
             }
@@ -155,13 +160,15 @@ public abstract class MetadataPatternMatcher {
                 idx += 1;
                 if (idx < patternLength) {
                     char nextChar = metadataPattern.charAt(idx);
-                    if (!isPatternSpecialChar(nextChar)) {
+                    if (!MetadataPattern.isPatternSpecialChar(nextChar)) {
                         // backslash before non-escapable character, handle as normal, see JDBC-562 and ODBC spec
+                        // NOTE: given the use of MetadataPattern, this situation will not occur
                         subPattern.append('\\');
                     }
                     subPattern.append(nextChar);
                 } else {
                     // backslash at end of string, handled as normal, see JDBC-562 and ODBC spec
+                    // NOTE: given the use of MetadataPattern, this situation will not occur
                     subPattern.append('\\');
                 }
                 break;

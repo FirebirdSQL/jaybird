@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
+package org.firebirdsql.jdbc;
 
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
@@ -27,30 +27,28 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-public class MetadataPatternMatcherTest {
+public class MetadataPatternTest {
 
     @Test
     public void testIsPatternSpecialChar_noSpecials() {
-        assertFalse("No pattern special char", MetadataPatternMatcher.isPatternSpecialChar('a'));
+        assertFalse("No pattern special char", MetadataPattern.isPatternSpecialChar('a'));
     }
 
     @Test
     public void testIsPatternSpecialChar_underscore() {
-        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('_'));
+        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('_'));
     }
 
     @Test
     public void testIsPatternSpecialChar_percent() {
-        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('%'));
+        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('%'));
     }
 
     @Test
     public void testIsPatternSpecialChar_backslash() {
-        assertTrue("pattern special char", MetadataPatternMatcher.isPatternSpecialChar('\\'));
+        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('\\'));
     }
 
     @Test
@@ -65,8 +63,17 @@ public class MetadataPatternMatcherTest {
                 everyItem(ContainsPatternSpecialCharMatcher.containsPatternSpecialCharMatcher()));
     }
 
+    @Test
+    public void testEscapeWildcards() {
+        assertEquals("escape wildcard incorrect", "test\\\\me", MetadataPattern.escapeWildcards("test\\me"));
+        assertEquals("escape wildcard incorrect", "test\\%me", MetadataPattern.escapeWildcards("test%me"));
+        assertEquals("escape wildcard incorrect", "test\\_me", MetadataPattern.escapeWildcards("test_me"));
+        assertEquals("escape wildcard incorrect", "test\\%\\_me", MetadataPattern.escapeWildcards("test%_me"));
+        assertEquals("escape wildcard incorrect", "test\\\\\\_me", MetadataPattern.escapeWildcards("test\\_me"));
+    }
+
     /**
-     * Matcher implementation serving as test harness for {@link MetadataPatternMatcher#containsPatternSpecialChars(String)} .
+     * Matcher implementation serving as test harness for {@link MetadataPattern#containsPatternSpecialChars(String)} .
      */
     private static class ContainsPatternSpecialCharMatcher extends TypeSafeMatcher<String> {
 
@@ -74,7 +81,7 @@ public class MetadataPatternMatcherTest {
 
         @Override
         protected boolean matchesSafely(String s) {
-            return MetadataPatternMatcher.containsPatternSpecialChars(s);
+            return MetadataPattern.containsPatternSpecialChars(s);
         }
 
         @Override

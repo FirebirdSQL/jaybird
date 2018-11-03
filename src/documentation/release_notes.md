@@ -991,6 +991,10 @@ expect the driver to remain functional, but chances are certain metadata (eg
 In general we will no longer fix issues that only occur with Firebird 2.1 or
 earlier.
 
+As a result of changes in `FBDatabaseMetaData`, most result set producing 
+methods will no longer work with Firebird 1.5 or earlier (unsupported since 
+Jaybird 3).
+
 Removed Legacy_Auth from default authentication plugins
 -------------------------------------------------------
 
