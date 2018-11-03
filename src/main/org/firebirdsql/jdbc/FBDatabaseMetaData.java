@@ -522,8 +522,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.ROWID:
                 // As size of rowid is context dependent, we can't cast to it using the convert escape
                 return false;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
                 // TODO JDBC-540
                 return false;
             default:
@@ -536,9 +536,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIMESTAMP:
                 return true;
             case Types.TIME:
-            case Types.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
                 return false;
-            case Types.TIMESTAMP_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
                 // TODO JDBC-540
                 return false;
             case Types.CHAR:
@@ -566,8 +566,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return true;
             case Types.DATE:
                 return false;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
                 // TODO JDBC-540
                 return false;
             case Types.CHAR:
@@ -594,8 +594,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIME:
             case Types.DATE:
                 return true;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
                 // TODO JDBC-540
                 return false;
             case Types.CHAR:
@@ -646,8 +646,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
             return false;
 
-        case Types.TIME_WITH_TIMEZONE:
-        case Types.TIMESTAMP_WITH_TIMEZONE:
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
             // TODO JDBC-540
             return false;
 
@@ -663,7 +663,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         case Types.REF:
         case Types.DATALINK:
         case Types.SQLXML:
-        case Types.REF_CURSOR:
+        case JaybirdTypeCodes.REF_CURSOR:
         default:
             return false;
         }
