@@ -109,8 +109,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] DATE_PRECISION = createInt(10);
     private static final byte[] TIME_PRECISION = createInt(8);
     private static final byte[] TIMESTAMP_PRECISION = createInt(19);
-    private static final byte[] NUMERIC_PRECISION = createInt(18);
-    private static final byte[] DECIMAL_PRECISION = createInt(18);
     private static final byte[] BOOLEAN_PRECISION = createInt(1);
     private static final byte[] DECFLOAT_16_PRECISION = createInt(16);
     private static final byte[] DECFLOAT_34_PRECISION = createInt(34);
@@ -2717,7 +2715,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         final List<RowValue> rows = new ArrayList<>(20);
 
         // DECFLOAT=-6001 (TODO Change when standardized)
-        if (getDatabaseMajorVersion() >= 4) {
+        if (firebirdSupportInfo.supportsDecfloat()) {
             rows.add(RowValue.of(rowDescriptor,
                     getBytes("DECFLOAT"), createInt(JaybirdTypeCodes.DECFLOAT), DECFLOAT_34_PRECISION, null, null,
                     getBytes("precision"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE,
@@ -2761,19 +2759,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TEXT), null,
                 RADIX_TEN));
 
+        // also for numeric
+        final byte[] maxDecimalPrecision = createInt(firebirdSupportInfo.maxDecimalPrecision());
+        final byte[] maxDecimalScale = maxDecimalPrecision;
         //NUMERIC=2
-        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("NUMERIC"), createInt(Types.NUMERIC), NUMERIC_PRECISION, null, null,
+                getBytes("NUMERIC"), createInt(Types.NUMERIC), maxDecimalPrecision, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
+                NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
 
         //DECIMAL=3
-        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("DECIMAL"), createInt(Types.DECIMAL), DECIMAL_PRECISION, null, null,
+                getBytes("DECIMAL"), createInt(Types.DECIMAL), maxDecimalPrecision, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, DECIMAL_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
+                NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
 
         //INTEGER=4
         rows.add(RowValue.of(rowDescriptor,

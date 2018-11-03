@@ -474,6 +474,46 @@ public class TestFBDatabaseMetaData {
         }
     }
 
+    /**
+     * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for DECIMAL and NUMERIC).
+     */
+    @Test
+    public void databaseMetaData_decimalAndNumericPrecision() throws Exception {
+        // intentionally not using FirebirdSupportInfo.maxDecimalPrecision() as tested implementation uses that method
+        final int expectedPrecision = getDefaultSupportInfo().isVersionEqualOrAbove(4, 0) ? 34 : 18;
+        try (ResultSet rs = dmd.getTypeInfo()) {
+            boolean foundNumeric = false;
+            boolean foundDecimal = false;
+            while (rs.next()) {
+                String typeName = rs.getString("TYPE_NAME");
+                final int expectedTypeCode;
+                if ("NUMERIC".equals(typeName)) {
+                    foundNumeric = true;
+                    expectedTypeCode = Types.NUMERIC;
+                } else if ("DECIMAL".equals(typeName)) {
+                    foundDecimal = true;
+                    expectedTypeCode = Types.DECIMAL;
+                } else {
+                    continue;
+                }
+                assertEquals("Unexpected DATA_TYPE", expectedTypeCode, rs.getInt("DATA_TYPE"));
+                assertEquals("Unexpected PRECISION", expectedPrecision, rs.getInt("PRECISION"));
+                assertEquals("Unexpected MINIMUM_SCALE", 0, rs.getInt("MINIMUM_SCALE"));
+                assertEquals("Unexpected MAXIMUM_SCALE", expectedPrecision, rs.getInt("MAXIMUM_SCALE"));
+                assertEquals("Unexpected NULLABLE", DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"));
+                assertFalse("Unexpected CASE_SENSITIVE", rs.getBoolean("CASE_SENSITIVE"));
+                assertEquals("Unexpected SEARCHABLE", DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"));
+                assertFalse("Unexpected UNSIGNED_ATTRIBUTE", rs.getBoolean("UNSIGNED_ATTRIBUTE"));
+                assertTrue("Unexpected FIXED_PREC_SCALE", rs.getBoolean("FIXED_PREC_SCALE"));
+                assertFalse("Unexpected AUTO_INCREMENT", rs.getBoolean("AUTO_INCREMENT"));
+                assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
+                // Not testing other values
+            }
+            assertTrue("Expected to find numeric type in typeInfo", foundNumeric);
+            assertTrue("Expected to find decimal type in typeInfo", foundDecimal);
+        }
+    }
+
     @Test
     public void testDefaultValue() throws Exception {
         try (Statement stmt = connection.createStatement()) {

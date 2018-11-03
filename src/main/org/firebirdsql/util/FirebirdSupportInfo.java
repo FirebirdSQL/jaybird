@@ -135,6 +135,8 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * Support for decimal (and numeric) precision.
+     *
      * @param precision Precision
      * @return {@code true} when DECIMAL (and NUMERIC) support the supplied precision; 0 or negative precision always
      * return {@code false}
@@ -149,6 +151,16 @@ public final class FirebirdSupportInfo {
             return isVersionEqualOrAbove(4, 0);
         }
         return false;
+    }
+
+    /**
+     * @return The maximum decimal and numeric precision
+     */
+    public int maxDecimalPrecision() {
+        if (isVersionEqualOrAbove(4, 0)) {
+            return 34;
+        }
+        return 18;
     }
 
     /**
