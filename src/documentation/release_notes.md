@@ -12,16 +12,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 General Notes
 =============
 
-Jaybird is a JCA/JDBC driver suite to connect to Firebird database servers. 
-
-This driver is based on both the JCA standard for application server
-connections to enterprise information systems and the well-known JDBC standard.
-The JCA standard specifies an architecture in which an application server can
-cooperate with a driver so that the application server manages transactions,
-security, and resource pooling, and the driver supplies only the connection
-functionality. While similar to the JDBC XADataSource concept, the JCA
-specification is considerably clearer on the division of responsibility between
-the application server and driver.
+Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
 About this version
 ------------------
@@ -35,7 +26,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.7, 3.0.2, and a recent 
+Jaybird @VERSION@ was tested against Firebird 2.5.7, 3.0.4, and a recent 
 Firebird 4 snapshot build, but should also support other Firebird versions from 
 2.5 and up.
 
@@ -75,10 +66,7 @@ Jaybird supports the following specifications:
 | JDBC 4.3    | Driver implements all JDBC 4.3 methods for features supported by Firebird; Java 9 supported using the Java 8 driver.
 | JDBC 4.2    | Driver implements all JDBC 4.2 methods for features supported by Firebird.
 | JDBC 4.1    | Driver implements all JDBC 4.1 methods for features supported by Firebird.
-| JDBC 4.0    | Driver implements all JDBC 4.0 interfaces and supports exception chaining.
-| JCA 1.0     | Jaybird provides implementation of `javax.resource.spi.ManagedConnectionFactory` and related interfaces. CCI interfaces are not supported. Although Jaybird depends on the JCA 1.5 classes, JCA 1.5 compatibility is currently not guaranteed.
-| JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via JCA framework and `XADataSource` implementation.
-| JMX 1.2     | Jaybird provides a MBean to manage Firebird servers and installed databases via JMX agent.
+| JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 
 Getting Jaybird 4
 =================
