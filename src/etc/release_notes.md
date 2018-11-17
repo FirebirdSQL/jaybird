@@ -813,6 +813,9 @@ Firebird support
 Jaybird 2.2 supports Firebird 1.0 and higher, but is only tested with Firebird
 2.1, 2.5 and 3.0. 
 
+Firebird 4 is not formally supported in Jaybird 2.2.x, although connecting and 
+most functionality will work.
+
 Firebird 1.0 and 1.5 support will be dropped with Jaybird 3.0. In general this 
 should not impact the use of the driver, but might have impact on the 
 availability and use of metadata information. This also means that starting with
