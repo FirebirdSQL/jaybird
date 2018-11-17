@@ -32,8 +32,9 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.3, but should also 
-support other Firebird versions from 2.0 and up.
+Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.4, but should also 
+support other Firebird versions from 2.0 and up. Firebird 4 is not fully 
+supported in Jaybird 3.x.
 
 Formal support for Firebird 1.x has been dropped (although in general we expect
 the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -51,6 +52,19 @@ See [Wire encryption support] and [Database encryption support] for more
 information. 
 
 Jaybird 3.0 does not support the Firebird 3 zlib compression.
+
+### Notes on Firebird 4 support
+
+Jaybird 3.0 can connect and query Firebird 4. Longer object names are supported. 
+
+The new data types introduced in Firebird 4 are not supported. Support for data 
+types like `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision higher than 18 will 
+be introduced in Jaybird 4.
+
+The Srp256 authentication plugin is supported, but the other SrpNNN plugins are
+not.
+
+Jaybird 3.0 does not support the Firebird 4 zlib compression.
 
 Supported Java versions
 -----------------------
@@ -483,9 +497,9 @@ Firebird 2.5 support is improved with the implementation of wire protocol
 version 12.
 
 Firebird 3.0 support is improved with the (partial) implementation of wire
-protocol 13 and support for the _Srp_ authentication plugin. Version 13 support
-does not yet provide Firebird 3.0 wire encryption and zlib compression. Wire
-encryption is planned for Jaybird 4. Support for zlib compression is not 
+protocol 13 and support for the _Srp_ and _Srp256_ (Jaybird 3.0.5) 
+authentication plugins. Version 13 support provides Firebird 3.0 
+wire encryption support since Jaybird 3.0.4. Support for zlib compression is not 
 planned yet.
 
 See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
@@ -493,6 +507,15 @@ on the wiki.
 
 Support for protocol version 13 and the SRP authentication was contributed
 by [Hajime Nakagami](https://github.com/nakagami).
+
+Partial Firebird 4 support:
+
+- Longer metadata names (63 characters) in database metadata
+- Authentication plugin _Srp256_ (Jaybird 3.0.5), but not the other _SrpNNN_ 
+plugins
+- Page size 32kb in management classes (Jaybird 3.0.5)
+- New data types (eg `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision greater than 
+18) are **not** supported
 
 ### Other Firebird feature support ###
 
