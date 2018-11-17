@@ -44,17 +44,19 @@ Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 Supported Java versions
 -----------------------
 
-Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 - 10 (JDBC 
-4.3). Support for earlier Java versions has been dropped.
+Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher 
+(JDBC 4.3). Support for earlier Java versions has been dropped.
 
 For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
 have the same source and all JDBC 4.3 related functionality.
 
 Given the limited support period for Java 9 and higher versions, we may limit
-support on those versions.
+support on those versions to the most recent LTS version and the latest release.
 
 Jaybird 4 is not modularized, but all versions declare the automatic module name 
 `org.firebirdsql.jaybird`.
+
+See als [Java support] in [What's new in Jaybird 4].
 
 Specification support
 ---------------------
@@ -63,10 +65,10 @@ Jaybird supports the following specifications:
 
 |Specification|Notes
 |-------------|----------------------------------------------------------------
-| JDBC 4.3    | Driver implements all JDBC 4.3 methods for features supported by Firebird; Java 9 supported using the Java 8 driver.
-| JDBC 4.2    | Driver implements all JDBC 4.2 methods for features supported by Firebird.
-| JDBC 4.1    | Driver implements all JDBC 4.1 methods for features supported by Firebird.
-| JTA 1.0.1   | Driver provides an implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
+| JDBC 4.3    | All JDBC 4.3 methods for features supported by Firebird; Java 9 and higher supported using the Java 8 driver.
+| JDBC 4.2    | All JDBC 4.2 methods for features supported by Firebird.
+| JDBC 4.1    | All JDBC 4.1 methods for features supported by Firebird.
+| JTA 1.0.1   | Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
 
 Getting Jaybird 4
 =================
@@ -180,10 +182,10 @@ Gotcha's
 
 During tests we have have observed that using Jaybird 4 with Firebird 4 may
 cause connection hangs when the connection is encrypted (the connection is 
-blocked in a read from the socket). The cause seems related to the Java 
-version (the problem disappeared with Java 9 Update 4), or possibly the 
-`TcpRemoteBufferSize` setting in Firebird. The workaround is to disable 
-wire encryption in Firebird or for the specific connection (see 
+blocked in a read from the socket). The cause seems related to the 
+`TcpRemoteBufferSize` setting in Firebird. The workaround is to change the value
+to a different value (it seems multiples of 8 or 16 prevent the problem) or to 
+disable wire encryption in Firebird or for the specific connection (see 
 [Wire encryption support]).
 
 If you find a problem while upgrading, or other bugs: please report it 
@@ -214,22 +216,24 @@ Jaybird 4 will very likely drop support for Java 7 (this decision is not final y
 
 The driver supports Java 8.
 
-### Java 9 ###
+### Java 9 and higher ###
 
-Jaybird currently does not fully support Java 9 and higher (JDBC 4.3), although 
-most of the JDBC 4.3 features have been implemented (in as far as they are 
-supported by Firebird).
+Jaybird 4 supports Java 9 and higher (JDBC 4.3) with the Java 8 version of the 
+driver. Most of the JDBC 4.3 features have been implemented (in as far as they 
+are supported by Firebird).
 
 For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
 automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
 name for Jaybird, and allows for future modularization of Jaybird.
 
-You can use the Java 8 driver under Java 9+. We recommend to only use the Java 8 
-version of Jaybird with Java 9+, and not use the Java 7 version of Jaybird. The 
-Java 7 version doesn't implement all of the JDBC 4.3 features that are 
-implemented in the Java 8 version. In addition, since Jaybird 3.0.4, the Java 7 
-version of Jaybird needs the `java.xml.bind` module, where the Java 8 version 
-doesn't need that module.   
+You can use the Java 8 driver under Java 9 and higher. We recommend not to use 
+the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
+JDBC 4.3 features that are implemented in the Java 8 version. In addition, since 
+Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` module, 
+where the Java 8 version does not need that module.
+
+Given the limited support period for Java 9 and higher versions, we may limit
+support on those versions to the most recent LTS version and the latest release.
 
 Firebird support
 ----------------
@@ -1061,7 +1065,7 @@ Removal of deprecated classes, packages and methods
 The following connection properties (and equivalent data source properties) have
 been removed:
 
--   `useTranslation`: See previous item
+-   `useTranslation`: See [Removal of character mapping]
 -   `octetsAsBytes`: Since Jaybird 3 octets is always handled as `BINARY`
 -   `noResultSetTracking`: Option does nothing since Jaybird 3
 -   `paranoia_mode`: Option does nothing since Jaybird 2.2 (maybe earlier)
@@ -1113,17 +1117,19 @@ Jaybird 5 may drop support for Java 8, depending on the actual release time line
 
 This decision is not final yet.
 
-### Dropping or restricting JCA (Java Connector Architecture) support ###
+### Dropping JCA (Java Connector Architecture) support ###
 
 Jaybird is currently built around a JCA (Java Connector Architecture) 
 implementation. As such, it is both a JDBC driver and a JCA driver. The current
 structure requires a dependency on JCA for non-JCA usage.
 
-We are currently considering removing support for JCA entirely, or restructuring 
-Jaybird so the dependency on JCA is only needed when Jaybird is used as a JCA 
-driver.
+We will remove support for JCA entirely in Jaybird 5 to simplify the 
+implementation.
 
-Please let us know on Firebird-Java if you use Jaybird as a JCA driver. 
+If you are currently using Jaybird as a JCA driver, please let us know on the 
+Firebird-Java mailing list. We may reconsider this decision and instead 
+restructure Jaybird so the dependency on JCA is only needed when Jaybird is used 
+as a JCA driver. 
 
 ### Removal of deprecated methods ###
 
