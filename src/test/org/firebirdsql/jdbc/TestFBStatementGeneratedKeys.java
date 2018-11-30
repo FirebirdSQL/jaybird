@@ -576,7 +576,6 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
         closeQuietly(stmt);
     }
 
-    //@Ignore("Fix JDBC-566 first")
     @Test
     public void testExecute_UPDATE_OR_INSERT_returnGeneratedKeys_withReturning() throws Exception {
         Statement stmt = con.createStatement();
