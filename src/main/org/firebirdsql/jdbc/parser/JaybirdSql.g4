@@ -310,7 +310,10 @@ updateOrInsertStatement
         ;
 
 matchingClause
-        :    MATCHING columnList
+        :    MATCHING '(' columnList ')'
+            {
+                _inReturning = false;
+            }
         ;
 
 /*

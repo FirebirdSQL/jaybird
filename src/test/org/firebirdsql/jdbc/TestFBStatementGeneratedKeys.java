@@ -49,6 +49,8 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     private static final String TEXT_VALUE = "Some text to insert";
     private static final String TEST_INSERT_QUERY =
             "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES ('" + TEXT_VALUE + "')";
+    private static final String TEST_UPDATE_OR_INSERT =
+            "UPDATE OR INSERT INTO TABLE_WITH_TRIGGER(ID, TEXT) VALUES (1, '" + TEXT_VALUE + "') MATCHING (ID)";
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -62,7 +64,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     @After
-    public void tearDownConnection() throws SQLException {
+    public void tearDownConnection() {
         closeQuietly(con);
     }
 
@@ -548,4 +550,59 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
         assertNotNull("Expected a result set", rs);
         assertTrue("Expected a row", rs.next());
     }
+
+    @Test
+    public void testExecute_UPDATE_OR_INSERT_returnGeneratedKeys() throws Exception {
+        Statement stmt = con.createStatement();
+
+        boolean producedResultSet = stmt.execute(TEST_UPDATE_OR_INSERT, Statement.RETURN_GENERATED_KEYS);
+        assertFalse("Expected execute to report false (has no result set) for UPDATE OR INSERT with generated keys returned",
+                producedResultSet);
+
+        ResultSet rs = stmt.getGeneratedKeys();
+        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+
+        assertTrue("Expected first row in result set", rs.next());
+        assertEquals(1, rs.getInt(1));
+        assertEquals(TEXT_VALUE, rs.getString(2));
+        assertFalse("Expected no second row", rs.next());
+
+        closeQuietly(rs);
+        closeQuietly(stmt);
+    }
+
+    @Test
+    public void testExecute_UPDATE_OR_INSERT_returnGeneratedKeys_withReturning() throws Exception {
+        Statement stmt = con.createStatement();
+
+        boolean producedResultSet = stmt.execute(TEST_UPDATE_OR_INSERT + " RETURNING id", Statement.RETURN_GENERATED_KEYS);
+        assertFalse("Expected execute to report false (has no result set) for UPDATE OR INSERT with generated keys returned",
+                producedResultSet);
+
+        ResultSet rs = stmt.getGeneratedKeys();
+        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
+        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+
+        assertTrue("Expected first row in result set", rs.next());
+        assertEquals(1, rs.getInt(1));
+        assertFalse("Expected no second row", rs.next());
+
+        closeQuietly(rs);
+        closeQuietly(stmt);
+    }
+
 }
