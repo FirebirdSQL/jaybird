@@ -50,7 +50,8 @@
 
             <batchtest todir="${build.reports.pure_java}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
@@ -118,7 +119,8 @@
 
             <batchtest todir="${build.reports.native}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
@@ -189,7 +191,8 @@
 
             <batchtest todir="${build.reports.embedded}"
                        haltonerror="${junit.batchtest.haltonerror}"
-                       haltonfailure="${junit.batchtest.haltonfailure}">
+                       haltonfailure="${junit.batchtest.haltonfailure}"
+                       skipNonTests="true">
 
                 <fileset dir="${build.test}">
                     <include name="**/Test*.class"/>
