@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
@@ -258,4 +259,14 @@ public interface FbStatement extends ExceptionListenable {
      * @return A potentially cached empty row descriptor for this statement or database.
      */
     RowDescriptor emptyRowDescriptor();
+
+    /**
+     * Creates a batch that call prepared statement to get a metadata.
+     *
+     * @param parameters
+     *         Batch parameters buffer {@link BatchParameterBuffer}
+     * @return Instance of {@link FbBatch}
+     * @throws SQLException
+     */
+    FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException;
 }

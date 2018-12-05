@@ -3,7 +3,10 @@ package org.firebirdsql.nativeoo.gds.ng;
 import org.firebirdsql.gds.ng.FbBatchCompletionState;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
 
+import java.sql.SQLException;
+
 /**
+ * Implementation of {@Link FbBatchCompletionState} for native batch execution.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
  * @since 4.0
@@ -22,25 +25,30 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
     }
 
     @Override
-    public int getSize() throws FbException {
-        return state.getSize(status);
+    public int getSize() throws SQLException {
+        int result = state.getSize(getStatus());
+        processStatus();
+        return result;
     }
 
     @Override
-    public int getState(int index) throws FbException {
-        return state.getState(status, index);
+    public int getState(int index) throws SQLException {
+        int result = state.getState(getStatus(), index);
+        processStatus();
+        return result;
     }
 
     @Override
-    public String getError(int index) throws FbException {
+    public String getError(int index) throws SQLException {
         if (state.findError(status, index) != FbBatchCompletionState.NO_MORE_ERRORS) {
             StringBuilder builder = new StringBuilder();
             IStatus errorStatus = database.getMaster().getStatus();
-            state.getStatus(status, errorStatus, index);
+            state.getStatus(getStatus(), errorStatus, index);
+            processStatus();
 
             try (CloseableMemory memory = new CloseableMemory(1024)) {
                 util.formatStatus(memory, (int) memory.size() - 1, errorStatus);
-                builder.append(memory.getString(0));
+                builder.append(memory.getString(0, getDatabase().getEncoding().getCharsetName()));
                 return builder.toString();
             }
         }
@@ -48,7 +56,7 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
     }
 
     @Override
-    public String getAllStates() throws FbException {
+    public String printAllStates() throws SQLException {
 
         StringBuilder builder = new StringBuilder();
 
@@ -57,18 +65,20 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
 
         util = database.getMaster().getUtilInterface();
 
-        int updateCount = state.getSize(status);
+        int updateCount = state.getSize(getStatus());
+        processStatus();
         int unknownCount = 0;
         int successCount = 0;
         for (int p = 0; p < updateCount; ++p) {
-            int s = state.getState(status, p);
+            int s = state.getState(getStatus(), p);
+            processStatus();
             switch (s) {
                 case FbBatchCompletionState.EXECUTE_FAILED:
                     if (!print1) {
                         builder.append(String.format("Message Status\n", p));
                         print1 = true;
                     }
-                    builder.append(String.format("%5d Execute failed\n", p));
+                    builder.append(String.format("%5d   Execute failed\n", p));
                     break;
 
                 case FbBatchCompletionState.SUCCESS_NO_INFO:
@@ -90,7 +100,8 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
 
         IStatus errorStatus = database.getMaster().getStatus();
         for (int p = 0; (p = state.findError(status, p)) != FbBatchCompletionState.NO_MORE_ERRORS; ++p) {
-            state.getStatus(status, errorStatus, p);
+            state.getStatus(getStatus(), errorStatus, p);
+            processStatus();
 
             try (CloseableMemory memory = new CloseableMemory(1024)) {
 
@@ -99,7 +110,8 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
                     builder.append(String.format("\nDetailed errors status:\n", p));
                     print2 = true;
                 }
-                builder.append(String.format("Message %d: %s\n", p, memory.getString(0)));
+                builder.append(String.format("Message %d: %s\n", p, memory.getString(0,
+                        database.getEncoding().getCharsetName())));
             }
         }
 
@@ -107,6 +119,37 @@ public class IBatchCompletionStateImpl implements FbBatchCompletionState {
             errorStatus.dispose();
 
         return builder.toString();
+    }
+
+    @Override
+    public int[] getAllStates() throws SQLException {
+
+        util = database.getMaster().getUtilInterface();
+
+        int updateCount = state.getSize(getStatus());
+        processStatus();
+
+        int[] states = new int[updateCount];
+
+        for (int p = 0; p < updateCount; ++p) {
+            states[p] = state.getState(getStatus(), p);
+            processStatus();
+        }
+
+        return states;
+    }
+
+    private IStatus getStatus() {
+        status.init();
+        return status;
+    }
+
+    private IDatabaseImpl getDatabase() {
+        return database;
+    }
+
+    private void processStatus() throws SQLException {
+        getDatabase().processStatus(status, null);
     }
 
 }

@@ -25,8 +25,10 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
 
     private final LongByReference blobId;
     private final boolean outputBlob;
+    private final IStatus status;
     private ByteBuffer byteBuffer;
     private IBlob blob;
+
 
     public IBlobImpl(IDatabaseImpl database, ITransactionImpl transaction, BlobParameterBuffer blobParameterBuffer) {
         this(database, transaction, blobParameterBuffer, NO_BLOB_ID);
@@ -37,14 +39,15 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
         super(database, transaction, blobParameterBuffer);
         this.blobId = new LongByReference(blobId);
         outputBlob = blobId == NO_BLOB_ID;
+        this.status = database.getStatus();
     }
 
     @Override
     protected void closeImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
             try {
-                IDatabaseImpl database = (IDatabaseImpl)getDatabase();
-                blob.close(database.getStatus());
+                blob.close(getStatus());
+                processStatus();
             } finally {
                 byteBuffer = null;
             }
@@ -55,8 +58,8 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
     protected void cancelImpl() throws SQLException {
         synchronized (getSynchronizationObject()) {
             try {
-                IDatabaseImpl database = (IDatabaseImpl)getDatabase();
-                blob.cancel(database.getStatus());
+                blob.cancel(getStatus());
+                processStatus();
             } finally {
                 byteBuffer = null;
             }
@@ -95,12 +98,13 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
                 IDatabaseImpl database = (IDatabaseImpl)getDatabase();
                 IAttachment attachment = database.getAttachment();
                 if (isOutput()) {
-                    blob = attachment.createBlob(database.getStatus(), ((ITransactionImpl)getTransaction()).getTransaction(),
+                    blob = attachment.createBlob(getStatus(), ((ITransactionImpl)getTransaction()).getTransaction(),
                             blobId, bpb.length, bpb);
                 } else {
-                    blob = attachment.openBlob(database.getStatus(), ((ITransactionImpl)getTransaction()).getTransaction(),
+                    blob = attachment.openBlob(getStatus(), ((ITransactionImpl)getTransaction()).getTransaction(),
                             blobId, bpb.length, bpb);
                 }
+                processStatus();
                 setOpen(true);
                 resetEof();
             }
@@ -133,10 +137,8 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
                 checkBlobOpen();
                 responseBuffer = getByteBuffer(sizeRequested);
                 try (CloseableMemory memory = new CloseableMemory(sizeRequested)) {
-
-                    IDatabaseImpl database = (IDatabaseImpl) getDatabase();
-                    IStatus status = database.getStatus();
-                    int result = blob.getSegment(status, sizeRequested, memory, actualLength);
+                    int result = blob.getSegment(getStatus(), sizeRequested, memory, actualLength);
+                    processStatus();
                     // result 0 means: more to come, isc_segment means: buffer was too small,
                     // rest will be returned on next call
                     if (!(IStatus.RESULT_OK == result || result == IStatus.RESULT_SEGMENT)) {
@@ -175,10 +177,8 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
 
                 try (CloseableMemory memory = new CloseableMemory(segment.length)) {
                     memory.write(0, segment, 0, segment.length);
-
-                    IDatabaseImpl database = (IDatabaseImpl) getDatabase();
-                    IStatus status = database.getStatus();
-                    blob.putSegment(status, segment.length, memory);
+                    blob.putSegment(getStatus(), segment.length, memory);
+                    processStatus();
                 }
             }
         } catch (SQLException e) {
@@ -193,12 +193,10 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
-
-                IDatabaseImpl database = (IDatabaseImpl)getDatabase();
-                IStatus status = database.getStatus();
                 // result is the current position in the blob
                 // We ignore the result
-                blob.seek(status, seekMode.getSeekModeId(), offset);
+                blob.seek(getStatus(), seekMode.getSeekModeId(), offset);
+                processStatus();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -213,12 +211,9 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
                 checkBlobOpen();
-
-                IDatabaseImpl database = (IDatabaseImpl)getDatabase();
-                IStatus status = database.getStatus();
-                blob.getInfo(status, requestItems.length, requestItems, bufferLength, responseArr);
+                blob.getInfo(getStatus(), requestItems.length, requestItems, bufferLength, responseArr);
+                processStatus();
             }
-
             return responseArr;
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -233,5 +228,19 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             byteBuffer.clear();
         }
         return byteBuffer;
+    }
+
+    private IStatus getStatus() {
+        status.init();
+        return status;
+    }
+
+    @Override
+    public IDatabaseImpl getDatabase() {
+        return (IDatabaseImpl) super.getDatabase();
+    }
+
+    private void processStatus() throws SQLException {
+        getDatabase().processStatus(status, null);
     }
 }

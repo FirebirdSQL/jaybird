@@ -21,11 +21,13 @@ public class ITransactionImpl extends AbstractFbTransaction {
 
     private final FbClientLibrary clientLibrary;
     private final ITransaction transaction;
+    private final IStatus status;
 
     public ITransactionImpl(IDatabaseImpl database, ITransaction iTransaction, TransactionState initialState) {
         super(initialState, database);
         transaction = iTransaction;
         clientLibrary = database.getClientLibrary();
+        status = database.getStatus();
     }
 
     @Override
@@ -49,7 +51,8 @@ public class ITransactionImpl extends AbstractFbTransaction {
                 final IDatabaseImpl db = getDatabase();
                 db.checkConnected();
                 switchState(TransactionState.COMMITTING);
-                transaction.commit(db.getStatus());
+                transaction.commit(getStatus());
+                processStatus();
                 switchState(TransactionState.COMMITTED);
             }
         } catch (SQLException e) {
@@ -71,7 +74,8 @@ public class ITransactionImpl extends AbstractFbTransaction {
                 final IDatabaseImpl db = getDatabase();
                 db.checkConnected();
                 switchState(TransactionState.ROLLING_BACK);
-                transaction.rollback(db.getStatus());
+                transaction.rollback(getStatus());
+                processStatus();
                 switchState(TransactionState.ROLLED_BACK);
             }
         } catch (SQLException e) {
@@ -96,12 +100,13 @@ public class ITransactionImpl extends AbstractFbTransaction {
                 switchState(TransactionState.PREPARING);
                 if (noRecoveryInfo) {
                     // TODO check for recovery information
-                    transaction.prepare(db.getStatus(), 0,
+                    transaction.prepare(getStatus(), 0,
                             null);
                 } else {
-                    transaction.prepare(db.getStatus(), (short) recoveryInformation.length,
+                    transaction.prepare(getStatus(), (short) recoveryInformation.length,
                             recoveryInformation);
                 }
+                processStatus();
                 switchState(TransactionState.PREPARED);
             }
         } catch (SQLException e) {
@@ -121,10 +126,10 @@ public class ITransactionImpl extends AbstractFbTransaction {
             synchronized (getSynchronizationObject()) {
                 final IDatabaseImpl db = getDatabase();
                 db.checkConnected();
-                transaction.getInfo(db.getStatus(), (short) requestItems.length, requestItems,
+                transaction.getInfo(getStatus(), (short) requestItems.length, requestItems,
                         (short) maxBufferLength, responseArray);
+                processStatus();
             }
-
             return responseArray;
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -132,4 +137,12 @@ public class ITransactionImpl extends AbstractFbTransaction {
         }
     }
 
+    private IStatus getStatus() {
+        status.init();
+        return status;
+    }
+
+    private void processStatus() throws SQLException {
+        getDatabase().processStatus(status, null);
+    }
 }

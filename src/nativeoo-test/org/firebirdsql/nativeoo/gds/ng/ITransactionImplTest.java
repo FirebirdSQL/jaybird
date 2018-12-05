@@ -1,10 +1,14 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.AbstractTransactionTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
@@ -15,15 +19,16 @@ import java.sql.SQLException;
  *
  * @since 4.0
  */
-public class TestITransactionImpl extends AbstractTransactionTest {
+public class ITransactionImplTest extends AbstractTransactionTest {
 
-    private static final String gdsType = "FBOONATIVE";
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) GDSFactory.getDatabaseFactoryForType(GDSType.getType(gdsType));
+    private final AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
     protected FbDatabase createDatabase() throws SQLException {

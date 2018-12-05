@@ -34,6 +34,8 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     private final IUtil util;
     private IAttachment attachment;
     private IEvents events;
+    private final IStatus status;
+
 
     public IDatabaseImpl(NativeDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
@@ -42,6 +44,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         provider = master.getDispatcher();
         util = master.getUtilInterface();
         attachment = null;
+        status = master.getStatus();
     }
 
     /**
@@ -69,6 +72,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         synchronized (getSynchronizationObject()) {
             try {
                 attachment.detach(getStatus());
+                processStatus();
             } catch (SQLException e) {
                 throw e;
             } finally {
@@ -114,9 +118,11 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             // No synchronization, otherwise cancel will never work
             try {
                 attachment.cancelOperation(getStatus(), kind);
+                processStatus();
             } finally {
                 if (kind == fb_cancel_abort) {
                     attachment.detach(getStatus());
+                    processStatus();
                     setDetached();
                 }
             }
@@ -133,7 +139,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             final byte[] tpbArray = tpb.toBytesWithType();
             synchronized (getSynchronizationObject()) {
                 ITransaction transaction = attachment.startTransaction(getStatus(), tpbArray.length, tpbArray);
-
+                processStatus();
                 final ITransactionImpl transactionImpl = new ITransactionImpl(this, transaction,
                         TransactionState.ACTIVE);
                 transactionAdded(transactionImpl);
@@ -154,7 +160,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             synchronized (getSynchronizationObject()) {
                 ITransaction iTransaction = attachment.reconnectTransaction(getStatus(), transactionIdBuffer.length,
                         transactionIdBuffer);
-
+                processStatus();
                 final ITransactionImpl transaction =
                         new ITransactionImpl(this, iTransaction, TransactionState.PREPARED);
                 transactionAdded(transaction);
@@ -211,9 +217,9 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             synchronized (getSynchronizationObject()) {
                 attachment.getInfo(getStatus(), requestItems.length, requestItems, (short) maxBufferLength, responseArray);
             }
-
+            processStatus();
             return responseArray;
-        } catch (FbException e) {
+        } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(new SQLException(e));
             throw new SQLException(e);
         }
@@ -392,6 +398,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
                 } else {
                     attachment = provider.attachDatabase(getStatus(), dbName, (short) dpbArray.length, dpbArray);
                 }
+                processStatus();
             } catch (SQLException e) {
                 safelyDetach();
                 throw e;
@@ -410,10 +417,23 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     }
 
     public IStatus getStatus() {
-        return master.getStatus();
+        status.init();
+        return status;
     }
 
     public IAttachment getAttachment() {
         return attachment;
+    }
+
+    private void processStatus() throws SQLException {
+        processStatus(status, getDatabaseWarningCallback());
+    }
+
+    public void processStatus(IStatus status, WarningMessageCallback warningMessageCallback)
+            throws SQLException {
+        if (warningMessageCallback == null) {
+            warningMessageCallback = getDatabaseWarningCallback();
+        }
+        connection.processStatus(status, warningMessageCallback);
     }
 }

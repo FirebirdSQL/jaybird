@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.nativeoo.gds.ng;
 
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -50,9 +52,10 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-public class TestIBlobImpl extends BaseTestBlob {
+public class IBlobImplTest extends BaseTestBlob {
 
-    private static final String gdsType = "FBOONATIVE";
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -61,7 +64,7 @@ public class TestIBlobImpl extends BaseTestBlob {
 
     @Before
     public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) GDSFactory.getDatabaseFactoryForType(GDSType.getType(gdsType));
+        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     }
 
     /**

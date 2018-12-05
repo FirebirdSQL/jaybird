@@ -6,7 +6,6 @@ import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.AbstractParameterConverter;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.WireCrypt;
-import org.firebirdsql.nativeoo.gds.ng.NativeDatabaseConnection;
 
 import java.sql.SQLException;
 

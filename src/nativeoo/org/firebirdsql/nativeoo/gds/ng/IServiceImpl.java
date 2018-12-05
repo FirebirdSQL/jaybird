@@ -6,10 +6,7 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
-import org.firebirdsql.gds.ng.AbstractFbService;
-import org.firebirdsql.gds.ng.FbAttachment;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.ParameterConverter;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
 
@@ -71,11 +68,12 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
                     serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
             final byte[] responseBuffer = new byte[maxBufferLength];
             synchronized (getSynchronizationObject()) {
-                service.query(status, (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
+                service.query(getStatus(), (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
                                 : 0), serviceParameterBufferBytes,
                         (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length
                                 : 0), serviceRequestBufferBytes,
                         maxBufferLength, responseBuffer);
+                processStatus();
             }
             return responseBuffer;
         } catch (SQLException e) {
@@ -92,8 +90,9 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
                     ? null
                     : serviceRequestBuffer.toBytes();
             synchronized (getSynchronizationObject()) {
-                service.start(status, (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
+                service.start(getStatus(), (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
                         serviceRequestBufferBytes);
+                processStatus();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -113,7 +112,8 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
 
             synchronized (getSynchronizationObject()) {
                 try {
-                    service = provider.attachServiceManager(status, connection.getAttachUrl(), spbArray.length, spbArray);
+                    service = provider.attachServiceManager(getStatus(), connection.getAttachUrl(), spbArray.length, spbArray);
+                    processStatus();
                 } catch (SQLException ex) {
                     safelyDetach();
                     throw ex;
@@ -158,7 +158,8 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
         checkConnected();
         synchronized (getSynchronizationObject()) {
             try {
-                service.detach(status);
+                service.detach(getStatus());
+                processStatus();
             } catch (SQLException ex) {
                 throw ex;
             } catch (Exception ex) {
@@ -172,6 +173,23 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
                 setDetached();
             }
         }
+    }
+
+    private IStatus getStatus() {
+        status.init();
+        return status;
+    }
+
+    private void processStatus() throws SQLException {
+        processStatus(status, getServiceWarningCallback());
+    }
+
+    public void processStatus(IStatus status, WarningMessageCallback warningMessageCallback)
+            throws SQLException {
+        if (warningMessageCallback == null) {
+            warningMessageCallback = getServiceWarningCallback();
+        }
+        connection.processStatus(status, warningMessageCallback);
     }
 
     @Override

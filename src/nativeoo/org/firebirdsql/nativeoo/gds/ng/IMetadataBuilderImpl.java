@@ -5,6 +5,8 @@ import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbMetadataBuilder;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
 
+import java.sql.SQLException;
+
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
@@ -24,7 +26,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     private IMetadataBuilder metadataBuilder;
     private IMessageMetadata messageMetadata;
 
-    public IMetadataBuilderImpl(FbDatabase database, int fieldCount) throws FbException {
+    public IMetadataBuilderImpl(FbDatabase database, int fieldCount) throws SQLException {
         this.database = (IDatabaseImpl)database;
         this.master = this.database.getMaster();
         this.status = this.database.getStatus();
@@ -33,7 +35,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     }
 
     @Override
-    public FbMessageMetadata getMessageMetadata() throws FbException {
+    public FbMessageMetadata getMessageMetadata() throws SQLException {
 
         messageMetadata = metadataBuilder.getMetadata(status);
         IMessageMetadataImpl metadata = new IMessageMetadataImpl(this);
@@ -49,39 +51,39 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
         return this.database;
     }
 
-    public int addField() throws FbException {
+    public int addField() throws SQLException {
         return this.metadataBuilder.addField(status);
     }
 
     @Override
-    public void addSmallint(int index) throws FbException {
+    public void addSmallint(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_SHORT);
         metadataBuilder.setLength(status, index, Short.SIZE / Byte.SIZE);
         metadataBuilder.setScale(status, index, 0);
     }
 
     @Override
-    public void addInteger(int index) throws FbException {
+    public void addInteger(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_LONG);
         metadataBuilder.setLength(status, index, Integer.SIZE / Byte.SIZE);
         metadataBuilder.setScale(status, index, 0);
     }
 
     @Override
-    public void addBigint(int index) throws FbException {
+    public void addBigint(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_INT64);
         metadataBuilder.setLength(status, index, Long.SIZE / Byte.SIZE);
         metadataBuilder.setScale(status, index, 0);
     }
 
     @Override
-    public void addFloat(int index) throws FbException {
+    public void addFloat(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_FLOAT);
         metadataBuilder.setLength(status, index, Float.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addNumeric(int index, int size, int scale) throws FbException {
+    public void addNumeric(int index, int size, int scale) throws SQLException {
         metadataBuilder.setType(status, index, SQL_SHORT);
         metadataBuilder.setLength(status, index, size);
         if (scale > 0)
@@ -91,7 +93,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     }
 
     @Override
-    public void addDecimal(int index, int size, int scale) throws FbException {
+    public void addDecimal(int index, int size, int scale) throws SQLException {
         metadataBuilder.setType(status, index, SQL_LONG);
         metadataBuilder.setLength(status, index, size);
         metadataBuilder.setScale(status, index, scale);
@@ -99,88 +101,88 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     }
 
     @Override
-    public void addDouble(int index) throws FbException {
+    public void addDouble(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DOUBLE);
         metadataBuilder.setLength(status, index, Double.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addDecfloat16(int index) throws FbException {
+    public void addDecfloat16(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DEC16);
         metadataBuilder.setLength(status, index, IDecFloat16.STRING_SIZE);
     }
 
     @Override
-    public void addDecfloat34(int index) throws FbException {
+    public void addDecfloat34(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DEC34);
         metadataBuilder.setLength(status, index, IDecFloat34.STRING_SIZE);
     }
 
     @Override
-    public void addBlob(int index) throws FbException {
+    public void addBlob(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_BLOB);
         metadataBuilder.setLength(status, index, (Integer.SIZE / Byte.SIZE) * 2);
     }
 
     @Override
-    public void addBlob(int index, int subtype) throws FbException {
+    public void addBlob(int index, int subtype) throws SQLException {
         metadataBuilder.setType(status, index, SQL_BLOB);
         metadataBuilder.setLength(status, index, (Integer.SIZE / Byte.SIZE) * 2);
         metadataBuilder.setSubType(status, index, subtype);
     }
 
     @Override
-    public void addBoolean(int index) throws FbException {
+    public void addBoolean(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_BOOLEAN);
         metadataBuilder.setLength(status, index, Short.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addDate(int index) throws FbException {
+    public void addDate(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DATE);
         metadataBuilder.setLength(status, index, Long.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addTime(int index) throws FbException {
+    public void addTime(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_TYPE_TIME);
         metadataBuilder.setLength(status, index, Long.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addTimestamp(int index) throws FbException {
+    public void addTimestamp(int index) throws SQLException {
         metadataBuilder.setType(status, index, SQL_TIMESTAMP);
         metadataBuilder.setLength(status, index, Long.SIZE / Byte.SIZE);
     }
 
     @Override
-    public void addChar(int index, int length) throws FbException {
+    public void addChar(int index, int length) throws SQLException {
         metadataBuilder.setType(status, index, SQL_TEXT);
         metadataBuilder.setLength(status, index, length);
     }
 
     @Override
-    public void addVarchar(int index, int length) throws FbException {
+    public void addVarchar(int index, int length) throws SQLException {
         metadataBuilder.setType(status, index, SQL_VARYING);
         metadataBuilder.setLength(status, index, length);
     }
 
     @Override
-    public void addChar(int index, int length, int charSet) throws FbException {
+    public void addChar(int index, int length, int charSet) throws SQLException {
         metadataBuilder.setType(status, index, SQL_TEXT);
         metadataBuilder.setLength(status, index, length);
         metadataBuilder.setCharSet(status, index, charSet);
     }
 
     @Override
-    public void addVarchar(int index, int length, int charSet) throws FbException {
+    public void addVarchar(int index, int length, int charSet) throws SQLException {
         metadataBuilder.setType(status, index, SQL_VARYING);
         metadataBuilder.setLength(status, index, length);
         metadataBuilder.setCharSet(status, index, charSet);
     }
 
     @Override
-    public void addDecDecimal(int index, int size, int scale) throws FbException {
+    public void addDecDecimal(int index, int size, int scale) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DEC_FIXED);
         metadataBuilder.setLength(status, index, size);
         metadataBuilder.setScale(status, index, scale);
@@ -188,7 +190,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     }
 
     @Override
-    public void addDecNumeric(int index, int size, int scale) throws FbException {
+    public void addDecNumeric(int index, int size, int scale) throws SQLException {
         metadataBuilder.setType(status, index, SQL_DEC_FIXED);
         metadataBuilder.setLength(status, index, size);
         metadataBuilder.setScale(status, index, scale);

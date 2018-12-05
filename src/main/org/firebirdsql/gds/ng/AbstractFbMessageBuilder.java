@@ -1,28 +1,11 @@
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.extern.decimal.Decimal128;
-import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ng.FbBatch;
-import org.firebirdsql.gds.ng.FbMessageBuilder;
-import org.firebirdsql.gds.ng.FbMessageMetadata;
-import org.firebirdsql.gds.ng.SeekableByteArrayOutputStream;
-import org.firebirdsql.gds.ng.jna.LittleEndianDatatypeCoder;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-
-import static org.firebirdsql.gds.ISCConstants.SQL_INT64;
-import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
-import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 
 /**
  * Common implementation of {@link org.firebirdsql.gds.ng.FbMessageBuilder} to build firebird message
@@ -32,15 +15,17 @@ import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
  */
 public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbMessageBuilder {
 
-    private FbMessageMetadata metadata;
-    private ByteBuffer buffer;
-    private final LittleEndianDatatypeCoder datatypeCoder = new LittleEndianDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+    private final FbMessageMetadata metadata;
+    private final FbStatement statement;
+    private final ByteBuffer buffer;
     private final SeekableByteArrayOutputStream stream = new SeekableByteArrayOutputStream();
     private final SeekableByteArrayOutputStream blobStream = new SeekableByteArrayOutputStream();
-    private int messageAlign;
-    private int messageLength;
-    private int blobAlign;
+    private final int messageAlign;
+    private final int messageLength;
+    private final int blobAlign;
+    private final byte[] nulls = new byte[] {0, 0};
     private int segmentedBlobSize = 0;
+    private int segmentedBlobOffset = 0;
 
     private int align(int target, int alignment) {
         return (((target) + alignment - 1) & ~(alignment - 1));
@@ -48,6 +33,7 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
 
     protected AbstractFbMessageBuilder(E batch) throws SQLException {
         this.metadata = batch.getMetadata();
+        this.statement = batch.getStatement();
         this.messageLength = metadata.getMessageLength();
         this.messageAlign = metadata.getAlignedLength();
         this.blobAlign = batch.getBlobAlignment();
@@ -55,267 +41,30 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
     }
 
     @Override
-    public void addSmallint(int index, short value) throws SQLException {
+    public void addData(int index, byte[] data, FieldDescriptor parameterDescriptor) throws SQLException {
         int nullOffset = metadata.getNullOffset(index);
         int offset = metadata.getOffset(index);
 
-        byte[] bytes = datatypeCoder.encodeShort(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addInteger(int index, int value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeInt(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addBigint(int index, long value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeLong(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addFloat(int index, float value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeFloat(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addDouble(int index, double value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-        int type = metadata.getType(index);
-        byte[] bytes = null;
-        if (type == SQL_INT64) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            BigInteger integer = decimal.unscaledValue();
-            bytes = datatypeCoder.encodeLong(integer.longValue());
+        if (parameterDescriptor.isVarying()) {
+            byte[] dataLen;
+            if (data == null)
+                dataLen = parameterDescriptor.getDatatypeCoder().encodeShort(0);
+            else
+                dataLen = parameterDescriptor.getDatatypeCoder().encodeShort(data.length);
+            buffer.position(offset);
+            buffer.put(dataLen);
+            offset += dataLen.length;
         }
-        else
-            bytes = datatypeCoder.encodeDouble(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
 
         buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addNumeric(int index, double value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-        int type = metadata.getType(index);
-        byte[] bytes = null;
-        if (type == SQL_INT64) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            BigInteger integer = decimal.unscaledValue();
-            bytes = datatypeCoder.encodeLong(integer.longValue());
-        } else if (type == SQL_SHORT) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            short encodedShort = (short)decimal.unscaledValue().intValue();
-            bytes = datatypeCoder.encodeShort(encodedShort);
-        } else if (type == SQL_LONG) {
-//            long encodedLong = Double.doubleToLongBits(value);
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            long encodedLong = (short)decimal.unscaledValue().longValue();
-            bytes = datatypeCoder.encodeLong(encodedLong);
+        if (data == null) {
+            buffer.position(nullOffset);
+            buffer.put(parameterDescriptor.getDatatypeCoder().encodeShort(1));
+        } else {
+            buffer.put(data);
+            buffer.position(nullOffset);
+            buffer.put(nulls);
         }
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addDecimal(int index, double value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-        int type = metadata.getType(index);
-        byte[] bytes = null;
-        if (type == SQL_INT64) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            BigInteger integer = decimal.unscaledValue();
-            bytes = datatypeCoder.encodeLong(integer.longValue());
-        } else if (type == SQL_SHORT) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            short encodedShort = (short)decimal.unscaledValue().intValue();
-            bytes = datatypeCoder.encodeShort(encodedShort);
-        } else if (type == SQL_LONG) {
-            BigDecimal decimal = BigDecimal.valueOf(value);
-            long encodedLong = decimal.unscaledValue().longValue();
-            bytes = datatypeCoder.encodeLong(encodedLong);
-        }
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addDecfloat16(int index, BigDecimal value) throws SQLException {
-        final Decimal64 decimal128 = Decimal64.valueOf(value);
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeDecimal64(decimal128);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addDecfloat34(int index, BigDecimal value) throws SQLException {
-        final Decimal128 decimal128 = Decimal128.valueOf(value);
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeDecimal128(decimal128);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addBlob(int index, long blobId) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeLong(blobId);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addBoolean(int index, boolean value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeBoolean(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addDate(int index, Date value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeDate(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addTime(int index, Time value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeTime(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addTimestamp(int index, Timestamp value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeTimestamp(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addChar(int index, String value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeString(value);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
-    }
-
-    @Override
-    public void addVarchar(int index, String value) throws SQLException {
-        int nullOffset = metadata.getNullOffset(index);
-        int offset = metadata.getOffset(index);
-
-        byte[] bytes = datatypeCoder.encodeString(value);
-        byte[] encodeShort = datatypeCoder.encodeShort(bytes.length);
-        byte[] nullShort = datatypeCoder.encodeShort(0);
-
-        buffer.position(offset);
-        buffer.put(encodeShort);
-        offset += encodeShort.length;
-        buffer.position(offset);
-        buffer.put(bytes);
-        buffer.position(nullOffset);
-        buffer.put(nullShort);
     }
 
     @Override
@@ -359,7 +108,7 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
         long oldPosition = blobStream.getStreamPosition();
         blobStream.seek(position);
 
-        blobStream.write(datatypeCoder.encodeInt(data.length));
+        blobStream.write(statement.getDatabase().getDatatypeCoder().encodeInt(data.length));
 
         blobStream.seek(oldPosition);
 
@@ -381,39 +130,39 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
             blobStream.write(shift);
         }
 
-        blobStream.write(datatypeCoder.encodeLong(blobId));
+        blobStream.write(statement.getDatabase().getDatatypeCoder().encodeLong(blobId));
 
-        int rc = blobStream.size();
-        segmentedBlobSize = rc;
+        segmentedBlobOffset = blobStream.size();
+        segmentedBlobSize = segmentedBlobOffset;
 
         if (buffer != null) {
             byte[] bytes = buffer.toBytesWithType();
-            byte[] bytesLength = datatypeCoder.encodeInt(bytes.length);
+            byte[] bytesLength = statement.getDatabase().getDatatypeCoder().encodeInt(bytes.length);
             blobStream.write(bytesLength);
             blobStream.write(bytesLength);
             blobStream.write(bytes);
         } else {
-            byte[] bytesLength = datatypeCoder.encodeInt(0);
+            byte[] bytesLength = statement.getDatabase().getDatatypeCoder().encodeInt(0);
             blobStream.write(bytesLength);
             blobStream.write(bytesLength);
         }
 
-        return rc;
+        return segmentedBlobOffset;
     }
 
     @Override
-    public void addBlobSegment(byte[] data, long offset, boolean lastSegment) throws IOException {
+    public void addBlobSegment(byte[] data, boolean lastSegment) throws IOException {
         int align = align(blobStream.size(), FbBatch.BLOB_SEGHDR_ALIGN);
         if (align != 0 && blobStream.size() - align < 0) {
             byte[] shift = ByteBuffer.allocate(Math.abs(blobStream.size() - align)).array();
             blobStream.write(shift);
         }
         long oldPosition = blobStream.getStreamPosition();
-        blobStream.seek(offset);
+        blobStream.seek(segmentedBlobOffset);
 
-        byte[] dataLength = datatypeCoder.encodeShort(data.length);
+        byte[] dataLength = statement.getDatabase().getDatatypeCoder().encodeShort(data.length);
         segmentedBlobSize += align(data.length + dataLength.length, FbBatch.BLOB_SEGHDR_ALIGN);
-        blobStream.write(datatypeCoder.encodeShort(segmentedBlobSize));
+        blobStream.write(statement.getDatabase().getDatatypeCoder().encodeShort(segmentedBlobSize));
 
         blobStream.seek(oldPosition);
 

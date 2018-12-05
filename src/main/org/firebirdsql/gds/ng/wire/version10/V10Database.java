@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -79,17 +80,17 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     @Override
     public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     @Override
     public FbMetadataBuilder getMetadataBuilder(int fieldCount) throws SQLException {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     @Override

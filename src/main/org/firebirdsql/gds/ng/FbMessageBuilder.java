@@ -1,65 +1,91 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 
+/**
+ * Interface to building row message for {@link FbBatch}.
+ *
+ * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
+ * @since 4.0
+ */
 public interface FbMessageBuilder {
 
-    void addSmallint(int index, short value) throws SQLException;
+    /**
+     * Add field data to message.
+     *
+     * @param index of field in statement.
+     * @param data of field
+     * @param parameterDescriptor field descriptor
+     * @throws SQLException
+     */
+    void addData(int index, byte[] data, FieldDescriptor parameterDescriptor) throws SQLException;
 
-    void addInteger(int index, int value) throws SQLException;
-
-    void addBigint(int index, long value) throws SQLException;
-
-    void addFloat(int index, float value) throws SQLException;
-
-    void addDouble(int index, double value) throws SQLException;
-
-    void addNumeric(int index, double value) throws SQLException;
-
-    void addDecimal(int index, double value) throws SQLException;
-
-    void addDecfloat16(int index, BigDecimal value) throws SQLException;
-
-    void addDecfloat34(int index, BigDecimal value) throws SQLException;
-
-    void addBlob(int index, long blobId) throws SQLException;
-
-    void addBoolean(int index, boolean value) throws SQLException;
-
-    void addDate(int index, Date value) throws SQLException;
-
-    void addTime(int index, Time value) throws SQLException;
-
-    void addTimestamp(int index, Timestamp value) throws SQLException;
-
-    void addChar(int index, String value) throws SQLException;
-
-    void addVarchar(int index, String value) throws SQLException;
-
+    /**
+     *
+     * @return batch message.
+     */
     byte[] getData();
 
+    /**
+     * Clear batch.
+     */
     void clear();
 
+    /**
+     * Add blob stream to batch.
+     * @param data stream data.
+     * @throws IOException
+     */
     void addStreamData(byte[] data) throws IOException;
 
+    /**
+     * Get stream bytes.
+     * @return
+     */
     byte[] getStreamData();
 
+    /**
+     * Clear stream data.
+     */
     void clearStream();
 
+    /**
+     * Add data for blob with id.
+     * @param data blob data.
+     * @param blobId blob id.
+     * @throws IOException
+     */
     void addBlobData(byte[] data, long blobId) throws IOException;
 
+    /**
+     * Add blob header to message if blob is segmented.
+     * @param blobId blob id.
+     * @param buffer blob parameters.
+     * @return
+     * @throws IOException
+     */
     long addBlobHeader(long blobId, BlobParameterBuffer buffer) throws IOException;
 
-    void addBlobSegment(byte[] data, long offset, boolean lastSegment) throws IOException;
+    /**
+     * Add segmented data to segmented blob.
+     * @param data blob data.
+     * @param lastSegment indicates whether the added segment is the last portion of the blob.
+     * @throws IOException
+     */
+    void addBlobSegment(byte[] data, boolean lastSegment) throws IOException;
 
+    /**
+     *
+     * @return blob stream bytes.
+     */
     byte[] getBlobStreamData();
 
+    /**
+     * Clear blob stream data.
+     */
     void clearBlobStream();
 }

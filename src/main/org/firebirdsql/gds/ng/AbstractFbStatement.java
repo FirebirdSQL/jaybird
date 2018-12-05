@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -603,5 +605,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final boolean hasFields() {
         RowDescriptor fieldDescriptor = getFieldDescriptor();
         return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
+    }
+
+    public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
     }
 }

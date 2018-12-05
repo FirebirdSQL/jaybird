@@ -17,7 +17,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public class IEventBlockImpl extends AbstractEventHandle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IEventBlockImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(IEventBlockImpl.class);
 
     private final CloseableMemory eventNameMemory;
     private int size = -1;

@@ -1,5 +1,7 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
@@ -9,16 +11,15 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.jdbc.FBBlob;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -36,9 +37,10 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
  * @since 4.0
  */
-public class TestIBatchImpl extends AbstractBatchTest {
+public class IBatchImplTest extends AbstractBatchTest {
 
-    private static final String gdsType = "FBOONATIVE";
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     //@formatter:off
     protected String INSERT_QUERY_WITHOUT_BLOBS = "INSERT INTO test_p_metadata (" +
@@ -118,7 +120,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
     public final ExpectedException expectedException = ExpectedException.none();
 
     private final AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) GDSFactory.getDatabaseFactoryForType(GDSType.getType(gdsType));
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
     protected Class<? extends FbDatabase> getExpectedDatabaseType() {
@@ -135,7 +137,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         allocateTransaction();
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
         buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY_WITHOUT_BLOBS, buffer);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITHOUT_BLOBS, buffer);
 
         int testInteger = 42;
         String testVarchar = "test varchar";
@@ -156,34 +158,32 @@ public class TestIBatchImpl extends AbstractBatchTest {
         Time testTime = Time.valueOf(timeFormat.format(cal.getTime()));
         Timestamp testTimestamp = Timestamp.valueOf(timestampFormat.format(cal.getTime()));
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
+        batch.setInt(1, testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
 
-        builder.addInteger(0, testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
-
-        batch.add(1, builder.getData());
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Message Status"),
                 containsString("total=1 success=1"),
                 endsWith("0\n")));
@@ -279,6 +279,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         fieldData = fieldValues.getFieldData(17);
         assertEquals(testTimestamp,
                 statement.getFieldDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
+
     }
 
     @Test
@@ -290,7 +291,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         buffer.addArgument(FbBatch.TAG_MULTIERROR, 1);
         // enable blobs processing - IDs generated by firebird engine
         buffer.addArgument(FbBatch.TAG_BLOB_POLICY, FbBatch.BLOB_ID_ENGINE);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY_WITH_BLOBS, buffer);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITH_BLOBS, buffer);
 
         int testInteger = 42;
         String testVarchar = "test varchar";
@@ -311,41 +312,39 @@ public class TestIBatchImpl extends AbstractBatchTest {
         Time testTime = Time.valueOf(timeFormat.format(cal.getTime()));
         Timestamp testTimestamp = Timestamp.valueOf(timestampFormat.format(cal.getTime()));
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
+        batch.setInt(1, testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
 
-        builder.addInteger(0, testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
         long blobID = 0;
-        FbBlob blob18 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
-        builder.addBlob(18, blob18.getBlobId());
-        FbBlob blob19 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
-        builder.addBlob(19, blob19.getBlobId());
-        FbBlob blob20 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
-        builder.addBlob(20, blob20.getBlobId());
+        FbBlob blob19 = batch.addBlob(19, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        FbBlob blob20 = batch.addBlob(20, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        FbBlob blob21 = batch.addBlob(21, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        batch.appendBlobData("\n".getBytes());
+        batch.appendBlobData(INSERT_QUERY_ONLY_BLOBS.getBytes());
 
-        batch.add(1, builder.getData());
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Message Status"),
                 containsString("total=1 success=1"),
                 endsWith("0\n")));
@@ -449,15 +448,15 @@ public class TestIBatchImpl extends AbstractBatchTest {
         checkBlob(blobID, INSERT_QUERY_WITH_BLOBS.getBytes());
         fieldData = fieldValues.getFieldData(20);
         blobID = statement.getFieldDescriptor().getFieldDescriptor(20).getDatatypeCoder().decodeLong(fieldData);
-        checkBlob(blobID, INSERT_QUERY_WITH_BLOBS.getBytes());
+        checkBlob(blobID, new String(INSERT_QUERY_WITH_BLOBS + "\n" + INSERT_QUERY_ONLY_BLOBS).getBytes());
     }
 
     @Test
     public void testMultipleMessagesBatchWithoutBlobs() throws SQLException {
         allocateTransaction();
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
-        buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY_WITHOUT_BLOBS, buffer);
+        buffer.addArgument(FbBatch.TAG_RECORD_COUNTS, 1);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITHOUT_BLOBS, buffer);
 
         int testInteger = 42;
         String testVarchar = "test varchar";
@@ -478,79 +477,71 @@ public class TestIBatchImpl extends AbstractBatchTest {
         Time testTime = Time.valueOf(timeFormat.format(cal.getTime()));
         Timestamp testTimestamp = Timestamp.valueOf(timestampFormat.format(cal.getTime()));
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
+        batch.setInt(1, testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
+        batch.addBatch();
 
-        builder.addInteger(0, testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
+        batch.setInt(1, ++testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
+        batch.addBatch();
 
-        builder.addInteger(0, ++testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
-
-        builder.addInteger(0, ++testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
+        batch.setInt(1, ++testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Message Status"),
                 containsString("total=3 success=3"),
                 endsWith("0\n")));
@@ -659,7 +650,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         buffer.addArgument(FbBatch.TAG_MULTIERROR, 1);
         // enable blobs processing - IDs generated by firebird engine
         buffer.addArgument(FbBatch.TAG_BLOB_POLICY, FbBatch.BLOB_ID_ENGINE);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY_WITH_BLOBS, buffer);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITH_BLOBS, buffer);
 
         int testInteger = 42;
         String testVarchar = "test varchar";
@@ -682,97 +673,85 @@ public class TestIBatchImpl extends AbstractBatchTest {
 
         FbMessageBuilder builder = new IMessageBuilderImpl(batch);
 
-        builder.addInteger(0, testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
-        FbBlob blob18 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), null);
-        builder.addBlob(18, blob18.getBlobId());
-        FbBlob blob19 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), null);
-        builder.addBlob(19, blob19.getBlobId());
-        FbBlob blob20 = batch.addBlob(INSERT_QUERY_WITH_BLOBS.getBytes(), null);
-        builder.addBlob(20, blob20.getBlobId());
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
+        batch.setInt(1, testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
 
-        builder.addInteger(0, ++testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
+        long blobID = 0;
+        FbBlob blob19 = batch.addBlob(19, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        FbBlob blob20 = batch.addBlob(20, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        FbBlob blob21 = batch.addBlob(21, INSERT_QUERY_WITH_BLOBS.getBytes(), blobID, null);
+        batch.addBatch();
+
+        batch.setInt(1, ++testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
+
         byte[] testBytes = (INSERT_QUERY_WITH_BLOBS + INSERT_QUERY_WITH_BLOBS).getBytes();
-        blob18 = batch.addBlob(testBytes, null);
-        builder.addBlob(18, blob18.getBlobId());
-        blob19 = batch.addBlob(testBytes, null);
-        builder.addBlob(19, blob19.getBlobId());
-        blob20 = batch.addBlob(testBytes, null);
-        builder.addBlob(20, blob20.getBlobId());
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
+        blob19 = batch.addBlob(19, testBytes, null);
+        blob20 = batch.addBlob(20, testBytes, null);
+        blob21 = batch.addBlob(21, testBytes, null);
+        batch.addBatch();
 
-        builder.addInteger(0, ++testInteger);
-        builder.addVarchar(1, testVarchar);
-        builder.addVarchar(2, testVarchar);
-        builder.addVarchar(3, testVarchar);
-        builder.addBigint(4, testBigInteger);
-        builder.addInteger(5, testInteger);
-        builder.addSmallint(6, testShort);
-        builder.addFloat(7, testFloat);
-        builder.addDouble(8, testDouble);
-        builder.addNumeric(9, testSmallintNumeric);
-        builder.addDecimal(10, testSmallintNumeric);
-        builder.addNumeric(11, testIntNumeric);
-        builder.addDecimal(12, testIntNumeric2);
-        builder.addNumeric(13, testBigintNumeric);
-        builder.addDecimal(14, testBigintNumeric2);
-        builder.addDate(15, testDate);
-        builder.addTime(16, testTime);
-        builder.addTimestamp(17, testTimestamp);
+        batch.setInt(1, ++testInteger);
+        batch.setString(2, testVarchar);
+        batch.setString(3, testVarchar);
+        batch.setString(4, testVarchar);
+        batch.setLong(5, testBigInteger);
+        batch.setInt(6, testInteger);
+        batch.setShort(7, testShort);
+        batch.setFloat(8, testFloat);
+        batch.setDouble(9, testDouble);
+        batch.setDouble(10, testSmallintNumeric);
+        batch.setDouble(11, testSmallintNumeric);
+        batch.setDouble(12, testIntNumeric);
+        batch.setDouble(13, testIntNumeric2);
+        batch.setDouble(14, testBigintNumeric);
+        batch.setDouble(15, testBigintNumeric2);
+        batch.setDate(16, testDate);
+        batch.setTime(17, testTime);
+        batch.setTimestamp(18, testTimestamp);
         testBytes = (INSERT_QUERY_WITH_BLOBS + INSERT_QUERY_WITH_BLOBS + INSERT_QUERY_WITH_BLOBS).getBytes();
-        blob18 = batch.addBlob(testBytes, null);
-        builder.addBlob(18, blob18.getBlobId());
-        blob19 = batch.addBlob(testBytes, null);
-        builder.addBlob(19, blob19.getBlobId());
-        blob20 = batch.addBlob(testBytes, null);
-        builder.addBlob(20, blob20.getBlobId());
-        batch.add(1, builder.getData());
-        // clear data for add next message
-        builder.clear();
+        blob19 = batch.addBlob(19, testBytes, null);
+        blob20 = batch.addBlob(20, testBytes, null);
+        blob21 = batch.addBlob(21, testBytes, null);
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Message Status"),
                 containsString("total=3 success=3"),
                 endsWith("0\n")));
@@ -871,7 +850,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         assertEquals(testTimestamp,
                 statement.getFieldDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
         fieldData = fieldValues.getFieldData(18);
-        long blobID = statement.getFieldDescriptor().getFieldDescriptor(18).getDatatypeCoder().decodeLong(fieldData);
+        blobID = statement.getFieldDescriptor().getFieldDescriptor(18).getDatatypeCoder().decodeLong(fieldData);
         checkBlob(blobID, testBytes);
         fieldData = fieldValues.getFieldData(19);
         blobID = statement.getFieldDescriptor().getFieldDescriptor(19).getDatatypeCoder().decodeLong(fieldData);
@@ -887,7 +866,7 @@ public class TestIBatchImpl extends AbstractBatchTest {
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
         // Blobs are placed in a stream
         buffer.addArgument(FbBatch.TAG_BLOB_POLICY, FbBatch.BLOB_STREAM);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY_ONLY_BLOBS, buffer);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_ONLY_BLOBS, buffer);
 
         GDSHelper h = new GDSHelper(db);
         h.setCurrentTransaction(batch.getTransaction());
@@ -896,30 +875,26 @@ public class TestIBatchImpl extends AbstractBatchTest {
         FBBlob b2 = new FBBlob(h, 2);
         FBBlob b3 = new FBBlob(h, 3);
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
-
-        builder.addBlob(0, b1.getBlobId());
-        builder.addBlob(1, b2.getBlobId());
-        builder.addBlob(2, b3.getBlobId());
+        batch.addBlob(1, b1.getBlobId());
+        batch.addBlob(2, b2.getBlobId());
+        batch.addBlob(3, b3.getBlobId());
 
         // blobs
         String d1 = "1111111111111111111";
         String d2 = "22222222222222222222";
         String d3 = "333333333333333333333333333333333333333333333333333333333333333";
 
-        builder.addBlobData(d1.getBytes(), b1.getBlobId());
-        builder.addBlobData(d2.getBytes(), b2.getBlobId());
-        builder.addBlobData(d3.getBytes(), b3.getBlobId());
+        batch.appendBlobData(d1.getBytes(), b1.getBlobId());
+        batch.appendBlobData(d2.getBytes(), b2.getBlobId());
+        batch.appendBlobData(d3.getBytes(), b3.getBlobId());
 
-        batch.add(1, builder.getData());
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clear();
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Summary"),
                 containsString("total=1 success=0 success(but no update info)=1"),
                 endsWith("\n")));
@@ -962,8 +937,6 @@ public class TestIBatchImpl extends AbstractBatchTest {
         FBBlob b2 = new FBBlob(h, 242);
         FBBlob b3 = new FBBlob(h, 42);
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
-
         // blobs
         String blobSegment1 = INSERT_QUERY_WITHOUT_BLOBS;
         String blobSegment2 = INSERT_QUERY_WITH_BLOBS;
@@ -972,46 +945,34 @@ public class TestIBatchImpl extends AbstractBatchTest {
         BlobParameterBuffer bpb = new BlobParameterBufferImp();
         bpb.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
 
-        long offset = builder.addBlobHeader(b1.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(1, b1.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
+        batch.addSegmentedBlob(2, b2.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        offset = builder.addBlobHeader(b2.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(3, b3.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
-
-        offset = builder.addBlobHeader(b3.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
-
-        builder.addBlob(0, b1.getBlobId());
-        builder.addBlob(1, b2.getBlobId());
-        builder.addBlob(2, b3.getBlobId());
-
-        batch.addBlobStream(builder.getBlobStreamData());
-        batch.add(1, builder.getData());
-        builder.clear();
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Summary"),
                 containsString("total=1 success=0 success(but no update info)=1"),
                 endsWith("\n")));
@@ -1057,8 +1018,6 @@ public class TestIBatchImpl extends AbstractBatchTest {
         FBBlob b2 = new FBBlob(h, 242);
         FBBlob b3 = new FBBlob(h, 42);
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
-
         // blobs
         String blobSegment1 = INSERT_QUERY_WITHOUT_BLOBS;
         String blobSegment2 = INSERT_QUERY_WITH_BLOBS;
@@ -1067,129 +1026,90 @@ public class TestIBatchImpl extends AbstractBatchTest {
         BlobParameterBuffer bpb = new BlobParameterBufferImp();
         bpb.addArgument(ISCConstants.isc_bpb_type, ISCConstants.isc_bpb_type_segmented);
 
-        long offset = builder.addBlobHeader(b1.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(1, b1.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
+        batch.addSegmentedBlob(2, b2.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        offset = builder.addBlobHeader(b2.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(3, b3.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
-
-        offset = builder.addBlobHeader(b3.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
-
-        builder.addBlob(0, b1.getBlobId());
-        builder.addBlob(1, b2.getBlobId());
-        builder.addBlob(2, b3.getBlobId());
-
-        batch.addBlobStream(builder.getBlobStreamData());
-        batch.add(1, builder.getData());
-        builder.clearBlobStream();
-        builder.clear();
+        batch.addBatch();
 
         // Create blobs
         FBBlob b4 = new FBBlob(h, 34242);
         FBBlob b5 = new FBBlob(h, 3242);
         FBBlob b6 = new FBBlob(h, 342);
 
-        offset = builder.addBlobHeader(b4.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(1, b4.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
+        batch.addSegmentedBlob(2, b5.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        offset = builder.addBlobHeader(b5.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(3, b6.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
-
-        offset = builder.addBlobHeader(b6.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
-
-        builder.addBlob(0, b4.getBlobId());
-        builder.addBlob(1, b5.getBlobId());
-        builder.addBlob(2, b6.getBlobId());
-
-        batch.addBlobStream(builder.getBlobStreamData());
-        batch.add(1, builder.getData());
-        builder.clear();
-        builder.clearBlobStream();
+        batch.addBatch();
 
         // Create blobs
         FBBlob b7 = new FBBlob(h, 14242);
         FBBlob b8 = new FBBlob(h, 1242);
         FBBlob b9 = new FBBlob(h, 142);
 
-        offset = builder.addBlobHeader(b7.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(1, b7.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
+        batch.addSegmentedBlob(2, b8.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        offset = builder.addBlobHeader(b8.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
+        batch.addSegmentedBlob(3, b9.getBlobId(), bpb);
+        batch.addBlobSegment(blobSegment1.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment2.getBytes(), false);
+        batch.addBlobSegment("\n".getBytes(), false);
+        batch.addBlobSegment(blobSegment3.getBytes(), true);
 
-        batch.addBlobStream(builder.getBlobStreamData());
-        builder.clearBlobStream();
-
-        offset = builder.addBlobHeader(b9.getBlobId(), bpb);
-        builder.addBlobSegment(blobSegment1.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment2.getBytes(), offset, false);
-        builder.addBlobSegment("\n".getBytes(), offset, false);
-        builder.addBlobSegment(blobSegment3.getBytes(), offset, true);
-
-        builder.addBlob(0, b7.getBlobId());
-        builder.addBlob(1, b8.getBlobId());
-        builder.addBlob(2, b9.getBlobId());
-
-        batch.addBlobStream(builder.getBlobStreamData());
-        batch.add(1, builder.getData());
-        builder.clear();
-        builder.clearBlobStream();
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Summary"),
                 containsString("total=3 success=0 success(but no update info)=3"),
                 endsWith("\n")));
@@ -1247,25 +1167,18 @@ public class TestIBatchImpl extends AbstractBatchTest {
         regBlob3.putSegment(INSERT_QUERY_ONLY_BLOBS.getBytes());
         regBlob3.close();
 
-        FbMessageBuilder builder = new IMessageBuilderImpl(batch);
-
-        builder.addBlob(0, b1.getBlobId());
-        builder.addBlob(1, b2.getBlobId());
-        builder.addBlob(2, b3.getBlobId());
-
         // Register blobs
-        batch.registerBlob(regBlob1.getBlobId(), b1.getBlobId());
-        batch.registerBlob(regBlob2.getBlobId(), b2.getBlobId());
-        batch.registerBlob(regBlob3.getBlobId(), b3.getBlobId());
+        batch.registerBlob(1, regBlob1.getBlobId(), b1.getBlobId());
+        batch.registerBlob(2, regBlob2.getBlobId(), b2.getBlobId());
+        batch.registerBlob(3, regBlob3.getBlobId(), b3.getBlobId());
 
-        batch.add(1, builder.getData());
-        builder.clear();
+        batch.addBatch();
 
         FbBatchCompletionState execute = batch.execute();
 
-        System.out.println(execute.getAllStates());
+        System.out.println(execute.printAllStates());
 
-        assertThat("Expected successful batch execution", execute.getAllStates(), allOf(
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
                 startsWith("Summary"),
                 containsString("total=1 success=0 success(but no update info)=1"),
                 endsWith("\n")));
@@ -1293,9 +1206,132 @@ public class TestIBatchImpl extends AbstractBatchTest {
         checkBlob(blobID, INSERT_QUERY_ONLY_BLOBS.getBytes());
     }
 
+    @Test
+    public void testBatchWithNulls() throws Exception {
+        allocateTransaction();
+        BatchParameterBuffer buffer = new BatchParameterBufferImpl();
+        buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITHOUT_BLOBS, buffer);
+
+        int testInteger = 42;
+
+        batch.setInt(1, testInteger);
+        batch.setNull(2, Types.VARCHAR);
+        batch.setNull(3, Types.VARCHAR);
+        batch.setNull(4, Types.VARCHAR);
+        batch.setNull(5, Types.BIGINT);
+        batch.setNull(6, Types.INTEGER);
+        batch.setNull(7, Types.SMALLINT);
+        batch.setNull(8, Types.FLOAT);
+        batch.setNull(9, Types.DOUBLE);
+        batch.setNull(10, Types.DOUBLE);
+        batch.setNull(11, Types.DOUBLE);
+        batch.setNull(12, Types.DOUBLE);
+        batch.setNull(13, Types.DOUBLE);
+        batch.setNull(14, Types.DOUBLE);
+        batch.setNull(15, Types.DOUBLE);
+        batch.setNull(16, Types.DATE);
+        batch.setNull(17, Types.TIME);
+        batch.setNull(18, Types.TIMESTAMP);
+
+        batch.addBatch();
+
+        FbBatchCompletionState execute = batch.execute();
+
+        System.out.println(execute.printAllStates());
+
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
+                startsWith("Message Status"),
+                containsString("total=1 success=1"),
+                endsWith("0\n")));
+
+        batch.getTransaction().commit();
+
+        allocateTransaction();
+
+        FbStatement statement = db.createStatement(transaction);
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
+        statement.prepare(SELECT_QUERY_WITHOUT_BLOBS);
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+        statement.fetchRows(1);
+        RowValue fieldValues = statementListener.getRows().get(0);
+        byte[] fieldData = fieldValues.getFieldData(0);
+        assertEquals(testInteger,
+                statement.getFieldDescriptor().getFieldDescriptor(0).getDatatypeCoder().decodeInt(fieldData));
+        for (int i = 1; i < statement.getFieldDescriptor().getCount(); i++) {
+            fieldData = fieldValues.getFieldData(i);
+            assertEquals(null, fieldData);
+        }
+    }
+
+    @Test
+    public void testBatchWithBlobNulls() throws Exception {
+        allocateTransaction();
+        BatchParameterBuffer buffer = new BatchParameterBufferImpl();
+        buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
+        buffer.addArgument(FbBatch.TAG_MULTIERROR, 1);
+        buffer.addArgument(FbBatch.TAG_BLOB_POLICY, FbBatch.BLOB_ID_ENGINE);
+        IBatchImpl batch = (IBatchImpl) db.createBatch(transaction, INSERT_QUERY_WITH_BLOBS, buffer);
+
+        int testInteger = 42;
+
+        batch.setInt(1, testInteger);
+        batch.setNull(2, Types.VARCHAR);
+        batch.setNull(3, Types.VARCHAR);
+        batch.setNull(4, Types.VARCHAR);
+        batch.setNull(5, Types.BIGINT);
+        batch.setNull(6, Types.INTEGER);
+        batch.setNull(7, Types.SMALLINT);
+        batch.setNull(8, Types.FLOAT);
+        batch.setNull(9, Types.DOUBLE);
+        batch.setNull(10, Types.DOUBLE);
+        batch.setNull(11, Types.DOUBLE);
+        batch.setNull(12, Types.DOUBLE);
+        batch.setNull(13, Types.DOUBLE);
+        batch.setNull(14, Types.DOUBLE);
+        batch.setNull(15, Types.DOUBLE);
+        batch.setNull(16, Types.DATE);
+        batch.setNull(17, Types.TIME);
+        batch.setNull(18, Types.TIMESTAMP);
+        batch.setNull(19, Types.LONGVARBINARY);
+        batch.setNull(20, Types.LONGVARCHAR);
+        batch.setNull(21, Types.LONGVARBINARY);
+
+        batch.addBatch();
+
+        FbBatchCompletionState execute = batch.execute();
+
+        System.out.println(execute.printAllStates());
+
+        assertThat("Expected successful batch execution", execute.printAllStates(), allOf(
+                startsWith("Message Status"),
+                containsString("total=1 success=1"),
+                endsWith("0\n")));
+
+        batch.getTransaction().commit();
+
+        allocateTransaction();
+
+        FbStatement statement = db.createStatement(transaction);
+        final SimpleStatementListener statementListener = new SimpleStatementListener();
+        statement.addStatementListener(statementListener);
+        statement.prepare(SELECT_QUERY_WITH_BLOBS);
+        statement.execute(RowValue.EMPTY_ROW_VALUE);
+        statement.fetchRows(1);
+        RowValue fieldValues = statementListener.getRows().get(0);
+        byte[] fieldData = fieldValues.getFieldData(0);
+        assertEquals(testInteger,
+                statement.getFieldDescriptor().getFieldDescriptor(0).getDatatypeCoder().decodeInt(fieldData));
+        for (int i = 1; i < statement.getFieldDescriptor().getCount(); i++) {
+            fieldData = fieldValues.getFieldData(i);
+            assertEquals(null, fieldData);
+        }
+    }
+
     public void checkBlob(long blobID, byte[] originalContent) throws Exception {
         // Use sufficiently large value so that multiple segments are used
-        final int requiredSize = originalContent.length;
+        final int requiredSize = (originalContent == null ? 10 : originalContent.length);
         final FbBlob blob = db.createBlobForInput(transaction, null, blobID);
         blob.open();
         ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);

@@ -25,6 +25,7 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
@@ -473,17 +474,17 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     @Override
     public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     @Override
     public FbMetadataBuilder getMetadataBuilder(int fieldCount) throws SQLException  {
-        throw new SQLException("Not implemented");
+        throw new FBDriverNotCapableException();
     }
 
     private void processStatusVector() throws SQLException {

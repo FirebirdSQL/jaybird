@@ -2,6 +2,7 @@ package org.firebirdsql.nativeoo.gds.ng;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
+import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
@@ -29,8 +30,8 @@ public class IStatementImpl extends AbstractFbStatement {
 
     private static final Logger log = LoggerFactory.getLogger(IStatementImpl.class);
 
-    private IDatabaseImpl database;
-    private final FbClientLibrary clientLibrary;
+    private final IDatabaseImpl database;
+    private final IStatus status;
     private IStatement statement;
     private IResultSet cursor;
     private IMessageMetadata inMeta;
@@ -40,16 +41,17 @@ public class IStatementImpl extends AbstractFbStatement {
     public IStatementImpl(IDatabaseImpl database) {
         super(database.getSynchronizationObject());
         this.database = database;
-        clientLibrary = database.getClientLibrary();
+        this.status = this.database.getStatus();
     }
 
     @Override
     protected void free(int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (option == ISCConstants.DSQL_close)
-                cursor.close(database.getStatus());
-            else
-                statement.free(database.getStatus());
+                cursor.close(getStatus());
+            else if (statement != null)
+                statement.free(getStatus());
+            processStatus();
             // Reset statement information
             reset(option == ISCConstants.DSQL_drop);
         }
@@ -61,7 +63,7 @@ public class IStatementImpl extends AbstractFbStatement {
     }
 
     @Override
-    public FbDatabase getDatabase() {
+    public IDatabaseImpl getDatabase() {
         return database;
     }
 
@@ -88,7 +90,6 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
                 resetAll();
 
-                final IDatabaseImpl db = (IDatabaseImpl) getDatabase();
                 if (currentState == StatementState.NEW) {
                     // allocated when prepare call
                     switchState(StatementState.ALLOCATED);
@@ -97,13 +98,14 @@ public class IStatementImpl extends AbstractFbStatement {
                     checkStatementValid();
                 }
 
-                IStatus status = db.getStatus();
                 ITransactionImpl transaction = (ITransactionImpl) getTransaction();
-                statement = db.getAttachment().prepare(status, transaction.getTransaction(), statementText.length(), statementText,
-                        db.getConnectionDialect(), IStatement.PREPARE_PREFETCH_METADATA);
-
-                outMeta = statement.getOutputMetadata(status);
-                inMeta = statement.getInputMetadata(status);
+                statement = getDatabase().getAttachment().prepare(getStatus(), transaction.getTransaction(), statementText.length(), statementText,
+                        getDatabase().getConnectionDialect(), IStatement.PREPARE_PREFETCH_METADATA);
+                processStatus();
+                outMeta = statement.getOutputMetadata(getStatus());
+                processStatus();
+                inMeta = statement.getInputMetadata(getStatus());
+                processStatus();
 
                 final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
                 final int responseLength = getDefaultSqlInfoSize();
@@ -131,9 +133,6 @@ public class IStatementImpl extends AbstractFbStatement {
 
                 setMetaData(getParameterDescriptor(), parameters);
 
-                IDatabaseImpl db = (IDatabaseImpl) getDatabase();
-                IStatus status = db.getStatus();
-
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
                 ITransactionImpl transaction = (ITransactionImpl) getTransaction();
@@ -145,15 +144,15 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
                 Pointer outPtr = null;
 
-                if ((statement.getFlags(status) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
-                    cursor = statement.openCursor(status, transaction.getTransaction(), inMeta, inPtr, outMeta, 0);
+                if ((statement.getFlags(getStatus()) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
+                    cursor = statement.openCursor(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, 0);
                 } else {
                     ByteBuffer outMessage = ByteBuffer.allocate(getMaxSqlInfoSize());
                     outPtr = new Memory(outMessage.array().length);
                     outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
-                    status = db.getStatus();
-                    statement.execute(status, transaction.getTransaction(), inMeta, inPtr, outMeta, outPtr);
+                    statement.execute(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, outPtr);
                 }
+                processStatus();
 
                 if (hasSingletonResult) {
                     /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
@@ -180,13 +179,13 @@ public class IStatementImpl extends AbstractFbStatement {
         }
     }
 
-    protected void setMetaData(final RowDescriptor rowDescriptor, final RowValue parameters) throws FbException {
+    protected void setMetaData(final RowDescriptor rowDescriptor, final RowValue parameters) throws SQLException {
 
         IMaster master = database.getMaster();
-        IStatus status = database.getStatus();
-        IMetadataBuilder metadataBuilder = master.getMetadataBuilder(status, parameters.getCount());
-        inMessage = ByteBuffer.allocate(inMeta.getMessageLength(status));
-        int offset = 0;
+        IMetadataBuilder metadataBuilder = master.getMetadataBuilder(getStatus(), parameters.getCount());
+        inMessage = ByteBuffer.allocate(inMeta.getMessageLength(getStatus()));
+        processStatus();
+        int offset;
         byte[] nullShort = {0, 0};
         int align = 0;
 
@@ -198,6 +197,8 @@ public class IStatementImpl extends AbstractFbStatement {
 
             } else {
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                // clear status
+                getStatus();
                 offset = inMeta.getOffset(status, idx) - align;
                 int nullOffset = inMeta.getNullOffset(status, idx);
                 inMessage.position(offset);
@@ -226,13 +227,17 @@ public class IStatementImpl extends AbstractFbStatement {
                     metadataBuilder.setSubType(status, idx, inMeta.getSubType(status, idx));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
                 }
+                processStatus();
+                // clear status
+                getStatus();
                 inMessage.put(fieldData);
                 inMessage.position(nullOffset - align);
                 inMessage.put(nullShort);
             }
         }
         
-        inMeta = metadataBuilder.getMetadata(status);
+        inMeta = metadataBuilder.getMetadata(getStatus());
+        processStatus();
         metadataBuilder.release();
     }
 
@@ -246,13 +251,12 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                final IDatabaseImpl db = (IDatabaseImpl) getDatabase();
-                IStatus status = db.getStatus();
-
-                ByteBuffer message = ByteBuffer.allocate(outMeta.getMessageLength(status) + 1);
+                ByteBuffer message = ByteBuffer.allocate(outMeta.getMessageLength(getStatus()) + 1);
+                processStatus();
                 Pointer ptr = new Memory(message.array().length);
 //                ptr.write(0, message.array(), 0, message.array().length);
-                int fetchStatus = cursor.fetchNext(status, ptr);
+                int fetchStatus = cursor.fetchNext(getStatus(), ptr);
+                processStatus();
                 if (fetchStatus == IStatus.RESULT_OK) {
                     queueRowData(toRowValue(getFieldDescriptor(), outMeta, ptr));
                 } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
@@ -270,29 +274,25 @@ public class IStatementImpl extends AbstractFbStatement {
         }
     }
 
-    protected RowValue toRowValue(RowDescriptor rowDescriptor, IMessageMetadata meta, Pointer ptr) throws FbException {
+    protected RowValue toRowValue(RowDescriptor rowDescriptor, IMessageMetadata meta, Pointer ptr) throws SQLException {
         final RowValueBuilder row = new RowValueBuilder(rowDescriptor);
-
-        IStatus status = database.getStatus();
-
-        int columns = meta.getCount(status);
-
+        int columns = meta.getCount(getStatus());
+        processStatus();
         for (int idx = 0; idx < columns; idx++) {
-
             row.setFieldIndex(idx);
-            int nullOffset = meta.getNullOffset(status, idx);
-
+            int nullOffset = meta.getNullOffset(getStatus(), idx);
+            processStatus();
             if (ptr.getShort(nullOffset) == XSQLVAR.SQLIND_NULL) {
                 row.set(null);
             } else {
-                int bufferLength = meta.getLength(status, idx);
-                int offset = meta.getOffset(status, idx);
-
+                int bufferLength = meta.getLength(getStatus(), idx);
+                processStatus();
+                int offset = meta.getOffset(getStatus(), idx);
+                processStatus();
                 if (rowDescriptor.getFieldDescriptor(idx).isVarying()) {
                     bufferLength = ptr.getShort(offset) & 0xffff;
                     offset += 2;
                 }
-
                 byte[] data = new byte[bufferLength];
                 ptr.read(offset, data, 0, bufferLength);
                 row.set(data);
@@ -305,15 +305,12 @@ public class IStatementImpl extends AbstractFbStatement {
     public byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             final byte[] responseArr = new byte[bufferLength];
-            final IDatabaseImpl db = (IDatabaseImpl) getDatabase();
-            IStatus status = db.getStatus();
-
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
-                statement.getInfo(status, requestItems.length, requestItems,
+                statement.getInfo(getStatus(), requestItems.length, requestItems,
                         bufferLength, responseArr);
+                processStatus();
             }
-
             return responseArr;
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -338,9 +335,8 @@ public class IStatementImpl extends AbstractFbStatement {
         try {
             synchronized (getSynchronizationObject()) {
                 checkStatementValid();
-                final IDatabaseImpl db = (IDatabaseImpl) getDatabase();
-                IStatus status = db.getStatus();
-                statement.setCursorName(status, cursorName + '\0');
+                statement.setCursorName(getStatus(), cursorName + '\0');
+                processStatus();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -353,7 +349,23 @@ public class IStatementImpl extends AbstractFbStatement {
         return database.emptyRowDescriptor();
     }
 
-    public FbMessageMetadata getInputMetadata() throws FbException {
+    @Override
+    public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {
+        IBatch batch = statement.createBatch(getStatus(),
+                inMeta, parameters.toBytesWithType().length, parameters.toBytesWithType());
+        return new IBatchImpl(batch, this, parameters);
+    }
+
+    public FbMessageMetadata getInputMetadata() throws SQLException {
         return new IMessageMetadataImpl(database, inMeta);
+    }
+
+    private IStatus getStatus() {
+        status.init();
+        return status;
+    }
+
+    private void processStatus() throws SQLException {
+        getDatabase().processStatus(status, getStatementWarningCallback());
     }
 }

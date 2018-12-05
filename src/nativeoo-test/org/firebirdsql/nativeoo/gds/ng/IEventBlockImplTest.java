@@ -2,6 +2,7 @@ package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
@@ -12,9 +13,7 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
@@ -24,15 +23,15 @@ import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestIEventBlockImpl extends FBJUnit4TestBase {
+public class IEventBlockImplTest extends FBJUnit4TestBase {
 
-    private static final String gdsType = "FBOONATIVE";
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) GDSFactory.getDatabaseFactoryForType(GDSType.getType(gdsType));
+    private AbstractNativeOODatabaseFactory factory;
     //@formatter:off
     public static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
@@ -60,6 +59,11 @@ public class TestIEventBlockImpl extends FBJUnit4TestBase {
     }
 
     private IDatabaseImpl db;
+
+    @Before
+    public void setFactory() {
+        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
+    }
 
     @After
     public final void tearDown() throws Exception {

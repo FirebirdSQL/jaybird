@@ -1,6 +1,7 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -15,6 +16,8 @@ import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
+import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,17 +40,20 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-public class TestIDatabaseImpl {
+public class IDatabaseImplTest {
 
     // TODO Assert in tests need to be checked (and more need to be added)
+
+    @ClassRule
+    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
     private static final String gdsType = "FBOONATIVE";
 
-    private final AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) GDSFactory.getDatabaseFactoryForType(GDSType.getType(gdsType));
+    private AbstractNativeOODatabaseFactory factory;
+
     private final FbConnectionProperties connectionInfo;
     {
         connectionInfo = new FbConnectionProperties();
@@ -57,6 +63,11 @@ public class TestIDatabaseImpl {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
+    }
+
+    @Before
+    public void setFactory() {
+        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     }
 
     public static FBManager createFBManager() {
@@ -105,7 +116,7 @@ public class TestIDatabaseImpl {
         try (IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo)) {
 
             expectedException.expect(allOf(
-                    isA(FbException.class),
+                    isA(SQLException.class),
                     message(startsWith(getFbMessage(ISCConstants.isc_login))),
                     errorCode(equalTo(ISCConstants.isc_login))
             ));

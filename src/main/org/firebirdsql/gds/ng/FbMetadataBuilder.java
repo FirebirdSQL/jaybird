@@ -1,6 +1,6 @@
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.nativeoo.gds.ng.FbException;
+import java.sql.SQLException;
 
 /**
  *
@@ -9,49 +9,49 @@ import org.firebirdsql.nativeoo.gds.ng.FbException;
  */
 public interface FbMetadataBuilder {
 
-    FbMessageMetadata getMessageMetadata() throws FbException;
+    FbMessageMetadata getMessageMetadata() throws SQLException;
 
-    int addField() throws FbException;
+    int addField() throws SQLException;
 
-    void addSmallint(int index) throws FbException;
+    void addSmallint(int index) throws SQLException;
 
-    void addInteger(int index) throws FbException;
+    void addInteger(int index) throws SQLException;
 
-    void addBigint(int index) throws FbException;
+    void addBigint(int index) throws SQLException;
 
-    void addFloat(int index) throws FbException;
+    void addFloat(int index) throws SQLException;
 
-    void addNumeric(int index, int size, int scale) throws FbException;
+    void addNumeric(int index, int size, int scale) throws SQLException;
 
-    void addDecimal(int index, int size, int scale) throws FbException;
+    void addDecimal(int index, int size, int scale) throws SQLException;
 
-    void addDouble(int index) throws FbException;
+    void addDouble(int index) throws SQLException;
 
-    void addDecfloat16(int index) throws FbException;
+    void addDecfloat16(int index) throws SQLException;
 
-    void addDecfloat34(int index) throws FbException;
+    void addDecfloat34(int index) throws SQLException;
 
-    void addBlob(int index)  throws FbException;
+    void addBlob(int index)  throws SQLException;
 
-    void addBlob(int index, int subtype)  throws FbException;
+    void addBlob(int index, int subtype)  throws SQLException;
 
-    void addBoolean(int index)  throws FbException;
+    void addBoolean(int index)  throws SQLException;
 
-    void addDate(int index)  throws FbException;
+    void addDate(int index)  throws SQLException;
 
-    void addTime(int index)  throws FbException;
+    void addTime(int index)  throws SQLException;
 
-    void addTimestamp(int index)  throws FbException;
+    void addTimestamp(int index)  throws SQLException;
 
-    void addChar(int index, int length)  throws FbException;
+    void addChar(int index, int length)  throws SQLException;
 
-    void addVarchar(int index, int length)  throws FbException;
+    void addVarchar(int index, int length)  throws SQLException;
 
-    void addChar(int index, int length, int charSet)  throws FbException;
+    void addChar(int index, int length, int charSet)  throws SQLException;
 
-    void addVarchar(int index, int length, int charSet)  throws FbException;
+    void addVarchar(int index, int length, int charSet)  throws SQLException;
 
-    void addDecDecimal(int index, int size, int scale)  throws FbException;
+    void addDecDecimal(int index, int size, int scale)  throws SQLException;
 
-    void addDecNumeric(int index, int size, int scale)  throws FbException;
+    void addDecNumeric(int index, int size, int scale)  throws SQLException;
 }
