@@ -26,6 +26,7 @@ import org.junit.*;
 
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +46,9 @@ public class TestFBDatabaseMetaData {
 
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+
+    // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
+    private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
 
     private static final Logger log = LoggerFactory.getLogger(TestFBDatabaseMetaData.class);
 
@@ -348,6 +352,11 @@ public class TestFBDatabaseMetaData {
                 assertEquals("result set from getProcedures schema mismatch: field 8 should be PROCEDURE_TYPE",
                         type, lit_type);
                 if (log != null) log.info(" got procedure " + name);
+                
+                if (PROCEDURES_TO_IGNORE.contains(name)) {
+                    // TODO Temporary workaround
+                    continue;
+                }
                 if (name.equals("TESTPROC1")) {
                     assertFalse("result set from getProcedures had duplicate entry for TESTPROC1", gotproc1);
                     gotproc1 = true;
@@ -382,8 +391,12 @@ public class TestFBDatabaseMetaData {
         try (ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%")) {
             int rownum = 0;
             while (rs.next()) {
-                rownum++;
                 String procname = rs.getString(3);
+                if (PROCEDURES_TO_IGNORE.contains(procname)) {
+                    // TODO Temporary workaround
+                    continue;
+                }
+                rownum++;
                 String colname = rs.getString(4);
                 short coltype = rs.getShort(5);
                 short datatype = rs.getShort(6);

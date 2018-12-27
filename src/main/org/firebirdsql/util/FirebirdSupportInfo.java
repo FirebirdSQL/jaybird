@@ -484,7 +484,7 @@ public final class FirebirdSupportInfo {
         } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
             return 50;
         } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
-            return 50;
+            return 51;
         } else {
             return -1;
         }
