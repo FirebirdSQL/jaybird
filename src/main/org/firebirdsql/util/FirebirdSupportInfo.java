@@ -218,6 +218,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when {@code RETURNING *} and {@code RETURNING ref.*} is supported.
+     */
+    public boolean supportsReturningAll() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @return <code>true</code> when the server knows the UTF8 character set (NOTE: For firebird 1.5 it is an alias for
      * UNICODE_FSS)
      */

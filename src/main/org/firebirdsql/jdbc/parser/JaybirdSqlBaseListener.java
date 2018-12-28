@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.7
+// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.7.2
 package org.firebirdsql.jdbc.parser;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -179,13 +179,13 @@ public class JaybirdSqlBaseListener implements JaybirdSqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterColumnAlias(JaybirdSqlParser.ColumnAliasContext ctx) { }
+	@Override public void enterAlias(JaybirdSqlParser.AliasContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitColumnAlias(JaybirdSqlParser.ColumnAliasContext ctx) { }
+	@Override public void exitAlias(JaybirdSqlParser.AliasContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -160,11 +160,43 @@ final class GeneratedKeysQueryBuilder {
             return new GeneratedKeysSupport.Query(true, originalSql);
         }
         if (isSupportedType()) {
-            List<String> columnNames = getAllColumnNames(statementModel.getTableName(), databaseMetaData);
-            QuoteStrategy quoteStrategy = QuoteStrategy.forDialect(databaseMetaData.getConnectionDialect());
-            return addColumnsByNameImpl(columnNames, quoteStrategy);
+            // TODO Use an strategy when creating this builder or even push this up to the GeneratedKeysSupportFactory?
+            if (supportsReturningAll(databaseMetaData)) {
+                return useReturningAll();
+            }
+            return useReturningAllColumnsByName(databaseMetaData);
         }
         return new GeneratedKeysSupport.Query(false, originalSql);
+    }
+
+    /**
+     * Determines support for {@code RETURNING *}.
+     *
+     * @param databaseMetaData
+     *         Database meta data
+     * @return {@code true} if this version of Firebird supports {@code RETURNING *}.
+     * @throws SQLException
+     *         for database access errors
+     */
+    private boolean supportsReturningAll(FirebirdDatabaseMetaData databaseMetaData) throws SQLException {
+        return databaseMetaData.getDatabaseMajorVersion() >= 4;
+    }
+
+    /**
+     * Generates the query using {@code RETURNING *}
+     */
+    private GeneratedKeysSupport.Query useReturningAll() {
+        return addColumnsByNameImpl(Collections.singletonList("*"), QuoteStrategy.NO_QUOTES);
+    }
+
+    /**
+     * Generates the query by retrieving all column names and appending them to a {@code RETURNING} clause.
+     */
+    private GeneratedKeysSupport.Query useReturningAllColumnsByName(FirebirdDatabaseMetaData databaseMetaData)
+            throws SQLException {
+        List<String> columnNames = getAllColumnNames(statementModel.getTableName(), databaseMetaData);
+        QuoteStrategy quoteStrategy = QuoteStrategy.forDialect(databaseMetaData.getConnectionDialect());
+        return addColumnsByNameImpl(columnNames, quoteStrategy);
     }
 
     private boolean hasReturning() {
@@ -298,7 +330,7 @@ final class GeneratedKeysQueryBuilder {
                         .messageParameter(tableName)
                         .toFlatSQLException();
             }
-            
+
             Map<Integer, String> columnByIndex = new HashMap<>();
             int[] sortedIndexes = columnIndexes.clone();
             Arrays.sort(sortedIndexes);

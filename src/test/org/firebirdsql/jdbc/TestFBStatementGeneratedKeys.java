@@ -265,6 +265,43 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     }
 
     /**
+     * Test for {@link FBStatement#execute(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT
+     * which already has a RETURNING * clause.
+     * <p>
+     * Expected: all columns of table returned, single row result set
+     * </p>
+     */
+    @Test
+    public void testExecute_INSERT_returnGeneratedKeys_withReturningAll() throws Exception {
+        assumeTrue("requires RETURNING * support", getDefaultSupportInfo().supportsReturningAll());
+
+        Statement stmt = con.createStatement();
+
+        boolean producedResultSet = stmt.execute(TEST_INSERT_QUERY + " RETURNING *", Statement.RETURN_GENERATED_KEYS);
+        assertFalse("Expected execute to report false (has no result set) for INSERT with generated keys returned",
+                producedResultSet);
+
+        ResultSet rs = stmt.getGeneratedKeys();
+        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+
+        assertTrue("Expected first row in result set", rs.next());
+        assertEquals(513, rs.getInt(1));
+        assertEquals(TEXT_VALUE, rs.getString(2));
+        assertFalse("Expected no second row", rs.next());
+
+        closeQuietly(rs);
+        closeQuietly(stmt);
+    }
+
+    /**
      * Test for {@link FBStatement#executeUpdate(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an
      * INSERT which already has a RETURNING clause.
      * <p>
@@ -303,11 +340,16 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     @Test
     public void testExecute_INSERT_returnGeneratedKeys_nonExistentTable() throws Exception {
         Statement stmt = con.createStatement();
+        // Firebird 4+ uses RETURNING *, while earlier version produce a custom error as the columns can't be retrieved
+        boolean usesReturningAll = getDefaultSupportInfo().supportsReturningAll();
+        int errorCode = usesReturningAll
+                ? ISCConstants.isc_dsql_relation_err
+                : JaybirdErrorCodes.jb_generatedKeysNoColumnsFound;
         expectedException.expect(allOf(
                 isA(SQLSyntaxErrorException.class),
-                errorCode(equalTo(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)),
+                errorCode(equalTo(errorCode)),
                 sqlState(equalTo("42S02")),
-                fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound, "TABLE_NON_EXISTENT")
+                fbMessageContains(errorCode, "TABLE_NON_EXISTENT")
         ));
 
         stmt.execute("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES ('" + TEXT_VALUE + "')",

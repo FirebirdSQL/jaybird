@@ -110,7 +110,61 @@ public class GrammarParameterizedTest {
                         + "  WHEN NOT MATCHED THEN\n"
                         + "    INSERT (id, name)\n"
                         + "    VALUES (cd.id, cd.name)\n"
-                        + " -- RETURNING id")
+                        + " -- RETURNING id"),
+    /* 12 */    testCase(true, INSERT_TYPE, "sometable", "insert into sometable default values returning *"),
+    /* 13 */    testCase(true, INSERT_TYPE, "sometable", "insert into sometable default values returning sometable.*"),
+    /* 14 */    testCase(true, INSERT_TYPE, "sometable", "insert into sometable(x, y, z) values(default, 1, 2) returning *"),
+    /* 15 */    testCase(true, INSERT_TYPE, "sometable", "insert into sometable(x, y, z) values(default, 1, 2) returning sometable.*"),
+    /* 16 */    testCase(true, UPDATE_TYPE, "sometable", "update sometable set x = ? returning *"),
+    /* 17 */    testCase(true, UPDATE_TYPE, "sometable", "update sometable set x = ? returning sometable.*"),
+    /* 18 */    testCase(true, UPDATE_TYPE, "sometable", "update sometable a set x = ? returning a.*"),
+    /* 19 */    testCase(true, UPDATE_TYPE, "sometable", "update sometable as a set a.x = ? returning *"),
+    /* 20 */    testCase(true, UPDATE_TYPE, "sometable", "update sometable as a set a.x = ? returning a.id"),
+    /* 21 */    testCase(true, DELETE_TYPE, "sometable", "delete from sometable where x = ? returning *"),
+    /* 22 */    testCase(true, DELETE_TYPE, "sometable", "delete from sometable a where a.x = ? returning a.*"),
+    /* 23 */    testCase(true, DELETE_TYPE, "sometable", "delete from sometable a where a.x = ? returning *"),
+    /* 24 */    testCase(true, DELETE_TYPE, "sometable", "delete from sometable as a where a.x = ? returning a.id"),
+    /* 25 */    testCase(true, DELETE_TYPE, "sometable", "delete from sometable as a where a.x = ? returning *"),
+    /* 26 */    testCase(true, MERGE_TYPE, "customers", "MERGE INTO customers\n"
+                        + "  USING\n"
+                        + "    (SELECT * FROM customers_delta WHERE id > 10) cd\n"
+                        + "     ON (c.id = cd.id)\n"
+                        + "  WHEN MATCHED THEN\n"
+                        + "    UPDATE SET name = cd.name\n"
+                        + "  WHEN NOT MATCHED THEN\n"
+                        + "    INSERT (id, name)\n"
+                        + "    VALUES (cd.id, cd.name)\n"
+                        + "  RETURNING *"),
+    /* 27 */    testCase(true, MERGE_TYPE, "customers", "MERGE INTO customers as c\n"
+                        + "  USING\n"
+                        + "    (SELECT * FROM customers_delta WHERE id > 10) cd\n"
+                        + "     ON (c.id = cd.id)\n"
+                        + "  WHEN MATCHED THEN\n"
+                        + "    UPDATE SET name = cd.name\n"
+                        + "  WHEN NOT MATCHED THEN\n"
+                        + "    INSERT (id, name)\n"
+                        + "    VALUES (cd.id, cd.name)\n"
+                        + "  RETURNING *"),
+    /* 28 */    testCase(true, MERGE_TYPE, "customers", "MERGE INTO customers c\n"
+                        + "  USING\n"
+                        + "    (SELECT * FROM customers_delta WHERE id > 10) cd\n"
+                        + "     ON (c.id = cd.id)\n"
+                        + "  WHEN MATCHED THEN\n"
+                        + "    UPDATE SET name = cd.name\n"
+                        + "  WHEN NOT MATCHED THEN\n"
+                        + "    INSERT (id, name)\n"
+                        + "    VALUES (cd.id, cd.name)\n"
+                        + "  RETURNING c.*"),
+    /* 29 */    testCase(true, MERGE_TYPE, "customers", "MERGE INTO customers c\n"
+                        + "  USING\n"
+                        + "    (SELECT * FROM customers_delta WHERE id > 10) cd\n"
+                        + "     ON (c.id = cd.id)\n"
+                        + "  WHEN MATCHED THEN\n"
+                        + "    UPDATE SET name = cd.name\n"
+                        + "  WHEN NOT MATCHED THEN\n"
+                        + "    INSERT (id, name)\n"
+                        + "    VALUES (cd.id, cd.name)\n"
+                        + "  RETURNING c.id")
 // @formatter:on
         );
     }

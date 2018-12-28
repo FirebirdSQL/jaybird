@@ -17,7 +17,7 @@
  * All rights reserved.
  */
 
-// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.7
+// Generated from D:/Development/project/Jaybird/jaybird/src/main/org/firebirdsql/jdbc/parser\JaybirdSql.g4 by ANTLR 4.7.2
 package org.firebirdsql.jdbc.parser;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -148,15 +148,15 @@ public interface JaybirdSqlListener extends ParseTreeListener {
 	 */
 	void exitColumnName(JaybirdSqlParser.ColumnNameContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JaybirdSqlParser#columnAlias}.
+	 * Enter a parse tree produced by {@link JaybirdSqlParser#alias}.
 	 * @param ctx the parse tree
 	 */
-	void enterColumnAlias(JaybirdSqlParser.ColumnAliasContext ctx);
+	void enterAlias(JaybirdSqlParser.AliasContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link JaybirdSqlParser#columnAlias}.
+	 * Exit a parse tree produced by {@link JaybirdSqlParser#alias}.
 	 * @param ctx the parse tree
 	 */
-	void exitColumnAlias(JaybirdSqlParser.ColumnAliasContext ctx);
+	void exitAlias(JaybirdSqlParser.AliasContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link JaybirdSqlParser#simpleValue}.
 	 * @param ctx the parse tree

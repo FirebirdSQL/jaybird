@@ -150,7 +150,7 @@ deleteStatement    :
 /* UPDATE statement */
 
 updateStatement    :
-            UPDATE tableName SET .*? /* other parts ignored by parser */ returningClause? ';'?
+            UPDATE tableName alias? SET .*? /* other parts ignored by parser */ returningClause? ';'?
             {
                 statementModel.setStatementType(JaybirdStatementModel.UPDATE_TYPE);
             }
@@ -184,7 +184,11 @@ mergeStatement
         ;
 
 returningClause
-        :    RETURNING returningColumnList
+        :   RETURNING (simpleIdentifier '.')? '*'
+           {
+               statementModel.setHasReturning();
+           }
+        |   RETURNING returningColumnList
            {
                statementModel.setHasReturning();
            }
@@ -207,7 +211,7 @@ tableName
         ;
 
 returningColumnList
-        :    columnName columnAlias? (',' columnName columnAlias?)*
+        :    columnName alias? (',' columnName alias?)*
         ;
 
 columnName
@@ -215,7 +219,7 @@ columnName
         |    fullIdentifier
         ;
 
-columnAlias
+alias
         :    AS? simpleIdentifier
         ;
 

@@ -26,7 +26,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.7, 3.0.4, and a recent 
+Jaybird @VERSION@ was tested against Firebird 2.5.8, 3.0.4, and a recent 
 Firebird 4 snapshot build, but should also support other Firebird versions from 
 2.5 and up.
 
@@ -40,6 +40,14 @@ in the protocol and database attachment parameters that are sent to the server.
 ### Notes on Firebird 3 support
 
 Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
+
+### Notes on Firebird 4 support
+
+Jaybird 4 does not (yet) support the new `TIME WITH TIME ZONE` and `TIMESTAMP 
+WITH TIME ZONE` types. We plan to add this before the Jaybird 4.0.0 release.
+
+Jaybird 4 does not support the protocol improvements of Firebird 4 like statement 
+and session timeouts. Nor does it implement the new batch protocol.
 
 Supported Java versions
 -----------------------
@@ -151,7 +159,7 @@ use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include
 server.
 
 For `getGeneratedKeys` support you will need to include 
-`antlr-runtime-4.7.jar` on your classpath.
+`antlr-runtime-4.7.2.jar` on your classpath.
 
 For native, local or embedded support, you will need to include `jna-4.4.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver].
@@ -176,6 +184,10 @@ If you manage your dependencies manually, you need to do the following:
 1.  Replace the Jaybird 3 library with the Jaybird 4 version
     - `jaybird-3.0.x.jar` with `jaybird-@VERSION@.jar` 
     - `jaybird-full-3.0.x.jar` with `jaybird-full-@VERSION@.jar`
+    
+2.  If installed, remove `antlr-runtime-4.7.jar` and replace it with 
+    `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
+    support.
     
 Gotcha's
 --------
@@ -1046,6 +1058,9 @@ character (`\`) to occur unescaped, this means that patterns `A\B` and `A\\B`
 will both match a value of `A\B`. This complies with the (undocumented) JDBC 
 expectation that patterns follow the ODBC requirements for pattern value 
 arguments ([JDBC-562](http://tracker.firebirdsql.org/browse/JDBC-562))
+-   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.  
+    The grammar generated for version 4.7.2 should still run on 4.7, but we
+suggest that you upgrade this dependency.
 
 Removal of deprecated classes and packages
 ------------------------------------------
