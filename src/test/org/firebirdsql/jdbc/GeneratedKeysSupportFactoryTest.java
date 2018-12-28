@@ -19,6 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matcher;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
 import org.jmock.integration.junit4.JUnitRuleMockery;
@@ -31,12 +33,12 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 import java.util.EnumSet;
+import java.util.Set;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_EXPLICITLY_DISABLED;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_NO_RETURNING_SUPPORT;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
@@ -332,11 +334,14 @@ public class GeneratedKeysSupportFactoryTest {
                 reason));
     }
 
-    private void expectDatabaseVersionCheck(int major, int minor) throws SQLException {
+    private void expectDatabaseVersionCheck(final int major, final int minor) throws SQLException {
         context.checking(new Expectations() {{
             oneOf(dbMetadata).getDatabaseMajorVersion(); will(returnValue(major));
             oneOf(dbMetadata).getDatabaseMinorVersion(); will(returnValue(minor));
         }});
     }
 
+    private static Matcher<Set<GeneratedKeysSupport.QueryType>> equalTo(Set<GeneratedKeysSupport.QueryType> types) {
+        return CoreMatchers.equalTo(types);
+    }
 }

@@ -654,14 +654,14 @@ public class TestGeneratedKeysQuery {
                 .createFor("default", dbMetadata);
     }
 
-    private void expectDatabaseVersionCheck(int major, int minor) throws SQLException {
+    private void expectDatabaseVersionCheck(final int major, final int minor) throws SQLException {
         context.checking(new Expectations() {{
             atLeast(1).of(dbMetadata).getDatabaseMajorVersion(); will(returnValue(major));
             oneOf(dbMetadata).getDatabaseMinorVersion(); will(returnValue(minor));
         }});
     }
 
-    private void expectConnectionDialectCheck(int connectionDialect) throws SQLException {
+    private void expectConnectionDialectCheck(final int connectionDialect) throws SQLException {
         context.checking(new Expectations() {{
             oneOf(dbMetadata).getConnectionDialect(); will(returnValue(connectionDialect));
         }});

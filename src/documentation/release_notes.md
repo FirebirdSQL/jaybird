@@ -220,9 +220,12 @@ Java support
 
 ### Java 7 ###
 
-The driver supports Java 7 for now.
-
-Jaybird 4 will very likely drop support for Java 7 (this decision is not final yet).
+The driver supports Java 7 with caveats.
+ 
+Some of the libraries used for testing Jaybird have upped there minimum version
+to Java 8, while we need those library versions to test - for example - Java 11. 
+When we can no longer work around these issues, we will sacrifice Java 7 test 
+coverage in order to maintain Java 7 support.
 
 ### Java 8 ###
 
@@ -246,6 +249,11 @@ where the Java 8 version does not need that module.
 
 Given the limited support period for Java 9 and higher versions, we may limit
 support on those versions to the most recent LTS version and the latest release.
+
+No final decisions have been made on releasing a version specific artifact, but
+likely a latest Java LTS-version specific release will be made available before 
+final Jaybird 4.0.0 (probably named jaybird-javaNN, eg jaybird-java11, to avoid 
+overlap with the current jaybird-jdkNN naming convention when we get to Java 15).
 
 Firebird support
 ----------------

@@ -84,7 +84,7 @@ final class GeneratedKeysQueryBuilder {
      *         Original statement text
      */
     private GeneratedKeysQueryBuilder(String originalSql) {
-        this(originalSql, null, Collections.emptySet());
+        this(originalSql, null, Collections.<GeneratedKeysSupport.QueryType>emptySet());
     }
 
     /**
