@@ -74,6 +74,11 @@ public interface JaybirdErrorCodes {
     int jb_dbCryptDataError         = 337248285;
     int jb_hashAlgorithmNotAvailable                     = 337248286;
     int jb_noKnownAuthPlugins       = 337248287;
+    int jb_invalidGeneratedKeysOption                    = 337248288;
+    int jb_generatedKeysSupportNotAvailable              = 337248289;
+    int jb_generatedKeysArrayEmptyOrNull                 = 337248290;
+    int jb_generatedKeysInvalidColumnPosition            = 337248291;
+    int jb_generatedKeysNoColumnsFound                   = 337248292;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -303,10 +304,10 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     public void testExecute_INSERT_returnGeneratedKeys_nonExistentTable() throws Exception {
         Statement stmt = con.createStatement();
         expectedException.expect(allOf(
-                isA(SQLException.class),
-                errorCode(equalTo(ISCConstants.isc_dsql_relation_err)),
+                isA(SQLSyntaxErrorException.class),
+                errorCode(equalTo(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)),
                 sqlState(equalTo("42S02")),
-                message(containsString("Table unknown; TABLE_NON_EXISTENT"))
+                fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound, "TABLE_NON_EXISTENT")
         ));
 
         stmt.execute("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES ('" + TEXT_VALUE + "')",

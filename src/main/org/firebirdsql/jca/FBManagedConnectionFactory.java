@@ -437,6 +437,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setAuthPlugins(authPlugins);
     }
 
+    @Override
+    public String getGeneratedKeysEnabled() {
+        return connectionProperties.getGeneratedKeysEnabled();
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

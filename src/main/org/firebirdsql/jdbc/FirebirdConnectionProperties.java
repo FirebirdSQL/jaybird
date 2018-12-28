@@ -458,5 +458,22 @@ public interface FirebirdConnectionProperties {
      * @since 4.0
      */
     void setAuthPlugins(String authPlugins);
-    
+
+    /**
+     * Get the {@code generatedKeysEnabled} configuration.
+     *
+     * @return configuration value for {@code generatedKeysEnabled}, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getGeneratedKeysEnabled();
+
+    /**
+     * Sets the {@code generatedKeysEnabled} configuration.
+     *
+     * @param generatedKeysEnabled
+     *         Generated keys support configuration: {@code default} (or null/empty), {@code disabled}, {@code ignored},
+     *         or a list of statement types to enable (possible values: {@code insert}, {@code update}, {@code delete},
+     *         {@code update_or_insert}, {@code merge})
+     */
+    void setGeneratedKeysEnabled(String generatedKeysEnabled);
 }

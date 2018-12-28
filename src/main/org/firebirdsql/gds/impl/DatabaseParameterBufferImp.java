@@ -25,6 +25,9 @@ import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
+import static org.firebirdsql.gds.ISCConstants.jaybirdMaxIscDpbValue;
+import static org.firebirdsql.gds.ISCConstants.jaybirdMinIscDpbValue;
+
 /**
  * Implementation for DatabaseParameterBuffer.
  */
@@ -49,8 +52,8 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
     public DatabaseParameterBuffer removeExtensionParams() {
         final DatabaseParameterBuffer copy = deepCopy();
 
-        for (int i = 0; i < DatabaseParameterBufferExtension.EXTENSION_PARAMETERS.length; i++) {
-            copy.removeArgument(DatabaseParameterBufferExtension.EXTENSION_PARAMETERS[i]);
+        for (int extensionDpb = jaybirdMinIscDpbValue; extensionDpb <= jaybirdMaxIscDpbValue; extensionDpb++) {
+            copy.removeArgument(extensionDpb);
         }
 
         return copy;

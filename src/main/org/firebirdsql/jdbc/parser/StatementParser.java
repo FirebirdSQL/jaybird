@@ -29,17 +29,31 @@ public interface StatementParser {
     
     /**
      * Parses the provided SQL into a statement model
+     * <p>
+     * Implementation must call {@link #parseStatement(String)}.
+     * </p>
      * 
+     * @param sql SQL query text to parse
+     * @return Statement model
+     * @throws StatementParser.ParseException For errors parsing the query
+     * @deprecated Use {@link #parseStatement(String)} instead; will be removed in Jaybird 5
+     */
+    @Deprecated
+    JaybirdStatementModel parseInsertStatement(String sql) throws ParseException;
+
+    /**
+     * Parses the provided SQL into a statement model
+     *
      * @param sql SQL query text to parse
      * @return Statementmodel
      * @throws StatementParser.ParseException For errors parsing the query
      */
-    JaybirdStatementModel parseInsertStatement(String sql) throws ParseException;
+    JaybirdStatementModel parseStatement(String sql) throws ParseException;
     
     /**
      * Exception to wrap other exceptions when parsing.
      */
-    public class ParseException extends Exception {
+    class ParseException extends Exception {
         
         private static final long serialVersionUID = 2440030356284907181L;
 

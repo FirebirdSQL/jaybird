@@ -18,9 +18,6 @@
  */
 package org.firebirdsql.jdbc.parser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Simple model of the parsed statement. At the moment the original statement
  * cannot be reconstructed from this model, but it should be possible when the
@@ -33,17 +30,16 @@ public class JaybirdStatementModel {
     public static final int UPDATE_TYPE = 2;
     public static final int DELETE_TYPE = 3;
     public static final int UPDATE_OR_INSERT_TYPE = 4;
+    @SuppressWarnings("unused")
+    @Deprecated
     public static final int EXECUTE_TYPE = 5;
+    public static final int MERGE_TYPE = 6;
+    public static final int MAX_STATEMENT_TYPE_VALUE = MERGE_TYPE;
 
     private int statementType = UNDETECTED_TYPE;
 
     private String tableName;
-    private String selectClause;
-    private final List<String> columns = new ArrayList<>();
-    private final List<String> values = new ArrayList<>();
-    private final List<String> returningColumns = new ArrayList<>();
-
-    private boolean defaultValues;
+    private boolean hasReturning;
 
     public int getStatementType() {
         return statementType;
@@ -51,14 +47,6 @@ public class JaybirdStatementModel {
 
     public void setStatementType(int statementType) {
         this.statementType = statementType;
-    }
-
-    public boolean isDefaultValues() {
-        return defaultValues;
-    }
-
-    public void setDefaultValues(boolean defaultValues) {
-        this.defaultValues = defaultValues;
     }
 
     public String getTableName() {
@@ -69,39 +57,11 @@ public class JaybirdStatementModel {
         this.tableName = tableName;
     }
 
-    public String getSelectClause() {
-        return selectClause;
-    }
-
-    public void setSelectClause(String selectClause) {
-        this.selectClause = selectClause;
-    }
-
-    public List<String> getColumns() {
-        return columns;
-    }
-
-    public void addColumn(String columnName) {
-        columns.add(columnName);
-    }
-
-    public List<String> getValues() {
-        return values;
-    }
-
-    public void addValue(String value) {
-        values.add(value);
-    }
-
     public boolean hasReturning() {
-        return getReturningColumns().size() != 0;
+        return hasReturning;
     }
 
-    public List<String> getReturningColumns() {
-        return returningColumns;
-    }
-
-    public void addReturningColumn(String columnName) {
-        returningColumns.add(columnName);
+    public void setHasReturning() {
+        hasReturning = true;
     }
 }
