@@ -111,53 +111,63 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             int rsHoldability,
             boolean cached)
             throws SQLException {
-        this.connection = connection;
-        this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
-        cursorName = fbStatement.getCursorName();
-        this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
-        trimStrings = metaDataQuery;
-        rowDescriptor = stmt.getFieldDescriptor();
-        fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        this.fbStatement = fbStatement;
+        try {
+            this.connection = connection;
+            this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
+            cursorName = fbStatement.getCursorName();
+            this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
+            trimStrings = metaDataQuery;
+            rowDescriptor = stmt.getFieldDescriptor();
+            fields = new FBField[rowDescriptor.getCount()];
+            colNames = new HashMap<>(rowDescriptor.getCount(), 1);
+            this.fbStatement = fbStatement;
 
-        if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
-            fbStatement.addWarning(FbExceptionBuilder
-                    .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                    .toFlatSQLException(SQLWarning.class));
-            rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-        }
-
-        cached = cached
-                || rsType != ResultSet.TYPE_FORWARD_ONLY
-                || metaDataQuery;
-        prepareVars(cached);
-        if (cached) {
-            fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
-                    rsType == ResultSet.TYPE_FORWARD_ONLY);
-        } else if (fbStatement.isUpdatableCursor()) {
-            fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
-                    fbStatement.getFetchSize());
-        } else {
-            assert rsType == ResultSet.TYPE_FORWARD_ONLY : "Expected TYPE_FORWARD_ONLY";
-            fbFetcher = new FBStatementFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
-                    fbStatement.getFetchSize());
-        }
-
-        if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
-            try {
-                rowUpdater = new FBRowUpdater(connection, rowDescriptor, this, cached, listener);
-            } catch (FBResultSetNotUpdatableException ex) {
+            if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
                 fbStatement.addWarning(FbExceptionBuilder
-                        .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
+                        .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
                         .toFlatSQLException(SQLWarning.class));
-                rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+                rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
+
+            cached = cached
+                    || rsType != ResultSet.TYPE_FORWARD_ONLY
+                    || metaDataQuery;
+            prepareVars(cached);
+            if (cached) {
+                fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
+                        rsType == ResultSet.TYPE_FORWARD_ONLY);
+            } else if (fbStatement.isUpdatableCursor()) {
+                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
+                        fbStatement.getFetchSize());
+            } else {
+                assert rsType == ResultSet.TYPE_FORWARD_ONLY : "Expected TYPE_FORWARD_ONLY";
+                fbFetcher = new FBStatementFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.getMaxRows(),
+                        fbStatement.getFetchSize());
+            }
+
+            if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
+                try {
+                    rowUpdater = new FBRowUpdater(connection, rowDescriptor, this, cached, listener);
+                } catch (FBResultSetNotUpdatableException ex) {
+                    fbStatement.addWarning(FbExceptionBuilder
+                            .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
+                            .toFlatSQLException(SQLWarning.class));
+                    rsConcurrency = ResultSet.CONCUR_READ_ONLY;
+                }
+            }
+            this.rsType = rsType;
+            this.rsConcurrency = rsConcurrency;
+            this.rsHoldability = rsHoldability;
+            this.fetchDirection = fbStatement.getFetchDirection();
+        } catch (SQLException e) {
+            try {
+                // Ensure cursor is closed to avoid problems with statement reuse
+                stmt.closeCursor();
+            } catch (SQLException e2) {
+                e.addSuppressed(e2);
+            }
+            throw e;
         }
-        this.rsType = rsType;
-        this.rsConcurrency = rsConcurrency;
-        this.rsHoldability = rsHoldability;
-        this.fetchDirection = fbStatement.getFetchDirection();
     }
 
     /**
