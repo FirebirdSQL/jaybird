@@ -1284,6 +1284,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 } finally {
                     currentRs = null;
                 }
+            } else if (fbStatement != null) {
+                fbStatement.ensureClosedCursor(completionReason.isTransactionEnd());
             }
         } finally {
             if (notifyListener && !wasCompleted)

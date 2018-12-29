@@ -186,6 +186,16 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    public final void ensureClosedCursor(boolean transactionEnd) throws SQLException {
+        if (getState().isCursorOpen()) {
+            if (log.isDebugEnabled()) {
+                log.debug("ensureClosedCursor has to close a cursor at", new RuntimeException("debugging stacktrace"));
+            }
+            closeCursor(transactionEnd);
+        }
+    }
+
+    @Override
     public StatementState getState() {
         return state;
     }
