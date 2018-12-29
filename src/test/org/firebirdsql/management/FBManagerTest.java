@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
@@ -25,7 +26,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
@@ -180,6 +184,33 @@ public class FBManagerTest {
                     getDefaultPropertiesForConnection())) {
                 final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
                 assertEquals("Unexpected database dialect", 1, currentDatabase.getDatabaseDialect());
+            } finally {
+                m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            }
+        }
+    }
+
+    @Test
+    public void testCreate_withDefaultCharacterSet() throws Exception {
+        try (FBManager m = createFBManager()) {
+            m.setServer(DB_SERVER_URL);
+            m.setPort(DB_SERVER_PORT);
+            m.start();
+
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
+            try {
+                m.setDefaultCharacterSet("UTF8");
+                m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+
+                try (Connection connection = DriverManager.getConnection(getUrl() + ".fdb",
+                        getDefaultPropertiesForConnection());
+                     Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery("select RDB$CHARACTER_SET_NAME from rdb$database")) {
+
+                    assertTrue("expected a row", rs.next());
+                    assertEquals("Unexpected default character set", "UTF8", StringHelper.trim(rs.getString(1)));
+                }
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }

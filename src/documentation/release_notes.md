@@ -1080,6 +1080,8 @@ arguments ([JDBC-562](http://tracker.firebirdsql.org/browse/JDBC-562))
 -   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.  
     The grammar generated for version 4.7.2 should still run on 4.7, but we
 suggest that you upgrade this dependency.
+-   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
+database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
 
 Removal of deprecated classes and packages
 ------------------------------------------

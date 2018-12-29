@@ -114,6 +114,20 @@ public interface FBManagerMBean extends AutoCloseable {
     int getPageSize();
 
     /**
+     * Set the default database character set.
+     *
+     * @param firebirdCharsetName
+     *         Character set name, use Firebird names only; {@code null} will use Firebird default ({@code NONE}).
+     *         Specifying an invalid name will result in an exception during database creation.
+     */
+    void setDefaultCharacterSet(String firebirdCharsetName);
+
+    /**
+     * @return The default character set name, {@code null} means not set.
+     */
+    String getDefaultCharacterSet();
+
+    /**
      * mbean get-set pair for field createOnStart
      * Get the value of createOnStart
      *
