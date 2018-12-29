@@ -246,7 +246,7 @@ The following has been changed or fixed since Jaybird 3.0.5
     limited to 12 prepared statements; the least recently used statement will be closed and removed 
     when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557))
 -   Fixed: `UPDATE OR INSERT` with existing `RETURNING` clause handled incorrectly for generated keys ([JDBC-566](http://tracker.firebirdsql.org/browse/JDBC-566))
--   Fixed: exceptions during initialization of result sets would not properly close the database
+-   Fixed: Exceptions during initialization of result sets would not properly close the database
     cursor leading to error _"Current statement state (CURSOR_OPEN) does not allow call to prepare"_ on
     reuse of the statement (or errors similar to described for JDBC-531 above). ([JDBC-571](http://tracker.firebirdsql.org/browse/JDBC-571))  
     A stopgap measure has been added to prevent similar problems from occurring. This will log its 
