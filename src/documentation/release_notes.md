@@ -1022,6 +1022,17 @@ select"_.
 Firebird 3 added `RETURNING` support for `MERGE`, this support is now available
 in Jaybird.
 
+### Support for Firebird 4 RETURNING * ###
+
+Firebird 4 added a `RETURNING *` ('returning all') clause which returns all
+columns of the row affected by a DML statement. When connected to Firebird 4, 
+the `Statement.RETURN_GENERATED_KEYS` methods will no longer query the database 
+metadata for the column names, but instead append a `RETURNING *` clause.
+
+Artificial testing by repeatedly executing the same insert statement using 
+`Statement.execute(insert, Statement.RETURN_GENERATED_KEYS)` shows a performance 
+improvement of roughly 200% (even 400% on localhost).
+
 ### Generated keys grammar simplification ###
 
 The grammar used by the generated keys support has been simplified to avoid
@@ -1207,6 +1218,10 @@ cannot find any columns for a table, an exception is now thrown with message
 _"No columns were found for table &lt;tablename&gt; to build RETURNING clause. 
 The table does not exist."_. Previously this executed as if the statement 
 generated no keys and deferred to Firebird to return a _"Table unknown"_ error.
+
+On Firebird 4, using `Statement.RETURN_GENERATED_KEYS` will continue to produce 
+a _"Table unknown"_ error as it does not need to query the metadata, and instead 
+defers this to Firebird using `RETURNING *`.
 
 This change does not apply for statements that already explicitly include a 
 `RETURNING` clause or for non-generated keys statements.
