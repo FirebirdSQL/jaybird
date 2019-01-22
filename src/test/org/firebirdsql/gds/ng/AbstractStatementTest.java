@@ -420,6 +420,41 @@ public abstract class AbstractStatementTest {
     }
 
     @Test
+    public void test_GetExplainedExecutionPlan_withStatementPrepared() throws Exception {
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        String executionPlan = statement.getExplainedExecutionPlan();
+
+        assertEquals("Unexpected plan for prepared statement", "Select Expression\n" +
+                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan);
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_noStatementPrepared() throws Exception {
+        allocateStatement();
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement not yet allocated");
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_StatementClosed() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement closed");
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+        statement.close();
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
     public void test_ExecuteInsert() throws Exception {
         allocateStatement();
         statement.addStatementListener(listener);

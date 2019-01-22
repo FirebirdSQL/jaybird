@@ -416,6 +416,12 @@ public abstract class AbstractFbStatement implements FbStatement {
         return getSqlInfo(processor.getDescribePlanInfoItems(), getDefaultSqlInfoSize(), processor);
     }
 
+    @Override
+    public final String getExplainedExecutionPlan() throws SQLException {
+        final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
+        return getSqlInfo(processor.getDescribeExplainedPlanInfoItems(), getDefaultSqlInfoSize(), processor);
+    }
+
     /**
      * @return New instance of {@link ExecutionPlanProcessor} (or subclass) for this statement.
      */

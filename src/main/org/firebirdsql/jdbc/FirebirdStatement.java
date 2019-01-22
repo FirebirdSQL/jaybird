@@ -113,6 +113,18 @@ public interface FirebirdStatement extends Statement {
      * the execution plan.
      */
     String getLastExecutionPlan() throws SQLException;
+
+    /**
+     * Get detailed execution plan for the last executed statement. More structured and comprehensible form.
+     * Can be called only after executing a query or update statement.
+     *
+     * @return detailed execution plan returned by the server.
+     *
+     * @throws SQLException if no statement was executed before calling this
+     * method, statement is not valid, or there was an error when obtaining
+     * the execution plan.
+     */
+    String getLastExplainedExecutionPlan() throws SQLException;
     
     /**
      * The local statement id is intended to identify the statement for internal implementation purposes.
