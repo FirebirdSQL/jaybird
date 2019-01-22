@@ -26,6 +26,7 @@ import org.junit.*;
 
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +46,9 @@ public class TestFBDatabaseMetaData {
 
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+
+    // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
+    private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
 
     private static final Logger log = LoggerFactory.getLogger(TestFBDatabaseMetaData.class);
 
@@ -178,8 +182,7 @@ public class TestFBDatabaseMetaData {
 
     @Test
     public void testEscapeWildcards() {
-        assertEquals("escape wildcard incorrect", "test\\\\me", FBDatabaseMetaData.escapeWildcards("test\\me"));
-        assertEquals("escape wildcard incorrect", "test\\%me", FBDatabaseMetaData.escapeWildcards("test%me"));
+        // NOTE: fully tested in MetadataPatternTest#testEscapeWildcards
         assertEquals("escape wildcard incorrect", "test\\_me", FBDatabaseMetaData.escapeWildcards("test_me"));
     }
 
@@ -251,7 +254,7 @@ public class TestFBDatabaseMetaData {
             String name = rs.getString(3);
             String column = rs.getString(4);
             if (log != null) log.info("table name: " + name);
-            assertTrue("wrong column found: " + column, "my_ column2".equals(column));
+            assertEquals("wrong column found: " + column, "my_ column2", column);
             assertFalse("Expected only one row in resultset", rs.next());
         }
     }
@@ -289,7 +292,7 @@ public class TestFBDatabaseMetaData {
             assertEquals("NO", rs.getString("IS_AUTOINCREMENT"));
             assertEquals("NO", rs.getString("IS_GENERATEDCOLUMN"));
             assertEquals("NO", rs.getString("JB_IS_IDENTITY"));
-            assertEquals(null, rs.getString("JB_IDENTITY_TYPE"));
+            assertNull(rs.getString("JB_IDENTITY_TYPE"));
         }
     }
 
@@ -349,6 +352,11 @@ public class TestFBDatabaseMetaData {
                 assertEquals("result set from getProcedures schema mismatch: field 8 should be PROCEDURE_TYPE",
                         type, lit_type);
                 if (log != null) log.info(" got procedure " + name);
+                
+                if (PROCEDURES_TO_IGNORE.contains(name)) {
+                    // TODO Temporary workaround
+                    continue;
+                }
                 if (name.equals("TESTPROC1")) {
                     assertFalse("result set from getProcedures had duplicate entry for TESTPROC1", gotproc1);
                     gotproc1 = true;
@@ -383,8 +391,12 @@ public class TestFBDatabaseMetaData {
         try (ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%")) {
             int rownum = 0;
             while (rs.next()) {
-                rownum++;
                 String procname = rs.getString(3);
+                if (PROCEDURES_TO_IGNORE.contains(procname)) {
+                    // TODO Temporary workaround
+                    continue;
+                }
+                rownum++;
                 String colname = rs.getString(4);
                 short coltype = rs.getShort(5);
                 short datatype = rs.getShort(6);
@@ -472,6 +484,46 @@ public class TestFBDatabaseMetaData {
             }
             if (log != null) log.info("getTypeInfo returned: " + out);
             assertTrue("Not enough TypeInfo rows fetched: " + count, count >= 15);
+        }
+    }
+
+    /**
+     * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for DECIMAL and NUMERIC).
+     */
+    @Test
+    public void databaseMetaData_decimalAndNumericPrecision() throws Exception {
+        // intentionally not using FirebirdSupportInfo.maxDecimalPrecision() as tested implementation uses that method
+        final int expectedPrecision = getDefaultSupportInfo().isVersionEqualOrAbove(4, 0) ? 34 : 18;
+        try (ResultSet rs = dmd.getTypeInfo()) {
+            boolean foundNumeric = false;
+            boolean foundDecimal = false;
+            while (rs.next()) {
+                String typeName = rs.getString("TYPE_NAME");
+                final int expectedTypeCode;
+                if ("NUMERIC".equals(typeName)) {
+                    foundNumeric = true;
+                    expectedTypeCode = Types.NUMERIC;
+                } else if ("DECIMAL".equals(typeName)) {
+                    foundDecimal = true;
+                    expectedTypeCode = Types.DECIMAL;
+                } else {
+                    continue;
+                }
+                assertEquals("Unexpected DATA_TYPE", expectedTypeCode, rs.getInt("DATA_TYPE"));
+                assertEquals("Unexpected PRECISION", expectedPrecision, rs.getInt("PRECISION"));
+                assertEquals("Unexpected MINIMUM_SCALE", 0, rs.getInt("MINIMUM_SCALE"));
+                assertEquals("Unexpected MAXIMUM_SCALE", expectedPrecision, rs.getInt("MAXIMUM_SCALE"));
+                assertEquals("Unexpected NULLABLE", DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"));
+                assertFalse("Unexpected CASE_SENSITIVE", rs.getBoolean("CASE_SENSITIVE"));
+                assertEquals("Unexpected SEARCHABLE", DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"));
+                assertFalse("Unexpected UNSIGNED_ATTRIBUTE", rs.getBoolean("UNSIGNED_ATTRIBUTE"));
+                assertTrue("Unexpected FIXED_PREC_SCALE", rs.getBoolean("FIXED_PREC_SCALE"));
+                assertFalse("Unexpected AUTO_INCREMENT", rs.getBoolean("AUTO_INCREMENT"));
+                assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
+                // Not testing other values
+            }
+            assertTrue("Expected to find numeric type in typeInfo", foundNumeric);
+            assertTrue("Expected to find decimal type in typeInfo", foundDecimal);
         }
     }
 

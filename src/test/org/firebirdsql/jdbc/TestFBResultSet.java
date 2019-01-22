@@ -107,7 +107,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected Connection connection;
+    private Connection connection;
 
     @Before
     public void setUp() throws Exception {

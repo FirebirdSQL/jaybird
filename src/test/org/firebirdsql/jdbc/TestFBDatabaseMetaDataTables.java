@@ -62,6 +62,12 @@ public class TestFBDatabaseMetaDataTables {
             "    varchar_field VARCHAR(100)\r\n" + 
             ")";
 
+    private static final String CREATE_QUOTED_WITH_SLASH_NORMAL_TABLE =
+            "CREATE TABLE \"testquotedwith\\table\" (\r\n" +
+                    "    id INTEGER PRIMARY KEY,\r\n" +
+                    "    varchar_field VARCHAR(100)\r\n" +
+                    ")";
+
     private static final String CREATE_NORMAL_VIEW =
             "CREATE VIEW test_normal_view (id, varchar_1, varchar_2) " + 
             "AS " + 
@@ -118,6 +124,7 @@ public class TestFBDatabaseMetaDataTables {
         List<String> createStatements = new ArrayList<>(Arrays.asList(
                 CREATE_NORMAL_TABLE,
                 CREATE_QUOTED_NORMAL_TABLE,
+                CREATE_QUOTED_WITH_SLASH_NORMAL_TABLE,
                 CREATE_NORMAL_VIEW,
                 CREATE_QUOTED_NORMAL_VIEW));
         if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
@@ -179,7 +186,7 @@ public class TestFBDatabaseMetaDataTables {
         // Expected user tables + a selection of expected system tables (some that existed in Firebird 1.0)
         // TODO Add test for order?
         Set<String> expectedTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
-                "test_quoted_normal_table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
+                "test_quoted_normal_table", "testquotedwith\\table", "TEST_NORMAL_VIEW", "test_quoted_normal_view",
                 "RDB$FIELDS", "RDB$GENERATORS", "RDB$ROLES", "RDB$DATABASE", "RDB$TRIGGERS"));
         if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
             expectedTables.add("TEST_GTT_ON_COMMIT_DELETE");
@@ -289,7 +296,7 @@ public class TestFBDatabaseMetaDataTables {
      */
     private void validateTableMetaData_allNormalTables(String tableNamePattern) throws Exception {
         Set<String> expectedNormalTables = new HashSet<>(Arrays.asList("TEST_NORMAL_TABLE",
-                "test_quoted_normal_table"));
+                "test_quoted_normal_table", "testquotedwith\\table"));
         Set<String> retrievedTables = new HashSet<>();
         Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
         rules.put(TableMetaData.TABLE_TYPE, TABLE);
@@ -368,15 +375,56 @@ public class TestFBDatabaseMetaDataTables {
 
     /**
      * Tests getTables retrieving normal table that was created unquoted using
-     * its lower case name with types null.
+     * its lower case name with types null (should produce no rows)
      */
     @Test
     public void testTableMetaData_NormalUnquotedTable_lowercase_typesNull() throws Exception {
+        validateTableMetaDataNoRow("test_normal_table", null);
+    }
+
+    @Test
+    public void testTableMetaData_QuotedWithSlash_unescaped() throws Exception {
+        Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
+        validationRules.put(TableMetaData.TABLE_NAME, "testquotedwith\\table");
+
+        validateTableMetaDataSingleRow("testquotedwith\\table", null, validationRules);
+    }
+
+    @Test
+    public void testTableMetaData_QuotedWithSlash_escaped() throws Exception {
+        Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
+        validationRules.put(TableMetaData.TABLE_NAME, "testquotedwith\\table");
+
+        validateTableMetaDataSingleRow("testquotedwith\\\\table", null, validationRules);
+    }
+
+    @Test
+    public void testTableMetaData_NormalUnquotedTable_uppercase_typesNull() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
 
         validateTableMetaDataSingleRow("TEST_NORMAL_TABLE", null, validationRules);
+    }
+
+    @Test
+    public void testTableMetaData_NormalUnquotedTable_uppercase_escaped_typesNull() throws Exception {
+        Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
+        validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
+
+        validateTableMetaDataSingleRow("TEST\\_NORMAL\\_TABLE", null, validationRules);
+    }
+
+    @Test
+    public void testTableMetaData_NormalUnquotedTable_uppercase_wildcard_typesNull() throws Exception {
+        Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
+        validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
+
+        validateTableMetaDataSingleRow("TEST\\_NORMAL\\_T%", null, validationRules);
     }
 
     /**
@@ -454,7 +502,6 @@ public class TestFBDatabaseMetaDataTables {
         validateTableMetaDataNoRow("test_normal_view", new String[] { SYSTEM_TABLE });
     }
 
-
     @Test
     public void testTableMetaData_globalTemporaryTables() throws Exception {
         assumeTrue("Requires global temporary table support",
@@ -487,6 +534,7 @@ public class TestFBDatabaseMetaDataTables {
         }
         expectedTables.add("TEST_NORMAL_TABLE");
         expectedTables.add("test_quoted_normal_table");
+        expectedTables.add("testquotedwith\\table");
         expectedTables.add("TEST_NORMAL_VIEW");
         expectedTables.add("test_quoted_normal_view");
         int indexExpected = 0;
@@ -525,7 +573,8 @@ public class TestFBDatabaseMetaDataTables {
         rules.put(TableMetaData.TABLE_NAME, tableName);
         if (tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$")) {
             rules.put(TableMetaData.TABLE_TYPE, SYSTEM_TABLE);
-        } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")) {
+        } else if (tableName.equals("TEST_NORMAL_TABLE") || tableName.equals("test_quoted_normal_table")
+                || tableName.equals("testquotedwith\\table")) {
             rules.put(TableMetaData.TABLE_TYPE, TABLE);
         } else if (tableName.equals("TEST_NORMAL_VIEW") || tableName.equals("test_quoted_normal_view")) {
             rules.put(TableMetaData.TABLE_TYPE, VIEW);

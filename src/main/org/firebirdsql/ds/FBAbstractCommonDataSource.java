@@ -548,7 +548,22 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setAuthPlugins(authPlugins);
         }
     }
-    
+
+    @Override
+    public String getGeneratedKeysEnabled() {
+        synchronized (lock) {
+            return connectionProperties.getGeneratedKeysEnabled();
+        }
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
+        }
+    }
+
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties

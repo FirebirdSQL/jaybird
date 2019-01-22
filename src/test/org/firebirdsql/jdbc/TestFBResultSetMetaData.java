@@ -19,9 +19,10 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.*;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
@@ -354,10 +355,8 @@ public class TestFBResultSetMetaData {
     /**
      * Test for CORE-5713
      */
-    @Ignore
     @Test
     public void core5713() throws Exception {
-        //assumeTrue("Firebird 4 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
 
@@ -378,15 +377,10 @@ public class TestFBResultSetMetaData {
             }) {
 
                 try (ResultSet rs = stmt.executeQuery(query)) {
-                    System.out.println(query);
                     FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
-                    final String columnLabel1 = rsmd.getColumnLabel(1);
-                    final String columnLabel2 = rsmd.getColumnLabel(2);
-                    System.out.println("'" + columnLabel1 + "', '" + columnLabel2 + "'");
-                    assertEquals("columnLabel1", "A1", columnLabel1);
-                    assertEquals("columnLabel2", "A2", columnLabel2);
+                    assertEquals("columnLabel1", "A1", rsmd.getColumnLabel(1));
+                    assertEquals("columnLabel2", "A2", rsmd.getColumnLabel(2));
                 }
-                System.out.println("---------");
             }
         }
     }
