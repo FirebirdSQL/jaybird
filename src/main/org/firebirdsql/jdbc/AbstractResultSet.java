@@ -1855,6 +1855,16 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     }
 
     @Override
+    public String getExplainedExecutionPlan() throws SQLException {
+        checkCursorMove();
+
+        if (fbStatement == null)
+            return "";
+
+        return fbStatement.getExplainedExecutionPlan();
+    }
+
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(this.getClass());
     }

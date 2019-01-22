@@ -228,6 +228,13 @@ public interface FbStatement extends ExceptionListenable {
     String getExecutionPlan() throws SQLException;
 
     /**
+     * @return The detailed execution plan of the currently prepared statement
+     * @throws SQLException
+     *         If this statement is closed.
+     */
+    String getExplainedExecutionPlan() throws SQLException;
+
+    /**
      * Retrieves the SQL counts for the last execution of this statement.
      * <p>
      * The retrieved SQL counts are also notified to all registered {@link StatementListener}s.
