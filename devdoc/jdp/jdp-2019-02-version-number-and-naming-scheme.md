@@ -30,7 +30,8 @@ Some examples:
   - org.firebirdsql.jdbc:jaybird-jdk18:3.0.4
 
 With the advent of the new Java version numbering, the possibility of collision
-is now imminent.
+is now imminent. For example when Java 15 is released, the existing `jdk15` 
+artifacts will be ambiguous.
 
 ## Decision
 
