@@ -79,7 +79,8 @@ The status of the document. Possible values:
 - Published: (date) : the date is optional for living documents
 - Updated by: (jdp-reference)
 - Replaced by: (jdp-reference)
-- Implemented in: (first Jaybird version that implements this) 
+- Implemented in: (first Jaybird version that implements this)
+- Proposed for: (proposed Jaybird version to implement this) 
 
 The status section should also reference the JDP(s) it updates or replaces:
 
