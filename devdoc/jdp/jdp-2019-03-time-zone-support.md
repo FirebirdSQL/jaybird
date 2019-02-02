@@ -54,44 +54,60 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
 
 **no final decisions yet**
 
-1.  Only persists offsets, no named zones.
+1.  When persisting, only persists offsets, no named zones.
 
     Matches with JDBC requirement to support `java.time.OffsetTime`/`OffsetDateTime`.
     See also rejected option 2.
     
-2.  On retrieval of value with a named zone, convert to offset based on Java 
-    zone information.
+2.  On retrieval of `TIMESTAMP WITH TIME ZONE` value with a named zone, convert 
+    to offset based on Java zone information.
     
     Requires mapping the Firebird named zone ids to Java time zone names.
     
     -   Rejected alternative: use offset 0 when retrieving named zone (see also 
         rejected option 1).
 
-### Open options or questions
+3.  On retrieval of `TIME WITH TIME ZONE` value with a named zone, convert to 
+    offset based on the **current date** and the Java zone information, then
+    remove date information.
+    
+    This can lead to inconsistent values depending on date, but aligns closer 
+    with the transformations suggested in the SQL standard (section 4.6 in 
+    ISO-9075-2:2016) - although the SQL standard itself only defines 
+    offset-based zones - and it matches the behaviour used by Firebird when 
+    applying `timetzvalue at time zone '...'` or 
+    `extract(timezone_hour from timetzvalue)`.
+    
+    -   Rejected alternative: handle as 1970-01-01 => consistent value: result
+        would be inconsistent with value obtained from 
+        `cast(timetzvalue as timestamp with time zone)` and 
+        `extract(timezone_hour from timetzvalue)` (and `timezone_minute`)
+    -   Rejected alternative: handle as offset 0 => consistent value, no 
+        conversion necessary: loss of information (see also rejected option 1). 
 
--   How to handle `TIME WITH TIME ZONE` with a named time zone? A named zone 
-    only has meaning in the context of a date.
-    
-    Options:
-    
-    -   Handle as 1970-01-01 => consistent value
-    -   Handle as current date => inconsistent value depending on date
-    -   Handle as offset 0 => consistent value, no conversion necessary
+### Open options or questions
 
 -   Support `java.time.OffsetTime` for `TIMESTAMP WITH TIME ZONE`.
 
-    Not specified by JDBC. Possible confusion/ambiguity (eg what date to use,
-    1970-01-01 or now, when setting?).
+    Based on the SQL standard (section 4.6 in ISO-9075-2:2016) as _"Copy time 
+    and time zone fields from SV \[Source Value]"_
+
+    Not specified by JDBC.
 
 -   Support `java.time.OffsetDateTime` for `TIME WITH TIME ZONE`.
 
-    Not specified by JDBC. Possible confusion/ambiguity?
+    Based on the SQL standard (section 4.6 in ISO-9075-2:2016) as _"Copy date 
+    fields from CURRENT_DATE and time and time zone fields from SV \[Source 
+    Value]"_
+
+    Not specified by JDBC.
 
 -   Support `java.time.LocalDate`, `LocalTime` and `LocalDateTime` for 
     `WITH TIME ZONE` types.
     
     Not specified by JDBC. Possible confusion/ambiguity (eg is local in the 
-    JVM zone or at the original offset?). See also other items.
+    JVM zone or at the original offset?). See also other items. See also section 
+    4.6 in ISO-9075-2:2016.
     
 -   Support for `java.time.Instant` on `TIMESTAMP WITH TIME ZONE` by storing
     with offset 0.
@@ -111,7 +127,7 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     applications or libraries still expecting `java.sql.*` types. It will also
     ease migration between Java 7 and 8 or higher.
     
-    Possible confusion/ambiguity.
+    Possible confusion/ambiguity. See also section 4.6 in ISO-9075-2:2016.
 
 -   How to handle setting time zone (connection property)? Especially effect on
     determining `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date` for 
@@ -146,8 +162,8 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     
 ### Rejected options
 
-1.  Ignore time zone information and always provide `OffsetDateTime` at offset 0 
-    (UTC/GMT), and set value at offset 0.
+1.  Ignore time zone information and always provide `OffsetDateTime` or 
+    `OffsetTime` at offset 0 (UTC/GMT), and set value at offset 0.
     
     This is similar to what the PostgreSQL JDBC driver does.
     
