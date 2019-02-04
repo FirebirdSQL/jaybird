@@ -1082,6 +1082,11 @@ arguments ([JDBC-562](http://tracker.firebirdsql.org/browse/JDBC-562))
 suggest that you upgrade this dependency.
 -   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
 database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
+-   New Feature: Support for Firebird 3 'explained' (detailed) execution plan ([JDBC-574](http://tracker.firebirdsql.org/browse/JDBC-574))  
+    Adds `FirebirdStatement.getLastExplainedExecutionPlan()`, 
+`FirebirdPreparedStatement.getExplainedExecutionPlan()`, and 
+`Firebird ResultSet.getExplainedExecutionPlan()`.   
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Removal of deprecated classes and packages
 ------------------------------------------
