@@ -490,6 +490,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
      */
     @Test
     public void testGetLastExplainedExecutionPlan_select() throws SQLException {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+        
         executeCreateTable(con, CREATE_TABLE);
 
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
@@ -502,7 +505,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     }
 
     /**
-     * Test retrieval of detailed execution plan ({@link FBStatement#getLastExplainedExecutionPlan()} ()})
+     * Test retrieval of detailed execution plan ({@link FBStatement#getLastExplainedExecutionPlan()})
      * when no statement has been executed yet.
      * <p>
      * Expected: exception

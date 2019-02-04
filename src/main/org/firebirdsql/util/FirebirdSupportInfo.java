@@ -505,6 +505,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports explained (detailed) execution plans.
+     */
+    public boolean supportsExplainedExecutionPlan() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

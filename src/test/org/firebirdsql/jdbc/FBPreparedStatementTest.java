@@ -604,6 +604,9 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
 
     @Test
     public void testGetExplainedExecutionPlan() throws SQLException {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
 
         try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2")) {

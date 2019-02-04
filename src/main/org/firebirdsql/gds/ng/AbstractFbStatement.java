@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
@@ -418,8 +419,24 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final String getExplainedExecutionPlan() throws SQLException {
-        final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
-        return getSqlInfo(processor.getDescribeExplainedPlanInfoItems(), getDefaultSqlInfoSize(), processor);
+        synchronized (getSynchronizationObject()) {
+            checkExplainedExecutionPlanSupport();
+            final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
+            return getSqlInfo(processor.getDescribeExplainedPlanInfoItems(), getDefaultSqlInfoSize(), processor);
+        }
+    }
+
+    private void checkExplainedExecutionPlanSupport() throws SQLException {
+        try {
+            checkStatementValid();
+            if (!getDatabase().getServerVersion().isEqualOrAbove(3, 0)) {
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported)
+                        .toFlatSQLException();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     /**

@@ -806,6 +806,9 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
     @Test
     public void testGetExplainedExecutionPlan() throws Exception {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
         executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
         try (Statement stmt = connection.createStatement();

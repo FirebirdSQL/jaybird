@@ -79,6 +79,7 @@ public interface JaybirdErrorCodes {
     int jb_generatedKeysArrayEmptyOrNull                 = 337248290;
     int jb_generatedKeysInvalidColumnPosition            = 337248291;
     int jb_generatedKeysNoColumnsFound                   = 337248292;
+    int jb_explainedExecutionPlanNotSupported            = 337248293;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
