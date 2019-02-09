@@ -189,6 +189,10 @@ If you manage your dependencies manually, you need to do the following:
     `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
     support.
     
+3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.2.0.jar`.
+    This library is only necessary for native, local or embedded connections.
+    If you use pure-java connections (the default), you don't need JNA.
+    
 Gotcha's
 --------
 
@@ -1087,6 +1091,8 @@ database character set during database creation ([JDBC-541](http://tracker.fireb
 `FirebirdPreparedStatement.getExplainedExecutionPlan()`, and 
 `Firebird ResultSet.getExplainedExecutionPlan()`.   
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
+-   Upgraded jna library used for native/embedded from 4.4 to 5.2 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)  
+    The pull request to upgrade was contributed by [Julien Nabet](https://github.com/serval2412).
 
 Removal of deprecated classes and packages
 ------------------------------------------
