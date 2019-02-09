@@ -161,7 +161,7 @@ server.
 For `getGeneratedKeys` support you will need to include 
 `antlr-runtime-4.7.2.jar` on your classpath.
 
-For native, local or embedded support, you will need to include `jna-4.4.0.jar` 
+For native, local or embedded support, you will need to include `jna-5.2.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver].
 
 Upgrading from Jaybird 3 to Jaybird 4
@@ -1375,7 +1375,7 @@ Type 2 (native) and embedded driver
 -----------------------------------
 
 Jaybird uses JNA to access the client library. If you want to use the Type 2 
-driver, or Firebird embedded, then you need to include `jna-4.4.0.jar` on the 
+driver, or Firebird embedded, then you need to include `jna-5.2.0.jar` on the 
 classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we 

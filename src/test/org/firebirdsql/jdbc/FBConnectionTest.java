@@ -25,20 +25,25 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.gds.ng.jna.FbEmbeddedDatabaseFactory;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
@@ -84,6 +89,27 @@ public class FBConnectionTest {
 
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     //@formatter:on
+
+    @AfterClass
+    public static void killEmbedded() {
+        /*
+        TODO Temporary workaround for problem occurring after https://github.com/FirebirdSQL/jaybird/pull/21
+        See als JDBC-575
+        NOTE: The necessity of this workaround could indicate that the connection was not properly closed or released
+        Possible fixed when JDBC-519 gets done (or otherwise a better way of doing this for all tests must be found)
+        */
+        if (GDS_TYPE.equals(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)) {
+            FbEmbeddedDatabaseFactory instance = FbEmbeddedDatabaseFactory.getInstance();
+            try {
+                Method getClientLibrary = FbEmbeddedDatabaseFactory.class.getDeclaredMethod("getClientLibrary");
+                getClientLibrary.setAccessible(true);
+                FbClientLibrary library = (FbClientLibrary) getClientLibrary.invoke(instance);
+                System.out.println(library.fb_shutdown(0, 1));
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     /**
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
