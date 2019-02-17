@@ -48,6 +48,7 @@ version.
 For pre-releases, the version can be suffixed with:
 
 - `-SNAPSHOT` for development snapshots, eg 4.0.0-SNAPSHOT
+  - On Maven, the snapshot can contain a timestamp (eg `-SNAPSHOT-<timestamp>`)
 - `-alpha-n` for alpha releases, eg 4.0.0-alpha-1
 - `-beta-n` for beta releases, eg 4.0.0-beta-1
 - `-rc-n` for release candidates, eg 4.0.0-rc-1
@@ -58,7 +59,8 @@ Moving forward, the current inconsistent identification of Java version (eg
 `JDK_1.8`, `jdk18`, etc) must be `javaXX`, where `XX` is the Java (major) 
 version.
 
-This change will only be applied for newly supported Java versions.
+This change will only be applied for newly supported Java versions (that is 
+beyond Java 8).
 
 For Java 8 or earlier, the Java identification must be `jdkXX`. This avoids
 introducing a breaking change in the Maven coordinates.
@@ -69,8 +71,8 @@ When referencing a Jaybird version in text, use `Jaybird <major>`. For legacy
 versions 2.2 and earlier, use `Jaybird <major>.<minor>`. If the specific patch
 version is relevant, use `Jaybird <major>.<minor>.<patch>`.
 
-In the various artifacts, the name Jaybird must be used lowercase. The target
-Java version must be included in the jar filename.
+In the various artifacts, the name Jaybird must be used lowercase (`jaybird`). 
+The target Java version must be included in the jar filename.
 
 The naming scheme must be:
 
