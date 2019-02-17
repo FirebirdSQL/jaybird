@@ -2,7 +2,7 @@
 
 ## Status
 
-- Draft
+- Published
 
 ## Type
 
