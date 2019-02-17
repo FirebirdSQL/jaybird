@@ -118,20 +118,23 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     
     Simplifies implementation in some parts, avoids some ambiguity in Java code 
     with mapping to `java.sql.Timestamp`/`java.sql.Time`.
-
-### Open options or questions
-
--   How to handle setting time zone (connection property)? Especially effect on
-    determining `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date` for 
-    `WITHOUT TIME ZONE` types (and `WITH TIME ZONE` when legacy binding is set) 
-    might be problematic.
     
--   Automatically set session time zone to JVM default, or leave unset?
- 
-    Leaving unset will retain backwards compatible behaviour for 
-    `WITHOUT TIME ZONE` types. But setting it will lead to more correct 
-    behaviour between values set from Jaybird and values assigned using 
-    `LOCALTIMESTAMP` and other conversions.
+7.  Provide connection property to set the time zone bind (native (default) or 
+    legacy).
+    
+    When the property is set to legacy, after connect to Firebird 4 or higher,
+    Jaybird will execute `SET TIME ZONE BIND LEGACY`.
+    
+    Java 7 users will need to explicitly set this if they want to use `WITH TIME 
+    ZONE` types (including `CURRENT_TIME` and `CURRENT_TIMESTAMP`).
+    
+    See also rejected option 9.
+    
+8.  Automatically set session time zone to JVM default on connect.
+     
+    Setting it will lead to more correct behaviour between values set from 
+    Jaybird and values assigned using `LOCALTIMESTAMP` and other conversions.
+    It will also closer align to JDBC expectations surrounding time.
     
     For example consider Firebird server at UTC+2, and Java application at 
     UTC+1, in Jaybird 3, use of `LOCALTIMESTAMP` returning a value of 13:00 (at 
@@ -139,13 +142,28 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     session time zone would result in `LOCALTIMESTAMP` returning a value of 
     12:00 (at +01:00) and a time value of 12:00 (at +01:00) in Java.
     
--   Automatically set `set time zone bind legacy` from Java 7.
-
-    This will automatically provide support, but having to execute Java 
-    version dependent statements on connect will introduce some complexity.
+9.  The specified (or default) session time zone will define how a value is 
+    derived for `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date` for 
+    `WITHOUT TIME ZONE` types (and `WITH TIME ZONE` when time zone bind is set 
+    to legacy). 
     
--   Alternative to previous point: provide connection property to perform set 
-    legacy binding on connect. 
+    That means instead of the JVM default, the session time zone will be used
+    to derive the value from the date/time information sent by Firebird. This 
+    can lead to unexpected behaviour for `java.sql.Date` (ie being one day off 
+    in the JVM default) if set to another zone than the JVM default.
+    
+    We accept this behaviour and encourage people to use the `java.time` types.
+
+10. Provide option as part of connection property (item 9) to unset session time 
+    zone of item 8 (maybe Firebird already provides an appropriate value).
+     
+    Property unset will retain backwards compatible behaviour for `WITHOUT TIME 
+    ZONE` types and use JVM default time zone for interpretation for 
+    `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date`.
+
+### Open options or questions
+
+_none at the moment_
     
 ### Rejected options
 
@@ -220,6 +238,15 @@ Time zone support in Jaybird will not include the following:
     Not specified by JDBC, would mirror decision 4, but possibly more ambiguous.
     
     If there is demand, we can always add it in later.
+    
+9.  Automatically set `set time zone bind legacy` from Java 7.
+    
+    This would automatically provide support, but having to execute Java 
+    version dependent statements on connect will introduce some complexity,
+    in addition Java 7 is end-of-life, so we don't want to spend too much time
+    on it.
+    
+    See also accepted option 7.
 
 ## Consequences
 
