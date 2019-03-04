@@ -324,7 +324,7 @@ public class JnaStatement extends AbstractFbStatement {
                     bufferLength = xSqlVar.sqldata.getShort(0) & 0xffff;
                 } else {
                     bufferOffset = 0;
-                    bufferLength = xSqlVar.sqllen;
+                    bufferLength = xSqlVar.sqllen & 0xffff;
                 }
 
                 byte[] data = new byte[bufferLength];
