@@ -99,10 +99,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
         return encoding;
     }
 
-    /**
-     * @return the datatype coder wrapped by this instance
-     */
-    DatatypeCoder unwrap() {
+    @Override
+    public DatatypeCoder unwrap() {
         return parentCoder;
     }
 
@@ -143,8 +141,18 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public void encodeShort(int value, byte[] target, int fromIndex) {
+        parentCoder.encodeShort(value, target, fromIndex);
+    }
+
+    @Override
     public short decodeShort(byte[] byte_int) {
         return parentCoder.decodeShort(byte_int);
+    }
+
+    @Override
+    public short decodeShort(byte[] bytes, int fromIndex) {
+        return parentCoder.decodeShort(bytes, fromIndex);
     }
 
     @Override
@@ -153,8 +161,18 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public void encodeInt(int value, byte[] target, int fromIndex) {
+        parentCoder.encodeInt(value, target, fromIndex);
+    }
+
+    @Override
     public int decodeInt(byte[] byte_int) {
         return parentCoder.decodeInt(byte_int);
+    }
+
+    @Override
+    public int decodeInt(byte[] bytes, int fromIndex) {
+        return parentCoder.decodeInt(bytes, fromIndex);
     }
 
     @Override

@@ -76,6 +76,24 @@ public class ByteArrayHelperTest {
     }
 
     @Test
+    public void fromHexString_0x01ff83a3() {
+        assertArrayEquals("01FF83A3", new byte[] { 0x01, (byte) 0xff, (byte) 0x83, (byte) 0xa3 },
+                ByteArrayHelper.fromHexString("01FF83A3"));
+    }
+
+    @Test
+    public void fromHexString_allValues() {
+        byte[] content = new byte[256];
+        for (int idx = 0; idx < 256; idx++) {
+            content[idx] = (byte) idx;
+        }
+
+        String asHexString = ByteArrayHelper.toHexString(content);
+
+        assertArrayEquals(content, ByteArrayHelper.fromHexString(asHexString));
+    }
+
+    @Test
     public void fromBase64String_properlyPadded() {
         final String base64 = "ZWFzdXJlLg==";
         final byte[] expectedValue = "easure.".getBytes(StandardCharsets.US_ASCII);

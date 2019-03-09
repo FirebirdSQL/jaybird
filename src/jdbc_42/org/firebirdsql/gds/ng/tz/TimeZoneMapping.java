@@ -68,7 +68,7 @@ public final class TimeZoneMapping {
      */
     private static final int MAX_CACHED_NAMED_ZONES = 10;
     private static final String FALLBACK_ZONE = "UTC";
-    private static final ZoneId FALLBACK_ZONE_ID = ZoneId.of(FALLBACK_ZONE);
+    private static final ZoneId FALLBACK_ZONE_ID = ZoneOffset.UTC;
     private static final String KEY_MIN_ZONE_ID = "min_zone_id";
     private static final String FIREBIRD_TIME_ZONE_MAPPING_PROPERTIES = "firebird_time_zone_mapping.properties";
 
@@ -158,6 +158,17 @@ public final class TimeZoneMapping {
                 logger.warn(message + " See debug level for location.");
             }
         }
+    }
+
+    /**
+     * Returns the Firebird time zone id for a {@link java.time.ZoneOffset}.
+     *
+     * @param zoneOffset
+     *         The zone offset
+     * @return Firebird time zone id
+     */
+    public int toTimeZoneId(ZoneOffset zoneOffset) {
+        return toTimeZoneId(zoneOffset.getTotalSeconds() / 60);
     }
 
     /**

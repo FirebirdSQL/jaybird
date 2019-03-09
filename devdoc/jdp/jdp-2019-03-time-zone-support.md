@@ -114,7 +114,7 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     implemented for Java 7.
 
     This will require setting `set time zone bind legacy` for support on Java 7 
-    (either by user or by Jaybird, see open options).
+    (by user, see also point 7 below).
     
     Simplifies implementation in some parts, avoids some ambiguity in Java code 
     with mapping to `java.sql.Timestamp`/`java.sql.Time`.
@@ -155,7 +155,7 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     We accept this behaviour and encourage people to use the `java.time` types.
 
 10. Provide option as part of connection property (item 9) to unset session time 
-    zone of item 8 (maybe Firebird already provides an appropriate value).
+    zone of item 8.
      
     Property unset will retain backwards compatible behaviour for `WITHOUT TIME 
     ZONE` types and use JVM default time zone for interpretation for 

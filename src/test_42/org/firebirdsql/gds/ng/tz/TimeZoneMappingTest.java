@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.tz;
 
 import org.junit.Test;
 
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import static org.junit.Assert.assertEquals;
@@ -35,17 +34,17 @@ public class TimeZoneMappingTest {
     @Test
     public void invalidZoneIdYieldsUTC() {
         // 64904 is current lowest id, this is one below that
-        assertEquals(ZoneId.of("UTC"), mapping.timeZoneById(64903));
+        assertEquals(ZoneOffset.UTC, mapping.timeZoneById(64903));
     }
 
     @Test
     public void timeZoneById_outOfRangeZoneIdYieldsUTC_negativeOne() {
-        assertEquals(ZoneId.of("UTC"), mapping.timeZoneById(-1));
+        assertEquals(ZoneOffset.UTC, mapping.timeZoneById(-1));
     }
 
     @Test
     public void timeZoneById_outOfRangeZoneIdYieldsUTC_exceeds0xFFFF() {
-        assertEquals(ZoneId.of("UTC"), mapping.timeZoneById(0xFFFF + 1));
+        assertEquals(ZoneOffset.UTC, mapping.timeZoneById(0xFFFF + 1));
     }
 
     @Test

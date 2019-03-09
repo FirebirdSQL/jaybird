@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public class TimeZoneOffsetMappingTest {
@@ -37,7 +38,7 @@ public class TimeZoneOffsetMappingTest {
     private static final int SIGN_POSITIVE = 1;
     private static final int SIGN_NEGATIVE = -1;
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
-    private static final ZoneId UTC_ZONE_UID = ZoneId.of("UTC");
+    private static final ZoneId UTC_ZONE_UID = ZoneOffset.UTC;
 
     private final int firebirdZoneId;
     private final int sign;
@@ -66,15 +67,22 @@ public class TimeZoneOffsetMappingTest {
     }
 
     @Test
-    public void testToTimeZoneId() {
+    public void testToTimeZoneId_minutes() {
         final int offsetMinutes = getOffsetMinutes();
 
         assertEquals("Unexpected timezone id", firebirdZoneId, mapping.toTimeZoneId(offsetMinutes));
     }
 
     @Test
+    public void testToTimeZoneId_ZoneOffset() {
+        assumeTrue("Test requires ZoneOffset", isInImplementationRange());
+
+        assertEquals("Unexpected mapping", firebirdZoneId, mapping.toTimeZoneId((ZoneOffset) zoneId));
+    }
+
+    @Test
     public void testIsSupportedOffsetTimezone() {
-        final boolean expectedSupport = !UTC_ZONE_UID.equals(zoneId);
+        final boolean expectedSupport = isInImplementationRange();
 
         assertEquals(expectedSupport, mapping.isSupportedOffsetTimezone(firebirdZoneId));
     }
@@ -82,6 +90,13 @@ public class TimeZoneOffsetMappingTest {
     @Test
     public void testIsOffsetTimeZone() {
         assertTrue(mapping.isOffsetTimeZone(firebirdZoneId));
+    }
+
+    /**
+     * @return {@code true} if the offset is within the Jaybird implementation range.
+     */
+    private boolean isInImplementationRange() {
+        return hours >= 0 && (hours < 17 || hours == 18 && minutes == 0);
     }
 
     private int getOffsetMinutes() {
@@ -92,6 +107,7 @@ public class TimeZoneOffsetMappingTest {
     public static Collection<Object[]> testCases() {
         List<Object[]> testData = new ArrayList<>(24 * 4 * 2 + 2);
         testData.add(testCase(1439, 1, 0, 0, ZoneOffset.ofHoursMinutes(0, 0)));
+        // Maximum range supported by Jaybird due to ZoneOffset limit of [-18:00, +18:00]
         testData.add(testCase(SIGN_POSITIVE, 18, 0));
         testData.add(testCase(SIGN_NEGATIVE, 18, 0));
         for (int hours = 0; hours < 17; hours++) {
