@@ -314,7 +314,7 @@ public final class TimeZoneMapping {
             for (int internalId = 0; internalId < zoneIdCount; internalId++) {
                 final String timeZoneId = String.valueOf(timeZoneId(internalId));
                 final String timeZoneName = StringUtils.trimToNull(timeZoneMapping.getProperty(timeZoneId));
-                zonesById[internalId] = timeZoneName != null ? timeZoneName.intern() : FALLBACK_ZONE;
+                zonesById[internalId] = timeZoneName != null ? timeZoneName : FALLBACK_ZONE;
             }
 
             return Collections.unmodifiableList(Arrays.asList(zonesById));
