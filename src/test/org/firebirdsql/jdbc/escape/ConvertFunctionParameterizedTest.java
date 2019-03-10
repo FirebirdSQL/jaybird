@@ -151,7 +151,16 @@ public class ConvertFunctionParameterizedTest {
         /* 74 */ testCase("?", "VARCHAR", "CAST(? AS VARCHAR(50))"),
         /* 75 */ testCase("?", "VARCHAR(75)", "CAST(? AS VARCHAR(75))"),
         /* 76 */ testCase("?", "NVARCHAR", "CAST(? AS NVARCHAR(50))"),
-        /* 77 */ testCase("?", "NVARCHAR(75)", "CAST(? AS NVARCHAR(75))")
+        /* 77 */ testCase("?", "NVARCHAR(75)", "CAST(? AS NVARCHAR(75))"),
+        // Time zone support (not defined in JDBC nor in ODBC)
+        /* 78 */ testCase("val", "SQL_TIME_WITH_TIMEZONE", "CAST(val AS TIME WITH TIME ZONE)"),
+        /* 79 */ testCase("val", "TIME_WITH_TIMEZONE", "CAST(val AS TIME WITH TIME ZONE)"),
+        /* 80 */ testCase("val", "SQL_TIME_WITH_TIME_ZONE", "CAST(val AS TIME WITH TIME ZONE)"),
+        /* 81 */ testCase("val", "TIME_WITH_TIME_ZONE", "CAST(val AS TIME WITH TIME ZONE)"),
+        /* 82 */ testCase("val", "SQL_TIMESTAMP_WITH_TIMEZONE", "CAST(val AS TIMESTAMP WITH TIME ZONE)"),
+        /* 83 */ testCase("val", "TIMESTAMP_WITH_TIMEZONE", "CAST(val AS TIMESTAMP WITH TIME ZONE)"),
+        /* 84 */ testCase("val", "SQL_TIMESTAMP_WITH_TIME_ZONE", "CAST(val AS TIMESTAMP WITH TIME ZONE)"),
+        /* 95 */ testCase("val", "TIMESTAMP_WITH_TIME_ZONE", "CAST(val AS TIMESTAMP WITH TIME ZONE)")
 //@formatter:on
         );
     }
