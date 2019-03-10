@@ -117,6 +117,10 @@ public final class JdbcTypeConverter {
             return Types.TIME;
         case ISCConstants.SQL_TYPE_DATE:
             return Types.DATE;
+        case ISCConstants.SQL_TIMESTAMP_TZ:
+            return JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE;
+        case ISCConstants.SQL_TIME_TZ:
+            return JaybirdTypeCodes.TIME_WITH_TIMEZONE;
         case ISCConstants.SQL_BLOB:
             if (subtype < 0) {
                 return Types.BLOB;
@@ -167,7 +171,9 @@ public final class JdbcTypeConverter {
     static final int varchar_type = 37;
     // static final int cstring_type = 40;
     static final int blob_type = 261;
-    static final short boolean_type = 23;
+    static final int boolean_type = 23;
+    static final int time_tz_type = 28;
+    static final int timestamp_tz_type = 29;
 
     /**
      * Converts the metadata type value to the Firebird type value (null bit not set).
@@ -203,6 +209,10 @@ public final class JdbcTypeConverter {
             return ISCConstants.SQL_TYPE_TIME;
         case timestamp_type:
             return ISCConstants.SQL_TIMESTAMP;
+        case time_tz_type:
+            return ISCConstants.SQL_TIME_TZ;
+        case timestamp_tz_type:
+            return ISCConstants.SQL_TIMESTAMP_TZ;
         case char_type:
             return ISCConstants.SQL_TEXT;
         case varchar_type:
