@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -61,6 +62,10 @@ public class TestScalarTimeDateFunctions {
         // We create a connection and statement for all tests executed for performance reasons
         con = getConnectionViaDriverManager();
         stmt = con.createStatement();
+        if (getDefaultSupportInfo().supportsTimeZones()) {
+            // Test uses java.sql.Time/java.sql.Timestamp, avoid complications with CURRENT_TIME(STAMP)
+            stmt.execute("set time zone bind legacy");
+        }
     }
 
     @AfterClass

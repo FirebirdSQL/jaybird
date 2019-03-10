@@ -512,6 +512,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports {@code TIME(STAMP) WITH TIME ZONE}
+     */
+    public boolean supportsTimeZones() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
@@ -553,4 +560,5 @@ public final class FirebirdSupportInfo {
             throw new IllegalStateException(e);
         }
     }
+
 }
