@@ -777,6 +777,100 @@ Values set on a field or parameter will be rounded using `RoundingMode.HALF_EVEN
 to the target scale of the field. Values exceeding a precision of 34 will be
 rejected with a `TypeConversionException`.
 
+Firebird 4 time zone support
+----------------------------
+
+Added support for the Firebird 4 `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME 
+ZONE` types. See the Firebird 4 release notes (and `doc/sql.extensions/README.time_zone.md`
+in the Firebird installation) for details on these types.
+
+The time zone types are supported under Java 8 and higher, using the Java 8 (or 
+higher) version of Jaybird. Time zone types are not supported under Java 7 and 
+will require you to enable legacy time zone bind. With legacy time zone 
+bind (`SET TIME ZONE BIND LEGACY`), Firebird will convert to the equivalent 
+`TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session time 
+zone.
+
+See also [jdp-2019-03 Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
+
+NOTE: documentation below reflects state as currently implemented
+
+### Scope of time zone support ###
+
+JDBC 4.2 introduced support for time zones, and maps these types to 
+`java.time.OffsetTime` and `java.time.OffsetDateTime`. JDBC does not define
+explicit setters for these types. Use `setObject(index, value)`,
+`updateObject(index, value)`, `getObject(index/name)` or 
+`getObject(index/name, classType)`
+
+Firebird 4 supports both offset and named time zones. Given the definition in
+JDBC, Jaybird only supports offset time zones. On retrieval of a value with a
+named zone, Jaybird will make a best effort to convert to the equivalent offset
+using Java's time zone information. If no mapping is available the time will be 
+returned at UTC (offset zero).
+
+Jaybird 4 supports the following Java types on fields of time zone types (those
+marked with * are not defined in JDBC)
+
+`TIME WITH TIME ZONE`:
+
+- `java.time.OffsetTime` (default for `getObject`)
+  - On get, if the value is a named zone, it will derive the offset using the 
+  current date
+- `java.time.OffsetDateTime`
+  - On set the date information is removed
+  - On get the current date is added
+- `java.lang.String`
+  - On get applies `OffsetTime.toString()` (eg `13:25:13.1+01:00`)
+  - On set tries the default parse format of either `OffsetTime` or 
+  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+  and then sets as that type
+  
+`TIMESTAMP WITH TIME ZONE`:
+
+- `java.time.OffsetDateTime` (default for `getObject`)
+- `java.time.OffsetTime` (*)
+  - On get, the date information is removed
+  - On set, the current date is added
+- `java.lang.String`
+  - On get applies `OffsetDateTime.toString()` (eg `2019-03-10T13:25:13.1+01:00`)
+  - On set tries the default parse format of either `OffsetTime` or 
+  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+  and then sets as that type
+  
+The legacy JDBC types `java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date`
+are not supported, nor are `java.time.LocalTime`, `java.time.LocalDateTime` or 
+`java.time.LocalDate`. Supporting these types would be ambiguous. If you need to 
+use these, then either enable legacy time zone bind, or define or cast your 
+columns as `TIME` or `TIMESTAMP`. **NOTE: This is not final yet**
+
+Jaybird also does not support non-standard extensions like `java.time.Instant`,
+or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
+future.
+
+### Time zone support for CONVERT ###
+
+Although not defined in JDBC (or ODBC), Jaybird has added a non-standard 
+extension to the `CONVERT` JDBC escape to allow conversion to the time zone 
+types. 
+
+In addition to the standard-defined types, it also supports the type names 
+`TIME_WITH_TIME_ZONE`, `TIME_WITH_TIMEZONE`, `TIMESTAMP_WITH_TIME_ZONE` and 
+`TIMESTAMP_WITH_TIMEZONE` (and the same with the `SQL_` prefix). 
+
+### Caveats for time zone types ###
+
+- Time zone fields do not support the legacy JDBC types `java.sql.Time`, 
+`java.sql.Timestamp`, `java.sql.Date`, nor do they support `java.time.LocalDate`,
+`java.time.LocalTime`, `java.time.LocalDateTime`. **NOTE: This is not final yet**
+- Firebird 4 redefines `CURRENT_TIME` and `CURRENT_TIMESTAMP` to return a `WITH 
+TIME ZONE` type. Use `LOCALTIME` and `LOCALTIMESTAMP` (introduced in Firebird 
+3.0.4) if you want to ensure a `WITHOUT TIME ZONE` type is used.
+- The database metadata will always return JDBC 4.2 compatible information on 
+time zone types, even on Java 7, and even when legacy time zone bind is set. For
+Java 7 compatibility the JDBC 4.2 `java.sql.Types` constants `TIME_WITH_TIMEZONE` 
+and `TIMESTAMP_WITH_TIMEZONE` are also defined in `org.firebirdsql.jdbc.JaybirdTypeCodes`. 
+
 JDBC DatabaseMetaData.getPseudoColumns implemented
 --------------------------------------------------
 
