@@ -31,7 +31,7 @@ package org.firebirdsql.gds;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "DanglingJavadoc" })
 public interface ISCConstants {
 
     int SQLDA_VERSION1             = 1;
@@ -860,7 +860,7 @@ public interface ISCConstants {
     int fb_cancel_abort = 4;
 
 
-    /********************/
+    /*******************/
     /* ISC Error Codes */
     /*******************/
 
@@ -2267,6 +2267,8 @@ public interface ISCConstants {
     int SQL_TYPE_TIME = 560;
     int SQL_TYPE_DATE = 570;
     int SQL_INT64     = 580;
+    int SQL_TIMESTAMP_TZ = 32754;
+    int SQL_TIME_TZ   = 32756;
     int SQL_DEC_FIXED = 32758;
     int SQL_DEC16     = 32760;
     int SQL_DEC34     = 32762;

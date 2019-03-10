@@ -222,6 +222,12 @@ public abstract class FBField {
         case ISCConstants.SQL_TYPE_TIME:
             return jdbcType == Types.TIME;
 
+        case ISCConstants.SQL_TIME_TZ:
+            return jdbcType == JaybirdTypeCodes.TIME_WITH_TIMEZONE;
+
+        case ISCConstants.SQL_TIMESTAMP_TZ:
+            return jdbcType == JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE;
+
         case ISCConstants.SQL_VARYING:
             return subType != ISCConstants.CS_BINARY && jdbcType == Types.VARCHAR
                     || subType == ISCConstants.CS_BINARY && jdbcType == Types.VARBINARY;
@@ -278,6 +284,10 @@ public abstract class FBField {
             return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
         case Types.TIMESTAMP:
             return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
         case Types.CHAR:
         case Types.VARCHAR:
             /*
