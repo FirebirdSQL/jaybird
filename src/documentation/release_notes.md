@@ -829,7 +829,7 @@ marked with * are not defined in JDBC)
 `TIMESTAMP WITH TIME ZONE`:
 
 - `java.time.OffsetDateTime` (default for `getObject`)
-- `java.time.OffsetTime` (*)
+- `java.time.OffsetTime` (\*)
   - On get, the date information is removed
   - On set, the current date is added
 - `java.lang.String`
