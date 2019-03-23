@@ -564,6 +564,21 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
+    @Override
+    public String getTimeZoneBind() {
+        synchronized (lock) {
+            return connectionProperties.getTimeZoneBind();
+        }
+    }
+
+    @Override
+    public void setTimeZoneBind(String timeZoneBind) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setTimeZoneBind(timeZoneBind);
+        }
+    }
+
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties

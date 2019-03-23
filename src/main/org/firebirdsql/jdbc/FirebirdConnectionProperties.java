@@ -476,4 +476,32 @@ public interface FirebirdConnectionProperties {
      *         {@code update_or_insert}, {@code merge})
      */
     void setGeneratedKeysEnabled(String generatedKeysEnabled);
+
+    /**
+     * Get the {@code timeZoneBind} configuration.
+     *
+     * @return configuration value for {@code timeZoneBind}, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getTimeZoneBind();
+
+    /**
+     * Sets the {@code timeZoneBind} configuration.
+     * <p>
+     * If the value is explicitly set to a non-null value and the connected server is Firebird 4 or higher, this will
+     * execute {@code SET TIME ZONE BIND} with the specified value. We advise only to use this when setting to {@code
+     * legacy}, as {@code native} is already the default and avoids the overhead of setting it explicitly.
+     * </p>
+     * <p>
+     * Invalid values are not ignored and will be executed, this will yield a syntax error which will be logged and
+     * ignored. As a result, specifying an invalid value will behave as the default (native).
+     * </p>
+     * <p>
+     * See also Firebird documentation for {@code SET TIME ZONE BIND}.
+     * </p>
+     *
+     * @param timeZoneBind
+     *         Firebird 4+ time zone bind configuration: default ({@code null}), {@code native}, {@code legacy}
+     */
+    void setTimeZoneBind(String timeZoneBind);
 }

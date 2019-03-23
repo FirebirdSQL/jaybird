@@ -87,8 +87,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setBlobBufferSize(length);
     }
     
-    
-    
     /**
      * Get name of the database. 
      * 
@@ -421,6 +419,16 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
         mcf.setGeneratedKeysEnabled(generatedKeysEnabled);
+    }
+
+    @Override
+    public String getTimeZoneBind() {
+        return mcf.getTimeZoneBind();
+    }
+
+    @Override
+    public void setTimeZoneBind(String timeZoneBind) {
+        mcf.setTimeZoneBind(timeZoneBind);
     }
 
     /*

@@ -447,6 +447,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
     }
 
+    @Override
+    public String getTimeZoneBind() {
+        return connectionProperties.getTimeZoneBind();
+    }
+
+    @Override
+    public void setTimeZoneBind(String timeZoneBind) {
+        connectionProperties.setTimeZoneBind(timeZoneBind);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

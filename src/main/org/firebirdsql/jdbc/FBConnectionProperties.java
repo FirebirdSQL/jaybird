@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.firebirdsql.jdbc.FBDriverPropertyManager.getCanonicalName;
+
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
     private static final long serialVersionUID = 611228437520889118L;
@@ -62,6 +64,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String DB_CRYPT_CONFIG = "dbCryptConfig";
     public static final String AUTH_PLUGINS = "authPlugins";
     public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
+    public static final String TIME_ZONE_BIND = "timeZoneBind";
 
     private Map<String, Object> properties = new HashMap<>();
     private String type;
@@ -75,10 +78,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     private int getIntProperty(String name) {
         Integer value = (Integer) properties.get(getCanonicalName(name));
         return value != null ? value : 0;
-    }
-
-    private String getCanonicalName(String propertyName) {
-        return FBDriverPropertyManager.getCanonicalName(propertyName);
     }
 
     private String getStringProperty(String name) {
@@ -109,10 +108,11 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     private void setBooleanProperty(String name, boolean value) {
+        String canonicalName = getCanonicalName(name);
         if (value) {
-            properties.put(getCanonicalName(name), Boolean.TRUE);
+            properties.put(canonicalName, Boolean.TRUE);
         } else {
-            properties.remove(name);
+            properties.remove(canonicalName);
         }
     }
 
@@ -391,6 +391,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
         setStringProperty(GENERATED_KEYS_ENABLED, generatedKeysEnabled);
+    }
+
+    @Override
+    public String getTimeZoneBind() {
+        return getStringProperty(TIME_ZONE_BIND);
+    }
+
+    @Override
+    public void setTimeZoneBind(String timeZoneBind) {
+        setStringProperty(TIME_ZONE_BIND, timeZoneBind);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

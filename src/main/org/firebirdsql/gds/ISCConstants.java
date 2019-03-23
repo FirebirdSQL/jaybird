@@ -93,7 +93,7 @@ public interface ISCConstants {
     int isc_dpb_quit_log                = 26;
     int isc_dpb_no_reserve              = 27;
     int isc_dpb_user_name               = 28;
-    int isc_dpb_user                    = 28; // alias to isc_dpb_user_name
+    int isc_dpb_user                    = isc_dpb_user_name;
     int isc_dpb_password                = 29;
     int isc_dpb_password_enc            = 30;
     int isc_dpb_sys_user_name_enc       = 31;
@@ -163,6 +163,10 @@ public interface ISCConstants {
     int isc_dpb_reset_icu				= 89;
     int isc_dpb_map_attach              = 90;
 
+    // Firebird 4 constants
+    int isc_dpb_session_time_zone       = 91;
+    int isc_dpb_set_db_replica          = 92;
+
     /*
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.
@@ -189,11 +193,13 @@ public interface ISCConstants {
     int isc_dpb_wire_crypt_level        = 144;
     int isc_dpb_db_crypt_config         = 145;
     int isc_dpb_generated_keys_enabled  = 146;
+    // TODO Fix after CORE-6032
+    int isc_dpb_time_zone_bind          = 147;
 
     // Lowest Jaybird DPB extension value
     int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
     // NOTE: Update this when adding new Jaybird specific DPB items
-    int jaybirdMaxIscDpbValue = isc_dpb_generated_keys_enabled;
+    int jaybirdMaxIscDpbValue = isc_dpb_time_zone_bind;
 
     /*************************************/
     /* Transaction parameter block stuff */
