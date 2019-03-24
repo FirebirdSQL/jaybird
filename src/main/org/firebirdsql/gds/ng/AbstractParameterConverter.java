@@ -35,6 +35,11 @@ import static org.firebirdsql.gds.ISCConstants.*;
 public abstract class AbstractParameterConverter<D extends AbstractConnection<IConnectionProperties, ?>, S extends AbstractConnection<IServiceProperties, ?>>
         implements ParameterConverter<D, S> {
 
+    /**
+     * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.
+     */
+    private static final String SESSION_TIME_ZONE_SERVER = "server";
+
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(final D connection) {
         return new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
                 connection.getEncoding());
@@ -82,6 +87,10 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
         dpb.addArgument(isc_dpb_sql_dialect, props.getConnectionDialect());
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             dpb.addArgument(isc_dpb_connect_timeout, props.getConnectTimeout());
+        }
+        String sessionTimeZone = props.getSessionTimeZone();
+        if (sessionTimeZone != null && !SESSION_TIME_ZONE_SERVER.equalsIgnoreCase(sessionTimeZone)) {
+            dpb.addArgument(isc_dpb_session_time_zone, sessionTimeZone);
         }
     }
 

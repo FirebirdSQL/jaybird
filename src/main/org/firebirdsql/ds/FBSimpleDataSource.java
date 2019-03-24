@@ -431,6 +431,16 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setTimeZoneBind(timeZoneBind);
     }
 
+    @Override
+    public String getSessionTimeZone() {
+        return mcf.getSessionTimeZone();
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        mcf.setSessionTimeZone(sessionTimeZone);
+    }
+
     /*
      * INTERFACES IMPLEMENTATION
      */

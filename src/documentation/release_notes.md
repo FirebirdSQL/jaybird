@@ -848,6 +848,41 @@ Jaybird also does not support non-standard extensions like `java.time.Instant`,
 or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
 future.
 
+### Connection property sessionTimeZone ###
+
+The connection property `sessionTimeZone` (alias `session_time_zone`) specifies 
+the Firebird 4 session time zone (see `SET TIME ZONE` in Firebird 4 
+documentation). By default, Jaybird will use the JVM default time zone as 
+reported by `java.util.TimeZone.getDefault().getID()`.
+
+The session time zone is used for conversion from `WITH TIME ZONE` values to
+`WITHOUT TIME ZONE` values (ie using cast or with legacy time zone bind), and
+for the value of `LOCALTIME`, `LOCALTIMESTAMP` `CURRENT_TIME` and 
+`CURRENT_TIMESTAMP`, and other uses of the session time zone as documented in 
+the Firebird 4 documentation.
+
+The use of the JVM default time zone as the default session time zone will
+result in subtly different behaviour compared to previous versions of Jaybird
+and - even with Jaybird 4 - Firebird 3 or earlier, as `LOCALTIMESTAMP` (etc) 
+values will now reflect the time in the JVM time zone and not the server time 
+zone. To use the server time zone and the old behaviour, set the connection 
+property to `server`.
+
+Using the JVM default time zone as the default is the best option in the light 
+of JDBC requirements with regard to `java.sql.Time` and `java.sql.Timestamp` 
+using the JVM default time zone.
+
+The value of `sessionTimeZone` must be supported by Firebird. It is possible 
+that time zone identifiers used by Java are not supported by Firebird. In that 
+case an error (`Invalid time zone region: <zone name>`) is reported, and you 
+will need to specify a valid value for `sessionTimeZone`.
+
+TODO: Behaviour for deciding `Time`/`Timestamp` value based on session time zone...
+
+NOTE: Currently, Jaybird will still use the JVM default time zone when deriving
+`java.sql.Time` and `java.sql.Timestamp` values even if another session time 
+zone was specified (this will be changed).
+
 ### Time zone support for CONVERT ###
 
 Although not defined in JDBC (or ODBC), Jaybird has added a non-standard 

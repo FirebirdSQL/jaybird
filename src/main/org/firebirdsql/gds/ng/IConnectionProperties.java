@@ -158,6 +158,24 @@ public interface IConnectionProperties extends IAttachProperties<IConnectionProp
     boolean isColumnLabelForName();
 
     /**
+     * Sets the {@code sessionTimeZone}.
+     *
+     * @param sessionTimeZone
+     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
+     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
+     * @since 4.0
+     */
+    void setSessionTimeZone(String sessionTimeZone);
+
+    /**
+     * Get the {@code sessionTimeZone}.
+     *
+     * @return value for {@code sessionTimeZone}
+     * @since 4.0
+     */
+    String getSessionTimeZone();
+
+    /**
      * Gets the extra database parameters. This can be used to pass extra database parameters that are not directly
      * supported.
      * <p>

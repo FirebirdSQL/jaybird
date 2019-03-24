@@ -65,6 +65,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String AUTH_PLUGINS = "authPlugins";
     public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
     public static final String TIME_ZONE_BIND = "timeZoneBind";
+    public static final String SESSION_TIME_ZONE = "sessionTimeZone";
 
     private Map<String, Object> properties = new HashMap<>();
     private String type;
@@ -401,6 +402,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public void setTimeZoneBind(String timeZoneBind) {
         setStringProperty(TIME_ZONE_BIND, timeZoneBind);
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return getStringProperty(SESSION_TIME_ZONE);
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        setStringProperty(SESSION_TIME_ZONE, sessionTimeZone);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

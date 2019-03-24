@@ -502,6 +502,25 @@ public interface FirebirdConnectionProperties {
      *
      * @param timeZoneBind
      *         Firebird 4+ time zone bind configuration: default ({@code null}), {@code native}, {@code legacy}
+     * @since 4.0
      */
     void setTimeZoneBind(String timeZoneBind);
+
+    /**
+     * Get the {@code sessionTimeZone}.
+     *
+     * @return value for {@code sessionTimeZone}, or {@code null} for driver default (JVM default time zone)
+     * @since 4.0
+     */
+    String getSessionTimeZone();
+
+    /**
+     * Sets the {@code sessionTimeZone}.
+     *
+     * @param sessionTimeZone
+     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
+     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
+     * @since 4.0
+     */
+    void setSessionTimeZone(String sessionTimeZone);
 }

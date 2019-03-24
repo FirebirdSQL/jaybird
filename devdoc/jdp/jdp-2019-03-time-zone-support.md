@@ -142,7 +142,10 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     session time zone would result in `LOCALTIMESTAMP` returning a value of 
     12:00 (at +01:00) and a time value of 12:00 (at +01:00) in Java.
     
-9.  The specified (or default) session time zone will define how a value is 
+9.  Provide connection property (`sessionTimeZone`) to explicitly set the
+    session time zone.
+
+    The specified (or default) session time zone will define how a value is 
     derived for `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date` for 
     `WITHOUT TIME ZONE` types (and `WITH TIME ZONE` when time zone bind is set 
     to legacy). 
@@ -157,9 +160,13 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
 10. Provide option as part of connection property (item 9) to unset session time 
     zone of item 8.
      
-    Property unset will retain backwards compatible behaviour for `WITHOUT TIME 
-    ZONE` types and use JVM default time zone for interpretation for 
+    Session time zone value `server` will not set the session time zone, and 
+    will retain backwards compatible behaviour for `WITHOUT TIME ZONE` types and 
+    use JVM default time zone for interpretation for 
     `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date`.
+    
+11. The driver-side session time zone for deriving time/timestamp values will
+    also be applied when connecting to earlier Firebird versions.
 
 ### Open options or questions
 
