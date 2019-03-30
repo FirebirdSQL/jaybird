@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -27,7 +28,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * Common superclass for {@link FBTimeField} and {@link FBTimestampField} to handle session time zone.
+ * Superclass for {@link FBTimeField}, {@link FBTimestampField} and {@link FBDateField} to handle session time zone.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -42,39 +43,35 @@ abstract class AbstractWithoutTimeZoneField extends FBField {
 
     @Override
     public final Time getTime() throws SQLException {
-        if (isNull()) return null;
-
         return getTime(getCalendar());
     }
 
     @Override
     public final Timestamp getTimestamp() throws SQLException {
-        if (isNull()) return null;
-
         return getTimestamp(getCalendar());
     }
 
     @Override
-    public final void setTime(Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+    public final Date getDate() throws SQLException {
+        return getDate(getCalendar());
+    }
 
+    @Override
+    public final void setTime(Time value) throws SQLException {
         setTime(value, getCalendar());
     }
 
     @Override
     public final void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
         setTimestamp(value, getCalendar());
     }
 
-    Calendar getCalendar() {
+    @Override
+    public final void setDate(Date value) throws SQLException {
+        setDate(value, getCalendar());
+    }
+
+    final Calendar getCalendar() {
         if (calendar == null) {
             return initCalendar();
         }

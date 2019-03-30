@@ -52,13 +52,6 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
 
-    @Override
-    public Date getDate() throws SQLException {
-        if (isNull()) return null;
-
-        return getDate(getCalendar());
-    }
-
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
@@ -87,16 +80,6 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         }
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
-    }
-
-    @Override
-    public final void setDate(Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setDate(value, getCalendar());
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
