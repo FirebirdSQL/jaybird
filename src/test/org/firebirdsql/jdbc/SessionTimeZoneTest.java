@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.*;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -58,7 +58,7 @@ public class SessionTimeZoneTest {
 
     @Test
     public void withoutTimeZone_appliesServerDefaultTimeZone() throws Exception {
-        long expectedMillis = getMillis("2019-03-23T14:05:12.12", ZoneId.systemDefault());
+        long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getDefault());
         checkForWithoutTimeZone("server", "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
@@ -72,28 +72,28 @@ public class SessionTimeZoneTest {
 
     @Test
     public void withoutTimeZone_appliesJvmDefaultTimeZone() throws Exception {
-        long expectedMillis = getMillis("2019-03-23T14:05:12.12", ZoneId.systemDefault());
+        long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getDefault());
         checkForWithoutTimeZone(null, "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
     @Test
     public void withTimeZone_appliesSpecificTimeZone() throws Exception {
         requireTimeZoneSupport();
-        long expectedMillis = getMillis("2019-03-23T14:05:12.12", ZoneId.of("America/New_York"));
+        long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("America/New_York"));
         checkForTimeZone("America/New_York", "timestamp'2019-03-23 14:05:12.12' at local", expectedMillis,
                 "2019-03-23 14:05:12.1200 America/New_York");
     }
 
     @Test
     public void withoutTimeZone_appliesSpecificTimeZone() throws Exception {
-        long expectedMillis = getMillis("2019-03-23T14:05:12.12", ZoneId.of("America/New_York"));
+        long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("America/New_York"));
         checkForWithoutTimeZone("America/New_York", "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
     @Test
     public void withTimeZone_appliesSpecificTimeZone_differentValue() throws Exception {
         requireTimeZoneSupport();
-        long expectedMillis = getMillis("2019-03-23T14:05:12.12", ZoneId.of("Europe/Amsterdam"));
+        long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("Europe/Amsterdam"));
         checkForTimeZone("America/Buenos_Aires", "timestamp'2019-03-23 14:05:12.12 Europe/Amsterdam'",
                 expectedMillis, "2019-03-23 14:05:12.1200 Europe/Amsterdam");
     }
@@ -176,9 +176,11 @@ public class SessionTimeZoneTest {
         }
     }
 
-    private static long getMillis(String localDateTimeString, ZoneId zone) {
-        return LocalDateTime.parse(localDateTimeString).atZone(zone)
-                .toInstant().toEpochMilli();
+    private static long getMillis(String localDateTimeString, TimeZone zone) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        sdf.setTimeZone(zone);
+        Date date = sdf.parse(localDateTimeString);
+        return date.getTime();
     }
 
     private static void requireTimeZoneSupport() {
