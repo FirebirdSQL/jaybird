@@ -37,6 +37,10 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
  */
 public interface IConnectionProperties extends IAttachProperties<IConnectionProperties> {
 
+    /**
+     * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.
+     */
+    String SESSION_TIME_ZONE_SERVER = "server";
     short DEFAULT_DIALECT = 3;
     int DEFAULT_BUFFERS_NUMBER = 0;
 
