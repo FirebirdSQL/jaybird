@@ -818,13 +818,23 @@ marked with * are not defined in JDBC)
   - On get, if the value is a named zone, it will derive the offset using the 
   current date
 - `java.time.OffsetDateTime`
-  - On set the date information is removed
   - On get the current date is added
+  - On set the date information is removed
 - `java.lang.String`
   - On get applies `OffsetTime.toString()` (eg `13:25:13.1+01:00`)
   - On set tries the default parse format of either `OffsetTime` or 
   `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
   and then sets as that type
+- `java.sql.Time`
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Time(millis)`
+  - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
+  and then derives the offset time for the default JVM time zone
+- `java.sql.Timestamp`
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Timestamp(millis)`
+  - On set applies `toLocalDateTime()` and derives the offset time for the 
+  default JVM time zone
   
 `TIMESTAMP WITH TIME ZONE`:
 
@@ -837,12 +847,42 @@ marked with * are not defined in JDBC)
   - On set tries the default parse format of either `OffsetTime` or 
   `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
   and then sets as that type
+- `java.sql.Time`
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Time(millis)`
+  - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
+  and then derives the offset date time for the default JVM time zone
+- `java.sql.Timestamp`
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Timestamp(millis)`
+  - On set applies `toLocalDateTime()` and derives the offset date time for the 
+  default JVM time zone
+- `java.sql.Date`
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Date(millis)`
+  - On set applies `toLocalDate()` at start of day and derives the offset date 
+  time for the default JVM time zone
+
+#### Support for legacy JDBC date/time types ####
+
+For the `WITH TIME ZONE` types, JDBC does not define support for the legacy JDBC 
+types (`java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date`). To ease the 
+transition and potential compatibility with tools and libraries, Jaybird does
+provide support. However, we strongly recommend to avoid using these types. 
+
+Compared to the `WITHOUT TIME ZONE` types, there may be small discrepancies in 
+values as Jaybird uses 1970-01-01 for `WITHOUT TIME ZONE`, while for `WITH TIME 
+ZONE` it uses the current date. If this is problematic, then either apply the 
+necessary conversions yourself, enable legacy time zone bind, or define or cast 
+your columns as `TIME` or `TIMESTAMP`.
+
+#### No support for other java.time types ####
   
-The legacy JDBC types `java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date`
-are not supported, nor are `java.time.LocalTime`, `java.time.LocalDateTime` or 
-`java.time.LocalDate`. Supporting these types would be ambiguous. If you need to 
-use these, then either apply the necessary conversions yourself, enable legacy 
-time zone bind, or define or cast your columns as `TIME` or `TIMESTAMP`. 
+The types `java.time.LocalTime`, `java.time.LocalDateTime` and 
+`java.time.LocalDate` are not supported. Supporting these types would be 
+ambiguous. If you need to use these, then either apply the necessary conversions 
+yourself, enable legacy time zone bind, or define or cast your columns as `TIME` 
+or `TIMESTAMP`. 
 **NOTE: This is not final yet**
 
 Jaybird also does not support non-standard extensions like `java.time.Instant`,
@@ -897,17 +937,21 @@ Other examples include values generated in triggers and default value clauses.
 
 #### Session time zone for conversion ####
 
-The session time zone will also be used to derive the `java.sql.Time`, 
-`java.sql.Timestamp` and `java.sql.Date` values. This is also done for 
-Firebird 3 and earlier.
+For `WITHOUT TIME ZONE` types, the session time zone will be used to derive the 
+`java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date` values. This is also 
+done for Firebird 3 and earlier.
+
+If Java does not know the session time zone, no error is reported, but when 
+retrieving `java.sql.Time`, `java.sql.Timestamp` or `java.sql.Date` a warning is 
+logged and conversion will happen in GMT, which might yield unexpected values.
 
 We strongly suggest that you use `java.time.LocalTime`, 
 `java.time.LocalDateTime` and `java.time.LocalDate` types instead of these 
 legacy datetime types.
 
-If Java does not know the session time zone, no error is reported, but when 
-retrieving `java.sql.Time`, `java.sql.Timestamp` or `java.sql.Date` a warning is 
-logged and conversion will happen in GMT, which might yield unexpected values.
+For `WITH TIME ZONE` types, the session time zone has no effect on the conversion
+to the legacy JDBC date/time types: to offset date/time is converted to epoch
+milliseconds and used to construct these legacy types directly.
 
 Executing `SET TIME ZONE <zone name>` statements after connect will change the 
 session time zone on the server, but Jaybird will continue to use the session
@@ -925,9 +969,8 @@ In addition to the standard-defined types, it also supports the type names
 
 ### Caveats for time zone types ###
 
--   Time zone fields do not support the legacy JDBC types `java.sql.Time`, 
-    `java.sql.Timestamp`, `java.sql.Date`, nor do they support 
-    `java.time.LocalDate`, `java.time.LocalTime`, `java.time.LocalDateTime`. 
+-   Time zone fields do not support `java.time.LocalDate`, `java.time.LocalTime`, 
+    `java.time.LocalDateTime`. 
     **NOTE: This is not final yet**
     
 -   Firebird 4 redefines `CURRENT_TIME` and `CURRENT_TIMESTAMP` to return a 

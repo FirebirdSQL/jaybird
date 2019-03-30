@@ -19,17 +19,13 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_DATE_TIME_CLASS_NAME;
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_TIME_CLASS_NAME;
+import java.util.Calendar;
 
 /**
  * Field for {@code TIMESTAMP WITH TIME ZONE}.
@@ -37,29 +33,33 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_TIME_CLASS_NAME;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-class FBTimestampTzField extends FBField {
+class FBTimestampTzField extends AbstractWithTimeZoneField {
 
     FBTimestampTzField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
-    private OffsetDateTime getOffsetDateTime() throws SQLException {
+    @Override
+    OffsetDateTime getOffsetDateTime() throws SQLException {
         if (isNull()) return null;
 
         return getTimeZoneDatatypeCoder().decodeTimestampTz(getFieldData());
     }
 
-    private void setOffsetDateTime(OffsetDateTime offsetDateTime) {
+    @Override
+    void setOffsetDateTime(OffsetDateTime offsetDateTime) {
         setFieldData(getTimeZoneDatatypeCoder().encodeTimestampTz(offsetDateTime));
     }
 
-    private OffsetTime getOffsetTime() throws SQLException {
+    @Override
+    OffsetTime getOffsetTime() throws SQLException {
         OffsetDateTime offsetDateTime = getOffsetDateTime();
         return offsetDateTime != null ? offsetDateTime.toOffsetTime() : null;
     }
 
-    private void setOffsetTime(OffsetTime offsetTime) throws SQLException {
+    @Override
+    void setOffsetTime(OffsetTime offsetTime) {
         // We need to base on a date to determine value, we use the current date; this will be inconsistent depending
         // on the date, but this aligns closest with Firebird behaviour and SQL standard
         ZoneOffset offset = offsetTime.getOffset();
@@ -74,35 +74,39 @@ class FBTimestampTzField extends FBField {
         return getOffsetDateTime();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T> T getObject(Class<T> type) throws SQLException {
-        if (type == null) {
-            throw new SQLNonTransientException("getObject called with type null");
+    public java.sql.Date getDate() throws SQLException {
+        OffsetDateTime offsetDateTime = getOffsetDateTime();
+        if (offsetDateTime == null) {
+            return null;
         }
-        switch (type.getName()) {
-        case OFFSET_DATE_TIME_CLASS_NAME:
-            return (T) getOffsetDateTime();
-        case OFFSET_TIME_CLASS_NAME:
-            return (T) getOffsetTime();
-        }
-        return super.getObject(type);
+        return new java.sql.Date(offsetDateTime.toInstant().toEpochMilli());
     }
 
     @Override
-    public void setObject(Object value) throws SQLException {
+    public java.sql.Date getDate(Calendar cal) throws SQLException {
+        // Intentionally ignoring calendar, see jdp-2019-03
+        return getDate();
+    }
+
+    @Override
+    public void setDate(java.sql.Date value) throws SQLException {
         if (value == null) {
             setNull();
             return;
         }
 
-        if (value instanceof OffsetDateTime) {
-            setOffsetDateTime((OffsetDateTime) value);
-        } else if (value instanceof OffsetTime) {
-            setOffsetTime((OffsetTime) value);
-        } else {
-            super.setObject(value);
-        }
+        OffsetDateTime offsetDateTime = value.toLocalDate()
+                .atStartOfDay()
+                .atZone(getDefaultZoneId())
+                .toOffsetDateTime();
+        setOffsetDateTime(offsetDateTime);
+    }
+
+    @Override
+    public void setDate(java.sql.Date value, Calendar cal) throws SQLException {
+        // Intentionally ignoring calendar, see jdp-2019-03
+        setDate(value);
     }
 
     @Override
@@ -120,21 +124,10 @@ class FBTimestampTzField extends FBField {
         }
 
         try {
-            // TODO Better way to do this?
-            // TODO More lenient parsing?
-            if (value.indexOf('T') != -1) {
-                OffsetDateTime offsetDateTime = OffsetDateTime.parse(value.trim());
-                setOffsetDateTime(offsetDateTime);
-            } else {
-                OffsetTime offsetTime = OffsetTime.parse(value.trim());
-                setOffsetTime(offsetTime);
-            }
+            setStringParse(value);
         } catch (DateTimeParseException e) {
             throw new TypeConversionException("Unable to convert value '" + value + "' to type TIMESTAMP WITH TIME ZONE", e);
         }
     }
 
-    private TimeZoneDatatypeCoder getTimeZoneDatatypeCoder() {
-        return TimeZoneDatatypeCoder.getInstanceFor(getDatatypeCoder());
-    }
 }

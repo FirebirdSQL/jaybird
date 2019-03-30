@@ -522,8 +522,9 @@ public abstract class FBField {
             if (isNull()) {
                 return null;
             } else {
+                Timestamp timestamp = getTimestamp();
                 Calendar calendar = GregorianCalendar.getInstance();
-                calendar.setTimeInMillis(getTimestamp().getTime());
+                calendar.setTimeInMillis(timestamp.getTime());
                 return (T) calendar;
             }
         case CLOB_CLASS_NAME:

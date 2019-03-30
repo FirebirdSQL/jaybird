@@ -167,6 +167,43 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     
 11. The driver-side session time zone for deriving time/timestamp values will
     also be applied when connecting to earlier Firebird versions.
+    
+12. Support legacy types `java.sql.Time`, `java.sql.Timestamp` for the `WITH 
+    TIME ZONE` types.
+    
+    Although not specified by JDBC, this option allows for some flexibility for
+    applications or libraries still expecting `java.sql.*` types. It will also
+    ease migration between Java 7 and 8 or higher.
+    
+    Firebird to Java conversion will derive the `OffsetDateTime` and then convert 
+    this to epoch milliseconds, which is then used for constructing 
+    `java.sql.Time` or `java.sql.Timestamp`. This will yield slightly different
+    results compared to `TIME WITHOUT TIME ZONE` type as there the conversion
+    applies 1970-01-01 instead of the current date.
+    
+    Java to Firebird conversion will derive an `OffsetDateTime` using 
+    `toLocalTime()` and the current date, or `toLocalDateTime()`, combined with 
+    the default JVM time zone (it will not apply `sessionTimeZone`).
+    
+    Methods with parameters of type `java.util.Calendar` will ignore the 
+    calendar.
+    
+13. Support legacy types `java.sql.Date` for the `TIMESTAMP WITH TIME ZONE` type.
+     
+    Although not specified by JDBC, this option allows for some flexibility for
+    applications or libraries still expecting `java.sql.*` types. It will also
+    ease migration between Java 7 and 8 or higher.
+    
+    Firebird to Java conversion will derive the `OffsetDateTime` and then convert 
+    this to epoch milliseconds, which is then used for constructing 
+    `java.sql.Date`.
+    
+    Java to Firebird conversion will derive an `OffsetDateTime`
+    using `toLocalDate()` at start of day combined with the default JVM time 
+    zone (it will not apply `sessionTimeZone`).
+    
+    Methods with parameters of type `java.util.Calendar` will ignore the 
+    calendar.
 
 ### Open options or questions
 
@@ -204,25 +241,9 @@ Time zone support in Jaybird will not include the following:
     
     If there is demand, we can always add it in later.
     
-4.  Support `java.sql.Time` and `java.sql.Timestamp` for `WITH TIME ZONE` types.
-
-    Although not specified by JDBC, this option allows for some flexibility for
-    applications or libraries still expecting `java.sql.*` types. It will also
-    ease migration between Java 7 and 8 or higher.
+4.  _removed, see decision 12_
     
-    Decided to prefer to abandon support for the legacy types. If people really
-    need to use legacy types, they can use `set time zone bind legacy`.
-    
-5.  Support `java.sql.Date` for `TIMESTAMP WITH TIME ZONE` type.
-
-    Although not specified by JDBC, this option allows for some flexibility for
-    applications or libraries still expecting `java.sql.*` types. It will also
-    ease migration between Java 7 and 8 or higher.
-    
-    Possible confusion/ambiguity. See also section 4.6 in ISO-9075-2:2016.
-    
-    Decided to prefer to abandon support for the legacy types, see also rejected
-    option 4.
+5.  _removed, see decision 13_
 
 6.  Support `OffsetTime`/`OffsetDateTime` on `WITHOUT TIME ZONE` types.
 
