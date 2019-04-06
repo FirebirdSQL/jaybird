@@ -523,4 +523,27 @@ public interface FirebirdConnectionProperties {
      * @since 4.0
      */
     void setSessionTimeZone(String sessionTimeZone);
+
+    /**
+     * Get the value for {@code ignoreProcedureType}.
+     *
+     * @return value for {@code ignoreProcedureType}
+     * @since 3.0.6
+     */
+    boolean isIgnoreProcedureType();
+
+    /**
+     * Sets the value {@code ignoreProcedureType}.
+     * <p>
+     * When set to true, the {@link java.sql.CallableStatement} implementation in Jaybird will ignore metadata
+     * information about the stored procedure type and default to using {@code EXECUTE PROCEDURE}, unless the type is
+     * explicitly set using {@link FirebirdCallableStatement#setSelectableProcedure(boolean)}. This can be useful in
+     * situations where a stored procedure is selectable, but tooling or code expects an executable stored procedure.
+     * </p>
+     *
+     * @param ignoreProcedureType
+     *         {@code true} Ignore procedure type
+     * @since 3.0.6
+     */
+    void setIgnoreProcedureType(boolean ignoreProcedureType);
 }

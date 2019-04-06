@@ -467,6 +467,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setSessionTimeZone(sessionTimeZone);
     }
 
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return connectionProperties.isIgnoreProcedureType();
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

@@ -43,6 +43,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.GENERATED_KEYS_ENABLED;
+import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.IGNORE_PROCEDURE_TYPE;
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIREBIRD_AUTOCOMMIT;
 
 /**
@@ -1268,6 +1269,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     private String getGeneratedKeysEnabled() {
         DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
         return dpb != null ? dpb.getArgumentAsString(GENERATED_KEYS_ENABLED) : null;
+    }
+
+    boolean isIgnoreProcedureType() {
+        DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
+        return dpb != null && dpb.hasArgument(IGNORE_PROCEDURE_TYPE);
     }
 
 }

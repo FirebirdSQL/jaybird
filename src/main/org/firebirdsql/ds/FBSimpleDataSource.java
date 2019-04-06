@@ -441,6 +441,16 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setSessionTimeZone(sessionTimeZone);
     }
 
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return mcf.isIgnoreProcedureType();
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        mcf.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
     /*
      * INTERFACES IMPLEMENTATION
      */

@@ -66,6 +66,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
     public static final String TIME_ZONE_BIND = "timeZoneBind";
     public static final String SESSION_TIME_ZONE = "sessionTimeZone";
+    public static final String IGNORE_PROCEDURE_TYPE = "ignoreProcedureType";
 
     private Map<String, Object> properties = new HashMap<>();
     private String type;
@@ -412,6 +413,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public void setSessionTimeZone(String sessionTimeZone) {
         setStringProperty(SESSION_TIME_ZONE, sessionTimeZone);
+    }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return getBooleanProperty(IGNORE_PROCEDURE_TYPE);
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        setBooleanProperty(IGNORE_PROCEDURE_TYPE, ignoreProcedureType);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

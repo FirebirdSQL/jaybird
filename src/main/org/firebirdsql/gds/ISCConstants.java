@@ -195,11 +195,12 @@ public interface ISCConstants {
     int isc_dpb_generated_keys_enabled  = 146;
     // TODO Fix after CORE-6032
     int isc_dpb_time_zone_bind          = 147;
+    int isc_dpb_ignore_procedure_type   = 148;
 
     // Lowest Jaybird DPB extension value
     int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
     // NOTE: Update this when adding new Jaybird specific DPB items
-    int jaybirdMaxIscDpbValue = isc_dpb_time_zone_bind;
+    int jaybirdMaxIscDpbValue = isc_dpb_ignore_procedure_type;
 
     /*************************************/
     /* Transaction parameter block stuff */
