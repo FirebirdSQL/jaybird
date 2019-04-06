@@ -239,6 +239,8 @@ The following has been changed or fixed since Jaybird 3.0.5
 -   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
     metadata) prevented prepared statement reuse/re-execute with error _"Statement state CURSOR_OPEN 
     only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+-   Improvement: Added `FBManager.setDefaultCharacterSet` to set default database character set 
+    during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
 -   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
     See [Case sensitive user names] for more information.
 -   Fixed: Savepoints did not work in connection dialect 1 as savepoint names were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
