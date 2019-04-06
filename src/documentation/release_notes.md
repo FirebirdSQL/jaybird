@@ -76,7 +76,7 @@ For the time being, there will be no Java 9+ specific builds, the Java 8 builds
 have the same source and all JDBC 4.3 related functionality.
 
 Given the limited support period for Java 9 and higher versions, we may limit
-support on those versions.
+support on those versions to the most recent LTS version and the latest release.
 
 Jaybird 3.0 is not modularized, but since Jaybird 3.0.3, it declares the 
 automatic module name `org.firebirdsql.jaybird`.
