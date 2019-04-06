@@ -185,6 +185,12 @@ public interface ISCConstants {
     int isc_dpb_use_firebird_autocommit = 143;
     int isc_dpb_wire_crypt_level        = 144;
     int isc_dpb_db_crypt_config         = 145;
+    int isc_dpb_ignore_procedure_type   = 146;
+
+    // Lowest Jaybird DPB extension value
+    int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
+    // NOTE: Update this when adding new Jaybird specific DPB items
+    int jaybirdMaxIscDpbValue = isc_dpb_ignore_procedure_type;
 
     /*************************************/
     /* Transaction parameter block stuff */

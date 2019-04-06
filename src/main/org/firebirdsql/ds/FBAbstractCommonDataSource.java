@@ -547,6 +547,20 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setDbCryptConfig(dbCryptConfig);
         }
     }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        synchronized (lock) {
+            return connectionProperties.isIgnoreProcedureType();
+        }
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        synchronized (lock) {
+            connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+        }
+    }
     
     /**
      * Method that allows setting non-standard property in the form "key=value"

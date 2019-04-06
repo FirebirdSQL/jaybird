@@ -252,7 +252,12 @@ The following has been changed or fixed since Jaybird 3.0.5
     cursor leading to error _"Current statement state (CURSOR_OPEN) does not allow call to prepare"_ on
     reuse of the statement (or errors similar to described for JDBC-531 above). ([JDBC-571](http://tracker.firebirdsql.org/browse/JDBC-571))  
     A stopgap measure has been added to prevent similar problems from occurring. This will log its 
-    use on debug-level with message _"ensureClosedCursor has to close a cursor at"_ and a stacktrace. 
+    use on debug-level with message _"ensureClosedCursor has to close a cursor at"_ and a stacktrace.
+-   New feature: boolean connection property `ignoreProcedureType` to disable usage of metadata for
+    stored procedure types in `CallableStatement`. When set to `true`, call escapes and `EXECUTE 
+    PROCEDURE` will default to use `EXECUTE PROCEDURE` and not switch to `SELECT` for selectable
+    stored procedures. ([JDBC-576](http://tracker.firebirdsql.org/browse/JDBC-576))  
+    See [Connection property ignoreProcedureType] for more information.
     
 ### Known issues in Jaybird 3.0.6
 
@@ -773,7 +778,35 @@ use `"SYSDBA"`.
 If a user name contains double quotes, it must be escaped by another double 
 quote. A singular double quote within a user name is a syntax error and will
 truncate the user name, leading to a login failure (unless a user exists with
-the truncated name and the same password).  
+the truncated name and the same password).
+
+Connection property ignoreProcedureType
+---------------------------------------
+  
+Jaybird 3.0.6 adds a boolean connection property `ignoreProcedureType`.
+
+On Firebird 2.1 and higher, Jaybird will use the procedure type information from 
+the database metadata to decide how to execute `CallableStatement`. When a 
+procedure is selectable, Jaybird will automatically transform a call-escape or 
+`EXECUTE PROCEDURE` statement to a `SELECT`.
+
+In some cases this automatic transformation to use a `SELECT` leads to problems.
+You can explicitly set `FirebirdCallableStatement.setSelectableProcedure(false)`
+to fix most of these issues, but this is not always an option. For example 
+spring-data-jpa's `@Procedure` will not work correctly with selectable 
+procedures, but you can't call `setSelectableProcedure`.
+
+To disable this automatic usage of procedure type information, set connection 
+property `ignoreProcedureType=true`. When necessary you can use 
+`FirebirdCallableStatement.setSelectableProcedure(true)` to execute a procedure 
+using `SELECT`.
+
+Be aware though, when `EXECUTE PROCEDURE` is used with a selectable procedure,
+it is executed only up to the first `SUSPEND`, and the rest of the stored
+procedure is not executed.
+
+For Firebird 2.0 and lower this property has no effect, as there the procedure
+type information is not available.
 
 Potentially breaking changes
 ----------------------------

@@ -42,6 +42,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.IGNORE_PROCEDURE_TYPE;
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIREBIRD_AUTOCOMMIT;
 
 /**
@@ -1689,6 +1690,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     private QuoteStrategy getQuoteStrategy() throws SQLException {
         return QuoteStrategy.forDialect(getGDSHelper().getDialect());
+    }
+
+    boolean isIgnoreProcedureType() {
+        DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
+        return dpb != null && dpb.hasArgument(IGNORE_PROCEDURE_TYPE);
     }
 
     protected class GeneratedKeysQuery extends AbstractGeneratedKeysQuery {
