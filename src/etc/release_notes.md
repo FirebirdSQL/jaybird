@@ -51,7 +51,7 @@ Supported Java versions
 Jaybird @VERSION@ supports Java 6 (JDBC 4.0), Java 7 (JDBC 4.1) and Java 8 
 (JDBC 4.2). Support for earlier Java versions has been dropped.
 
-The upcoming Jaybird 3.0 will support Java 7, 8, and 9.
+Jaybird 3 supports Java 7, 8, and 11.
 
 Specification support
 ---------------------
