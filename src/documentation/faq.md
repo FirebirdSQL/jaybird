@@ -67,7 +67,7 @@ for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`)  
-Version: `2.2.14`
+Version: `2.2.15`
 
 For example:
 
@@ -75,7 +75,7 @@ For example:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>2.2.14</version>
+    <version>2.2.15</version>
 </dependency>
 ~~~
 
@@ -479,6 +479,18 @@ specified connection property `wireCrypt=required` while Firebird is set to
 
 In general this error means that Jaybird requested a connection with properties 
 not supported by Firebird. It can have other causes than described below.
+
+#### Cause: user name or password is null ####
+
+With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving user name 
+or password null will lead to Jaybird not trying any authentication plugin, and
+as a result, Firebird will reject the connection.
+
+With Firebird 2.5 and earlier, or Jaybird 2.2, this situation will normally
+yield error _"Your user name and password are not defined. Ask your database 
+administrator to set up a Firebird login."_. 
+
+#### Cause: wirecrypt required ####
 
 With Jaybird 2.2.x connecting to Firebird 3 or higher, this usually means that 
 the setting `WireCrypt` is set to its (default) value of `Required`.
