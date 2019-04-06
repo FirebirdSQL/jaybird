@@ -13,11 +13,21 @@ functionality. While similar to the JDBC `XADataSource` concept, the JCA
 specification is considerably clearer on the division of responsibility between
 the application server and driver.
 
+Jaybird 2.2.x End-Of-Life
+-------------------------
+
+Jaybird 2.2.15 is the last version of Jaybird 2.2.x, and we will not plan new 
+changes or fixes for 2.2.x. This effectively means that Jaybird 2.2.x is 
+End-Of-Life. 
+
+If you run into problems, we will recommend that you switch to Jaybird 3 (or 4 
+once it is released). Contact us on Firebird-Java for questions.
+
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.7, and 
-Firebird 3.0.2, but should also support other Firebird versions from
+Jaybird @VERSION@ was tested against Firebird 2.5.8, and 
+Firebird 3.0.4, but should also support other Firebird versions from
 1.0 and up. The Type 2 and embedded server JDBC drivers require the appropriate
 JNI library. Precompiled JNI binaries for Windows and Linux platforms are 
 shipped in the default installation, other platforms require porting/building 
@@ -64,6 +74,8 @@ Changelog
 ---------
 
 ### Changes and fixes in Jaybird 2.2.15
+
+Jaybird 2.2.15 is the final version of Jaybird 2.2.x, we recommend switching to Jaybird 3.
 
 The following has been changed or fixed in Jaybird 2.2.15:
 
