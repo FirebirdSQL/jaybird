@@ -30,7 +30,8 @@ Relevant highlights:
   This can be done with `set time zone {time zone '<name>' | local}` or through 
   a DPB item `isc_dpb_session_time_zone`.
 - It is possible to transform the `WITH TIME ZONE` types to `WITHOUT TIME ZONE`
-  types (ie `TIME` and `TIMESTAMP`) by setting `set time zone bind legacy`.
+  types (ie `TIME` and `TIMESTAMP`) by setting `set time zone bind legacy` or 
+  DPB item `isc_dpb_time_zone_bind`.
   
 JDBC 4.2 (Java 8) introduced support for `TIMESTAMP WITH TIME ZONE` (`java.sql.Types.TIMESTAMP_WITH_TIMEZONE`) 
 and `TIME WITH TIME ZONE` (`java.sql.Types.TIME_WITH_TIMEZONE`) mapping to 
@@ -59,15 +60,15 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     Matches with JDBC requirement to support `java.time.OffsetTime`/`OffsetDateTime`.
     See also rejected option 2.
     
-2.  On retrieval of `TIMESTAMP WITH TIME ZONE` value with a named zone, convert 
-    to offset based on Java zone information.
+2.  On retrieval of a `TIMESTAMP WITH TIME ZONE` value with a named zone, 
+    convert to offset based on Java zone information.
     
     Requires mapping the Firebird named zone ids to Java time zone names.
     
     -   Rejected alternative: use offset 0 when retrieving named zone (see also 
         rejected option 1).
 
-3.  On retrieval of `TIME WITH TIME ZONE` value with a named zone, convert to 
+3.  On retrieval of a `TIME WITH TIME ZONE` value with a named zone, convert to 
     offset based on the **current date** and the Java zone information, then
     remove date information.
     
@@ -113,8 +114,8 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
 6.  Only support `WITH TIME ZONE` on Java 8 and higher. Support will not be
     implemented for Java 7.
 
-    This will require setting `set time zone bind legacy` for support on Java 7 
-    (by user, see also point 7 below).
+    This will require setting `set time zone bind legacy` or `timeZoneBind=legacy` 
+    for support on Java 7 (by user, see also point 7 below).
     
     Simplifies implementation in some parts, avoids some ambiguity in Java code 
     with mapping to `java.sql.Timestamp`/`java.sql.Time`.
@@ -130,9 +131,10 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     
 8.  Automatically set session time zone to JVM default on connect.
      
-    Setting it will lead to more correct behaviour between values set from 
-    Jaybird and values assigned using `LOCALTIMESTAMP` and other conversions.
-    It will also closer align to JDBC expectations surrounding time.
+    Setting the session time zone to the JVM default will lead to more correct 
+    behaviour between values set from Jaybird and values assigned using 
+    `LOCALTIMESTAMP` and other conversions. It will also closer align to JDBC 
+    expectations surrounding time.
     
     For example consider Firebird server at UTC+2, and Java application at 
     UTC+1, in Jaybird 3, use of `LOCALTIMESTAMP` returning a value of 13:00 (at 
@@ -158,10 +160,11 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
 10. Provide option as part of connection property (item 9) to unset session time 
     zone of item 8.
      
-    Session time zone value `server` will not set the session time zone, and 
-    will retain backwards compatible behaviour for `WITHOUT TIME ZONE` types and 
-    use JVM default time zone for interpretation for 
-    `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date`.
+    Session time zone value `server` will not set the session time zone. The 
+    Firebird server will use its default time zone, while the JVM uses the JVM 
+    default time zone (these might be different!). This will retain backwards 
+    compatible behaviour for `WITHOUT TIME ZONE` types and use JVM default time 
+    zone for interpretation for `java.sql.Time`/`java.sql.Timestamp`/`java.sql.Date`.
     
 11. The driver-side session time zone for deriving time/timestamp values will
     also be applied when connecting to earlier Firebird versions.
