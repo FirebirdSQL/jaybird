@@ -258,7 +258,13 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                             "Unknown or unsupported parameter with type %d added to extra database parameters",
                             parameterType));
                 }
-                parameter.copyTo(getExtraDatabaseParameters(), null);
+                // intentional fall-through; properties below don't need a warning
+                // TODO Consider using explicit properties in IConnectionProperties?
+            case isc_dpb_time_zone_bind:
+            case isc_dpb_decfloat_bind:
+            case isc_dpb_decfloat_round:
+            case isc_dpb_decfloat_traps:
+                parameter.copyTo(extraDatabaseParameters, null);
                 dirtied();
             }
         }

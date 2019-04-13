@@ -166,6 +166,10 @@ public interface ISCConstants {
     // Firebird 4 constants
     int isc_dpb_session_time_zone       = 91;
     int isc_dpb_set_db_replica          = 92;
+    int isc_dpb_time_zone_bind          = 93;
+    int isc_dpb_decfloat_bind           = 94;
+    int isc_dpb_decfloat_round          = 95;
+    int isc_dpb_decfloat_traps          = 96;
 
     /*
      * Driver-specific DPB params that will be removed before sending them
@@ -193,9 +197,7 @@ public interface ISCConstants {
     int isc_dpb_wire_crypt_level        = 144;
     int isc_dpb_db_crypt_config         = 145;
     int isc_dpb_generated_keys_enabled  = 146;
-    // TODO Fix after CORE-6032
-    int isc_dpb_time_zone_bind          = 147;
-    int isc_dpb_ignore_procedure_type   = 148;
+    int isc_dpb_ignore_procedure_type   = 147;
 
     // Lowest Jaybird DPB extension value
     int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
@@ -1827,6 +1829,9 @@ public interface ISCConstants {
     int isc_bad_repl_handle                  = 335545251;
     int isc_tra_snapshot_does_not_exist      = 335545252;
     int isc_eds_input_prm_not_used           = 335545253;
+    int isc_effective_user                   = 335545254;
+    int isc_time_zone_bind                   = 335545255;
+    int isc_decfloat_bind                    = 335545256;
     int isc_gfix_db_name                     = 335740929;
     int isc_gfix_invalid_sw                  = 335740930;
     int isc_gfix_incmp_sw                    = 335740932;

@@ -119,11 +119,9 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
     Simplifies implementation in some parts, avoids some ambiguity in Java code 
     with mapping to `java.sql.Timestamp`/`java.sql.Time`.
     
-7.  Provide connection property to set the time zone bind (native (default) or 
-    legacy).
-    
-    When the property is set to legacy, after connect to Firebird 4 or higher,
-    Jaybird will execute `SET TIME ZONE BIND LEGACY`.
+7.  Provide connection property `timeZoneBind` to set the time zone bind (native 
+    (default) or legacy). This will map to Firebird DPB item 
+    `isc_dpb_time_zone_bind`.
     
     Java 7 users will need to explicitly set this if they want to use `WITH TIME 
     ZONE` types (including `CURRENT_TIME` and `CURRENT_TIMESTAMP`).
@@ -278,5 +276,5 @@ Time zone support in Jaybird will not include the following:
 
 ## Consequences
 
-*todo*
+See [Decision] and [Rejected options].
     

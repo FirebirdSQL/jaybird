@@ -654,6 +654,8 @@ applied:
     
 If you need other rounding and overflow behavior, make sure you round the values
 appropriately before you set them.
+
+*TODO*: Document decfloat bind/traps/round connection property.
      
 ### Notes ###
 
@@ -785,11 +787,13 @@ ZONE` types. See the Firebird 4 release notes and `doc/sql.extensions/README.tim
 in the Firebird installation for details on these types.
 
 The time zone types are supported under Java 8 and higher, using the Java 8 (or 
-higher) version of Jaybird. Time zone types are not supported under Java 7 and 
-will require you to enable legacy time zone bind. With legacy time zone 
-bind (`SET TIME ZONE BIND LEGACY`), Firebird will convert to the equivalent 
-`TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session time 
-zone.
+higher) version of Jaybird. 
+
+Time zone types are not supported under Java 7, you will need to enable legacy 
+time zone bind. With legacy time zone bind, Firebird will convert to the 
+equivalent `TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session 
+time zone. Time zone bind can be configured with connection property 
+`timeZoneBind`, for more information see [Time zone bind configuration].
 
 See also [jdp-2019-03 Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
 
@@ -874,7 +878,7 @@ Compared to the `WITHOUT TIME ZONE` types, there may be small discrepancies in
 values as Jaybird uses 1970-01-01 for `WITHOUT TIME ZONE`, while for `WITH TIME 
 ZONE` it uses the current date. If this is problematic, then either apply the 
 necessary conversions yourself, enable legacy time zone bind, or define or cast 
-your columns as `TIME` or `TIMESTAMP`.
+your columns to `TIME` or `TIMESTAMP`.
 
 #### No support for other java.time types ####
   
@@ -889,6 +893,42 @@ Jaybird also does not support non-standard extensions like `java.time.Instant`,
 or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
 future.
 
+### Time zone bind configuration ###
+
+The connection property `timeZoneBind` (alias `time_zone_bind`) is a connection 
+property to configure the time zone bind (see also `SET TIME ZONE BIND` in the 
+Firebird 4 release notes).
+
+The primary purpose of this property is to set the legacy time zone bind. This
+needs to be explicitly set if you are using Java 7 and need to handle the 
+`WITH TIME ZONE` types. It can also be used for tools or applications that
+expect `java.sql.Time`/`Timestamp` types and cannot use the 
+`java.time.OffsetTime`/`OffsetDateTime` types returned for the `WITH TIME ZONE` 
+types.
+
+Possible values (case insensitive):
+
+-   `legacy`
+    
+    Firebird will convert a `WITH TIME ZONE` type to the equivalent `WITHOUT 
+    TIME ZONE` type using the session time zone to derive the value.
+    
+    Result set columns and parameters on prepared statements will behave as the
+    equivalent `WITHOUT TIME ZONE` types. This conversion is not applied to the
+    database metadata which will always report `WITH TIME ZONE` information.
+    
+-   `native`
+
+    Behaves as default (`WITH TIME ZONE` types supported), but value will be 
+    explicitly set.
+
+Any other value will result in error `isc_time_zone_bind` (code 335545255, 
+message _"Invalid time zone bind mode &lt;value&gt;"_) on connect.
+
+**Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
+build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
+necessary database parameter buffer item does not exist in earlier versions.
+
 ### Connection property sessionTimeZone ###
 
 The connection property `sessionTimeZone` (alias `session_time_zone`) does two
@@ -902,6 +942,11 @@ By default, Jaybird will use the JVM default time zone as reported by
 `java.util.TimeZone.getDefault().getID()`. Using the JVM default time zone as 
 the default is the best option in the light of JDBC requirements with regard to 
 `java.sql.Time` and `java.sql.Timestamp` using the JVM default time zone.
+
+Valid values are time zone names known by Firebird, we recommend to use the long
+names (eg `Europe/Amsterdam`) and not the ambiguous short IDs (eg `CET`). 
+Although not required, we recommend to use time zone names that are known by 
+Firebird and Java (see [Session time zone for conversion] for caveats).
 
 To use the default server time zone and the old behaviour to use the JVM default 
 time zone, set the connection property to `server`. This will result in the 
