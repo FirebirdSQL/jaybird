@@ -245,10 +245,10 @@ public class TimeZoneDatatypeCoderTest {
     }
 
     private OffsetTime getExpectedOffsetTimeForZone() {
-        LocalTime expectedTime = TIMETZ_OFFSETTIME.toLocalTime();
-        ZonedDateTime today = ZonedDateTime.now(ZoneId.of("Europe/Amsterdam"));
-        return ZonedDateTime
-                .of(today.toLocalDate(), expectedTime, ZoneId.of("Europe/Amsterdam"))
+        ZoneId amsterdamTZ = ZoneId.of("Europe/Amsterdam");
+        return TIMETZ_OFFSETTIME
+                .atDate(OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate())
+                .atZoneSameInstant(amsterdamTZ)
                 .toOffsetDateTime()
                 .toOffsetTime();
     }
