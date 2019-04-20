@@ -1329,28 +1329,55 @@ Other fixes and changes
 
 -   The distribution zip no longer includes the jaybird-@VERSION@.rar. This file
 was an example JCA Resource Archive.
+
+    We currently plan to remove JCA support entirely in Jaybird 5. See also
+[Dropping JCA (Java Connector Architecture) support].
+
 -   Added support for Firebird 4 page size 32768 (32KB) in `FBManager` and backup 
 managers (backported to Jaybird 3.0.5) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
+
 -   Changed: The value returned by `ResultSetMetaData.getColumnDisplaySize` was 
 revised for `REAL`/`FLOAT` and `DOUBLE PRECISION` to take scientific notation 
 into account ([JDBC-514](http://tracker.firebirdsql.org/browse/JDBC-514))
+
 -   Fixed: Database metadata pattern parameters now allow the pattern escape 
 character (`\`) to occur unescaped, this means that patterns `A\B` and `A\\B` 
 will both match a value of `A\B`. This complies with the (undocumented) JDBC 
 expectation that patterns follow the ODBC requirements for pattern value 
 arguments ([JDBC-562](http://tracker.firebirdsql.org/browse/JDBC-562))
--   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.  
+
+-   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.
+  
     The grammar generated for version 4.7.2 should still run on 4.7, but we
 suggest that you upgrade this dependency.
+
 -   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
 database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
--   New Feature: Support for Firebird 3 'explained' (detailed) execution plan ([JDBC-574](http://tracker.firebirdsql.org/browse/JDBC-574))  
+
+-   New Feature: Support for Firebird 3 'explained' (detailed) execution plan ([JDBC-574](http://tracker.firebirdsql.org/browse/JDBC-574))
+  
     Adds `FirebirdStatement.getLastExplainedExecutionPlan()`, 
 `FirebirdPreparedStatement.getExplainedExecutionPlan()`, and 
-`Firebird ResultSet.getExplainedExecutionPlan()`.   
+`Firebird ResultSet.getExplainedExecutionPlan()`.
+   
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
--   Upgraded jna library used for native/embedded from 4.4 to 5.2 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)  
+    
+-   Upgraded jna library used for native/embedded from 4.4 to 5.2 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
+
     The pull request to upgrade was contributed by [Julien Nabet](https://github.com/serval2412).
+    
+-   Native libraries will now be disposed on application exit ([JDBC-519](http://tracker.firebirdsql.org/browse/JDBC-519))
+
+    On JVM exit or - if deployed inside a WAR - servlet context destroy (tested 
+on Tomcat), Jaybird will call `fb_shutdown` on any loaded native libraries and 
+dispose the JNA handle to the native library. This should prevent crashes (eg 
+access violation / 0xc0000005 error on Windows) on library unload if there were 
+still embedded connections open.
+
+    Given the potential for bugs or timing issues with this feature, it can be 
+disabled with system property `org.firebirdsql.nativeResourceShutdownDisabled` 
+set to `true`. This property must be set before Jaybird is loaded, preferably
+on the Java command line.
 
 Removal of deprecated classes and packages
 ------------------------------------------

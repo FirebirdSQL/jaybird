@@ -25,5 +25,6 @@
 	<classpathentry kind="lib" path="lib/test/jmock-2.9.0.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-junit4-2.9.0.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-legacy-2.9.0.jar"/>
+	<classpathentry kind="lib" path="src/lib/servlet-api.jar"/>
 	<classpathentry kind="output" path="classes/production/client-java"/>
 </classpath>
