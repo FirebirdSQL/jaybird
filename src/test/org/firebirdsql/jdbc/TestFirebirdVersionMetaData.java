@@ -29,10 +29,10 @@ import static org.junit.Assert.assertEquals;
 public class TestFirebirdVersionMetaData {
 
     @Test
-    public void shouldReturn3_0ForFirebird4_0() throws Exception {
+    public void shouldReturn4_0ForFirebird4_0() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion("WI-V4.0.0.459 Firebird 4.0");
 
-        assertEquals(FirebirdVersionMetaData.FIREBIRD_3_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
+        assertEquals(FirebirdVersionMetaData.FIREBIRD_4_0, FirebirdVersionMetaData.getVersionMetaDataFor(version));
     }
 
     @Test
