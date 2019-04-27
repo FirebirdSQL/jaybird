@@ -190,7 +190,7 @@ server.
 For `getGeneratedKeys` support you will need to include 
 `antlr-runtime-4.7.2.jar` on your classpath.
 
-For native, local or embedded support, you will need to include `jna-5.2.0.jar` 
+For native, local or embedded support, you will need to include `jna-5.3.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver].
 
 Upgrading from Jaybird 3 to Jaybird 4
@@ -204,7 +204,7 @@ Maven
 
 Upgrade the version of the dependency to @VERSION@. If you use native or 
 embedded verify that you upgrade JNA (`net.java.dev.jna:jna`) from 4.4.0 to 
-5.2.0.
+5.3.0.
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 4]. 
@@ -223,7 +223,7 @@ If you manage your dependencies manually, you need to do the following:
     `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
     support.
     
-3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.2.0.jar`.
+3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.3.0.jar`.
     This library is only necessary for native, local or embedded connections.
     If you use pure-java connections (the default), you don't need JNA.
     
@@ -1441,9 +1441,9 @@ database character set during database creation ([JDBC-541](http://tracker.fireb
    
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
     
--   Upgraded jna library used for native/embedded from 4.4 to 5.2 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
+-   Upgraded jna library used for native/embedded from 4.4 to 5.3 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
 
-    The pull request to upgrade was contributed by [Julien Nabet](https://github.com/serval2412).
+    The pull request to upgrade (from 4.4 to 5.2) was contributed by [Julien Nabet](https://github.com/serval2412).
     
 -   Native libraries will now be disposed on application exit ([JDBC-519](http://tracker.firebirdsql.org/browse/JDBC-519))
 
@@ -1745,7 +1745,7 @@ Type 2 (native) and embedded driver
 -----------------------------------
 
 Jaybird uses JNA to access the client library. If you want to use the Type 2 
-driver, or Firebird embedded, then you need to include `jna-5.2.0.jar` on the 
+driver, or Firebird embedded, then you need to include `jna-5.3.0.jar` on the 
 classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we 
