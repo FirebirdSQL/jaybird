@@ -871,12 +871,12 @@ marked with * are not defined in JDBC)
   - On set tries the default parse format of either `OffsetTime` or 
   `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
   and then sets as that type
-- `java.sql.Time`
+- `java.sql.Time` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
   milliseconds and uses `new java.sql.Time(millis)`
   - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
   and then derives the offset time for the default JVM time zone
-- `java.sql.Timestamp`
+- `java.sql.Timestamp` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
   milliseconds and uses `new java.sql.Timestamp(millis)`
   - On set applies `toLocalDateTime()` and derives the offset time for the 
@@ -893,17 +893,17 @@ marked with * are not defined in JDBC)
   - On set tries the default parse format of either `OffsetTime` or 
   `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
   and then sets as that type
-- `java.sql.Time`
+- `java.sql.Time` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
   milliseconds and uses `new java.sql.Time(millis)`
   - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
   and then derives the offset date time for the default JVM time zone
-- `java.sql.Timestamp`
+- `java.sql.Timestamp` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
   milliseconds and uses `new java.sql.Timestamp(millis)`
   - On set applies `toLocalDateTime()` and derives the offset date time for the 
   default JVM time zone
-- `java.sql.Date`
+- `java.sql.Date` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
   milliseconds and uses `new java.sql.Date(millis)`
   - On set applies `toLocalDate()` at start of day and derives the offset date 
