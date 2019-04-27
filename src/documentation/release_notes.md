@@ -55,11 +55,13 @@ Supported Java versions
 Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher 
 (JDBC 4.3). Support for earlier Java versions has been dropped.
 
-For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
-have the same source and all JDBC 4.3 related functionality.
-
-Given the limited support period for Java 9 and higher versions, we may limit
+Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
+Currently that means we support Java 11 and Java 12.
+
+Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
+have the same source and all JDBC 4.3 related functionality and can be used on
+Java 9 and higher as well.
 
 Jaybird 4 is not modularized, but all versions declare the automatic module name 
 `org.firebirdsql.jaybird`.
@@ -268,10 +270,17 @@ Java support
 
 The driver supports Java 7 with caveats.
  
-Some of the libraries used for testing Jaybird have upped there minimum version
-to Java 8, while we need those library versions to test - for example - Java 11. 
-When we can no longer work around these issues, we will sacrifice Java 7 test 
-coverage in order to maintain Java 7 support.
+-   Firebird 4 time zone types are not supported under Java 7, see also
+    [Firebird 4 time zone support].
+
+-   Under Java 7, Jaybird requires JAXB (`javax.xml.bind`), this will work in
+    standard Java, but may require additional configuration in certain 
+    environments, for example JBoss/Wildfly.
+    
+-   Some of the libraries used for testing Jaybird have upped there minimum 
+    version to Java 8, while we need those library versions to test - for 
+    example - Java 11. When we can no longer work around these issues, we will 
+    sacrifice Java 7 test coverage in order to maintain Java 7 support. 
 
 ### Java 8 ###
 
@@ -279,27 +288,27 @@ The driver supports Java 8.
 
 ### Java 9 and higher ###
 
-Jaybird 4 supports Java 9 and higher (JDBC 4.3) with the Java 8 version of the 
-driver. Most of the JDBC 4.3 features have been implemented (in as far as they 
-are supported by Firebird).
+Jaybird 4 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version 
+of the driver. Most of the JDBC 4.3 features have been implemented (in as far 
+as they are supported by Firebird).
 
-For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
-automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
-name for Jaybird, and allows for future modularization of Jaybird.
+You can use the Java 8 driver under Java 9 and higher. For Java 11 or higher we 
+recommend to use the Java 11 driver, though its sources are identical to the 
+Java 8 driver. 
 
-You can use the Java 8 driver under Java 9 and higher. We recommend not to use 
-the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
-JDBC 4.3 features that are implemented in the Java 8 version. In addition, since 
-Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` module, 
-where the Java 8 version does not need that module.
+We recommend not to use the Java 7 version of Jaybird with Java 9 or higher. The 
+Java 7 version doesn't implement all of the JDBC 4.3 features that are 
+implemented in the Java 8 version. In addition, since Jaybird 3.0.4, the Java 7 
+version of Jaybird needs the `java.xml.bind` module, where the Java 8 and higher 
+versions do not need that module.
 
-Given the limited support period for Java 9 and higher versions, we may limit
+Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
+Currently that means we support Java 7, 8, 11 and 12.
 
-No final decisions have been made on releasing a version specific artifact, but
-likely a latest Java LTS-version specific release will be made available before 
-final Jaybird 4.0.0 (probably named jaybird-javaNN, eg jaybird-java11, to avoid 
-overlap with the current jaybird-jdkNN naming convention when we get to Java 15).
+For compatibility with Java 9 modules, Jaybird defines the automatic module name 
+`org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
+allows for future modularization of Jaybird.
 
 Firebird support
 ----------------
