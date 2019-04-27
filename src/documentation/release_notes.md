@@ -43,11 +43,12 @@ Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 
 ### Notes on Firebird 4 support
 
-Jaybird 4 does not (yet) support the new `TIME WITH TIME ZONE` and `TIMESTAMP 
-WITH TIME ZONE` types. We plan to add this before the Jaybird 4.0.0 release.
-
 Jaybird 4 does not support the protocol improvements of Firebird 4 like statement 
 and session timeouts. Nor does it implement the new batch protocol.
+
+Jaybird time zone support uses functionality added after Firebird 4 beta 1 (4.0.0.1436), 
+you will need version 4.0.0.1481 or later for the `timeZoneBind` connection 
+property.
 
 Supported Java versions
 -----------------------
