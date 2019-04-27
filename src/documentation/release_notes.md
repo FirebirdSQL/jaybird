@@ -115,7 +115,7 @@ Jaybird @VERSION@
 Jaybird @VERSION@ is available from Maven central: 
 
 Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18` or `java11`).\
+Artifactid: `jaybird-XX` (where `XX` is `jdk17`, `jdk18` or `java11`).\
 Version: `@VERSION@`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id

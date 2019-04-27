@@ -6,13 +6,75 @@ Where do I get Jaybird?
 
 ### Maven ###
 
+#### Jaybird 4 ####
+
+NOTE: Jaybird 4 is in beta. Use [Jaybird 3.0] for production.
+
+Jaybird 4 is available from Maven central:
+
+Groupid: `org.firebirdsql.jdbc`,  
+Artifactid: `jaybird-XX` (where `XX` is `jdk17`, `jdk18` or `java11`)  
+Version: `4.0.0-beta-1`
+
+For ease of use, we also provide a Maven relocation artifact with artifact id
+`jaybird`. For Jaybird 4 this relocation artifact points to `jaybird-jdk18`.
+
+For example, for Java 8:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>4.0.0-beta-1</version>
+</dependency>
+~~~
+
+If your application is deployed to a Java EE application server, you will need to
+exclude the `javax.resource:connector-api` dependency, and add it as a provided 
+dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird-jdk18</artifactId>
+    <version>4.0.0-beta-1</version>
+    <exclusions>
+        <exclusion>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>javax.resource</groupId>
+    <artifactId>connector-api</artifactId>
+    <version>1.5</version>
+    <scope>provided</scope>
+</dependency>
+~~~
+
+If you want to use Type 2 support (native, local or embedded), you need to 
+explicitly include JNA as a dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+</dependency>
+~~~
+
+The version can be left off, as it is already specified in the Jaybird pom.
+
 #### Jaybird 3.0 ####
 
 Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`)  
+Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
 Version: `3.0.5`
+
+For ease of use, we also provide a Maven relocation artifact with artifact id
+`jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
 
 For example, for Java 8:
 
@@ -58,7 +120,7 @@ explicitly include JNA as a dependency:
 </dependency>
 ~~~
 
-The version can be excluded, as it is already specified in the Jaybird pom.
+The version can be left off, as it is already specified in the Jaybird pom.
 
 #### Jaybird 2.2 ####
 
@@ -66,8 +128,11 @@ Jaybird 2.2 is available on maven, with a separate artifact
 for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-jdkXX` (where `XX` is `16`, `17` or `18`)  
+Artifactid: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`)  
 Version: `2.2.15`
+
+For ease of use, we also provide a Maven relocation artifact with artifact id
+`jaybird`. For Jaybird 2.2 this relocation artifact points to `jaybird-jdk17`.
 
 For example:
 
@@ -129,6 +194,14 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
+Jaybird 4 supports Java 7, 8, 11 and 12. Support for Java 9 and higher is 
+limited to the latest LTS and current latest release, but in practice Jaybird
+should work on all Java 9+ versions.
+
+Jaybird 4 is the last version to support Java 7, support will be dropped with
+Jaybird 5. Java 8 support may be dropped from Jaybird 5 as well depending on
+the actual release timeline. 
+
 Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9.
 
 Jaybird 2.2 supports Java 6, 7 and 8. 
@@ -151,7 +224,12 @@ Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name
 Which Firebird versions are supported?
 --------------------------------------
 
-Jaybird 3.0 supports Firebird versions 2.0 and higher.
+Jaybird 4 supports Firebird version 2.5 and higher, and introduces support for
+Firebird 4 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and 
+time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
+
+Jaybird 3.0 supports Firebird versions 2.0 and higher. Support for Firebird 4 is
+limited to the Firebird 3 feature set.
 
 Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1. Future versions
 of Jaybird are not guaranteed to work with version 2.1 and earlier.
@@ -178,8 +256,16 @@ Where to get more information on Jaybird
 Apart from this FAQ, you can get additional information from:
 
 * [Jaybird wiki](https://github.com/FirebirdSQL/jaybird/wiki/)
-* [Jaybird 2.1 Programmers Manual](https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
+* [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html)
+(covers Jaybird 2.2 and higher, work in progress)
+* [Jaybird 2.1 JDBC driver - Java Programmers Manual](https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
 * [Firebird Website: Development, JDBC Driver](https://www.firebirdsql.org/en/devel-jdbc-driver/)
+
+For version specific details, consult the release notes
+
+* [Jaybird 4.0.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/4.0.x/release_notes.html)
+* [Jaybird 3.0.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/3.0.x/release_notes.html)
+* [Jaybird 2.2.x release notes](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/2.2.x/release_notes.html)
 
 Where to get help
 -----------------
@@ -238,7 +324,7 @@ JDBC URLs (`java.sql.DriverManager`)
 Default URL format:
 
     jdbc:firebirdsql://host[:port]/<database>
-
+    
 This will connect to the database using the Type 4 JDBC driver using the Java
 implementation of the Firebird wire-protocol. This is best suited for
 client-server applications with dedicated database server. Port can be omitted
@@ -257,12 +343,17 @@ On Linux the root `/` should be included in the path. A database located on
 `/opt/firebird/db.fdb` should use (note the double slash after port!):  
 
     jdbc:firebirdsql://host:port//opt/firebird/db.fdb
-
+    
 Deprecated, but still supported legacy URL format:
 
     jdbc:firebirdsql:host[/port]:<database>
 
 The legacy URL format does not support IPv6 address literals.
+
+Jaybird 4 and higher also support:
+
+    jdbc:firebird://host[:port]/<database>
+    jdbc:firebird:host[/port]:<database>
 
 ### Open Office/Libre Office (Pure Java)
 
@@ -271,6 +362,10 @@ some compatibility issues (and differences in interpretation of JDBC
 specifications) a separate subprotocol is used:
 
     jdbc:firebirdsql:oo://host[:port]/<database>
+
+Jaybird 4 and higher also support:
+
+    jdbc:firebird:oo://host[:port]/<database>
 
 ### Native (using Firebird client library)
 
@@ -294,6 +389,12 @@ will not use socket communication, but rather access database directly. Requires
 correct installation of the client library and - for Jaybird 2.2 or earlier - 
 the Jaybird native library, or - for Jaybird 3.0 - the JNA jar file.
 
+Jaybird 4 and higher also support:
+
+    jdbc:firebird:native://host[:port]/<database>
+    jdbc:firebird:native:host[/port]:<database>
+    jdbc:firebird:local:<database>
+
 ### Embedded Server
 
     jdbc:firebirdsql:embedded:<database>
@@ -302,6 +403,10 @@ Similar to the Firebird client library, however `fbembed.dll` on Windows and
 `libfbembed.so` on Linux are used. Requires correctly installed and configured
 Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native
 library, or - for Jaybird 3.0 - the JNA jar file.
+
+Jaybird 4 and higher also support:
+
+    jdbc:firebird:embedded:<database>
 
 Character sets
 --------------
