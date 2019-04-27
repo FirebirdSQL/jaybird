@@ -824,7 +824,7 @@ rejected with a `TypeConversionException`.
 Firebird 4 time zone support
 ----------------------------
 
-Added support for the Firebird 4 `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME 
+Added support for the Firebird 4 `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME
 ZONE` types. See the Firebird 4 release notes and `doc/sql.extensions/README.time_zone.md`
 in the Firebird installation for details on these types.
 
