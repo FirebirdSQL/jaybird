@@ -1506,6 +1506,20 @@ The pure Java protocol in Jaybird will - by default - no longer try the
 
 See [Default authentication plugins] for more information.
 
+Time zone behaviour
+-------------------
+
+Using Jaybird 4 with Firebird 4 on a machine with a different time zone than the 
+JVM, values of `CURRENT_TIMESTAMP`, `LOCALTIMESTAMP`, `CURRENT_TIME` and 
+`LOCALTIME` will result in different values compared to Jaybird 4 with 
+Firebird 3 (or Jaybird 3 or earlier with Firebird 4). This is caused by
+Jaybird 4 setting the session time zone to the JVM default time zone. As a
+result values will be in the time zone of the JVM and not the Firebird server
+time zone.
+
+To revert to the previous behaviour, explicitly set `sessionTimeZone=server`.
+See [Connection property sessionTimeZone] for more information.
+
 RDB$DB_KEY columns no longer of Types.BINARY
 --------------------------------------------
 
