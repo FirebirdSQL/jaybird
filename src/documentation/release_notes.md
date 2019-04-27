@@ -25,13 +25,13 @@ Firebird 4.
 
 The main new features are:
 
-- [JDBC RowId support]
 - [Wire encryption support] (backported to Jaybird 3.0.4)
 - [Database encryption support] (backported to Jaybird 3.0.4)
 - [Authentication plugin improvements]
 - [Firebird 4 DECFLOAT support]
 - [Firebird 4 extended numeric precision support]
 - [Firebird 4 time zone support]
+- [JDBC RowId support]
 - [JDBC DatabaseMetaData.getPseudoColumns implemented]
 - [JDBC DatabaseMetaData.getVersionColumns implemented]
 - [Improved JDBC function escape support]
@@ -345,43 +345,6 @@ Support for Firebird 2.0 and 2.1 has been dropped. See [Firebird 2.0 and 2.1 no
 longer supported] for details.
 
 Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
-
-JDBC RowId support
-------------------
-
-Columns of type `RDB$DB_KEY` are now identified as `java.sql.Types.ROWID`,
-and `getObject` on these columns will now return a `java.sql.RowId`.
-
-The `getObject(int/String, Class)` methods support retrieval as 
-`java.sql.RowId` and `org.firebirdsql.jdbc.FBRowId`; the object returned is the
-same type (`org.firebirdsql.jdbc.FBRowId`) in both cases.
-
-Updating row ids is not possible, so attempts to call `updateRowId` or 
-`updateObject` on a `RDB$DB_KEY` in an updatable result set will throw an 
-`SQLFeatureNotSupportedException`.
-
-Unfortunately, this support does not extend to parameters, as parameters (eg in
-`where RDB$DB_KEY = ?`) cannot be distinguished from parameters of a normal 
-binary field (`char character set octets`). To address this, binary fields
-now also accept values of type `java.sql.RowId` on `setRowId` and `setObject`.
-
-Support has also been added to `DatabaseMetaData`:
-
--   `getBestRowIdentifier` returns `RDB$DB_KEY` if there is no primary key (existing
-    functionality)
--   `getRowIdLifetime` now returns `RowIdLifetime.ROWID_VALID_TRANSACTION` (even
-    if `dbkey_scope=1` has been specified!)
--   `getPseudoColumns` now returns `RDB$DB_KEY`
-
-Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
-column, as it is a pseudo-column.
-
-In result sets, Jaybird will now also automatically map request for columns by 
-name `RDB$DB_KEY` (case insensitive) to `DB_KEY` as Firebird automatically 
-applies this alias for the `RDB$DB_KEY` column(s) in a select-list.
-
-Be aware that result set metadata will still report `DB_KEY` as the column name 
-and label.
 
 Wire encryption support
 -----------------------
@@ -1113,6 +1076,43 @@ In addition to the standard-defined types, it also supports the type names
     this, either switch those types to a `WITH TIME ZONE` type, or set the 
     `sessionTimeZone` to `server` or to the actual time zone of the Firebird 
     server. 
+
+JDBC RowId support
+------------------
+
+Columns of type `RDB$DB_KEY` are now identified as `java.sql.Types.ROWID`,
+and `getObject` on these columns will now return a `java.sql.RowId`.
+
+The `getObject(int/String, Class)` methods support retrieval as 
+`java.sql.RowId` and `org.firebirdsql.jdbc.FBRowId`; the object returned is the
+same type (`org.firebirdsql.jdbc.FBRowId`) in both cases.
+
+Updating row ids is not possible, so attempts to call `updateRowId` or 
+`updateObject` on a `RDB$DB_KEY` in an updatable result set will throw an 
+`SQLFeatureNotSupportedException`.
+
+Unfortunately, this support does not extend to parameters, as parameters (eg in
+`where RDB$DB_KEY = ?`) cannot be distinguished from parameters of a normal 
+binary field (`char character set octets`). To address this, binary fields
+now also accept values of type `java.sql.RowId` on `setRowId` and `setObject`.
+
+Support has also been added to `DatabaseMetaData`:
+
+-   `getBestRowIdentifier` returns `RDB$DB_KEY` if there is no primary key (existing
+    functionality)
+-   `getRowIdLifetime` now returns `RowIdLifetime.ROWID_VALID_TRANSACTION` (even
+    if `dbkey_scope=1` has been specified!)
+-   `getPseudoColumns` now returns `RDB$DB_KEY`
+
+Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
+column, as it is a pseudo-column.
+
+In result sets, Jaybird will now also automatically map request for columns by 
+name `RDB$DB_KEY` (case insensitive) to `DB_KEY` as Firebird automatically 
+applies this alias for the `RDB$DB_KEY` column(s) in a select-list.
+
+Be aware that result set metadata will still report `DB_KEY` as the column name 
+and label.
 
 JDBC DatabaseMetaData.getPseudoColumns implemented
 --------------------------------------------------
