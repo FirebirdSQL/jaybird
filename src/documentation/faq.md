@@ -235,7 +235,8 @@ Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1. Future versions
 of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
-support for new features of Firebird 3 (eg `BOOLEAN` support).
+support for new features of Firebird 3 (eg `BOOLEAN` support). Support for 
+Firebird 4 is limited to the Firebird 3 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5. Future
 versions of Jaybird are not guaranteed to work with these versions.
