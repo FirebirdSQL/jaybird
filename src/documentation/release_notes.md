@@ -12,12 +12,35 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 General Notes
 =============
 
-Jaybird is a JDBC driver suite to connect to Firebird database servers.
+Jaybird is a JDBC driver suite to connect to Firebird database servers from Java
+and other Java Virtual Machine (JVM) languages.
 
 About this version
 ------------------
 
-*TODO*
+Jaybird 4 is - compared to Jaybird 3 - an incremental release that builds on the
+foundations of Jaybird 3. The focus of this release has been on further 
+improving JDBC support and adding support for the new data types and features of 
+Firebird 4.
+
+The main new features are:
+
+- [JDBC RowId support]
+- [Wire encryption support] (backported to Jaybird 3.0.4)
+- [Database encryption support] (backported to Jaybird 3.0.4)
+- [Authentication plugin improvements]
+- [Firebird 4 DECFLOAT support]
+- [Firebird 4 extended numeric precision support]
+- [Firebird 4 time zone support]
+- [JDBC DatabaseMetaData.getPseudoColumns implemented]
+- [JDBC DatabaseMetaData.getVersionColumns implemented]
+- [Improved JDBC function escape support]
+- [New JDBC protocol prefix jdbc:firebird:]
+- [Generated keys support improvements]
+
+Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read 
+[Compatibility changes] before using Jaybird 4. See also 
+[Upgrading from Jaybird 3 to Jaybird 4].
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
@@ -173,11 +196,15 @@ on your classpath. See also [Type 2 (native) and embedded driver].
 Upgrading from Jaybird 3 to Jaybird 4
 =====================================
 
+Please make sure to read [Compatibility changes] and 
+[Changes in artifact and library names] before upgrading to Jaybird 4.
+
 Maven
 -----
 
 Upgrade the version of the dependency to @VERSION@. If you use native or 
-embedded.
+embedded verify that you upgrade JNA (`net.java.dev.jna:jna`) from 4.4.0 to 
+5.2.0.
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 4]. 
@@ -1680,7 +1707,7 @@ implementation. As such, it is both a JDBC driver and a JCA driver. The current
 structure requires a dependency on JCA for non-JCA usage.
 
 We will remove support for JCA entirely in Jaybird 5 to simplify the 
-implementation.
+implementation. The package `org.firebirdsql.jca` will be removed entirely.
 
 If you are currently using Jaybird as a JCA driver, please let us know on the 
 Firebird-Java mailing list. We may reconsider this decision and instead 
