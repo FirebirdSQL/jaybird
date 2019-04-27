@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
+import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
@@ -61,10 +62,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
     private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
-
-    private static final int DRIVER_MAJOR_VERSION = 4;
-    private static final int DRIVER_MINOR_VERSION = 0;
-    private static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
 
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
@@ -236,18 +233,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getDriverVersion() throws SQLException {
-        // TODO Return full version?
-        return DRIVER_VERSION;
+        return Version.JAYBIRD_SIMPLE_VERSION;
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return DRIVER_MAJOR_VERSION;
+        return Version.JAYBIRD_MAJOR_VERSION;
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return DRIVER_MINOR_VERSION;
+        return Version.JAYBIRD_MINOR_VERSION;
     }
 
     @Override

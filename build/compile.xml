@@ -140,18 +140,21 @@
         <mkdir dir="${build.resources}"/>
         <copy todir="${build.resources}" filtering="no">
             <fileset dir="${source.resources}">
-                <exclude name="org/firebirdsql/version.properties"/>
+                <exclude name="org/firebirdsql/jaybird/version.properties"/>
                 <include name="**/*"/>
             </fileset>
         </copy>
         <copy todir="${build.resources}" filtering="yes">
             <fileset dir="${source.resources}">
-                <include name="org/firebirdsql/version.properties"/>
+                <include name="org/firebirdsql/jaybird/version.properties"/>
             </fileset>
             <filterset>
                 <filter token="NAME" value="${Name}"/>
                 <filter token="VERSION" value="${version.major}.${version.minor}.${version.revision}"/>
-                <filter token="VERSION_FULL" value="${version.full}"/>
+                <filter token="MAVEN_NAME" value="${maven.artifactId}"/>
+                <filter token="VERSION_FULL" value="${version.maven}"/>
+                <filter token="VERSION_MAJOR" value="${version.major}"/>
+                <filter token="VERSION_MINOR" value="${version.minor}"/>
             </filterset>
         </copy>
     </target>

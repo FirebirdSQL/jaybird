@@ -89,8 +89,11 @@ Jaybird @VERSION@
 Jaybird @VERSION@ is available from Maven central: 
 
 Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
+Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18` or `java11`).\
 Version: `@VERSION@`
+
+For ease of use, we also provide a Maven relocation artifact with artifact id
+`jaybird`. For Jaybird 4 this relocation artifact points to `jaybird-jdk18`.
 
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot 
 repository, <https://oss.sonatype.org/content/repositories/snapshots>
@@ -149,12 +152,12 @@ See also [Type 2 (native) and embedded driver].
 
 You can download the latest versions from <https://www.firebirdsql.org/en/jdbc-driver/>
 
-At minimum Jaybird 4 requires `jaybird-@VERSION@.jar` and 
-`connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` which
-includes the connector-api files.
+At minimum Jaybird 4 requires `jaybird-XX-@VERSION@.jar` (where `XX` is `jdk17`, 
+`jdk18` or `java11`) and `connector-api-1.5.jar`. You can also use 
+`jaybird-full-XX-@VERSION@.jar` which includes the connector-api files.
 
 If you deploy your application to a Java EE application server, then you must 
-use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include 
+use `jaybird-XX-@VERSION@.jar` (not `-full`!), and **not** include 
 `connector-api-1.5.jar` as this dependency will be provided by your application 
 server.
 
@@ -182,8 +185,9 @@ Manual install
 If you manage your dependencies manually, you need to do the following:
 
 1.  Replace the Jaybird 3 library with the Jaybird 4 version
-    - `jaybird-3.0.x.jar` with `jaybird-@VERSION@.jar` 
-    - `jaybird-full-3.0.x.jar` with `jaybird-full-@VERSION@.jar`
+    - `jaybird-3.0.x.jar` with `jaybird-XX-@VERSION@.jar` (where `XX` is 
+      `jdk17`, `jdk18` or `java11`) 
+    - `jaybird-full-3.0.x.jar` with `jaybird-full-XX-@VERSION@.jar`
     
 2.  If installed, remove `antlr-runtime-4.7.jar` and replace it with 
     `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
@@ -218,6 +222,44 @@ What's new in Jaybird 4
 =======================
 
 For a full list of changes, see [Firebird tracker for Jaybird 4](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10441).
+
+Changes in artifact and library names
+-------------------------------------
+
+Historically, the naming of Jaybird artifacts and libraries has been a bit
+inconsistent. With the rapid release cycle of Java, naming collisions are
+imminent with the old naming convention. For example, the Maven artifact 
+`jaybird-jdk15` was used for Java 1.5 and with this naming convention, this 
+would be reused for Java 15.
+
+Forced by this issue, we have overhauled the naming convention entirely to bring
+more consistency between Maven artifacts and the Jaybird zip distribution. The
+full naming convention is documented in [jdp-2019-02](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-02-version-number-and-naming-scheme.md).
+
+This new naming convention has the following effects:
+
+-   Java 9 and higher use suffix `javaXX` (eg `java11` for Java 11)
+-   Java 8 and earlier will use suffix `jdkXX` (eg `jdk18` for Java 1.8)
+    -   Previous Jaybird versions used suffix `jdkXX` for Maven, and `JDK_x.y` 
+        for zip artifacts; these will now all use `javaXX` (or `jdkxx` for 
+        Java 8 and earlier)
+-   Names of libraries are now consistent with the Maven naming convention
+
+As a result of these new naming conventions, the following has been changed (for
+Java 11, read `java11` instead of `jdk18`)
+
+-   Distribution zip: `jaybird-jdk18-4.0.0.zip` (was `Jaybird-3.0.5_JDK1.8.zip`)
+-   Jaybird: `jaybird-jdk18-4.0.0.jar` (was `jaybird-3.0.5.jar` in zip 
+    distribution)
+-   Jaybird (full): `jaybird-full-jdk18-4.0.0.jar` (was 
+    `jaybird-full-3.0.5.jar`)
+-   Jaybird sources: `jaybird-jdk18-4.0.0-sources.jar` (was 
+    `jaybird-3.0.5-sources.jar` in zip distribution)
+-   Jaybird javadoc: `jaybird-jdk18-4.0.0-javadoc.jar` (was
+    `jaybird-3.0.5-javadoc.jar` in zip distribution)
+    
+Furthermore, the client name reported to Firebird 2.5 and higher has been 
+changed from `Jaybird 3.0.5-JDK_1.8` to `Jaybird jaybird-jdk17-4.0.0` 
 
 Java support
 ------------
