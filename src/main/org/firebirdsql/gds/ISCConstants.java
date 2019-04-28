@@ -163,6 +163,14 @@ public interface ISCConstants {
     int isc_dpb_reset_icu				= 89;
     int isc_dpb_map_attach              = 90;
 
+    // Firebird 4 constants
+    int isc_dpb_session_time_zone       = 91;
+    int isc_dpb_set_db_replica          = 92;
+    int isc_dpb_time_zone_bind          = 93;
+    int isc_dpb_decfloat_bind           = 94;
+    int isc_dpb_decfloat_round          = 95;
+    int isc_dpb_decfloat_traps          = 96;
+
     /*
      * Driver-specific DPB params that will be removed before sending them
      * to the server. These params influence only client side.

@@ -236,28 +236,38 @@ Changes in Jaybird 3.0.6
 
 The following has been changed or fixed since Jaybird 3.0.5
 
--   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
-    metadata) prevented prepared statement reuse/re-execute with error _"Statement state CURSOR_OPEN 
-    only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
--   Improvement: Added `FBManager.setDefaultCharacterSet` to set default database character set 
-    during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
+-   Fixed: Exceptions during fetch of cached result sets (holdable over commit, 
+    scrollable and metadata) prevented prepared statement reuse/re-execute with
+    error _"Statement state CURSOR_OPEN only allows next states \[CLOSING,
+    PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+-   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
+    database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
 -   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
     See [Case sensitive user names] for more information.
--   Fixed: Savepoints did not work in connection dialect 1 as savepoint names were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
--   Changed: The `DatabaseMetaData` statement cache introduced in Jaybird 3 was unlimited, it is now 
-    limited to 12 prepared statements; the least recently used statement will be closed and removed 
-    when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557))
--   Fixed: `UPDATE OR INSERT` with existing `RETURNING` clause handled incorrectly for generated keys ([JDBC-566](http://tracker.firebirdsql.org/browse/JDBC-566))
--   Fixed: Exceptions during initialization of result sets would not properly close the database
-    cursor leading to error _"Current statement state (CURSOR_OPEN) does not allow call to prepare"_ on
-    reuse of the statement (or errors similar to described for JDBC-531 above). ([JDBC-571](http://tracker.firebirdsql.org/browse/JDBC-571))  
-    A stopgap measure has been added to prevent similar problems from occurring. This will log its 
-    use on debug-level with message _"ensureClosedCursor has to close a cursor at"_ and a stacktrace.
--   New feature: boolean connection property `ignoreProcedureType` to disable usage of metadata for
-    stored procedure types in `CallableStatement`. When set to `true`, call escapes and `EXECUTE 
-    PROCEDURE` will default to use `EXECUTE PROCEDURE` and not switch to `SELECT` for selectable
-    stored procedures. ([JDBC-576](http://tracker.firebirdsql.org/browse/JDBC-576))  
+-   Fixed: Savepoints did not work in connection dialect 1 as savepoint names
+    were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
+-   Changed: The `DatabaseMetaData` statement cache introduced in Jaybird 3 was
+    unlimited, it is now limited to 12 prepared statements; the least recently
+    used statement will be closed and removed when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557))
+-   Fixed: `UPDATE OR INSERT` with existing `RETURNING` clause handled 
+    incorrectly for generated keys ([JDBC-566](http://tracker.firebirdsql.org/browse/JDBC-566))
+-   Fixed: Exceptions during initialization of result sets would not properly
+    close the database cursor leading to error _"Current statement state
+    (CURSOR_OPEN) does not allow call to prepare"_ on reuse of the statement (or
+    errors similar to described for JDBC-531 above). ([JDBC-571](http://tracker.firebirdsql.org/browse/JDBC-571))  
+    A stopgap measure has been added to prevent similar problems from occurring.
+    This will log its use on debug-level with message _"ensureClosedCursor has
+    to close a cursor at"_ and a stacktrace.
+-   New feature: boolean connection property `ignoreProcedureType` to disable
+    usage of metadata for stored procedure types in `CallableStatement`. When 
+    set to `true`, call escapes and `EXECUTE PROCEDURE` will default to use 
+    `EXECUTE PROCEDURE` and not switch to `SELECT` for selectable stored 
+    procedures. ([JDBC-576](http://tracker.firebirdsql.org/browse/JDBC-576))  
     See [Connection property ignoreProcedureType] for more information.
+-   New feature: connection properties `timeZoneBind` and `sessionTimeZone` for 
+    limited support for Firebird 4 `TIME(STAMP) WITH TIME ZONE` types, and
+    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-583))  
+    See [Limited support for new Firebird 4 data types] for more information.
     
 ### Known issues in Jaybird 3.0.6
 
@@ -527,13 +537,86 @@ Partial Firebird 4 support:
 - Authentication plugin _Srp256_ (Jaybird 3.0.5), but not the other _SrpNNN_ 
 plugins
 - Page size 32kb in management classes (Jaybird 3.0.5)
-- New data types (eg `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision greater than 
-18) are **not** supported
+- New data types (eg `TIME WITH TIME ZONE`, `TIMESTAMP WITH TIME ZONE`, 
+`DECFLOAT` and `NUMERIC`/`DECIMAL` with precision greater than 18) are **not** 
+supported. See [Limited support for new Firebird 4 data types] for workarounds
+for the `WITH TIME ZONE` and `DECFLOAT` types.
 
 ### Other Firebird feature support ###
 
 *   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))  
     This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
+
+### Limited support for new Firebird 4 data types ###
+
+Jaybird 3 does not support the new Firebird 4 data types `TIME WITH TIME ZONE`,
+`TIMESTAMP WITH TIME ZONE`, `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision 
+greater than 18. As an accommodation, Jaybird 3.0.6 has limited support for the
+following Firebird connection properties:
+
+- `timeZoneBind` (alias: `time_zone_bind`) with valid values:
+  - `native` (default) - produces the normal `WITH TIME ZONE` values (not 
+    supported by Jaybird 3)
+  - `legacy` - converts the `WITH TIME ZONE` values to the equivalent `WITHOUT
+    TIME ZONE` values using the session time zone
+- `sessionTimeZone` (alias: `session_time_zone`) configures the **server-side**
+  session time zone used for conversion of `WITH TIME ZONE` to `WITHOUT TIME
+  ZONE` and values generated by `CURRENT_TIME`, `LOCALTIME`, etc.  
+  Valid values are Firebird time zone names or offsets. See also the Firebird 4 
+  documentation. For important caveats, see [Notes on sessionTimeZone].
+- `decfloatBind` (alias: `decfloat_bind`) with valid values:
+  - `native` (default) - produces the normal `DECFLOAT` values (not supported by
+    Jaybird 3)
+  - `char`/`character` - converts the `DECFLOAT` values to an equivalent string
+    using scientific notation.
+  - `double precision` - converts the `DECFLOAT` values to an equivalent `double
+    precision`. This may lose precision, and this option cannot support the full
+    range of values of `DECFLOAT(34)` and can result on errors on overflow.
+  - `bigint, n` where `n` is the target scale converts the value to a 
+    `NUMERIC(18,n)`. This option cannot support the full range of values of 
+    `DECFLOAT` and can result on errors on overflow.
+    
+These properties have only limited support. They can be used as connection
+properties with `DriverManager`. For Jaybird data sources, the properties must
+be set using `setNonStandardProperty`.
+    
+To be able to use `WITH TIME ZONE` types with Jaybird 3, you must use 
+`timeZoneBind=legacy`. Setting `sessionTimeZone` is optional, see also 
+[Notes on sessionTimeZone]. 
+
+For `DECFLOAT`, we recommend either `decfloatBind=char`
+or `decfloatBind=double precision`. Option `char` has our preference as it is
+able to support the full rang of values of the `DECFLOAT` types.
+
+Unfortunately there is no option for the extended precision numeric types, other
+than explicitly casting to `DECFLOAT(34)` and relying on the conversion provided
+by property `decfloatBind`.
+
+#### Notes on sessionTimeZone ####
+
+In Jaybird 3 `sessionTimeZone` will only configure the server-side session time 
+zone. Client-side, Jaybird will continue to use the JVM default time zone for 
+parsing the value to the `java.sql.Time/Timestamp/Date` types. In Jaybird 4,
+this property will also configure client-side parsing of values to these legacy
+types.  
+
+When Jaybird 3 and Firebird 4 are hosted on machines with different time zone
+settings, setting `sessionTimeZone` can result in changes in current time values
+(eg for `CURRENT_TIME`) as Firebird will base these values on the session time
+zone.
+
+Setting `sessionTimeZone` to the JVM default time zone will yield the best 
+(ie correct) values, but not setting it (and thus using the server default) will
+retain behaviour that is backwards compatible with behaviour of previous 
+versions of Jaybird. 
+
+When setting `sessionTimeZone`, we recommend to use the long-form time zone
+names (eg `Europe/Amsterdam`) and not the short-form ids (eg `CET`).
+
+We recommend not setting this property, or setting it to the default JVM time 
+zone. If you set it to a different time zone, then we recommend that you do not
+use the legacy `java.sql.Time/Timestamp/Date` types, but instead use 
+`java.time.LocalTime/LocalDateTime/LocalDate`.
 
 New low-level implementation
 ----------------------------

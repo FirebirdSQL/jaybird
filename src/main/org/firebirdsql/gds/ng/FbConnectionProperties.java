@@ -237,6 +237,12 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                             "Unknown or unsupported parameter with type %d added to extra database parameters",
                             parameterType));
                 }
+                // intentional fall-through; properties below don't need a warning
+            case isc_dpb_session_time_zone:
+            case isc_dpb_time_zone_bind:
+            case isc_dpb_decfloat_bind:
+            case isc_dpb_decfloat_round:
+            case isc_dpb_decfloat_traps:
                 parameter.copyTo(getExtraDatabaseParameters(), null);
                 dirtied();
             }
