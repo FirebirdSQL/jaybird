@@ -575,10 +575,14 @@ following Firebird connection properties:
   - `bigint, n` where `n` is the target scale converts the value to a 
     `NUMERIC(18,n)`. This option cannot support the full range of values of 
     `DECFLOAT` and can result on errors on overflow.
+
+**Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
+build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
+necessary database parameter buffer item does not exist in earlier versions.
     
-These properties have only limited support. They can be used as connection
-properties with `DriverManager`. For Jaybird data sources, the properties must
-be set using `setNonStandardProperty`.
+These properties can be used as connection properties with `DriverManager`. For 
+Jaybird data sources, the properties must be set using `setNonStandardProperty`
+as corresponding setters have not been defined.
     
 To be able to use `WITH TIME ZONE` types with Jaybird 3, you must use 
 `timeZoneBind=legacy`. Setting `sessionTimeZone` is optional, see also 
