@@ -25,6 +25,8 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static org.firebirdsql.gds.ParameterBufferHelper.DPB_PREFIX;
+import static org.firebirdsql.jdbc.FBConnectionProperties.DATABASE_PROPERTY;
+import static org.firebirdsql.jdbc.FBConnectionProperties.TYPE_PROPERTY;
 
 /**
  * Manager of the DPB properties.
@@ -183,18 +185,21 @@ class FBDriverPropertyManager {
                             ", alias : " + propInfo.alias);
             }
 
-            // if the specified property is not an alias, check
-            // the full list
+            // if the specified property is not an alias, check the full list
             if (propInfo == null) {
                 propInfo = getPropertyInfo(propName);
             }
 
-            // skip the element if nothing if found
-            if (propInfo == null)
-                continue;
-
-            result.put(propInfo.dpbName, propValue);
+            if (propInfo != null) {
+                result.put(propInfo.dpbName, propValue);
+            } else {
+                // add using original name if nothing is found
+                result.put(propName, propValue);
+            }
         }
+
+        // database and type have special meaning and should not be set through properties
+        result.keySet().removeAll(Arrays.asList(DATABASE_PROPERTY, TYPE_PROPERTY));
 
         return result;
     }
