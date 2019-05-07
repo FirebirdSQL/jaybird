@@ -268,6 +268,8 @@ The following has been changed or fixed since Jaybird 3.0.5
     limited support for Firebird 4 `TIME(STAMP) WITH TIME ZONE` types, and
     `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-583))  
     See [Limited support for new Firebird 4 data types] for more information.
+-   Fixed: Connection property `defaultIsolation`/`isolation` did not work
+    through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
     
 ### Known issues in Jaybird 3.0.6
 
@@ -571,10 +573,10 @@ following Firebird connection properties:
     using scientific notation.
   - `double precision` - converts the `DECFLOAT` values to an equivalent `double
     precision`. This may lose precision, and this option cannot support the full
-    range of values of `DECFLOAT(34)` and can result on errors on overflow.
+    range of values of `DECFLOAT(34)` and can result in errors on overflow.
   - `bigint, n` where `n` is the target scale converts the value to a 
     `NUMERIC(18,n)`. This option cannot support the full range of values of 
-    `DECFLOAT` and can result on errors on overflow.
+    `DECFLOAT` and can result in errors on overflow.
 
 **Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
 build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
@@ -590,7 +592,7 @@ To be able to use `WITH TIME ZONE` types with Jaybird 3, you must use
 
 For `DECFLOAT`, we recommend either `decfloatBind=char`
 or `decfloatBind=double precision`. Option `char` has our preference as it is
-able to support the full rang of values of the `DECFLOAT` types.
+able to support the full range of values of the `DECFLOAT` types.
 
 Unfortunately there is no option for the extended precision numeric types, other
 than explicitly casting to `DECFLOAT(34)` and relying on the conversion provided
