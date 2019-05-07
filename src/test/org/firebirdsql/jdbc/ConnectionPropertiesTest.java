@@ -77,7 +77,7 @@ public class ConnectionPropertiesTest {
 
     private FBSimpleDataSource createDataSource() {
         FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabase(getUrl().replace("jdbc:firebirdsql:", ""));
+        ds.setDatabase(getdbpath(DB_NAME));
         ds.setType(GDS_TYPE);
         ds.setUserName(DB_USER);
         ds.setPassword(DB_PASSWORD);
