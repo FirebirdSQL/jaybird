@@ -33,31 +33,23 @@ import static org.firebirdsql.jdbc.FBConnectionProperties.TYPE_PROPERTY;
  */
 class FBDriverPropertyManager {
 
-    private static final String RES = "driver_property_info";
-
-    private static ResourceBundle info;
-    static {
-        try {
-            info = ResourceBundle.getBundle(RES);
-        } catch (MissingResourceException ex) {
-            info = null;
-        }
-    }
-
     /**
      * Container class for the driver properties.
      */
     private static class PropertyInfo {
         private final String alias;
         private final String dpbName;
+        private final String dpbShortName;
         private final Integer dpbKey;
         private final String description;
 
         private final int hashCode;
 
         public PropertyInfo(String alias, String dpbName, Integer dpbKey, String description) {
+            assert dpbName.startsWith(DPB_PREFIX) : "dpName should start with " + DPB_PREFIX + ", was: " + dpbName;
             this.alias = alias;
             this.dpbName = dpbName;
+            this.dpbShortName = dpbName.substring(DPB_PREFIX.length());
             this.dpbKey = dpbKey;
             this.description = description;
 
@@ -89,20 +81,23 @@ class FBDriverPropertyManager {
         final Map<String, PropertyInfo> tempAliases = new HashMap<>(64);
         final Map<String, PropertyInfo> tempDpbMap = new HashMap<>(256);
         // process aliases and descriptions first
+        ResourceBundle info = getDriverPropertyInfoResourceBundle();
         if (info != null) {
             for (Enumeration<String> en = info.getKeys(); en.hasMoreElements(); ) {
-                String key = en.nextElement();
-                String value = info.getString(key);
+                String alias = en.nextElement();
+                String value = info.getString(alias);
 
                 int hashIndex = value.indexOf('#');
 
                 String dpbName;
-                String description = "";
+                String description;
                 if (hashIndex != -1) {
                     dpbName = value.substring(0, hashIndex).trim();
                     description = value.substring(hashIndex + 1).trim();
-                } else
+                } else {
                     dpbName = value.trim();
+                    description = "";
+                }
 
                 // skip incorrect mappings
                 if (!dpbName.startsWith(DPB_PREFIX))
@@ -114,8 +109,7 @@ class FBDriverPropertyManager {
                 if (dpbKey == null)
                     continue;
 
-                PropertyInfo propInfo = new PropertyInfo(key, dpbName,
-                        dpbKey, description);
+                PropertyInfo propInfo = new PropertyInfo(alias, dpbName, dpbKey, description);
 
                 tempAliases.put(propInfo.alias, propInfo);
                 tempDpbMap.put(propInfo.dpbName, propInfo);
@@ -127,11 +121,9 @@ class FBDriverPropertyManager {
             String dpbName = entry.getKey();
             Integer dpbKey = entry.getValue();
 
-            if (!dpbName.startsWith(DPB_PREFIX))
+            if (!dpbName.startsWith(DPB_PREFIX) || tempDpbMap.containsKey(dpbName)) {
                 continue;
-
-            if (tempDpbMap.containsKey(dpbName))
-                continue;
+            }
 
             PropertyInfo propInfo = new PropertyInfo(null, dpbName, dpbKey, "");
 
@@ -153,36 +145,23 @@ class FBDriverPropertyManager {
      *         if original properties reference the same DPB parameter using both alias and original name.
      */
     public static Map<String, String> normalize(Properties props) throws SQLException {
-        Map<String, String> tempProps = new HashMap<>();
-        for (String propertyName : props.stringPropertyNames()) {
-            tempProps.put(propertyName, props.getProperty(propertyName));
-        }
-
-        Map<String, String> result = new HashMap<>();
-
-        for (Map.Entry<String, String> entry : tempProps.entrySet()) {
-            String propName = entry.getKey();
-            String propValue = entry.getValue();
-
+        Map<String, String> result = new HashMap<>(props.size());
+        
+        for (String propName : props.stringPropertyNames()) {
             PropertyInfo propInfo = aliases.get(propName);
 
             // check if alias is not used together with original property
             if (propInfo != null) {
-                String originalName = propInfo.dpbName;
-                String shortName = propInfo.dpbName.substring(DPB_PREFIX.length());
-
                 boolean hasDuplicate =
-                        tempProps.keySet().contains(originalName)
-                                || tempProps.keySet().contains(shortName);
-
-                hasDuplicate &= !propName.equals(shortName);
-                hasDuplicate &= !propName.equals(originalName);
+                        !(propName.equals(propInfo.dpbShortName) || propName.equals(propInfo.dpbName))
+                                && (props.containsKey(propInfo.dpbName) ||
+                                props.containsKey(propInfo.dpbShortName));
 
                 if (hasDuplicate)
                     throw new FBSQLException("Specified properties contain " +
                             "reference to a DPB parameter under original and " +
                             "alias names: original name " + propInfo.dpbName +
-                            ", alias : " + propInfo.alias);
+                            ", alias : " + propName);
             }
 
             // if the specified property is not an alias, check the full list
@@ -190,6 +169,7 @@ class FBDriverPropertyManager {
                 propInfo = getPropertyInfo(propName);
             }
 
+            String propValue = props.getProperty(propName);
             if (propInfo != null) {
                 result.put(propInfo.dpbName, propValue);
             } else {
@@ -255,5 +235,13 @@ class FBDriverPropertyManager {
                 : DPB_PREFIX + propName;
 
         return dpbMap.get(propertyKey);
+    }
+
+    private static ResourceBundle getDriverPropertyInfoResourceBundle() {
+        try {
+            return ResourceBundle.getBundle("driver_property_info");
+        } catch (MissingResourceException ex) {
+            return null;
+        }
     }
 }
