@@ -9,6 +9,20 @@ Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
 <http://tracker.firebirdsql.org/browse/JDBC>.
 
+Jaybird 4.0.x changelog
+=======================
+
+Changes per Jaybird 4 release. See also [What's new in Jaybird 4]. For known
+issues, consult [Known Issues].
+
+Jaybird 4.0.0-beta-2
+--------------------
+
+The following has been changed or fixed since Jaybird 4.0.0-beta-1
+
+-   Fixed: Connection property `defaultIsolation`/`isolation` did not work
+    through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
+
 General Notes
 =============
 
@@ -242,11 +256,6 @@ If you find a problem while upgrading, or other bugs: please report it
 on <http://tracker.firebirdsql.org/brows/JDBC>.
 
 For known issues, consult [Known Issues].
-
-Jaybird 4.0.x changelog
-=======================
-
-...
 
 What's new in Jaybird 4
 =======================
@@ -773,8 +782,8 @@ a calculation as a boolean value. Instead, use a real `BOOLEAN`.
 non-numerical strings throw an `SQLException` with a `NumberFormatException` as 
 cause. Out of range values are handled as described in [Precision and range].
 
-13. Getting values as `String` will equivalent to `BigDecimal.toString`, with
-extra support for the special values mentioned in the previous note.
+13. Getting values as `String` will be equivalent to `BigDecimal.toString()`,
+with extra support for the special values mentioned in the previous note.
 
 14. As mentioned in earlier notes, support for the special values is under
 discussion, and may be removed in the final Jaybird 4 or Firebird 4 release,
@@ -810,16 +819,16 @@ Firebird 4 extended numeric precision support
 ---------------------------------------------
 
 Added support for the extended precision for `NUMERIC` and `DECIMAL` introduced 
-in Firebird 4, increasing the maximum precision to 34. Technically, this
-extended precision is supported by a IEEE-754 Decimal128 which is also used for
-`DECFLOAT` support.
+in Firebird 4, increasing the maximum precision to 34. In the implementation in 
+Firebird, this extended precision is backed by a IEEE-754 Decimal128 which is 
+also used for `DECFLOAT` support.
 
 Any `NUMERIC` or `DECIMAL` with a precision between 19 and 34 will allow storage
 up to a precision of 34. 
 
-Values set on a field or parameter will be rounded using `RoundingMode.HALF_EVEN` 
-to the target scale of the field. Values exceeding a precision of 34 will be
-rejected with a `TypeConversionException`.
+Values set on a field or parameter will be rounded to the target scale of the 
+field using `RoundingMode.HALF_EVEN`. Values exceeding a precision of 34 after 
+rounding will be rejected with a `TypeConversionException`.
 
 Firebird 4 time zone support
 ----------------------------
@@ -917,7 +926,7 @@ transition and potential compatibility with tools and libraries, Jaybird does
 provide support. However, we strongly recommend to avoid using these types. 
 
 Compared to the `WITHOUT TIME ZONE` types, there may be small discrepancies in 
-values as Jaybird uses 1970-01-01 for `WITHOUT TIME ZONE`, while for `WITH TIME 
+values as Jaybird uses 1970-01-01 for `WITHOUT TIME ZONE`, while for `WITH TIME
 ZONE` it uses the current date. If this is problematic, then either apply the 
 necessary conversions yourself, enable legacy time zone bind, or define or cast 
 your columns to `TIME` or `TIMESTAMP`.
@@ -952,7 +961,7 @@ Possible values (case insensitive):
 
 -   `legacy`
     
-    Firebird will convert a `WITH TIME ZONE` type to the equivalent `WITHOUT 
+    Firebird will convert a `WITH TIME ZONE` type to the equivalent `WITHOUT
     TIME ZONE` type using the session time zone to derive the value.
     
     Result set columns and parameters on prepared statements will behave as the
@@ -999,13 +1008,13 @@ inconsistent if Firebird and Java are in different time zones.
 
 The session time zone is used for conversion between `WITH TIME ZONE` values 
 and `WITHOUT TIME ZONE` values (ie using cast or with legacy time zone bind), 
-and for the value of `LOCALTIME`, `LOCALTIMESTAMP` `CURRENT_TIME` and 
+and for the value of `LOCALTIME`, `LOCALTIMESTAMP`, `CURRENT_TIME` and 
 `CURRENT_TIMESTAMP`, and other uses of the session time zone as documented in 
 the Firebird 4 documentation.
 
 The value of `sessionTimeZone` must be supported by Firebird 4. It is possible 
 that time zone identifiers used by Java are not supported by Firebird. If 
-Firebird does not know the session time zone, error (`Invalid time zone region: 
+Firebird does not know the session time zone, error (`Invalid time zone region:
 <zone name>`) is reported on connect. 
 
 The use of the JVM default time zone as the default session time zone will
