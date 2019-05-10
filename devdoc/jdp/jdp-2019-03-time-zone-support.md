@@ -3,7 +3,7 @@
 ## Status
 
 - Draft
-- Proposed for: Jaybird 4
+- Implemented in: Jaybird 4
 
 ## Type
 
@@ -231,7 +231,7 @@ Time zone support in Jaybird will not include the following:
     would allow full preservation of time zone information (assuming the Java 
     time zone can be mapped to a Firebird time zone).
     
-    Defer to a future version as a possible improvement.
+    If there is demand, we can always add it in later.
 
 3.  Support `java.time.LocalDate`, `LocalTime` and `LocalDateTime` for 
     `WITH TIME ZONE` types.
