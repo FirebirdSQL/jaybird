@@ -155,8 +155,9 @@ explicitly include JNA 4.4.0 as a dependency:
 </dependency>
 ~~~
 
-We plan to make native and embedded support a separate library in future 
-releases, and provide Firebird client libraries as Maven dependencies as well.
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
 
 See also [Type 2 (native) and embedded driver].
 
@@ -580,7 +581,7 @@ following Firebird connection properties:
 
 **Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
 build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
-necessary database parameter buffer item does not exist in earlier versions.
+necessary database parameter buffer items do not exist in earlier versions.
     
 These properties can be used as connection properties with `DriverManager`. For 
 Jaybird data sources, the properties must be set using `setNonStandardProperty`
@@ -1481,8 +1482,20 @@ be on the path, or the location needs to be specified in the system property
 `jna.library.path` (as an absolute or relative path to the directory/directories
 containing the library file(s)).
 
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
+
+``` {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>fbclient</artifactId>
+    <version>3.0.4.0</artifactId>
+</dependency>
+```
+
 In the future we will move the Type 2 support to a separate library and provide 
-JNA-compatible jars that provide the native libraries of a specific Firebird 
+JNA-compatible jars that provide the embedded libraries of a specific Firebird 
 version.
 
 Removal of deprecated classes, packages and methods
