@@ -209,8 +209,8 @@ class FBDriverPropertyManager {
             }
         }
 
-        // database and type have special meaning and should not be set through properties
-        result.keySet().removeAll(Arrays.asList(DATABASE_PROPERTY, TYPE_PROPERTY));
+        // database has special meaning and should not be set through properties
+        result.keySet().removeAll(Collections.singletonList(DATABASE_PROPERTY));
 
         handleEncodings(result);
 
