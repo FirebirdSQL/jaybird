@@ -54,16 +54,15 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA as a dependency:
+explicitly include JNA 5.3.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>5.3.0</version>
 </dependency>
 ~~~
-
-The version can be left off, as it is already specified in the Jaybird pom.
 
 #### Jaybird 3.0 ####
 
@@ -111,16 +110,15 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA as a dependency:
+explicitly include JNA 4.4.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>4.4.0</version>
 </dependency>
 ~~~
-
-The version can be left off, as it is already specified in the Jaybird pom.
 
 #### Jaybird 2.2 ####
 
@@ -408,7 +406,7 @@ library, or - for Jaybird 3.0 - the JNA jar file.
 Jaybird 4 and higher also support:
 
     jdbc:firebird:embedded:<database>
-
+    
 Character sets
 --------------
 

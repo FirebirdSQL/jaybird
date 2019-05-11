@@ -173,18 +173,19 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA as a dependency, as we only depend on it as an
-optional dependency:
+explicitly include JNA 5.3.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>5.3.0</version>
 </dependency>
 ~~~
 
-We plan to make native and embedded support a separate library in future 
-releases, and provide Firebird client libraries as Maven dependencies as well.
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
 
 See also [Type 2 (native) and embedded driver].
 
@@ -1778,6 +1779,7 @@ don't depend on it by default (it is specified as an optional dependency):
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>5.3.0</artifactId>
 </dependency>
 ```
 
@@ -1786,6 +1788,18 @@ be on the path, or the location needs to be specified in the system property
 `jna.library.path` (as an absolute or relative path to the directory/directories
 containing the library file(s)).
 
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
+
+``` {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>fbclient</artifactId>
+    <version>3.0.4.0</artifactId>
+</dependency>
+```
+
 In the future we will move the Type 2 support to a separate library and provide 
-JNA-compatible jars that provide the native libraries of a specific Firebird 
+JNA-compatible jars that provide the embedded libraries of a specific Firebird 
 version.
