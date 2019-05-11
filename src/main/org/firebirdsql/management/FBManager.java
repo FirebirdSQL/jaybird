@@ -31,9 +31,13 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.sql.SQLException;
 
 /**
- * The class <code>FBManager</code> is a simple jmx mbean that allows you
- * to create and drop databases.  in particular, they can be created and
- * dropped using the jboss service lifecycle operations start and stop.
+ * A tool for creating and dropping databases.
+ * <p>
+ * In particular, they can be created and dropped using the jboss service lifecycle operations start and stop.
+ * </p>
+ * <p>
+ * See {@link FBManagerMBean} for documentation.
+ * </p>
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
@@ -75,7 +79,10 @@ public class FBManager implements FBManagerMBean {
     //Service methods
 
     @Override
-    public void start() throws Exception {
+    public synchronized void start() throws Exception {
+        if (STARTED.equals(state)) {
+            throw new IllegalStateException("FBManager already started. Call stop() before starting again.");
+        }
         dbFactory = GDSFactory.getDatabaseFactoryForType(type);
         state = STARTED;
         String fileName = getFileName();
@@ -85,14 +92,20 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void stop() throws Exception {
-        String fileName = getFileName();
-        if (isDropOnStop() && fileName != null) {
-            dropDatabase(fileName, getUserName(), getPassword());
+    public synchronized void stop() throws Exception {
+        try {
+            if (STOPPED.equals(state)) {
+                log.warn("FBManager already stopped.");
+                return;
+            }
+            String fileName = getFileName();
+            if (isDropOnStop() && fileName != null) {
+                dropDatabase(fileName, getUserName(), getPassword());
+            }
+        } finally {
+            dbFactory = null;
+            state = STOPPED;
         }
-
-        dbFactory = null;
-        state = STOPPED;
     }
 
     @Override
@@ -143,10 +156,12 @@ public class FBManager implements FBManagerMBean {
         this.fileName = fileName;
     }
 
+    @Override
     public String getType() {
         return this.type.toString();
     }
 
+    @Override
     public void setType(String type) {
         final GDSType gdsType = GDSType.getType(type);
 
@@ -176,19 +191,13 @@ public class FBManager implements FBManagerMBean {
         this.password = password;
     }
 
-    /**
-     * Sets the dialect.
-     *
-     * @param dialect
-     *         Database dialect (1 or 3)
-     * @throws java.lang.IllegalArgumentException
-     *         if value is not 1 or 3
-     */
+    @Override
     public void setDialect(int dialect) {
         if (!(dialect == 1 || dialect == 3)) throw new IllegalArgumentException("Only dialect 1 or 3 allowed");
         this.dialect = dialect;
     }
 
+    @Override
     public int getDialect() {
         return dialect;
     }
@@ -233,22 +242,11 @@ public class FBManager implements FBManagerMBean {
         this.dropOnStop = dropOnStop;
     }
 
-    /**
-     * Get the ForceCreate value.
-     *
-     * @return the ForceCreate value.
-     */
     @Override
     public boolean isForceCreate() {
         return forceCreate;
     }
 
-    /**
-     * Set the ForceCreate value.
-     *
-     * @param forceCreate
-     *         The new ForceCreate value.
-     */
     @Override
     public void setForceCreate(boolean forceCreate) {
         this.forceCreate = forceCreate;
@@ -258,6 +256,7 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public void createDatabase(String fileName, String user, String password) throws Exception {
+        checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
@@ -299,6 +298,7 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public void dropDatabase(String fileName, String user, String password) throws Exception {
+        checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
@@ -313,6 +313,7 @@ public class FBManager implements FBManagerMBean {
 
     @Override
     public boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
+        checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
@@ -332,5 +333,11 @@ public class FBManager implements FBManagerMBean {
         connectionProperties.setServerName(getServer());
         connectionProperties.setPortNumber(getPort());
         return connectionProperties;
+    }
+
+    private synchronized void checkStarted() {
+        if (!STARTED.equals(state)) {
+            throw new IllegalStateException("FBManager has not been started. Call start() before use.");
+        }
     }
 }
