@@ -246,7 +246,7 @@ public class JnaStatement extends AbstractFbStatement {
                     xSqlVar.writeField("sqllen");
                     if (fieldDescriptor.getSubType() != ISCConstants.CS_BINARY) {
                         // Non-binary CHAR field: fill with spaces
-                        xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xff, (byte) ' ');
+                        xSqlVar.sqldata.setMemory(0, xSqlVar.sqllen & 0xffff, (byte) ' ');
                     }
                 }
                 xSqlVar.sqldata.write(bufferOffset, fieldData, 0, fieldData.length);
@@ -324,7 +324,7 @@ public class JnaStatement extends AbstractFbStatement {
                     bufferLength = xSqlVar.sqldata.getShort(0) & 0xffff;
                 } else {
                     bufferOffset = 0;
-                    bufferLength = xSqlVar.sqllen;
+                    bufferLength = xSqlVar.sqllen & 0xffff;
                 }
 
                 byte[] data = new byte[bufferLength];

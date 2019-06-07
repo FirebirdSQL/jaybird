@@ -28,12 +28,12 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import java.sql.Time;
 
 /**
- * Describe class <code>FBTimeField</code> here.
+ * Field implementation for {@code TIME (WITHOUT TIME ZONE)}.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-final class FBTimeField extends FBField {
+final class FBTimeField extends AbstractWithoutTimeZoneField {
 
     FBTimeField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
@@ -41,7 +41,7 @@ final class FBTimeField extends FBField {
 
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return String.valueOf(getDatatypeCoder().decodeTime(getFieldData()));
+        return String.valueOf(getTime());
     }
 
     public Time getTime(Calendar cal) throws SQLException {
@@ -49,19 +49,9 @@ final class FBTimeField extends FBField {
         return getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal);
     }
 
-    public Time getTime() throws SQLException {
-        if (isNull()) return null;
-        return getDatatypeCoder().decodeTime(getFieldData());
-    }
-
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return new java.sql.Timestamp(getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal).getTime());
-    }
-
-    public Timestamp getTimestamp() throws SQLException {
-        if (isNull()) return null;
-        return new Timestamp(getTime().getTime());
     }
 
     //--- setXXX methods
@@ -74,9 +64,7 @@ final class FBTimeField extends FBField {
         try {
             setTime(Time.valueOf(value));
         } catch (RuntimeException e) {
-            final TypeConversionException conversionException = new TypeConversionException(TIME_CONVERSION_ERROR);
-            conversionException.initCause(e);
-            throw conversionException;
+            throw new TypeConversionException(TIME_CONVERSION_ERROR, e);
         }
     }
 
@@ -88,14 +76,6 @@ final class FBTimeField extends FBField {
         setFieldData(getDatatypeCoder().encodeTimeCalendar(new java.sql.Time(value.getTime()), cal));
     }
 
-    public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setTime(new Time(value.getTime()));
-    }
-
     public void setTime(Time value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -103,15 +83,6 @@ final class FBTimeField extends FBField {
         }
 
         setFieldData(getDatatypeCoder().encodeTimeCalendar(value, cal));
-    }
-
-    public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setFieldData(getDatatypeCoder().encodeTime(value));
     }
 
     @Override

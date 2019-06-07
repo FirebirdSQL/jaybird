@@ -883,6 +883,15 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return fbStatement.getExecutionPlan();
     }
 
+    /**
+     * Get the detailed execution plan of this PreparedStatement
+     *
+     * @return The detailed execution plan of the statement
+     */
+    String getExplainedExecutionPlan() throws SQLException {
+        return fbStatement.getExplainedExecutionPlan();
+    }
+
     @Override
     public String getLastExecutionPlan() throws SQLException {
         checkValidity();
@@ -892,6 +901,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
         
         return getExecutionPlan();
+    }
+
+    @Override
+    public String getLastExplainedExecutionPlan() throws SQLException {
+        checkValidity();
+
+        if (fbStatement == null) {
+            throw new FBSQLException("No statement was executed, detailed plan cannot be obtained.");
+        }
+
+        return getExplainedExecutionPlan();
     }
 
     /**

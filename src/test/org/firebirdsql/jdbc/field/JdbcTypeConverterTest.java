@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.jdbc.JaybirdTypeCodes;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -94,6 +95,8 @@ public class JdbcTypeConverterTest {
                 create(SQL_TYPE_DATE, 0, 0, date_type, Types.DATE),
                 create(SQL_TYPE_TIME, 0, 0, time_type, Types.TIME),
                 create(SQL_TIMESTAMP, 0, 0, timestamp_type, Types.TIMESTAMP),
+                create(SQL_TIME_TZ, 0, 0, time_tz_type, JaybirdTypeCodes.TIME_WITH_TIMEZONE),
+                create(SQL_TIMESTAMP_TZ, 0, 0, timestamp_tz_type, JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE),
                 create(SQL_BLOB, 0, 0, blob_type, Types.LONGVARBINARY),
                 create(SQL_BLOB, 1, 0, blob_type, Types.LONGVARCHAR),
                 create(SQL_BLOB, 2, 0, blob_type, Types.LONGVARBINARY),

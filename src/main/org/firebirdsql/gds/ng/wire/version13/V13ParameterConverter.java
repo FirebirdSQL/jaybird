@@ -29,9 +29,9 @@ import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter;
+import org.firebirdsql.jaybird.Version;
 
 import java.sql.SQLException;
-import java.util.ResourceBundle;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for the version 13 protocol.
@@ -43,20 +43,6 @@ import java.util.ResourceBundle;
  * @since 3.0
  */
 public class V13ParameterConverter extends V12ParameterConverter {
-
-    private static final String JAYBIRD_VERSION;
-
-    static {
-        String jaybirdVersion;
-        try {
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("org.firebirdsql.version");
-            jaybirdVersion = resourceBundle.getString("jaybird.version.display");
-        } catch (Exception ex) {
-            // Resource bundle missing, or key missing
-            jaybirdVersion = "Jaybird (version unknown)";
-        }
-        JAYBIRD_VERSION = jaybirdVersion;
-    }
 
     protected DatabaseParameterBuffer createDatabaseParameterBuffer(WireDatabaseConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
@@ -79,7 +65,7 @@ public class V13ParameterConverter extends V12ParameterConverter {
             final DatabaseParameterBuffer dpb) throws SQLException {
         super.populateDefaultProperties(connection, dpb);
 
-        dpb.addArgument(ISCConstants.isc_dpb_client_version, JAYBIRD_VERSION);
+        dpb.addArgument(ISCConstants.isc_dpb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
     }
 
     @Override
@@ -109,6 +95,6 @@ public class V13ParameterConverter extends V12ParameterConverter {
             final ServiceParameterBuffer spb) throws SQLException {
         super.populateDefaultProperties(connection, spb);
 
-        spb.addArgument(ISCConstants.isc_spb_client_version, JAYBIRD_VERSION);
+        spb.addArgument(ISCConstants.isc_spb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
     }
 }

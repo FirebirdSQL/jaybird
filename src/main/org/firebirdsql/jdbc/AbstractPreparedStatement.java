@@ -819,6 +819,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     @Override
+    public String getExplainedExecutionPlan() throws SQLException {
+        return super.getExplainedExecutionPlan();
+    }
+
+    @Override
     public int getStatementType() throws SQLException {
         return super.getStatementType();
     }

@@ -84,6 +84,13 @@ public interface FirebirdPreparedStatement extends FirebirdStatement, PreparedSt
     String getExecutionPlan() throws SQLException;
 
     /**
+     * Get the detailed execution plan of this PreparedStatement
+     *
+     * @return The detailed execution plan of the statement
+     */
+    String getExplainedExecutionPlan() throws SQLException;
+
+    /**
      * Get the statement type of this PreparedStatement.
      * The returned value will be one of the <code>TYPE_*</code> constant
      * values.

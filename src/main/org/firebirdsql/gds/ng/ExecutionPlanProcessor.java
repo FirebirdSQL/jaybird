@@ -40,6 +40,14 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
             ISCConstants.isc_info_end
     };
 
+    /**
+     * Detailed plan information items
+     */
+    private static final byte[] DESCRIBE_EXPLAINED_PLAN_INFO_ITEMS = new byte[]{
+            ISCConstants.isc_info_sql_explain_plan,
+            ISCConstants.isc_info_end
+    };
+
     private final FbStatement statement;
 
     public ExecutionPlanProcessor(FbStatement statement) {
@@ -60,8 +68,8 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
             }
         }
 
-        if (buffer[0] != ISCConstants.isc_info_sql_get_plan) {
-            // We only expect isc_info_sql_get_plan
+        if (buffer[0] != ISCConstants.isc_info_sql_get_plan && buffer[0] != ISCConstants.isc_info_sql_explain_plan) {
+            // We only expect isc_info_sql_get_plan or isc_info_sql_explain_plan
             throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
         }
 
@@ -83,5 +91,14 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
      */
     public byte[] getDescribePlanInfoItems() {
         return DESCRIBE_PLAN_INFO_ITEMS.clone();
+    }
+
+    /**
+     * Get the byte array with the describe detailed plan info items.
+     *
+     * @return detailed plan info items
+     */
+    public byte[] getDescribeExplainedPlanInfoItems() {
+        return DESCRIBE_EXPLAINED_PLAN_INFO_ITEMS.clone();
     }
 }

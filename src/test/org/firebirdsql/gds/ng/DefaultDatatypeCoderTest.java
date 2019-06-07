@@ -56,6 +56,20 @@ public class DefaultDatatypeCoderTest {
     }
 
     @Test
+    public void testShortWithOffset() {
+        final short testShort = 513;
+        byte[] target = new byte[8];
+
+        datatypeCoder.encodeShort(testShort, target, 2);
+
+        final short result = datatypeCoder.decodeShort(target, 2);
+
+        assertEquals("Unexpected short", testShort, result);
+        assertEquals("First byte should not be set", 0, target[0]);
+        assertEquals("Second byte should not be set", 0, target[0]);
+    }
+
+    @Test
     public void testInt() {
         final int testInt = -1405525771;
         final byte[] intBytes = datatypeCoder.encodeInt(testInt);
@@ -63,6 +77,20 @@ public class DefaultDatatypeCoderTest {
         final int result = datatypeCoder.decodeInt(intBytes);
 
         assertEquals("Unexpected int", testInt, result);
+    }
+
+    @Test
+    public void testIntWithOffset() {
+        final int testInt = -1405525771;
+        byte[] target = new byte[8];
+
+        datatypeCoder.encodeInt(testInt, target, 2);
+
+        final int result = datatypeCoder.decodeInt(target, 2);
+
+        assertEquals("Unexpected short", testInt, result);
+        assertEquals("First byte should not be set", 0, target[0]);
+        assertEquals("Second byte should not be set", 0, target[0]);
     }
 
     @Test

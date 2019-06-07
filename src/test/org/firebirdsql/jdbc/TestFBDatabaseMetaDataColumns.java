@@ -93,6 +93,7 @@ public class TestFBDatabaseMetaDataColumns {
             "    /* boolean */ " +
             "    /* decfloat */ " +
             "    /* extended numerics */ " +
+            "    /* time zone */ " +
             ")";
     //@formatter:on
 
@@ -162,6 +163,10 @@ public class TestFBDatabaseMetaDataColumns {
         if (supportInfo.supportsDecimalPrecision(34)) {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
+        }
+        if (supportInfo.supportsTimeZones()) {
+            createTable = createTable.replace("/* time zone */",
+                    ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
         }
 
         statements.add(createTable);
@@ -914,6 +919,32 @@ public class TestFBDatabaseMetaDataColumns {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 44);
 
         validate(TEST_TABLE, "COL_DECIMAL30_5", validationRules);
+    }
+
+    @Test
+    public void testTimeWithTimezoneColumn() throws Exception {
+        assumeTrue("Test requires time zone support",
+                supportInfoFor(con).supportsTimeZones());
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.TIME_WITH_TIMEZONE);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "TIME WITH TIME ZONE");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 19);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 45);
+
+        validate(TEST_TABLE, "COL_TIMETZ", validationRules);
+    }
+
+    @Test
+    public void testTimestampWithTimezoneColumn() throws Exception {
+        assumeTrue("Test requires time zone support",
+                supportInfoFor(con).supportsTimeZones());
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "TIMESTAMP WITH TIME ZONE");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 30);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 46);
+
+        validate(TEST_TABLE, "COL_TIMESTAMPTZ", validationRules);
     }
     
     // TODO: Add more extensive tests of patterns

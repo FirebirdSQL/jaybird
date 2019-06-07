@@ -107,13 +107,31 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public void encodeShort(int value, byte[] target, int fromIndex) {
+        encodeInt(value, target, fromIndex);
+    }
+
+    @Override
     public short decodeShort(byte[] byte_int) {
         return (short) decodeInt(byte_int);
     }
 
     @Override
+    public short decodeShort(byte[] bytes, int fromIndex) {
+        return (short) decodeInt(bytes, fromIndex);
+    }
+
+    @Override
     public byte[] encodeInt(int value) {
         return intToBytes(value);
+    }
+
+    @Override
+    public void encodeInt(int value, byte[] target, int fromIndex) {
+        target[fromIndex] = (byte) ((value >>> 24) & 0xff);
+        target[fromIndex + 1] = (byte) ((value >>> 16) & 0xff);
+        target[fromIndex + 2] = (byte) ((value >>> 8) & 0xff);
+        target[fromIndex + 3] = (byte) ((value) & 0xff);
     }
 
     /**
@@ -125,7 +143,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      * <code>byte</code> array
      */
     protected byte[] intToBytes(int value) {
-        byte ret[] = new byte[4];
+        byte[] ret = new byte[4];
         ret[0] = (byte) ((value >>> 24) & 0xff);
         ret[1] = (byte) ((value >>> 16) & 0xff);
         ret[2] = (byte) ((value >>> 8) & 0xff);
@@ -135,11 +153,18 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public int decodeInt(byte[] byte_int) {
-        int b1 = byte_int[0] & 0xFF;
-        int b2 = byte_int[1] & 0xFF;
-        int b3 = byte_int[2] & 0xFF;
-        int b4 = byte_int[3] & 0xFF;
-        return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
+        return (((byte_int[0] & 0xFF) << 24) +
+                ((byte_int[1] & 0xFF) << 16) +
+                ((byte_int[2] & 0xFF) << 8) +
+                (byte_int[3] & 0xFF));
+    }
+
+    @Override
+    public int decodeInt(byte[] bytes, int fromIndex) {
+        return (((bytes[fromIndex] & 0xFF) << 24) +
+                ((bytes[fromIndex + 1] & 0xFF) << 16) +
+                ((bytes[fromIndex + 2] & 0xFF) << 8) +
+                (bytes[fromIndex + 3] & 0xFF));
     }
 
     @Override
@@ -158,16 +183,14 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public long decodeLong(byte[] byte_int) {
-        long b1 = byte_int[0] & 0xFF;
-        long b2 = byte_int[1] & 0xFF;
-        long b3 = byte_int[2] & 0xFF;
-        long b4 = byte_int[3] & 0xFF;
-        long b5 = byte_int[4] & 0xFF;
-        long b6 = byte_int[5] & 0xFF;
-        long b7 = byte_int[6] & 0xFF;
-        long b8 = byte_int[7] & 0xFF;
-        return ((b1 << 56) + (b2 << 48) + (b3 << 40) + (b4 << 32)
-                + (b5 << 24) + (b6 << 16) + (b7 << 8) + b8);
+        return ((((long) (byte_int[0] & 0xFF)) << 56) +
+                (((long) (byte_int[1] & 0xFF)) << 48) +
+                (((long) (byte_int[2] & 0xFF)) << 40) +
+                (((long) (byte_int[3] & 0xFF)) << 32) +
+                (((long) (byte_int[4] & 0xFF)) << 24) +
+                (((long) (byte_int[5] & 0xFF)) << 16) +
+                (((long) (byte_int[6] & 0xFF)) << 8) +
+                ((long) (byte_int[7] & 0xFF)));
     }
 
     @Override
@@ -472,6 +495,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         return getOrCreateForEncodingDefinition(encodingDefinition);
     }
 
+    @Override
+    public DatatypeCoder unwrap() {
+        return this;
+    }
+
     private DatatypeCoder getOrCreateForEncodingDefinition(final EncodingDefinition encodingDefinition) {
         final DatatypeCoder coder = encodingSpecificDatatypeCoders.get(encodingDefinition);
         if (coder != null) {
@@ -526,8 +554,9 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         }
         DatatypeCoder other = (DatatypeCoder) o;
         if (o instanceof EncodingSpecificDatatypeCoder) {
+            // TODO This isn't correct, maybe should be unwrap().getClass() == other.unwrap().getClass()?
             return getEncodingDefinition().equals(other.getEncodingDefinition())
-                    && getClass() == ((EncodingSpecificDatatypeCoder) other).unwrap().getClass();
+                    && getClass() == other.unwrap().getClass();
         } else {
             return getEncodingDefinition().equals(other.getEncodingDefinition())
                     && getClass() == other.getClass();
@@ -536,23 +565,19 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
     @Override
     public final int hashCode() {
+        // TODO See note in equals
         return hash(getClass(), getEncodingDefinition());
     }
 
     private datetime fromLongBytes(byte[] byte_long) {
-        if (byte_long.length != 8) {
-            throw new IllegalArgumentException("Bad parameter to decode, require byte array of length 8");
+        if (byte_long.length < 8) {
+            throw new IllegalArgumentException("Bad parameter to decode, require byte array of at least length 8");
         }
 
         // we have to extract time and date correctly see encodeTimestamp(...) for explanations
-
-        byte[] date = new byte[4];
-        byte[] time = new byte[4];
-
-        System.arraycopy(byte_long, 0, date, 0, 4);
-        System.arraycopy(byte_long, 4, time, 0, 4);
-
-        return new datetime(date, time);
+        int encodedDate = decodeInt(byte_long);
+        int encodedTime = decodeInt(byte_long, 4);
+        return new datetime(encodedDate, encodedTime);
     }
 
     /**
@@ -560,90 +585,59 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
      */
     private class datetime {
 
-        private RawDateTimeStruct raw = new RawDateTimeStruct();
+        private final RawDateTimeStruct raw;
 
         datetime(int year, int month, int day, int hour, int minute, int second, int nanos) {
+            raw = new RawDateTimeStruct();
             raw.year = year;
             raw.month = month;
             raw.day = day;
             raw.hour = hour;
             raw.minute = minute;
             raw.second = second;
-            raw.fractions = (nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND;
+            raw.setFractionsFromNanos(nanos);
         }
 
         datetime(Timestamp value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
+            raw = new RawDateTimeStruct();
             raw.year = c.get(Calendar.YEAR);
             raw.month = c.get(Calendar.MONTH) + 1;
             raw.day = c.get(Calendar.DAY_OF_MONTH);
             raw.hour = c.get(Calendar.HOUR_OF_DAY);
             raw.minute = c.get(Calendar.MINUTE);
             raw.second = c.get(Calendar.SECOND);
-            raw.fractions = value.getNanos() / NANOSECONDS_PER_FRACTION;
+            raw.setFractionsFromNanos(value.getNanos());
         }
 
         datetime(Date value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
+            raw = new RawDateTimeStruct();
             raw.year = c.get(Calendar.YEAR);
             raw.month = c.get(Calendar.MONTH) + 1;
             raw.day = c.get(Calendar.DAY_OF_MONTH);
-            raw.hour = 0;
-            raw.minute = 0;
-            raw.second = 0;
-            raw.fractions = 0;
         }
 
         datetime(Time value, Calendar cOrig) {
             Calendar c = (Calendar) cOrig.clone();
             c.setTime(value);
-            raw.year = 0;
-            raw.month = 0;
-            raw.day = 0;
+            raw = new RawDateTimeStruct();
             raw.hour = c.get(Calendar.HOUR_OF_DAY);
             raw.minute = c.get(Calendar.MINUTE);
             raw.second = c.get(Calendar.SECOND);
             raw.fractions = c.get(Calendar.MILLISECOND) * FRACTIONS_PER_MILLISECOND;
         }
 
+        datetime(int encodedDate, int encodedTime) {
+            raw = new RawDateTimeStruct(encodedDate, true, encodedTime, true);
+        }
+
         datetime(byte[] date, byte[] time) {
-
-            if (date != null) {
-                int sql_date = decodeInt(date);
-                int century;
-                sql_date -= 1721119 - 2400001;
-                century = (4 * sql_date - 1) / 146097;
-                sql_date = 4 * sql_date - 1 - 146097 * century;
-                raw.day = sql_date / 4;
-
-                sql_date = (4 * raw.day + 3) / 1461;
-                raw.day = 4 * raw.day + 3 - 1461 * sql_date;
-                raw.day = (raw.day + 4) / 4;
-
-                raw.month = (5 * raw.day - 3) / 153;
-                raw.day = 5 * raw.day - 3 - 153 * raw.month;
-                raw.day = (raw.day + 5) / 5;
-
-                raw.year = 100 * century + sql_date;
-
-                if (raw.month < 10) {
-                    raw.month += 3;
-                } else {
-                    raw.month -= 9;
-                    raw.year += 1;
-                }
-            }
-            if (time != null) {
-                int fractionsInDay = decodeInt(time);
-                raw.hour = fractionsInDay / FRACTIONS_PER_HOUR;
-                fractionsInDay -= raw.hour * FRACTIONS_PER_HOUR;
-                raw.minute = fractionsInDay / FRACTIONS_PER_MINUTE;
-                fractionsInDay -= raw.minute * FRACTIONS_PER_MINUTE;
-                raw.second = fractionsInDay / FRACTIONS_PER_SECOND;
-                raw.fractions = fractionsInDay - raw.second * FRACTIONS_PER_SECOND;
-            }
+            int encodedDate = date != null ? decodeInt(date) : 0;
+            int encodedTime = time != null ? decodeInt(time) : 0;
+            raw = new RawDateTimeStruct(encodedDate, date != null, encodedTime, time != null);
         }
 
         datetime(RawDateTimeStruct raw) {
@@ -658,44 +652,17 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         }
 
         byte[] toTimeBytes() {
-            int fractionsInDay =
-                    raw.hour * FRACTIONS_PER_HOUR
-                            + raw.minute * FRACTIONS_PER_MINUTE
-                            + raw.second * FRACTIONS_PER_SECOND
-                            + raw.fractions;
-            return encodeInt(fractionsInDay);
+            return encodeInt(raw.getEncodedTime());
         }
 
         byte[] toDateBytes() {
-            int cpMonth = raw.month;
-            int cpYear = raw.year;
-            int c, ya;
-
-            if (cpMonth > 2) {
-                cpMonth -= 3;
-            } else {
-                cpMonth += 9;
-                cpYear -= 1;
-            }
-
-            c = cpYear / 100;
-            ya = cpYear - 100 * c;
-
-            int value = ((146097 * c) / 4 +
-                    (1461 * ya) / 4 +
-                    (153 * cpMonth + 2) / 5 +
-                    raw.day + 1721119 - 2400001);
-            return encodeInt(value);
+            return encodeInt(raw.getEncodedDate());
         }
 
         byte[] toTimestampBytes() {
-            byte[] date = toDateBytes();
-            byte[] time = toTimeBytes();
-
             byte[] result = new byte[8];
-            System.arraycopy(date, 0, result, 0, 4);
-            System.arraycopy(time, 0, result, 4, 4);
-
+            encodeInt(raw.getEncodedDate(), result, 0);
+            encodeInt(raw.getEncodedTime(), result, 4);
             return result;
         }
 
@@ -720,7 +687,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             c.set(Calendar.MINUTE, raw.minute);
             c.set(Calendar.SECOND, raw.second);
             Timestamp timestamp = new Timestamp(c.getTimeInMillis());
-            timestamp.setNanos(raw.fractions * NANOSECONDS_PER_FRACTION);
+            timestamp.setNanos(raw.getFractionsAsNanos());
             return timestamp;
         }
 
@@ -735,5 +702,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             c.set(Calendar.MILLISECOND, 0);
             return new Date(c.getTimeInMillis());
         }
+
     }
 }

@@ -51,7 +51,7 @@ final class ConsoleLogger implements Logger {
     }
 
     private void err(Object message, Throwable t) {
-        synchronized(System.out) {
+        synchronized(System.err) {
             System.err.println("[" + name + "]" + message);
             if (t != null)
                 t.printStackTrace(System.err);

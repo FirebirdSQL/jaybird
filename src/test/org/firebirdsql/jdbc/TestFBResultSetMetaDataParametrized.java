@@ -28,13 +28,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static java.sql.ResultSetMetaData.*;
+import static java.sql.ResultSetMetaData.columnNullable;
 import static java.sql.Types.*;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
@@ -85,6 +87,7 @@ public class TestFBResultSetMetaDataParametrized {
         "  /* boolean */ " +
         "  /* decfloat */ " +
         "  /* extended numerics */ " +
+        "  /* time zone */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -96,6 +99,7 @@ public class TestFBResultSetMetaDataParametrized {
             "/* boolean */ " +
             "/* decfloat */ " +
             "/* extended numerics */ " +
+            "/* time zone */ " +
             "FROM test_p_metadata";
     //@formatter:on
 
@@ -136,6 +140,11 @@ public class TestFBResultSetMetaDataParametrized {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5");
+        }
+        if (supportInfo.supportsTimeZones()) {
+            createTable = createTable.replace("/* time zone */",
+                    ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
+            testQuery = testQuery.replace("/* time zone */", ", col_timetz, col_timestamptz");
         }
 
         DdlHelper.executeCreateTable(connection, createTable);
@@ -200,6 +209,10 @@ public class TestFBResultSetMetaDataParametrized {
         if (supportInfo.supportsDecimalPrecision(34)) {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 27, "COL_NUMERIC25_20", "COL_NUMERIC25_20", NUMERIC, "NUMERIC", 25, 20, TABLE_NAME, columnNullable, true, true));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, TABLE_NAME, columnNullable, true, true));
+        }
+        if (supportInfo.supportsTimeZones()) {
+            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
         }
 
         return testData;

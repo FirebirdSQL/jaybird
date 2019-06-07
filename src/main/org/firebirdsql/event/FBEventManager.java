@@ -303,7 +303,7 @@ public class FBEventManager implements EventManager {
     private void unregisterListener(String eventName) throws SQLException {
         GdsEventHandler handler = handlerMap.get(eventName);
         try {
-            handler.unregister();
+            if (handler != null) handler.unregister();
         } finally {
             handlerMap.remove(eventName);
         }

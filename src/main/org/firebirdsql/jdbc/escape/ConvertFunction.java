@@ -44,6 +44,8 @@ import java.util.regex.Pattern;
  *  <li>{@code `(SQL_)DECIMAL`} and {@code `(SQL_)NUMERIC`} without precision and scale are passed as is, in current
  *  Firebird versions, this means the value will be equivalent to {@code DECIMAL(9,0)} (which is equivalent to
  *  {@code INTEGER})</li>
+ *  <li>Extension not defined in JDBC: {@code TIME_WITH_TIMEZONE/TIME_WITH_TIME_ZONE} and
+ *  {@code TIMESTAMP_WITH_TIMEZONE/TIMESTAMP_WITH_TIME_ZONE} for Firebird 4 time zone types</li>
  *  <li>Unsupported/unknown datatypes (or invalid length or precision and scale) are passed as is to cast, resulting in
  *  an error from the Firebird engine if the resulting cast is invalid</li>
  * </ul>
@@ -138,6 +140,16 @@ final class ConvertFunction implements SQLFunction {
             dataType = "BLOB SUB_TYPE BINARY";
             parameters = null;
             break;
+        // WITH_TIMEZONE / WITH_TIME_ZONE support for convert is not defined in JDBC or ODBC
+        case "TIME_WITH_TIMEZONE":
+        case "TIME_WITH_TIME_ZONE":
+            dataType = "TIME WITH TIME ZONE";
+            parameters = null;
+            break;
+        case "TIMESTAMP_WITH_TIMEZONE":
+        case "TIMESTAMP_WITH_TIME_ZONE":
+            dataType = "TIMESTAMP WITH TIME ZONE";
+            parameters = null;
         }
         return renderCast(value, parameters == null ? dataType : dataType + parameters);
     }

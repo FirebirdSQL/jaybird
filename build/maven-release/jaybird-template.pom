@@ -131,6 +131,14 @@
 			<name>Artyom Smirnov</name>
 			<url>https://github.com/artyom-smirnov</url>
 		</contributor>
+		<contributor>
+			<name>Vasiliy Yashkov</name>
+			<url>https://github.com/vasiliy-yashkov</url>
+		</contributor>
+		<contributor>
+			<name>Julien Nabet</name>
+			<url>https://github.com/serval2412</url>
+		</contributor>
 	</contributors>
 	
 	<licenses>
@@ -179,7 +187,7 @@
 		<dependency>
 			<groupId>net.java.dev.jna</groupId>
 			<artifactId>jna</artifactId>
-			<version>4.4.0</version>
+			<version>5.3.0</version>
 			<optional>true</optional>
 		</dependency>
 	</dependencies>

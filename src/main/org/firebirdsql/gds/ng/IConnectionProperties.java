@@ -37,6 +37,10 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
  */
 public interface IConnectionProperties extends IAttachProperties<IConnectionProperties> {
 
+    /**
+     * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.
+     */
+    String SESSION_TIME_ZONE_SERVER = "server";
     short DEFAULT_DIALECT = 3;
     int DEFAULT_BUFFERS_NUMBER = 0;
 
@@ -156,6 +160,24 @@ public interface IConnectionProperties extends IAttachProperties<IConnectionProp
      * @see #setColumnLabelForName(boolean)
      */
     boolean isColumnLabelForName();
+
+    /**
+     * Sets the {@code sessionTimeZone}.
+     *
+     * @param sessionTimeZone
+     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
+     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
+     * @since 4.0
+     */
+    void setSessionTimeZone(String sessionTimeZone);
+
+    /**
+     * Get the {@code sessionTimeZone}.
+     *
+     * @return value for {@code sessionTimeZone}
+     * @since 4.0
+     */
+    String getSessionTimeZone();
 
     /**
      * Gets the extra database parameters. This can be used to pass extra database parameters that are not directly

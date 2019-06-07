@@ -28,10 +28,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.*;
+import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.junit.Assert.*;
@@ -1128,6 +1129,59 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             // Calling getParameterMetaData and getMetaData should not throw an exception
             cs.getParameterMetaData();
             cs.getMetaData();
+        }
+    }
+
+    @Test
+    public void testIgnoreProcedureType() throws Exception{
+        executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "DGPII");
+            cstmt.setString(3, "Smith");
+            cstmt.setString(4, "Automap");
+            cstmt.addBatch();
+            cstmt.setInt(1, 44);
+            cstmt.setString(2, "VBASE");
+            cstmt.setString(3, "Jenner");
+            cstmt.setString(4, "Video Database");
+            cstmt.addBatch();
+            cstmt.executeBatch();
+        }
+
+        // First verify with default connection that procedure is selectable
+        try (CallableStatement cstmt = con.prepareCall("{call get_emp_proj(?)}")) {
+            assertTrue("Expected procedure inferred as selectable",
+                    cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure());
+            cstmt.setInt(1, 44);
+            try (ResultSet rs = cstmt.executeQuery()) {
+                assertTrue("Should have at least one row", rs.next());
+                assertEquals("First row value must be DGPII", "DGPII", rs.getString(1));
+                assertTrue("Should have at least a second row", rs.next());
+                assertEquals("Second row value must be VBASE", "VBASE", rs.getString(1));
+            }
+        }
+
+        // Then check with ignoreProcedureType = true
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("ignoreProcedureType", "true");
+        try (Connection conn2 = DriverManager.getConnection(getUrl(), props);
+             CallableStatement cstmt = conn2.prepareCall("{call get_emp_proj(?)}")) {
+            assertFalse("Expected procedure inferred as executable",
+                    cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure());
+            cstmt.setInt(1, 44);
+            cstmt.execute();
+            assertEquals("Value must be DGPII", "DGPII", cstmt.getString(1));
+
+            // re-check via non-standard result set if it has a single row (executable should end after first result)
+            try (ResultSet rs = cstmt.executeQuery()) {
+                assertTrue("Should have at least one row", rs.next());
+                assertEquals("First row value must be DGPII", "DGPII", rs.getString(1));
+                assertFalse("Should not have a second row", rs.next());
+            }
         }
     }
 }

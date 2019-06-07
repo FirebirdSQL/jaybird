@@ -486,6 +486,44 @@ public class TestFBStatement extends FBJUnit4TestBase {
     }
 
     /**
+     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
+     */
+    @Test
+    public void testGetLastExplainedExecutionPlan_select() throws SQLException {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+        
+        executeCreateTable(con, CREATE_TABLE);
+
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(SELECT_DATA);
+            rs.close();
+
+            String plan = stmt.getLastExplainedExecutionPlan();
+            assertThat("Expected non-empty detailed plan", plan, not(isEmptyOrNullString()));
+        }
+    }
+
+    /**
+     * Test retrieval of detailed execution plan ({@link FBStatement#getLastExplainedExecutionPlan()})
+     * when no statement has been executed yet.
+     * <p>
+     * Expected: exception
+     * </p>
+     */
+    @Test
+    public void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(equalTo("No statement was executed, detailed plan cannot be obtained."))
+            ));
+
+            stmt.getLastExplainedExecutionPlan();
+        }
+    }
+
+    /**
      * Test that {@link FBStatement#getConnection()} returns the expected {@link java.sql.Connection}.
      */
     @Test

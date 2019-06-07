@@ -45,7 +45,7 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
     public void setUp() throws Exception {
         super.setUp();
 
-        rowDescriptorBuilder.setType(ISCConstants.SQL_TYPE_TIME);
+        rowDescriptorBuilder.setType(ISCConstants.SQL_TIMESTAMP);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
         field = new FBTimestampField(fieldDescriptor, fieldData, Types.TIMESTAMP);
     }

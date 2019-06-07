@@ -27,6 +27,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.TimeZone;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -47,6 +48,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private int pageCacheSize;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
+    private String sessionTimeZone = TimeZone.getDefault().getID();
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp(
             DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
             EncodingFactory.getPlatformEncoding());
@@ -71,6 +73,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             pageCacheSize = src.getPageCacheSize();
             resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
             columnLabelForName = src.isColumnLabelForName();
+            sessionTimeZone = src.getSessionTimeZone();
             for (Parameter parameter : src.getExtraDatabaseParameters()) {
                 parameter.copyTo(extraDatabaseParameters, null);
             }
@@ -144,6 +147,18 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        this.sessionTimeZone = sessionTimeZone != null ? sessionTimeZone : TimeZone.getDefault().getID();
+        dirtied();
+
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return sessionTimeZone;
+    }
+
+    @Override
     public DatabaseParameterBuffer getExtraDatabaseParameters() {
         return extraDatabaseParameters;
     }
@@ -200,6 +215,9 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             case isc_dpb_connect_timeout:
                 setConnectTimeout(parameter.getValueAsInt());
                 break;
+            case isc_dpb_session_time_zone:
+                setSessionTimeZone(parameter.getValueAsString());
+                break;
             case isc_dpb_so_timeout:
                 setSoTimeout(parameter.getValueAsInt());
                 break;
@@ -240,7 +258,13 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                             "Unknown or unsupported parameter with type %d added to extra database parameters",
                             parameterType));
                 }
-                parameter.copyTo(getExtraDatabaseParameters(), null);
+                // intentional fall-through; properties below don't need a warning
+                // TODO Consider using explicit properties in IConnectionProperties?
+            case isc_dpb_time_zone_bind:
+            case isc_dpb_decfloat_bind:
+            case isc_dpb_decfloat_round:
+            case isc_dpb_decfloat_traps:
+                parameter.copyTo(extraDatabaseParameters, null);
                 dirtied();
             }
         }

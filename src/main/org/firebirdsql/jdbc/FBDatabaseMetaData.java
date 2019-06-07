@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
+import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
@@ -61,10 +62,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
     private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
-
-    private static final int DRIVER_MAJOR_VERSION = 4;
-    private static final int DRIVER_MINOR_VERSION = 0;
-    private static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
 
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
@@ -109,6 +106,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] DATE_PRECISION = createInt(10);
     private static final byte[] TIME_PRECISION = createInt(8);
     private static final byte[] TIMESTAMP_PRECISION = createInt(19);
+    private static final byte[] TIME_WITH_TIMEZONE_PRECISION = createInt(19);
+    private static final byte[] TIMESTAMP_WITH_TIMEZONE_PRECISION = createInt(30);
     private static final byte[] BOOLEAN_PRECISION = createInt(1);
     private static final byte[] DECFLOAT_16_PRECISION = createInt(16);
     private static final byte[] DECFLOAT_34_PRECISION = createInt(34);
@@ -234,18 +233,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getDriverVersion() throws SQLException {
-        // TODO Return full version?
-        return DRIVER_VERSION;
+        return Version.JAYBIRD_SIMPLE_VERSION;
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return DRIVER_MAJOR_VERSION;
+        return Version.JAYBIRD_MAJOR_VERSION;
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return DRIVER_MINOR_VERSION;
+        return Version.JAYBIRD_MINOR_VERSION;
     }
 
     @Override
@@ -417,7 +415,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      * <p>
-     * See also {@link org.firebirdsql.jdbc.escape.ConvertFunction} for caveats.
+     * See also {@code org.firebirdsql.jdbc.escape.ConvertFunction} for caveats.
      * </p>
      */
     @Override
@@ -522,8 +520,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return false;
             case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
             case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+                return fromType != Types.ROWID && firebirdSupportInfo.supportsTimeZones();
             default:
                 return false;
             }
@@ -537,8 +534,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
                 return false;
             case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -566,8 +562,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return false;
             case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
             case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -594,8 +589,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return true;
             case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
             case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -645,8 +639,64 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             return false;
 
         case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            if (firebirdSupportInfo.supportsTimeZones()) {
+                switch (toType) {
+                case Types.TIME:
+                case Types.TIMESTAMP:
+                    return true;
+                case Types.DATE:
+                    return false;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    return true;
+                case Types.CHAR:
+                case Types.VARCHAR:
+                case Types.LONGVARCHAR:
+                case Types.CLOB:
+                case Types.NCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NVARCHAR:
+                case Types.NCLOB:
+                    return true;
+                // casting date/time values to binary types will result in ASCII bytes of string conversion
+                case Types.BINARY:
+                case Types.VARBINARY:
+                case Types.LONGVARBINARY:
+                case Types.BLOB:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            return false;
         case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
-            // TODO JDBC-540
+            if (firebirdSupportInfo.supportsTimeZones()) {
+                switch (toType) {
+                case Types.TIME:
+                case Types.TIMESTAMP:
+                case Types.DATE:
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    return true;
+                case Types.CHAR:
+                case Types.VARCHAR:
+                case Types.LONGVARCHAR:
+                case Types.CLOB:
+                case Types.NCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NVARCHAR:
+                case Types.NCLOB:
+                    return true;
+                // casting date/time values to binary types will result in ASCII bytes of string conversion
+                case Types.BINARY:
+                case Types.VARBINARY:
+                case Types.LONGVARBINARY:
+                case Types.BLOB:
+                    return true;
+                default:
+                    return false;
+                }
+            }
             return false;
 
         case Types.ARRAY:
@@ -1345,6 +1395,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                     valueBuilder.at(7).set(TIMESTAMP_PRECISION);
                     break;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                    valueBuilder.at(7).set(TIME_WITH_TIMEZONE_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    valueBuilder.at(7).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
+                    break;
                 case Types.BOOLEAN:
                     valueBuilder
                             .at(7).set(BOOLEAN_PRECISION)
@@ -1820,6 +1876,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                     valueBuilder.at(6).set(TIMESTAMP_PRECISION);
                     break;
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    valueBuilder.at(6).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                    valueBuilder.at(6).set(TIME_WITH_TIMEZONE_PRECISION);
+                    break;
                 case Types.BOOLEAN:
                     valueBuilder
                             .at(6).set(BOOLEAN_PRECISION)
@@ -1927,6 +1989,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return scopeCatalog;
     }
 
+    // TODO Duplicates JdbcTypeConverter (and probably BlrConstants)
     private static final int smallint_type = 7;
     private static final int integer_type = 8;
     private static final int quad_type = 9;
@@ -1944,7 +2007,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int varchar_type = 37;
 //  private static final int cstring_type = 40;
     private static final int blob_type = 261;
-    private static final short boolean_type = 23;
+    private static final int boolean_type = 23;
+    private static final int time_tz_type = 28;
+    private static final int timestamp_tz_type = 29;
 
     private static int getDataType(int fieldType, int fieldSubType, int fieldScale, int characterSetId) {
         // TODO Preserved for backwards compatibility, is this really necessary?
@@ -2003,6 +2068,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return "TIME";
             case date_type:
                 return "DATE";
+            case time_tz_type:
+                return "TIME WITH TIME ZONE";
+            case timestamp_tz_type:
+                return "TIMESTAMP WITH TIME ZONE";
             case int64_type:
                 if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
                     return "NUMERIC";
@@ -2844,6 +2913,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 getBytes("BLOB SUB_TYPE <0 "), createInt(Types.BLOB), INT_ZERO, null, null, null,
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
+
+        if (firebirdSupportInfo.supportsTimeZones()) {
+            //TIME_WITH_TIMEZONE=2013
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("TIME WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIME_WITH_TIMEZONE),
+                    TIME_WITH_TIMEZONE_PRECISION, getBytes("time'"), getBytes("'"), null, TYPE_NULLABLE,
+                    CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                    createInt(SQL_TIME_TZ), null, RADIX_TEN));
+
+            //TIMESTAMP_WITH_TIMEZONE=2014
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("TIMESTAMP WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE),
+                    TIMESTAMP_WITH_TIMEZONE_PRECISION, getBytes("timestamp'"), getBytes("'"), null, TYPE_NULLABLE,
+                    CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                    createInt(SQL_TIMESTAMP_TZ), null, RADIX_TEN));
+        }
 
         return new FBResultSet(rowDescriptor, rows);
     }

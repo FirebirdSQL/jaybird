@@ -23,6 +23,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -38,6 +39,7 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,9 +47,12 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -417,6 +422,60 @@ public abstract class AbstractStatementTest {
         statement.close();
 
         statement.getExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_unsupportedVersion() throws Exception {
+        assumeFalse("Test expects explained execution plan not supported",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        expectedException.expect(SQLFeatureNotSupportedException.class);
+        expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported));
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_withStatementPrepared() throws Exception {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        String executionPlan = statement.getExplainedExecutionPlan();
+
+        assertEquals("Unexpected plan for prepared statement", "Select Expression\n" +
+                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan);
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_noStatementPrepared() throws Exception {
+        allocateStatement();
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement not yet allocated");
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_StatementClosed() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement closed");
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+        statement.close();
+
+        statement.getExplainedExecutionPlan();
     }
 
     @Test

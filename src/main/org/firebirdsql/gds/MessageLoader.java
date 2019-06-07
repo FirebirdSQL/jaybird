@@ -134,6 +134,7 @@ final class MessageLoader {
 
     private void storeSqlState(int errorCode, String value) {
         Vector<String> facilityState = facilityStates.get(MessageLookup.getFacility(errorCode));
+        // Given the large number of duplicate sql states, interning makes sense here
         storeValue(errorCode, value.intern(), facilityState);
     }
 

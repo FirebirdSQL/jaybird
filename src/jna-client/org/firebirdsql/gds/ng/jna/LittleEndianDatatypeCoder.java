@@ -58,23 +58,36 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     public byte[] encodeShort(short value) {
-        byte ret[] = new byte[2];
+        byte[] ret = new byte[2];
         ret[0] = (byte) (value & 0xff);
         ret[1] = (byte) ((value >>> 8) & 0xff);
         return ret;
     }
 
     @Override
-    public short decodeShort(byte[] byte_int) {
-        int b1 = byte_int[0] & 0xFF;
-        int b2 = byte_int[1] & 0xFF;
+    public void encodeShort(int value, byte[] target, int fromIndex) {
+        target[fromIndex] = (byte) (value & 0xff);
+        target[fromIndex + 1] = (byte) ((value >>> 8) & 0xff);
+    }
 
-        return (short) (b1 + (b2 << 8));
+    @Override
+    public short decodeShort(byte[] byte_int) {
+
+        return (short)
+                ((byte_int[0] & 0xFF) +
+                ((byte_int[1] & 0xFF) << 8));
+    }
+
+    @Override
+    public short decodeShort(byte[] bytes, int fromIndex) {
+        return (short)
+                ((bytes[fromIndex] & 0xFF) +
+                ((bytes[fromIndex + 1] & 0xFF) << 8));
     }
 
     @Override
     public byte[] encodeInt(int value) {
-        byte ret[] = new byte[4];
+        byte[] ret = new byte[4];
         ret[0] = (byte) (value & 0xff);
         ret[1] = (byte) ((value >>> 8) & 0xff);
         ret[2] = (byte) ((value >>> 16) & 0xff);
@@ -83,12 +96,27 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
+    public void encodeInt(int value, byte[] target, int fromIndex) {
+        target[fromIndex] = (byte) (value & 0xff);
+        target[fromIndex + 1] = (byte) ((value >>> 8) & 0xff);
+        target[fromIndex + 2] = (byte) ((value >>> 16) & 0xff);
+        target[fromIndex + 3] = (byte) ((value >>> 24) & 0xff);
+    }
+
+    @Override
     public int decodeInt(byte[] byte_int) {
-        int b1 = byte_int[0] & 0xFF;
-        int b2 = byte_int[1] & 0xFF;
-        int b3 = byte_int[2] & 0xFF;
-        int b4 = byte_int[3] & 0xFF;
-        return (b1 + (b2 << 8) + (b3 << 16) + (b4 << 24));
+        return ((byte_int[0] & 0xFF) +
+                ((byte_int[1] & 0xFF) << 8) +
+                ((byte_int[2] & 0xFF) << 16) +
+                ((byte_int[3] & 0xFF) << 24));
+    }
+
+    @Override
+    public int decodeInt(byte[] bytes, int fromIndex) {
+        return ((bytes[fromIndex] & 0xFF) +
+                ((bytes[fromIndex + 1] & 0xFF) << 8) +
+                ((bytes[fromIndex + 2] & 0xFF) << 16) +
+                ((bytes[fromIndex + 3] & 0xFF) << 24));
     }
 
     @Override
@@ -107,16 +135,14 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     public long decodeLong(byte[] byte_int) {
-        long b1 = byte_int[0] & 0xFF;
-        long b2 = byte_int[1] & 0xFF;
-        long b3 = byte_int[2] & 0xFF;
-        long b4 = byte_int[3] & 0xFF;
-        long b5 = byte_int[4] & 0xFF;
-        long b6 = byte_int[5] & 0xFF;
-        long b7 = byte_int[6] & 0xFF;
-        long b8 = byte_int[7] & 0xFF;
-        return (b1 + (b2 << 8) + (b3 << 16) + (b4 << 24) + (b5 << 32)
-                + (b6 << 40) + (b7 << 48) + (b8 << 56));
+        return (((long) (byte_int[0] & 0xFF)) +
+                (((long) (byte_int[1] & 0xFF)) << 8) +
+                (((long) (byte_int[2] & 0xFF)) << 16) +
+                (((long) (byte_int[3] & 0xFF)) << 24) +
+                (((long) (byte_int[4] & 0xFF)) << 32) +
+                (((long) (byte_int[5] & 0xFF)) << 40) +
+                (((long) (byte_int[6] & 0xFF)) << 48) +
+                (((long) (byte_int[7] & 0xFF)) << 56));
     }
 
     @Override

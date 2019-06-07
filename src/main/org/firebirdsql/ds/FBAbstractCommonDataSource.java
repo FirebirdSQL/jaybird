@@ -564,6 +564,50 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
+    @Override
+    public String getTimeZoneBind() {
+        synchronized (lock) {
+            return connectionProperties.getTimeZoneBind();
+        }
+    }
+
+    @Override
+    public void setTimeZoneBind(String timeZoneBind) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setTimeZoneBind(timeZoneBind);
+        }
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        synchronized (lock) {
+            return connectionProperties.getSessionTimeZone();
+        }
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setSessionTimeZone(sessionTimeZone);
+        }
+    }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        synchronized (lock) {
+            return connectionProperties.isIgnoreProcedureType();
+        }
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        synchronized (lock) {
+            connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+        }
+    }
+
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties

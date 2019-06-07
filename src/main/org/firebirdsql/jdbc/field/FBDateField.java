@@ -32,30 +32,22 @@ import java.util.Calendar;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-final class FBDateField extends FBField {
+final class FBDateField extends AbstractWithoutTimeZoneField {
 
     FBDateField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return new java.sql.Timestamp(getDatatypeCoder().decodeDateCalendar(getFieldData(), cal).getTime());
     }
 
-    public Timestamp getTimestamp() throws SQLException {
-        if (isNull()) return null;
-        return new Timestamp(getDate().getTime());
-    }
-
+    @Override
     public Date getDate(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
-    }
-
-    public Date getDate() throws SQLException {
-        if (isNull()) return null;
-        return getDatatypeCoder().decodeDate(getFieldData());
     }
 
     public String getString() throws SQLException {
@@ -63,6 +55,7 @@ final class FBDateField extends FBField {
         return getDatatypeCoder().decodeDate(getFieldData()).toString();
     }
 
+    @Override
     public void setString(String value) throws SQLException {
         if (value == null) {
             setNull();
@@ -72,6 +65,7 @@ final class FBDateField extends FBField {
         setDate(Date.valueOf(value));
     }
 
+    @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -81,15 +75,7 @@ final class FBDateField extends FBField {
         setFieldData(getDatatypeCoder().encodeDateCalendar(new java.sql.Date(value.getTime()), cal));
     }
 
-    public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setDate(new Date(value.getTime()));
-    }
-
+    @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
         if (value == null) {
             setNull();
@@ -97,15 +83,6 @@ final class FBDateField extends FBField {
         }
 
         setFieldData(getDatatypeCoder().encodeDateCalendar(value, cal));
-    }
-
-    public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setFieldData(getDatatypeCoder().encodeDate(value));
     }
 
     @Override

@@ -9,15 +9,52 @@ Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
 <http://tracker.firebirdsql.org/browse/JDBC>.
 
+Jaybird 4.0.x changelog
+=======================
+
+Changes per Jaybird 4 release. See also [What's new in Jaybird 4]. For known
+issues, consult [Known Issues].
+
+Jaybird 4.0.0-beta-2
+--------------------
+
+The following has been changed or fixed since Jaybird 4.0.0-beta-1
+
+-   Fixed: Connection property `defaultIsolation`/`isolation` did not work
+    through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
+
 General Notes
 =============
 
-Jaybird is a JDBC driver suite to connect to Firebird database servers.
+Jaybird is a JDBC driver suite to connect to Firebird database servers from Java
+and other Java Virtual Machine (JVM) languages.
 
 About this version
 ------------------
 
-*TODO*
+Jaybird 4 is - compared to Jaybird 3 - an incremental release that builds on the
+foundations of Jaybird 3. The focus of this release has been on further 
+improving JDBC support and adding support for the new data types and features of 
+Firebird 4.
+
+The main new features are:
+
+- [Wire encryption support] (backported to Jaybird 3.0.4)
+- [Database encryption support] (backported to Jaybird 3.0.4)
+- [Authentication plugin improvements]
+- [Firebird 4 DECFLOAT support]
+- [Firebird 4 extended numeric precision support]
+- [Firebird 4 time zone support]
+- [JDBC RowId support]
+- [JDBC DatabaseMetaData.getPseudoColumns implemented]
+- [JDBC DatabaseMetaData.getVersionColumns implemented]
+- [Improved JDBC function escape support]
+- [New JDBC protocol prefix jdbc:firebird:]
+- [Generated keys support improvements]
+
+Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read 
+[Compatibility changes] before using Jaybird 4. See also 
+[Upgrading from Jaybird 3 to Jaybird 4].
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
@@ -43,11 +80,12 @@ Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
 
 ### Notes on Firebird 4 support
 
-Jaybird 4 does not (yet) support the new `TIME WITH TIME ZONE` and `TIMESTAMP 
-WITH TIME ZONE` types. We plan to add this before the Jaybird 4.0.0 release.
-
 Jaybird 4 does not support the protocol improvements of Firebird 4 like statement 
 and session timeouts. Nor does it implement the new batch protocol.
+
+Jaybird time zone support uses functionality added after Firebird 4 beta 1 (4.0.0.1436), 
+you will need version 4.0.0.1481 or later for the `timeZoneBind` connection 
+property.
 
 Supported Java versions
 -----------------------
@@ -55,11 +93,13 @@ Supported Java versions
 Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher 
 (JDBC 4.3). Support for earlier Java versions has been dropped.
 
-For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
-have the same source and all JDBC 4.3 related functionality.
-
-Given the limited support period for Java 9 and higher versions, we may limit
+Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
+Currently that means we support Java 11 and Java 12.
+
+Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
+have the same source and all JDBC 4.3 related functionality and can be used on
+Java 9 and higher as well.
 
 Jaybird 4 is not modularized, but all versions declare the automatic module name 
 `org.firebirdsql.jaybird`.
@@ -89,8 +129,11 @@ Jaybird @VERSION@
 Jaybird @VERSION@ is available from Maven central: 
 
 Groupid: `org.firebirdsql.jdbc`,\
-Artifactid: `jaybird-jdkXX` (where `XX` is `17` or `18`).\
+Artifactid: `jaybird-XX` (where `XX` is `jdk17`, `jdk18` or `java11`).\
 Version: `@VERSION@`
+
+For ease of use, we also provide a Maven relocation artifact with artifact id
+`jaybird`. For Jaybird 4 this relocation artifact points to `jaybird-jdk18`.
 
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot 
 repository, <https://oss.sonatype.org/content/repositories/snapshots>
@@ -130,18 +173,19 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA as a dependency, as we only depend on it as an
-optional dependency:
+explicitly include JNA 5.3.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>5.3.0</version>
 </dependency>
 ~~~
 
-We plan to make native and embedded support a separate library in future 
-releases, and provide Firebird client libraries as Maven dependencies as well.
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
 
 See also [Type 2 (native) and embedded driver].
 
@@ -149,29 +193,33 @@ See also [Type 2 (native) and embedded driver].
 
 You can download the latest versions from <https://www.firebirdsql.org/en/jdbc-driver/>
 
-At minimum Jaybird 4 requires `jaybird-@VERSION@.jar` and 
-`connector-api-1.5.jar`. You can also use `jaybird-full-@VERSION@.jar` which
-includes the connector-api files.
+At minimum Jaybird 4 requires `jaybird-XX-@VERSION@.jar` (where `XX` is `jdk17`, 
+`jdk18` or `java11`) and `connector-api-1.5.jar`. You can also use 
+`jaybird-full-XX-@VERSION@.jar` which includes the connector-api files.
 
 If you deploy your application to a Java EE application server, then you must 
-use `jaybird-@VERSION@.jar` (not `-full`!), and **not** include 
+use `jaybird-XX-@VERSION@.jar` (not `-full`!), and **not** include 
 `connector-api-1.5.jar` as this dependency will be provided by your application 
 server.
 
 For `getGeneratedKeys` support you will need to include 
 `antlr-runtime-4.7.2.jar` on your classpath.
 
-For native, local or embedded support, you will need to include `jna-4.4.0.jar` 
+For native, local or embedded support, you will need to include `jna-5.3.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver].
 
 Upgrading from Jaybird 3 to Jaybird 4
 =====================================
 
+Please make sure to read [Compatibility changes] and 
+[Changes in artifact and library names] before upgrading to Jaybird 4.
+
 Maven
 -----
 
 Upgrade the version of the dependency to @VERSION@. If you use native or 
-embedded.
+embedded verify that you upgrade JNA (`net.java.dev.jna:jna`) from 4.4.0 to 
+5.3.0.
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 4]. 
@@ -182,12 +230,17 @@ Manual install
 If you manage your dependencies manually, you need to do the following:
 
 1.  Replace the Jaybird 3 library with the Jaybird 4 version
-    - `jaybird-3.0.x.jar` with `jaybird-@VERSION@.jar` 
-    - `jaybird-full-3.0.x.jar` with `jaybird-full-@VERSION@.jar`
+    - `jaybird-3.0.x.jar` with `jaybird-XX-@VERSION@.jar` (where `XX` is 
+      `jdk17`, `jdk18` or `java11`) 
+    - `jaybird-full-3.0.x.jar` with `jaybird-full-XX-@VERSION@.jar`
     
 2.  If installed, remove `antlr-runtime-4.7.jar` and replace it with 
     `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
     support.
+    
+3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.3.0.jar`.
+    This library is only necessary for native, local or embedded connections.
+    If you use pure-java connections (the default), you don't need JNA.
     
 Gotcha's
 --------
@@ -205,15 +258,48 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 
 For known issues, consult [Known Issues].
 
-Jaybird 4.0.x changelog
-=======================
-
-...
-
 What's new in Jaybird 4
 =======================
 
 For a full list of changes, see [Firebird tracker for Jaybird 4](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10441).
+
+Changes in artifact and library names
+-------------------------------------
+
+Historically, the naming of Jaybird artifacts and libraries has been a bit
+inconsistent. With the rapid release cycle of Java, naming collisions are
+imminent with the old naming convention. For example, the Maven artifact 
+`jaybird-jdk15` was used for Java 1.5 and with this naming convention, this 
+would be reused for Java 15.
+
+Forced by this issue, we have overhauled the naming convention entirely to bring
+more consistency between Maven artifacts and the Jaybird zip distribution. The
+full naming convention is documented in [jdp-2019-02](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-02-version-number-and-naming-scheme.md).
+
+This new naming convention has the following effects:
+
+-   Java 9 and higher use suffix `javaXX` (eg `java11` for Java 11)
+-   Java 8 and earlier will use suffix `jdkXX` (eg `jdk18` for Java 1.8)
+    -   Previous Jaybird versions used suffix `jdkXX` for Maven, and `JDK_x.y` 
+        for zip artifacts; these will now all use `javaXX` (or `jdkxx` for 
+        Java 8 and earlier)
+-   Names of libraries are now consistent with the Maven naming convention
+
+As a result of these new naming conventions, the following has been changed (for
+Java 11, read `java11` instead of `jdk18`)
+
+-   Distribution zip: `jaybird-jdk18-4.0.0.zip` (was `Jaybird-3.0.5_JDK1.8.zip`)
+-   Jaybird: `jaybird-jdk18-4.0.0.jar` (was `jaybird-3.0.5.jar` in zip 
+    distribution)
+-   Jaybird (full): `jaybird-full-jdk18-4.0.0.jar` (was 
+    `jaybird-full-3.0.5.jar`)
+-   Jaybird sources: `jaybird-jdk18-4.0.0-sources.jar` (was 
+    `jaybird-3.0.5-sources.jar` in zip distribution)
+-   Jaybird javadoc: `jaybird-jdk18-4.0.0-javadoc.jar` (was
+    `jaybird-3.0.5-javadoc.jar` in zip distribution)
+    
+Furthermore, the client name reported to Firebird 2.5 and higher has been 
+changed from `Jaybird 3.0.5-JDK_1.8` to `Jaybird jaybird-jdk17-4.0.0` 
 
 Java support
 ------------
@@ -222,10 +308,17 @@ Java support
 
 The driver supports Java 7 with caveats.
  
-Some of the libraries used for testing Jaybird have upped there minimum version
-to Java 8, while we need those library versions to test - for example - Java 11. 
-When we can no longer work around these issues, we will sacrifice Java 7 test 
-coverage in order to maintain Java 7 support.
+-   Firebird 4 time zone types are not supported under Java 7, see also
+    [Firebird 4 time zone support].
+
+-   Under Java 7, Jaybird requires JAXB (`javax.xml.bind`), this will work in
+    standard Java, but may require additional configuration in certain 
+    environments, for example JBoss/Wildfly.
+    
+-   Some of the libraries used for testing Jaybird have upped there minimum 
+    version to Java 8, while we need those library versions to test - for 
+    example - Java 11. When we can no longer work around these issues, we will 
+    sacrifice Java 7 test coverage in order to maintain Java 7 support. 
 
 ### Java 8 ###
 
@@ -233,27 +326,27 @@ The driver supports Java 8.
 
 ### Java 9 and higher ###
 
-Jaybird 4 supports Java 9 and higher (JDBC 4.3) with the Java 8 version of the 
-driver. Most of the JDBC 4.3 features have been implemented (in as far as they 
-are supported by Firebird).
+Jaybird 4 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version 
+of the driver. Most of the JDBC 4.3 features have been implemented (in as far 
+as they are supported by Firebird).
 
-For compatibility with Java 9 modules, versions 2.2.14 and 3.0.3 introduced the 
-automatic module name `org.firebirdsql.jaybird`. This guarantees a stable module 
-name for Jaybird, and allows for future modularization of Jaybird.
+You can use the Java 8 driver under Java 9 and higher. For Java 11 or higher we 
+recommend to use the Java 11 driver, though its sources are identical to the 
+Java 8 driver. 
 
-You can use the Java 8 driver under Java 9 and higher. We recommend not to use 
-the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
-JDBC 4.3 features that are implemented in the Java 8 version. In addition, since 
-Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` module, 
-where the Java 8 version does not need that module.
+We recommend not to use the Java 7 version of Jaybird with Java 9 or higher. The 
+Java 7 version doesn't implement all of the JDBC 4.3 features that are 
+implemented in the Java 8 version. In addition, since Jaybird 3.0.4, the Java 7 
+version of Jaybird needs the `java.xml.bind` module, where the Java 8 and higher 
+versions do not need that module.
 
-Given the limited support period for Java 9 and higher versions, we may limit
+Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
+Currently that means we support Java 7, 8, 11 and 12.
 
-No final decisions have been made on releasing a version specific artifact, but
-likely a latest Java LTS-version specific release will be made available before 
-final Jaybird 4.0.0 (probably named jaybird-javaNN, eg jaybird-java11, to avoid 
-overlap with the current jaybird-jdkNN naming convention when we get to Java 15).
+For compatibility with Java 9 modules, Jaybird defines the automatic module name 
+`org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
+allows for future modularization of Jaybird.
 
 Firebird support
 ----------------
@@ -262,43 +355,6 @@ Support for Firebird 2.0 and 2.1 has been dropped. See [Firebird 2.0 and 2.1 no
 longer supported] for details.
 
 Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
-
-JDBC RowId support
-------------------
-
-Columns of type `RDB$DB_KEY` are now identified as `java.sql.Types.ROWID`,
-and `getObject` on these columns will now return a `java.sql.RowId`.
-
-The `getObject(int/String, Class)` methods support retrieval as 
-`java.sql.RowId` and `org.firebirdsql.jdbc.FBRowId`; the object returned is the
-same type (`org.firebirdsql.jdbc.FBRowId`) in both cases.
-
-Updating row ids is not possible, so attempts to call `updateRowId` or 
-`updateObject` on a `RDB$DB_KEY` in an updatable result set will throw an 
-`SQLFeatureNotSupportedException`.
-
-Unfortunately, this support does not extend to parameters, as parameters (eg in
-`where RDB$DB_KEY = ?`) cannot be distinguished from parameters of a normal 
-binary field (`char character set octets`). To address this, binary fields
-now also accept values of type `java.sql.RowId` on `setRowId` and `setObject`.
-
-Support has also been added to `DatabaseMetaData`:
-
--   `getBestRowIdentifier` returns `RDB$DB_KEY` if there is no primary key (existing
-    functionality)
--   `getRowIdLifetime` now returns `RowIdLifetime.ROWID_VALID_TRANSACTION` (even
-    if `dbkey_scope=1` has been specified!)
--   `getPseudoColumns` now returns `RDB$DB_KEY`
-
-Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
-column, as it is a pseudo-column.
-
-In result sets, Jaybird will now also automatically map request for columns by 
-name `RDB$DB_KEY` (case insensitive) to `DB_KEY` as Firebird automatically 
-applies this alias for the `RDB$DB_KEY` column(s) in a select-list.
-
-Be aware that result set metadata will still report `DB_KEY` as the column name 
-and label.
 
 Wire encryption support
 -----------------------
@@ -650,6 +706,8 @@ applied:
     
 If you need other rounding and overflow behavior, make sure you round the values
 appropriately before you set them.
+
+*TODO*: Document decfloat bind/traps/round connection property.
      
 ### Notes ###
 
@@ -725,8 +783,8 @@ a calculation as a boolean value. Instead, use a real `BOOLEAN`.
 non-numerical strings throw an `SQLException` with a `NumberFormatException` as 
 cause. Out of range values are handled as described in [Precision and range].
 
-13. Getting values as `String` will equivalent to `BigDecimal.toString`, with
-extra support for the special values mentioned in the previous note.
+13. Getting values as `String` will be equivalent to `BigDecimal.toString()`,
+with extra support for the special values mentioned in the previous note.
 
 14. As mentioned in earlier notes, support for the special values is under
 discussion, and may be removed in the final Jaybird 4 or Firebird 4 release,
@@ -762,16 +820,309 @@ Firebird 4 extended numeric precision support
 ---------------------------------------------
 
 Added support for the extended precision for `NUMERIC` and `DECIMAL` introduced 
-in Firebird 4, increasing the maximum precision to 34. Technically, this
-extended precision is supported by a IEEE-754 Decimal128 which is also used for
-`DECFLOAT` support.
+in Firebird 4, increasing the maximum precision to 34. In the implementation in 
+Firebird, this extended precision is backed by a IEEE-754 Decimal128 which is 
+also used for `DECFLOAT` support.
 
 Any `NUMERIC` or `DECIMAL` with a precision between 19 and 34 will allow storage
 up to a precision of 34. 
 
-Values set on a field or parameter will be rounded using `RoundingMode.HALF_EVEN` 
-to the target scale of the field. Values exceeding a precision of 34 will be
-rejected with a `TypeConversionException`.
+Values set on a field or parameter will be rounded to the target scale of the 
+field using `RoundingMode.HALF_EVEN`. Values exceeding a precision of 34 after 
+rounding will be rejected with a `TypeConversionException`.
+
+Firebird 4 time zone support
+----------------------------
+
+Added support for the Firebird 4 `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME
+ZONE` types. See the Firebird 4 release notes and `doc/sql.extensions/README.time_zone.md`
+in the Firebird installation for details on these types.
+
+The time zone types are supported under Java 8 and higher, using the Java 8 (or 
+higher) version of Jaybird. 
+
+Time zone types are not supported under Java 7, you will need to enable legacy 
+time zone bind. With legacy time zone bind, Firebird will convert to the 
+equivalent `TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session 
+time zone. Time zone bind can be configured with connection property 
+`timeZoneBind`, for more information see [Time zone bind configuration].
+
+See also [jdp-2019-03 Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
+
+NOTE: documentation below reflects state as currently implemented
+
+### Scope of time zone support ###
+
+JDBC 4.2 introduced support for time zones, and maps these types to 
+`java.time.OffsetTime` and `java.time.OffsetDateTime`. JDBC does not define
+explicit setters for these types. Use `setObject(index, value)`,
+`updateObject(index, value)`, `getObject(index/name)` or 
+`getObject(index/name, classType)`
+
+Firebird 4 supports both offset and named time zones. Given the definition in
+JDBC, Jaybird only supports offset time zones. On retrieval of a value with a
+named zone, Jaybird will make a best effort to convert to the equivalent offset
+using Java's time zone information. If no mapping is available the time will be 
+returned at UTC (offset zero).
+
+Jaybird 4 supports the following Java types on fields of time zone types (those
+marked with * are not defined in JDBC)
+
+`TIME WITH TIME ZONE`:
+
+- `java.time.OffsetTime` (default for `getObject`)
+  - On get, if the value is a named zone, it will derive the offset using the 
+  current date
+- `java.time.OffsetDateTime`
+  - On get the current date is added
+  - On set the date information is removed
+- `java.lang.String`
+  - On get applies `OffsetTime.toString()` (eg `13:25:13.1+01:00`)
+  - On set tries the default parse format of either `OffsetTime` or 
+  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+  and then sets as that type
+- `java.sql.Time` (\*)
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Time(millis)`
+  - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
+  and then derives the offset time for the default JVM time zone
+- `java.sql.Timestamp` (\*)
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Timestamp(millis)`
+  - On set applies `toLocalDateTime()` and derives the offset time for the 
+  default JVM time zone
+  
+`TIMESTAMP WITH TIME ZONE`:
+
+- `java.time.OffsetDateTime` (default for `getObject`)
+- `java.time.OffsetTime` (\*)
+  - On get, the date information is removed
+  - On set, the current date is added
+- `java.lang.String`
+  - On get applies `OffsetDateTime.toString()` (eg `2019-03-10T13:25:13.1+01:00`)
+  - On set tries the default parse format of either `OffsetTime` or 
+  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+  and then sets as that type
+- `java.sql.Time` (\*)
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Time(millis)`
+  - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
+  and then derives the offset date time for the default JVM time zone
+- `java.sql.Timestamp` (\*)
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Timestamp(millis)`
+  - On set applies `toLocalDateTime()` and derives the offset date time for the 
+  default JVM time zone
+- `java.sql.Date` (\*)
+  - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
+  milliseconds and uses `new java.sql.Date(millis)`
+  - On set applies `toLocalDate()` at start of day and derives the offset date 
+  time for the default JVM time zone
+
+#### Support for legacy JDBC date/time types ####
+
+For the `WITH TIME ZONE` types, JDBC does not define support for the legacy JDBC 
+types (`java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date`). To ease the 
+transition and potential compatibility with tools and libraries, Jaybird does
+provide support. However, we strongly recommend to avoid using these types. 
+
+Compared to the `WITHOUT TIME ZONE` types, there may be small discrepancies in 
+values as Jaybird uses 1970-01-01 for `WITHOUT TIME ZONE`, while for `WITH TIME
+ZONE` it uses the current date. If this is problematic, then either apply the 
+necessary conversions yourself, enable legacy time zone bind, or define or cast 
+your columns to `TIME` or `TIMESTAMP`.
+
+#### No support for other java.time types ####
+  
+The types `java.time.LocalTime`, `java.time.LocalDateTime` and 
+`java.time.LocalDate` are not supported. Supporting these types would be 
+ambiguous. If you need to use these, then either apply the necessary conversions 
+yourself, enable legacy time zone bind, or define or cast your columns as `TIME` 
+or `TIMESTAMP`. 
+**NOTE: This is not final yet**
+
+Jaybird also does not support non-standard extensions like `java.time.Instant`,
+or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
+future.
+
+### Time zone bind configuration ###
+
+The connection property `timeZoneBind` (alias `time_zone_bind`) is a connection 
+property to configure the time zone bind (see also `SET TIME ZONE BIND` in the 
+Firebird 4 release notes).
+
+The primary purpose of this property is to set the legacy time zone bind. This
+needs to be explicitly set if you are using Java 7 and need to handle the 
+`WITH TIME ZONE` types. It can also be used for tools or applications that
+expect `java.sql.Time`/`Timestamp` types and cannot use the 
+`java.time.OffsetTime`/`OffsetDateTime` types returned for the `WITH TIME ZONE` 
+types.
+
+Possible values (case insensitive):
+
+-   `legacy`
+    
+    Firebird will convert a `WITH TIME ZONE` type to the equivalent `WITHOUT
+    TIME ZONE` type using the session time zone to derive the value.
+    
+    Result set columns and parameters on prepared statements will behave as the
+    equivalent `WITHOUT TIME ZONE` types. This conversion is not applied to the
+    database metadata which will always report `WITH TIME ZONE` information.
+    
+-   `native`
+
+    Behaves as default (`WITH TIME ZONE` types supported), but value will be 
+    explicitly set.
+
+Any other value will result in error `isc_time_zone_bind` (code 335545255, 
+message _"Invalid time zone bind mode &lt;value&gt;"_) on connect.
+
+**Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
+build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
+necessary database parameter buffer item does not exist in earlier versions.
+
+### Connection property sessionTimeZone ###
+
+The connection property `sessionTimeZone` (alias `session_time_zone`) does two
+things: 
+
+1.  specifies the Firebird 4 session time zone (see Firebird 4 documentation),
+2.  specifies the time zone to use when converting values to the legacy JDBC 
+    datetime types (all Firebird version).  
+
+By default, Jaybird will use the JVM default time zone as reported by 
+`java.util.TimeZone.getDefault().getID()`. Using the JVM default time zone as 
+the default is the best option in the light of JDBC requirements with regard to 
+`java.sql.Time` and `java.sql.Timestamp` using the JVM default time zone.
+
+Valid values are time zone names known by Firebird, we recommend to use the long
+names (eg `Europe/Amsterdam`) and not the ambiguous short IDs (eg `CET`). 
+Although not required, we recommend to use time zone names that are known by 
+Firebird and Java (see [Session time zone for conversion] for caveats).
+
+To use the default server time zone and the old behaviour to use the JVM default 
+time zone, set the connection property to `server`. This will result in the 
+conversion behaviour of Jaybird 3 and earlier. Be aware that this is 
+inconsistent if Firebird and Java are in different time zones.
+
+#### Firebird 4 session time zone ####
+
+The session time zone is used for conversion between `WITH TIME ZONE` values 
+and `WITHOUT TIME ZONE` values (ie using cast or with legacy time zone bind), 
+and for the value of `LOCALTIME`, `LOCALTIMESTAMP`, `CURRENT_TIME` and 
+`CURRENT_TIMESTAMP`, and other uses of the session time zone as documented in 
+the Firebird 4 documentation.
+
+The value of `sessionTimeZone` must be supported by Firebird 4. It is possible 
+that time zone identifiers used by Java are not supported by Firebird. If 
+Firebird does not know the session time zone, error (`Invalid time zone region:
+<zone name>`) is reported on connect. 
+
+The use of the JVM default time zone as the default session time zone will
+result in subtly different behaviour compared to previous versions of Jaybird
+and - even with Jaybird 4 - Firebird 3 or earlier, as current time values like 
+`LOCALTIMESTAMP` (etc) will now reflect the time in the JVM time zone, and not 
+the server time zone rebased on the JVM default time zone. 
+
+As an example, with a Firebird in Europe/London and a Java application in 
+Europe/Amsterdam with Firebird time 12:00, in Jaybird 3, the Java application
+will report this time as 12:00, in Jaybird 4 with Firebird 4, this will now 
+report 13:00, as that is the time in Amsterdam if it is 12:00 in London 
+(ignoring potential DST start/end differences).
+
+Other examples include values generated in triggers and default value clauses.
+
+#### Session time zone for conversion ####
+
+For `WITHOUT TIME ZONE` types, the session time zone will be used to derive the 
+`java.sql.Time`, `java.sql.Timestamp` and `java.sql.Date` values. This is also 
+done for Firebird 3 and earlier.
+
+If Java does not know the session time zone, no error is reported, but when 
+retrieving `java.sql.Time`, `java.sql.Timestamp` or `java.sql.Date` a warning is 
+logged and conversion will happen in GMT, which might yield unexpected values.
+
+We strongly suggest that you use `java.time.LocalTime`, 
+`java.time.LocalDateTime` and `java.time.LocalDate` types instead of these 
+legacy datetime types.
+
+For `WITH TIME ZONE` types, the session time zone has no effect on the conversion
+to the legacy JDBC date/time types: to offset date/time is converted to epoch
+milliseconds and used to construct these legacy types directly.
+
+Executing `SET TIME ZONE <zone name>` statements after connect will change the 
+session time zone on the server, but Jaybird will continue to use the session
+time zone set in the connection property for these conversions. 
+
+### Time zone support for CONVERT ###
+
+Although not defined in JDBC (or ODBC), Jaybird has added a non-standard 
+extension to the `CONVERT` JDBC escape to allow conversion to the time zone 
+types. 
+
+In addition to the standard-defined types, it also supports the type names 
+`TIME_WITH_TIME_ZONE`, `TIME_WITH_TIMEZONE`, `TIMESTAMP_WITH_TIME_ZONE` and 
+`TIMESTAMP_WITH_TIMEZONE` (and the same with the `SQL_` prefix). 
+
+### Caveats for time zone types ###
+
+-   Time zone fields do not support `java.time.LocalDate`, `java.time.LocalTime`, 
+    `java.time.LocalDateTime`. 
+    **NOTE: This is not final yet**
+    
+-   Firebird 4 redefines `CURRENT_TIME` and `CURRENT_TIMESTAMP` to return a 
+    `WITH TIME ZONE` type. Use `LOCALTIME` and `LOCALTIMESTAMP` (introduced in 
+    Firebird 3.0.4) if you want to ensure a `WITHOUT TIME ZONE` type is used.
+    
+-   The database metadata will always return JDBC 4.2 compatible information on 
+    time zone types, even on Java 7, and even when legacy time zone bind is set. 
+    For Java 7 compatibility the JDBC 4.2 `java.sql.Types` constants 
+    `TIME_WITH_TIMEZONE` and `TIMESTAMP_WITH_TIMEZONE` are also defined in 
+    `org.firebirdsql.jdbc.JaybirdTypeCodes`.
+    
+-   The default `sessionTimeZone` is set to the JVM default time zone, this may
+    result in different application behavior for `DATE`, `TIME` and `TIMESTAMP`, 
+    including values generated in triggers and default value clauses. To prevent 
+    this, either switch those types to a `WITH TIME ZONE` type, or set the 
+    `sessionTimeZone` to `server` or to the actual time zone of the Firebird 
+    server. 
+
+JDBC RowId support
+------------------
+
+Columns of type `RDB$DB_KEY` are now identified as `java.sql.Types.ROWID`,
+and `getObject` on these columns will now return a `java.sql.RowId`.
+
+The `getObject(int/String, Class)` methods support retrieval as 
+`java.sql.RowId` and `org.firebirdsql.jdbc.FBRowId`; the object returned is the
+same type (`org.firebirdsql.jdbc.FBRowId`) in both cases.
+
+Updating row ids is not possible, so attempts to call `updateRowId` or 
+`updateObject` on a `RDB$DB_KEY` in an updatable result set will throw an 
+`SQLFeatureNotSupportedException`.
+
+Unfortunately, this support does not extend to parameters, as parameters (eg in
+`where RDB$DB_KEY = ?`) cannot be distinguished from parameters of a normal 
+binary field (`char character set octets`). To address this, binary fields
+now also accept values of type `java.sql.RowId` on `setRowId` and `setObject`.
+
+Support has also been added to `DatabaseMetaData`:
+
+-   `getBestRowIdentifier` returns `RDB$DB_KEY` if there is no primary key (existing
+    functionality)
+-   `getRowIdLifetime` now returns `RowIdLifetime.ROWID_VALID_TRANSACTION` (even
+    if `dbkey_scope=1` has been specified!)
+-   `getPseudoColumns` now returns `RDB$DB_KEY`
+
+Other database metadata (eg `getColumns`) will **not** list the `RDB$DB_KEY` 
+column, as it is a pseudo-column.
+
+In result sets, Jaybird will now also automatically map request for columns by 
+name `RDB$DB_KEY` (case insensitive) to `DB_KEY` as Firebird automatically 
+applies this alias for the `RDB$DB_KEY` column(s) in a select-list.
+
+Be aware that result set metadata will still report `DB_KEY` as the column name 
+and label.
 
 JDBC DatabaseMetaData.getPseudoColumns implemented
 --------------------------------------------------
@@ -1067,21 +1418,55 @@ Other fixes and changes
 
 -   The distribution zip no longer includes the jaybird-@VERSION@.rar. This file
 was an example JCA Resource Archive.
+
+    We currently plan to remove JCA support entirely in Jaybird 5. See also
+[Dropping JCA (Java Connector Architecture) support].
+
 -   Added support for Firebird 4 page size 32768 (32KB) in `FBManager` and backup 
 managers (backported to Jaybird 3.0.5) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
+
 -   Changed: The value returned by `ResultSetMetaData.getColumnDisplaySize` was 
 revised for `REAL`/`FLOAT` and `DOUBLE PRECISION` to take scientific notation 
 into account ([JDBC-514](http://tracker.firebirdsql.org/browse/JDBC-514))
+
 -   Fixed: Database metadata pattern parameters now allow the pattern escape 
 character (`\`) to occur unescaped, this means that patterns `A\B` and `A\\B` 
 will both match a value of `A\B`. This complies with the (undocumented) JDBC 
 expectation that patterns follow the ODBC requirements for pattern value 
 arguments ([JDBC-562](http://tracker.firebirdsql.org/browse/JDBC-562))
--   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.  
+
+-   Upgraded antlr-runtime used for generated keys support from 4.7 to 4.7.2.
+  
     The grammar generated for version 4.7.2 should still run on 4.7, but we
 suggest that you upgrade this dependency.
+
 -   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
 database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
+
+-   New Feature: Support for Firebird 3 'explained' (detailed) execution plan ([JDBC-574](http://tracker.firebirdsql.org/browse/JDBC-574))
+  
+    Adds `FirebirdStatement.getLastExplainedExecutionPlan()`, 
+`FirebirdPreparedStatement.getExplainedExecutionPlan()`, and 
+`Firebird ResultSet.getExplainedExecutionPlan()`.
+   
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
+    
+-   Upgraded jna library used for native/embedded from 4.4 to 5.3 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
+
+    The pull request to upgrade (from 4.4 to 5.2) was contributed by [Julien Nabet](https://github.com/serval2412).
+    
+-   Native libraries will now be disposed on application exit ([JDBC-519](http://tracker.firebirdsql.org/browse/JDBC-519))
+
+    On JVM exit or - if deployed inside a WAR - servlet context destroy (tested 
+on Tomcat), Jaybird will call `fb_shutdown` on any loaded native libraries and 
+dispose the JNA handle to the native library. This should prevent crashes (eg 
+access violation / 0xc0000005 error on Windows) on library unload if there were 
+still embedded connections open.
+
+    Given the potential for bugs or timing issues with this feature, it can be 
+disabled with system property `org.firebirdsql.nativeResourceShutdownDisabled` 
+set to `true`. This property must be set before Jaybird is loaded, preferably
+on the Java command line.
 
 Removal of deprecated classes and packages
 ------------------------------------------
@@ -1130,6 +1515,20 @@ The pure Java protocol in Jaybird will - by default - no longer try the
 `Legacy_Auth` plugin when connecting to Firebird 3 or higher.
 
 See [Default authentication plugins] for more information.
+
+Time zone behaviour
+-------------------
+
+Using Jaybird 4 with Firebird 4 on a machine with a different time zone than the 
+JVM, values of `CURRENT_TIMESTAMP`, `LOCALTIMESTAMP`, `CURRENT_TIME` and 
+`LOCALTIME` will result in different values compared to Jaybird 4 with 
+Firebird 3 (or Jaybird 3 or earlier with Firebird 4). This is caused by
+Jaybird 4 setting the session time zone to the JVM default time zone. As a
+result values will be in the time zone of the JVM and not the Firebird server
+time zone.
+
+To revert to the previous behaviour, explicitly set `sessionTimeZone=server`.
+See [Connection property sessionTimeZone] for more information.
 
 RDB$DB_KEY columns no longer of Types.BINARY
 --------------------------------------------
@@ -1332,7 +1731,7 @@ implementation. As such, it is both a JDBC driver and a JCA driver. The current
 structure requires a dependency on JCA for non-JCA usage.
 
 We will remove support for JCA entirely in Jaybird 5 to simplify the 
-implementation.
+implementation. The package `org.firebirdsql.jca` will be removed entirely.
 
 If you are currently using Jaybird as a JCA driver, please let us know on the 
 Firebird-Java mailing list. We may reconsider this decision and instead 
@@ -1370,7 +1769,7 @@ Type 2 (native) and embedded driver
 -----------------------------------
 
 Jaybird uses JNA to access the client library. If you want to use the Type 2 
-driver, or Firebird embedded, then you need to include `jna-4.4.0.jar` on the 
+driver, or Firebird embedded, then you need to include `jna-5.3.0.jar` on the 
 classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we 
@@ -1380,6 +1779,7 @@ don't depend on it by default (it is specified as an optional dependency):
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
+    <version>5.3.0</artifactId>
 </dependency>
 ```
 
@@ -1388,6 +1788,18 @@ be on the path, or the location needs to be specified in the system property
 `jna.library.path` (as an absolute or relative path to the directory/directories
 containing the library file(s)).
 
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
+
+``` {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>fbclient</artifactId>
+    <version>3.0.4.0</artifactId>
+</dependency>
+```
+
 In the future we will move the Type 2 support to a separate library and provide 
-JNA-compatible jars that provide the native libraries of a specific Firebird 
+JNA-compatible jars that provide the embedded libraries of a specific Firebird 
 version.

@@ -42,6 +42,7 @@ public final class JaybirdSystemProperties {
     public static final String DEFAULT_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "defaultConnectionEncoding";
     public static final String REQUIRE_CONNECTION_ENCODING_PROPERTY = JDBC_PREFIX + "requireConnectionEncoding";
     public static final String DATATYPE_CODER_CACHE_SIZE = COMMON_PREFIX + "datatypeCoderCacheSize";
+    public static final String NATIVE_LIBRARY_SHUTDOWN_DISABLED = COMMON_PREFIX + "nativeResourceShutdownDisabled";
 
     private JaybirdSystemProperties() {
         // no instances
@@ -77,6 +78,10 @@ public final class JaybirdSystemProperties {
 
     public static boolean isRequireConnectionEncoding() {
         return getBooleanSystemPropertyPrivileged(REQUIRE_CONNECTION_ENCODING_PROPERTY);
+    }
+
+    public static boolean isNativeResourceShutdownDisabled() {
+        return getBooleanSystemPropertyPrivileged(NATIVE_LIBRARY_SHUTDOWN_DISABLED);
     }
 
     public static int getDatatypeCoderCacheSize(int defaultValue) {

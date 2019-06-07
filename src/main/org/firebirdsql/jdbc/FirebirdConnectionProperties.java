@@ -476,4 +476,74 @@ public interface FirebirdConnectionProperties {
      *         {@code update_or_insert}, {@code merge})
      */
     void setGeneratedKeysEnabled(String generatedKeysEnabled);
+
+    /**
+     * Get the {@code timeZoneBind} configuration.
+     *
+     * @return configuration value for {@code timeZoneBind}, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getTimeZoneBind();
+
+    /**
+     * Sets the {@code timeZoneBind} configuration.
+     * <p>
+     * If the value is explicitly set to a non-null value and the connected server is Firebird 4 or higher, this will
+     * execute {@code SET TIME ZONE BIND} with the specified value. We advise only to use this when setting to {@code
+     * legacy}, as {@code native} is already the default and avoids the overhead of setting it explicitly.
+     * </p>
+     * <p>
+     * Invalid values are not ignored and will be executed, this will yield a syntax error which will be logged and
+     * ignored. As a result, specifying an invalid value will behave as the default (native).
+     * </p>
+     * <p>
+     * See also Firebird documentation for {@code SET TIME ZONE BIND}.
+     * </p>
+     *
+     * @param timeZoneBind
+     *         Firebird 4+ time zone bind configuration: default ({@code null}), {@code native}, {@code legacy}
+     * @since 4.0
+     */
+    void setTimeZoneBind(String timeZoneBind);
+
+    /**
+     * Get the {@code sessionTimeZone}.
+     *
+     * @return value for {@code sessionTimeZone}, or {@code null} for driver default (JVM default time zone)
+     * @since 4.0
+     */
+    String getSessionTimeZone();
+
+    /**
+     * Sets the {@code sessionTimeZone}.
+     *
+     * @param sessionTimeZone
+     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
+     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
+     * @since 4.0
+     */
+    void setSessionTimeZone(String sessionTimeZone);
+
+    /**
+     * Get the value for {@code ignoreProcedureType}.
+     *
+     * @return value for {@code ignoreProcedureType}
+     * @since 3.0.6
+     */
+    boolean isIgnoreProcedureType();
+
+    /**
+     * Sets the value {@code ignoreProcedureType}.
+     * <p>
+     * When set to true, the {@link java.sql.CallableStatement} implementation in Jaybird will ignore metadata
+     * information about the stored procedure type and default to using {@code EXECUTE PROCEDURE}, unless the type is
+     * explicitly set using {@link FirebirdCallableStatement#setSelectableProcedure(boolean)}. This can be useful in
+     * situations where a stored procedure is selectable, but tooling or code expects an executable stored procedure.
+     * </p>
+     *
+     * @param ignoreProcedureType
+     *         {@code true} Ignore procedure type
+     * @since 3.0.6
+     */
+    void setIgnoreProcedureType(boolean ignoreProcedureType);
 }

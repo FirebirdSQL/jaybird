@@ -61,7 +61,7 @@
     <!-- =================================================================== -->
     <target name="dist" depends="jars,buildalldocs,mavenPrepare">
         <mkdir dir="${build.dist}"/>
-        <zip zipfile="${build.dist}/${Name}-${version.full}.zip">
+        <zip zipfile="${build.dist}/${maven.artifactId}-${version.maven}.zip">
             <fileset dir="${build.lib}">
                 <include name="${archive.name.full}"/>
                 <include name="${archive.name.simple}"/>
@@ -81,7 +81,7 @@
                 <include name="antlr-runtime-4.7.2.jar"/>
             </zipfileset>
             <zipfileset dir="${module.thirdparty}" prefix="lib">
-                <include name="jna-4.4.0.jar"/>
+                <include name="jna-5.3.0.jar"/>
             </zipfileset>
             <zipfileset dir="${build.documentation}" prefix="docs">
                 <include name="faq.html"/>
@@ -97,7 +97,7 @@
     <!-- Also see task jar-sources in archive.xml                            -->
     <!-- =================================================================== -->
     <target name="src-zip" depends="init">
-        <zip zipfile="${Name}-src-${version.full}.zip" basedir="../.." includes="clients/java/**"
+        <zip zipfile="${maven.artifactId}-src-${version.maven}.zip" basedir="../.." includes="clients/java/**"
              excludes="clients/java/**.zip"/>
     </target>
 
@@ -105,14 +105,14 @@
     <!-- Packages the distribution with ZIP                                  -->
     <!-- =================================================================== -->
     <target name="dist-zip" depends="dist">
-        <zip zipfile="${Name}-${version.full}.zip" basedir="${dist.dir}" includes="src/**"/>
+        <zip zipfile="${maven.artifactId}-${version.maven}.zip" basedir="${dist.dir}" includes="src/**"/>
     </target>
 
     <!-- =================================================================== -->
     <!-- Packages the distribution with TAR-GZIP                             -->
     <!-- =================================================================== -->
     <target name="dist-tgz" depends="dist">
-        <tar tarfile="${Name}-${version.full}.tar" basedir="${dist.dir}" includes="src/**"/>
-        <gzip zipfile="${Name}-${version.full}.tar.gz" src="${Name}-${version}.tar"/>
+        <tar tarfile="${maven.artifactId}-${version.maven}.tar" basedir="${dist.dir}" includes="src/**"/>
+        <gzip zipfile="${maven.artifactId}-${version.maven}.tar.gz" src="${maven.artifactId}-${version.maven}.tar"/>
     </target>
 </project>

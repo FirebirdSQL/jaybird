@@ -66,12 +66,37 @@ public interface DatatypeCoder {
     byte[] encodeShort(int value);
 
     /**
+     * Encode a {@code short} value into the {@code target} byte array starting at index {@code fromIndex}.
+     *
+     * @param value
+     *         The value to be encoded
+     * @param target
+     *         Target byte array of sufficient size (warning: this may be datatype coder specific)
+     * @param fromIndex
+     *         Index to start writing
+     * @since 4.0
+     */
+    void encodeShort(int value, byte[] target, int fromIndex);
+
+    /**
      * Decode a {@code byte} array into a {@code short} value.
      *
      * @param byte_int The {@code byte} array to be decoded
      * @return The {@code short} value of the decoded {@code byte} array
      */
     short decodeShort(byte[] byte_int);
+
+    /**
+     * Decode from a {@code byte} array to a {@code short} value.
+     *
+     * @param bytes
+     *         The {@code byte} array to be decoded
+     * @param fromIndex
+     *         The index to start reading
+     * @return The {@code short} value of the decoded {@code byte} array
+     * @since 4.0
+     */
+    short decodeShort(byte[] bytes, int fromIndex);
 
     /**
      * Encode an {@code int} value as a {@code byte} array.
@@ -82,12 +107,37 @@ public interface DatatypeCoder {
     byte[] encodeInt(int value);
 
     /**
+     * Encode an {@code int} value into the {@code target} byte array starting at index {@code fromIndex}.
+     *
+     * @param value
+     *         The value to be encoded
+     * @param target
+     *         Target byte array of sufficient size
+     * @param fromIndex
+     *         Index to start writing
+     * @since 4.0
+     */
+    void encodeInt(int value, byte[] target, int fromIndex);
+
+    /**
      * Decode a {@code byte} array into an {@code int} value.
      *
      * @param byte_int The {@code byte} array to be decoded
      * @return The {@code int} value of the decoded {@code byte} array
      */
     int decodeInt(byte[] byte_int);
+
+    /**
+     * Decode a {@code byte} array to an {@code int} value.
+     *
+     * @param bytes
+     *         The {@code byte} array to be decoded
+     * @param fromIndex
+     *         The index to start reading
+     * @return The {@code int} value of the decoded {@code byte} array
+     * @since 4.0
+     */
+    int decodeInt(byte[] bytes, int fromIndex);
 
     /**
      * Encode a {@code long} value as a {@code byte} array.
@@ -471,6 +521,14 @@ public interface DatatypeCoder {
     DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition);
 
     /**
+     * Unwrap this datatype coder to its parent (or itself).
+     *
+     * @return Return the parent of this datatype code, or itself if it has no parent.
+     * @since 4.0
+     */
+    DatatypeCoder unwrap();
+
+    /**
      * {@inheritDoc}
      * <p>
      * Equality: same basic type (ie: wire protocol/JNA type + endianness) and same encoding definition.
@@ -494,6 +552,14 @@ public interface DatatypeCoder {
      * <p>
      * Fractions are sub-second precision in 100 microseconds.
      * </p>
+     * <p>
+     * We cannot simply pass millis to the database, because Firebird stores timestamp in format (citing Ann W.
+     * Harrison):
+     * </p>
+     * <p>
+     * "[timestamp is] stored a two long words, one representing the number of days since 17 Nov 1858 and one
+     * representing number of 100 nano-seconds since midnight" (NOTE: It is actually 100 microseconds!)
+     * </p>
      */
     final class RawDateTimeStruct {
         public int year;
@@ -505,6 +571,24 @@ public interface DatatypeCoder {
         public int fractions; // Sub-second precision in 100 microseconds
 
         public RawDateTimeStruct() {
+        }
+
+        /**
+         * Initializes a raw date/time value from encoded time and/or date integers.
+         *
+         * @param encodedDate Encoded date (Modified Julian Date)
+         * @param hasDate If date should be decoded (set {@code false} for a time-only value)
+         * @param encodedTime Encoded time (fractions in day)
+         * @param hasTime If time should be decoded (set {@code false} for a date-only value)
+         * @since 4.0
+         */
+        public RawDateTimeStruct(int encodedDate, boolean hasDate, int encodedTime, boolean hasTime) {
+            if (hasDate) {
+                decodeDate(encodedDate);
+            }
+            if (hasTime) {
+                decodeTime(encodedTime);
+            }
         }
 
         public RawDateTimeStruct(RawDateTimeStruct raw) {
@@ -520,5 +604,89 @@ public interface DatatypeCoder {
         public int getFractionsAsNanos() {
             return fractions * NANOSECONDS_PER_FRACTION;
         }
+
+        /**
+         * Sets the sub-second fraction (100 microseconds) from a nanosecond value.
+         *
+         * @param nanos Sub-second nanoseconds
+         * @since 4.0
+         */
+        public void setFractionsFromNanos(long nanos) {
+            fractions = (int) ((nanos / NANOSECONDS_PER_FRACTION) % FRACTIONS_PER_SECOND);
+        }
+
+        /**
+         * Encodes the date as used by Firebird (Modified Julian Date, or number of days since 17 November 1858).
+         *
+         * @return Encoded date
+         * @since 4.0
+         */
+        public int getEncodedDate() {
+            int cpMonth = month;
+            int cpYear = year;
+
+            if (cpMonth > 2) {
+                cpMonth -= 3;
+            } else {
+                cpMonth += 9;
+                cpYear -= 1;
+            }
+
+            int c = cpYear / 100;
+            int ya = cpYear - 100 * c;
+
+            return ((146097 * c) / 4 +
+                    (1461 * ya) / 4 +
+                    (153 * cpMonth + 2) / 5 +
+                    day + 1721119 - 2400001);
+        }
+
+        private void decodeDate(int encodedDate) {
+            int sql_date = encodedDate - 1721119 + 2400001;
+            int century = (4 * sql_date - 1) / 146097;
+            sql_date = 4 * sql_date - 1 - 146097 * century;
+            day = sql_date / 4;
+
+            sql_date = (4 * day + 3) / 1461;
+            day = 4 * day + 3 - 1461 * sql_date;
+            day = (day + 4) / 4;
+
+            month = (5 * day - 3) / 153;
+            day = 5 * day - 3 - 153 * month;
+            day = (day + 5) / 5;
+
+            year = 100 * century + sql_date;
+
+            if (month < 10) {
+                month += 3;
+            } else {
+                month -= 9;
+                year += 1;
+            }
+        }
+
+        /**
+         * Encodes the time as used by Firebird (fractions (100 milliseconds) in a day).
+         *
+         * @return Encoded time
+         * @since 4.0
+         */
+        public int getEncodedTime() {
+            return hour * FRACTIONS_PER_HOUR
+                    + minute * FRACTIONS_PER_MINUTE
+                    + second * FRACTIONS_PER_SECOND
+                    + fractions;
+        }
+
+        private void decodeTime(int encodedTime) {
+            int fractionsInDay = encodedTime;
+            hour = fractionsInDay / FRACTIONS_PER_HOUR;
+            fractionsInDay -= hour * FRACTIONS_PER_HOUR;
+            minute = fractionsInDay / FRACTIONS_PER_MINUTE;
+            fractionsInDay -= minute * FRACTIONS_PER_MINUTE;
+            second = fractionsInDay / FRACTIONS_PER_SECOND;
+            fractions = fractionsInDay - second * FRACTIONS_PER_SECOND;
+        }
+
     }
 }

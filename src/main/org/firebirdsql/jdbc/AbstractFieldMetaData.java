@@ -171,6 +171,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.DATE:
             return SQL_DATE_CLASS_NAME;
 
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            return OFFSET_TIME_CLASS_NAME;
+
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return OFFSET_DATE_TIME_CLASS_NAME;
+
         case Types.NUMERIC:
         case Types.DECIMAL:
         case JaybirdTypeCodes.DECFLOAT:
@@ -253,6 +259,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return "TIME";
         case ISCConstants.SQL_TYPE_DATE:
             return "DATE";
+        case ISCConstants.SQL_TIMESTAMP_TZ:
+            return "TIMESTAMP WITH TIME ZONE";
+        case ISCConstants.SQL_TIME_TZ:
+            return "TIME WITH TIME ZONE";
         case ISCConstants.SQL_BLOB:
             if (sqlSubtype < 0) {
                 return "BLOB SUB_TYPE <0"; // TODO report actual subtype
@@ -346,6 +356,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.TIME:
             return 8;
         case Types.TIMESTAMP:
+            return 19;
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return 30;
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
             return 19;
         case Types.BOOLEAN:
             return 1;

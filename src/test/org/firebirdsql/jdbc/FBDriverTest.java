@@ -362,6 +362,7 @@ public class FBDriverTest {
     }
 
     private void checkCaseSensitiveLogin(String authPlugin) throws SQLException {
+        assumeThat("Test requires GDS type that performs real authentication", GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Test requires case sensitive user name support",
                 getDefaultSupportInfo().supportsCaseSensitiveUserNames());
         final String username = "\"CaseSensitiveUser\"";

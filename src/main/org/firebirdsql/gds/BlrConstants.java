@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +61,8 @@ public interface BlrConstants {
     int blr_dec64 = 24;
     int blr_dec128 = 25;
     int blr_dec_fixed = 26;
+    int blr_sql_time_tz = 28;
+    int blr_timestamp_tz = 29;
 
     // first sub parameter for blr_domain_name[2]
     int blr_domain_type_of = 0;

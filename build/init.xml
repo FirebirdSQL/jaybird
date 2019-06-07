@@ -32,16 +32,16 @@
             <javaversion exactly="1.8"/>
         </condition>
 
-        <!-- Java 9 specific properties -->
-        <condition property="maven.jdkversion" value="jdk9">
-            <javaversion atleast="9"/>
+        <!-- Java 11 specific properties -->
+        <condition property="maven.jdkversion" value="java11">
+            <javaversion atleast="11"/>
         </condition>
-        <condition property="javac.level" value="9">
-            <javaversion atleast="9"/>
+        <condition property="javac.level" value="11">
+            <javaversion atleast="11"/>
         </condition>
 
         <condition property="java.module.arg" value="" else="">
-            <javaversion atleast="9"/>
+            <javaversion atleast="11"/>
         </condition>
 
         <condition property="jdbc.41" value="true">
@@ -64,10 +64,21 @@
         <property name="Name" value="Jaybird"/>
         <property name="name" value="jaybird"/>
 
-        <property name="version.name" value="-JDK_${ant.java.version}"/>
-
         <property name="version.maven" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
-        <property name="version.full" value="${version.maven}${version.name}"/>
+
+        <!-- Names for maven -->
+        <property name="maven.artifactId" value="${name}-${maven.jdkversion}"/>
+        <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
+        <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
+        <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
+
+        <!-- Archive names in dist -->
+        <property name="archive.name.simple" value="${archive.maven.simple}"/>
+        <property name="archive.name.sources" value="${archive.maven.sources}"/>
+        <property name="archive.name.javadoc" value="${archive.maven.javadoc}"/>
+        <property name="archive.name.rar" value="${maven.artifactId}-${version.maven}.rar"/>
+        <property name="archive.name.full" value="${name}-full-${maven.jdkversion}-${version.maven}.jar"/>
+        <property name="archive.name.test" value="${name}-test-${maven.jdkversion}-${version.maven}.jar"/>
 
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
@@ -82,10 +93,10 @@
         </condition>
         <property name="specification.vendor" value="Oracle Corporation"/>
 
-        <property name="implementation.title" value="Jaybird"/>
+        <property name="implementation.title" value="${Name}"/>
         <property name="implementation.url" value="https://www.firebirdsql.org"/>
         <property name="implementation.version"
-                  value="${version.full} (build: tag=${version.svntag} date=${build.id})"/>
+                  value="${version.maven} (build: variant=${maven.artifactId} tag=${version.svntag} date=${build.id})"/>
         <property name="implementation.vendor" value="Firebird project"/>
         <property name="implementation.vendor.id" value="${implementation.url}"/>
 
@@ -146,24 +157,10 @@
         <property name="build.documentation" value="${module.output}/documentation"/>
         <property name="build.maven" value="${module.output}/maven"/>
 
-        <property name="archive.name.main" value="${name}"/>
-
-        <property name="archive.name.rar" value="${archive.name.main}-${version.maven}.rar"/>
-        <property name="archive.name.full" value="${archive.name.main}-full-${version.maven}.jar"/>
-        <property name="archive.name.simple" value="${archive.name.main}-${version.maven}.jar"/>
-        <property name="archive.name.test" value="${archive.name.main}-test-${version.maven}.jar"/>
-        <property name="archive.name.sources" value="${archive.name.main}-${version.maven}-sources.jar"/>
-        <property name="archive.name.javadoc" value="${archive.name.main}-${version.maven}-javadoc.jar"/>
-
-        <!-- Names for maven -->
-        <property name="maven.artifactId" value="${name}-${maven.jdkversion}"/>
-        <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
-        <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
-        <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
+        <!-- Maven locations -->
         <property name="maven.artifact.location" value="${build.maven}/${maven.artifactId}"/>
         <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-template.pom"/>
         <property name="maven.pom.target" value="${maven.artifactId}-${version.maven}.pom"/>
-
         <filterset id="maven.filterSet">
             <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
             <filter token="VERSION" value="${version.maven}"/>
@@ -221,7 +218,8 @@
             <path refid="javac.j2ee.classpath"/>
             <pathelement location="${build.j2ee}"/>
             <pathelement location="${module.thirdparty}/antlr-runtime-4.7.2.jar"/>
-            <pathelement location="${module.thirdparty}/jna-4.4.0.jar"/>
+            <pathelement location="${module.thirdparty}/jna-5.3.0.jar"/>
+            <pathelement location="${module.thirdparty}/servlet-api.jar"/>
         </path>
 
         <path id="javac.test.classpath">

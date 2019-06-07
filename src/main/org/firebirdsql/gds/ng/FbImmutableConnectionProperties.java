@@ -35,6 +35,7 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
     private final int pageCacheSize;
     private final boolean resultSetDefaultHoldable;
     private final boolean columnLabelForName;
+    private final String sessionTimezone;
     private final DatabaseParameterBuffer extraDatabaseParameters;
 
     /**
@@ -54,6 +55,7 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
         pageCacheSize = src.getPageCacheSize();
         resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
         columnLabelForName = src.isColumnLabelForName();
+        sessionTimezone = src.getSessionTimeZone();
         extraDatabaseParameters = src.getExtraDatabaseParameters().deepCopy();
     }
 
@@ -110,6 +112,16 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
     @Override
     public boolean isColumnLabelForName() {
         return columnLabelForName;
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        immutable();
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return sessionTimezone;
     }
 
     @Override

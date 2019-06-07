@@ -46,4 +46,16 @@ public interface FirebirdResultSet extends ResultSet {
      * @see FirebirdPreparedStatement#getExecutionPlan()
      */
     String getExecutionPlan() throws SQLException;
+
+    /**
+     * Get detailed execution plan for the specified result set.
+     *
+     * @return detailed execution plan for this query.
+     *
+     * @throws SQLException if detailed execution plan cannot be obtained or this result
+     * set is already closed.
+     *
+     * @see FirebirdPreparedStatement#getExplainedExecutionPlan()
+     */
+    String getExplainedExecutionPlan() throws SQLException;
 }
