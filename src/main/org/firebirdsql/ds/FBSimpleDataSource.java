@@ -410,7 +410,17 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setDbCryptConfig(String dbCryptConfig) {
         mcf.setDbCryptConfig(dbCryptConfig);
     }
-    
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return mcf.isIgnoreProcedureType();
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        mcf.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
     /*
      * INTERFACES IMPLEMENTATION
      */

@@ -55,6 +55,9 @@ public abstract class StoredProcedureMetaDataFactory {
     }
 
     private static boolean connectionHasProcedureMetadata(FBConnection connection) throws SQLException {
+        if (connection.isIgnoreProcedureType()) {
+            return false;
+        }
         FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) connection.getMetaData();
 
         return versionInformationEqualOrAbove(metaData.getDatabaseMajorVersion(), metaData.getDatabaseMinorVersion(), 2, 1)

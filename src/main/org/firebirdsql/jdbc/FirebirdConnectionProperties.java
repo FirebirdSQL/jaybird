@@ -431,7 +431,8 @@ public interface FirebirdConnectionProperties {
      * Invalid values are accepted, but will cause an error when a connection is established.
      * </p>
      *
-     * @param wireCrypt Wire encryption level
+     * @param wireCrypt
+     *         Wire encryption level
      * @since 3.0.4
      */
     void setWireCrypt(String wireCrypt);
@@ -447,9 +448,32 @@ public interface FirebirdConnectionProperties {
     /**
      * Sets the database encryption plugin configuration.
      *
-     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @param dbCryptConfig
+     *         Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
 
+    /**
+     * Get the value for {@code ignoreProcedureType}.
+     *
+     * @return value for {@code ignoreProcedureType}
+     * @since 3.0.6
+     */
+    boolean isIgnoreProcedureType();
+
+    /**
+     * Sets the value {@code ignoreProcedureType}.
+     * <p>
+     * When set to true, the {@link java.sql.CallableStatement} implementation in Jaybird will ignore metadata
+     * information about the stored procedure type and default to using {@code EXECUTE PROCEDURE}, unless the type is
+     * explicitly set using {@link FirebirdCallableStatement#setSelectableProcedure(boolean)}. This can be useful in
+     * situations where a stored procedure is selectable, but tooling or code expects an executable stored procedure.
+     * </p>
+     *
+     * @param ignoreProcedureType
+     *         {@code true} Ignore procedure type
+     * @since 3.0.6
+     */
+    void setIgnoreProcedureType(boolean ignoreProcedureType);
 }

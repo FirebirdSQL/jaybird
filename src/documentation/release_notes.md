@@ -32,8 +32,9 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.3, but should also 
-support other Firebird versions from 2.0 and up.
+Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.4, but should also 
+support other Firebird versions from 2.0 and up. Firebird 4 is not fully 
+supported in Jaybird 3.x.
 
 Formal support for Firebird 1.x has been dropped (although in general we expect
 the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -52,6 +53,19 @@ information.
 
 Jaybird 3.0 does not support the Firebird 3 zlib compression.
 
+### Notes on Firebird 4 support
+
+Jaybird 3.0 can connect and query Firebird 4. Longer object names are supported. 
+
+The new data types introduced in Firebird 4 are not supported. Support for data 
+types like `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision higher than 18 will 
+be introduced in Jaybird 4.
+
+The Srp256 authentication plugin is supported, but the other SrpNNN plugins are
+not.
+
+Jaybird 3.0 does not support the Firebird 4 zlib compression.
+
 Supported Java versions
 -----------------------
 
@@ -62,7 +76,7 @@ For the time being, there will be no Java 9+ specific builds, the Java 8 builds
 have the same source and all JDBC 4.3 related functionality.
 
 Given the limited support period for Java 9 and higher versions, we may limit
-support on those versions.
+support on those versions to the most recent LTS version and the latest release.
 
 Jaybird 3.0 is not modularized, but since Jaybird 3.0.3, it declares the 
 automatic module name `org.firebirdsql.jaybird`.
@@ -141,8 +155,9 @@ explicitly include JNA 4.4.0 as a dependency:
 </dependency>
 ~~~
 
-We plan to make native and embedded support a separate library in future 
-releases, and provide Firebird client libraries as Maven dependencies as well.
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
 
 See also [Type 2 (native) and embedded driver].
 
@@ -222,15 +237,40 @@ Changes in Jaybird 3.0.6
 
 The following has been changed or fixed since Jaybird 3.0.5
 
--   Fixed: Exceptions during fetch of cached result sets (holdable over commit, scrollable and 
-    metadata) prevented prepared statement reuse/re-execute with error _"Statement state CURSOR_OPEN 
-    only allows next states \[CLOSING, PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+-   Fixed: Exceptions during fetch of cached result sets (holdable over commit, 
+    scrollable and metadata) prevented prepared statement reuse/re-execute with
+    error _"Statement state CURSOR_OPEN only allows next states \[CLOSING,
+    PREPARED, ERROR], received EXECUTING"_ ([JDBC-531](http://tracker.firebirdsql.org/browse/JDBC-531))
+-   Improvement: Added `FBManager.setDefaultCharacterSet` to set default 
+    database character set during database creation ([JDBC-541](http://tracker.firebirdsql.org/browse/JDBC-541))
 -   New feature: Support for Firebird 3 case sensitive user names ([JDBC-549](http://tracker.firebirdsql.org/browse/JDBC-549))  
     See [Case sensitive user names] for more information.
--   Fixed: Savepoints did not work in connection dialect 1 as savepoint names were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
--   Changed: The `DatabaseMetaData` statement cache introduced in Jaybird 3 was unlimited, it is now 
-    limited to 12 prepared statements; the least recently used statement will be closed and removed 
-    when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557)) 
+-   Fixed: Savepoints did not work in connection dialect 1 as savepoint names
+    were always quoted ([JDBC-556](http://tracker.firebirdsql.org/browse/JDBC-556))  
+-   Changed: The `DatabaseMetaData` statement cache introduced in Jaybird 3 was
+    unlimited, it is now limited to 12 prepared statements; the least recently
+    used statement will be closed and removed when a new statement is added ([JDBC-557](http://tracker.firebirdsql.org/browse/JDBC-557))
+-   Fixed: `UPDATE OR INSERT` with existing `RETURNING` clause handled 
+    incorrectly for generated keys ([JDBC-566](http://tracker.firebirdsql.org/browse/JDBC-566))
+-   Fixed: Exceptions during initialization of result sets would not properly
+    close the database cursor leading to error _"Current statement state
+    (CURSOR_OPEN) does not allow call to prepare"_ on reuse of the statement (or
+    errors similar to described for JDBC-531 above). ([JDBC-571](http://tracker.firebirdsql.org/browse/JDBC-571))  
+    A stopgap measure has been added to prevent similar problems from occurring.
+    This will log its use on debug-level with message _"ensureClosedCursor has
+    to close a cursor at"_ and a stacktrace.
+-   New feature: boolean connection property `ignoreProcedureType` to disable
+    usage of metadata for stored procedure types in `CallableStatement`. When 
+    set to `true`, call escapes and `EXECUTE PROCEDURE` will default to use 
+    `EXECUTE PROCEDURE` and not switch to `SELECT` for selectable stored 
+    procedures. ([JDBC-576](http://tracker.firebirdsql.org/browse/JDBC-576))  
+    See [Connection property ignoreProcedureType] for more information.
+-   New feature: connection properties `timeZoneBind` and `sessionTimeZone` for 
+    limited support for Firebird 4 `TIME(STAMP) WITH TIME ZONE` types, and
+    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-583))  
+    See [Limited support for new Firebird 4 data types] for more information.
+-   Fixed: Connection property `defaultIsolation`/`isolation` did not work
+    through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
     
 ### Known issues in Jaybird 3.0.6
 
@@ -483,9 +523,9 @@ Firebird 2.5 support is improved with the implementation of wire protocol
 version 12.
 
 Firebird 3.0 support is improved with the (partial) implementation of wire
-protocol 13 and support for the _Srp_ authentication plugin. Version 13 support
-does not yet provide Firebird 3.0 wire encryption and zlib compression. Wire
-encryption is planned for Jaybird 4. Support for zlib compression is not 
+protocol 13 and support for the _Srp_ and _Srp256_ (Jaybird 3.0.5) 
+authentication plugins. Version 13 support provides Firebird 3.0 
+wire encryption support since Jaybird 3.0.4. Support for zlib compression is not 
 planned yet.
 
 See also [Jaybird and Firebird 3](https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3)
@@ -494,10 +534,96 @@ on the wiki.
 Support for protocol version 13 and the SRP authentication was contributed
 by [Hajime Nakagami](https://github.com/nakagami).
 
+Partial Firebird 4 support:
+
+- Longer metadata names (63 characters) in database metadata
+- Authentication plugin _Srp256_ (Jaybird 3.0.5), but not the other _SrpNNN_ 
+plugins
+- Page size 32kb in management classes (Jaybird 3.0.5)
+- New data types (eg `TIME WITH TIME ZONE`, `TIMESTAMP WITH TIME ZONE`, 
+`DECFLOAT` and `NUMERIC`/`DECIMAL` with precision greater than 18) are **not** 
+supported. See [Limited support for new Firebird 4 data types] for workarounds
+for the `WITH TIME ZONE` and `DECFLOAT` types.
+
 ### Other Firebird feature support ###
 
 *   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))  
     This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
+
+### Limited support for new Firebird 4 data types ###
+
+Jaybird 3 does not support the new Firebird 4 data types `TIME WITH TIME ZONE`,
+`TIMESTAMP WITH TIME ZONE`, `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision 
+greater than 18. As an accommodation, Jaybird 3.0.6 has limited support for the
+following Firebird connection properties:
+
+- `timeZoneBind` (alias: `time_zone_bind`) with valid values:
+  - `native` (default) - produces the normal `WITH TIME ZONE` values (not 
+    supported by Jaybird 3)
+  - `legacy` - converts the `WITH TIME ZONE` values to the equivalent `WITHOUT
+    TIME ZONE` values using the session time zone
+- `sessionTimeZone` (alias: `session_time_zone`) configures the **server-side**
+  session time zone used for conversion of `WITH TIME ZONE` to `WITHOUT TIME
+  ZONE` and values generated by `CURRENT_TIME`, `LOCALTIME`, etc.  
+  Valid values are Firebird time zone names or offsets. See also the Firebird 4 
+  documentation. For important caveats, see [Notes on sessionTimeZone].
+- `decfloatBind` (alias: `decfloat_bind`) with valid values:
+  - `native` (default) - produces the normal `DECFLOAT` values (not supported by
+    Jaybird 3)
+  - `char`/`character` - converts the `DECFLOAT` values to an equivalent string
+    using scientific notation.
+  - `double precision` - converts the `DECFLOAT` values to an equivalent `double
+    precision`. This may lose precision, and this option cannot support the full
+    range of values of `DECFLOAT(34)` and can result in errors on overflow.
+  - `bigint, n` where `n` is the target scale converts the value to a 
+    `NUMERIC(18,n)`. This option cannot support the full range of values of 
+    `DECFLOAT` and can result in errors on overflow.
+
+**Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
+build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
+necessary database parameter buffer items do not exist in earlier versions.
+    
+These properties can be used as connection properties with `DriverManager`. For 
+Jaybird data sources, the properties must be set using `setNonStandardProperty`
+as corresponding setters have not been defined.
+    
+To be able to use `WITH TIME ZONE` types with Jaybird 3, you must use 
+`timeZoneBind=legacy`. Setting `sessionTimeZone` is optional, see also 
+[Notes on sessionTimeZone]. 
+
+For `DECFLOAT`, we recommend either `decfloatBind=char`
+or `decfloatBind=double precision`. Option `char` has our preference as it is
+able to support the full range of values of the `DECFLOAT` types.
+
+Unfortunately there is no option for the extended precision numeric types, other
+than explicitly casting to `DECFLOAT(34)` and relying on the conversion provided
+by property `decfloatBind`.
+
+#### Notes on sessionTimeZone ####
+
+In Jaybird 3 `sessionTimeZone` will only configure the server-side session time 
+zone. Client-side, Jaybird will continue to use the JVM default time zone for 
+parsing the value to the `java.sql.Time/Timestamp/Date` types. In Jaybird 4,
+this property will also configure client-side parsing of values to these legacy
+types.  
+
+When Jaybird 3 and Firebird 4 are hosted on machines with different time zone
+settings, setting `sessionTimeZone` can result in changes in current time values
+(eg for `CURRENT_TIME`) as Firebird will base these values on the session time
+zone.
+
+Setting `sessionTimeZone` to the JVM default time zone will yield the best 
+(ie correct) values, but not setting it (and thus using the server default) will
+retain behaviour that is backwards compatible with behaviour of previous 
+versions of Jaybird. 
+
+When setting `sessionTimeZone`, we recommend to use the long-form time zone
+names (eg `Europe/Amsterdam`) and not the short-form ids (eg `CET`).
+
+We recommend not setting this property, or setting it to the default JVM time 
+zone. If you set it to a different time zone, then we recommend that you do not
+use the legacy `java.sql.Time/Timestamp/Date` types, but instead use 
+`java.time.LocalTime/LocalDateTime/LocalDate`.
 
 New low-level implementation
 ----------------------------
@@ -742,7 +868,35 @@ use `"SYSDBA"`.
 If a user name contains double quotes, it must be escaped by another double 
 quote. A singular double quote within a user name is a syntax error and will
 truncate the user name, leading to a login failure (unless a user exists with
-the truncated name and the same password).  
+the truncated name and the same password).
+
+Connection property ignoreProcedureType
+---------------------------------------
+  
+Jaybird 3.0.6 adds a boolean connection property `ignoreProcedureType`.
+
+On Firebird 2.1 and higher, Jaybird will use the procedure type information from 
+the database metadata to decide how to execute `CallableStatement`. When a 
+procedure is selectable, Jaybird will automatically transform a call-escape or 
+`EXECUTE PROCEDURE` statement to a `SELECT`.
+
+In some cases this automatic transformation to use a `SELECT` leads to problems.
+You can explicitly set `FirebirdCallableStatement.setSelectableProcedure(false)`
+to fix most of these issues, but this is not always an option. For example 
+spring-data-jpa's `@Procedure` will not work correctly with selectable 
+procedures, but you can't call `setSelectableProcedure`.
+
+To disable this automatic usage of procedure type information, set connection 
+property `ignoreProcedureType=true`. When necessary you can use 
+`FirebirdCallableStatement.setSelectableProcedure(true)` to execute a procedure 
+using `SELECT`.
+
+Be aware though, when `EXECUTE PROCEDURE` is used with a selectable procedure,
+it is executed only up to the first `SUSPEND`, and the rest of the stored
+procedure is not executed.
+
+For Firebird 2.0 and lower this property has no effect, as there the procedure
+type information is not available.
 
 Potentially breaking changes
 ----------------------------
@@ -1328,8 +1482,20 @@ be on the path, or the location needs to be specified in the system property
 `jna.library.path` (as an absolute or relative path to the directory/directories
 containing the library file(s)).
 
+For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient`
+dependency on your classpath to provide the native libraries for the `native` 
+and `local` protocol. Be aware that this dependency does not support `embedded`.
+
+``` {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>fbclient</artifactId>
+    <version>3.0.4.0</artifactId>
+</dependency>
+```
+
 In the future we will move the Type 2 support to a separate library and provide 
-JNA-compatible jars that provide the native libraries of a specific Firebird 
+JNA-compatible jars that provide the embedded libraries of a specific Firebird 
 version.
 
 Removal of deprecated classes, packages and methods

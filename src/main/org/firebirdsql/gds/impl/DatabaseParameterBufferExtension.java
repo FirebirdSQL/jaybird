@@ -56,6 +56,7 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int USE_FIREBIRD_AUTOCOMMIT         = ISCConstants.isc_dpb_use_firebird_autocommit;
     int WIRE_CRYPT_LEVEL                = ISCConstants.isc_dpb_wire_crypt_level;
     int DB_CRYPT_CONFIG                 = ISCConstants.isc_dpb_db_crypt_config;
+    int IGNORE_PROCEDURE_TYPE           = ISCConstants.isc_dpb_ignore_procedure_type;
     
     /**
      * List of the DPB extensions. This array is used to filter the parameters
@@ -80,7 +81,8 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
         COLUMN_LABEL_FOR_NAME,
         USE_FIREBIRD_AUTOCOMMIT,
         WIRE_CRYPT_LEVEL,
-        DB_CRYPT_CONFIG
+        DB_CRYPT_CONFIG,
+        IGNORE_PROCEDURE_TYPE
     };
 
     /**

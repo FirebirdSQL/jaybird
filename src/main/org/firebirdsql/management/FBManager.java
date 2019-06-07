@@ -50,6 +50,7 @@ public class FBManager implements FBManagerMBean {
     private String password;
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
+    private String defaultCharacterSet;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
@@ -195,6 +196,16 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
+    public void setDefaultCharacterSet(String firebirdCharsetName) {
+        defaultCharacterSet = firebirdCharsetName;
+    }
+
+    @Override
+    public String getDefaultCharacterSet() {
+        return defaultCharacterSet;
+    }
+
+    @Override
     public boolean isCreateOnStart() {
         return createOnStart;
     }
@@ -264,6 +275,10 @@ public class FBManager implements FBManagerMBean {
             if (getPageSize() != -1) {
                 connectionProperties.getExtraDatabaseParameters()
                         .addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
+            }
+            if (getDefaultCharacterSet() != null) {
+                connectionProperties.getExtraDatabaseParameters()
+                        .addArgument(ISCConstants.isc_dpb_set_db_charset, getDefaultCharacterSet());
             }
             try (FbDatabase db = dbFactory.connect(connectionProperties)) {
                 db.createDatabase();

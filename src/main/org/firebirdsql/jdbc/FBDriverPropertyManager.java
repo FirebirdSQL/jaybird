@@ -29,6 +29,9 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.*;
 
+import static org.firebirdsql.jdbc.FBConnectionProperties.DATABASE_PROPERTY;
+import static org.firebirdsql.jdbc.FBConnectionProperties.TYPE_PROPERTY;
+
 /**
  * Manager of the DPB properties.
  */
@@ -198,12 +201,16 @@ class FBDriverPropertyManager {
                 propInfo = dpbMap.get(tempKey);
             }
 
-            // skip the element if nothing if found
-            if (propInfo == null)
-                continue;
-
-            result.put(propInfo.dpbName, propValue);
+            if (propInfo != null) {
+                result.put(propInfo.dpbName, propValue);
+            } else {
+                // add using original name if nothing is found
+                result.put(propName, propValue);
+            }
         }
+
+        // database has special meaning and should not be set through properties
+        result.keySet().removeAll(Collections.singletonList(DATABASE_PROPERTY));
 
         handleEncodings(result);
 
