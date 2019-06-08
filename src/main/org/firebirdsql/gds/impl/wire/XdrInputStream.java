@@ -48,9 +48,7 @@ import java.io.InputStream;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public final class XdrInputStream {
-
-    private InputStream in = null;
+public final class XdrInputStream extends BufferedInputStream {
 
     private static final int DEFAULT_BUFFER_SIZE = 16384;
 
@@ -60,7 +58,7 @@ public final class XdrInputStream {
      * @param in The underlying <code>InputStream</code> to read from
      */
     public XdrInputStream(InputStream in) {
-        this.in = new BufferedInputStream(in, DEFAULT_BUFFER_SIZE);
+        super(in, DEFAULT_BUFFER_SIZE);
     }
 
     /**
@@ -92,7 +90,7 @@ public final class XdrInputStream {
     public int skipFully(int n) throws IOException {
         int total = 0;
         int cur;
-        while (total < n && (cur = (int) in.skip(n - total)) > 0) {
+        while (total < n && (cur = (int) skip(n - total)) > 0) {
             total += cur;
         }
         return total;
@@ -139,7 +137,7 @@ public final class XdrInputStream {
         return encoding.decodeFromCharset(buffer);
     }
 
-    private final byte readBuffer[] = new byte[8];
+    private final byte[] readBuffer = new byte[8];
 
     /**
      * Read in a <code>long</code>.
@@ -168,10 +166,10 @@ public final class XdrInputStream {
      *         underlying input stream
      */
     public int readInt() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        int ch3 = in.read();
-        int ch4 = in.read();
+        int ch1 = read();
+        int ch2 = read();
+        int ch3 = read();
+        int ch4 = read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
         return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
@@ -185,8 +183,8 @@ public final class XdrInputStream {
      *         underlying input stream
      */
     public int readShort() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
+        int ch1 = read();
+        int ch2 = read();
         if ((ch1 | ch2) < 0)
             throw new EOFException();
         return (ch1 << 8) + (ch2);
@@ -203,12 +201,12 @@ public final class XdrInputStream {
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
-    public void readFully(byte b[], int off, int len) throws IOException {
+    public void readFully(byte[] b, int off, int len) throws IOException {
         if (len < 0)
             throw new IndexOutOfBoundsException();
         int n = 0;
         while (n < len) {
-            int count = in.read(b, off + n, len - n);
+            int count = read(b, off + n, len - n);
             if (count < 0)
                 throw new EOFException();
             n += count;
@@ -216,19 +214,20 @@ public final class XdrInputStream {
     }
 
     /**
-     * Close this input stream and the underlying input stream.
+     * Wraps the underlying stream in an {@link CipherInputStream} using the provided {@code cipher}.
      *
-     * @throws IOException if an error occurs while closing the underlying
-     *         input stream
+     * @param cipher
+     *         Cipher for decrypting the stream
+     * @throws IOException
+     *         If the underlying stream is already wrapped, or if this stream is closed.
      */
-    public void close() throws IOException {
-        in.close();
-    }
-
-    public void setCipher(Cipher cipher) throws IOException {
-        if (in instanceof CipherInputStream) {
+    public synchronized void setCipher(Cipher cipher) throws IOException {
+        InputStream currentStream = in;
+        if (currentStream == null) {
+            throw new IOException("Stream closed");
+        } else if (currentStream instanceof CipherInputStream) {
             throw new IOException("Input stream already encrypted");
         }
-        in = new CipherInputStream(in, cipher);
+        in = new CipherInputStream(currentStream, cipher);
     }
 }
