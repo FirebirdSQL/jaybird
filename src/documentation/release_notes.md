@@ -23,6 +23,16 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
 
+Support
+=======
+
+If you need support with Jaybird, join the Firebird-Java mailing list. You can
+subscribe by sending an email to [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com).
+
+Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
+
+See also [Where to get help](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help)
+
 General Notes
 =============
 
@@ -113,7 +123,7 @@ Jaybird supports the following specifications:
 
 |Specification|Notes
 |-------------|----------------------------------------------------------------
-| JDBC 4.3    | All JDBC 4.3 methods for features supported by Firebird; Java 9 and higher supported using the Java 8 driver.
+| JDBC 4.3    | All JDBC 4.3 methods for features supported by Firebird; Java 9 and higher supported using the Java 8 or Java 11 driver.
 | JDBC 4.2    | All JDBC 4.2 methods for features supported by Firebird.
 | JDBC 4.1    | All JDBC 4.1 methods for features supported by Firebird.
 | JTA 1.0.1   | Implementation of `javax.transaction.xa.XAResource` interface via `XADataSource` implementation.
