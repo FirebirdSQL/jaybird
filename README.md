@@ -26,6 +26,10 @@ under the BSD 3-clause. See source headers for the specific license.
 
 `SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause`
 
+## Support
+
+Looking for professional support of Jaybird? Jaybird is now part of a [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=readme).
+
 ## Sponsors
 
 The Firebird JDBC team would like to thank YourKit for providing licenses to their [YourKit Java Profiler](https://www.yourkit.com/java/profiler/). 
