@@ -755,7 +755,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), connection);
+        return new FBResultSetMetaData(fbStatement.getRowDescriptor(), connection);
     }
 
     @Override

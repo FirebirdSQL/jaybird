@@ -319,7 +319,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
             if (resetAll) {
                 setParameterDescriptor(null);
-                setFieldDescriptor(null);
+                setRowDescriptor(null);
                 setType(StatementType.NONE);
             }
         }
@@ -355,8 +355,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    @Deprecated
     public final RowDescriptor getFieldDescriptor() {
-        return fieldDescriptor;
+        return getRowDescriptor();
     }
 
     /**
@@ -364,9 +365,26 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param fieldDescriptor
      *         Field descriptor
+     * @deprecated Use {@link #setRowDescriptor(RowDescriptor)} instead; will be removed in Jaybird 5
      */
+    @Deprecated
     protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
-        this.fieldDescriptor = fieldDescriptor;
+        setRowDescriptor(fieldDescriptor);
+    }
+
+    @Override
+    public final RowDescriptor getRowDescriptor() {
+        return fieldDescriptor;
+    }
+
+    /**
+     * Sets the (result set) row descriptor.
+     *
+     * @param rowDescriptor
+     *         Row descriptor
+     */
+    protected void setRowDescriptor(RowDescriptor rowDescriptor) {
+        this.fieldDescriptor = rowDescriptor;
     }
 
     /**
@@ -619,7 +637,7 @@ public abstract class AbstractFbStatement implements FbStatement {
         InfoProcessor.StatementInfo statementInfo = infoProcessor.process(statementInfoResponse);
 
         setType(statementInfo.getStatementType());
-        setFieldDescriptor(statementInfo.getFields());
+        setRowDescriptor(statementInfo.getFields());
         setParameterDescriptor(statementInfo.getParameters());
     }
 
@@ -634,7 +652,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return {@code true} if this statement has at least one output field (either singleton or result set)
      */
     protected final boolean hasFields() {
-        RowDescriptor fieldDescriptor = getFieldDescriptor();
+        RowDescriptor fieldDescriptor = getRowDescriptor();
         return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
     }
 }

@@ -1761,6 +1761,9 @@ The following methods will be removed in Jaybird 5:
 -   `FBDatabaseMetaData.stripEscape(String pattern)`
 -   `StatementParser.parseInsertStatement(String sql)`, use 
     `StatementParser.parseStatement(String sql)`
+-   `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
+-   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
+    use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
     
 ### Removal of deprecated constants ###
 

@@ -323,7 +323,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery() && isSingletonResult) {
-            return new FBResultSet(fbStatement.getFieldDescriptor(), new ArrayList<>(specialResult),
+            return new FBResultSet(fbStatement.getRowDescriptor(), new ArrayList<>(specialResult),
                     resultSetListener);
         }
         return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.<RowValue>emptyList());
@@ -499,7 +499,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
             } else if (!specialResult.isEmpty()) {
-                currentRs = new FBResultSet(fbStatement.getFieldDescriptor(),
+                currentRs = new FBResultSet(fbStatement.getRowDescriptor(),
                         new ArrayList<>(specialResult), resultSetListener);
             }
             return currentRs;
