@@ -278,6 +278,8 @@ Where to get help
     You can subscribe to the mailing list by sending an email to
     [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
 
+*   Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
+
 *   The [Firebird project home page](https://www.firebirdsql.org)
 
 *   Firebird support and other [Firebird mailing lists](https://www.firebirdsql.org/en/mailing-lists/)

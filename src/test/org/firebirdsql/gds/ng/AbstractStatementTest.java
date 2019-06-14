@@ -167,7 +167,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
@@ -223,7 +223,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
@@ -294,7 +294,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -340,7 +340,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -371,7 +371,7 @@ public abstract class AbstractStatementTest {
         // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -790,7 +790,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(

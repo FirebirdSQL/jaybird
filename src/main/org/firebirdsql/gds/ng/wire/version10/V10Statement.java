@@ -402,7 +402,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         }
 
         if (operation == WireProtocolConstants.op_execute2) {
-            final RowDescriptor fieldDescriptor = getFieldDescriptor();
+            final RowDescriptor fieldDescriptor = getRowDescriptor();
             xdrOut.writeBuffer(fieldDescriptor != null && fieldDescriptor.getCount() > 0 ? calculateBlr(fieldDescriptor) : null);
             xdrOut.writeInt(0); // out_message_number = out_message_type
         }
@@ -496,7 +496,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_fetch);
         xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(calculateBlr(getFieldDescriptor()));
+        xdrOut.writeBuffer(calculateBlr(getRowDescriptor()));
         xdrOut.writeInt(0); // out_message_number = out_message_type
         xdrOut.writeInt(fetchSize); // fetch size
     }
@@ -509,7 +509,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * @throws IOException
      */
     protected RowValue readSqlData() throws SQLException, IOException {
-        final RowDescriptor rowDescriptor = getFieldDescriptor();
+        final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 

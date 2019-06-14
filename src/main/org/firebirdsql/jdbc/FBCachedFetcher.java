@@ -48,7 +48,7 @@ class FBCachedFetcher implements FBFetcher {
             FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
         this.fetcherListener = fetcherListener;
         this.forwardOnly = forwardOnly;
-        final RowDescriptor rowDescriptor = stmt_handle.getFieldDescriptor();
+        final RowDescriptor rowDescriptor = stmt_handle.getRowDescriptor();
 
         // Check if there is blobs to catch
         final boolean[] isBlob = new boolean[rowDescriptor.getCount()];

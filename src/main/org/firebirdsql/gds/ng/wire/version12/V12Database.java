@@ -70,10 +70,11 @@ public class V12Database extends V11Database {
                 try {
                     // We circumvent the normal xdrOut to minimize the chance of interleaved writes
                     // TODO We may still need to do separate write / read synchronization to ensure this works correctly
-                    final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
-                    final XdrOutputStream xdr = new XdrOutputStream(out, false);
-                    xdr.writeInt(WireProtocolConstants.op_cancel);
-                    xdr.writeInt(kind);
+                    ByteArrayOutputStream out = new ByteArrayOutputStream(8);
+                    try (XdrOutputStream xdr = new XdrOutputStream(out, 8)) {
+                        xdr.writeInt(WireProtocolConstants.op_cancel);
+                        xdr.writeInt(kind);
+                    }
                     wireOperations.writeDirect(out.toByteArray());
                 } catch (IOException ioe) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioe)

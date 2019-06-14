@@ -117,7 +117,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
             cursorName = fbStatement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
             trimStrings = metaDataQuery;
-            rowDescriptor = stmt.getFieldDescriptor();
+            rowDescriptor = stmt.getRowDescriptor();
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
             this.fbStatement = fbStatement;
