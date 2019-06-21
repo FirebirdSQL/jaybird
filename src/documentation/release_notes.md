@@ -267,7 +267,7 @@ The following has been changed or fixed since Jaybird 3.0.5
     See [Connection property ignoreProcedureType] for more information.
 -   New feature: connection properties `timeZoneBind` and `sessionTimeZone` for 
     limited support for Firebird 4 `TIME(STAMP) WITH TIME ZONE` types, and
-    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-583))  
+    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-583](http://tracker.firebirdsql.org/browse/JDBC-583))  
     See [Limited support for new Firebird 4 data types] for more information.
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
