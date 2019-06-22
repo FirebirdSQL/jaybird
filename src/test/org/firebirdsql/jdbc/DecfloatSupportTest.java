@@ -27,6 +27,8 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
@@ -64,6 +66,7 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
 
     @Test
     public void simpleValueSelects() throws Exception {
+        // NOTE Currently broken due to CORE-5696
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
@@ -77,7 +80,7 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                 assertEquals(1, rs.getInt("id"));
                 assertNull(rs.getBigDecimal("decfloat16"));
                 assertNull(rs.getBigDecimal("decfloat34"));
-                
+
                 assertTrue(rs.next());
                 assertEquals(2, rs.getInt("id"));
                 assertEquals(BigDecimal.ONE, rs.getBigDecimal("decfloat16"));
@@ -137,6 +140,8 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
         // String comparison might be sensitive to platform-dependent library used by Firebird(?)
         final BigDecimal bd16AllDigits = new BigDecimal("1234567890123456E123");
         final BigDecimal bd34AllDigits = new BigDecimal("1234567890123456789012345678901234E1234");
+        final BigDecimal one_pow_300 = BigDecimal.ONE.scaleByPowerOfTen(300);
+        final BigDecimal one_pow_3000 = BigDecimal.ONE.scaleByPowerOfTen(3000);
         try (Connection connection = getConnectionViaDriverManager();
              Statement statement = connection.createStatement();
              PreparedStatement insert = connection.prepareStatement(
@@ -146,6 +151,7 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
             execute(insert, 2, BigDecimal.ONE, BigDecimal.ONE);
             execute(insert, 3, DECFLOAT_16_MAX, DECFLOAT_34_MAX);
             execute(insert, 4, bd16AllDigits, bd34AllDigits);
+            execute(insert, 5, one_pow_300, one_pow_3000);
 
             try (ResultSet rs = statement.executeQuery(
                     "select id, "
@@ -159,7 +165,51 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                         DECFLOAT_34_MAX, "9.999999999999999999999999999999999E+6144");
                 assertRow(rs, 4, bd16AllDigits, "1.234567890123456E+138",
                         bd34AllDigits, "1.234567890123456789012345678901234E+1267");
+                assertRow(rs, 5, one_pow_300, "1E+300", one_pow_3000, "1E+3000");
                 assertFalse("expected no more rows", rs.next());
+            }
+        }
+    }
+
+    // This is more a test of Firebird than of Jaybird
+    @Test
+    public void testLiteralConversion() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            List<LiteralTestCase> literalTestCases = Arrays.asList(
+                    new LiteralTestCase(1, "-0", BigDecimal.ZERO, "-0", BigDecimal.ZERO, "-0"),
+                    new LiteralTestCase(2, "-0E300", BigDecimal.ZERO.scaleByPowerOfTen(300), "-0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "-0E+300"),
+                    new LiteralTestCase(3, "-0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "-0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "-0E+300"),
+                    new LiteralTestCase(4, "-0.0E300", BigDecimal.ZERO.scaleByPowerOfTen(299), "-0E+299", BigDecimal.ZERO.scaleByPowerOfTen(299), "-0E+299"),
+                    new LiteralTestCase(5, "0E300", BigDecimal.ZERO.scaleByPowerOfTen(300), "0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "0E+300"),
+                    new LiteralTestCase(6, "0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "0E+300", BigDecimal.ZERO.scaleByPowerOfTen(300), "0E+300"),
+                    new LiteralTestCase(7, "0.0E300", BigDecimal.ZERO.scaleByPowerOfTen(299), "0E+299", BigDecimal.ZERO.scaleByPowerOfTen(299), "0E+299"),
+                    new LiteralTestCase(8, "0E369", BigDecimal.ZERO.scaleByPowerOfTen(369), "0E+369", BigDecimal.ZERO.scaleByPowerOfTen(369), "0E+369"),
+                    new LiteralTestCase(9, "0E-398", BigDecimal.ZERO.scaleByPowerOfTen(-398), "0E-398", BigDecimal.ZERO.scaleByPowerOfTen(-398), "0E-398"),
+                    // Commented out testcases don't work as literals seem to be restricted DECFLOAT(16) range, see CORE-5696
+//                    new LiteralTestCase(10, "0E370", null, null, BigDecimal.ZERO.scaleByPowerOfTen(370), "0E+370").decfloat34Only(),
+//                    new LiteralTestCase(11, "0E-399", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-399), "0E-399").decfloat34Only(),
+//                    new LiteralTestCase(12, "0E6111", null, null, BigDecimal.ZERO.scaleByPowerOfTen(6111), "0E+6111").decfloat34Only(),
+//                    new LiteralTestCase(13, "0E-6176", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-6176), "0E-6176").decfloat34Only(),
+//                    new LiteralTestCase(14, "1E6111", null, null, BigDecimal.ONE.scaleByPowerOfTen(6111), "1E+6111").decfloat34Only(),
+//                    new LiteralTestCase(15, "1E6144", null, null, BigDecimal.ONE.scaleByPowerOfTen(6144), "1E+6144").decfloat34Only(),
+//                    new LiteralTestCase(16, "1E-6176", null, null, BigDecimal.ONE.scaleByPowerOfTen(-6176), "1E-6176").decfloat34Only(),
+//                    new LiteralTestCase(17, "1.234567890123456789012345678901234E0", null, null, new BigDecimal("1.234567890123456789012345678901234"), "1.234567890123456789012345678901234").decfloat34Only()
+                    new LiteralTestCase(18, "1E300", BigDecimal.ONE.scaleByPowerOfTen(300), "1E+300", BigDecimal.ONE.scaleByPowerOfTen(300), "1E+300")
+            );
+            for (LiteralTestCase testCase : literalTestCases) {
+                testCase.createTestCase(stmt);
+            }
+            try (ResultSet rs = stmt.executeQuery(
+                    "select id, "
+                            + "decfloat16, cast(decfloat16 as varchar(50)) decfloat16str, "
+                            + "decfloat34, cast(decfloat34 as varchar(50)) decfloat34str "
+                            + "from decfloattest "
+                            + "order by id")) {
+                for (LiteralTestCase testCase : literalTestCases) {
+                    testCase.assertRow(rs);
+                }
             }
         }
     }
@@ -285,9 +335,56 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
             BigDecimal expectedDecfloat34, String expectedDecfloat34String) throws Exception {
         assertTrue("Expected row for id=" + expectedId, resultSet.next());
         assertEquals("id", expectedId, resultSet.getInt("id"));
-        assertEquals("decfloat16", expectedDecfloat16, resultSet.getBigDecimal("decfloat16"));
-        assertEquals("decfloat16str", expectedDecfloat16String, resultSet.getString("decfloat16str"));
-        assertEquals("decfloat34", expectedDecfloat34, resultSet.getBigDecimal("decfloat34"));
-        assertEquals("decfloat34str", expectedDecfloat34String, resultSet.getString("decfloat34str"));
+        assertEquals("decfloat16 " + expectedId, expectedDecfloat16, resultSet.getBigDecimal("decfloat16"));
+        assertEquals("decfloat16str " + expectedId, expectedDecfloat16String, resultSet.getString("decfloat16str"));
+        assertEquals("decfloat34 " + expectedId, expectedDecfloat34, resultSet.getBigDecimal("decfloat34"));
+        assertEquals("decfloat34str " + expectedId, expectedDecfloat34String, resultSet.getString("decfloat34str"));
+    }
+
+    private static class LiteralTestCase {
+
+        private final int id;
+        private final String literal;
+        private final BigDecimal expectedDecfloat16;
+        private final String expectedDecfloat16String;
+        private final BigDecimal expectedDecfloat34;
+        private final String expectedDecfloat34String;
+        private boolean decfloat34Only;
+
+        LiteralTestCase(int id, String literal, BigDecimal expectedDecfloat16, String expectedDecfloat16String,
+                BigDecimal expectedDecfloat34, String expectedDecfloat34String) {
+            this.id = id;
+            this.literal = literal;
+            this.expectedDecfloat16 = expectedDecfloat16;
+            this.expectedDecfloat16String = expectedDecfloat16String;
+            this.expectedDecfloat34 = expectedDecfloat34;
+            this.expectedDecfloat34String = expectedDecfloat34String;
+        }
+
+        LiteralTestCase decfloat34Only() {
+            decfloat34Only = true;
+            return this;
+        }
+
+        void createTestCase(Statement statement) throws SQLException {
+            statement.execute(getInsertStatement());
+        }
+
+        String getInsertStatement() {
+            if (decfloat34Only) {
+                return "insert into decfloattest(id, decfloat34) values (" + id + ", " + literal + ")";
+            }
+            return "insert into decfloattest(id, decfloat16, decfloat34) values (" + id + ", " + literal + ", "
+                    + literal + ")";
+        }
+
+        void assertRow(ResultSet resultSet) throws Exception {
+            if (decfloat34Only) {
+                DecfloatSupportTest.assertRow(resultSet, id, null, null, expectedDecfloat34, expectedDecfloat34String);
+            } else {
+                DecfloatSupportTest.assertRow(resultSet, id, expectedDecfloat16, expectedDecfloat16String,
+                        expectedDecfloat34, expectedDecfloat34String);
+            }
+        }
     }
 }
