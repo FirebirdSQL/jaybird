@@ -81,6 +81,7 @@ public interface JaybirdErrorCodes {
     int jb_generatedKeysNoColumnsFound                   = 337248292;
     int jb_explainedExecutionPlanNotSupported            = 337248293;
     int jb_failedToLoadNativeLibrary                     = 337248294;
+    int jb_blobClosed               = 337248295;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
