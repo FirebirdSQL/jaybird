@@ -22,6 +22,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
+-   Fixed: Instances of `java.sql.Blob` and `java.sql.Clob` obtained from a 
+    result set were freed after calls to `ResultSet.next()`. ([JDBC-588](http://tracker.firebirdsql.org/browse/JDBC-588)) \
+    They will now remain valid until transaction end. You will need to call
+    `Blob.free()` if you want to invalidate them earlier.
 
 Support
 =======
