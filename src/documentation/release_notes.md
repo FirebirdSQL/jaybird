@@ -232,6 +232,20 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.7
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.6
+
+-   Fixed: Instances of `java.sql.Blob` and `java.sql.Clob` obtained from a 
+    result set were freed after calls to `ResultSet.next()`. ([JDBC-588](http://tracker.firebirdsql.org/browse/JDBC-588)) \
+    They will now remain valid until transaction end. You will need to call
+    `Blob.free()` if you want to invalidate them earlier.
+    
+### Known issues in Jaybird 3.0.7
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.6
 ------------------------
 
@@ -271,10 +285,6 @@ The following has been changed or fixed since Jaybird 3.0.5
     See [Limited support for new Firebird 4 data types] for more information.
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
-    
-### Known issues in Jaybird 3.0.6
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.5
 ------------------------

@@ -63,8 +63,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
-    @Override
-    public Blob getBlob() throws SQLException {
+    private FBBlob getBlobInternal() {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
         if (bytes == null) return null;
@@ -76,6 +75,13 @@ class FBBlobField extends FBField implements FBFlushableField {
     }
 
     @Override
+    public Blob getBlob() throws SQLException {
+        FBBlob blob = getBlobInternal();
+        // Need to use detached blob to ensure the blob is usable after resultSet.next()
+        return blob != null ? blob.detach() : null;
+    }
+
+    @Override
     public Clob getClob() throws SQLException {
         FBBlob blob = (FBBlob) getBlob();
         if (blob == null) return null;
@@ -84,7 +90,7 @@ class FBBlobField extends FBField implements FBFlushableField {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        Blob blob = getBlob();
+        Blob blob = getBlobInternal();
         if (blob == null) return null;
 
         return blob.getBinaryStream();
@@ -100,7 +106,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (blobIdBuffer == null) return null;
 
         final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
-        synchronized (((Synchronizable) getBlob()).getSynchronizationObject()) {
+        synchronized (gdsHelper.getSynchronizationObject()) {
             try (FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED)) {
                 final int blobLength = (int) blobHandle.length();
                 final int bufferLength = gdsHelper.getBlobBufferLength();
@@ -157,7 +163,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (fieldDescriptor.getSubType() < 0)
             throw new TypeConversionException(STRING_CONVERSION_ERROR);
 
-        Blob blob = getBlob();
+        Blob blob = getBlobInternal();
 
         if (blob == null) return null;
 
