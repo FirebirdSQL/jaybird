@@ -237,10 +237,22 @@ Changes in Jaybird 3.0.7
 
 The following has been changed or fixed since Jaybird 3.0.6
 
+-   Fixed: attempts to use a blob after it was freed or after transaction end
+    could throw a `NullPointerException` or just work depending on whether the
+    connection had a new transaction. ([JDBC-587](http://tracker.firebirdsql.org/browse/JDBC-587)) \
+    The lifetime of a blob is now restricted to the transaction that created it,
+    or - for blobs created using `Connection.createBlob()` - to the transaction
+    that populated it. Attempts to use the blob after the transaction ends will 
+    now throw a `SQLException` with message _"Blob is invalid. Blob was freed, 
+    or closed by transaction end."_ This restriction does not apply to cached 
+    blobs, see also next item. 
 -   Fixed: Instances of `java.sql.Blob` and `java.sql.Clob` obtained from a 
     result set were freed after calls to `ResultSet.next()`. ([JDBC-588](http://tracker.firebirdsql.org/browse/JDBC-588)) \
-    They will now remain valid until transaction end. You will need to call
-    `Blob.free()` if you want to invalidate them earlier.
+    Normal blobs will now remain valid until transaction end. You will need to 
+    call `Blob.free()` if you want to invalidate them earlier. \
+    Cached blobs (in auto-commit, holdable or scrollable result sets) will not
+    be automatically freed at transaction end. You will need to explicitly call
+    `Blob.free()` or rely on the garbage collector.
     
 ### Known issues in Jaybird 3.0.7
 

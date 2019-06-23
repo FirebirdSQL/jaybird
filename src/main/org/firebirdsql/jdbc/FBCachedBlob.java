@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.SyncObject;
 
 import java.sql.SQLException;
@@ -31,11 +33,12 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
 
     private static final byte[] BYTES_NULL_VALUE = null;
     private static final InputStream STREAM_NULL_VALUE = null;
+    private static final byte[] FREED_MARKER = new byte[0];
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
 
     private final Object syncObject = new SyncObject();
 
-    private byte[] blobData;
+    private volatile byte[] blobData;
 
     /**
      * Create an instance using the cached data.
@@ -54,7 +57,8 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * </p>
      */
     public FirebirdBlob detach() throws SQLException {
-        return this;
+        checkClosed();
+        return new FBCachedBlob(blobData);
     }
 
     /**
@@ -64,6 +68,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * </p>
      */
     public boolean isSegmented() throws SQLException {
+        checkClosed();
         return false;
     }
 
@@ -73,6 +78,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
      * @return length of the cached blob field or -1 if the field is null.
      */
     public long length() throws SQLException {
+        checkClosed();
         return blobData != null ? blobData.length : -1;
     }
 
@@ -93,7 +99,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
             throw new SQLException("Expected value of length >= 0, got " + length,
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
-        // TODO: Is this correct behavior? Maybe need to throw exception instead
+        checkClosed();
         if (blobData == null) return BYTES_NULL_VALUE;
 
         // TODO What if pos or length are beyond blobData
@@ -123,6 +129,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
     }
 
     public InputStream getBinaryStream() throws SQLException {
+        checkClosed();
         if (blobData == null) return STREAM_NULL_VALUE;
 
         return new ByteArrayInputStream(blobData);
@@ -176,7 +183,14 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
         return syncObject;
     }
 
+    @Override
     public void free() throws SQLException {
-        this.blobData = null;
+        blobData = FREED_MARKER;
+    }
+
+    private void checkClosed() throws SQLException {
+        if (blobData == FREED_MARKER) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toFlatSQLException();
+        }
     }
 }

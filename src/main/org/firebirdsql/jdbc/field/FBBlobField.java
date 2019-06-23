@@ -19,10 +19,12 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
-import org.firebirdsql.jdbc.Synchronizable;
+import org.firebirdsql.jdbc.FirebirdBlob;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -38,7 +40,7 @@ import java.sql.SQLException;
  */
 class FBBlobField extends FBField implements FBFlushableField {
 
-    private FBBlob blob;
+    protected FirebirdBlob blob;
     private long length;
     private InputStream binaryStream;
     private Reader characterStream;
@@ -63,7 +65,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
-    private FBBlob getBlobInternal() {
+    protected FirebirdBlob getBlobInternal() {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
         if (bytes == null) return null;
@@ -76,9 +78,9 @@ class FBBlobField extends FBField implements FBFlushableField {
 
     @Override
     public Blob getBlob() throws SQLException {
-        FBBlob blob = getBlobInternal();
+        FirebirdBlob blob = getBlobInternal();
         // Need to use detached blob to ensure the blob is usable after resultSet.next()
-        return blob != null ? blob.detach() : null;
+        return blob != null ? registerWithTransaction(blob.detach()) : null;
     }
 
     @Override
@@ -279,5 +281,15 @@ class FBBlobField extends FBField implements FBFlushableField {
             bytes = null;
             length = 0;
         }
+    }
+
+    private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
+        if (blob instanceof TransactionListener) {
+            FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
+            if (currentTransaction != null) {
+                currentTransaction.addWeakTransactionListener((TransactionListener) blob);
+            }
+        }
+        return blob;
     }
 }
