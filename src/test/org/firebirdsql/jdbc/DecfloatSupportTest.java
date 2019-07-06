@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
@@ -187,15 +188,14 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                     new LiteralTestCase(7, "0.0E300", BigDecimal.ZERO.scaleByPowerOfTen(299), "0E+299", BigDecimal.ZERO.scaleByPowerOfTen(299), "0E+299"),
                     new LiteralTestCase(8, "0E369", BigDecimal.ZERO.scaleByPowerOfTen(369), "0E+369", BigDecimal.ZERO.scaleByPowerOfTen(369), "0E+369"),
                     new LiteralTestCase(9, "0E-398", BigDecimal.ZERO.scaleByPowerOfTen(-398), "0E-398", BigDecimal.ZERO.scaleByPowerOfTen(-398), "0E-398"),
-                    // Commented out testcases don't work as literals seem to be restricted DECFLOAT(16) range, see CORE-5696
-//                    new LiteralTestCase(10, "0E370", null, null, BigDecimal.ZERO.scaleByPowerOfTen(370), "0E+370").decfloat34Only(),
-//                    new LiteralTestCase(11, "0E-399", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-399), "0E-399").decfloat34Only(),
-//                    new LiteralTestCase(12, "0E6111", null, null, BigDecimal.ZERO.scaleByPowerOfTen(6111), "0E+6111").decfloat34Only(),
-//                    new LiteralTestCase(13, "0E-6176", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-6176), "0E-6176").decfloat34Only(),
-//                    new LiteralTestCase(14, "1E6111", null, null, BigDecimal.ONE.scaleByPowerOfTen(6111), "1E+6111").decfloat34Only(),
-//                    new LiteralTestCase(15, "1E6144", null, null, BigDecimal.ONE.scaleByPowerOfTen(6144), "1E+6144").decfloat34Only(),
-//                    new LiteralTestCase(16, "1E-6176", null, null, BigDecimal.ONE.scaleByPowerOfTen(-6176), "1E-6176").decfloat34Only(),
-//                    new LiteralTestCase(17, "1.234567890123456789012345678901234E0", null, null, new BigDecimal("1.234567890123456789012345678901234"), "1.234567890123456789012345678901234").decfloat34Only()
+                    new LiteralTestCase(10, "0E370", null, null, BigDecimal.ZERO.scaleByPowerOfTen(370), "0E+370").decfloat34Only(),
+                    new LiteralTestCase(11, "0E-399", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-399), "0E-399").decfloat34Only(),
+                    new LiteralTestCase(12, "0E6111", null, null, BigDecimal.ZERO.scaleByPowerOfTen(6111), "0E+6111").decfloat34Only(),
+                    new LiteralTestCase(13, "0E-6176", null, null, BigDecimal.ZERO.scaleByPowerOfTen(-6176), "0E-6176").decfloat34Only(),
+                    new LiteralTestCase(14, "1E6111", null, null, BigDecimal.ONE.scaleByPowerOfTen(6111), "1E+6111").decfloat34Only(),
+                    new LiteralTestCase(15, "1E6144", null, null, BigDecimal.ONE.setScale(33, RoundingMode.UNNECESSARY).scaleByPowerOfTen(6144), "1.000000000000000000000000000000000E+6144").decfloat34Only(),
+                    new LiteralTestCase(16, "1E-6176", null, null, BigDecimal.ONE.scaleByPowerOfTen(-6176), "1E-6176").decfloat34Only(),
+                    new LiteralTestCase(17, "1.234567890123456789012345678901234E0", null, null, new BigDecimal("1.234567890123456789012345678901234"), "1.234567890123456789012345678901234").decfloat34Only(),
                     new LiteralTestCase(18, "1E300", BigDecimal.ONE.scaleByPowerOfTen(300), "1E+300", BigDecimal.ONE.scaleByPowerOfTen(300), "1E+300")
             );
             for (LiteralTestCase testCase : literalTestCases) {
