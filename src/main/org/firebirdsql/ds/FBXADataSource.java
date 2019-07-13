@@ -118,7 +118,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         public void connectionClosed(ConnectionEvent ce) {
             PrintWriter externalLog = ((FBManagedConnection) ce.getSource()).getLogWriter();
             try {
-                ((FBManagedConnection) ce.getSource()).destroy();
+                ((FBManagedConnection) ce.getSource()).destroy(ce);
             } catch (ResourceException e) {
                 if (externalLog != null)
                     externalLog.println("Exception closing unmanaged connection: " + e);
@@ -136,7 +136,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         public void connectionErrorOccurred(ConnectionEvent ce) {
             PrintWriter externalLog = ((FBManagedConnection) ce.getSource()).getLogWriter();
             try {
-                ((FBManagedConnection) ce.getSource()).destroy();
+                ((FBManagedConnection) ce.getSource()).destroy(ce);
             } catch (ResourceException e) {
                 if (externalLog != null)
                     externalLog.println("Exception closing unmanaged connection: " + e);

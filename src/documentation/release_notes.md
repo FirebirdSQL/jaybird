@@ -38,6 +38,12 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     Cached blobs (in auto-commit, holdable or scrollable result sets) will not
     be automatically freed at transaction end. You will need to explicitly call
     `Blob.free()` or rely on the garbage collector.
+-   New feature: Support for `Connection.setNetworkTimeout` and 
+    `getNetworkTimeout` ([JDBC-589](http://tracker.firebirdsql.org/browse/JDBC-589)) \
+    This JDBC feature is only supported on pure Java connections, not in native
+    or embedded. Calling `setNetworkTimeout` will override the timeout set with
+    the `soTimeout` connection property. When a timeout occurs, the connection
+    will be closed.
 
 Support
 =======

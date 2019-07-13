@@ -480,6 +480,23 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     /**
+     * Disassociate connections without cleanly closing them.
+     */
+    private void forceDisassociateConnections() {
+        Iterator<FBConnection> connectionIterator = connectionHandles.iterator();
+        while (connectionIterator.hasNext()) {
+            FBConnection connection = connectionIterator.next();
+            connection.setManagedConnection(null);
+            try {
+                connection.close();
+            } catch(SQLException sqlex) {
+                log.debug("Exception ignored during forced disassociation", sqlex);
+            }
+            connectionIterator.remove();
+        }
+    }
+
+    /**
      * Creates a new connection handle for the underlying physical connection
      * represented by the <code>ManagedConnection</code> instance. This
      * connection handle is used by the application code to refer to the
@@ -551,20 +568,74 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *             illegal state for destroying connection
      */
     public void destroy() throws ResourceException {
+        destroy(null);
+    }
+
+    public void destroy(ConnectionEvent connectionEvent) throws ResourceException {
         if (gdsHelper == null)
             return;
-        
-        if (inTransaction())
-            throw new javax.resource.spi.IllegalStateException(
-                "Can't destroy managed connection  with active transaction");
-        
+
         try {
-            gdsHelper.detachDatabase();
+            if (isBrokenConnection(connectionEvent)) {
+                FbDatabase currentDatabase = gdsHelper.getCurrentDatabase();
+                currentDatabase.forceClose();
+            } else {
+                if (inTransaction())
+                    throw new javax.resource.spi.IllegalStateException(
+                            "Can't destroy managed connection with active transaction");
+
+                gdsHelper.detachDatabase();
+            }
         } catch (SQLException ge) {
             throw new FBResourceException("Can't detach from db.", ge);
         } finally {
             gdsHelper = null;
+            forceDisassociateConnections();
         }
+    }
+
+    private boolean isBrokenConnection(ConnectionEvent connectionEvent) {
+        if (connectionEvent == null || connectionEvent.getId() != ConnectionEvent.CONNECTION_ERROR_OCCURRED) {
+            return false;
+        }
+
+        Exception connectionEventException = connectionEvent.getException();
+        if (connectionEventException == null) {
+            return false;
+        }
+
+        SQLException firstSqlException = findException(connectionEventException, SQLException.class);
+        if (firstSqlException != null && isBrokenConnectionErrorCode(firstSqlException.getErrorCode())) {
+            return true;
+        }
+
+        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
+            return true;
+        }
+
+        //noinspection RedundantIfStatement
+        if (findException(connectionEventException, SocketTimeoutException.class) != null) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isBrokenConnectionErrorCode(int iscCode) {
+        return iscCode == ISCConstants.isc_network_error
+                || iscCode == ISCConstants.isc_net_read_err
+                || iscCode == ISCConstants.isc_net_write_err;
+    }
+
+    private <T extends Exception> T findException(Exception root, Class<T> exceptionType) {
+        Throwable current = root;
+        while (current != null) {
+            if (exceptionType.isInstance(current)) {
+                return exceptionType.cast(current);
+            }
+            current = current.getCause();
+        }
+        return null;
     }
 
     /**

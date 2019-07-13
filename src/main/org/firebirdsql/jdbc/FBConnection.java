@@ -37,6 +37,7 @@ import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.resource.ResourceException;
+import java.lang.ref.WeakReference;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -66,6 +67,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     private static final String SET_CLIENT_INFO_SQL = "SELECT "
                 + "  rdb$set_context('USER_SESSION', ?, ?) session_context " 
                 + "FROM rdb$database";
+
+    private static final String PERMISSION_SET_NETWORK_TIMEOUT = "setNetworkTimeout";
 
     protected FBManagedConnection mc;
 
@@ -1075,7 +1078,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public GDSHelper getGDSHelper() throws SQLException {
         if (mc == null)
             // TODO Right error code?
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_req_no_trans).toSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_req_no_trans).toFlatSQLException();
 
         return mc.getGDSHelper();
     }
@@ -1225,16 +1228,52 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        // TODO Write implementation
+        SecurityManager securityManager = System.getSecurityManager();
+        if (securityManager != null) {
+            SQLPermission sqlPermission = new SQLPermission(PERMISSION_SET_NETWORK_TIMEOUT);
+            securityManager.checkPermission(sqlPermission);
+        }
+        if (executor == null) {
+            throw FbExceptionBuilder
+                    .forException(JaybirdErrorCodes.jb_invalidExecutor)
+                    .toFlatSQLException();
+        }
+        if (milliseconds < 0) {
+            throw FbExceptionBuilder
+                    .forException(JaybirdErrorCodes.jb_invalidTimeout)
+                    .toFlatSQLException();
+        }
         checkValidity();
-        throw new FBDriverNotCapableException();
+
+        executor.execute(new SetNetworkTimeoutCommand(this, milliseconds));
+    }
+
+    private static class SetNetworkTimeoutCommand implements Runnable {
+
+        private final WeakReference<FBConnection> connectionReference;
+        private final int timeoutMillis;
+
+        SetNetworkTimeoutCommand(FBConnection connection, int timeoutMillis) {
+            connectionReference = new WeakReference<>(connection);
+            this.timeoutMillis = timeoutMillis;
+        }
+
+        @Override
+        public void run() {
+            FBConnection connection = connectionReference.get();
+            if (connection != null) {
+                try {
+                    connection.getFbDatabase().setNetworkTimeout(timeoutMillis);
+                } catch (SQLException e) {
+                    log.error("Exception during asynchronous handling of setNetworkTimeout", e);
+                }
+            }
+        }
     }
 
     @Override
     public int getNetworkTimeout() throws SQLException {
-        // TODO Write implementation
-        checkValidity();
-        return 0;
+        return getFbDatabase().getNetworkTimeout();
     }
 
     @Override

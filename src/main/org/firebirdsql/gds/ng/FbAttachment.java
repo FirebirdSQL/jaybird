@@ -61,6 +61,16 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
     void close() throws SQLException;
 
     /**
+     * Forces the connection to close without proper detach or cleanup.
+     * <p>
+     * If a given implementation does not support this, then this method should call {@link #close()}.
+     * </p>
+     *
+     * @throws SQLException For problems closing the connection.
+     */
+    void forceClose() throws SQLException;
+
+    /**
      * @return The attachment handle value
      */
     int getHandle();
@@ -100,5 +110,30 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
      * @return The {@link DatatypeCoder} for this database implementation.
      */
     DatatypeCoder getDatatypeCoder();
+
+    /**
+     * Sets the network timeout for this attachment.
+     *
+     * @param milliseconds
+     *         Timeout in milliseconds; 0 means no timeout. If the attachment doesn't support milliseconds, it should
+     *         round up to the nearest second.
+     * @throws SQLException
+     *         If this attachment is closed, the value of {@code milliseconds} is smaller than 0, or if setting the
+     *         timeout fails.
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If this attachment doesn't support (changing) the network timeout.
+     */
+    void setNetworkTimeout(int milliseconds) throws SQLException;
+
+    /**
+     * Gets the current network timeout for this attachment.
+     *
+     * @return Timeout in milliseconds, 0 means no timeout
+     * @throws SQLException
+     *         If this attachment is closed
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If this attachment doesn't support network timeout
+     */
+    int getNetworkTimeout() throws SQLException;
 
 }

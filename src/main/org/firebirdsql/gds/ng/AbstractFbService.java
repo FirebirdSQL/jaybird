@@ -42,7 +42,7 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         extends AbstractFbAttachment<T> implements FbService {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbService.class);
-    private final ServiceListenerDispatcher serviceListenerDispatcher = new ServiceListenerDispatcher();
+    protected final ServiceListenerDispatcher serviceListenerDispatcher = new ServiceListenerDispatcher();
     private final WarningMessageCallback serviceWarningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {

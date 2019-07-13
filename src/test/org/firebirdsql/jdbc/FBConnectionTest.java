@@ -42,6 +42,7 @@ import org.junit.rules.TestRule;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.concurrent.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
@@ -50,9 +51,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.isIn;
 import static org.junit.Assert.*;
@@ -773,4 +772,104 @@ public class FBConnectionTest {
             // Using try-with-resources just in case connection is created
         }
     }
+
+    @Test(timeout = 10000L)
+    public void setNetworkTimeout_isUsed() throws Exception {
+        assumeThat("Test assumes pure Java implementation (native doesn't support setNetworkTimeout)",
+                FBTestProperties.GDS_TYPE, isPureJavaType());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        // Workaround for bug with TPBMapper being shared (has conflict with testTpbMapping)
+        Properties props = getDefaultPropertiesForConnection();
+        props.put("TRANSACTION_READ_COMMITTED", "read_committed,rec_version,write,wait");
+        try (Connection connection1 = getConnectionViaDriverManager();
+             Statement statement1 = connection1.createStatement();
+             Connection connection2 = DriverManager.getConnection(getUrl(), props)) {
+            executeCreateTable(connection1, "create table locking (id integer, colval varchar(50))");
+            statement1.execute("insert into locking(id, colval) values (1, 'abc')");
+
+            try (ResultSet rs1 = statement1.executeQuery("select id, colval from locking with lock")) {
+                rs1.next();
+
+                connection2.setNetworkTimeout(executor, 50);
+                // Ensure setting timeout is complete
+                executor.shutdown();
+                executor.awaitTermination(500, TimeUnit.MILLISECONDS);
+                long start = 0;
+                try (Statement statement2 = connection2.createStatement();
+                     ResultSet rs2 = statement2.executeQuery("select id, colval from locking with lock")) {
+                    start = System.currentTimeMillis();
+                    // Fetch will blocking waiting for lock held by statement1/rs1 to be released
+                    rs2.next();
+                    fail("Expected an exception");
+                } catch (SQLException e) {
+                    // expected
+                    e.printStackTrace();
+                } finally {
+                    long end = System.currentTimeMillis();
+                    System.out.println("Time taken: " + (end - start));
+                }
+            } catch (SQLException e) {
+                // ignore
+                e.printStackTrace();
+            }
+
+            assertTrue("Expected connection2 to be closed by timeout", connection2.isClosed());
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    public void setNetworkTimeout_invalidTimeout() throws Exception {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        try (Connection connection = getConnectionViaDriverManager()) {
+            expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_invalidTimeout));
+
+            connection.setNetworkTimeout(executorService, -1);
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
+    @Test
+    public void setNetworkTimeout_invalidExecutor() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_invalidExecutor));
+
+            connection.setNetworkTimeout(null, 500);
+        }
+    }
+
+    @Test
+    public void setNetworkTimeout_getAndSetSeries() throws Exception {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        try (Connection connection = getConnectionViaDriverManager()) {
+            assertEquals("Expected 0 as initial network timeout", 0, connection.getNetworkTimeout());
+
+            connection.setNetworkTimeout(executorService, 500);
+            final CyclicBarrier barrier = new CyclicBarrier(2);
+            Runnable waitForBarrier = new Runnable() {
+                public void run() {
+                    try {
+                        barrier.await(500, TimeUnit.MILLISECONDS);
+                    } catch (TimeoutException | InterruptedException | BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            executorService.execute(waitForBarrier);
+            barrier.await(500, TimeUnit.MILLISECONDS);
+            assertEquals("Unexpected getNetworkTimeout", 500, connection.getNetworkTimeout());
+
+            barrier.reset();
+            connection.setNetworkTimeout(executorService, 0);
+            executorService.execute(waitForBarrier);
+            barrier.await(500, TimeUnit.MILLISECONDS);
+            assertEquals("Unexpected getNetworkTimeout", 0, connection.getNetworkTimeout());
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
 }
