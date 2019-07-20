@@ -178,7 +178,7 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     }
 
     // "test string" in Ukrainian
-    public static String UKRAINIAN_TEST_STRING =
+    private static final String UKRAINIAN_TEST_STRING =
             "\u0442\u0435\u0441\u0442\u043e\u0432\u0430 \u0441\u0442\u0440\u0456\u0447\u043a\u0430";
 
     private static final int UKRAINIAN_TEST_ID = 1;
@@ -249,21 +249,21 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     }
 
     // This test only demonstrate a failure in the CYRL character set
-    public static byte[] CYRL_TEST_BYTES = new byte[] {
+    private static final byte[] CYRL_TEST_BYTES = new byte[] {
             (byte) 0xE0, (byte) 0xE1, (byte) 0xE2, (byte) 0xE3,
             (byte) 0xE4, (byte) 0xE5, (byte) 0xE6, (byte) 0xE7,
             (byte) 0xE8, (byte) 0xE9, (byte) 0xEA, (byte) 0xEB,
             (byte) 0xEC, (byte) 0xED, (byte) 0xEC, (byte) 0xEF
     };
     // These are the correct uppercase bytes
-    public static byte[] CYRL_TEST_BYTES_UPPER = new byte[] {
+    private static final byte[] CYRL_TEST_BYTES_UPPER = new byte[] {
             (byte) 0xC0, (byte) 0xC1, (byte) 0xC2, (byte) 0xC3,
             (byte) 0xC4, (byte) 0xC5, (byte) 0xC6, (byte) 0xC7,
             (byte) 0xC8, (byte) 0xC9, (byte) 0xCA, (byte) 0xCB,
             (byte) 0xCC, (byte) 0xCD, (byte) 0xCC, (byte) 0xCF
     };
     // These are the wrong uppercase bytes
-    public static byte[] CYRL_TEST_BYTES_UPPER_WRONG = new byte[] {
+    private static final byte[] CYRL_TEST_BYTES_UPPER_WRONG = new byte[] {
             (byte) 0x90, (byte) 0x91, (byte) 0x92, (byte) 0x93,
             (byte) 0x94, (byte) 0x95, (byte) 0x96, (byte) 0x97,
             (byte) 0x00, (byte) 0x99, (byte) 0x9A, (byte) 0x9B,
@@ -362,10 +362,10 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     }
 
     // couple of test characters in German
-    public static String GERMAN_TEST_STRING_WIN1252 =
+    private static final String GERMAN_TEST_STRING_WIN1252 =
             "Zeichen " + "\u00c4\u00e4, \u00d6\u00f6, \u00dc\u00fc und \u00df";
 
-    public static int GERMAN_TEST_ID = 2;
+    private static final int GERMAN_TEST_ID = 2;
 
     @Test
     public void testGerman() throws Exception {
@@ -429,7 +429,7 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     // String in Hungarian ("\u0151r\u00FClt")
     private static final String HUNGARIAN_TEST_STRING = "\u0151\u0072\u00fc\u006c\u0074";
 
-    public static int HUNGARIAN_TEST_ID = 3;
+    private static final int HUNGARIAN_TEST_ID = 3;
 
     @Test
     public void testHungarian() throws Exception {
