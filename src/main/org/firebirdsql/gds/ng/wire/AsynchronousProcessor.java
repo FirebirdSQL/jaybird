@@ -58,7 +58,7 @@ public class AsynchronousProcessor {
         }
         Thread selectorThread = new Thread(selectorTask, "Jaybird asynchronous processing");
         selectorThread.setDaemon(true);
-        selectorThread.setUncaughtExceptionHandler(new LogUncaughtException());
+        selectorThread.setUncaughtExceptionHandler(new LogUncaughtExceptionHandler());
         selectorThread.start();
     }
 
@@ -203,7 +203,7 @@ public class AsynchronousProcessor {
         }
     }
 
-    private static class LogUncaughtException implements Thread.UncaughtExceptionHandler {
+    private static class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
             log.error("Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
