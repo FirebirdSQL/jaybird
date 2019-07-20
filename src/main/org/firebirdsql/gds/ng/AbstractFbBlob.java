@@ -205,6 +205,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             } catch (SQLException e) {
                 log.error("Exception while closing blob during transaction end", e);
             }
+            break;
         case COMMITTED:
         case ROLLED_BACK:
             synchronized (getSynchronizationObject()) {
