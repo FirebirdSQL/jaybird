@@ -1787,6 +1787,12 @@ The following methods will be removed in Jaybird 5:
 -   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
     use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
     
+### Removal of deprecated classes ###
+
+The following classes will be removed in Jaybird 5:
+
+-   `FBMissingParameterException`, exception is no longer used.
+    
 ### Removal of deprecated constants ###
 
 The following constants will be removed in Jaybird 5:
