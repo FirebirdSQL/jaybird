@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.jdbc.FBDatabaseMetaData.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -89,8 +90,8 @@ public class TestFBDatabaseMetaData {
     public void testGetTableTypes() throws Exception {
         final Set<String> expected = new HashSet<>(Arrays.asList(
                 getDefaultSupportInfo().supportsGlobalTemporaryTables()
-                        ? FBDatabaseMetaData.ALL_TYPES_2_5
-                        : FBDatabaseMetaData.ALL_TYPES_2_1));
+                        ? new String[] {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY}
+                        : new String[] {TABLE, SYSTEM_TABLE, VIEW}));
         final Set<String> retrieved = new HashSet<>();
 
         ResultSet rs = dmd.getTableTypes();

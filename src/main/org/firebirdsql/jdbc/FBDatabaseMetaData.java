@@ -1431,13 +1431,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Table types supported for Firebird 2.5 and up (will also work with 2.1 and earlier though)
      */
-    public static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
+    private static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
     /**
      * Table types supported for Firebird 2.1 and lower
      */
-    public static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
-    @SuppressWarnings("unused")
-    public static final String[] ALL_TYPES = ALL_TYPES_2_5;
+    private static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
 
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
@@ -1687,6 +1685,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         return new FBResultSet(rowDescriptor, rows);
+    }
+
+    @Override
+    public String[] getTableTypeNames() throws SQLException {
+        String[] allTypes = hasGlobalTemporaryTables()
+                ? ALL_TYPES_2_5
+                : ALL_TYPES_2_1;
+        return Arrays.copyOf(allTypes, allTypes.length);
     }
 
     private boolean hasGlobalTemporaryTables() throws SQLException {

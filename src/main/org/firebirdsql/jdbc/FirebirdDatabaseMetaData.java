@@ -114,4 +114,15 @@ public interface FirebirdDatabaseMetaData extends DatabaseMetaData {
      * </p>
      */
     void close();
+
+    /**
+     * Supported table type names.
+     *
+     * @return An array with the supported table types names for {@link #getTables(String, String, String, String[])}
+     * @throws SQLException
+     *         For problems determining supported table types
+     * @see #getTableTypes()
+     * @since 4.0
+     */
+    String[] getTableTypeNames() throws SQLException;
 }
