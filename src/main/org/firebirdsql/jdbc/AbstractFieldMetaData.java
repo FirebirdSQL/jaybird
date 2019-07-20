@@ -417,14 +417,13 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * information about fields in a database.
      */
     protected static class ExtendedFieldInfo {
-        String relationName;
-        String fieldName;
-        int fieldLength;
-        int fieldPrecision;
-        int fieldScale;
-        int fieldSubtype;
-        int characterLength;
-        int characterSetId;
+        final FieldKey fieldKey;
+        final int fieldPrecision;
+
+        public ExtendedFieldInfo(String relationName, String fieldName, int precision) {
+            fieldKey = new FieldKey(relationName, fieldName);
+            fieldPrecision = precision;
+        }
     }
 
     /**
