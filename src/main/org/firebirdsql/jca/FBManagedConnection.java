@@ -887,9 +887,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            GDSHelper gdsHelper2 = new GDSHelper(database);
-            gdsHelper2.setCurrentTransaction(trHandle2);
-
             stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
             stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
 
