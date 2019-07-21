@@ -255,7 +255,7 @@ public class FBManager implements FBManagerMBean {
     //Meaningful management methods
 
     @Override
-    public void createDatabase(String fileName, String user, String password) throws Exception {
+    public synchronized void createDatabase(String fileName, String user, String password) throws Exception {
         checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
@@ -297,7 +297,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public void dropDatabase(String fileName, String user, String password) throws Exception {
+    public synchronized void dropDatabase(String fileName, String user, String password) throws Exception {
         checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
@@ -312,7 +312,7 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
-    public boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
+    public synchronized boolean isDatabaseExists(String fileName, String user, String password) throws Exception {
         checkStarted();
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
