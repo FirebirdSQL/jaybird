@@ -4,5 +4,4 @@ jdk:
   - openjdk8
 
 script:
-  - jdk_switcher use openjdk8
   - ./build.sh compile
