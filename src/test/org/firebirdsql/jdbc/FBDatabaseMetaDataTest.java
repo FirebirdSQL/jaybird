@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.RegexMatcher.matchesRegex;
 import static org.firebirdsql.jdbc.FBDatabaseMetaData.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -45,7 +46,7 @@ import static org.junit.Assume.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class TestFBDatabaseMetaData {
+public class FBDatabaseMetaDataTest {
 
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
@@ -53,7 +54,7 @@ public class TestFBDatabaseMetaData {
     // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
     private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
 
-    private static final Logger log = LoggerFactory.getLogger(TestFBDatabaseMetaData.class);
+    private static final Logger log = LoggerFactory.getLogger(FBDatabaseMetaDataTest.class);
 
     private Connection connection;
     private boolean supportsComment;
@@ -833,9 +834,9 @@ public class TestFBDatabaseMetaData {
     @Test
     public void testDriverVersionInformation() throws Exception {
         assumeThat("Running with unfiltered org/firebirdsql/jaybird/version.properties; test ignored",
-                "@VERSION@", not(equalTo(dmd.getDriverVersion())));
-        String expectedVersion = String.format("%d.%d", dmd.getDriverMajorVersion(), dmd.getDriverMinorVersion());
-        assertEquals(expectedVersion, dmd.getDriverVersion());
+                dmd.getDriverVersion(), not(equalTo("@VERSION@")));
+        String expectedVersionPattern = String.format("%d\\.%d\\.\\d+", dmd.getDriverMajorVersion(), dmd.getDriverMinorVersion());
+        assertThat(dmd.getDriverVersion(), matchesRegex(expectedVersionPattern));
     }
 
     @Test
