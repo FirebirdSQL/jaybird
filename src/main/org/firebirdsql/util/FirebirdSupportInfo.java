@@ -519,6 +519,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports packages.
+     */
+    public boolean supportsPackages() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

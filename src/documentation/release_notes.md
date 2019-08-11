@@ -44,6 +44,9 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     or embedded. Calling `setNetworkTimeout` will override the timeout set with
     the `soTimeout` connection property. When a timeout occurs, the connection
     will be closed.
+-   Changed: Procedures in packages are no longer returned from 
+    `DatabaseMetaData.getProcedures` and `getProcedureColumns` ([JDBC-590](http://tracker.firebirdsql.org/browse/JDBC-590)) \
+    See also [Excluding procedures from packages].
 
 Support
 =======
@@ -1669,6 +1672,19 @@ This is probably only a theoretical concern (we don't know of actual cases
 where detection changed). 
 
 See also [Generated keys grammar simplification]. 
+
+### DatabaseMetaData ###
+
+### Excluding procedures from packages ###
+
+The definition of `getProcedures` and `getProcedureColumns` does not offer a way
+to return information on procedures in packages without breaking tools or
+applications that rely on the JDBC standard behaviour. To avoid these problems,
+stored procedures in packages are no longer returned from these methods.
+
+The way Jaybird handled this previously was 'by accident', and the information
+returned was not enough to correctly call the procedure as the package name was
+not included.
 
 Removal of character mapping
 ----------------------------

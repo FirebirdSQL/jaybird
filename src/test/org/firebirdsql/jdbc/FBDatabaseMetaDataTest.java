@@ -22,11 +22,13 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import java.sql.*;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,7 +39,8 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test for the {@link FBDatabaseMetaData} implementation of {@link java.sql.DatabaseMetaData}
@@ -50,9 +53,6 @@ public class FBDatabaseMetaDataTest {
 
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
-
-    // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
-    private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
 
     private static final Logger log = LoggerFactory.getLogger(FBDatabaseMetaDataTest.class);
 
@@ -328,6 +328,7 @@ public class FBDatabaseMetaDataTest {
 
     @Test
     public void testGetProcedures() throws Exception {
+        dropProcedures();
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
@@ -357,10 +358,6 @@ public class FBDatabaseMetaDataTest {
                         type, lit_type);
                 if (log != null) log.info(" got procedure " + name);
                 
-                if (PROCEDURES_TO_IGNORE.contains(name)) {
-                    // TODO Temporary workaround
-                    continue;
-                }
                 if (name.equals("TESTPROC1")) {
                     assertFalse("result set from getProcedures had duplicate entry for TESTPROC1", gotproc1);
                     gotproc1 = true;
@@ -388,7 +385,23 @@ public class FBDatabaseMetaDataTest {
     }
 
     @Test
+    public void testGetProcedures_excludesPackages() throws Exception {
+        assumeTrue("Test requires package support", getDefaultSupportInfo().supportsPackages());
+        dropProcedures();
+        dropPackages();
+        createProcedure("procedure1", true);
+        createPackage("package1", "pkgprocedure1");
+
+        try (ResultSet rs = dmd.getProcedures(null, null, "%")) {
+            assertTrue("expected a row", rs.next());
+            assertEquals("Unexpected procedure", "PROCEDURE1", rs.getString("PROCEDURE_NAME"));
+            assertFalse("expected no more procedures", rs.next());
+        }
+    }
+
+    @Test
     public void testGetProcedureColumns() throws Exception {
+        dropProcedures();
         createProcedure("testproc1", true);
         createProcedure("testproc2", false);
 
@@ -396,10 +409,6 @@ public class FBDatabaseMetaDataTest {
             int rownum = 0;
             while (rs.next()) {
                 String procname = rs.getString(3);
-                if (PROCEDURES_TO_IGNORE.contains(procname)) {
-                    // TODO Temporary workaround
-                    continue;
-                }
                 rownum++;
                 String colname = rs.getString(4);
                 short coltype = rs.getShort(5);
@@ -450,6 +459,22 @@ public class FBDatabaseMetaDataTest {
                     fail("unexpected field returned from getProcedureColumns.");
                 }
             }
+        }
+    }
+
+    @Test
+    public void testGetProcedureColumns_excludesPackages() throws Exception {
+        assumeTrue("Test requires package support", getDefaultSupportInfo().supportsPackages());
+        dropProcedures();
+        dropPackages();
+        createProcedure("procedure1", false);
+        createPackage("package1", "pkgprocedure1");
+
+        try (ResultSet rs = dmd.getProcedureColumns(null, null, "%", "%")) {
+            assertTrue("expected a row", rs.next());
+            assertEquals("Unexpected procedure", "PROCEDURE1", rs.getString("PROCEDURE_NAME"));
+            assertEquals("Unexpected column name", "INP", rs.getString("COLUMN_NAME"));
+            assertFalse("expected no more procedures", rs.next());
         }
     }
 
@@ -872,5 +897,52 @@ public class FBDatabaseMetaDataTest {
         }
 
         assertEquals("JDBCMinorVersion", expectedMinor, dmd.getJDBCMinorVersion());
+    }
+
+    private void createPackage(String packageName, String procedureName) throws Exception {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("create package " + packageName + " as "
+                    + "begin "
+                    + "  procedure " + procedureName + " (param1 int) returns (return1 int);"
+                    + "end");
+            stmt.execute("create package body " + packageName + " as "
+                    + "begin "
+                    + "  procedure " + procedureName + " (param1 int) returns (return1 int) "
+                    + "  as "
+                    + "  begin"
+                    + "  end "
+                    + "end");
+        }
+    }
+
+    private void dropProcedures() throws Exception {
+        connection.setAutoCommit(false);
+        String procedureSelectQuery = "select RDB$PROCEDURE_NAME from RDB$PROCEDURES where coalesce(RDB$SYSTEM_FLAG, 0) <> 1";
+        if (getDefaultSupportInfo().supportsPackages()) {
+            procedureSelectQuery += " and RDB$PACKAGE_NAME is null";
+        }
+        try (Statement select = connection.createStatement();
+             Statement drop = connection.createStatement();
+             ResultSet procedures = select.executeQuery(procedureSelectQuery)) {
+            while (procedures.next()) {
+                drop.execute("drop procedure " + procedures.getString(1));
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
+    }
+
+    private void dropPackages() throws Exception {
+        connection.setAutoCommit(false);
+        String packageSelectQuery = "select RDB$PACKAGE_NAME from RDB$PACKAGES where coalesce(RDB$SYSTEM_FLAG, 0) <> 1";
+        try (Statement select = connection.createStatement();
+             Statement drop = connection.createStatement();
+             ResultSet packages = select.executeQuery(packageSelectQuery)) {
+            while (packages.next()) {
+                drop.execute("drop package " + packages.getString(1));
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
     }
 }

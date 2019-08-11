@@ -1217,6 +1217,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         String sql = GET_PROCEDURES_START;
         sql += procedureClause.getCondition();
+        if (firebirdSupportInfo.supportsPackages()) {
+            sql += "RDB$PACKAGE_NAME is null and ";
+        }
         sql += GET_PROCEDURES_END;
 
         List<String> params = procedureClause.hasCondition()
@@ -1300,6 +1303,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = GET_PROCEDURE_COLUMNS_START;
         sql += procedureClause.getCondition();
         sql += columnClause.getCondition();
+        if (firebirdSupportInfo.supportsPackages()) {
+            sql += "PP.RDB$PACKAGE_NAME is null and ";
+        }
         sql += GET_PROCEDURE_COLUMNS_END;
 
         List<String> params = new ArrayList<>(2);
