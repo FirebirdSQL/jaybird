@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,202 +12,154 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import static org.firebirdsql.common.DdlHelper.executeDropTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.junit.Assert.fail;
+
 /**
  * This test case checks if DDL statements are executed correctly.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 1.0
  */
-public class TestDDL extends FBTestBase {
-    public static final String CREATE_MAIN_TABLE = ""
-        + "CREATE TABLE main_table (" 
-        + "  id INTEGER NOT NULL PRIMARY KEY"
-        + ")"
-        ;
+public class TestDDL extends FBJUnit4TestBase {
+    private static final String CREATE_MAIN_TABLE = ""
+            + "CREATE TABLE main_table ("
+            + "  id INTEGER NOT NULL PRIMARY KEY"
+            + ")";
 
-    public static final String CREATE_DETAIL_TABLE = ""
-        + "CREATE TABLE detail_table("
-        + "  main_id INTEGER NOT NULL, "
-        + "  some_data VARCHAR(20)"
-        + ")"
-        ;
+    private static final String CREATE_DETAIL_TABLE = ""
+            + "CREATE TABLE detail_table("
+            + "  main_id INTEGER NOT NULL, "
+            + "  some_data VARCHAR(20)"
+            + ")";
 
-    public static final String ADD_FOREIGN_KEY = ""
-        + "ALTER TABLE detail_table ADD FOREIGN KEY(main_id) "
-        + "REFERENCES main_table(id) ON DELETE CASCADE"
-        ;
-        
-    public static final String DROP_DETAIL_TABLE = ""
-        + "DROP TABLE detail_table"
-        ;
-        
-    public static final String DROP_MAIN_TABLE = ""
-        + "DROP TABLE main_table"
-        ;
-    
-    public TestDDL(String testName) {
-        super(testName);
-    }
+    private static final String ADD_FOREIGN_KEY = ""
+            + "ALTER TABLE detail_table ADD FOREIGN KEY(main_id) "
+            + "REFERENCES main_table(id) ON DELETE CASCADE";
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        Class.forName(FBDriver.class.getName());
-    }
-    
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
+    private static final String DROP_DETAIL_TABLE =
+            "DROP TABLE detail_table";
 
-    private void tryDrop(Connection connection, String sql) {
-        Statement stmt = null;
-        try {
-            stmt = connection.createStatement();
+    private static final String DROP_MAIN_TABLE =
+            "DROP TABLE main_table";
+
+    private static void executeUpdate(Connection connection, String sql) throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sql);
-        } catch(SQLException sqlex) {
-            // do nothing
-        } finally {
-            if (stmt != null)
-                try {
-                    stmt.close();
-                } catch(SQLException sqlex) {
-                    // do nothing
-                }
-        }
-    }
-    
-    private void executeUpdate(Connection connection, String sql) throws SQLException {
-        Statement stmt = null;
-        
-        try {
-            stmt = connection.createStatement();
-            stmt.executeUpdate(sql);
-        } finally {
-            if (stmt != null)
-                stmt.close();
         }
     }
 
+    @Test
     public void testFKWithAutoCommit() throws Exception {
-        Connection connection = null;
-        try {
-            connection = getConnectionViaDriverManager();
-            
-            tryDrop(connection, DROP_DETAIL_TABLE);
-            tryDrop(connection, DROP_MAIN_TABLE);
-            
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeDropTable(connection, DROP_DETAIL_TABLE);
+            executeDropTable(connection, DROP_MAIN_TABLE);
+
             executeUpdate(connection, CREATE_MAIN_TABLE);
             executeUpdate(connection, CREATE_DETAIL_TABLE);
-            
+
             try {
                 executeUpdate(connection, ADD_FOREIGN_KEY);
-            } catch(SQLException sqlex) {
-                assertTrue("Should add foreign key constraint.", false);
-            } 
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+                fail("Should add foreign key constraint.");
+            }
 
-            tryDrop(connection, DROP_DETAIL_TABLE);
-            tryDrop(connection, DROP_MAIN_TABLE);
-            
-        } finally {
-            if (connection != null)
-                connection.close();
+            executeDropTable(connection, DROP_DETAIL_TABLE);
+            executeDropTable(connection, DROP_MAIN_TABLE);
         }
     }
-    
+
+    @Test
     public void testFKWithTx() throws Exception {
-        Connection connection = null;
-        try {
-            connection = getConnectionViaDriverManager();
+        try (Connection connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(false);
-            
-            tryDrop(connection, DROP_DETAIL_TABLE);
+
+            executeDropTable(connection, DROP_DETAIL_TABLE);
             connection.commit();
-            
-            tryDrop(connection, DROP_MAIN_TABLE);
+
+            executeDropTable(connection, DROP_MAIN_TABLE);
             connection.commit();
-            
+
             executeUpdate(connection, CREATE_MAIN_TABLE);
             connection.commit();
-            
+
             executeUpdate(connection, CREATE_DETAIL_TABLE);
             connection.commit();
-            
+
             try {
                 executeUpdate(connection, ADD_FOREIGN_KEY);
                 connection.commit();
-            } catch(SQLException sqlex) {
-                assertTrue("Should add foreign key constraint.", false);
-            } 
-            
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+                fail("Should add foreign key constraint.");
+            }
+
             connection.setAutoCommit(true);
 
-            tryDrop(connection, DROP_DETAIL_TABLE);
-            tryDrop(connection, DROP_MAIN_TABLE);
-            
-        } finally {
-            if (connection != null)
-                connection.close();
+            executeDropTable(connection, DROP_DETAIL_TABLE);
+            executeDropTable(connection, DROP_MAIN_TABLE);
         }
     }
-    
+
+    @Test
     public void testFKMixed() throws Exception {
-        Connection connection = null;
-        try {
-            connection = getConnectionViaDriverManager();
-            
-            tryDrop(connection, DROP_DETAIL_TABLE);
-            tryDrop(connection, DROP_MAIN_TABLE);
-            
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeDropTable(connection, DROP_DETAIL_TABLE);
+            executeDropTable(connection, DROP_MAIN_TABLE);
+
             executeUpdate(connection, CREATE_MAIN_TABLE);
             executeUpdate(connection, CREATE_DETAIL_TABLE);
-            
+
             try {
                 executeUpdate(connection, ADD_FOREIGN_KEY);
-            } catch(SQLException sqlex) {
+            } catch (SQLException sqlex) {
                 sqlex.printStackTrace();
-                assertTrue("Should add foreign key constraint.", false);
-            } 
-            
+                fail("Should add foreign key constraint.");
+            }
+
             connection.setAutoCommit(false);
-            
-            tryDrop(connection, DROP_DETAIL_TABLE);
-            
+
+            executeDropTable(connection, DROP_DETAIL_TABLE);
+
             try {
-                // Here it will fail, but should not, 
+                // TODO: Doesn't fail (FB3), so what is the meaning/intention?
+                // Here it will fail, but should not,
                 // everything is correct from the programmers point of view
                 connection.commit();
-            } catch(SQLException sqlex) {
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
                 connection.setAutoCommit(true);
-                tryDrop(connection, DROP_DETAIL_TABLE);
+                executeDropTable(connection, DROP_DETAIL_TABLE);
             }
-            
+
             connection.setAutoCommit(false);
-            
-            tryDrop(connection, DROP_MAIN_TABLE);
-            
+
+            executeDropTable(connection, DROP_MAIN_TABLE);
+
             try {
-                // Here it will fail, but should not, 
+                // TODO: Doesn't fail (FB3), so what is the meaning/intention?
+                // Here it will fail, but should not,
                 // everything is correct from the programmers point of view
                 connection.commit();
-            } catch(SQLException sqlex) {
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
                 connection.setAutoCommit(true);
-                tryDrop(connection, DROP_MAIN_TABLE);
+                executeDropTable(connection, DROP_MAIN_TABLE);
             }
-            
-        } finally {
-            if (connection != null)
-                connection.close();
         }
     }
 }

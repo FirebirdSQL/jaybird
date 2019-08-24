@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,24 +12,28 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
+import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.junit.Assert.*;
 
-/**
- * Describe class <code>TestFBBlobParam</code> here.
- *
- * @version 1.0
- */
-public class TestFBBlobParams extends FBTestBase {
-    public static final String CREATE_TABLE = 
+public class TestFBBlobParams extends FBJUnit4TestBase {
+    //@formatter:off
+    private static final String CREATE_TABLE =
         "CREATE TABLE ClassMap(" + 
         "  oid INTEGER NOT NULL, " + 
         "  className BLOB SUB_TYPE 1, " + 
@@ -37,134 +41,81 @@ public class TestFBBlobParams extends FBTestBase {
         "  codebase BLOB SUB_TYPE 1, " + 
         " PRIMARY KEY (oid) " +
         ")";
-       
-    public TestFBBlobParams(String testName) {
-        super(testName);
-    }
+    //@formatter:on
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        Class.forName(FBDriver.class.getName());
-        Connection connection = getConnectionViaDriverManager();
-       
-        Statement stmt = connection.createStatement();
-
-        stmt.executeUpdate(CREATE_TABLE);
-        stmt.close();
-        connection.close();
-    }
-    
-    /**
-     * Test if we can pass string as blob param. This test is not 100% correctly
-     * coded, but it tries to reproduce bug
-     * 
-     * @throws Exception if something went wrong.
-     */
-    public void testParams() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        connection.setAutoCommit(false);
-        
-        try {
-            PreparedStatement ps = connection.prepareStatement(
-                "SELECT ClassMap.oid,classname,mapping,codebase FROM ClassMap WHERE classname=?;"
-            );
-    
-            ps.setObject(1, PreparedStatement.class.getName());
-    
-            ResultSet rs = ps.executeQuery();
-            rs.next();
-            
-        } catch(Exception e) {
-            assertTrue("There should be no exceptions.", false);
-        } finally {
-            connection.close();
+    @Before
+    public void setUp() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE);
         }
     }
-    
-    /**
-     * Test case that reproduces problem when using UPPER function with text
-     * Blobs.
-     * 
-     * @throws java.lang.Exception if something went wrong.
-     */
-    public void _testUpperAndBlobParam() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        connection.setAutoCommit(false);
 
-        try {
-            
-            Statement stmt = connection.createStatement();
-            try {
-                stmt.execute("INSERT INTO ClassMap(oid, classname) VALUES (1, 'test')");
-            } finally {
-                stmt.close();
-            }
-    
-            connection.commit();
-            
+    /**
+     * Test if we can pass string as blob param. This test is not 100% correctly coded, but it tries to reproduce bug
+     */
+    @Test
+    public void testParams() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+
             PreparedStatement ps = connection.prepareStatement(
-                "SELECT oid FROM ClassMap WHERE UPPER(classname) LIKE ?"
-            );
-            
-            try {
+                    "SELECT ClassMap.oid,classname,mapping,codebase FROM ClassMap WHERE classname=?;");
+
+            ps.setObject(1, PreparedStatement.class.getName());
+
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+        }
+    }
+
+    /**
+     * Test case that reproduces problem when using UPPER function with text Blobs.
+     */
+    @Test
+    public void testUpperAndBlobParam() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+
+            try (Statement stmt = connection.createStatement()) {
+                stmt.execute("INSERT INTO ClassMap(oid, classname) VALUES (1, 'test')");
+            }
+
+            connection.commit();
+
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT oid FROM ClassMap WHERE UPPER(classname) LIKE ?")) {
                 ps.setString(1, "TEST");
 
                 ResultSet rs = ps.executeQuery();
                 assertTrue("Should find at least one row.", rs.next());
-                assertTrue("OID value should be correct.",
-                    "1".equals(rs.getString(1)));
-                assertTrue("Only one row should be selected", !rs.next());
-            } finally {
-                ps.close();
+                assertEquals("OID value should be correct.", "1", rs.getString(1));
+                assertFalse("Only one row should be selected", rs.next());
             }
-
-        } finally {
-            connection.close();
         }
     }
 
     /**
-     * Test case that reproduces problem when using equal sign with text
-     * Blobs.
-     * 
-     * @throws java.lang.Exception if something went wrong.
+     * Test case that reproduces problem when using equal sign with text Blobs.
      */
-    public void _testEqualityInBlobParam() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        connection.setAutoCommit(false);
+    @Test
+    public void testEqualityInBlobParam() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
 
-        try {
-
-            Statement stmt = connection.createStatement();
-            try {
+            try (Statement stmt = connection.createStatement()) {
                 stmt.execute("INSERT INTO ClassMap(oid, classname) VALUES (1, 'test')");
-            } finally {
-                stmt.close();
             }
 
             connection.commit();
 
-            PreparedStatement ps = connection.prepareStatement(
-                "SELECT oid FROM ClassMap WHERE classname = ?"
-            );
-
-            try {
+            try (PreparedStatement ps = connection.prepareStatement("SELECT oid FROM ClassMap WHERE classname = ?")) {
                 ps.setString(1, "test");
 
                 ResultSet rs = ps.executeQuery();
                 assertTrue("Should find at least one row.", rs.next());
-                assertTrue("OID value should be correct.",
-                    "1".equals(rs.getString(1)));
-                assertTrue("Only one row should be selected", !rs.next());
-            } catch(SQLException ex) {
-                ex.printStackTrace();
-                throw ex;
-            } finally {
-                ps.close();
+                assertEquals("OID value should be correct.", "1", rs.getString(1));
+                assertFalse("Only one row should be selected", rs.next());
             }
-
-        } finally {
-            connection.close();
         }
     }
 

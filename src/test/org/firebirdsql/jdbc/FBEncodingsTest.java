@@ -25,7 +25,6 @@ import org.junit.Test;
 import java.sql.*;
 import java.util.*;
 
-import static junit.framework.TestCase.fail;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
@@ -33,11 +32,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
-/**
- * Describe class <code>TestFBEncodings</code> here.
- *
- * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- */
 public class FBEncodingsTest extends FBJUnit4TestBase {
 
     private static final List<String> ENCODINGS_JAVA;

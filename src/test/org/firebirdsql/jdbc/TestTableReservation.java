@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,10 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
+import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,58 +31,53 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-public class TestTableReservation extends FBTestBase {
+public class TestTableReservation extends FBJUnit4TestBase {
 
-    protected static final int READ_COMMITTED = TransactionParameterBuffer.READ_COMMITTED;
-    protected static final int CONCURRENCY = TransactionParameterBuffer.CONCURRENCY;
-    protected static final int CONSISTENCY = TransactionParameterBuffer.CONSISTENCY;
+    private static final int READ_COMMITTED = TransactionParameterBuffer.READ_COMMITTED;
+    private static final int CONCURRENCY = TransactionParameterBuffer.CONCURRENCY;
+    private static final int CONSISTENCY = TransactionParameterBuffer.CONSISTENCY;
 
-    protected static final int LOCK_READ = TransactionParameterBuffer.LOCK_READ;
-    protected static final int LOCK_WRITE = TransactionParameterBuffer.LOCK_WRITE;
+    private static final int LOCK_READ = TransactionParameterBuffer.LOCK_READ;
+    private static final int LOCK_WRITE = TransactionParameterBuffer.LOCK_WRITE;
 
-    protected static final int SHARED = TransactionParameterBuffer.SHARED;
-    protected static final int PROTECTED = TransactionParameterBuffer.PROTECTED;
-    protected static final int EXCLUSIVE = TransactionParameterBuffer.EXCLUSIVE;
+    private static final int SHARED = TransactionParameterBuffer.SHARED;
+    private static final int PROTECTED = TransactionParameterBuffer.PROTECTED;
+    private static final int EXCLUSIVE = TransactionParameterBuffer.EXCLUSIVE;
 
-    public TestTableReservation(String name) {
-        super(name);
-    }
-
-    protected static final String CREATE_TABLE_1 = ""
+    private static final String CREATE_TABLE_1 = ""
             + "CREATE TABLE table_1("
             + "  ID INTEGER NOT NULL PRIMARY KEY"
             + ")";
 
-    protected static final String CREATE_TABLE_2 = ""
+    private static final String CREATE_TABLE_2 = ""
             + "CREATE TABLE table_2("
             + "  ID INTEGER NOT NULL PRIMARY KEY"
             + ")";
 
-    protected static final String INSERT_TABLE_1 = ""
-            + "INSERT INTO table_1 VALUES(?)";
+    private static final String INSERT_TABLE_1 =
+            "INSERT INTO table_1 VALUES(?)";
 
-    protected static final String INSERT_TABLE_2 = ""
-            + "INSERT INTO table_2 VALUES(?)";
+    private static final String INSERT_TABLE_2 =
+            "INSERT INTO table_2 VALUES(?)";
 
-    protected static final String SELECT_TABLE_1 = ""
-            + "SELECT id FROM table_1 WHERE id = ?";
+    private static final String SELECT_TABLE_1 =
+            "SELECT id FROM table_1 WHERE id = ?";
 
-    protected static final String SELECT_TABLE_2 = ""
-            + "SELECT id FROM table_2 WHERE id = ?";
+    private static final String SELECT_TABLE_2 =
+            "SELECT id FROM table_2 WHERE id = ?";
 
-    protected FirebirdConnection connection1;
-    protected FirebirdConnection connection2;
+    private FirebirdConnection connection1;
+    private FirebirdConnection connection2;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        Connection connection = getConnectionViaDriverManager();
-        try {
+    @Before
+    public void setUp() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
             executeCreateTable(connection, CREATE_TABLE_1);
             executeCreateTable(connection, CREATE_TABLE_2);
-        } finally {
-            connection.close();
         }
 
         connection1 = getConnectionViaDriverManager();
@@ -92,15 +87,16 @@ public class TestTableReservation extends FBTestBase {
         connection2.setAutoCommit(false);
     }
 
-    protected void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(connection1);
-        JdbcResourceHelper.closeQuietly(connection2);
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+        try (Connection ignored1 = connection1;
+             Connection ignored2 = connection2) {
+            log.debug("closing connections");
+        }
     }
 
     protected void execute(Connection connection, String sql, Object[] params) throws SQLException {
-        PreparedStatement stmt = connection.prepareStatement(sql);
-        try {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
@@ -112,8 +108,6 @@ public class TestTableReservation extends FBTestBase {
                     rs.getObject(1);
                 }
             }
-        } finally {
-            stmt.close();
         }
     }
 
@@ -136,6 +130,7 @@ public class TestTableReservation extends FBTestBase {
         connection.setTransactionParameters(tpb);
     }
 
+    @Test
     public void testProtectedWriteProtectedWrite() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
@@ -151,6 +146,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testProtectedWriteProtectedRead() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
@@ -166,6 +162,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testProtectedWriteSharedWrite() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
@@ -181,6 +178,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testProtectedWriteSharedRead() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
@@ -196,6 +194,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testSharedWriteSharedRead() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
@@ -211,6 +210,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testSharedReadSharedRead() throws SQLException {
         prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
         prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
@@ -219,6 +219,7 @@ public class TestTableReservation extends FBTestBase {
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
     }
 
+    @Test
     public void testProtectedReadSharedRead() throws SQLException {
         prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
         prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
@@ -227,6 +228,7 @@ public class TestTableReservation extends FBTestBase {
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
     }
 
+    @Test
     public void testSharedWriteSharedWrite() throws SQLException {
         prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
         prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
@@ -235,6 +237,7 @@ public class TestTableReservation extends FBTestBase {
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
     }
 
+    @Test
     public void testSharedWriteProtectedRead() throws SQLException {
         try {
             prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
@@ -250,6 +253,7 @@ public class TestTableReservation extends FBTestBase {
         }
     }
 
+    @Test
     public void testProtectedReadProtectedRead() throws SQLException {
         prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
         prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
