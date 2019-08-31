@@ -526,6 +526,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
+     */
+    public boolean supportsFloatBinaryPrecision() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

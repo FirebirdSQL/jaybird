@@ -121,6 +121,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] TABLE_INDEX_OTHER = createShort(DatabaseMetaData.tableIndexOther);
     private static final byte[] ASC_BYTES = getBytes("A");
     private static final byte[] DESC_BYTES = getBytes("D");
+    private static final int FLOAT_BINARY_PRECISION = 24;
+    private static final int DOUBLE_BINARY_PRECISION = 53;
 
     private GDSHelper gdsHelper;
     private FBConnection connection;
@@ -1324,6 +1326,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
             final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            final boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
             do {
                 final short columnType = rs.getShort("COLUMN_TYPE");
                 final short fieldType = rs.getShort("FIELD_TYPE");
@@ -1372,10 +1375,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     valueBuilder.at(16).set(valueBuilder.get(8));
                     break;
                 case Types.FLOAT:
-                    valueBuilder.at(7).set(FLOAT_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(7).set(createInt(FLOAT_BINARY_PRECISION))
+                                .at(10).set(RADIX_BINARY_SHORT);
+                    } else {
+                        valueBuilder.at(7).set(FLOAT_PRECISION);
+                    }
                     break;
                 case Types.DOUBLE:
-                    valueBuilder.at(7).set(DOUBLE_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(7).set(createInt(DOUBLE_BINARY_PRECISION))
+                                .at(10).set(RADIX_BINARY_SHORT);
+                    } else {
+                        valueBuilder.at(7).set(DOUBLE_PRECISION);
+                    }
                     break;
                 case Types.BIGINT:
                     valueBuilder
@@ -1826,6 +1841,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
             final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            final boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
             do {
                 final short fieldType = rs.getShort("FIELD_TYPE");
                 final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -1859,10 +1875,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     }
                     break;
                 case Types.FLOAT:
-                    valueBuilder.at(6).set(FLOAT_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(6).set(createInt(FLOAT_BINARY_PRECISION))
+                                .at(9).set(RADIX_BINARY);
+                    } else {
+                        valueBuilder.at(6).set(FLOAT_PRECISION);
+                    }
                     break;
                 case Types.DOUBLE:
-                    valueBuilder.at(6).set(DOUBLE_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(6).set(createInt(DOUBLE_BINARY_PRECISION))
+                                .at(9).set(RADIX_BINARY);
+                    } else {
+                        valueBuilder.at(6).set(DOUBLE_PRECISION);
+                    }
                     break;
                 case Types.BIGINT:
                     valueBuilder
@@ -2867,17 +2895,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_SHORT), null, RADIX_TEN));
 
+        boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
+
         //FLOAT=6
+        // Technically this describes REAL, but historically FLOAT == REAL in Firebird, and Jaybird has only used FLOAT
+        int floatPrecision = supportsFloatBinaryPrecision ? 24 : 7;
+        // We're intentionally not communicating the max FLOAT precision of 53 (which is a synonym of DOUBLE PRECISION)
+        // nor are we reporting "precision" for column CREATE_PARAMS
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("FLOAT"), createInt(Types.FLOAT), FLOAT_PRECISION, null, null, null,
+                getBytes("FLOAT"), createInt(Types.FLOAT), createInt(floatPrecision), null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_FLOAT), null, RADIX_TEN));
+                SHORT_ZERO, createInt(SQL_FLOAT), null, supportsFloatBinaryPrecision ? RADIX_BINARY : RADIX_TEN));
 
         //DOUBLE=8
+        int doublePrecision = supportsFloatBinaryPrecision ? 53 : 15;
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("DOUBLE PRECISION"), createInt(Types.DOUBLE), DOUBLE_PRECISION, null, null,
+                getBytes("DOUBLE PRECISION"), createInt(Types.DOUBLE), createInt(doublePrecision), null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(SQL_DOUBLE), null, RADIX_TEN));
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_DOUBLE), null,
+                supportsFloatBinaryPrecision ? RADIX_BINARY : RADIX_TEN));
 
         //VARCHAR=12
         rows.add(RowValue.of(rowDescriptor,

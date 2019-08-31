@@ -47,6 +47,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   Changed: Procedures in packages are no longer returned from 
     `DatabaseMetaData.getProcedures` and `getProcedureColumns` ([JDBC-590](http://tracker.firebirdsql.org/browse/JDBC-590)) \
     See also [Excluding procedures from packages].
+-   Changed: On Firebird 4 and higher, precision of `FLOAT` and `DOUBLE PRECISION`
+    are reported using binary precision (24 and 53 respectively), instead of
+    decimal precision (7 and 15 respectively) ([JBC-591](http://tracker.firebirdsql.org/browse/JDBC-591)) \
+    See also [Precision reported for FLOAT and DOUBLE PRECISION on Firebird 4].
 
 Support
 =======
@@ -1600,6 +1604,31 @@ use `bestRowTransaction` instead.
 
 If you are relying on the `SCOPE` column containing the value for the requested
 scope, change your logic to remove that dependency.
+
+Precision reported for FLOAT and DOUBLE PRECISION on Firebird 4
+---------------------------------------------------------------
+
+Firebird 4 introduced support for SQL standard `FLOAT(p)` with 1 <= p <= 24 a
+synonym of `FLOAT`, and 25 <= p <= 53 as synonym of `DOUBLE PRECISION`. This
+precision is expressed in binary digits (or radix 2).
+
+To bring the metadata reported by Jaybird in line for this change, on Firebird 4
+and higher, we now report the precision for `FLOAT` and `DOUBLE PRECISION` in
+binary digits instead of decimal digits.
+
+For example for `FLOAT` precision, on Firebird 3 and lower Jaybird 4 returns `7`,
+and `24` on Firebird 4 and higher. For `DOUBLE PRECISION` precision, on Firebird 3
+and lower Jaybird 4 returns `15`, and `53` on Firebird 4 and higher. In addition,
+the radix reported in the metadata for these types will be 2 instead of 10 on
+Firebird 4 and higher.
+
+This change affects 
+
+- `DatabaseMetaData.getColumns` (columns `COLUMN_SIZE` and `NUM_PREC_RADIX`),
+- `DatabaseMetaData.getProcedureColumns` (columns `PRECISION` and `RADIX`), 
+- `DatabaseMetaData.getTypeInfo` (columns `PRECISION` and `NUM_PREC_RADIX`),
+- `ParameterMetaData.getPrecison`, 
+- `ResultSetMetaData.getPrecision`.
 
 Stricter JDBC compliance
 ------------------------

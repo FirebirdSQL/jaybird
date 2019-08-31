@@ -189,6 +189,7 @@ public class TestFBDatabaseMetaDataProcedureColumns {
     public void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
         List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(7);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         // TODO Having result columns first might be against JDBC spec
         // TODO Describing result columns as procedureColumnOut might be against JDBC spec
         column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
@@ -220,7 +221,8 @@ public class TestFBDatabaseMetaDataProcedureColumns {
         column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnOut);
         column.put(ProcedureColumnMetaData.DATA_TYPE, Types.DOUBLE);
         column.put(ProcedureColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
-        column.put(ProcedureColumnMetaData.PRECISION, 15);
+        column.put(ProcedureColumnMetaData.PRECISION, supportsFloatBinaryPrecision ? 53 : 15);
+        column.put(ProcedureColumnMetaData.RADIX, supportsFloatBinaryPrecision ? 2 : 10);
         column.put(ProcedureColumnMetaData.LENGTH, 8);
         column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 3);
         column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));

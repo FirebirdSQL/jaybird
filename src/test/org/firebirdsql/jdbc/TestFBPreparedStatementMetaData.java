@@ -179,6 +179,7 @@ public class TestFBPreparedStatementMetaData {
 
     @Parameterized.Parameters(name = "Column {0} ({2})")
     public static Collection<Object[]> testData() {
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         List<Object[]> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "simple_field"),
                 create(2, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "two_byte_field"),
@@ -186,8 +187,8 @@ public class TestFBPreparedStatementMetaData {
                 create(4, "java.lang.Long", parameterModeIn, BIGINT, "BIGINT", 19, 0, parameterNullable, true, "long_field"),
                 create(5, "java.lang.Integer", parameterModeIn, INTEGER, "INTEGER", 10, 0, parameterNullable, true, "int_field"),
                 create(6, "java.lang.Integer", parameterModeIn, SMALLINT, "SMALLINT", 5, 0, parameterNullable, true, "short_field"),
-                create(7, "java.lang.Double", parameterModeIn, FLOAT, "FLOAT", 7, 0, parameterNullable, true, "float_field"),
-                create(8, "java.lang.Double", parameterModeIn, DOUBLE, "DOUBLE PRECISION", 15, 0, parameterNullable, true, "double_field"),
+                create(7, "java.lang.Double", parameterModeIn, FLOAT, "FLOAT", supportsFloatBinaryPrecision ? 24 : 7, 0, parameterNullable, true, "float_field"),
+                create(8, "java.lang.Double", parameterModeIn, DOUBLE, "DOUBLE PRECISION", supportsFloatBinaryPrecision ? 53 : 15, 0, parameterNullable, true, "double_field"),
                 create(9, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 4, 1, parameterNullable, true, "smallint_numeric"),
                 create(10, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 9, 1, parameterNullable, true, "integer_decimal_1"),
                 create(11, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 9, 2, parameterNullable, true, "integer_numeric"),

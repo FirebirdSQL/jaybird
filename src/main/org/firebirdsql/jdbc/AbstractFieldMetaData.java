@@ -24,10 +24,13 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.sql.Wrapper;
 import java.util.Map;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
@@ -341,10 +344,20 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return var.getLength();
         }
 
-        case Types.FLOAT:
-            return 7;
-        case Types.DOUBLE:
-            return 15;
+        case Types.FLOAT: {
+            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+                return 24;
+            } else {
+                return 7;
+            }
+        }
+        case Types.DOUBLE: {
+            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+                return 53;
+            } else {
+                return 15;
+            }
+        }
         case Types.INTEGER:
             return 10;
         case Types.BIGINT:
