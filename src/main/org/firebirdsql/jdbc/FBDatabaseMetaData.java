@@ -2839,21 +2839,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //LONGVARBINARY=-4
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("BLOB SUB_TYPE BINARY"), createInt(Types.LONGVARBINARY), INT_ZERO, null, null,
-                null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                getBytes("BLOB SUB_TYPE BINARY"), createInt(Types.LONGVARBINARY), INT_ZERO, getBytes("x'"),
+                getBytes("'"), null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //VARBINARY=-3
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("VARCHAR"), createInt(Types.VARBINARY), createInt(32765), null, null, getBytes("length"),
-                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_VARYING), null, RADIX_TEN));
+                getBytes("VARCHAR"), createInt(Types.VARBINARY), createInt(32765), getBytes("x'"), getBytes("'"),
+                getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC,
+                null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_VARYING), null, RADIX_TEN));
 
         //BINARY=-2
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("CHAR"), createInt(Types.BINARY), createInt(32767), null, null, getBytes("length"),
-                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_TEXT), null, RADIX_TEN));
+                getBytes("CHAR"), createInt(Types.BINARY), createInt(32767), getBytes("x'"), getBytes("'"),
+                getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC,
+                null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TEXT), null, RADIX_TEN));
 
         //LONGVARCHAR=-1
         rows.add(RowValue.of(rowDescriptor,

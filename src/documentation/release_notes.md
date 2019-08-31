@@ -51,6 +51,9 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     are reported using binary precision (24 and 53 respectively), instead of
     decimal precision (7 and 15 respectively) ([JBC-591](http://tracker.firebirdsql.org/browse/JDBC-591)) \
     See also [Precision reported for FLOAT and DOUBLE PRECISION on Firebird 4].
+-   Improvement: added binary literal prefix (`x'`) and suffix (`'`) to 
+    `DatabaseMetaData.getTypeInfo` for `LONGVARBINARY`, `VARBINARY` and 
+    `BINARY` ([JDBC-593](http://tracker.firebirdsql.org/browse/JDBC-593))
 
 Support
 =======
