@@ -32,9 +32,11 @@ import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
+import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
+import org.firebirdsql.util.InternalApi;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -57,9 +59,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
     private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
     private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
-    private static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
+    @InternalApi
+    public static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
     // Extra space to allow for longer patterns (avoids string right truncation errors)
-    static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
+    @InternalApi
+    public static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
     private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
 
@@ -131,6 +135,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int STATEMENT_CACHE_SIZE = 12;
     private final Map<String, FBPreparedStatement> statements = new LruPreparedStatementCache(STATEMENT_CACHE_SIZE);
     private final FirebirdVersionMetaData versionMetaData;
+    private final DbMetadataMediator dbMetadataMediator = new DbMetadataMediatorImpl();
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
@@ -3381,20 +3386,26 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Jaybird defines a number of additional columns. As these are not defined in JDBC, their position may change with
+     * revisions of JDBC. We recommend to retrieve these columns by name. The following additional columns are
+     * available:
+     * <ol start="7">
+     * <li><b>JB_FUNCTION_SOURCE</b> String  => The source of the function (for Firebird 3+ PSQL functions only)).</li>
+     * <li><b>JB_FUNCTION_KIND</b> String => The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
+     * "UDR" (Firebird 3+)</li>
+     * <li><b>JB_MODULE_NAME</b> String => Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENTRYPOINT</b> String => Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENGINE_NAME</b> String => Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
+     * </ol>
+     */
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
-                .at(3).simple(SQL_VARYING, 80, "REMARKS", "FUNCTIONS").addField()
-                .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTIONS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return GetFunctions.create(dbMetadataMediator).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override
@@ -3689,42 +3700,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return sResult;
     }
 
-    protected static final class Clause {
-        private final String condition;
-        private final String value;
-
-        public Clause(String columnName, String pattern) {
-            MetadataPattern metadataPattern = MetadataPattern.compile(pattern);
-            condition = metadataPattern.renderCondition(columnName);
-            value = metadataPattern.getConditionValue();
-        }
-
-        /**
-         * @return Result of {@code getCondition(true)}
-         */
-        public String getCondition() {
-            return getCondition(true);
-        }
-
-        public String getCondition(boolean includeAnd) {
-            if (!hasCondition()) {
-                return "";
-            }
-            if (includeAnd) {
-                return condition + " and ";
-            }
-            return condition;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public boolean hasCondition() {
-            return !condition.isEmpty();
-        }
-    }
-
     protected static byte[] getBytes(String value) {
         return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
     }
@@ -3880,6 +3855,19 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 log.debug("Closing eldest cached metadata statement yielded an exception; ignored", e);
             }
             return true;
+        }
+    }
+
+    private class DbMetadataMediatorImpl extends DbMetadataMediator {
+
+        @Override
+        protected FirebirdSupportInfo getFirebirdSupportInfo() {
+            return firebirdSupportInfo;
+        }
+
+        @Override
+        protected ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException {
+            return doQuery(metadataQuery.getQueryText(), metadataQuery.getParameters(), metadataQuery.isStandalone());
         }
     }
 }

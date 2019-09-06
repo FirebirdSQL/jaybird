@@ -16,7 +16,9 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.metadata;
+
+import org.firebirdsql.util.InternalApi;
 
 import java.util.regex.Pattern;
 
@@ -32,7 +34,8 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_PARAMETER_LENG
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-final class MetadataPattern {
+@InternalApi
+public final class MetadataPattern {
 
     private static final MetadataPattern ALL_PATTERN = new MetadataPattern(ConditionType.NONE, null);
     private static final MetadataPattern EMPTY_PATTERN = new MetadataPattern(ConditionType.SQL_EQUALS, "");
@@ -57,14 +60,14 @@ final class MetadataPattern {
     /**
      * @return Type of condition to use for this metadata pattern
      */
-    ConditionType getConditionType() {
+    public ConditionType getConditionType() {
         return conditionType;
     }
 
     /**
      * @return Value for the condition; {@code null} signals no condition
      */
-    String getConditionValue() {
+    public String getConditionValue() {
         return conditionValue;
     }
 
@@ -75,14 +78,14 @@ final class MetadataPattern {
      *         column name
      * @return Rendered condition (can be empty string if there is no condition).
      */
-    String renderCondition(String columnName) {
+    public String renderCondition(String columnName) {
         return conditionType.renderCondition(columnName);
     }
 
     /**
      * @return Metadata pattern matcher for this metadata pattern
      */
-    MetadataPatternMatcher toMetadataPatternMatcher() {
+    public MetadataPatternMatcher toMetadataPatternMatcher() {
         return MetadataPatternMatcher.fromPattern(this);
     }
 
@@ -93,7 +96,7 @@ final class MetadataPattern {
      *         Metadata pattern string
      * @return MetadataPattern instance
      */
-    static MetadataPattern compile(String metadataPattern) {
+    public static MetadataPattern compile(String metadataPattern) {
         if (isAllCondition(metadataPattern)) {
             return ALL_PATTERN;
         }
@@ -114,7 +117,7 @@ final class MetadataPattern {
      *         metadata pattern
      * @return {@code true} if the string contains any like special characters
      */
-    static boolean containsPatternSpecialChars(String pattern) {
+    public static boolean containsPatternSpecialChars(String pattern) {
         for (int idx = 0; idx < pattern.length(); idx++) {
             if (isPatternSpecialChar(pattern.charAt(idx))) {
                 return true;
@@ -130,7 +133,7 @@ final class MetadataPattern {
      *         Character to check
      * @return {@code true} if {@code charVal} is a pattern special ({@code \_%})
      */
-    static boolean isPatternSpecialChar(char charVal) {
+    public static boolean isPatternSpecialChar(char charVal) {
         return charVal == '%' || charVal == '_' || charVal == '\\';
     }
 
@@ -141,7 +144,7 @@ final class MetadataPattern {
      *         Object name to escape.
      * @return Object name with wildcards escaped.
      */
-    static String escapeWildcards(String objectName) {
+    public static String escapeWildcards(String objectName) {
         if (objectName == null) {
             return null;
         }
@@ -208,11 +211,11 @@ final class MetadataPattern {
         }
     }
 
-    static boolean isAllCondition(String metadataPattern) {
+    public static boolean isAllCondition(String metadataPattern) {
         return metadataPattern == null || "%".equals(metadataPattern);
     }
 
-    enum ConditionType {
+    public enum ConditionType {
         NONE {
             @Override
             String renderCondition(String columnName) {

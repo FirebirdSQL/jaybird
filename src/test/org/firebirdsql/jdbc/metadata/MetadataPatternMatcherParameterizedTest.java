@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.metadata;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

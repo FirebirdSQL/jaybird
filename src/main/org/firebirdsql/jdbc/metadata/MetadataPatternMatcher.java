@@ -16,7 +16,9 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jdbc;
+package org.firebirdsql.jdbc.metadata;
+
+import org.firebirdsql.util.InternalApi;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,7 +35,8 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-abstract class MetadataPatternMatcher {
+@InternalApi
+public abstract class MetadataPatternMatcher {
 
     private MetadataPatternMatcher() {
         // Only allow derivation in nested classes
@@ -46,7 +49,7 @@ abstract class MetadataPatternMatcher {
      *         Metadata pattern instance
      * @return Matcher for {@code metadataPattern}
      */
-    static MetadataPatternMatcher fromPattern(MetadataPattern metadataPattern) {
+    public static MetadataPatternMatcher fromPattern(MetadataPattern metadataPattern) {
         switch (metadataPattern.getConditionType()) {
         case NONE:
             return AllMatcher.INSTANCE;
@@ -71,14 +74,14 @@ abstract class MetadataPatternMatcher {
      *         Value to check
      * @return {@code true} if {@code value} matches this pattern, {@code false} otherwise
      */
-    abstract boolean matches(String value);
+    public abstract boolean matches(String value);
 
     private static final class AllMatcher extends MetadataPatternMatcher {
 
         private static final AllMatcher INSTANCE = new AllMatcher();
 
         @Override
-        boolean matches(String value) {
+        public boolean matches(String value) {
             return true;
         }
     }
@@ -92,7 +95,7 @@ abstract class MetadataPatternMatcher {
         }
 
         @Override
-        boolean matches(String value) {
+        public boolean matches(String value) {
             return pattern.equals(value);
         }
 
@@ -107,7 +110,7 @@ abstract class MetadataPatternMatcher {
         }
 
         @Override
-        boolean matches(String value) {
+        public boolean matches(String value) {
             return value != null && value.startsWith(pattern);
         }
 
@@ -124,7 +127,7 @@ abstract class MetadataPatternMatcher {
         }
 
         @Override
-        boolean matches(String value) {
+        public boolean matches(String value) {
             if (value == null) {
                 return false;
             }
@@ -140,7 +143,7 @@ abstract class MetadataPatternMatcher {
      *         database metadata pattern
      * @return Pattern for the provided like string.
      */
-    static String patternToRegex(final String metadataPattern) {
+    public static String patternToRegex(final String metadataPattern) {
         final int patternLength = metadataPattern.length();
         // Derivation of additional 10: 8 chars for 2x quote pair (\Q..\E) + 2 chars for .*
         final StringBuilder patternString = new StringBuilder(patternLength + 10);

@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.oo;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.metadata.Clause;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;

@@ -42,7 +42,7 @@ Simple metadata methods that are not (yet) version-dependent, should remain in
 Result-set-producing metadata methods should be moved to separate implementation
 classes, and be accessed through a static factory method (passing in the 
 `FBDatabaseMetaData` object, the `FBConnection`, or possibly a new 
-database metadata companion object specific for metadata queries).
+database metadata mediator object specific for metadata queries).
 
 The static factory method is only responsible for returning the right metadata
 object. The metadata object provides a method that matches the signature of the

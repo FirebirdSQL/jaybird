@@ -20,6 +20,8 @@ Jaybird 4.0.0-beta-2
 
 The following has been changed or fixed since Jaybird 4.0.0-beta-1
 
+-   New feature: support for `DatabaseMetaData.getFunctions` ([JDBC-552](http://tracker.firebirdsql.org/browse/JDBC-552)) \
+    See also [JDBC DatabaseMetaData.getFunctions implemented].
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
 -   Fixed: attempts to use a blob after it was freed or after transaction end
@@ -90,6 +92,7 @@ The main new features are:
 - [JDBC RowId support]
 - [JDBC DatabaseMetaData.getPseudoColumns implemented]
 - [JDBC DatabaseMetaData.getVersionColumns implemented]
+- [JDBC DatabaseMetaData.getFunctions implemented] (since Jaybird 4.0.0-beta-2)
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
 - [Generated keys support improvements]
@@ -1206,6 +1209,39 @@ is the transaction that last updated the row.
 Jaybird only returns pseudo-column as version columns, so 'last updated' columns 
 updated by a trigger, calculated columns, or other forms of change tracking are 
 not reported by this method.
+
+JDBC DatabaseMetaData.getFunctions implemented
+----------------------------------------------
+
+The `DatabaseMetaData.getFunctions` method has now been implemented.
+
+The JDBC API specifies this method as:
+
+> Retrieves a description of the system and user functions available in the
+> given catalog.
+
+The implementation only returns functions that are available from
+the `RDB$FUNCTIONS` table. This means that the built-in functions are not
+included in the result of this method.
+
+For Firebird 3 and higher, the result includes native UDF, PSQL and UDR
+functions. The result does not include functions defined in packages as JDBC
+does not provide support for packages.
+
+Jaybird provides additional columns with Firebird specific information. As these
+columns are not defined by JDBC, they may change position when JDBC adds new
+columns. We recommend retrieving these columns by name.
+
+The additional columns are:
+
+-  `JB_FUNCTION_SOURCE` - Source of Firebird 3+ PSQL function, this is the part
+after the `AS` clause.
+-  `JB_FUNCTION_KIND` - Kind of function, one of `"UDF"`, `"PSQL"` (Firebird 3+)
+or `"UDR"` (Firebird 3+)
+-  `JB_MODULE_NAME` - Value of `RDB$MODULE_NAME`, is `null` for PSQL functions
+- `JB_ENTRYPOINT` - Value of `RDB$ENTRYPOINT`, is `null` for PSQL functions
+- `JB_ENGINE_NAME` - Value of `RDB$ENGINE_NAME`, is `null for UDF and PSQL
+functions
 
 Improved JDBC function escape support
 -------------------------------------

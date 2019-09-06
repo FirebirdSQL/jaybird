@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.jdbc.metadata.MetadataPattern;
 import org.firebirdsql.jdbc.parser.JaybirdStatementModel;
 import org.firebirdsql.jdbc.parser.StatementParser;
 import org.firebirdsql.logging.Logger;

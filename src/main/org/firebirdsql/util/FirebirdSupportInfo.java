@@ -432,7 +432,7 @@ public final class FirebirdSupportInfo {
     /**
      * @return {@code true} when PSQL functions are supported
      */
-    public boolean supportsPSQLFunctions() {
+    public boolean supportsPsqlFunctions() {
         return isVersionEqualOrAbove(3, 0);
     }
 

@@ -16,21 +16,18 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.util;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
 /**
- * Indicates that the annotated package, class, method or value is for internal use only.
+ * The classes in this packages support or provide parts of the implementation of {@link java.sql.DatabaseMetaData}.
  * <p>
- * Future versions may radically change, move, or make inaccessible this type.
+ * This package is an implementation detail and not part of the public API of Jaybird. Its contents may change
+ * drastically between point release or may even be removed without notice. Do not rely on it directly, but instead use
+ * {@link java.sql.DatabaseMetaData}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@Documented
-@Retention(RetentionPolicy.SOURCE)
-public @interface InternalApi {
-}
+@InternalApi
+package org.firebirdsql.jdbc.metadata;
+
+import org.firebirdsql.util.InternalApi;
