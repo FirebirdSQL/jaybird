@@ -177,8 +177,7 @@ public class TestFBDatabaseMetaDataTables {
      * tables of all types.
      * 
      * @param tableNamePattern
-     *            Pattern for the tableName (should be null, "", "%" only for
-     *            this test)
+     *            Pattern for the tableName (should be null, "%" only for this test)
      * @param types
      *            Array of types to retrieve
      */
