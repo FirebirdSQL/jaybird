@@ -31,15 +31,15 @@ is clear that the proposed structure isn't workable.
 
 ### Simple metadata methods
 
-Simple - scalar - metadata methods with version-dependent behavior should be
+Simple - scalar - metadata methods with version-dependent behavior will be
 implemented in `FirebirdVersionMetaData`.
 
-Simple metadata methods that are not (yet) version-dependent, should remain in
+Simple metadata methods that are not (yet) version-dependent, will remain in
 `FBDatabaseMetaData`.
 
 ### Result set producing metadata methods
 
-Result-set-producing metadata methods should be moved to separate implementation
+Result-set-producing metadata methods will be moved to separate implementation
 classes, and be accessed through a static factory method (passing in the 
 `FBDatabaseMetaData` object, the `FBConnection`, or possibly a new 
 database metadata mediator object specific for metadata queries).
@@ -62,7 +62,7 @@ duplication. For example, `DatabaseMetaData.getTypeInfo` is version-specific,
 but it is probably better to use a single implementation with version checks to
 account for the actual differences (new types, new precision, etc)..
 
-Where possible, version-specific implementations should try and reuse code
+Where possible, version-specific implementations will try and reuse code
 between versions.
 
 For purposes of code organization, these implementation classes will be put in a
@@ -70,7 +70,7 @@ separate package, `org.firebirdsql.jdbc.metadata`.
 
 ### Testing
 
-The individual metadata implementation classes should be tested through the 
+The individual metadata implementation classes will be tested through the 
 `java.sql.DatabaseMetaData` API. This will ensure both the implementation and
 the API are covered.
 
