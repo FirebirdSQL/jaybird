@@ -31,7 +31,6 @@ import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
-import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -45,6 +44,9 @@ import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
+import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataType;
+import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -66,9 +68,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
     private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
-
-    private static final int SUBTYPE_NUMERIC = 1;
-    private static final int SUBTYPE_DECIMAL = 2;
 
     protected static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
@@ -102,8 +101,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] PROCEDURE_NULLABLE = createShort(DatabaseMetaData.procedureNullable);
     private static final byte[] PROCEDURE_COLUMN_IN = createShort(DatabaseMetaData.procedureColumnIn);
     private static final byte[] PROCEDURE_COLUMN_OUT = createShort(DatabaseMetaData.procedureColumnOut);
-    private static final byte[] FLOAT_PRECISION = createInt(7);
-    private static final byte[] DOUBLE_PRECISION = createInt(15);
     private static final byte[] BIGINT_PRECISION = createInt(19);
     private static final byte[] INTEGER_PRECISION = createInt(10);
     private static final byte[] SMALLINT_PRECISION = createInt(5);
@@ -125,8 +122,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] TABLE_INDEX_OTHER = createShort(DatabaseMetaData.tableIndexOther);
     private static final byte[] ASC_BYTES = getBytes("A");
     private static final byte[] DESC_BYTES = getBytes("D");
-    private static final int FLOAT_BINARY_PRECISION = 24;
-    private static final int DOUBLE_BINARY_PRECISION = 53;
 
     private GDSHelper gdsHelper;
     private FBConnection connection;
@@ -135,7 +130,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final int STATEMENT_CACHE_SIZE = 12;
     private final Map<String, FBPreparedStatement> statements = new LruPreparedStatementCache(STATEMENT_CACHE_SIZE);
     private final FirebirdVersionMetaData versionMetaData;
-    private final DbMetadataMediator dbMetadataMediator = new DbMetadataMediatorImpl();
 
     protected FBDatabaseMetaData(FBConnection c) throws SQLException {
         this.gdsHelper = c.getGDSHelper();
@@ -1385,7 +1379,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                                 .at(7).set(createInt(FLOAT_BINARY_PRECISION))
                                 .at(10).set(RADIX_BINARY_SHORT);
                     } else {
-                        valueBuilder.at(7).set(FLOAT_PRECISION);
+                        valueBuilder.at(7).set(createInt(FLOAT_DECIMAL_PRECISION));
                     }
                     break;
                 case Types.DOUBLE:
@@ -1394,7 +1388,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                                 .at(7).set(createInt(DOUBLE_BINARY_PRECISION))
                                 .at(10).set(RADIX_BINARY_SHORT);
                     } else {
-                        valueBuilder.at(7).set(DOUBLE_PRECISION);
+                        valueBuilder.at(7).set(createInt(DOUBLE_DECIMAL_PRECISION));
                     }
                     break;
                 case Types.BIGINT:
@@ -1885,7 +1879,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                                 .at(6).set(createInt(FLOAT_BINARY_PRECISION))
                                 .at(9).set(RADIX_BINARY);
                     } else {
-                        valueBuilder.at(6).set(FLOAT_PRECISION);
+                        valueBuilder.at(6).set(createInt(FLOAT_DECIMAL_PRECISION));
                     }
                     break;
                 case Types.DOUBLE:
@@ -1894,7 +1888,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                                 .at(6).set(createInt(DOUBLE_BINARY_PRECISION))
                                 .at(9).set(RADIX_BINARY);
                     } else {
-                        valueBuilder.at(6).set(DOUBLE_PRECISION);
+                        valueBuilder.at(6).set(createInt(DOUBLE_DECIMAL_PRECISION));
                     }
                     break;
                 case Types.BIGINT:
@@ -2032,128 +2026,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             scopeCatalog = "SCOPE_CATLOG";
         }
         return scopeCatalog;
-    }
-
-    // TODO Duplicates JdbcTypeConverter (and probably BlrConstants)
-    private static final int smallint_type = 7;
-    private static final int integer_type = 8;
-    private static final int quad_type = 9;
-    private static final int float_type = 10;
-    private static final int d_float_type = 11;
-    private static final int date_type = 12;
-    private static final int time_type = 13;
-    private static final int char_type = 14;
-    private static final int int64_type = 16;
-    private static final int dec16_type = 24;
-    private static final int dec34_type = 25;
-    private static final int dec_fixed_type = 26;
-    private static final int double_type = 27;
-    private static final int timestamp_type = 35;
-    private static final int varchar_type = 37;
-//  private static final int cstring_type = 40;
-    private static final int blob_type = 261;
-    private static final int boolean_type = 23;
-    private static final int time_tz_type = 28;
-    private static final int timestamp_tz_type = 29;
-
-    private static int getDataType(int fieldType, int fieldSubType, int fieldScale, int characterSetId) {
-        // TODO Preserved for backwards compatibility, is this really necessary?
-        if (fieldType == blob_type && fieldSubType > 1) {
-            return Types.OTHER;
-        }
-        final int jdbcType = JdbcTypeConverter.fromMetaDataToJdbcType(fieldType, fieldSubType, fieldScale);
-        // Metadata from RDB$ tables does not contain character set in subtype, manual fixup
-        if (characterSetId == CS_BINARY) {
-            if (jdbcType == Types.CHAR) {
-                return Types.BINARY;
-            } else if (jdbcType == Types.VARCHAR) {
-                return Types.VARBINARY;
-            }
-        }
-        return jdbcType;
-    }
-
-    // TODO Unify with AbstractFieldMetadata
-    private static String getDataTypeName(int sqltype, int sqlsubtype, int sqlscale) {
-        switch (sqltype) {
-            case smallint_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "SMALLINT";
-                }
-            case integer_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "INTEGER";
-                }
-            case double_type:
-            case d_float_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "DOUBLE PRECISION";
-                }
-            case float_type:
-                return "FLOAT";
-            case char_type:
-                return "CHAR";
-            case varchar_type:
-                return "VARCHAR";
-            case timestamp_type:
-                return "TIMESTAMP";
-            case time_type:
-                return "TIME";
-            case date_type:
-                return "DATE";
-            case time_tz_type:
-                return "TIME WITH TIME ZONE";
-            case timestamp_tz_type:
-                return "TIMESTAMP WITH TIME ZONE";
-            case int64_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "BIGINT";
-                }
-            case blob_type:
-                if (sqlsubtype < 0) {
-                    // TODO Include actual subtype?
-                    return "BLOB SUB_TYPE <0";
-                } else if (sqlsubtype == BLOB_SUB_TYPE_BINARY) {
-                    return "BLOB SUB_TYPE 0";
-                } else if (sqlsubtype == BLOB_SUB_TYPE_TEXT) {
-                    return "BLOB SUB_TYPE 1";
-                } else {
-                    return "BLOB SUB_TYPE " + sqlsubtype;
-                }
-            case quad_type:
-                return "ARRAY";
-            case boolean_type:
-                return "BOOLEAN";
-            case dec_fixed_type:
-                switch (sqlsubtype) {
-                case SUBTYPE_DECIMAL:
-                    return "DECIMAL";
-                case SUBTYPE_NUMERIC:
-                default:
-                    return "NUMERIC";
-                }
-            case dec16_type:
-            case dec34_type:
-                return "DECFLOAT";
-            default:
-                return "NULL";
-        }
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
@@ -3359,31 +3231,18 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * <p>
+     * This method does not return columns of functions defined in packages.
+     * </p>
+     */
     @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
-        // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
-                .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS").addField()
-                .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS").addField()
-                .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS").addField()
-                .at(7).simple(SQL_LONG, 0, "PRECISION", "FUNCTION_COLUMNS").addField()
-                .at(8).simple(SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS").addField()
-                .at(9).simple(SQL_SHORT, 0, "SCALE", "FUNCTION_COLUMNS").addField()
-                .at(10).simple(SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS").addField()
-                .at(11).simple(SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS").addField()
-                .at(12).simple(SQL_VARYING, 80, "REMARKS", "FUNCTION_COLUMNS").addField()
-                .at(13).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS").addField()
-                .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS").addField()
-                .at(15).simple(SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS").addField()
-                .at(16).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return GetFunctionColumns.create(getDbMetadataMediator())
+                .getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
     }
 
     /**
@@ -3401,11 +3260,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <li><b>JB_ENTRYPOINT</b> String => Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
      * <li><b>JB_ENGINE_NAME</b> String => Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
      * </ol>
+     * </p>
+     * <p>
+     * This method does not return functions defined in packages.
+     * </p>
      */
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return GetFunctions.create(dbMetadataMediator).getFunctions(catalog, schemaPattern, functionNamePattern);
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override
@@ -3856,6 +3719,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
             return true;
         }
+    }
+
+    protected DbMetadataMediator getDbMetadataMediator() {
+        return new DbMetadataMediatorImpl();
     }
 
     private class DbMetadataMediatorImpl extends DbMetadataMediator {

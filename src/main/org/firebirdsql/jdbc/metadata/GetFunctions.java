@@ -42,25 +42,26 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_LENGTH;
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getFunctions(String, String, String)}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0
  */
 @InternalApi
 public abstract class GetFunctions {
 
     private static final RowDescriptor FUNCTIONS_ROW_DESCRIPTOR =
             new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
-                    .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
-                    .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
+                    .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
+                    .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
                     .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
                     // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                    .at(3).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "FUNCTIONS").addField()
+                    .at(3).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "FUNCTIONS").addField()
                     .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
                     .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTIONS").addField()
                     // non-standard extensions
-                    .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "JB_FUNCTION_SOURCE", "FUNCTIONS").addField()
-                    .at(7).simple(SQL_VARYING, 50, "JB_FUNCTION_KIND", "FUNCTIONS").addField()
-                    .at(8).simple(SQL_VARYING, 255, "JB_MODULE_NAME", "FUNCTIONS").addField()
-                    .at(9).simple(SQL_VARYING, 255, "JB_ENTRYPOINT", "FUNCTIONS").addField()
-                    .at(10).simple(SQL_VARYING, 255, "JB_ENGINE_NAME", "FUNCTIONS").addField()
+                    .at(6).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "JB_FUNCTION_SOURCE", "FUNCTIONS").addField()
+                    .at(7).simple(SQL_VARYING, 4, "JB_FUNCTION_KIND", "FUNCTIONS").addField()
+                    .at(8).simple(SQL_VARYING | 1, 255, "JB_MODULE_NAME", "FUNCTIONS").addField()
+                    .at(9).simple(SQL_VARYING | 1, 255, "JB_ENTRYPOINT", "FUNCTIONS").addField()
+                    .at(10).simple(SQL_VARYING | 1, 255, "JB_ENGINE_NAME", "FUNCTIONS").addField()
                     .toRowDescriptor();
 
     private final DbMetadataMediator mediator;
@@ -157,10 +158,7 @@ public abstract class GetFunctions {
             String queryText = GET_FUNCTIONS_FRAGMENT_2_5
                     + functionNameClause.getCondition("where ", "\n")
                     + GET_FUNCTIONS_ORDER_BY_2_5;
-            return new MetadataQuery(queryText,
-                    functionNameClause.hasCondition()
-                            ? Collections.singletonList(functionNameClause.getValue())
-                            : Collections.emptyList());
+            return new MetadataQuery(queryText, Clause.parameters(functionNameClause));
         }
     }
 
@@ -200,10 +198,7 @@ public abstract class GetFunctions {
             String queryText = GET_FUNCTIONS_FRAGMENT_3_0
                     + functionNameClause.getCondition("and ", "\n")
                     + GET_FUNCTIONS_ORDER_BY_3_0;
-            return new MetadataQuery(queryText,
-                    functionNameClause.hasCondition()
-                            ? Collections.singletonList(functionNameClause.getValue())
-                            : Collections.emptyList());
+            return new MetadataQuery(queryText, Clause.parameters(functionNameClause));
         }
     }
 }

@@ -28,7 +28,7 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_PARAMETER_LENG
  * Holder of a database metadata pattern.
  * <p>
  * Provides information whether the pattern is the all-pattern, or if the condition needs a normal equality comparison,
- * or a SQL {@code LIKE}.
+ * a SQL {@code LIKE}, or a SQL {@code STARTING WITH}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>

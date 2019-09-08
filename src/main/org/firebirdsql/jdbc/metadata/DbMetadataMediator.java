@@ -35,6 +35,7 @@ import static java.util.Objects.requireNonNull;
  * Provides access to the database connection for executing database metadata queries.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0
  */
 @InternalApi
 public abstract class DbMetadataMediator {
@@ -60,8 +61,20 @@ public abstract class DbMetadataMediator {
      */
     protected abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
 
+    byte[] createInt(int intValue) {
+        return datatypeCoder.encodeInt(intValue);
+    }
+
+    byte[] createInt(Number intValue) {
+        return intValue == null ? null : createInt(intValue.intValue());
+    }
+
     byte[] createShort(int shortValue) {
         return datatypeCoder.encodeShort(shortValue);
+    }
+
+    byte[] createShort(Number shortValue) {
+        return shortValue == null ? null : createShort(shortValue.intValue());
     }
 
     byte[] createString(String value) {

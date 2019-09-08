@@ -85,7 +85,7 @@ Jaybird 5 (and maybe Jaybird 6).
 
 For Jaybird 4, the implementation of `getFunctions` and `getFunctionColumns` is
 used as a testbed for the result set producing metadata methods. In addition,
-one or two simple metadata methods will be moved to FirebirdVersionMetaData.
+one or two simple metadata methods will be moved to `FirebirdVersionMetaData`.
 
 For Jaybird 5, the remaining result set producing metadata methods and version
 dependent simple metadata methods will be moved. This should not be done

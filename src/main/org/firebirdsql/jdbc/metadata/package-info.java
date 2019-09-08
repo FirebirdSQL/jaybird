@@ -26,6 +26,7 @@
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0
  */
 @InternalApi
 package org.firebirdsql.jdbc.metadata;

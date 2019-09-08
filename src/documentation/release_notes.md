@@ -22,6 +22,8 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 
 -   New feature: support for `DatabaseMetaData.getFunctions` ([JDBC-552](http://tracker.firebirdsql.org/browse/JDBC-552)) \
     See also [JDBC DatabaseMetaData.getFunctions implemented].
+-   New feature: support for `DatabaseMetaData.getFunctionColumns` ([JDBC-552](http://tracker.firebirdsql.org/browse/JDBC-552)) \
+    See also [JDBC DatabaseMetaData.getFunctionColumns implemented].
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
 -   Fixed: attempts to use a blob after it was freed or after transaction end
@@ -93,6 +95,7 @@ The main new features are:
 - [JDBC DatabaseMetaData.getPseudoColumns implemented]
 - [JDBC DatabaseMetaData.getVersionColumns implemented]
 - [JDBC DatabaseMetaData.getFunctions implemented] (since Jaybird 4.0.0-beta-2)
+- [JDBC DatabaseMetaData.getFunctionColumns implemented] (since Jaybird 4.0.0-beta-2)
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
 - [Generated keys support improvements]
@@ -1242,6 +1245,29 @@ or `"UDR"` (Firebird 3+)
 - `JB_ENTRYPOINT` - Value of `RDB$ENTRYPOINT`, is `null` for PSQL functions
 - `JB_ENGINE_NAME` - Value of `RDB$ENGINE_NAME`, is `null for UDF and PSQL
 functions
+
+JDBC DatabaseMetaData.getFunctionColumns implemented
+----------------------------------------------------
+
+The `DatabaseMetaData.getFunctionColumns` method has now been implemented.
+
+The JDBC API specifies this method as:
+
+> Retrieves a description of the given catalog's system or user function
+> parameters and return type.
+
+The implementation only returns columns of functions that are available from
+the `RDB$FUNCTIONS` table. This means that the built-in functions are not
+included in the result of this method.
+
+For Firebird 3 and higher, the result includes native UDF, PSQL and UDR
+functions. The result does not include functions defined in packages as JDBC
+does not provide support for packages.
+
+Where Firebird provides no column name, Jaybird generates one by combining 
+the string `PARAM_` with the value of `RDB$ARGUMENT_POSITION`. Names are not
+available for the parameters of legacy UDF functions, and for the return value
+of any function.
 
 Improved JDBC function escape support
 -------------------------------------

@@ -191,6 +191,7 @@ public class FBDatabaseMetaDataFunctionsTest {
 
     @Test
     public void testFunctionMetaData_functionInPackageNotFound() throws Exception {
+        assumeTrue("Requires package support", getDefaultSupportInfo().supportsPackages());
         validateNoRows("IN$PACKAGE");
         validateNoRows("%IN$PACKAGE%");
     }
