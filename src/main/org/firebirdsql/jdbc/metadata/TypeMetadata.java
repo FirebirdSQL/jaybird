@@ -63,7 +63,7 @@ public class TypeMetadata {
             this.characterLength = characterLength;
         }
         this.typeBehaviours = typeBehaviours.isEmpty()
-                ? Collections.emptySet()
+                ? Collections.<TypeBehaviour>emptySet()
                 : Collections.unmodifiableSet(EnumSet.copyOf(typeBehaviours));
     }
 

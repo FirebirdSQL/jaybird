@@ -244,7 +244,8 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     public void validateNoRows(String functionNamePattern, String columnNamePattern) throws Exception {
-        validateExpectedFunctionColumns(functionNamePattern, columnNamePattern, Collections.emptyList());
+        validateExpectedFunctionColumns(functionNamePattern, columnNamePattern,
+                Collections.<Map<FunctionColumnMetaData, Object>>emptyList());
     }
 
     @Test
