@@ -22,8 +22,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FirebirdBlob;
 
-import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 
@@ -40,9 +40,13 @@ final class FBCachedBlobField extends FBBlobField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
-    public Blob getBlob() throws SQLException {
-        if (isNull()) return null;
-        return new FBCachedBlob(getFieldData());
+    @Override
+    protected FirebirdBlob getBlobInternal() {
+        if (blob != null) return blob;
+        final byte[] bytes = getFieldData();
+        if (bytes == null) return null;
+        blob = new FBCachedBlob(bytes);
+        return blob;
     }
     
     public Clob getClob() throws SQLException {
@@ -54,5 +58,4 @@ final class FBCachedBlobField extends FBBlobField {
         // TODO Looks suspicious compared to the implementation in FBBlobField
         return getFieldData();
     }
-    
 }

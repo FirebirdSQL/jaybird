@@ -83,12 +83,25 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
 
     @Override
     protected void closeImpl() throws SQLException {
-        releaseBlob(WireProtocolConstants.op_close_blob);
+        try {
+            releaseBlob(WireProtocolConstants.op_close_blob);
+        } finally {
+            releaseResources();
+        }
     }
 
     @Override
     protected void cancelImpl() throws SQLException {
-        releaseBlob(WireProtocolConstants.op_cancel_blob);
+        try {
+            releaseBlob(WireProtocolConstants.op_cancel_blob);
+        } finally {
+            releaseResources();
+        }
+    }
+
+    @Override
+    protected void releaseResources() {
+        // Nothing to release
     }
 
     // NOTE If we need to override some of the blob operations below in the future, consider introducing a separate

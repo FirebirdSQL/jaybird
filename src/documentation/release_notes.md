@@ -232,6 +232,32 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.7
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.6
+
+-   Fixed: attempts to use a blob after it was freed or after transaction end
+    could throw a `NullPointerException` or just work depending on whether the
+    connection had a new transaction. ([JDBC-587](http://tracker.firebirdsql.org/browse/JDBC-587)) \
+    The lifetime of a blob is now restricted to the transaction that created it,
+    or - for blobs created using `Connection.createBlob()` - to the transaction
+    that populated it. Attempts to use the blob after the transaction ends will 
+    now throw a `SQLException` with message _"Blob is invalid. Blob was freed, 
+    or closed by transaction end."_ This restriction does not apply to cached 
+    blobs, see also next item. 
+-   Fixed: Instances of `java.sql.Blob` and `java.sql.Clob` obtained from a 
+    result set were freed after calls to `ResultSet.next()`. ([JDBC-588](http://tracker.firebirdsql.org/browse/JDBC-588)) \
+    Normal blobs will now remain valid until transaction end. You will need to 
+    call `Blob.free()` if you want to invalidate them earlier. \
+    Cached blobs (in auto-commit, holdable or scrollable result sets) will not
+    be automatically freed at transaction end. You will need to explicitly call
+    `Blob.free()` or rely on the garbage collector.
+    
+### Known issues in Jaybird 3.0.7
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.6
 ------------------------
 
@@ -267,14 +293,10 @@ The following has been changed or fixed since Jaybird 3.0.5
     See [Connection property ignoreProcedureType] for more information.
 -   New feature: connection properties `timeZoneBind` and `sessionTimeZone` for 
     limited support for Firebird 4 `TIME(STAMP) WITH TIME ZONE` types, and
-    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-538](http://tracker.firebirdsql.org/browse/JDBC-583))  
+    `decfloatBind` for limited support for Firebird 4 `DECFLOAT` types. ([JDBC-583](http://tracker.firebirdsql.org/browse/JDBC-583))  
     See [Limited support for new Firebird 4 data types] for more information.
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
-    
-### Known issues in Jaybird 3.0.6
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.5
 ------------------------

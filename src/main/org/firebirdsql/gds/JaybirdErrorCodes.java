@@ -73,6 +73,8 @@ public interface JaybirdErrorCodes {
     int jb_dbCryptCallbackInitError = 337248284;
     int jb_dbCryptDataError         = 337248285;
     int jb_hashAlgorithmNotAvailable                     = 337248286;
+    // Error codes backported from Jaybird 4 as needed
+    int jb_blobClosed               = 337248295;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;
