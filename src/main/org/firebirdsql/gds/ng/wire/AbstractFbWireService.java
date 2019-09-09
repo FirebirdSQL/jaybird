@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -59,6 +60,24 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
         wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback(),
                 getSynchronizationObject());
+    }
+
+    @Override
+    public void forceClose() throws SQLException {
+        try {
+            if (connection.isConnected()) {
+                connection.close();
+            }
+        } catch (IOException e) {
+            throw new FbExceptionBuilder()
+                    .exception(ISCConstants.isc_net_write_err)
+                    .cause(e)
+                    .toFlatSQLException();
+        } finally {
+            serviceListenerDispatcher.detached(this);
+            serviceListenerDispatcher.shutdown();
+            exceptionListenerDispatcher.shutdown();
+        }
     }
 
     @Override
@@ -105,6 +124,14 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
         if (!isAttached()) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
                     .toFlatSQLException();
+        }
+    }
+
+    @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkConnected();
+            wireOperations.setNetworkTimeout(milliseconds);
         }
     }
 

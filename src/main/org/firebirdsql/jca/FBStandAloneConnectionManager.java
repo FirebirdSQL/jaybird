@@ -79,7 +79,7 @@ public class FBStandAloneConnectionManager
      */
     public void connectionClosed(ConnectionEvent ce) {
         try {
-            ((FBManagedConnection)ce.getSource()).destroy();
+            ((FBManagedConnection)ce.getSource()).destroy(ce);
         }
         catch (ResourceException e) {
             if (log!=null) log.debug("Exception closing unmanaged connection: ", e);
@@ -96,7 +96,7 @@ public class FBStandAloneConnectionManager
     public void connectionErrorOccurred(ConnectionEvent ce) {
         if (log!=null) log.debug("ConnectionErrorOccurred, ", ce.getException());
         try {
-            ((FBManagedConnection)ce.getSource()).destroy();
+            ((FBManagedConnection)ce.getSource()).destroy(ce);
         }
         catch (ResourceException e) {
             if (log!=null) log.debug("further problems destroying connection: ", e);

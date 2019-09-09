@@ -78,7 +78,9 @@ class FatalGDSErrorHelper {
      * This list has been kindly reviewed by Ann Harrison, 12/13/2002
      */
     static final int[] FATAL_ERRORS = new int[] {
-          ISCConstants.isc_network_error,
+        ISCConstants.isc_network_error,
+        ISCConstants.isc_net_read_err,
+        ISCConstants.isc_net_write_err,
 //        ISCConstants.isc_bad_db_format,   //probably not a firebird db
 //        ISCConstants.isc_bad_db_handle,   //couldn't get a connection
 //        ISCConstants.isc_bad_dpb_content, //couldn't get a connection

@@ -34,11 +34,10 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.jdbc.field.JdbcTypeConverter.*;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 /**
@@ -58,7 +57,7 @@ public class JdbcTypeConverterTest {
 
     public JdbcTypeConverterTest(FieldDescriptor fieldDescriptor, Integer metadataType, Integer expectedJdbcType) {
         this.metadataType = metadataType;
-        assertTrue("Only use non-nullable types", (fieldDescriptor.getType() & 1) == 0);
+        assertEquals("Only use non-nullable types", 0, (fieldDescriptor.getType() & 1));
         this.fieldDescriptor = fieldDescriptor;
         this.expectedJdbcType = expectedJdbcType;
     }
@@ -70,7 +69,9 @@ public class JdbcTypeConverterTest {
                 create(SQL_TEXT, CS_NONE, 0, char_type, Types.CHAR),
                 create(SQL_TEXT, CS_BINARY, 0, char_type, Types.BINARY),
                 create(SQL_VARYING, CS_NONE, 0, varchar_type, Types.VARCHAR),
+                create(SQL_VARYING, CS_NONE, 0, cstring_type, Types.VARCHAR),
                 create(SQL_VARYING, CS_BINARY, 0, varchar_type, Types.VARBINARY),
+                create(SQL_VARYING, CS_BINARY, 0, cstring_type, Types.VARBINARY),
                 create(SQL_SHORT, 0, 0, smallint_type, Types.SMALLINT),
                 create(SQL_SHORT, 0, -1, smallint_type, Types.NUMERIC),
                 create(SQL_SHORT, SUBTYPE_NUMERIC, 0, smallint_type, Types.NUMERIC),

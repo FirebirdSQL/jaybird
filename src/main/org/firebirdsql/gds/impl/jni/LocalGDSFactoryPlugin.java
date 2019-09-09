@@ -22,6 +22,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbLocalDatabaseFactory;
 
+import java.util.Arrays;
+
 public class LocalGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String LOCAL_TYPE_NAME = "LOCAL";
@@ -44,7 +46,7 @@ public class LocalGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
     
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {

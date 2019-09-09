@@ -21,8 +21,11 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.Types;
+
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 
 /**
  * Helper class to convert from Firebird and metadata type information to JDBC type information.
@@ -30,10 +33,8 @@ import java.sql.Types;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@InternalApi
 public final class JdbcTypeConverter {
-
-    static final int SUBTYPE_NUMERIC = 1;
-    static final int SUBTYPE_DECIMAL = 2;
 
     private JdbcTypeConverter() {
         // No instances
@@ -152,29 +153,6 @@ public final class JdbcTypeConverter {
         return fromFirebirdToJdbcType(fromMetaDataToFirebirdType(metaDataType), subtype, scale);
     }
 
-    // TODO Double check if these are the same as the blr constants or not.
-    // TODO And if they are the same, check missing types (like text2 = 15, varying2 = 38)
-    static final int smallint_type = 7;
-    static final int integer_type = 8;
-    static final int quad_type = 9;
-    static final int float_type = 10;
-    static final int d_float_type = 11;
-    static final int date_type = 12;
-    static final int time_type = 13;
-    static final int char_type = 14;
-    static final int int64_type = 16;
-    static final int dec16_type = 24;
-    static final int dec34_type = 25;
-    static final int dec_fixed_type = 26;
-    static final int double_type = 27;
-    static final int timestamp_type = 35;
-    static final int varchar_type = 37;
-    // static final int cstring_type = 40;
-    static final int blob_type = 261;
-    static final int boolean_type = 23;
-    static final int time_tz_type = 28;
-    static final int timestamp_tz_type = 29;
-
     /**
      * Converts the metadata type value to the Firebird type value (null bit not set).
      *
@@ -215,6 +193,7 @@ public final class JdbcTypeConverter {
             return ISCConstants.SQL_TIMESTAMP_TZ;
         case char_type:
             return ISCConstants.SQL_TEXT;
+        case cstring_type:
         case varchar_type:
             return ISCConstants.SQL_VARYING;
         case blob_type:

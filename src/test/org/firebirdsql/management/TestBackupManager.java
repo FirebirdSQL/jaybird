@@ -245,6 +245,7 @@ public class TestBackupManager {
 
     @Test
     public void testBackupMultiple() throws Exception {
+        // Note broken in current Firebird 4 versions, see CORE-5976
         usesDatabase.createDefaultDatabase();
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();

@@ -61,6 +61,17 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
         this.datatypeCoder = requireNonNull(datatypeCoder, "parameter datatypeCoder should be non-null");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Default implementation, calls {@link #close()}
+     * </p>
+     */
+    @Override
+    public void forceClose() throws SQLException {
+        close();
+    }
+
     @Override
     public GDSServerVersion getServerVersion() {
         return serverVersion;
@@ -134,6 +145,13 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     @Override
     public final DatatypeCoder getDatatypeCoder() {
         return datatypeCoder;
+    }
+
+    @Override
+    public int getNetworkTimeout() throws SQLException {
+        checkConnected();
+        int soTimeout = connection.getAttachProperties().getSoTimeout();
+        return soTimeout != -1 ? soTimeout : 0;
     }
 
     @Override

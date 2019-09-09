@@ -432,7 +432,7 @@ public final class FirebirdSupportInfo {
     /**
      * @return {@code true} when PSQL functions are supported
      */
-    public boolean supportsPSQLFunctions() {
+    public boolean supportsPsqlFunctions() {
         return isVersionEqualOrAbove(3, 0);
     }
 
@@ -515,6 +515,20 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when this Firebird version supports {@code TIME(STAMP) WITH TIME ZONE}
      */
     public boolean supportsTimeZones() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports packages.
+     */
+    public boolean supportsPackages() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
+     */
+    public boolean supportsFloatBinaryPrecision() {
         return isVersionEqualOrAbove(4, 0);
     }
 

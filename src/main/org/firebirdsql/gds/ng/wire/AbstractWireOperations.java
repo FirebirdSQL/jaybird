@@ -281,6 +281,16 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         connection.writeDirect(data);
     }
 
+    @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        if (milliseconds < 0) {
+            throw FbExceptionBuilder
+                    .forException(JaybirdErrorCodes.jb_invalidTimeout)
+                    .toFlatSQLException();
+        }
+        connection.setSoTimeout(milliseconds);
+    }
+
     protected final Object getSynchronizationObject() {
         return syncObject;
     }

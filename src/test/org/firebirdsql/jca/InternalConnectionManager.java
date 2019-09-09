@@ -45,7 +45,7 @@ public class InternalConnectionManager implements ConnectionManager,
     public void connectionClosed(ConnectionEvent event) {
         PrintWriter externalLog = ((FBManagedConnection) event.getSource()).getLogWriter();
         try {
-            ((FBManagedConnection) event.getSource()).destroy();
+            ((FBManagedConnection) event.getSource()).destroy(event);
         } catch (ResourceException e) {
             if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }
@@ -63,7 +63,7 @@ public class InternalConnectionManager implements ConnectionManager,
     public void connectionErrorOccurred(ConnectionEvent event) {
         PrintWriter externalLog = ((FBManagedConnection) event.getSource()).getLogWriter();
         try {
-            ((FBManagedConnection) event.getSource()).destroy();
+            ((FBManagedConnection) event.getSource()).destroy(event);
         } catch (ResourceException e) {
             if (externalLog != null) externalLog.println("Exception closing unmanaged connection: " + e);
         }

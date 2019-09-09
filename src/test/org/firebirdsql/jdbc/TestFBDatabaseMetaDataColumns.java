@@ -31,6 +31,7 @@ import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -79,7 +80,7 @@ public class TestFBDatabaseMetaDataColumns {
             "    col_varchar_10_octets VARCHAR(10) CHARACTER SET OCTETS," + 
             "    col_blob_text_utf8 BLOB SUB_TYPE TEXT CHARACTER SET UTF8," + 
             "    col_blob_text_iso8859_1 BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1," + 
-            "    col_blob_binary BLOB SUB_TYPE 0," +
+            "    col_blob_binary BLOB SUB_TYPE BINARY," +
             "    col_integer_not_null INTEGER NOT NULL," + 
             "    col_varchar_not_null VARCHAR(100) NOT NULL," +
             "    col_integer_default_null INTEGER DEFAULT NULL," + 
@@ -300,10 +301,12 @@ public class TestFBDatabaseMetaDataColumns {
      */
     @Test
     public void testDoublePrecisionColumn() throws Exception {
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DOUBLE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 15);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, supportsFloatBinaryPrecision ? 53 : 15);
+        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, supportsFloatBinaryPrecision ? 2 : 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 4);
 
         validate(TEST_TABLE, "COL_DOUBLE", validationRules);
@@ -315,10 +318,12 @@ public class TestFBDatabaseMetaDataColumns {
      */
     @Test
     public void testFloatColumn() throws Exception {
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.FLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "FLOAT");
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 7);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, supportsFloatBinaryPrecision ? 24 : 7);
+        validationRules.put(ColumnMetaData.NUM_PREC_RADIX, supportsFloatBinaryPrecision ? 2 : 10);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 5);
 
         validate(TEST_TABLE, "COL_FLOAT", validationRules);
@@ -777,7 +782,7 @@ public class TestFBDatabaseMetaDataColumns {
     public void testTextBlob_UTF8Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARCHAR);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE 1");
+        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE TEXT");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 27);
 
@@ -792,7 +797,7 @@ public class TestFBDatabaseMetaDataColumns {
     public void testTextBlob_ISO8859_1Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARCHAR);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE 1");
+        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE TEXT");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 28);
 
@@ -807,7 +812,7 @@ public class TestFBDatabaseMetaDataColumns {
     public void testBlobColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARBINARY);
-        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE 0");
+        validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE BINARY");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, null);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 29);
 

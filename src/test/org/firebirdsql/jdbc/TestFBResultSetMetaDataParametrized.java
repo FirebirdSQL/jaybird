@@ -175,6 +175,7 @@ public class TestFBResultSetMetaDataParametrized {
 
     @Parameterized.Parameters(name = "Index {0} ({2})")
     public static Collection<Object[]> testData() {
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         List<Object[]> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
@@ -182,8 +183,8 @@ public class TestFBResultSetMetaDataParametrized {
                 create(4, "java.lang.Long", 20, "LONG_FIELD", "LONG_FIELD", BIGINT, "BIGINT", 19, 0, TABLE_NAME, columnNullable, true, true),
                 create(5, "java.lang.Integer", 11, "INT_FIELD", "INT_FIELD", INTEGER, "INTEGER", 10, 0, TABLE_NAME, columnNullable, true, true),
                 create(6, "java.lang.Integer", 6, "SHORT_FIELD", "SHORT_FIELD", SMALLINT, "SMALLINT", 5, 0, TABLE_NAME, columnNullable, true, true),
-                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", 7, 0, TABLE_NAME, columnNullable, true, true),
-                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", 15, 0, TABLE_NAME, columnNullable, true, true),
+                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", supportsFloatBinaryPrecision ? 24 : 7, 0, TABLE_NAME, columnNullable, true, true),
+                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", supportsFloatBinaryPrecision ? 53 : 15, 0, TABLE_NAME, columnNullable, true, true),
                 create(9, "java.math.BigDecimal", 5, "SMALLINT_NUMERIC", "SMALLINT_NUMERIC", NUMERIC, "NUMERIC", 3, 1, TABLE_NAME, columnNullable, true, true),
                 create(10, "java.math.BigDecimal", 5, "INTEGER_DECIMAL_1", "INTEGER_DECIMAL_1", DECIMAL, "DECIMAL", 3, 1, TABLE_NAME, columnNullable, true, true),
                 create(11, "java.math.BigDecimal", 7, "INTEGER_NUMERIC", "INTEGER_NUMERIC", NUMERIC, "NUMERIC", 5, 2, TABLE_NAME, columnNullable, true, true),

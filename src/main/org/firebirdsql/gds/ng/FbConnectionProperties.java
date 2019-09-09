@@ -252,20 +252,24 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                 break;
             case isc_dpb_specific_auth_data:
                 break;
-            default:
-                if (parameterType < jaybirdMinIscDpbValue || parameterType > jaybirdMaxIscDpbValue) {
-                    log.warn(String.format(
-                            "Unknown or unsupported parameter with type %d added to extra database parameters",
-                            parameterType));
-                }
-                // intentional fall-through; properties below don't need a warning
-                // TODO Consider using explicit properties in IConnectionProperties?
+            case isc_dpb_process_id:
+            case isc_dpb_process_name:
             case isc_dpb_time_zone_bind:
             case isc_dpb_decfloat_bind:
             case isc_dpb_decfloat_round:
             case isc_dpb_decfloat_traps:
                 parameter.copyTo(extraDatabaseParameters, null);
                 dirtied();
+                break;
+            default:
+                if (parameterType < jaybirdMinIscDpbValue || parameterType > jaybirdMaxIscDpbValue) {
+                    log.warn(String.format(
+                            "Unknown or unsupported parameter with type %d added to extra database parameters",
+                            parameterType));
+                }
+                parameter.copyTo(extraDatabaseParameters, null);
+                dirtied();
+                break;
             }
         }
     }

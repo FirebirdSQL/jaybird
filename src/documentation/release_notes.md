@@ -20,8 +20,44 @@ Jaybird 4.0.0-beta-2
 
 The following has been changed or fixed since Jaybird 4.0.0-beta-1
 
+-   New feature: support for `DatabaseMetaData.getFunctions` ([JDBC-552](http://tracker.firebirdsql.org/browse/JDBC-552)) \
+    See also [JDBC DatabaseMetaData.getFunctions implemented].
+-   New feature: support for `DatabaseMetaData.getFunctionColumns` ([JDBC-552](http://tracker.firebirdsql.org/browse/JDBC-552)) \
+    See also [JDBC DatabaseMetaData.getFunctionColumns implemented].
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
+-   Fixed: attempts to use a blob after it was freed or after transaction end
+    could throw a `NullPointerException` or just work depending on whether the
+    connection had a new transaction. ([JDBC-587](http://tracker.firebirdsql.org/browse/JDBC-587)) \
+    The lifetime of a blob is now restricted to the transaction that created it,
+    or - for blobs created using `Connection.createBlob()` - to the transaction
+    that populated it. Attempts to use the blob after the transaction ends will 
+    now throw a `SQLException` with message _"Blob is invalid. Blob was freed, 
+    or closed by transaction end."_ This restriction does not apply to cached 
+    blobs, see also next item. 
+-   Fixed: Instances of `java.sql.Blob` and `java.sql.Clob` obtained from a 
+    result set were freed after calls to `ResultSet.next()`. ([JDBC-588](http://tracker.firebirdsql.org/browse/JDBC-588)) \
+    Normal blobs will now remain valid until transaction end. You will need to 
+    call `Blob.free()` if you want to invalidate them earlier. \
+    Cached blobs (in auto-commit, holdable or scrollable result sets) will not
+    be automatically freed at transaction end. You will need to explicitly call
+    `Blob.free()` or rely on the garbage collector.
+-   New feature: Support for `Connection.setNetworkTimeout` and 
+    `getNetworkTimeout` ([JDBC-589](http://tracker.firebirdsql.org/browse/JDBC-589)) \
+    This JDBC feature is only supported on pure Java connections, not in native
+    or embedded. Calling `setNetworkTimeout` will override the timeout set with
+    the `soTimeout` connection property. When a timeout occurs, the connection
+    will be closed.
+-   Changed: Procedures in packages are no longer returned from 
+    `DatabaseMetaData.getProcedures` and `getProcedureColumns` ([JDBC-590](http://tracker.firebirdsql.org/browse/JDBC-590)) \
+    See also [Excluding procedures from packages].
+-   Changed: On Firebird 4 and higher, precision of `FLOAT` and `DOUBLE PRECISION`
+    are reported using binary precision (24 and 53 respectively), instead of
+    decimal precision (7 and 15 respectively) ([JBC-591](http://tracker.firebirdsql.org/browse/JDBC-591)) \
+    See also [Precision reported for FLOAT and DOUBLE PRECISION on Firebird 4].
+-   Improvement: added binary literal prefix (`x'`) and suffix (`'`) to 
+    `DatabaseMetaData.getTypeInfo` for `LONGVARBINARY`, `VARBINARY` and 
+    `BINARY` ([JDBC-593](http://tracker.firebirdsql.org/browse/JDBC-593))
 
 Support
 =======
@@ -58,6 +94,8 @@ The main new features are:
 - [JDBC RowId support]
 - [JDBC DatabaseMetaData.getPseudoColumns implemented]
 - [JDBC DatabaseMetaData.getVersionColumns implemented]
+- [JDBC DatabaseMetaData.getFunctions implemented] (since Jaybird 4.0.0-beta-2)
+- [JDBC DatabaseMetaData.getFunctionColumns implemented] (since Jaybird 4.0.0-beta-2)
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
 - [Generated keys support improvements]
@@ -1175,6 +1213,62 @@ Jaybird only returns pseudo-column as version columns, so 'last updated' columns
 updated by a trigger, calculated columns, or other forms of change tracking are 
 not reported by this method.
 
+JDBC DatabaseMetaData.getFunctions implemented
+----------------------------------------------
+
+The `DatabaseMetaData.getFunctions` method has now been implemented.
+
+The JDBC API specifies this method as:
+
+> Retrieves a description of the system and user functions available in the
+> given catalog.
+
+The implementation only returns functions that are available from
+the `RDB$FUNCTIONS` table. This means that the built-in functions are not
+included in the result of this method.
+
+For Firebird 3 and higher, the result includes native UDF, PSQL and UDR
+functions. The result does not include functions defined in packages as JDBC
+does not provide support for packages.
+
+Jaybird provides additional columns with Firebird specific information. As these
+columns are not defined by JDBC, they may change position when JDBC adds new
+columns. We recommend retrieving these columns by name.
+
+The additional columns are:
+
+-  `JB_FUNCTION_SOURCE` - Source of Firebird 3+ PSQL function, this is the part
+after the `AS` clause.
+-  `JB_FUNCTION_KIND` - Kind of function, one of `"UDF"`, `"PSQL"` (Firebird 3+)
+or `"UDR"` (Firebird 3+)
+-  `JB_MODULE_NAME` - Value of `RDB$MODULE_NAME`, is `null` for PSQL functions
+- `JB_ENTRYPOINT` - Value of `RDB$ENTRYPOINT`, is `null` for PSQL functions
+- `JB_ENGINE_NAME` - Value of `RDB$ENGINE_NAME`, is `null for UDF and PSQL
+functions
+
+JDBC DatabaseMetaData.getFunctionColumns implemented
+----------------------------------------------------
+
+The `DatabaseMetaData.getFunctionColumns` method has now been implemented.
+
+The JDBC API specifies this method as:
+
+> Retrieves a description of the given catalog's system or user function
+> parameters and return type.
+
+The implementation only returns columns of functions that are available from
+the `RDB$FUNCTIONS` table. This means that the built-in functions are not
+included in the result of this method.
+
+For Firebird 3 and higher, the result includes native UDF, PSQL and UDR
+functions. The result does not include functions defined in packages as JDBC
+does not provide support for packages.
+
+Where Firebird provides no column name, Jaybird generates one by combining 
+the string `PARAM_` with the value of `RDB$ARGUMENT_POSITION`. Names are not
+available for the parameters of legacy UDF functions, and for the return value
+of any function.
+
 Improved JDBC function escape support
 -------------------------------------
 
@@ -1576,6 +1670,31 @@ use `bestRowTransaction` instead.
 If you are relying on the `SCOPE` column containing the value for the requested
 scope, change your logic to remove that dependency.
 
+Precision reported for FLOAT and DOUBLE PRECISION on Firebird 4
+---------------------------------------------------------------
+
+Firebird 4 introduced support for SQL standard `FLOAT(p)` with 1 <= p <= 24 a
+synonym of `FLOAT`, and 25 <= p <= 53 as synonym of `DOUBLE PRECISION`. This
+precision is expressed in binary digits (or radix 2).
+
+To bring the metadata reported by Jaybird in line for this change, on Firebird 4
+and higher, we now report the precision for `FLOAT` and `DOUBLE PRECISION` in
+binary digits instead of decimal digits.
+
+For example for `FLOAT` precision, on Firebird 3 and lower Jaybird 4 returns `7`,
+and `24` on Firebird 4 and higher. For `DOUBLE PRECISION` precision, on Firebird 3
+and lower Jaybird 4 returns `15`, and `53` on Firebird 4 and higher. In addition,
+the radix reported in the metadata for these types will be 2 instead of 10 on
+Firebird 4 and higher.
+
+This change affects 
+
+- `DatabaseMetaData.getColumns` (columns `COLUMN_SIZE` and `NUM_PREC_RADIX`),
+- `DatabaseMetaData.getProcedureColumns` (columns `PRECISION` and `RADIX`), 
+- `DatabaseMetaData.getTypeInfo` (columns `PRECISION` and `NUM_PREC_RADIX`),
+- `ParameterMetaData.getPrecison`, 
+- `ResultSetMetaData.getPrecision`.
+
 Stricter JDBC compliance
 ------------------------
 
@@ -1648,6 +1767,19 @@ where detection changed).
 
 See also [Generated keys grammar simplification]. 
 
+### DatabaseMetaData ###
+
+### Excluding procedures from packages ###
+
+The definition of `getProcedures` and `getProcedureColumns` does not offer a way
+to return information on procedures in packages without breaking tools or
+applications that rely on the JDBC standard behaviour. To avoid these problems,
+stored procedures in packages are no longer returned from these methods.
+
+The way Jaybird handled this previously was 'by accident', and the information
+returned was not enough to correctly call the procedure as the package name was
+not included.
+
 Removal of character mapping
 ----------------------------
 
@@ -1675,6 +1807,29 @@ implementation have been removed (note that most are internal to Jaybird):
 -   `FirebirdConnectionProperties#setUseTranslation(String translationPath)` (and on data sources)
 -   `FirebirdConnectionProperties#getUseTranslation` (and on data sources)
 -   `IEncodingFactory#getCharacterTranslator(String mappingPath)`
+
+Removal of constants without deprecation
+----------------------------------------
+
+The following array constants in `FBDatabaseMetaData` have been made private or
+have been removed to avoid unintended side-effects of modification:
+
+-   `ALL_TYPES_2_5`
+-   `ALL_TYPES_2_1`
+-   `ALL_TYPES`
+
+Instead, use `DatabaseMetaData.getTableTypes()` (which returns a `ResultSet`),
+or `FirebirdDatabaseMetaData.getTableTypeNames()` (which returns a `String[]`).
+
+To access `getTableTypeNames()`, the `DatabaseMetaData` needs to be unwrapped to
+`FirebirdDatabaseMetaData` 
+
+```java
+DatabaseMetaData dbmd = connection.getDatabaseMetaData();
+String[] tableTypes = dbmd
+        .unwrap(FirebirdDatabaseMetaData.class)
+        .getTableTypeNames();
+```
     
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
@@ -1764,6 +1919,12 @@ The following methods will be removed in Jaybird 5:
 -   `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
 -   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
     use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
+    
+### Removal of deprecated classes ###
+
+The following classes will be removed in Jaybird 5:
+
+-   `FBMissingParameterException`, exception is no longer used.
     
 ### Removal of deprecated constants ###
 

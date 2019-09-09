@@ -23,7 +23,10 @@ package org.firebirdsql.jdbc;
 /**
  * Exception notifying developer that not all parameters were set when calling
  * the prepared statement.
+ *
+ * @deprecated Unused, will be removed in Jaybird 5
  */
+@Deprecated
 public class FBMissingParameterException extends FBSQLException {
 
     private boolean[] setParams;

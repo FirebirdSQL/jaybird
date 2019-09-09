@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,8 +29,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlState;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
@@ -46,13 +46,13 @@ public class TestFBCachedBlob {
     public final ExpectedException expectedException = ExpectedException.none();
 
     /**
-     * Test if {@link FBCachedBlob#detach()} returns itself.
+     * Test if {@link FBCachedBlob#detach()} does not return itself.
      */
     @Test
     public void testDetach() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[0]);
 
-        assertEquals("FBCachedBlob.detach() should return itself", blob, blob.detach());
+        assertNotSame("FBCachedBlob.detach() should not return itself", blob, blob.detach());
     }
 
     /**
@@ -308,13 +308,21 @@ public class TestFBCachedBlob {
 
         blob.free();
 
-        assertEquals("Expected length of -1 after free()", -1, blob.length());
+        expectedException.expect(blobFreedSQLException());
+        blob.length();
     }
 
     private Matcher<SQLException> blobReadOnlySQLException() {
         return allOf(
                 isA(SQLException.class),
                 message(equalTo(FBCachedBlob.BLOB_READ_ONLY))
+        );
+    }
+
+    private Matcher<SQLException> blobFreedSQLException() {
+        return allOf(
+                isA(SQLException.class),
+                fbMessageStartsWith(JaybirdErrorCodes.jb_blobClosed)
         );
     }
 }

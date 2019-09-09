@@ -22,6 +22,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 
+import java.util.Arrays;
+
 public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String PURE_JAVA_TYPE_NAME = "PURE_JAVA";
@@ -43,12 +45,12 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     @Override
     public String[] getTypeAliases() {
-        return TYPE_ALIASES;
+        return Arrays.copyOf(TYPE_ALIASES, TYPE_ALIASES.length);
     }
 
     @Override
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
     @Override

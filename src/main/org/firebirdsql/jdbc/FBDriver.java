@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -190,12 +191,12 @@ public class FBDriver implements FirebirdDriver {
 
     @Override
     public int getMajorVersion() {
-        return 4;
+        return Version.JAYBIRD_MAJOR_VERSION;
     }
 
     @Override
     public int getMinorVersion() {
-        return 0;
+        return Version.JAYBIRD_MINOR_VERSION;
     }
 
     @Override
