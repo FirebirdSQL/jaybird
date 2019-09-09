@@ -22,7 +22,7 @@ import org.firebirdsql.util.InternalApi;
 
 import java.util.regex.Pattern;
 
-import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_PARAMETER_LENGTH;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
  * Holder of a database metadata pattern.
@@ -37,6 +37,8 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_PARAMETER_LENG
 @InternalApi
 public final class MetadataPattern {
 
+    // Extra space to allow for longer patterns (avoids string right truncation errors)
+    private static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final MetadataPattern ALL_PATTERN = new MetadataPattern(ConditionType.NONE, null);
     private static final MetadataPattern EMPTY_PATTERN = new MetadataPattern(ConditionType.SQL_EQUALS, "");
     private static final Pattern METADATA_SPECIALS = Pattern.compile("([\\\\_%])");
