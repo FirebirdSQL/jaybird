@@ -1115,8 +1115,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxUserNameLength() throws SQLException {
-        // TODO getMaxObjectNameLength?
-        return 31;//I don't know??
+        return getMaxObjectNameLength();
     }
 
     //----------------------------------------------------------------------
