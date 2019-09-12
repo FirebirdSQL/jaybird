@@ -905,7 +905,7 @@ JDBC 4.2 introduced support for time zones, and maps these types to
 `java.time.OffsetTime` and `java.time.OffsetDateTime`. JDBC does not define
 explicit setters for these types. Use `setObject(index, value)`,
 `updateObject(index, value)`, `getObject(index/name)` or 
-`getObject(index/name, classType)`
+`getObject(index/name, classType)`.
 
 Firebird 4 supports both offset and named time zones. Given the definition in
 JDBC, Jaybird only supports offset time zones. On retrieval of a value with a
@@ -1095,7 +1095,7 @@ We strongly suggest that you use `java.time.LocalTime`,
 legacy datetime types.
 
 For `WITH TIME ZONE` types, the session time zone has no effect on the conversion
-to the legacy JDBC date/time types: to offset date/time is converted to epoch
+to the legacy JDBC date/time types: the offset date/time is converted to epoch
 milliseconds and used to construct these legacy types directly.
 
 Executing `SET TIME ZONE <zone name>` statements after connect will change the 
