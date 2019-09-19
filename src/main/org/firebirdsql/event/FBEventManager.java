@@ -50,14 +50,14 @@ public class FBEventManager implements EventManager {
     private static final Logger log = LoggerFactory.getLogger(FBEventManager.class);
 
     private final GDSType gdsType;
-    private FbDatabase fbDatabase;
+    protected FbDatabase fbDatabase;
     private final IConnectionProperties connectionProperties = new FbConnectionProperties();
-    private boolean connected = false;
-    private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
-    private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
+    protected boolean connected = false;
+    protected final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
+    protected final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
     private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<>();
-    private EventDispatcher eventDispatcher;
-    private Thread dispatchThread;
+    protected EventDispatcher eventDispatcher;
+    protected Thread dispatchThread;
     private volatile long waitTimeout = 1000;
 
     @SuppressWarnings("UnusedDeclaration")
@@ -300,7 +300,7 @@ public class FBEventManager implements EventManager {
         handler.register();
     }
 
-    private void unregisterListener(String eventName) throws SQLException {
+    protected void unregisterListener(String eventName) throws SQLException {
         GdsEventHandler handler = handlerMap.get(eventName);
         try {
             if (handler != null) handler.unregister();
