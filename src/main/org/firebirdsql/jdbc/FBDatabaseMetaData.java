@@ -35,7 +35,6 @@ import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.firebirdsql.util.InternalApi;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -59,13 +58,8 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
-    private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
-    private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
-    @InternalApi
-    public static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
     // Extra space to allow for longer patterns (avoids string right truncation errors)
-    @InternalApi
-    public static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
+    private static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
     private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
     private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
 
@@ -1121,8 +1115,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxUserNameLength() throws SQLException {
-        // TODO getMaxObjectNameLength?
-        return 31;//I don't know??
+        return getMaxObjectNameLength();
     }
 
     //----------------------------------------------------------------------

@@ -31,11 +31,9 @@ is clear that the proposed structure isn't workable.
 
 ### Simple metadata methods
 
-Simple - scalar - metadata methods with version-dependent behavior will be
-implemented in `FirebirdVersionMetaData`.
-
-Simple metadata methods that are not (yet) version-dependent, will remain in
-`FBDatabaseMetaData`.
+Simple metadata methods will remain in `FBDatabaseMetaData`. A small test shows
+that moving those few methods that are version-dependent will only yield more 
+code with little further benefit.
 
 ### Result set producing metadata methods
 

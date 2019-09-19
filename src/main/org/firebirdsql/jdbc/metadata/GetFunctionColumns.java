@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_LENGTH;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.Clause.anyCondition;
 
 /**

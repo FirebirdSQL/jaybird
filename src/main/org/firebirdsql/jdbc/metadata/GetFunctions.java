@@ -36,7 +36,7 @@ import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
-import static org.firebirdsql.jdbc.FBDatabaseMetaData.OBJECT_NAME_LENGTH;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
  * Provides the implementation for {@link java.sql.DatabaseMetaData#getFunctions(String, String, String)}.
