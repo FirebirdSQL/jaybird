@@ -58,6 +58,17 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   Improvement: added binary literal prefix (`x'`) and suffix (`'`) to 
     `DatabaseMetaData.getTypeInfo` for `LONGVARBINARY`, `VARBINARY` and 
     `BINARY` ([JDBC-593](http://tracker.firebirdsql.org/browse/JDBC-593))
+-   New feature: added `FBEventManager.createFor(Connection)` to create an
+    `EventManager` for an existing connection. Backported to Jaybird 3.0.7. ([JDBC-594](http://tracker.firebirdsql.org/browse/JDBC-594)) \
+    The created event manager does not allow setting properties (other than
+    `waitTimeout`). It is still required to use `connect()` and `disconnect()`,
+    to start respectively stop listening for events. \
+    Due to implementation limitations, the lifetime is tied to the physical 
+    connection. When using a connection pool, this means that the event manager
+    works as long as the physical pooled connection remains open, which can be
+    (significantly) longer than the logical connection used to create the event
+    manager. \
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Support
 =======
