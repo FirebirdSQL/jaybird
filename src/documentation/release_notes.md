@@ -253,6 +253,17 @@ The following has been changed or fixed since Jaybird 3.0.6
     Cached blobs (in auto-commit, holdable or scrollable result sets) will not
     be automatically freed at transaction end. You will need to explicitly call
     `Blob.free()` or rely on the garbage collector.
+-   New feature: added `FBEventManager.createFor(Connection)` to create an
+    `EventManager` for an existing connection. Backported from Jaybird 4. ([JDBC-594](http://tracker.firebirdsql.org/browse/JDBC-594)) \
+    The created event manager does not allow setting properties (other than
+    `waitTimeout`). It is still required to use `connect()` and `disconnect()`,
+    to start respectively stop listening for events. \
+    Due to implementation limitations, the lifetime is tied to the physical 
+    connection. When using a connection pool, this means that the event manager
+    works as long as the physical pooled connection remains open, which can be
+    (significantly) longer than the logical connection used to create the event
+    manager. \
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
     
 ### Known issues in Jaybird 3.0.7
 
