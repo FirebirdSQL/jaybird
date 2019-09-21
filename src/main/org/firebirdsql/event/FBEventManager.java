@@ -123,6 +123,7 @@ public class FBEventManager implements EventManager {
      * @return An event manager
      * @throws SQLException
      *         When {@code connection} does not unwrap to {@link org.firebirdsql.jdbc.FirebirdConnection}
+     * @since 3.0.7
      */
     public static EventManager createFor(Connection connection) throws SQLException {
         return new FBEventManager(connection);
@@ -348,7 +349,7 @@ public class FBEventManager implements EventManager {
         handler.register();
     }
 
-    protected void unregisterListener(String eventName) throws SQLException {
+    private void unregisterListener(String eventName) throws SQLException {
         GdsEventHandler handler = handlerMap.get(eventName);
         try {
             if (handler != null) handler.unregister();

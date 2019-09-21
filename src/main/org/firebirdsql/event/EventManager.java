@@ -54,6 +54,7 @@ public interface EventManager extends AutoCloseable {
      *
      * @throws SQLException
      *         For errors during disconnect
+     * @since 3.0.7
      */
     void close() throws SQLException;
 
