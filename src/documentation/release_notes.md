@@ -154,7 +154,7 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 
 Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 11 and Java 12.
+Currently that means we support Java 11 and Java 13.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
 have the same source and all JDBC 4.3 related functionality and can be used on
@@ -401,7 +401,7 @@ versions do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 7, 8, 11 and 12.
+Currently that means we support Java 7, 8, 11 and 13.
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
