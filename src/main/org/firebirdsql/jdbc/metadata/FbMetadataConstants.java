@@ -57,6 +57,10 @@ public final class FbMetadataConstants {
     public static final int RADIX_BINARY = 2;
     public static final int RADIX_DECIMAL = 10;
 
+    public static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
+    public static final int OBJECT_NAME_LENGTH_V4_0 = 63;
+    public static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
+
     // TODO Double check if these are the same as the blr constants or not.
     // TODO And if they are the same, check missing types (like text2 = 15, varying2 = 38)
     public static final int smallint_type = 7;

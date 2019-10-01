@@ -19,9 +19,11 @@
 package org.firebirdsql.event;
 
 import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.Unstable;
 import org.junit.*;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.sql.Connection;
@@ -32,7 +34,8 @@ import java.sql.Statement;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.junit.Assert.*;
 
 /** 
  * Test the FBEventManager class
@@ -42,8 +45,10 @@ public class TestFBEventManager {
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
+
     private EventManager eventManager;
-    private boolean eventManagerDisconnected;
 
     public static final String TABLE_DEF = ""
         + "CREATE TABLE TEST ("
@@ -71,8 +76,7 @@ public class TestFBEventManager {
         }
     }
 
-    @Before
-    public void setUp() throws Exception {
+    private void setupDefaultEventManager() throws SQLException {
         eventManager = new FBEventManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
             eventManager.setHost(DB_SERVER_URL);
@@ -86,7 +90,6 @@ public class TestFBEventManager {
         eventManager.setDatabase(tempFile.getAbsolutePath());
         
         eventManager.connect();
-        eventManagerDisconnected = false;
     }
 
     private void executeSql(String sql) throws SQLException {
@@ -98,19 +101,20 @@ public class TestFBEventManager {
 
     @After
     public void tearDown() throws Exception {
-        if (!eventManagerDisconnected)
+        if (eventManager != null && eventManager.isConnected()) {
             eventManager.disconnect();
-        
-        eventManagerDisconnected = true;
+        }
     }
 
     @Test
     public void testWaitForEventNoEvent() throws Exception {
+        setupDefaultEventManager();
         assertEquals(-1, eventManager.waitForEvent("TEST_EVENT_B", 500));
     }
 
     @Test
     public void testWaitForEventIndefinitely() throws Exception {
+        setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_B", 0);
         Thread waitThread = new Thread(eventWait);
         waitThread.start();
@@ -121,6 +125,7 @@ public class TestFBEventManager {
 
     @Test
     public void testWaitForEventWithOccurrence() throws Exception {
+        setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_B", 10000);
         Thread waitThread = new Thread(eventWait);
         waitThread.start();
@@ -132,6 +137,7 @@ public class TestFBEventManager {
 
     @Test
     public void testWaitForEventWithOccurrenceNoTimeout() throws Exception {
+        setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_A", 0);
         Thread waitThread = new Thread(eventWait);
         waitThread.start();
@@ -143,6 +149,7 @@ public class TestFBEventManager {
 
     @Test
     public void testBasicEventMechanism() throws Exception {
+        setupDefaultEventManager();
         AccumulatingEventListener ael = new AccumulatingEventListener();
         eventManager.addEventListener("TEST_EVENT_B", ael);
         Thread.sleep(SHORT_DELAY);
@@ -159,6 +166,7 @@ public class TestFBEventManager {
 
     @Test
     public void testMultipleListenersOnOneEvent() throws Exception {
+        setupDefaultEventManager();
         AccumulatingEventListener ael1 = new AccumulatingEventListener();
         AccumulatingEventListener ael2 = new AccumulatingEventListener();
         AccumulatingEventListener ael3 = new AccumulatingEventListener();
@@ -179,6 +187,7 @@ public class TestFBEventManager {
     @Test
     @Unstable("Performance/timing dependent, may need tweaking LONG_DELAY")
     public void testLargeMultiLoad() throws Exception {
+        setupDefaultEventManager();
         final int THREAD_COUNT = 5;
         final int REP_COUNT = 100;
         final Thread[] producerThreads = new Thread[THREAD_COUNT];
@@ -210,6 +219,7 @@ public class TestFBEventManager {
 
     @Test
     public void testSlowCallback() throws Exception {
+        setupDefaultEventManager();
         final int REP_COUNT = 5;
         AccumulatingEventListener ael = new AccumulatingEventListener(){
             public void eventOccurred(DatabaseEvent e) {
@@ -229,6 +239,101 @@ public class TestFBEventManager {
         Thread.sleep(REP_COUNT * 300 + SHORT_DELAY);
         eventManager.removeEventListener("TEST_EVENT_B", ael);
         assertEquals(REP_COUNT, ael.getTotalEvents());
+    }
+
+    @Test
+    public void testMultipleManagersOnExistingConnectionOnOneEvent() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            EventManager eventManager1 = FBEventManager.createFor(connection);
+            EventManager eventManager2 = FBEventManager.createFor(connection);
+
+            eventManager1.connect();
+            eventManager2.connect();
+
+            AccumulatingEventListener ael1 = new AccumulatingEventListener();
+            AccumulatingEventListener ael2 = new AccumulatingEventListener();
+            AccumulatingEventListener ael3 = new AccumulatingEventListener();
+            eventManager1.addEventListener("TEST_EVENT_A", ael1);
+            eventManager1.addEventListener("TEST_EVENT_B", ael2);
+            eventManager1.addEventListener("NOT_REAL_EVENT", ael3);
+
+            AccumulatingEventListener ael4 = new AccumulatingEventListener();
+            AccumulatingEventListener ael5 = new AccumulatingEventListener();
+            AccumulatingEventListener ael6 = new AccumulatingEventListener();
+            eventManager2.addEventListener("TEST_EVENT_B", ael4);
+            eventManager2.addEventListener("TEST_EVENT_A", ael5);
+            eventManager2.addEventListener("NOT_REAL_EVENT", ael6);
+
+            Thread.sleep(SHORT_DELAY);
+            executeSql("INSERT INTO TEST VALUES (4)");
+            Thread.sleep(LONG_DELAY);
+            eventManager1.removeEventListener("TEST_EVENT_A", ael1);
+            eventManager2.removeEventListener("TEST_EVENT_B", ael4);
+            executeSql("INSERT INTO TEST VALUES (5)");
+            Thread.sleep(SHORT_DELAY);
+            assertEquals(2, ael1.getTotalEvents());
+            assertEquals(2, ael2.getTotalEvents());
+            assertEquals(0, ael3.getTotalEvents());
+            assertEquals(1, ael4.getTotalEvents());
+            assertEquals(4, ael5.getTotalEvents());
+            assertEquals(0, ael6.getTotalEvents());
+
+            eventManager1.disconnect();
+            eventManager2.disconnect();
+        }
+    }
+
+    @Test
+    public void testEventManagerOnExistingConnectionDisconnectsOnConnectionClose() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            eventManager = FBEventManager.createFor(connection);
+            eventManager.connect();
+            assertTrue("Expected connected event manager", eventManager.isConnected());
+
+            connection.close();
+
+            assertFalse("Expected disconnected event manager after connection close", eventManager.isConnected());
+        }
+    }
+
+    @Test
+    public void testEventManagerOnExistingConnectionThrowsExceptionOnSetter() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            eventManager = FBEventManager.createFor(connection);
+
+            // setting waitTimeout should work
+            eventManager.setWaitTimeout(1001);
+
+            try {
+                eventManager.setUser("abc");
+                fail("should not allow setUser");
+            } catch (UnsupportedOperationException e) {
+                // expected
+            }
+
+            try {
+                eventManager.setHost("abc");
+                fail("should not allow setHost");
+            } catch (UnsupportedOperationException e) {
+                // expected
+            }
+
+            // not testing other props as that would be testing the immutable implementation of IConnectionProperties
+        }
+    }
+
+    @Test
+    public void testEventManagerOnExistingException_connectThrowsException_afterConnectionClose() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            eventManager = FBEventManager.createFor(connection);
+
+            connection.close();
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_notConnectedToServer));
+
+            eventManager.connect();
+        }
     }
 
     class EventWait implements Runnable {
@@ -293,5 +398,3 @@ public class TestFBEventManager {
     }
 
 }
-
-

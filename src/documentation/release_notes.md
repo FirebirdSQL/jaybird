@@ -58,6 +58,17 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   Improvement: added binary literal prefix (`x'`) and suffix (`'`) to 
     `DatabaseMetaData.getTypeInfo` for `LONGVARBINARY`, `VARBINARY` and 
     `BINARY` ([JDBC-593](http://tracker.firebirdsql.org/browse/JDBC-593))
+-   New feature: added `FBEventManager.createFor(Connection)` to create an
+    `EventManager` for an existing connection. Backported to Jaybird 3.0.7. ([JDBC-594](http://tracker.firebirdsql.org/browse/JDBC-594)) \
+    The created event manager does not allow setting properties (other than
+    `waitTimeout`). It is still required to use `connect()` and `disconnect()`,
+    to start respectively stop listening for events. \
+    Due to implementation limitations, the lifetime is tied to the physical 
+    connection. When using a connection pool, this means that the event manager
+    works as long as the physical pooled connection remains open, which can be
+    (significantly) longer than the logical connection used to create the event
+    manager. \
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Support
 =======
@@ -143,7 +154,7 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 
 Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 11 and Java 12.
+Currently that means we support Java 11 and Java 13.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
 have the same source and all JDBC 4.3 related functionality and can be used on
@@ -390,7 +401,7 @@ versions do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 7, 8, 11 and 12.
+Currently that means we support Java 7, 8, 11 and 13.
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
@@ -905,7 +916,7 @@ JDBC 4.2 introduced support for time zones, and maps these types to
 `java.time.OffsetTime` and `java.time.OffsetDateTime`. JDBC does not define
 explicit setters for these types. Use `setObject(index, value)`,
 `updateObject(index, value)`, `getObject(index/name)` or 
-`getObject(index/name, classType)`
+`getObject(index/name, classType)`.
 
 Firebird 4 supports both offset and named time zones. Given the definition in
 JDBC, Jaybird only supports offset time zones. On retrieval of a value with a
@@ -1095,7 +1106,7 @@ We strongly suggest that you use `java.time.LocalTime`,
 legacy datetime types.
 
 For `WITH TIME ZONE` types, the session time zone has no effect on the conversion
-to the legacy JDBC date/time types: to offset date/time is converted to epoch
+to the legacy JDBC date/time types: the offset date/time is converted to epoch
 milliseconds and used to construct these legacy types directly.
 
 Executing `SET TIME ZONE <zone name>` statements after connect will change the 

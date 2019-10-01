@@ -25,14 +25,18 @@
 package org.firebirdsql.event;
 
 import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -44,6 +48,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
  */
 public class FBEventManager implements EventManager {
 
@@ -51,8 +56,9 @@ public class FBEventManager implements EventManager {
 
     private final GDSType gdsType;
     private FbDatabase fbDatabase;
-    private final IConnectionProperties connectionProperties = new FbConnectionProperties();
-    private boolean connected = false;
+    private final IConnectionProperties connectionProperties;
+    private final EventManagerBehaviour eventManagerBehaviour;
+    private volatile boolean connected = false;
     private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
     private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
     private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<>();
@@ -67,6 +73,60 @@ public class FBEventManager implements EventManager {
 
     public FBEventManager(GDSType gdsType) {
         this.gdsType = gdsType;
+        connectionProperties = new FbConnectionProperties();
+        eventManagerBehaviour = new DefaultEventManagerBehaviour();
+    }
+
+    /**
+     * Constructs an event manager using an existing connection.
+     *
+     * @param connection Connection that unwraps to {@link FirebirdConnection}.
+     */
+    private FBEventManager(Connection connection) throws SQLException {
+        this.fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
+        gdsType = null;
+        connectionProperties = fbDatabase.getConnectionProperties().asImmutable();
+        // NOTE In this implementation, we don't take into account pooled connections that might be closed while
+        //  the FbDatabase instance remains in use. This means that at the moment, it is possible that the event manager
+        //  can remain in use for longer than the Connection.
+        fbDatabase.addDatabaseListener(new DefaultDatabaseListener() {
+            @Override
+            public void detaching(FbDatabase database) {
+                try {
+                    if (!isConnected()) return;
+                    try {
+                        disconnect();
+                    } catch (SQLException e) {
+                        log.error("Exception on disconnect of event manager on connection detaching.", e);
+                    }
+                } finally {
+                    database.removeDatabaseListener(this);
+                    fbDatabase = null;
+                }
+            }
+        });
+        eventManagerBehaviour = new ManagedEventManagerBehaviour();
+    }
+
+    /**
+     * Creates an {@link EventManager} for a connection.
+     * <p>
+     * The created event manager does not allow setting the properties and will instead
+     * throw {@link UnsupportedOperationException} for the setters.
+     * </p>
+     * <p>
+     * The returned instance is not necessarily an implementation of {@link FBEventManager}.
+     * </p>
+     *
+     * @param connection
+     *         A connection that unwraps to {@link org.firebirdsql.jdbc.FirebirdConnection}
+     * @return An event manager
+     * @throws SQLException
+     *         When {@code connection} does not unwrap to {@link org.firebirdsql.jdbc.FirebirdConnection}
+     * @since 3.0.7
+     */
+    public static EventManager createFor(Connection connection) throws SQLException {
+        return new FBEventManager(connection);
     }
 
     @Override
@@ -74,16 +134,20 @@ public class FBEventManager implements EventManager {
         if (connected) {
             throw new IllegalStateException("Connect called while already connected");
         }
-        final FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
-
-        fbDatabase = databaseFactory.connect(connectionProperties);
-        fbDatabase.attach();
+        eventManagerBehaviour.connectDatabase();
         connected = true;
 
         eventDispatcher = new EventDispatcher();
         dispatchThread = new Thread(eventDispatcher);
         dispatchThread.setDaemon(true);
         dispatchThread.start();
+    }
+
+    @Override
+    public void close() throws SQLException {
+        if (connected) {
+            disconnect();
+        }
     }
 
     @Override
@@ -107,7 +171,7 @@ public class FBEventManager implements EventManager {
                 handlerMap.clear();
                 listenerMap.clear();
                 try {
-                    fbDatabase.close();
+                    eventManagerBehaviour.disconnectDatabase();
                 } catch (SQLException e) {
                     chain.append(e);
                 }
@@ -115,17 +179,21 @@ public class FBEventManager implements EventManager {
             }
         } finally {
             eventDispatcher.stop();
-
+            dispatchThread.interrupt();
             // join the thread and wait until it dies
             try {
                 dispatchThread.join();
             } catch (InterruptedException ex) {
                 chain.append(new FBSQLException(ex));
+            } finally {
+                eventDispatcher = null;
+                dispatchThread = null;
             }
         }
         if (chain.hasException()) throw chain.getException();
     }
 
+    @Override
     public boolean isConnected() {
         return connected;
     }
@@ -210,32 +278,13 @@ public class FBEventManager implements EventManager {
         connectionProperties.setAuthPlugins(authPlugins);
     }
 
-    /**
-     * Get the time in milliseconds, after which the async thread will exit from the {@link Object#wait(long)} method
-     * and check whether it was stopped or not.
-     * <p>
-     * Default value is 1000 (1 second).
-     * </p>
-     *
-     * @return wait timeout in milliseconds
-     */
-    @SuppressWarnings("UnusedDeclaration")
+    @Override
     public long getWaitTimeout() {
         return waitTimeout;
     }
 
-    /**
-     * Set the time in milliseconds, after which the async thread will exit from the {@link Object#wait(long)} method
-     * and check whether it was stopped or not.
-     * <p>
-     * Default value is 1000 (1 second).
-     * </p>
-     *
-     * @param waitTimeout
-     *         wait timeout in milliseconds
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public synchronized void setWaitTimeout(long waitTimeout) {
+    @Override
+    public void setWaitTimeout(long waitTimeout) {
         this.waitTimeout = waitTimeout;
     }
 
@@ -309,6 +358,50 @@ public class FBEventManager implements EventManager {
         }
     }
 
+    private interface EventManagerBehaviour {
+        void connectDatabase() throws SQLException;
+        void disconnectDatabase() throws SQLException;
+    }
+
+    /**
+     * Default behaviour where the event manager owns the connection.
+     */
+    private class DefaultEventManagerBehaviour implements EventManagerBehaviour {
+
+        @Override
+        public void connectDatabase() throws SQLException {
+            FbDatabaseFactory databaseFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
+            fbDatabase = databaseFactory.connect(connectionProperties);
+            fbDatabase.attach();
+        }
+
+        @Override
+        public void disconnectDatabase() throws SQLException {
+            fbDatabase.close();
+        }
+    }
+
+    /**
+     * Behaviour where the lifetime of the connection used by the event manager is managed elsewhere.
+     */
+    private class ManagedEventManagerBehaviour implements EventManagerBehaviour {
+
+        @Override
+        public void connectDatabase() throws SQLException {
+            // using existing connection
+            if (fbDatabase == null) {
+                // fbDatabase has already detached
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
+                        .toFlatSQLException();
+            }
+        }
+
+        @Override
+        public void disconnectDatabase() {
+            // fbDatabase will be closed where it was opened
+        }
+    }
+
     class GdsEventHandler implements org.firebirdsql.gds.EventHandler {
 
         private final EventHandle eventHandle;
@@ -362,7 +455,7 @@ public class FBEventManager implements EventManager {
 
     class EventDispatcher implements Runnable {
 
-        private volatile boolean running = false;
+        private volatile boolean running = true;
 
         public void stop() {
             running = false;
@@ -370,7 +463,6 @@ public class FBEventManager implements EventManager {
 
         @Override
         public void run() {
-            running = true;
             DatabaseEvent event;
             while (running) {
                 try {
