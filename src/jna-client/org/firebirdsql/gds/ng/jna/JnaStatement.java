@@ -23,6 +23,7 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.impl.GDSHelperOperation;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
@@ -172,26 +173,35 @@ public class JnaStatement extends AbstractFbStatement {
                 setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
-                if (hasSingletonResult) {
-                    clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
-                            inXSqlDa.version, inXSqlDa, outXSqlDa);
-                } else {
-                    clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
-                            inXSqlDa.version, inXSqlDa);
-                }
 
-                if (hasSingletonResult) {
-                    /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                     * have a result set that will be fetched, instead we have a singleton result if we have fields
-                     */
-                    statementListenerDispatcher.statementExecuted(this, false, true);
-                    processStatusVector();
-                    queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
-                    setAllRowsFetched(true);
-                } else {
-                    // A normal execute is never a singleton result (even if it only produces a single result)
-                    statementListenerDispatcher.statementExecuted(this, hasFields(), false);
-                    processStatusVector();
+                // Register the start of the operation
+                final GDSHelperOperation op = new GDSHelperOperation(getDatabase());
+                StatementOperationAware.startStatementOperation(op);
+                try {
+                    if (hasSingletonResult) {
+                        clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
+                                inXSqlDa.version, inXSqlDa, outXSqlDa);
+                    } else {
+                        clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
+                                inXSqlDa.version, inXSqlDa);
+                    }
+
+                    if (hasSingletonResult) {
+                        /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                         * have a result set that will be fetched, instead we have a singleton result if we have fields
+                         */
+                        statementListenerDispatcher.statementExecuted(this, false, true);
+                        processStatusVector();
+                        queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
+                        setAllRowsFetched(true);
+                    } else {
+                        // A normal execute is never a singleton result (even if it only produces a single result)
+                        statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                        processStatusVector();
+                    }
+                } finally {
+                    // Register the finish of the operation
+                    StatementOperationAware.finishStatementOperation(op);
                 }
 
                 if (getState() != StatementState.ERROR) {
@@ -353,20 +363,28 @@ public class JnaStatement extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
-                        outXSqlDa);
-                processStatusVector();
+                // Register the start of the operation
+                final GDSHelperOperation op = new GDSHelperOperation(getDatabase());
+                StatementOperationAware.startStatementOperation(op);
+                try {
+                    final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
+                            outXSqlDa);
+                    processStatusVector();
 
-                int fetchStatusInt = fetchStatus.intValue();
-                if (fetchStatusInt == ISCConstants.FETCH_OK) {
-                    queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
-                } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
-                    setAllRowsFetched(true);
-                    // Note: we are not explicitly 'closing' the cursor here
-                } else {
-                    final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
-                    log.error(message);
-                    throw new SQLException(message);
+                    int fetchStatusInt = fetchStatus.intValue();
+                    if (fetchStatusInt == ISCConstants.FETCH_OK) {
+                        queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
+                    } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
+                        setAllRowsFetched(true);
+                        // Note: we are not explicitly 'closing' the cursor here
+                    } else {
+                        final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
+                        log.error(message);
+                        throw new SQLException(message);
+                    }
+                } finally {
+                    // Register the finish of the operation
+                    StatementOperationAware.finishStatementOperation(op);
                 }
             }
         } catch (SQLException e) {
