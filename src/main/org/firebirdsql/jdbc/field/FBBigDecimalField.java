@@ -50,6 +50,7 @@ final class FBBigDecimalField extends FBField {
 
     private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
+    @Deprecated
     private static final int MAX_DEC_FIXED_PRECISION = 34;
 
     private final FieldDataSize fieldDataSize;
@@ -275,6 +276,8 @@ final class FBBigDecimalField extends FBField {
                 return fieldDescriptor.getDatatypeCoder().encodeDouble(value.doubleValue());
             }
         },
+        // Replaced by INT128 in Firebird 4.0.0.1604
+        @Deprecated
         DEC_FIXED {
             @Override
             protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException {
@@ -300,6 +303,24 @@ final class FBBigDecimalField extends FBField {
                 } catch (ArithmeticException e) {
                     throw new TypeConversionException(OVERFLOW_ERROR, e);
                 }
+            }
+        },
+        INT128 {
+            @Override
+            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+                BigInteger int128Value = fieldDescriptor.getDatatypeCoder().decodeInt128(fieldData);
+                return new BigDecimal(int128Value, -1 * fieldDescriptor.getScale());
+            }
+
+            @Override
+            protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
+                BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
+                if (unscaledValue.bitLength() > 127) {
+                    // value will not fit in a 16-byte byte array,
+                    // using 127 and not 128 because bitLength() does not include sign bit
+                    throw new TypeConversionException(INT128_CONVERSION_ERROR + ": " + OVERFLOW_ERROR);
+                }
+                return fieldDescriptor.getDatatypeCoder().encodeInt128(unscaledValue);
             }
         };
 
@@ -361,6 +382,8 @@ final class FBBigDecimalField extends FBField {
                 return DOUBLE;
             case ISCConstants.SQL_DEC_FIXED:
                 return DEC_FIXED;
+            case ISCConstants.SQL_INT128:
+                return INT128;
             default:
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
                         .messageParameter(fieldDescriptor.getType())

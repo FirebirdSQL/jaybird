@@ -148,7 +148,12 @@ public final class FirebirdSupportInfo {
             // all Firebird versions
             return true;
         } else if (precision <= 34) {
+            // TODO Remove this branch after Jaybird 4.0.0-beta-2
             return isVersionEqualOrAbove(4, 0);
+        } else if (precision <= 38) {
+            // NOTE: Can result in problems for Firebird 4.0.0.1603 or earlier
+            // TODO Remove build number check after Jaybird 4.0.0-beta-2 to avoid issues with Firebird 5
+            return isVersionEqualOrAbove(4, 0, 0) && serverVersion.getBuildNumber() > 1603;
         }
         return false;
     }
@@ -158,7 +163,7 @@ public final class FirebirdSupportInfo {
      */
     public int maxDecimalPrecision() {
         if (isVersionEqualOrAbove(4, 0)) {
-            return 34;
+            return 38;
         }
         return 18;
     }

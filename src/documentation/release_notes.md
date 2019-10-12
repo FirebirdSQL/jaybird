@@ -69,6 +69,11 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     (significantly) longer than the logical connection used to create the event
     manager. \
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
+-   Changed: Firebird 4.0.0.1604 and later changed the format of extended
+    numeric precision from a Decimal128 to an Int128, increasing the maximum
+    decimal precision from 34 to 38. The Int128 format is now supported. ([JDBC-595](http://tracker.firebirdsql.org/browse/JDBC-595)) \
+    Support for the old format will be removed after Jaybird 4.0.0-beta-2. See
+    also [Firebird 4 extended numeric precision support].
 
 Support
 =======
@@ -879,16 +884,27 @@ Firebird 4 extended numeric precision support
 ---------------------------------------------
 
 Added support for the extended precision for `NUMERIC` and `DECIMAL` introduced 
-in Firebird 4, increasing the maximum precision to 34. In the implementation in 
-Firebird, this extended precision is backed by a IEEE-754 Decimal128 which is 
-also used for `DECFLOAT` support.
+in Firebird 4, increasing the maximum precision to 38. In the implementation in 
+Firebird, this extended precision is backed by an Int128.
 
-Any `NUMERIC` or `DECIMAL` with a precision between 19 and 34 will allow storage
-up to a precision of 34. 
+Any `NUMERIC` or `DECIMAL` with a precision between 19 and 38 will allow storage
+up to a precision of 38 (technically even 39, but not full range). 
 
 Values set on a field or parameter will be rounded to the target scale of the 
-field using `RoundingMode.HALF_EVEN`. Values exceeding a precision of 34 after 
-rounding will be rejected with a `TypeConversionException`.
+field using `RoundingMode.HALF_UP`. Values exceeding that do not fit in an 
+Int128 after rounding will be rejected with a `TypeConversionException`.
+
+### Important notice about extended numeric precision support ###
+
+The implementation of extended numeric precision was changed after Firebird
+4.0.0-beta-1 (in build 1604) from a maximum precision of 34 backed by a 
+Decimal128 to a maximum precision of 38 backed by an Int128. 
+
+Current test versions of Jaybird 4.0.0 support both formats, but support for the
+old 'DEC_FIXED' format backed by a Decimal128 will be removed after Jaybird
+4.0.0-beta-2. The old format is only supported in statements and result sets.
+Metadata may report incorrect incorrect information regarding precision (ie 38
+instead of 34).
 
 Firebird 4 time zone support
 ----------------------------

@@ -187,6 +187,10 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_DEC34:
             bout.write(blr_dec128);
             break;
+        case SQL_INT128:
+            bout.write(blr_int128);
+            bout.write(field.getScale());
+            break;
         case SQL_DEC_FIXED:
             bout.write(blr_dec_fixed);
             bout.write(field.getScale());
@@ -230,6 +234,7 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_TIMESTAMP_TZ:
             return -12;
         case SQL_DEC34:
+        case SQL_INT128:
         case SQL_DEC_FIXED:
             return -16;
         case SQL_NULL:
