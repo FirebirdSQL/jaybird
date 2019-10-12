@@ -84,6 +84,7 @@ public interface JaybirdErrorCodes {
     int jb_blobClosed               = 337248295;
     int jb_invalidTimeout           = 337248296;
     int jb_invalidExecutor          = 337248297;
+    int jb_operationClosed          = 337248298;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

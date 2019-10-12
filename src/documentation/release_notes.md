@@ -74,6 +74,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     decimal precision from 34 to 38. The Int128 format is now supported. ([JDBC-595](http://tracker.firebirdsql.org/browse/JDBC-595)) \
     Support for the old format will be removed after Jaybird 4.0.0-beta-2. See
     also [Firebird 4 extended numeric precision support].
+-   New experimental feature: A way to monitor driver operations (specifically
+    statement executes and fetches). ([JDBC-597](http://tracker.firebirdsql.org/browse/JDBC-597) \ 
+    See [Operation monitoring] for details. \
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Support
 =======
@@ -115,6 +119,7 @@ The main new features are:
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
 - [Generated keys support improvements]
+- [Operation monitoring]
 
 Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read 
 [Compatibility changes] before using Jaybird 4. See also 
@@ -1536,6 +1541,41 @@ ignore or only selectively enable generated keys support, see
 ### Other behavioural changes to generated keys ###
 
 See [Changes to behaviour of generated keys] in [Stricter JDBC compliance]. 
+
+Operation monitoring
+--------------------
+
+**Experimental feature**
+
+Operation monitoring is an experimental feature that allows an application to
+monitor and - in a limited fashion - control driver operations. This feature is
+exposed as the interfaces `org.firebirdsql.gds.ng.monitor.OperationAware` and
+`org.firebirdsql.gds.ng.monitor.Operation`.
+
+An application can implement `OperationAware` and register it through 
+`org.firebirdsql.gds.ng.OperationMonitor.initOperationAware(OperationAware)`.
+When a `SecurityManager` is active, registering an `OperationAware` will
+require the `SQLPermission` with name `org.firebirdsql.jaybird.initOperationAware`.
+Only one instance can be registered at a time. Setting `null` will clear the
+current instance.
+
+Once registered, the `OperationAware` instance will be notified of operation
+start and end through the methods `startOperation(Operation)` and 
+`endOperation(Operation)`. These methods are called on the thread performing the
+operation, so implementations must complete these methods as soon as possible to
+prevent performance problems in the driver.
+
+The `Operation` instance exposes the type of operation through `getType()` and
+allows the operation to be cancelled. Cancellation is only possible as long as
+the operation is active. Attempting to cancel when the operation is complete
+will throw an `SQLException`.
+
+This feature is experimental and its API may be removed or changed, and
+operation types may be added or removed in point releases.
+
+See also [jdp-2019-06 Ability to monitor driver operations](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-06-ability-to-monitor-driver-operations.md)
+
+This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Potentially breaking changes
 ----------------------------
