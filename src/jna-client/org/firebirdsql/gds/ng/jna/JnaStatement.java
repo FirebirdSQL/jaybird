@@ -23,9 +23,10 @@ import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.ShortByReference;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.impl.GDSHelperOperation;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.*;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.XSQLDA;
@@ -174,10 +175,7 @@ public class JnaStatement extends AbstractFbStatement {
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
 
-                // Register the start of the operation
-                final GDSHelperOperation op = new GDSHelperOperation(getDatabase());
-                StatementOperationAware.startStatementOperation(op);
-                try {
+                try (FbDatabaseOperation ignored = signalExecute()){
                     if (hasSingletonResult) {
                         clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
                                 inXSqlDa.version, inXSqlDa, outXSqlDa);
@@ -199,9 +197,6 @@ public class JnaStatement extends AbstractFbStatement {
                         statementListenerDispatcher.statementExecuted(this, hasFields(), false);
                         processStatusVector();
                     }
-                } finally {
-                    // Register the finish of the operation
-                    StatementOperationAware.finishStatementOperation(op);
                 }
 
                 if (getState() != StatementState.ERROR) {
@@ -363,10 +358,7 @@ public class JnaStatement extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                // Register the start of the operation
-                final GDSHelperOperation op = new GDSHelperOperation(getDatabase());
-                StatementOperationAware.startStatementOperation(op);
-                try {
+                try (FbDatabaseOperation ignored = signalFetch()) {
                     final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
                             outXSqlDa);
                     processStatusVector();
@@ -382,9 +374,6 @@ public class JnaStatement extends AbstractFbStatement {
                         log.error(message);
                         throw new SQLException(message);
                     }
-                } finally {
-                    // Register the finish of the operation
-                    StatementOperationAware.finishStatementOperation(op);
                 }
             }
         } catch (SQLException e) {

@@ -655,4 +655,26 @@ public abstract class AbstractFbStatement implements FbStatement {
         RowDescriptor fieldDescriptor = getRowDescriptor();
         return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
     }
+
+    /**
+     * Signals the start of an execute for this statement.
+     *
+     * @return Operation
+     */
+    protected final FbDatabaseOperation signalExecute() {
+        FbDatabaseOperation operation = FbDatabaseOperation.forExecute(getDatabase());
+        OperationMonitor.startOperation(operation);
+        return operation;
+    }
+
+    /**
+     * Signals the start of a fetch for this statement.
+     *
+     * @return Operation
+     */
+    protected final FbDatabaseOperation signalFetch() {
+        FbDatabaseOperation operation = FbDatabaseOperation.forFetch(getDatabase());
+        OperationMonitor.startOperation(operation);
+        return operation;
+    }
 }
