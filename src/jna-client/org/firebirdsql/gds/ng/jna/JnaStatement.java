@@ -175,7 +175,7 @@ public class JnaStatement extends AbstractFbStatement {
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
 
-                try (FbDatabaseOperation ignored = signalExecute()){
+                try (OperationCloseHandle ignored = signalExecute()){
                     if (hasSingletonResult) {
                         clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
                                 inXSqlDa.version, inXSqlDa, outXSqlDa);
@@ -358,7 +358,7 @@ public class JnaStatement extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                try (FbDatabaseOperation ignored = signalFetch()) {
+                try (OperationCloseHandle ignored = signalFetch()) {
                     final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
                             outXSqlDa);
                     processStatusVector();

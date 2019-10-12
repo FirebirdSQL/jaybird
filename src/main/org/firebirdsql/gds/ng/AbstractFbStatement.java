@@ -659,22 +659,18 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Signals the start of an execute for this statement.
      *
-     * @return Operation
+     * @return {@code OperationCloseHandle} handle for the operation
      */
-    protected final FbDatabaseOperation signalExecute() {
-        FbDatabaseOperation operation = FbDatabaseOperation.forExecute(getDatabase());
-        OperationMonitor.startOperation(operation);
-        return operation;
+    protected final OperationCloseHandle signalExecute() {
+        return FbDatabaseOperation.signalExecute(getDatabase());
     }
 
     /**
      * Signals the start of a fetch for this statement.
      *
-     * @return Operation
+     * @return {@code OperationCloseHandle} handle for the operation
      */
-    protected final FbDatabaseOperation signalFetch() {
-        FbDatabaseOperation operation = FbDatabaseOperation.forFetch(getDatabase());
-        OperationMonitor.startOperation(operation);
-        return operation;
+    protected final OperationCloseHandle signalFetch() {
+        return FbDatabaseOperation.signalFetch(getDatabase());
     }
 }

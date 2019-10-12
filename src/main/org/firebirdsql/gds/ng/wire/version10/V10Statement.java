@@ -301,7 +301,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 final boolean hasSingletonResult = hasSingletonResult();
                 int expectedResponseCount = 0;
 
-                try (FbDatabaseOperation ignored = signalExecute()){
+                try (OperationCloseHandle ignored = signalExecute()){
                     try {
                         if (hasSingletonResult) {
                             expectedResponseCount++;
@@ -442,7 +442,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 if (isAllRowsFetched()) return;
 
-                try (FbDatabaseOperation ignored = signalFetch()) {
+                try (OperationCloseHandle ignored = signalFetch()) {
                     try {
                         sendFetch(fetchSize);
                         getXdrOut().flush();

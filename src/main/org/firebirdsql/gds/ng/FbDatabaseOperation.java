@@ -36,7 +36,7 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-public final class FbDatabaseOperation implements Operation, AutoCloseable {
+public final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
     private final Type type;
     private volatile FbDatabase fbDatabase;
@@ -57,7 +57,7 @@ public final class FbDatabaseOperation implements Operation, AutoCloseable {
         if (current == null) {
             throw FbExceptionBuilder
                     .forException(JaybirdErrorCodes.jb_operationClosed)
-                    .messageParameter("cancelOperation")
+                    .messageParameter("cancel")
                     .toFlatSQLException();
         }
         current.cancelOperation(ISCConstants.fb_cancel_raise);
@@ -78,12 +78,18 @@ public final class FbDatabaseOperation implements Operation, AutoCloseable {
         }
     }
 
-    static FbDatabaseOperation forExecute(FbDatabase fbDatabase) {
-        return new FbDatabaseOperation(Type.STATEMENT_EXECUTE, fbDatabase);
+    static OperationCloseHandle signalExecute(FbDatabase fbDatabase) {
+        return signalOperation(fbDatabase, Type.STATEMENT_EXECUTE);
     }
 
-    static FbDatabaseOperation forFetch(FbDatabase fbDatabase) {
-        return new FbDatabaseOperation(Type.STATEMENT_FETCH, fbDatabase);
+    static OperationCloseHandle signalFetch(FbDatabase fbDatabase) {
+        return signalOperation(fbDatabase, Type.STATEMENT_FETCH);
+    }
+
+    private static OperationCloseHandle signalOperation(FbDatabase fbDatabase, Type statementExecute) {
+        FbDatabaseOperation fbDatabaseOperation = new FbDatabaseOperation(statementExecute, fbDatabase);
+        OperationMonitor.startOperation(fbDatabaseOperation);
+        return fbDatabaseOperation;
     }
 
 }
