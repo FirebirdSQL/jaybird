@@ -19,19 +19,23 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.monitor.OperationAware;
 import org.junit.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.*;
 
 public class OperationMonitorTest {
 
@@ -95,12 +99,93 @@ public class OperationMonitorTest {
                         Operation.Type.STATEMENT_EXECUTE);
 
                 assertTrue("Expected a row", rs.next());
-                assertEquals(4, reportedOperations.size());
+                // Native implementation does additional fetch during next()
+                assertThat(reportedOperations, hasSize(greaterThanOrEqualTo(4)));
                 assertOperationReport(reportedOperations.get(2), OperationReport.Type.START,
                         Operation.Type.STATEMENT_FETCH);
                 assertOperationReport(reportedOperations.get(3), OperationReport.Type.END,
                         Operation.Type.STATEMENT_FETCH);
             }
+        }
+    }
+
+    // Technically this test should probably belong in a FbStatementTest instead
+    @Test
+    public void synchronousCancellationDuringExecute() throws Exception {
+        TestOperationAware syncCancelOperationAware = new TestOperationAware() {
+            @Override
+            public void startOperation(Operation operation) {
+                super.startOperation(operation);
+                if (operation.getType() == Operation.Type.STATEMENT_EXECUTE) {
+                    try {
+                        operation.cancel();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        OperationMonitor.initOperationAware(syncCancelOperationAware);
+        usesDatabase.createDefaultDatabase();
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            List<OperationReport> reportedOperations = syncCancelOperationAware.getReportedOperations();
+            assertEquals(0, reportedOperations.size());
+            try (ResultSet rs = stmt.executeQuery("select 1 from RDB$DATABASE")) {
+                fail("should throw exception");
+            } catch (SQLException e) {
+                assertThat(e, errorCodeEquals(ISCConstants.isc_cancelled));
+            }
+            assertEquals(2, reportedOperations.size());
+            assertOperationReport(reportedOperations.get(0), OperationReport.Type.START,
+                    Operation.Type.STATEMENT_EXECUTE);
+            assertOperationReport(reportedOperations.get(1), OperationReport.Type.END,
+                    Operation.Type.STATEMENT_EXECUTE);
+        }
+    }
+
+    // Technically this test should probably belong in a FbStatementTest instead
+    @Test
+    public void synchronousCancellationDuringFetch() throws Exception {
+        TestOperationAware syncCancelOperationAware = new TestOperationAware() {
+            @Override
+            public void startOperation(Operation operation) {
+                super.startOperation(operation);
+                if (operation.getType() == Operation.Type.STATEMENT_FETCH) {
+                    try {
+                        operation.cancel();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        OperationMonitor.initOperationAware(syncCancelOperationAware);
+        usesDatabase.createDefaultDatabase();
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            List<OperationReport> reportedOperations = syncCancelOperationAware.getReportedOperations();
+            assertEquals(0, reportedOperations.size());
+            try (ResultSet rs = stmt.executeQuery("select 1 from RDB$DATABASE")) {
+                assertEquals(2, reportedOperations.size());
+                assertOperationReport(reportedOperations.get(0), OperationReport.Type.START,
+                        Operation.Type.STATEMENT_EXECUTE);
+                assertOperationReport(reportedOperations.get(1), OperationReport.Type.END,
+                        Operation.Type.STATEMENT_EXECUTE);
+
+                rs.next();
+
+                fail("should throw exception");
+            } catch (SQLException e) {
+                assertThat(e, errorCodeEquals(ISCConstants.isc_cancelled));
+            }
+            assertEquals(4, reportedOperations.size());
+            assertOperationReport(reportedOperations.get(2), OperationReport.Type.START,
+                    Operation.Type.STATEMENT_FETCH);
+            assertOperationReport(reportedOperations.get(3), OperationReport.Type.END,
+                    Operation.Type.STATEMENT_FETCH);
         }
     }
 

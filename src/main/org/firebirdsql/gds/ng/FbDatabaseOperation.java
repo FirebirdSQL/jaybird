@@ -36,10 +36,11 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-public final class FbDatabaseOperation implements Operation, OperationCloseHandle {
+final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
     private final Type type;
     private volatile FbDatabase fbDatabase;
+    private volatile boolean cancelled;
 
     private FbDatabaseOperation(Operation.Type type, FbDatabase fbDatabase) {
         this.type = requireNonNull(type, "type");
@@ -60,7 +61,13 @@ public final class FbDatabaseOperation implements Operation, OperationCloseHandl
                     .messageParameter("cancel")
                     .toFlatSQLException();
         }
+        cancelled = true;
         current.cancelOperation(ISCConstants.fb_cancel_raise);
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
     }
 
     /**
@@ -71,7 +78,7 @@ public final class FbDatabaseOperation implements Operation, OperationCloseHandl
      */
     @Override
     public void close() {
-        final FbDatabase previous = this.fbDatabase;
+        final FbDatabase previous = fbDatabase;
         fbDatabase = null;
         if (previous != null) {
             OperationMonitor.endOperation(this);

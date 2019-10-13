@@ -35,4 +35,9 @@ public interface OperationCloseHandle extends AutoCloseable {
     @Override
     void close();
 
+    /**
+     * @return {@code true} if the operation was cancelled
+     */
+    boolean isCancelled();
+
 }

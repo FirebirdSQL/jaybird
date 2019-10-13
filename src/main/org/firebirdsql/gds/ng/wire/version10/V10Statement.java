@@ -301,7 +301,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 final boolean hasSingletonResult = hasSingletonResult();
                 int expectedResponseCount = 0;
 
-                try (OperationCloseHandle ignored = signalExecute()){
+                try (OperationCloseHandle operationCloseHandle = signalExecute()){
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
                     try {
                         if (hasSingletonResult) {
                             expectedResponseCount++;
@@ -350,6 +354,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
                             // This should always be a GenericResponse, otherwise something went fundamentally wrong anyway
                             processExecuteResponse((GenericResponse) response);
+                        } catch (SQLException e) {
+                            if (e.getErrorCode() == ISCConstants.isc_cancelled) {
+                                expectedResponseCount = 0;
+                            }
+                            throw e;
                         } finally {
                             db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                         }
@@ -442,7 +451,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 if (isAllRowsFetched()) return;
 
-                try (OperationCloseHandle ignored = signalFetch()) {
+                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
                     try {
                         sendFetch(fetchSize);
                         getXdrOut().flush();
