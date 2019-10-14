@@ -35,7 +35,7 @@ public final class OperationMonitor {
 
     private static final String PERMISSION_INIT_OPERATION_AWARE = "org.firebirdsql.jaybird.initOperationAware";
 
-    private static final AtomicReference<OperationAware> instance = new AtomicReference<>(NoOpOperationAware.INSTANCE);
+    private static final AtomicReference<OperationAware> instance = new AtomicReference<OperationAware>(NoOpOperationAware.INSTANCE);
 
     private OperationMonitor() {
         throw new AssertionError("no instances");
