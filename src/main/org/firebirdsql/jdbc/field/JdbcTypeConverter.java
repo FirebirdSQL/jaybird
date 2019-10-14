@@ -75,6 +75,7 @@ public final class JdbcTypeConverter {
         case ISCConstants.SQL_INT64:
         case ISCConstants.SQL_DOUBLE:
         case ISCConstants.SQL_D_FLOAT:
+        case ISCConstants.SQL_INT128:
         case ISCConstants.SQL_DEC_FIXED:
             if (subtype == SUBTYPE_NUMERIC || (subtype == 0 && scale < 0)) {
                 return Types.NUMERIC;
@@ -92,7 +93,8 @@ public final class JdbcTypeConverter {
                 case ISCConstants.SQL_D_FLOAT:
                     return Types.DOUBLE;
                 case ISCConstants.SQL_DEC_FIXED:
-                    return Types.NUMERIC;
+                case ISCConstants.SQL_INT128:
+                    return Types.DECIMAL;
                 }
             }
         case ISCConstants.SQL_FLOAT:
@@ -171,8 +173,8 @@ public final class JdbcTypeConverter {
             return ISCConstants.SQL_DEC16;
         case dec34_type:
             return ISCConstants.SQL_DEC34;
-        case dec_fixed_type:
-            return ISCConstants.SQL_DEC_FIXED;
+        case int128_type:
+            return ISCConstants.SQL_INT128;
         case quad_type:
             return ISCConstants.SQL_QUAD;
         case float_type:

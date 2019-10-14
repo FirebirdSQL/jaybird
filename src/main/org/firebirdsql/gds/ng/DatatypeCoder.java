@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -495,6 +496,26 @@ public interface DatatypeCoder {
      * @return Byte array for decimal128 value
      */
     byte[] encodeDecimal128(Decimal128 decimal128);
+
+    /**
+     * Decodes a BigInteger from byte array.
+     *
+     * @param data Data to decode (expected 16 bytes)
+     * @return BigInteger value
+     */
+    BigInteger decodeInt128(byte[] data);
+
+    /**
+     * Encodes a BigInteger to a 16-byte byte array.
+     * <p>
+     * The implementation expects to be passed a value that fits in 16 bytes. If a larger value is passed, and
+     * {@code IllegalArgumentException} is thrown.
+     * </p>
+     *
+     * @param bigInteger The BigInteger value to be encoded
+     * @return Byte array for bigInteger value
+     */
+    byte[] encodeInt128(BigInteger bigInteger);
 
     /**
      * @return The encoding factory.

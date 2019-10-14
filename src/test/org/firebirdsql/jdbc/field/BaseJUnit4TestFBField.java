@@ -822,12 +822,12 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         toReturnValueExpectations(parsedValue.toBytes());
     }
 
-    protected final void setDecFixedExpectations(final String value) {
-        setDecfloat34Expectations(value);
+    protected final void setInt128Expectations(final BigInteger value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeInt128(value));
     }
 
-    protected final void toReturnDecFixedExpectations(final String value) {
-        toReturnDecfloat34Expectations(value);
+    protected final void toReturnInt128Expectations(final BigInteger value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeInt128(value));
     }
 
     /**

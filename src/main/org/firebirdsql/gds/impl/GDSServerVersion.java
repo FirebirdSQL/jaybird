@@ -31,15 +31,15 @@ import java.util.regex.Pattern;
 
 /**
  * Object representing a Firebird server version. The version string is returned
- * in response to the <code>isc_info_firebird_version</code> information call.
+ * in response to the {@code isc_info_firebird_version} information call.
  * Expected version format is:
  * <p>
- * <code>&lt;platform&gt;-&lt;type&gt;&lt;majorVersion&gt;.&lt;minorVersion&gt;.&lt;variant&gt;.&lt;buildNum&gt;
- * &lt;serverName&gt;</code>, and additional version string elements if present.
+ * {@code <platform>-<type><majorVersion>.<minorVersion>.<variant>.<buildNum>[-<revision>] <serverName>},
+ * and additional version string elements if present.
  * </p>
  * <p>
- * where <code>platform</code> is a two-character platform identification string,
- * Windows for example is "WI", <code>type</code> is one of the three characters:
+ * where {@code platform} is a two-character platform identification string,
+ * Windows for example is "WI", {@code type} is one of the three characters:
  * "V" - production version, "T" - beta version, "X" - development version.
  * </p>
  */

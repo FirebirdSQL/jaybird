@@ -60,6 +60,9 @@ public interface BlrConstants {
     int blr_bool = 23;
     int blr_dec64 = 24;
     int blr_dec128 = 25;
+    int blr_int128 = 26;
+    // Replaced by blr_int128 in 4.0.0.1604
+    @Deprecated
     int blr_dec_fixed = 26;
     int blr_sql_time_tz = 28;
     int blr_timestamp_tz = 29;

@@ -69,6 +69,15 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     (significantly) longer than the logical connection used to create the event
     manager. \
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
+-   Changed: Firebird 4.0.0.1604 and later changed the format of extended
+    numeric precision from a Decimal128 to an Int128, increasing the maximum
+    decimal precision from 34 to 38. The Int128 format is now supported. ([JDBC-595](http://tracker.firebirdsql.org/browse/JDBC-595)) \
+    Support for the old format will be removed after Jaybird 4.0.0-beta-2. See
+    also [Firebird 4 extended numeric precision support].
+-   New experimental feature: A way to monitor driver operations (specifically
+    statement executes and fetches). ([JDBC-597](http://tracker.firebirdsql.org/browse/JDBC-597) \ 
+    See [Operation monitoring] for details. \
+    This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Support
 =======
@@ -110,6 +119,7 @@ The main new features are:
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
 - [Generated keys support improvements]
+- [Operation monitoring]
 
 Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read 
 [Compatibility changes] before using Jaybird 4. See also 
@@ -879,16 +889,27 @@ Firebird 4 extended numeric precision support
 ---------------------------------------------
 
 Added support for the extended precision for `NUMERIC` and `DECIMAL` introduced 
-in Firebird 4, increasing the maximum precision to 34. In the implementation in 
-Firebird, this extended precision is backed by a IEEE-754 Decimal128 which is 
-also used for `DECFLOAT` support.
+in Firebird 4, increasing the maximum precision to 38. In the implementation in 
+Firebird, this extended precision is backed by an Int128.
 
-Any `NUMERIC` or `DECIMAL` with a precision between 19 and 34 will allow storage
-up to a precision of 34. 
+Any `NUMERIC` or `DECIMAL` with a precision between 19 and 38 will allow storage
+up to a precision of 38 (technically even 39, but not full range). 
 
 Values set on a field or parameter will be rounded to the target scale of the 
-field using `RoundingMode.HALF_EVEN`. Values exceeding a precision of 34 after 
-rounding will be rejected with a `TypeConversionException`.
+field using `RoundingMode.HALF_UP`. Values exceeding that do not fit in an 
+Int128 after rounding will be rejected with a `TypeConversionException`.
+
+### Important notice about extended numeric precision support ###
+
+The implementation of extended numeric precision was changed after Firebird
+4.0.0-beta-1 (in build 1604) from a maximum precision of 34 backed by a 
+Decimal128 to a maximum precision of 38 backed by an Int128. 
+
+Current test versions of Jaybird 4.0.0 support both formats, but support for the
+old 'DEC_FIXED' format backed by a Decimal128 will be removed after Jaybird
+4.0.0-beta-2. The old format is only supported in statements and result sets.
+Metadata may report incorrect incorrect information regarding precision (ie 38
+instead of 34).
 
 Firebird 4 time zone support
 ----------------------------
@@ -1520,6 +1541,41 @@ ignore or only selectively enable generated keys support, see
 ### Other behavioural changes to generated keys ###
 
 See [Changes to behaviour of generated keys] in [Stricter JDBC compliance]. 
+
+Operation monitoring
+--------------------
+
+**Experimental feature**
+
+Operation monitoring is an experimental feature that allows an application to
+monitor and - in a limited fashion - control driver operations. This feature is
+exposed as the interfaces `org.firebirdsql.gds.ng.monitor.OperationAware` and
+`org.firebirdsql.gds.ng.monitor.Operation`.
+
+An application can implement `OperationAware` and register it through 
+`org.firebirdsql.gds.ng.OperationMonitor.initOperationAware(OperationAware)`.
+When a `SecurityManager` is active, registering an `OperationAware` will
+require the `SQLPermission` with name `org.firebirdsql.jaybird.initOperationAware`.
+Only one instance can be registered at a time. Setting `null` will clear the
+current instance.
+
+Once registered, the `OperationAware` instance will be notified of operation
+start and end through the methods `startOperation(Operation)` and 
+`endOperation(Operation)`. These methods are called on the thread performing the
+operation, so implementations must complete these methods as soon as possible to
+prevent performance problems in the driver.
+
+The `Operation` instance exposes the type of operation through `getType()` and
+allows the operation to be cancelled. Cancellation is only possible as long as
+the operation is active. Attempting to cancel when the operation is complete
+will throw an `SQLException`.
+
+This feature is experimental and its API may be removed or changed, and
+operation types may be added or removed in point releases.
+
+See also [jdp-2019-06 Ability to monitor driver operations](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-06-ability-to-monitor-driver-operations.md)
+
+This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
 Potentially breaking changes
 ----------------------------

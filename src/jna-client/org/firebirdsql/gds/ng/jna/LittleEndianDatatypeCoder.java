@@ -23,6 +23,8 @@ import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 
+import java.math.BigInteger;
+
 /**
  * Datatype encoder and decoder for little endian platforms, specifically for use with the Firebird client library.
  * <p>
@@ -163,6 +165,16 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
     @Override
     public byte[] encodeDecimal128(Decimal128 decimal128) {
         return reverseByteOrder(super.encodeDecimal128(decimal128));
+    }
+
+    @Override
+    public BigInteger decodeInt128(byte[] data) {
+        return super.decodeInt128(reverseByteOrder(data));
+    }
+
+    @Override
+    public byte[] encodeInt128(BigInteger bigInteger) {
+        return reverseByteOrder(super.encodeInt128(bigInteger));
     }
 
     private byte[] reverseByteOrder(byte[] array) {

@@ -75,6 +75,9 @@ public final class FbMetadataConstants {
     public static final int boolean_type = 23;
     public static final int dec16_type = 24;
     public static final int dec34_type = 25;
+    public static final int int128_type = 26;
+    // Replaced by int128_type in 4.0.0.1604
+    @Deprecated
     public static final int dec_fixed_type = 26;
     public static final int double_type = 27;
     public static final int time_tz_type = 28;

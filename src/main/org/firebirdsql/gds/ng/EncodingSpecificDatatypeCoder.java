@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -378,6 +379,16 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public byte[] encodeDecimal128(Decimal128 decimal128) {
         return parentCoder.encodeDecimal128(decimal128);
+    }
+
+    @Override
+    public BigInteger decodeInt128(byte[] data) {
+        return parentCoder.decodeInt128(data);
+    }
+
+    @Override
+    public byte[] encodeInt128(BigInteger bigInteger) {
+        return parentCoder.encodeInt128(bigInteger);
     }
 
     @Override

@@ -19,13 +19,10 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.StatementType;
-import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.*;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
@@ -303,64 +300,76 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
                 int expectedResponseCount = 0;
-                try {
-                    if (hasSingletonResult) {
-                        expectedResponseCount++;
-                    }
-                    sendExecute(hasSingletonResult
-                                    ? WireProtocolConstants.op_execute2
-                                    : WireProtocolConstants.op_execute,
-                            parameters);
-                    expectedResponseCount++;
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
 
-                final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
-                try {
-                    final FbWireDatabase db = getDatabase();
+                try (OperationCloseHandle operationCloseHandle = signalExecute()){
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
                     try {
-                        expectedResponseCount--;
-                        Response response = db.readResponse(statementWarningCallback);
                         if (hasSingletonResult) {
-                            /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                             * have a result set that will be fetched, instead we have a singleton result if we have fields
-                             */
-                            statementListenerDispatcher.statementExecuted(this, false, true);
-                            if (response instanceof SqlResponse) {
-                                processExecuteSingletonResponse((SqlResponse) response);
-                                expectedResponseCount--;
-                                response = db.readResponse(statementWarningCallback);
+                            expectedResponseCount++;
+                        }
+                        sendExecute(hasSingletonResult
+                                        ? WireProtocolConstants.op_execute2
+                                        : WireProtocolConstants.op_execute,
+                                parameters);
+                        expectedResponseCount++;
+                        getXdrOut().flush();
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    }
+
+                    final WarningMessageCallback statementWarningCallback = getStatementWarningCallback();
+                    try {
+                        final FbWireDatabase db = getDatabase();
+                        try {
+                            expectedResponseCount--;
+                            Response response = db.readResponse(statementWarningCallback);
+                            if (hasSingletonResult) {
+                                /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                                 * have a result set that will be fetched, instead we have a singleton result if we have fields
+                                 */
+                                statementListenerDispatcher.statementExecuted(this, false, true);
+                                if (response instanceof SqlResponse) {
+                                    processExecuteSingletonResponse((SqlResponse) response);
+                                    expectedResponseCount--;
+                                    response = db.readResponse(statementWarningCallback);
+                                } else {
+                                    // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
+                                    // We don't expect any more responses after this
+                                    expectedResponseCount = 0;
+                                    SQLWarning sqlWarning = new SQLWarning(
+                                            "Expected an SqlResponse, instead received a " + response.getClass().getName());
+                                    log.warn(sqlWarning.toString() + "; see debug level for stacktrace");
+                                    log.debug(sqlWarning.toString(), sqlWarning);
+                                    statementWarningCallback.processWarning(sqlWarning);
+                                }
+                                setAllRowsFetched(true);
                             } else {
-                                // We didn't get an op_sql_response first, something is iffy, maybe cancellation or very low level problem?
-                                // We don't expect any more responses after this
-                                expectedResponseCount = 0;
-                                SQLWarning sqlWarning = new SQLWarning(
-                                        "Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                log.warn(sqlWarning.toString() + "; see debug level for stacktrace");
-                                log.debug(sqlWarning.toString(), sqlWarning);
-                                statementWarningCallback.processWarning(sqlWarning);
+                                // A normal execute is never a singleton result (even if it only produces a single result)
+                                statementListenerDispatcher.statementExecuted(this, hasFields(), false);
                             }
-                            setAllRowsFetched(true);
-                        } else {
-                            // A normal execute is never a singleton result (even if it only produces a single result)
-                            statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+
+                            // This should always be a GenericResponse, otherwise something went fundamentally wrong anyway
+                            processExecuteResponse((GenericResponse) response);
+                        } catch (SQLException e) {
+                            if (e.getErrorCode() == ISCConstants.isc_cancelled) {
+                                expectedResponseCount = 0;
+                            }
+                            throw e;
+                        } finally {
+                            db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                         }
 
-                        // This should always be a GenericResponse, otherwise something went fundamentally wrong anyway
-                        processExecuteResponse((GenericResponse) response);
-                    } finally {
-                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
+                        if (getState() != StatementState.ERROR) {
+                            switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
+                        }
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                     }
-
-                    if (getState() != StatementState.ERROR) {
-                        switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
-                    }
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
         } catch (SQLException e) {
@@ -442,18 +451,24 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 }
                 if (isAllRowsFetched()) return;
 
-                try {
-                    sendFetch(fetchSize);
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    processFetchResponse();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
+                    try {
+                        sendFetch(fetchSize);
+                        getXdrOut().flush();
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    }
+                    try {
+                        processFetchResponse();
+                    } catch (IOException ex) {
+                        switchState(StatementState.ERROR);
+                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    }
                 }
             }
         } catch (SQLException e) {

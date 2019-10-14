@@ -139,7 +139,7 @@ public class TestFBPreparedStatementMetaData {
             testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
                     .replace("/* decfloat-param */", ", ?, ?");
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
@@ -211,9 +211,9 @@ public class TestFBPreparedStatementMetaData {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, parameterNullable, true, "decfloat16_field"));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, parameterNullable, true, "decfloat34_field"));
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 34, 20, parameterNullable, true, "col_numeric25_20"));
-            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 34, 5, parameterNullable, true, "col_decimal30_5"));
+        if (supportInfo.supportsDecimalPrecision(38)) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 38, 20, parameterNullable, true, "col_numeric25_20"));
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 38, 5, parameterNullable, true, "col_decimal30_5"));
         }
         if (shouldTestTimeZoneSupport()) {
             testData.add(create(testData.size() + 1, "java.time.OffsetTime", parameterModeIn, JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, parameterNullable, false, "col_timetz"));

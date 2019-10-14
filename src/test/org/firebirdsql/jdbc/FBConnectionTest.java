@@ -843,6 +843,7 @@ public class FBConnectionTest {
 
     @Test
     public void setNetworkTimeout_getAndSetSeries() throws Exception {
+        assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE, isPureJavaType());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try (Connection connection = getConnectionViaDriverManager()) {
             assertEquals("Expected 0 as initial network timeout", 0, connection.getNetworkTimeout());

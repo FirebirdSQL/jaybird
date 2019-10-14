@@ -136,7 +136,7 @@ public class TestFBResultSetMetaDataParametrized {
                     ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
             testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field");
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5");
@@ -207,7 +207,7 @@ public class TestFBResultSetMetaDataParametrized {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 23, "DECFLOAT16_FIELD", "DECFLOAT16_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, TABLE_NAME, columnNullable, true, true));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 42, "DECFLOAT34_FIELD", "DECFLOAT34_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, TABLE_NAME, columnNullable, true, true));
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 27, "COL_NUMERIC25_20", "COL_NUMERIC25_20", NUMERIC, "NUMERIC", 25, 20, TABLE_NAME, columnNullable, true, true));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, TABLE_NAME, columnNullable, true, true));
         }

@@ -522,7 +522,7 @@ public class FBDatabaseMetaDataTest {
     @Test
     public void databaseMetaData_decimalAndNumericPrecision() throws Exception {
         // intentionally not using FirebirdSupportInfo.maxDecimalPrecision() as tested implementation uses that method
-        final int expectedPrecision = getDefaultSupportInfo().isVersionEqualOrAbove(4, 0) ? 34 : 18;
+        final int expectedPrecision = getDefaultSupportInfo().isVersionEqualOrAbove(4, 0) ? 38 : 18;
         try (ResultSet rs = dmd.getTypeInfo()) {
             boolean foundNumeric = false;
             boolean foundDecimal = false;

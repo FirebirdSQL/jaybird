@@ -54,6 +54,7 @@ public abstract class FBField {
     static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
     static final String BIG_INTEGER_CONVERSION_ERROR = "Error converting to BigInteger.";
     static final String DECIMAL_CONVERSION_ERROR = "Error converting to Decimal";
+    static final String INT128_CONVERSION_ERROR = "Error converting to Int128";
     static final String OVERFLOW_ERROR =
             "Value is too large to fit in target type, or cannot be represented by the target type";
     static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";

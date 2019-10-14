@@ -31,9 +31,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
@@ -470,6 +472,30 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     @Override
     public byte[] encodeDecimal128(Decimal128 decimal128) {
         return decimal128.toBytes();
+    }
+
+    @Override
+    public BigInteger decodeInt128(byte[] data) {
+        return new BigInteger(data);
+    }
+
+    @Override
+    public byte[] encodeInt128(BigInteger bigInteger) {
+        if (bigInteger.bitLength() > 127) {
+            throw new IllegalArgumentException("Received BigInteger value requires more than 16 bytes storage");
+        }
+        byte[] minimumBytes = bigInteger.toByteArray();
+        if (minimumBytes.length == 16) {
+            return minimumBytes;
+        }
+        byte[] int128Bytes = new byte[16];
+        int startOfMinimum = 16 - minimumBytes.length;
+        if (bigInteger.signum() == -1) {
+            // extend sign
+            Arrays.fill(int128Bytes, 0, startOfMinimum, (byte) -1);
+        }
+        System.arraycopy(minimumBytes, 0, int128Bytes, startOfMinimum, minimumBytes.length);
+        return int128Bytes;
     }
 
     @Override

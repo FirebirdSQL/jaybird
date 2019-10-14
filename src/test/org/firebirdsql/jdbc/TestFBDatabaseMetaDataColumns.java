@@ -161,7 +161,7 @@ public class TestFBDatabaseMetaDataColumns {
             createTable = createTable.replace("/* decfloat */",
                     ", col_decfloat16 DECFLOAT(16), col_decfloat34 DECFLOAT(34)");
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
         }
@@ -897,7 +897,7 @@ public class TestFBDatabaseMetaDataColumns {
     @Test
     public void testNumeric25_20Column() throws Exception {
         assumeTrue("Test requires extended numeric precision support",
-                supportInfoFor(con).supportsDecimalPrecision(34));
+                supportInfoFor(con).supportsDecimalPrecision(38));
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -915,7 +915,7 @@ public class TestFBDatabaseMetaDataColumns {
     @Test
     public void testDecimal30_5Column() throws Exception {
         assumeTrue("Test requires extended numeric precision support",
-                supportInfoFor(con).supportsDecimalPrecision(34));
+                supportInfoFor(con).supportsDecimalPrecision(38));
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
