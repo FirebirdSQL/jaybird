@@ -70,6 +70,23 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * Check if the major.minor of this version is below the specified version.
+     * <p>
+     * Equivalent to {@code !isVersionEqualOrAbove(majorVersion, minorVersion)}.
+     * </p>
+     *
+     * @param majorVersion
+     *         Major version
+     * @param minorVersion
+     *         Minor version
+     * @return {@code true} when current major is smaller than the specified major, or major is same and minor is
+     * smaller than the specified minor
+     */
+    public boolean isVersionBelow(int majorVersion, int minorVersion) {
+        return !isVersionEqualOrAbove(majorVersion, minorVersion);
+    }
+
+    /**
      * Checks if BIGINT is supported.
      * <p>
      * Low level this feature was added in Interbase 6.0 / Firebird 1.0, but it was never surfaced in DDL
@@ -338,6 +355,13 @@ public final class FirebirdSupportInfo {
 
     public boolean supportsWireEncryption() {
         return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
+     */
+    public boolean supportsNativeUserDefinedFunctions() {
+        return isVersionBelow(4, 0);
     }
 
     /**

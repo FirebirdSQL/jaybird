@@ -104,7 +104,7 @@ public class TestFBResultSet extends TestXABase {
         xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
         assertFalse("execute returned true for insert statement",
-                s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6:8:00:03.1223')"));
+                s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6 8:00:03.1223')"));
         assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
         ResultSet rs = s.getResultSet();
         while (rs.next()) {

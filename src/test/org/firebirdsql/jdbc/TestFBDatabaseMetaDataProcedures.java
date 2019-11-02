@@ -153,6 +153,10 @@ public class TestFBDatabaseMetaDataProcedures extends
         try {
             int procedureCount = 0;
             while(procedures.next()) {
+                if (TestFBDatabaseMetaData.FB4_TRANSITIONS_PROC_NAME.equals(procedures.getString("PROCEDURE_NAME"))) {
+                    // Skip FB4 system procedure TRANSITIONS, returned as packages aren't excluded (fixed in Jaybird 4)
+                    continue;
+                }
                 if (procedureCount < expectedProcedures.size()) {
                     ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
                     Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());

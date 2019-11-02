@@ -23,6 +23,7 @@ package org.firebirdsql.jdbc.escape;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -34,6 +35,7 @@ import java.util.Collection;
 
 import org.firebirdsql.management.FBManager;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +45,7 @@ import org.junit.runners.Parameterized.Parameters;
 /**
  * Tests for support of the scalar time and date function escapes as defined in
  * appendix D.3 of the JDBC 4.1 specification.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @RunWith(Parameterized.class)
@@ -51,11 +53,11 @@ public class TestScalarTimeDateFunctions {
     private static FBManager fbManager;
     private static Connection con;
     private static Statement stmt;
-    
+
     private final String functionCall;
     private final Validator validator;
     private final boolean supported;
-    
+
     @BeforeClass
     public static void setUp() throws Exception {
         fbManager = createFBManager();
@@ -64,7 +66,7 @@ public class TestScalarTimeDateFunctions {
         con = getConnectionViaDriverManager();
         stmt = con.createStatement();
     }
-    
+
     @AfterClass
     public static void tearDown() throws Exception {
         closeQuietly(stmt);
@@ -72,10 +74,10 @@ public class TestScalarTimeDateFunctions {
         defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
-    
+
     /**
      * Testcase
-     * 
+     *
      * @param functionCall
      *            JDBC function call (without {fn .. })
      * @param validator
@@ -89,8 +91,8 @@ public class TestScalarTimeDateFunctions {
         this.validator = validator;
         this.supported = supported;
     }
-    
-    @Parameters
+
+    @Parameters(name="{index}: {0}")
     public static Collection<Object[]> timeDateFunctionTestcases() {
         return Arrays.asList(new Object[][] {
 //@formatter:off
@@ -125,6 +127,13 @@ public class TestScalarTimeDateFunctions {
         /*27*/  testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)),
 //@formatter:off
         });
+    }
+
+    @Before
+    public void skipUnsupportedFirebird4Types() {
+        assumeFalse("CURRENT_TIME(STAMP) related functions on Firebird return time zone types",
+                getDefaultSupportInfo().isVersionEqualOrAbove(4, 0) &&
+                        (validator instanceof CurrentTimeValidator || validator instanceof CurrentTimestampValidator));
     }
     
     @Test

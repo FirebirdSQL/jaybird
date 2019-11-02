@@ -73,7 +73,7 @@ public class Firebird4DataTypeTest {
     }
 
     @Test
-    public void testDefloatBindCharOnDecfloat() throws Exception {
+    public void testDecfloatBindCharOnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("decfloatBind", "char");
 
@@ -92,7 +92,7 @@ public class Firebird4DataTypeTest {
     }
 
     @Test
-    public void testDefloatBindDoublePrecisionOnDecfloat() throws Exception {
+    public void testDecfloatBindDoublePrecisionOnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("decfloatBind", "double precision");
 
@@ -110,7 +110,7 @@ public class Firebird4DataTypeTest {
     }
 
     @Test
-    public void testDefloatBindBigint3OnDecfloat() throws Exception {
+    public void testDecfloatBindBigint3OnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("decfloatBind", "bigint,3");
 
