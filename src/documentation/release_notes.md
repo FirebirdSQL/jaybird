@@ -32,7 +32,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.8, and 3.0.4, but should also 
+Jaybird 3.0 was tested against Firebird 2.5.9, and 3.0.4, but should also 
 support other Firebird versions from 2.0 and up. Firebird 4 is not fully 
 supported in Jaybird 3.x.
 
@@ -62,21 +62,22 @@ types like `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision higher than 18 will
 be introduced in Jaybird 4.
 
 The Srp256 authentication plugin is supported, but the other SrpNNN plugins are
-not.
+not supported; support for these plugins will be introduced in Jaybird 4.
 
 Jaybird 3.0 does not support the Firebird 4 zlib compression.
 
 Supported Java versions
 -----------------------
 
-Jaybird 3 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 - 11 (JDBC 
-4.3). Support for earlier Java versions has been dropped.
+Jaybird 3 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and 
+higher (JDBC 4.3). Support for earlier Java versions has been dropped.
 
 For the time being, there will be no Java 9+ specific builds, the Java 8 builds 
 have the same source and all JDBC 4.3 related functionality.
 
-Given the limited support period for Java 9 and higher versions, we may limit
+Given the limited support period for Java 9 and higher versions, we limit
 support on those versions to the most recent LTS version and the latest release.
+As of November 2019, this means Java 11 and Java 13 are supported.
 
 Jaybird 3.0 is not modularized, but since Jaybird 3.0.3, it declares the 
 automatic module name `org.firebirdsql.jaybird`.
@@ -534,8 +535,9 @@ releases, it is not necessary to add the `java.xml.bind` module using
 `--add-modules java.xml.bind`, as we removed its use (see caveat below for the 
 Java 7 version of Jaybird).
 
-Given the limited support period for Java 9 and higher versions, we may limit
-support on those versions.
+Given the limited support period for Java 9 and higher versions, we limit
+support on those versions to the most recent LTS version and the latest release.
+As of November 2019, this means Java 11 and Java 13 are supported.
 
 We recommend to only use the Java 8 version of Jaybird with Java 9+, and not use 
 the Java 7 version of Jaybird. The Java 7 version doesn't implement all of the 
@@ -573,10 +575,11 @@ Partial Firebird 4 support:
 - Authentication plugin _Srp256_ (Jaybird 3.0.5), but not the other _SrpNNN_ 
 plugins
 - Page size 32kb in management classes (Jaybird 3.0.5)
-- New data types (eg `TIME WITH TIME ZONE`, `TIMESTAMP WITH TIME ZONE`, 
-`DECFLOAT` and `NUMERIC`/`DECIMAL` with precision greater than 18) are **not** 
-supported. See [Limited support for new Firebird 4 data types] for workarounds
-for the `WITH TIME ZONE` and `DECFLOAT` types.
+- Workarounds for new data types. The new data types introduced in Firebird (eg
+`TIME WITH TIME ZONE`, `TIMESTAMP WITH TIME ZONE`, `DECFLOAT` and 
+`NUMERIC`/`DECIMAL` with precision greater than 18) are **not** supported. See
+[Limited support for new Firebird 4 data types] for workarounds for the 
+`WITH TIME ZONE` and `DECFLOAT` types.
 
 ### Other Firebird feature support ###
 
