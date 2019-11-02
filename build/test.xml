@@ -4,7 +4,8 @@
     <!-- runs the junit tests                                                -->
     <!-- =================================================================== -->
 
-    <target name="all-tests-pure-java" depends="jars">
+    <target name="all-tests-pure-java" depends="jars,all-tests-pure-java-only"/>
+    <target name="all-tests-pure-java-only" depends="init">
 
         <!-- Override JUnit defaults -->
 
@@ -369,7 +370,8 @@
     </target>
 
 
-    <target name="tests-report-html-pure-java" depends="all-tests-pure-java">
+    <target name="tests-report-html-pure-java" depends="all-tests-pure-java,tests-report-html-pure-java-only"/>
+    <target name="tests-report-html-pure-java-only" depends="init">
         <mkdir dir="${build.reports.pure_java}/html"/>
 
         <junitreport todir="${build.reports.pure_java}">
