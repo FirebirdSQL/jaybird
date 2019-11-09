@@ -29,6 +29,16 @@ Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
 <http://tracker.firebirdsql.org/browse/JDBC>.
 
+Support
+=======
+
+If you need support with Jaybird, join the Firebird-Java mailing list. You can
+subscribe by sending an email to [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com).
+
+Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
+
+See also [Where to get help](https://www.firebirdsql.org/file/documentation/drivers_documentation/java/faq.html#where-to-get-help)
+
 Supported Firebird versions
 ---------------------------
 
