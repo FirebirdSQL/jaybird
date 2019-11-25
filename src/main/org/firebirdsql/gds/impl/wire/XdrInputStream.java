@@ -77,7 +77,7 @@ public final class XdrInputStream extends BufferedInputStream {
         int bytesToSkip = (4 - length) & 3;
         int actual = skipFully(bytesToSkip);
         assert actual == bytesToSkip
-                : String.format("Unexpect number of bytes skipped: %d, expected: %d", actual, bytesToSkip);
+                : String.format("Unexpected number of bytes skipped: %d, expected: %d", actual, bytesToSkip);
         return actual;
     }
 
@@ -86,7 +86,7 @@ public final class XdrInputStream extends BufferedInputStream {
      *
      * @param numbytes
      *         Number of bytes to skip.
-     * @return Actual number of bytes skipped (usually {@code n}, unless the underlying input stream is closed).
+     * @return Actual number of bytes skipped (usually {@code numbytes}, unless the underlying input stream is closed).
      * @throws IOException
      *         IOException if an error occurs while reading from the underlying input stream
      */
@@ -97,6 +97,7 @@ public final class XdrInputStream extends BufferedInputStream {
         if (numbytes <= 0) {
             return 0;
         }
+        // TODO Switch the readNBytes in Java 9, and simplify as it's currently only used for 1 - 3 bytes.
         int n = numbytes;
         int buflen = Math.min(1024, n);
         byte[] data = new byte[buflen];
