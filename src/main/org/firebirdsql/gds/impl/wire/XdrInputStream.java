@@ -76,26 +76,40 @@ public final class XdrInputStream {
      * @see XdrOutputStream#writePadding(int, int)
      */
     public int skipPadding(int length) throws IOException {
-        return skipFully((4 - length) & 3);
+        int bytesToSkip = (4 - length) & 3;
+        int actual = skipFully(bytesToSkip);
+        assert actual == bytesToSkip
+                : String.format("Unexpected number of bytes skipped: %d, expected: %d", actual, bytesToSkip);
+        return actual;
     }
 
     /**
      * Skips the specified number of bytes.
      *
-     * @param n
+     * @param numbytes
      *         Number of bytes to skip.
-     * @return Actual number of bytes skipped (usually <code>n</code>, unless the underlying input stream is closed).
+     * @return Actual number of bytes skipped (usually {@code n}, unless the underlying input stream is closed).
      * @throws IOException
-     *         IOException if an error occurs while reading from the
-     *         underlying input stream
+     *         IOException if an error occurs while reading from the underlying input stream
      */
-    public int skipFully(int n) throws IOException {
-        int total = 0;
-        int cur;
-        while (total < n && (cur = (int) in.skip(n - total)) > 0) {
-            total += cur;
+    public int skipFully(int numbytes) throws IOException {
+        // This is the skip from SocketInputStream, which will read all bytes unless the stream is closed.
+        // We can't rely on InputStream.skip(int), because for example CipherInputStream will not skip beyond
+        // its current buffer.
+        if (numbytes <= 0) {
+            return 0;
         }
-        return total;
+        int n = numbytes;
+        int buflen = Math.min(1024, n);
+        byte[] data = new byte[buflen];
+        while (n > 0) {
+            int r = in.read(data, 0, Math.min(buflen, n));
+            if (r < 0) {
+                break;
+            }
+            n -= r;
+        }
+        return numbytes - n;
     }
 
     /**
