@@ -252,7 +252,7 @@ The following has been changed or fixed since Jaybird 3.0.7:
     hang or throw exceptions like _"Unsupported or unexpected operation code"_. ([JDBC-599](http://tracker.firebirdsql.org/browse/JDBC-599)) \
     The implementation could read wrong data, followed by either a read blocked
     waiting for more data or an exception. \
-    The underlying problem was how buffer padding was skipped used 
+    The underlying problem was how buffer padding was skipped using 
     `InputStream.skip`, which in `CipherInputStream` never skips beyond its
     current buffer. If that buffer was at (or 1 or 2 bytes from) the end, 
     Jaybird was reading less bytes than it should. This caused subsequent reads
