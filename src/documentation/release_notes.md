@@ -243,6 +243,17 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.9
+------------------------
+
+The following has been changed or fixed since Jaybird 3.0.9:
+
+..
+
+### Known issues in Jaybird 3.0.9
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.8
 ------------------------
 
@@ -291,10 +302,6 @@ The following has been changed or fixed since Jaybird 3.0.6
     manager. \
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
     
-### Known issues in Jaybird 3.0.7
-
-See [Known Issues]
-
 Changes in Jaybird 3.0.6
 ------------------------
 
