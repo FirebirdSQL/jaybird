@@ -324,7 +324,7 @@ Gotcha's
 --------
 
 If you find a problem while upgrading, or other bugs: please report it 
-on <http://tracker.firebirdsql.org/brows/JDBC>.
+on <http://tracker.firebirdsql.org/browse/JDBC>.
 
 For known issues, consult [Known Issues].
 
