@@ -87,6 +87,11 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     current buffer. If that buffer was at (or 1 or 2 bytes from) the end, 
     Jaybird was reading less bytes than it should. This caused subsequent reads
     to read wrong data, reading too little or too much data.
+-   New feature: Support for the v15 protocol (Firebird 3.0.2 and higher). ([JDBC-601](http://tracker.firebirdsql.org/browse/JDBC-601)) \
+    The v15 protocol supports database encryption key callbacks during the
+    authentication phase, supporting encrypted security databases. We decided to
+    implement the v14 changes only as part of the v15 implementation. \
+    See also [Database encryption support].
 
 Support
 =======
@@ -483,6 +488,10 @@ Jaybird 4 (and 3.0.4) adds support for Firebird 3 database encryption callbacks
 in the pure Java implementation of the version 13 protocol. This feature was 
 sponsored by IBPhoenix.
 
+In addition, version 15 of the protocol (Firebird 3.0.2 and higher) was also
+implemented, supporting encryption callbacks during authentication for use with
+encrypted security databases.
+
 The current implementation is simple and only supports replying with a static 
 value from a connection property. Be aware that a static value response for 
 database encryption is not very secure as it can easily lead to replay attacks 
@@ -529,13 +538,7 @@ Other warnings and limitations
     encryption (caveat: see the next point).
 -   Firebird may ask for the database encryption key before the connection has
     been encrypted (for example if the encrypted database itself is used as the
-    security database). _This applies to v15 protocol support, which is not yet
-    available._
--   The improvements of the versions 14 and 15 wire protocol are not
-    implemented, and as a result encrypted security databases (external or 
-    security database hosted in the database itself) will not work unless the
-    encryption plugin does not require a callback. Support for the version 15 
-    wire protocol will be added in a future version.
+    security database). _This applies to v15 protocol support._
 -   We cannot guarantee that the `dbCryptConfig` value cannot be obtained by 
     someone with access to your application or the machine hosting your 
     application (although that in itself would already imply a severe security 

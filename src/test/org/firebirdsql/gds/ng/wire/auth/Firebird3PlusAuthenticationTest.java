@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version13;
+package org.firebirdsql.gds.ng.wire.auth;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.DatabaseUserRule;
@@ -47,12 +47,12 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.*;
 
 /**
- * Test authentication in the V13 protocol.
+ * Test Firebird 3 and higher authentication introduced in protocol v13.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestV13Authentication {
+public class Firebird3PlusAuthenticationTest {
 
     @ClassRule
     public static final RequireProtocol requireProtocol = requireProtocolVersion(13);

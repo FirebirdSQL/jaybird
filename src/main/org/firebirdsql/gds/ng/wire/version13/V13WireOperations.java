@@ -245,18 +245,9 @@ public class V13WireOperations extends V11WireOperations {
 
         readOperationResponse(readNextOperation(), null);
     }
-
-    /**
-     * Handles the database encryption key callback.
-     *
-     * @param dbCryptCallback
-     *         Database encryption callback plugin
-     * @throws IOException
-     *         For errors reading data from the socket
-     * @throws SQLException
-     *         For database errors
-     */
-    protected final void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException {
+    
+    @Override
+    public final void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException {
         final DbCryptData serverPluginData = readCryptKeyCallback();
         DbCryptData clientPluginResponse;
         try {

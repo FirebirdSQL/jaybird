@@ -47,6 +47,7 @@ import java.util.Properties;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests related to database encryption.
@@ -225,8 +226,9 @@ public class DatabaseEncryptionTest {
    }
 
    @Test
-   @Ignore("Requires encrypted self-security db + protocol v15")
    public void testEncryptedSelfSecurityDb() throws Exception {
+       assumeTrue("Protocol version 15 is required for encrypted security database with callback, but not supported",
+               getDefaultSupportInfo().supportsProtocol(15));
        String url = FBTestProperties.getUrl(CRYPTSEC_DB);
        System.out.println(url);
        Properties props = new Properties();

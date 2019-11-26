@@ -30,6 +30,7 @@ import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
@@ -272,7 +273,20 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             }
 
             xdrOut.flush();
-            final int operation = readNextOperation();
+            
+            FbWireOperations cryptKeyCallbackWireOperations = null;
+            DbCryptCallback dbCryptCallback = null;
+            int operation = readNextOperation();
+            while (operation == op_crypt_key_callback) {
+                if (cryptKeyCallbackWireOperations == null) {
+                    cryptKeyCallbackWireOperations = getCryptKeyCallbackWireOperations();
+                }
+                if (dbCryptCallback == null) {
+                    dbCryptCallback = createDbCryptCallback();
+                }
+                cryptKeyCallbackWireOperations.handleCryptKeyCallback(dbCryptCallback);
+                operation = readNextOperation();
+            }
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
                 FbWireAttachment.AcceptPacket acceptPacket = new FbWireAttachment.AcceptPacket();
                 acceptPacket.operation = operation;
@@ -306,7 +320,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 }
                 C connectionHandle = createConnectionHandle(descriptor);
                 if (operation == op_cond_accept) {
-                   connectionHandle.authReceiveResponse(acceptPacket);
+                    connectionHandle.authReceiveResponse(acceptPacket);
                 }
                 return connectionHandle;
             } else {
@@ -409,6 +423,15 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     /**
+     * @return Instance of FbWireOperations that can read crypt key callbacks (in practice: v15).
+     */
+    private FbWireOperations getCryptKeyCallbackWireOperations() {
+        ProtocolDescriptor protocolDescriptor = protocols
+                .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15);
+        return protocolDescriptor.createWireOperations(this, null, this);
+    }
+
+    /**
      * Creates the connection handle for this type of connection.
      *
      * @param protocolDescriptor
@@ -418,7 +441,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     protected abstract C createConnectionHandle(ProtocolDescriptor protocolDescriptor);
 
     /**
-     * Reads the next operation code. Skips all {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_dummy} codes received.
+     * Reads the next operation code. Skips all {@link org.firebirdsql.gds.impl.wire.WireProtocolConstants#op_dummy}
+     * codes received.
      *
      * @return Operation code
      * @throws IOException

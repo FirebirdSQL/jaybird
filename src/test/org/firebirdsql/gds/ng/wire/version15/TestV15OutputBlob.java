@@ -16,30 +16,31 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version13;
+package org.firebirdsql.gds.ng.wire.version15;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.gds.ng.wire.version12.TestV12Service;
+import org.firebirdsql.gds.ng.wire.version13.TestV13OutputBlob;
 import org.junit.ClassRule;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Service} in the V13 protocol.
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob} in the version 15 protocol
+ * (note: there is no version 15 specific implementation of this class).
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 4.0
  */
-public class TestV13Service extends TestV12Service {
+public class TestV15OutputBlob extends TestV13OutputBlob {
 
     @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(15);
 
-    public TestV13Service() {
-        this(new V13CommonConnectionInfo());
+    public TestV15OutputBlob() {
+        this(new V15CommonConnectionInfo());
     }
 
-    protected TestV13Service(V13CommonConnectionInfo commonConnectionInfo) {
+    protected TestV15OutputBlob(V15CommonConnectionInfo commonConnectionInfo) {
         super(commonConnectionInfo);
     }
 }

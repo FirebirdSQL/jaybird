@@ -193,6 +193,14 @@ public interface WireProtocolConstants {
        It also transfers SQL messages in the packed (null aware) format. */
     int PROTOCOL_VERSION13 = (FB_PROTOCOL_FLAG | 13);
 
+    /* Protocol 14:
+    	- fixes a bug in database crypt key callback */
+    int PROTOCOL_VERSION14	= (FB_PROTOCOL_FLAG | 14);
+
+    /* Protocol 15:
+    	- supports crypt key callback at connect phase */
+    int PROTOCOL_VERSION15 = (FB_PROTOCOL_FLAG | 15);
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
     
