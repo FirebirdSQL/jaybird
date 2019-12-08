@@ -92,6 +92,11 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     authentication phase, supporting encrypted security databases. We decided to
     implement the v14 changes only as part of the v15 implementation. \
     See also [Database encryption support].
+-   New feature: Jaybird now supports UTF-8 URL encoding for connection
+    properties in the JDBC url. ([JDBC-604](http://tracker.firebirdsql.org/browse/JDBC-604)) \
+    This introduce a minor incompatibility, see also 
+    [URL encoding in query part of JDBC URL]. \
+    This feature was backported to Jaybird 3.0.9.
 
 Support
 =======
@@ -132,6 +137,7 @@ The main new features are:
 - [JDBC DatabaseMetaData.getFunctionColumns implemented] (since Jaybird 4.0.0-beta-2)
 - [Improved JDBC function escape support]
 - [New JDBC protocol prefix jdbc:firebird:]
+- [URL encoding in query part of JDBC URL] (backported to Jaybird 3.0.9)
 - [Generated keys support improvements]
 - [Operation monitoring]
 
@@ -1435,6 +1441,39 @@ Jaybird now supports the following URL prefixes (or JDBC protocols):
     -    `jdbc:firebird:oo:`
     -    `jdbc:firebirdsql:oo:`
     
+URL encoding in query part of JDBC URL
+--------------------------------------
+
+Jaybird now supports UTF-8 URL encoded values (and keys) in the query part of
+the JDBC URL.
+
+As a result of this change, the following previously unsupported characters can
+be used in a connection property value when escaped:
+
+- `;` escaped as `%3B`
+- `&` escaped as `%26`
+
+URL encoding can also be used to encode any unicode character in the query
+string. Jaybird will always use UTF-8 for decoding.
+
+This change introduces the following backwards incompatibilities:
+
+- `+` in the query part now means _space_ (0x20), so occurrences
+of `+` (_plus_) need to be escaped as `%2B`
+- `%` in the query part now introduces an escape, so occurrences 
+of `%` (_percent_) need to be escaped as `%25`
+
+Invalid URL encoded values will now throw a `SQLNonTransientConnectionException`.
+
+The reason for this changes is that the new `setBind` connection property
+requires semicolon-separated values, but Jaybird supports semicolon-separated
+key/value connection properties in the query part. To be able to support this
+new property in the connection string, we had to introduce URL encoding.
+
+This change only applies to the JDBC URL part after the first `?`. This change
+does not apply to connection properties set through `java.util.Properties` or on
+a `javax.sql.DataSource`.
+    
 Generated keys support improvements
 -----------------------------------
 
@@ -1765,6 +1804,15 @@ This change affects
 - `DatabaseMetaData.getTypeInfo` (columns `PRECISION` and `NUM_PREC_RADIX`),
 - `ParameterMetaData.getPrecison`, 
 - `ResultSetMetaData.getPrecision`.
+
+Incompatibilities due to URL encoding in JDBC URL query part
+------------------------------------------------------------
+
+With the introduction of URL encoding for the query part of the JDBC URL, the
+use of characters `+` and `%` in the query part of a JDBC URL now have different
+meaning and can lead to errors or unexpected results.
+
+See [URL encoding in query part of JDBC URL] for more information.
 
 Stricter JDBC compliance
 ------------------------
