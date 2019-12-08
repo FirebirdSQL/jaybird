@@ -29,6 +29,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 
@@ -301,6 +303,60 @@ public class TestFBDriver {
                     : equalTo(authPlugin);
             assertThat("Unexpected authentication method", resultSet.getString(1), authMethodMatcher);
             assertEquals("Unexpected user name", "CaseSensitiveUser", resultSet.getString(2).trim());
+        }
+    }
+
+    @Test
+    public void testUrlEncodedPropertiesDecode()
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        // Using reflection to access internal implementation
+        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Properties.class);
+        convertUrlParams.setAccessible(true);
+
+        String url = "jdbc:firebird://localhost/database?"
+                + "key=value"
+                + "&key+semicolon=value%3bsemicolon"
+                + "&key+percent=value%25percent"
+                + "&key+plus=value%2Bplus"
+                + "&key+ampersand=value%26ampersand"
+                + "&key+equals_unescaped=value=equals"
+                + "&key+equals_escaped=value%3Dequals"
+                + "&key+euro=value%e2%82%aceuro"
+                + "&key space=value space";
+        Properties props = new Properties();
+
+        convertUrlParams.invoke(null, url, props);
+
+        assertEquals("key", "value", props.getProperty("key"));
+        assertEquals("key semicolon", "value;semicolon", props.getProperty("key semicolon"));
+        assertEquals("key percent", "value%percent", props.getProperty("key percent"));
+        assertEquals("key plus", "value+plus", props.getProperty("key plus"));
+        assertEquals("key ampersand", "value&ampersand", props.getProperty("key ampersand"));
+        assertEquals("key equals_unescaped", "value=equals", props.getProperty("key equals_unescaped"));
+        assertEquals("key equals_escaped", "value=equals", props.getProperty("key equals_escaped"));
+        assertEquals("key euro", "value\u20aceuro", props.getProperty("key euro"));
+        assertEquals("key space", "value space", props.getProperty("key space"));
+    }
+
+    @Test
+    public void testUrlEncodedPropertiesDecode_illegalEscape() throws Throwable {
+        // Using reflection to access internal implementation
+        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Properties.class);
+        convertUrlParams.setAccessible(true);
+
+        String url = "jdbc:firebird://localhost/database?key+invalid_escape=value%xyinvalid";
+        Properties props = new Properties();
+
+        expectedException.expect(SQLNonTransientConnectionException.class);
+        expectedException.expect(allOf(
+                errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
+                message(containsString(url)),
+                message(containsString("java.lang.IllegalArgumentException"))));
+
+        try {
+            convertUrlParams.invoke(null, url, props);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
         }
     }
 }

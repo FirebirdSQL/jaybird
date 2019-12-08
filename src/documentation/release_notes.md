@@ -248,7 +248,11 @@ Changes in Jaybird 3.0.9
 
 The following has been changed or fixed since Jaybird 3.0.9:
 
-..
+-   New feature: Jaybird now supports UTF-8 URL encoding for connection
+    properties in the JDBC url. ([JDBC-604](http://tracker.firebirdsql.org/browse/JDBC-604)) \
+    This introduce a minor incompatibility, see also 
+    [URL encoding in query part of JDBC URL]. \
+    This feature was backported to Jaybird 3.0.9.
 
 ### Known issues in Jaybird 3.0.9
 
@@ -966,6 +970,41 @@ procedure is not executed.
 For Firebird 2.0 and lower this property has no effect, as there the procedure
 type information is not available.
 
+URL encoding in query part of JDBC URL
+--------------------------------------
+
+Added in Jaybird 3.0.9, backported from Jaybird 4.
+
+Jaybird now supports UTF-8 URL encoded values (and keys) in the query part of
+the JDBC URL.
+
+As a result of this change, the following previously unsupported characters can
+be used in a connection property value when escaped:
+
+- `;` escaped as `%3B`
+- `&` escaped as `%26`
+
+URL encoding can also be used to encode any unicode character in the query
+string. Jaybird will always use UTF-8 for decoding.
+
+This change introduces the following backwards incompatibilities:
+
+- `+` in the query part now means _space_ (0x20), so occurrences
+of `+` (_plus_) need to be escaped as `%2B`
+- `%` in the query part now introduces an escape, so occurrences 
+of `%` (_percent_) need to be escaped as `%25`
+
+Invalid URL encoded values will now throw a `SQLNonTransientConnectionException`.
+
+The reason for this changes is that the new `setBind` connection property
+requires semicolon-separated values, but Jaybird supports semicolon-separated
+key/value connection properties in the query part. To be able to support this
+new property in the connection string, we had to introduce URL encoding.
+
+This change only applies to the JDBC URL part after the first `?`. This change
+does not apply to connection properties set through `java.util.Properties` or on
+a `javax.sql.DataSource`.
+
 Potentially breaking changes
 ----------------------------
 
@@ -1565,6 +1604,15 @@ and `local` protocol. Be aware that this dependency does not support `embedded`.
 In the future we will move the Type 2 support to a separate library and provide 
 JNA-compatible jars that provide the embedded libraries of a specific Firebird 
 version.
+
+Incompatibilities due to URL encoding in JDBC URL query part
+------------------------------------------------------------
+
+With the introduction in Jaybird 3.0.9 of URL encoding for the query part of the
+JDBC URL, the use of characters `+` and `%` in the query part of a JDBC URL now
+have different meaning and can lead to errors or unexpected results.
+
+See [URL encoding in query part of JDBC URL] for more information.
 
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
