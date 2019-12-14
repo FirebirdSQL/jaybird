@@ -305,10 +305,11 @@ public final class FirebirdSupportInfo {
         case 13:
             return isVersionEqualOrAbove(3, 0);
         case 14:
-            // Jaybird has only implemented protocol version 14 as part of version 15
-            return isVersionEqualOrAbove(3, 0, 1);
+            // fall-through: Jaybird has only implemented protocol version 14 as part of version 15
         case 15:
             return isVersionEqualOrAbove(3, 0, 2);
+        case 16:
+            return isVersionEqualOrAbove(4, 0, 0);
         default:
             return false;
         }
@@ -539,6 +540,13 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
      */
     public boolean supportsFloatBinaryPrecision() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports statement timeouts.
+     */
+    public boolean supportsStatementTimeouts() {
         return isVersionEqualOrAbove(4, 0);
     }
 

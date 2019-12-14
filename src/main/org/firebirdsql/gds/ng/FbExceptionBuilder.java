@@ -230,7 +230,7 @@ public final class FbExceptionBuilder {
      */
     private static final Integer[] UNINTERESTING_ERROR_CODES_ARR =
             { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err,
-                    isc_arith_except };
+                    isc_arith_except, isc_cancelled };
 
     /**
      * Set of uninteresting error codes derived from {@link #UNINTERESTING_ERROR_CODES_ARR}.
@@ -375,8 +375,10 @@ public final class FbExceptionBuilder {
     private static final int[] NON_TRANSIENT_CODES = {isc_wirecrypt_incompatible, isc_miss_wirecrypt, isc_wirecrypt_key,
             isc_wirecrypt_plugin, jb_cryptNoCryptKeyAvailable, jb_cryptAlgorithmNotAvailable, jb_cryptInvalidKey,
             isc_login };
+    private static final int[] TIMEOUT_CODES = {isc_cfg_stmt_timeout, isc_att_stmt_timeout, isc_req_stmt_timeout };
     static {
         Arrays.sort(NON_TRANSIENT_CODES);
+        Arrays.sort(TIMEOUT_CODES);
     }
 
     /**
@@ -393,6 +395,9 @@ public final class FbExceptionBuilder {
         case EXCEPTION:
             if (Arrays.binarySearch(NON_TRANSIENT_CODES, errorCode) >= 0) {
                 return Type.NON_TRANSIENT;
+            }
+            if (Arrays.binarySearch(TIMEOUT_CODES, errorCode) >= 0) {
+                return Type.TIMEOUT;
             }
             return type;
         default:

@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version15;
+package org.firebirdsql.gds.ng.wire.version16;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.BlobParameterBuffer;
@@ -33,21 +33,20 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.*;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
-import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 import org.firebirdsql.gds.ng.wire.version13.V13WireOperations;
 
 /**
- * The {@link ProtocolDescriptor} for the Firebird version 15 protocol. This version
- * applies to Firebird 3.0.2, but also works with newer Firebird versions.
+ * The {@link ProtocolDescriptor} for the Firebird version 16 protocol. This version
+ * applies to Firebird 4, but also works with newer Firebird versions.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-public final class Version15Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public final class Version16Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
-    public Version15Descriptor() {
+    public Version16Descriptor() {
         super(
-                WireProtocolConstants.PROTOCOL_VERSION15,
+                WireProtocolConstants.PROTOCOL_VERSION16,
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
@@ -56,7 +55,7 @@ public final class Version15Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireDatabase createDatabase(final WireDatabaseConnection connection) {
-        return new V15Database(connection, this);
+        return new V16Database(connection, this);
     }
 
     @Override
@@ -87,7 +86,7 @@ public final class Version15Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
-        return new V13Statement(database);
+        return new V16Statement(database);
     }
 
     @Override

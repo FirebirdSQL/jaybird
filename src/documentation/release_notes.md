@@ -103,6 +103,9 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     Firebird 4.0.0.1683 or higher. \
     See also [Firebird 4 data type bind configuration support]. \
     This feature was partially backported to Jaybird 3.0.9.
+-   New feature: Support for statement timeouts through `java.sql.Statement.setQueryTimeout`
+    for the v16 protocol (Firebird 4 and higher). ([JDBC-602](http://tracker.firebirdsql.org/browse/JDBC-602))
+    See also [Firebird 4 statement timeout support].
 
 Support
 =======
@@ -133,10 +136,11 @@ The main new features are:
 - [Wire encryption support] (backported to Jaybird 3.0.4)
 - [Database encryption support] (backported to Jaybird 3.0.4)
 - [Authentication plugin improvements]
-- [Firebird 4 data type bind configuration support]
+- [Firebird 4 data type bind configuration support] (since Jaybird 4.0.0-beta-2)
 - [Firebird 4 DECFLOAT support]
 - [Firebird 4 extended numeric precision support]
 - [Firebird 4 time zone support]
+- [Firebird 4 statement timeout support] (since Jaybird 4.0.0-beta-2)
 - [JDBC RowId support]
 - [JDBC DatabaseMetaData.getPseudoColumns implemented]
 - [JDBC DatabaseMetaData.getVersionColumns implemented]
@@ -1224,7 +1228,30 @@ In addition to the standard-defined types, it also supports the type names
     including values generated in triggers and default value clauses. To prevent 
     this, either switch those types to a `WITH TIME ZONE` type, or set the 
     `sessionTimeZone` to `server` or to the actual time zone of the Firebird 
-    server. 
+    server.
+    
+Firebird 4 statement timeout support
+------------------------------------
+
+Supports was added for Firebird 4 statement timeouts through 
+`java.sql.setQueryTimeout`. Currently this feature is only supported in the pure
+Java implementation. On Firebird 3 and earlier, or when using native/embedded
+connections, the timeout is silently ignored.
+
+This implementation supports a maximum timeout of 4294967 seconds. Larger values
+will be handled as if `0` (unlimited) was set. Firebird also has attachment
+level and global statement timeouts. This configuration governs the statement
+level statement timeout only. In practice, a more stringent timeout might be
+applied by this attachment level or global statement timeout.
+
+**Important**: Query timeouts in Firebird 4 and higher have an important caveat:
+for result set producing statements, the timeout covers the time from execution
+start until the cursor is closed. This includes the time that Firebird waits for
+your application to fetch more rows. This means that if you execute a SELECT and
+take your time processing the results, the statement may be cancelled even when
+Firebird itself returns rows quickly.
+
+See Firebird 4 release notes and documentation for more information.
 
 JDBC RowId support
 ------------------

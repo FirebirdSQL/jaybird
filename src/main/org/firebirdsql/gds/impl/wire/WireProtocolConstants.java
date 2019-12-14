@@ -201,6 +201,10 @@ public interface WireProtocolConstants {
     	- supports crypt key callback at connect phase */
     int PROTOCOL_VERSION15 = (FB_PROTOCOL_FLAG | 15);
 
+    /* Protocol 16:
+    	- supports statement timeouts */
+    int PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
     

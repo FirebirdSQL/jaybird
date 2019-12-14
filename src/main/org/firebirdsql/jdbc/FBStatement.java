@@ -31,6 +31,7 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -81,7 +82,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected int maxRows;	 
     protected int fetchSize;
     private int maxFieldSize;
-    private int queryTimeout;
     private String cursorName;
 
     private final int rsConcurrency;
@@ -398,17 +398,52 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         escapedProcessing = enable;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Firebird 4 and higher also support attachment level and global statement timeouts. This method only reports the
+     * value explicitly configured for this statement. In practice, a more stringent timeout might be applied by this
+     * attachment level or global statement timeout.
+     * </p>
+     *
+     * @see #setQueryTimeout(int)
+     */
     @Override
     public int getQueryTimeout() throws  SQLException {
-        return queryTimeout;
+        synchronized (getSynchronizationObject()) {
+            checkValidity();
+            if (fbStatement == null) {
+                return 0;
+            }
+            return (int) TimeUnit.MILLISECONDS.toSeconds(fbStatement.getTimeout());
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Query timeout is only supported on Firebird 4 and higher, and only for the pure-java wire protocol
+     * implementation. For earlier versions or native/embedded connections, the timeout is ignored. The maximum timeout
+     * for Firebird 4 is 4294967 seconds, higher values will be handled as if 0 was set. Firebird 4 also has attachment
+     * level and global statement timeouts. This configuration governs the statement level statement timeout only. In
+     * practice, a more stringent timeout might be applied by this attachment level or global statement timeout.
+     * </p>
+     * <p><b>Important:</b> Query timeouts in Firebird 4 and higher have an important caveat: for result set producing
+     * statements, the timeout covers the time from execution start until the cursor is closed. This includes the time
+     * that Firebird waits for your application to fetch more rows. This means that if you execute a {@code SELECT} and
+     * take your time processing the results, the statement may be cancelled even when Firebird itself returns rows
+     * quickly.
+     * </p>
+     * <p>
+     * A query timeout is not applied for execution of DDL.
+     * </p>
+     */
     @Override
     public void setQueryTimeout(int seconds) throws  SQLException {
-        if (seconds < 0) {
-            throw new FBSQLException("Can't set query timeout negative", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+        synchronized (getSynchronizationObject()) {
+            checkValidity();
+            requireStatement().setTimeout(TimeUnit.SECONDS.toMillis(seconds));
         }
-        queryTimeout = seconds;
     }
 
     @Override
@@ -839,12 +874,21 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected void prepareFixedStatement(String sql) throws SQLException {
         // TODO: Statement should be created and allocated at FBStatement creation only.
         if (fbStatement == null) {
-            fbStatement = gdsHelper.allocateStatement();
-            fbStatement.addStatementListener(createStatementListener());
+            requireStatement();
         } else {
             fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         }
         fbStatement.prepare(escapedProcessing ? nativeSQL(sql) : sql);
+    }
+
+    protected FbStatement requireStatement() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            if (fbStatement == null) {
+                fbStatement = gdsHelper.allocateStatement();
+                fbStatement.addStatementListener(createStatementListener());
+            }
+            return fbStatement;
+        }
     }
 
     protected void addWarning(SQLWarning warning) {
