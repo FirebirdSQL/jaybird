@@ -447,13 +447,13 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     }
 
     @Override
-    public String getTimeZoneBind() {
-        return connectionProperties.getTimeZoneBind();
+    public String getDataTypeBind() {
+        return connectionProperties.getDataTypeBind();
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
-        connectionProperties.setTimeZoneBind(timeZoneBind);
+    public void setDataTypeBind(String dataTypeBind) {
+        connectionProperties.setDataTypeBind(dataTypeBind);
     }
 
     @Override

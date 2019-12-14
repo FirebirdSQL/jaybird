@@ -64,7 +64,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String DB_CRYPT_CONFIG = "dbCryptConfig";
     public static final String AUTH_PLUGINS = "authPlugins";
     public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
-    public static final String TIME_ZONE_BIND = "timeZoneBind";
+    public static final String DATA_TYPE_BIND = "dataTypeBind";
     public static final String SESSION_TIME_ZONE = "sessionTimeZone";
     public static final String IGNORE_PROCEDURE_TYPE = "ignoreProcedureType";
 
@@ -396,13 +396,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     @Override
-    public String getTimeZoneBind() {
-        return getStringProperty(TIME_ZONE_BIND);
+    public String getDataTypeBind() {
+        return getStringProperty(DATA_TYPE_BIND);
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
-        setStringProperty(TIME_ZONE_BIND, timeZoneBind);
+    public void setDataTypeBind(String dataTypeBind) {
+        setStringProperty(DATA_TYPE_BIND, dataTypeBind);
     }
 
     @Override

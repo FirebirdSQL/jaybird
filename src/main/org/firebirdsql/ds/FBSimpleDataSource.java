@@ -422,13 +422,13 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     @Override
-    public String getTimeZoneBind() {
-        return mcf.getTimeZoneBind();
+    public String getDataTypeBind() {
+        return mcf.getDataTypeBind();
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
-        mcf.setTimeZoneBind(timeZoneBind);
+    public void setDataTypeBind(String dataTypeBind) {
+        mcf.setDataTypeBind(dataTypeBind);
     }
 
     @Override

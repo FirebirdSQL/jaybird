@@ -97,6 +97,12 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     This introduce a minor incompatibility, see also 
     [URL encoding in query part of JDBC URL]. \
     This feature was backported to Jaybird 3.0.9.
+-   New feature: Firebird 4 data type bind configuration support ([JDBC-603](http://tracker.firebirdsql.org/browse/JDBC-603)) \
+    This change also removes the `timeZoneBind` and `decfloatBind` connection
+    properties. This feature requires Firebird 4 beta 2 or snapshot 
+    Firebird 4.0.0.1683 or higher. \
+    See also [Firebird 4 data type bind configuration support]. \
+    This feature was partially backported to Jaybird 3.0.9.
 
 Support
 =======
@@ -127,6 +133,7 @@ The main new features are:
 - [Wire encryption support] (backported to Jaybird 3.0.4)
 - [Database encryption support] (backported to Jaybird 3.0.4)
 - [Authentication plugin improvements]
+- [Firebird 4 data type bind configuration support]
 - [Firebird 4 DECFLOAT support]
 - [Firebird 4 extended numeric precision support]
 - [Firebird 4 time zone support]
@@ -173,7 +180,7 @@ Jaybird 4 does not support the protocol improvements of Firebird 4 like statemen
 and session timeouts. Nor does it implement the new batch protocol.
 
 Jaybird time zone support uses functionality added after Firebird 4 beta 1 (4.0.0.1436), 
-you will need version 4.0.0.1481 or later for the `timeZoneBind` connection 
+you will need version 4.0.0.1683 or later for the `dataTypeBind` connection 
 property.
 
 Supported Java versions
@@ -663,6 +670,55 @@ us on the Firebird-Java mailing list.
 If you use a native connection, check the Firebird documentation how to add
 third-party authentication plugins to fbclient.
 
+Firebird 4 data type bind configuration support
+-----------------------------------------------
+
+Firebird 4 (build 4.0.0.1683 or later) introduced the `SET BIND` statement and 
+`isc_dpb_set_bind` DPB item. This allows you to define data type conversion
+rules for compatibility or ease of processing data.
+
+This feature is specifically necessary for using the `WITH TIME ZONE` types
+under Java 7. See also [Time zone bind configuration].
+
+In Jaybird this feature is exposed as connection property `dataTypeBind` (alias
+`set_bind`). The value of this connection property is a semicolon-separated list
+of data type bind definitions.
+
+A data type bind definition is of the form `<from-type> TO <to-type>`. A
+definition is the same as the second half of a `SET BIND` statement after the
+`OF`. See the Firebird documentation of `SET BIND` for more information. Invalid
+values or impossible mappings will result in an error on connect.
+
+When using the `dataTypeBind` connection property in a JDBC URL, the semicolons
+of the list need to be encoded as `%3B`, as semicolons in the JDBC URL are 
+an alternative to `&` as the separator between properties.
+
+For example:
+
+```
+String jdbcUrl = "jdbc:firebirdsql://localhost/database?charSet=utf-8"
+        + "&dataTypeBind=decfloat to varchar%3Btimestamp with time zone to legacy
+```
+
+When the property is set through a `Properties` object or a `DataSource`
+configuration, encoding the semicolon is not necessary and will result in errors.
+
+For example:
+
+```
+Properties props = new Properties();
+props.setProperty("dataTypeBind", 
+        "decfloat to varchar;timestamp with time zone to legacy"
+``` 
+
+Values set through this connection property will be the session default
+configuration, which means that they are retained (or reverted to) when
+executing `ALTER SESSION RESET`.
+
+This feature replaces the connection properties `timeZoneBind` and
+`decfloatBind` from earlier Jaybird 4 versions. The `timeZoneBind` and
+`decfloatBind` properties are no longer supported. 
+
 Firebird 4 DECFLOAT support
 ---------------------------
 
@@ -935,7 +991,7 @@ Time zone types are not supported under Java 7, you will need to enable legacy
 time zone bind. With legacy time zone bind, Firebird will convert to the 
 equivalent `TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session 
 time zone. Time zone bind can be configured with connection property 
-`timeZoneBind`, for more information see [Time zone bind configuration].
+`dataTypeBind`, for more information see [Time zone bind configuration].
 
 See also [jdp-2019-03 Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
 
@@ -1037,39 +1093,32 @@ future.
 
 ### Time zone bind configuration ###
 
-The connection property `timeZoneBind` (alias `time_zone_bind`) is a connection 
-property to configure the time zone bind (see also `SET TIME ZONE BIND` in the 
-Firebird 4 release notes).
+If you are using Java 7 and need to handle the `WITH TIME ZONE` types, you will
+need to redefine the data type binding for the time zone types as the necessary
+`java.time` types do not exist in Java 7. Redefining the binding can also be
+used for tools or applications that expect `java.sql.Time`/`Timestamp` types and
+cannot use the `java.time.OffsetTime`/`OffsetDateTime` types returned for the
+`WITH TIME ZONE` types.
 
-The primary purpose of this property is to set the legacy time zone bind. This
-needs to be explicitly set if you are using Java 7 and need to handle the 
-`WITH TIME ZONE` types. It can also be used for tools or applications that
-expect `java.sql.Time`/`Timestamp` types and cannot use the 
-`java.time.OffsetTime`/`OffsetDateTime` types returned for the `WITH TIME ZONE` 
-types.
+To redefine the data type binding, you can use the connection property
+`dataTypeBind`. See [Firebird 4 data type bind configuration support] for
+details.
 
-Possible values (case insensitive):
+You will need to individually map the time zone types, either to `legacy` (which
+uses `time` and `timestamp` (without time zone)) or to a desired target data
+type (for example `time` or `varchar`):
 
--   `legacy`
-    
-    Firebird will convert a `WITH TIME ZONE` type to the equivalent `WITHOUT
-    TIME ZONE` type using the session time zone to derive the value.
-    
-    Result set columns and parameters on prepared statements will behave as the
-    equivalent `WITHOUT TIME ZONE` types. This conversion is not applied to the
-    database metadata which will always report `WITH TIME ZONE` information.
-    
--   `native`
+```
+Properties props = new Properties();
+props.setProperty("dataTypeBind", 
+        "time with time zone to legacy;timestamp with time zone to legacy");
+```
 
-    Behaves as default (`WITH TIME ZONE` types supported), but value will be 
-    explicitly set.
-
-Any other value will result in error `isc_time_zone_bind` (code 335545255, 
-message _"Invalid time zone bind mode &lt;value&gt;"_) on connect.
-
-**Important**: this feature requires Firebird 4 beta 2 or higher (or a snapshot 
-build version 4.0.0.1481 or later). It will be ignored in earlier builds as the
-necessary database parameter buffer item does not exist in earlier versions.
+**Important**: These features requires Firebird 4 beta 2 or higher (or a snapshot
+build version 4.0.0.1683 or later). It will be ignored in builds before 1481 as
+the necessary database parameter buffer item does not exist, and it will raise
+an error in versions between 1481 and 1682 as there the DPB item points to the
+removed DPB item `isc_time_zone_bind`.
 
 ### Connection property sessionTimeZone ###
 
@@ -1465,7 +1514,7 @@ of `%` (_percent_) need to be escaped as `%25`
 
 Invalid URL encoded values will now throw a `SQLNonTransientConnectionException`.
 
-The reason for this changes is that the new `setBind` connection property
+The reason for this changes is that the new `dataTypeBind` connection property
 requires semicolon-separated values, but Jaybird supports semicolon-separated
 key/value connection properties in the query part. To be able to support this
 new property in the connection string, we had to introduce URL encoding.

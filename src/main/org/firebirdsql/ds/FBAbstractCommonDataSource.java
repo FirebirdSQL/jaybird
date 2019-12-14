@@ -565,17 +565,17 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
 
     @Override
-    public String getTimeZoneBind() {
+    public String getDataTypeBind() {
         synchronized (lock) {
-            return connectionProperties.getTimeZoneBind();
+            return connectionProperties.getDataTypeBind();
         }
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
+    public void setDataTypeBind(String dataTypeBind) {
         synchronized (lock) {
             checkNotStarted();
-            connectionProperties.setTimeZoneBind(timeZoneBind);
+            connectionProperties.setDataTypeBind(dataTypeBind);
         }
     }
 

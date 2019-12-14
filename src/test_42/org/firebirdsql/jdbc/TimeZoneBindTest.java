@@ -75,22 +75,23 @@ public class TimeZoneBindTest {
 
     @Test
     public void testCurrentTimestamp_nativeBind() throws Exception {
-        checkForBindValue("native");
+        checkForBindValue("timestamp with time zone to native");
     }
 
     @Test
     public void testCurrentTimestamp_NaTIVEBind() throws Exception {
-        checkForBindValue("NaTIVE");
+        // check case insensitivity
+        checkForBindValue("timestamp with time zone to NaTIVE");
     }
 
     @Test
     public void testCurrentTimestamp_invalidBind() throws Exception {
         expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_time_zone_bind),
-                fbMessageStartsWith(ISCConstants.isc_time_zone_bind, "doesnotexist")));
+                errorCodeEquals(ISCConstants.isc_bind_err),
+                fbMessageStartsWith(ISCConstants.isc_bind_err, "timestamp with time zone to doesnotexist")));
 
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "doesnotexist");
+        props.setProperty("dataTypeBind", "timestamp with time zone to doesnotexist");
         //noinspection EmptyTryBlock
         try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
             // ensure connection is closed if this doesn't fail
@@ -100,7 +101,7 @@ public class TimeZoneBindTest {
     @Test
     public void verifySessionReset_retainsSetting() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement()) {
             stmt.execute("alter session reset");
@@ -110,15 +111,24 @@ public class TimeZoneBindTest {
     }
 
     @Test
+    public void verifySessionReset_throughJDBCUrl_withMultipleProperties() throws Exception {
+        String jdbcUrl = getUrl() + "?dataTypeBind=time with time zone to legacy%3Btimestamp with time zone to legacy";
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, DB_USER, DB_PASSWORD);
+             Statement stmt = connection.createStatement()) {
+            verifyLegacyTimestamp(stmt);
+        }
+    }
+
+    @Test
     public void verifySessionReset_afterExplicitChange() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement()) {
 
             verifyLegacyTimestamp(stmt);
 
-            stmt.execute("set time zone bind native");
+            stmt.execute("set bind of timestamp with time zone to native");
 
             verifyTimestampWithTimezone(stmt);
 
@@ -130,7 +140,7 @@ public class TimeZoneBindTest {
 
     private void checkForBindValue(String bindValue) throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", bindValue);
+        props.setProperty("dataTypeBind", bindValue);
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             try (Statement stmt = connection.createStatement()) {
                 verifyTimestampWithTimezone(stmt);

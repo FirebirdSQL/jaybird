@@ -478,33 +478,29 @@ public interface FirebirdConnectionProperties {
     void setGeneratedKeysEnabled(String generatedKeysEnabled);
 
     /**
-     * Get the {@code timeZoneBind} configuration.
+     * Get the {@code dataTypeBind} configuration.
      *
-     * @return configuration value for {@code timeZoneBind}, or {@code null} for driver default
+     * @return configuration value for {@code dataTypeBind}, or {@code null} for driver default
      * @since 4.0
      */
-    String getTimeZoneBind();
+    String getDataTypeBind();
 
     /**
-     * Sets the {@code timeZoneBind} configuration.
+     * Sets the {@code dataTypeBind} configuration.
      * <p>
      * If the value is explicitly set to a non-null value and the connected server is Firebird 4 or higher, this will
-     * execute {@code SET TIME ZONE BIND} with the specified value. We advise only to use this when setting to {@code
-     * legacy}, as {@code native} is already the default and avoids the overhead of setting it explicitly.
+     * configure the data type binding with the specified values using {@code isc_dpb_set_bind}, which is equivalent to
+     * executing {@code SET BIND} statements with the values.
      * </p>
      * <p>
-     * Invalid values are not ignored and will be executed, this will yield a syntax error which will be logged and
-     * ignored. As a result, specifying an invalid value will behave as the default (native).
-     * </p>
-     * <p>
-     * See also Firebird documentation for {@code SET TIME ZONE BIND}.
+     * See also Firebird documentation for {@code SET BIND}.
      * </p>
      *
-     * @param timeZoneBind
-     *         Firebird 4+ time zone bind configuration: default ({@code null}), {@code native}, {@code legacy}
+     * @param dataTypeBind
+     *         Firebird 4+ data type bind configuration, a semicolon-separated list of {@code <from-type> TO <to-type>}
      * @since 4.0
      */
-    void setTimeZoneBind(String timeZoneBind);
+    void setDataTypeBind(String dataTypeBind);
 
     /**
      * Get the {@code sessionTimeZone}.
