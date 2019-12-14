@@ -234,8 +234,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             case isc_dpb_process_id:
             case isc_dpb_process_name:
             case isc_dpb_session_time_zone:
-            case isc_dpb_time_zone_bind:
-            case isc_dpb_decfloat_bind:
+            case isc_dpb_set_bind:
             case isc_dpb_decfloat_round:
             case isc_dpb_decfloat_traps:
                 parameter.copyTo(getExtraDatabaseParameters(), null);

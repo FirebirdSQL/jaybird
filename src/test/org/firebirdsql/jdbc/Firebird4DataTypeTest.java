@@ -52,7 +52,7 @@ public class Firebird4DataTypeTest {
     @Test
     public void testTimeZoneBind() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         // Ensure consistent value
         props.setProperty("sessionTimeZone", TimeZone.getDefault().getID());
 
@@ -75,9 +75,9 @@ public class Firebird4DataTypeTest {
     @Test
     public void testDecfloatBindCharOnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("decfloatBind", "char");
+        props.setProperty("dataTypeBind", "decfloat to char");
 
-        final String testValue = "9.999999999999999999999999999999999E+6144";
+        final String testValue = "-9.999999999999999999999999999999999E+6144";
         final BigDecimal expectedBigDecimal = new BigDecimal(testValue);
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
@@ -94,7 +94,7 @@ public class Firebird4DataTypeTest {
     @Test
     public void testDecfloatBindDoublePrecisionOnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("decfloatBind", "double precision");
+        props.setProperty("dataTypeBind", "decfloat to double precision");
 
         // Max value representable; larger DECFLOAT values will yield an error with default trap settings
         final String testValue = String.valueOf(Double.MAX_VALUE);
@@ -110,9 +110,9 @@ public class Firebird4DataTypeTest {
     }
 
     @Test
-    public void testDecfloatBindBigint3OnDecfloat() throws Exception {
+    public void testDecfloatBindNumeric18_3OnDecfloat() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("decfloatBind", "bigint,3");
+        props.setProperty("dataTypeBind", "decfloat to numeric(18,3)");
 
         // Max value representable; larger DECFLOAT values will yield an error with default trap settings
         BigDecimal testValue = BigDecimal.valueOf(Long.MAX_VALUE, 3);
