@@ -300,7 +300,7 @@ public interface FbStatement extends ExceptionListenable {
      * </p>
      * <p>
      * The configured timeout only affects subsequent executes on this statement. The timeout includes time spent
-     * reading the result set.
+     * between reading from the result set.
      * </p>
      *
      * @param timeoutMillis

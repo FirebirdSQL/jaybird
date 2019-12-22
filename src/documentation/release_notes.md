@@ -1234,9 +1234,8 @@ Firebird 4 statement timeout support
 ------------------------------------
 
 Supports was added for Firebird 4 statement timeouts through 
-`java.sql.setQueryTimeout`. Currently this feature is only supported in the pure
-Java implementation. On Firebird 3 and earlier, or when using native/embedded
-connections, the timeout is silently ignored.
+`java.sql.setQueryTimeout`. On Firebird 3 and earlier or a native connection
+with a Firebird 3 or earlier client library, the timeout is silently ignored.
 
 This implementation supports a maximum timeout of 4294967 seconds. Larger values
 will be handled as if `0` (unlimited) was set. Firebird also has attachment
@@ -1247,7 +1246,7 @@ applied by this attachment level or global statement timeout.
 **Important**: Query timeouts in Firebird 4 and higher have an important caveat:
 for result set producing statements, the timeout covers the time from execution
 start until the cursor is closed. This includes the time that Firebird waits for
-your application to fetch more rows. This means that if you execute a SELECT and
+the application to fetch more rows. This means that if you execute a SELECT and
 take your time processing the results, the statement may be cancelled even when
 Firebird itself returns rows quickly.
 
