@@ -241,6 +241,9 @@ public interface WireProtocolConstants {
     int ptype_batch_send = 3; // Batch sends, no asynchrony
     int ptype_out_of_band = 4; // Batch sends w/ out of band notification
     int ptype_lazy_send = 5; // Deferred packets delivery
+    int ptype_MASK = 0xFF; // Mask - up to 255 types of protocol
+
+    int pflag_compress = 0x100; // Turn on compression if possible
 
     int P_REQ_async = 1;
 }

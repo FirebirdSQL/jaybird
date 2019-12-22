@@ -197,11 +197,12 @@ public interface ISCConstants {
     int isc_dpb_db_crypt_config         = 145;
     int isc_dpb_generated_keys_enabled  = 146;
     int isc_dpb_ignore_procedure_type   = 147;
+    int isc_dpb_wire_compression        = 148;
 
     // Lowest Jaybird DPB extension value
     int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
     // NOTE: Update this when adding new Jaybird specific DPB items
-    int jaybirdMaxIscDpbValue = isc_dpb_ignore_procedure_type;
+    int jaybirdMaxIscDpbValue = isc_dpb_wire_compression;
 
     /*************************************/
     /* Transaction parameter block stuff */

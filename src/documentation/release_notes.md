@@ -104,8 +104,11 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     See also [Firebird 4 data type bind configuration support]. \
     This feature was partially backported to Jaybird 3.0.9.
 -   New feature: Support for statement timeouts through `java.sql.Statement.setQueryTimeout`
-    for the v16 protocol (Firebird 4 and higher). ([JDBC-602](http://tracker.firebirdsql.org/browse/JDBC-602))
+    for the v16 protocol (Firebird 4 and higher) ([JDBC-602](http://tracker.firebirdsql.org/browse/JDBC-602)) \
     See also [Firebird 4 statement timeout support].
+-   New feature: Support for zlib wire compression in the pure Java wire
+    protocol implementation (Firebird 3 and higher) ([JDBC-606](http://tracker.firebirdsql.org/browse/JDBC-606)) \
+    See also [Wire compression support].
 
 Support
 =======
@@ -135,6 +138,7 @@ The main new features are:
 
 - [Wire encryption support] (backported to Jaybird 3.0.4)
 - [Database encryption support] (backported to Jaybird 3.0.4)
+- [Wire compression support]
 - [Authentication plugin improvements]
 - [Firebird 4 data type bind configuration support] (since Jaybird 4.0.0-beta-2)
 - [Firebird 4 DECFLOAT support]
@@ -176,12 +180,13 @@ in the protocol and database attachment parameters that are sent to the server.
 
 ### Notes on Firebird 3 support
 
-Jaybird 4 does not (yet) support the Firebird 3 zlib compression.
+Jaybird 4 adds support for the Firebird 3 zlib compression in the pure Java wire
+protocol. The compression is disabled by default.
 
 ### Notes on Firebird 4 support
 
-Jaybird 4 does not support the protocol improvements of Firebird 4 like statement 
-and session timeouts. Nor does it implement the new batch protocol.
+Jaybird 4 supports the protocol improvements of Firebird 4 for statement
+timeouts, but does not implement the new batch protocol.
 
 Jaybird time zone support uses functionality added after Firebird 4 beta 1 (4.0.0.1436), 
 you will need version 4.0.0.1683 or later for the `dataTypeBind` connection 
@@ -560,6 +565,24 @@ Other warnings and limitations
     someone with access to your application or the machine hosting your 
     application (although that in itself would already imply a severe security 
     breach).
+    
+Wire compression support
+------------------------
+
+Support for zlib wire compression was added in the pure Java wire protocol.
+Compression can be enabled using boolean connection property `wireCompression`.
+
+The connection property only has effect for the pure Java wire protocol
+connections on Firebird 3 and higher, if the server has the zlib library. Native
+connections will follow the `WireCompression` configuration in 
+the `firebird.conf` read by the client library, if the zlib library is on the
+search path.
+
+Compression is currently disabled by default. We may change this in future 
+versions of Jaybird to be enabled by default.
+
+The `wireCompression` property is also available on data sources and the
+management classes in `org.firebirdsql.management`.
     
 Authentication plugin improvements
 ----------------------------------

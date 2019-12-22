@@ -268,7 +268,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 xdrOut.writeInt(protocol.getVersion()); // Protocol version
                 xdrOut.writeInt(protocol.getArchitecture()); // Architecture of client
                 xdrOut.writeInt(protocol.getMinimumType()); // Minimum type
-                xdrOut.writeInt(protocol.getMaximumType()); // Maximum type
+                if (protocol.supportsWireCompression() && attachProperties.isWireCompression()) {
+                    xdrOut.writeInt(protocol.getMaximumType() | pflag_compress);
+                } else {
+                    xdrOut.writeInt(protocol.getMaximumType()); // Maximum type
+                }
                 xdrOut.writeInt(protocol.getWeight()); // Preference weight
             }
 
@@ -290,9 +294,12 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             if (operation == op_accept || operation == op_cond_accept || operation == op_accept_data) {
                 FbWireAttachment.AcceptPacket acceptPacket = new FbWireAttachment.AcceptPacket();
                 acceptPacket.operation = operation;
-                protocolVersion = xdrIn.readInt(); // Protocol version
-                protocolArchitecture = xdrIn.readInt(); // Architecture for protocol
-                protocolMinimumType = xdrIn.readInt(); // Minimum type
+                protocolVersion = xdrIn.readInt(); // p_acpt_version - Protocol version
+                protocolArchitecture = xdrIn.readInt(); // p_acpt_architecture - Architecture for protocol
+                int acceptType = xdrIn.readInt(); // p_acpt_type - Minimum type
+                protocolMinimumType = acceptType & ptype_MASK;
+                final boolean compress = (acceptType & pflag_compress) != 0;
+
                 if (protocolVersion < 0) {
                     protocolVersion = (protocolVersion & FB_PROTOCOL_MASK) | FB_PROTOCOL_FLAG;
                 }
@@ -310,6 +317,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                     clientAuthBlock.switchPlugin(acceptPacket.p_acpt_plugin);
                 } else {
                     clientAuthBlock.resetClient(null);
+                }
+
+                if (compress) {
+                    xdrOut.enableCompression();
+                    xdrIn.enableDecompression();
                 }
 
                 ProtocolDescriptor descriptor = protocols.getProtocolDescriptor(protocolVersion);

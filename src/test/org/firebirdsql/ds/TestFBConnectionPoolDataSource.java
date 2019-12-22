@@ -20,6 +20,9 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -29,7 +32,11 @@ import java.sql.Statement;
 
 import javax.sql.PooledConnection;
 
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for {@link FBConnectionPoolDataSource}
@@ -97,5 +104,22 @@ public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
         ds.setNonStandardProperty("someProperty", "someValue");
         
         assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+    }
+
+    @Test
+    public void enableWireCompression() throws Exception {
+        assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
+        assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
+        ds.setWireCompression(true);
+
+        PooledConnection pooledConnection = ds.getPooledConnection();
+        try (Connection connection = pooledConnection.getConnection()){
+            assertTrue(connection.isValid(0));
+            GDSServerVersion serverVersion =
+                    connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
+            assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+        } finally {
+            pooledConnection.close();
+        }
     }
 }

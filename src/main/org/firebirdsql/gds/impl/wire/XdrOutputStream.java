@@ -28,6 +28,7 @@ package org.firebirdsql.gds.impl.wire;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBuffer;
+import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherOutputStream;
@@ -48,7 +49,7 @@ import java.util.Arrays;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public final class XdrOutputStream extends BufferedOutputStream {
+public final class XdrOutputStream extends BufferedOutputStream implements EncryptedStreamSupport {
 
     private static final int BUF_SIZE = 32767;
 
@@ -60,6 +61,9 @@ public final class XdrOutputStream extends BufferedOutputStream {
     private static final byte[] ZERO_PADDING = new byte[ZERO_PAD_LENGTH];
 
     // TODO In a lot of cases the padding written in this class should be NULL_BYTE instead of SPACE_BYTE
+
+    private boolean compressed;
+    private boolean encrypted;
 
     /**
      * Create a new instance of <code>XdrOutputStream</code> with default buffer size.
@@ -307,13 +311,34 @@ public final class XdrOutputStream extends BufferedOutputStream {
         }
     }
 
-    public void setCipher(Cipher cipher) throws IOException {
-        OutputStream currentOut = out;
-        if (currentOut instanceof CipherOutputStream) {
+    /**
+     * Wraps the underlying stream for zlib compression.
+     *
+     * @throws IOException
+     *         If the underlying stream is already set up for compression
+     */
+    @InternalApi
+    public synchronized void enableCompression() throws IOException {
+        if (compressed) {
+            throw new IOException("Output stream already compressed");
+        }
+        out = new FbDeflaterOutputStream(out);
+        compressed = true;
+    }
+
+    @Override
+    public synchronized void setCipher(Cipher cipher) throws IOException {
+        if (encrypted) {
             throw new IOException("Output stream already encrypted");
         }
         flush();
-        out = new CipherOutputStream(currentOut, cipher);
+        OutputStream currentStream = out;
+        if (currentStream instanceof EncryptedStreamSupport) {
+            ((EncryptedStreamSupport) currentStream).setCipher(cipher);
+        } else {
+            out = new CipherOutputStream(currentStream, cipher);
+        }
+        encrypted = true;
     }
 
     /**

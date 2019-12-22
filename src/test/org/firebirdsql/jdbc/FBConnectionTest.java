@@ -873,4 +873,18 @@ public class FBConnectionTest {
         }
     }
 
+    @Test
+    public void testWireCompression() throws Exception {
+        assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
+        assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("wireCompression", "true");
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            assertTrue(connection.isValid(0));
+            GDSServerVersion serverVersion =
+                    connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
+            assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+        }
+    }
+
 }

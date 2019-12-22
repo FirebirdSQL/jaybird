@@ -604,7 +604,23 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
         synchronized (lock) {
+            checkNotStarted();
             connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+        }
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        synchronized (lock) {
+            return connectionProperties.isWireCompression();
+        }
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setWireCompression(wireCompression);
         }
     }
 

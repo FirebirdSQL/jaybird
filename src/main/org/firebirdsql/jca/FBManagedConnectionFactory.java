@@ -476,6 +476,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
     }
 
+    @Override
+    public boolean isWireCompression() {
+        return connectionProperties.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        connectionProperties.setWireCompression(wireCompression);
+    }
+
     public int hashCode() {
         if (hashCode != 0) 
             return hashCode;

@@ -34,7 +34,6 @@ import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.*;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
-import org.firebirdsql.gds.ng.wire.version13.V13WireOperations;
 
 /**
  * The {@link ProtocolDescriptor} for the Firebird version 15 protocol. This version
@@ -51,6 +50,7 @@ public final class Version15Descriptor extends AbstractProtocolDescriptor implem
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
+                true,
                 5);
     }
 

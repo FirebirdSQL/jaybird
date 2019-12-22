@@ -27,13 +27,11 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -48,9 +46,11 @@ import java.io.InputStream;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public final class XdrInputStream extends BufferedInputStream {
+public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {
 
     private static final int DEFAULT_BUFFER_SIZE = 16384;
+    private boolean compressed;
+    private boolean encrypted;
 
     /**
      * Create a new instance of <code>XdrInputStream</code>.
@@ -58,7 +58,7 @@ public final class XdrInputStream extends BufferedInputStream {
      * @param in The underlying <code>InputStream</code> to read from
      */
     public XdrInputStream(InputStream in) {
-        super(in, DEFAULT_BUFFER_SIZE);
+        super(new BufferedInputStream(in, DEFAULT_BUFFER_SIZE));
     }
 
     /**
@@ -229,20 +229,31 @@ public final class XdrInputStream extends BufferedInputStream {
     }
 
     /**
-     * Wraps the underlying stream in an {@link CipherInputStream} using the provided {@code cipher}.
+     * Wraps the underlying stream for zlib decompression.
      *
-     * @param cipher
-     *         Cipher for decrypting the stream
      * @throws IOException
-     *         If the underlying stream is already wrapped, or if this stream is closed.
+     *         If the underlying stream is already set up for decompression
      */
+    @InternalApi
+    public synchronized void enableDecompression() throws IOException {
+        if (compressed) {
+            throw new IOException("Input stream already compressed");
+        }
+        in = new FbInflaterInputStream(in);
+        compressed = true;
+    }
+
+    @Override
     public synchronized void setCipher(Cipher cipher) throws IOException {
-        InputStream currentStream = in;
-        if (currentStream == null) {
-            throw new IOException("Stream closed");
-        } else if (currentStream instanceof CipherInputStream) {
+        if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }
-        in = new CipherInputStream(currentStream, cipher);
+        InputStream currentStream = in;
+        if (currentStream instanceof EncryptedStreamSupport) {
+            ((EncryptedStreamSupport) currentStream).setCipher(cipher);
+        } else {
+            in = new CipherInputStream(currentStream, cipher);
+        }
+        encrypted = true;
     }
 }

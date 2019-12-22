@@ -39,7 +39,7 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     public EmptyProtocolDescriptor(final int version, final int architecture, final int minimumType,
             final int maximumType, final int weight) {
-        super(version, architecture, minimumType, maximumType, weight);
+        super(version, architecture, minimumType, maximumType, false, weight);
     }
 
     @Override

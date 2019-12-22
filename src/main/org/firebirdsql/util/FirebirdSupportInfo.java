@@ -434,6 +434,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when zlib wire compression is supported
+     */
+    public boolean supportsWireCompression() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
      */
     public boolean supportsNativeUserDefinedFunctions() {
