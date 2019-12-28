@@ -18,12 +18,17 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import com.sun.jna.Library;
 import com.sun.jna.Native;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -39,6 +44,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeRes
  */
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractNativeDatabaseFactory.class);
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private FbClientResource resource;
 
@@ -88,7 +94,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
             writeLock.lock();
             try {
                 if (resource == null) {
-                    FbClientLibrary newLibrary = syncWrapIfNecessary(createClientLibrary());
+                    FbClientLibrary newLibrary = syncWrapIfNecessary(wrapFeatureAccess(createClientLibrary()));
                     resource = registerNativeResource(new FbClientResource(newLibrary, this));
                 }
                 readLock.lock();
@@ -101,6 +107,27 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
         } finally {
             readLock.unlock();
         }
+    }
+
+    private static FbClientLibrary wrapFeatureAccess(FbClientLibrary library) {
+        Class<?> libraryClass = library.getClass();
+        if (!Proxy.isProxyClass(libraryClass)) {
+            log.warn("Could not decorate client library with FbClientFeatureAccess: not a proxy");
+            return library;
+        }
+        InvocationHandler ih = Proxy.getInvocationHandler(library);
+        if (!(ih instanceof Library.Handler)) {
+            log.warn("Could not decorate client library with FbClientFeatureAccess: unexpected invocation handler type "
+                    + ih.getClass());
+            return library;
+        }
+        Library.Handler originalHandler = (Library.Handler) ih;
+        FbClientFeatureAccessHandler fbClientFeatureAccessHandler = new FbClientFeatureAccessHandler(originalHandler);
+        Class<?> interfaceClass = originalHandler.getInterfaceClass();
+        ClassLoader loader = interfaceClass.getClassLoader();
+        Object proxy = Proxy.newProxyInstance(loader, new Class[] { interfaceClass, FbClientFeatureAccess.class },
+                fbClientFeatureAccessHandler);
+        return (FbClientLibrary) proxy;
     }
 
     /**
@@ -117,8 +144,10 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
     /**
      * Called when a resource registered by this factory is disposed.
      *
-     * @param disposedResource client resource to dispose
-     * @param disposeAction Dispose action to run if {@code disposedResource} matches the current resource
+     * @param disposedResource
+     *         client resource to dispose
+     * @param disposeAction
+     *         Dispose action to run if {@code disposedResource} matches the current resource
      * @since 4.0
      */
     final void disposing(FbClientResource disposedResource, Runnable disposeAction) {
@@ -152,8 +181,10 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      * advised to copy the attach properties before modification and return this copy.
      * </p>
      *
-     * @param attachProperties Attach properties
-     * @param <T> Type of attach properties
+     * @param attachProperties
+     *         Attach properties
+     * @param <T>
+     *         Type of attach properties
      * @return Filtered properties
      */
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {

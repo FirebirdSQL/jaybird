@@ -23,9 +23,12 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ng.AbstractStatementTimeoutTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.util.Unstable;
+import org.junit.Before;
 import org.junit.ClassRule;
 
 import java.sql.SQLException;
+
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for statement timeouts with JNA statement.
@@ -40,6 +43,12 @@ public class JnaStatementTimeoutTest extends AbstractStatementTimeoutTest {
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
+
+    @Before
+    public void checkClientTimeoutSupport() {
+        assumeTrue("Requires native client statement timeout support",
+                ((JnaDatabase) db).hasFeature(FbClientFeature.STATEMENT_TIMEOUT));
+    }
 
     @Override
     protected Class<? extends FbDatabase> getExpectedDatabaseType() {

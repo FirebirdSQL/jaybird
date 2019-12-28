@@ -51,7 +51,7 @@ public class JnaStatement extends AbstractFbStatement {
     private static final Logger log = LoggerFactory.getLogger(JnaStatement.class);
 
     private final IntByReference handle = new IntByReference(0);
-    private JnaDatabase database;
+    private final JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
     private XSQLDA inXSqlDa;
@@ -445,13 +445,13 @@ public class JnaStatement extends AbstractFbStatement {
     }
 
     private void updateStatementTimeout() throws SQLException {
-        try {
-            int allowedTimeout = (int) getAllowedTimeout();
-            clientLibrary.fb_dsql_set_timeout(statusVector, handle, allowedTimeout);
-            processStatusVector();
-        } catch (UnsatisfiedLinkError e) {
-            // ignored, library version doesn't support fb_dsql_set_timeout
+        if (!database.hasFeature(FbClientFeature.STATEMENT_TIMEOUT)) {
+            // no statement timeouts, do nothing
+            return;
         }
+        int allowedTimeout = (int) getAllowedTimeout();
+        clientLibrary.fb_dsql_set_timeout(statusVector, handle, allowedTimeout);
+        processStatusVector();
     }
 
     @Override
