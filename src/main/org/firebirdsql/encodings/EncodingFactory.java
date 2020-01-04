@@ -686,7 +686,6 @@ public final class EncodingFactory implements IEncodingFactory {
         final EncodingDefinition encodingDefinition = getRootEncodingFactory()
                 .getEncodingDefinitionByFirebirdName(iscEncoding);
 
-        // TODO: Test the claim below
         // very important for performance
         // if javaEncoding is the default one, set to null
         if (encodingDefinition == null || DEFAULT_CHARSET.equals(encodingDefinition.getJavaCharset())) {
@@ -711,7 +710,6 @@ public final class EncodingFactory implements IEncodingFactory {
     public static String getJavaEncodingForAlias(String javaAlias) {
         final EncodingDefinition encodingDefinition = getRootEncodingFactory()
                 .getEncodingDefinitionByCharsetAlias(javaAlias);
-        // TODO: Test the claim below
         // very important for performance
         // if javaEncoding is the default one, set to null
         if (encodingDefinition == null || DEFAULT_CHARSET.equals(encodingDefinition.getJavaCharset())) {
