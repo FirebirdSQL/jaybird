@@ -21,9 +21,7 @@ package org.firebirdsql.jdbc;
 /**
  * Reasons for statement (or other resources) completion. This is intended for the {@link InternalTransactionCoordinator}
  * to notify the statement and related objects on why it should complete.
- * <p>
- * TODO: This is a bit of kludge to fix <a href="http://tracker.firebirdsql.org/browse/JDBC-304">JDBC-304</a> in 2.2.x, might need some more polish for 3.0
- * </p>
+ * 
  * @since 2.2.3
  */
 public enum CompletionReason {
