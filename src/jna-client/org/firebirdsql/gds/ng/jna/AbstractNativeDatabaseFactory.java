@@ -18,17 +18,12 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -94,7 +89,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
             writeLock.lock();
             try {
                 if (resource == null) {
-                    FbClientLibrary newLibrary = syncWrapIfNecessary(wrapFeatureAccess(createClientLibrary()));
+                    FbClientLibrary newLibrary = FbClientFeatureAccessHandler.decorateWithFeatureAccess(createClientLibrary());
                     resource = registerNativeResource(new FbClientResource(newLibrary, this));
                 }
                 readLock.lock();
@@ -107,27 +102,6 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
         } finally {
             readLock.unlock();
         }
-    }
-
-    private static FbClientLibrary wrapFeatureAccess(FbClientLibrary library) {
-        Class<?> libraryClass = library.getClass();
-        if (!Proxy.isProxyClass(libraryClass)) {
-            log.warn("Could not decorate client library with FbClientFeatureAccess: not a proxy");
-            return library;
-        }
-        InvocationHandler ih = Proxy.getInvocationHandler(library);
-        if (!(ih instanceof Library.Handler)) {
-            log.warn("Could not decorate client library with FbClientFeatureAccess: unexpected invocation handler type "
-                    + ih.getClass());
-            return library;
-        }
-        Library.Handler originalHandler = (Library.Handler) ih;
-        FbClientFeatureAccessHandler fbClientFeatureAccessHandler = new FbClientFeatureAccessHandler(originalHandler);
-        Class<?> interfaceClass = originalHandler.getInterfaceClass();
-        ClassLoader loader = interfaceClass.getClassLoader();
-        Object proxy = Proxy.newProxyInstance(loader, new Class[] { interfaceClass, FbClientFeatureAccess.class },
-                fbClientFeatureAccessHandler);
-        return (FbClientLibrary) proxy;
     }
 
     /**
@@ -189,13 +163,6 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      */
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {
         return attachProperties;
-    }
-
-    private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
-        if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
-            return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
-        }
-        return clientLibrary;
     }
 
 }

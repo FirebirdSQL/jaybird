@@ -20,23 +20,21 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Library;
 import com.sun.jna.NativeLibrary;
-import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.Collections;
+import java.lang.reflect.Proxy;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
-
-import static java.util.Collections.unmodifiableSet;
 
 /**
  * Invocation handler to check for feature existence as part of the client library initialization.
  *
  * @since 4.0
  */
-class FbClientFeatureAccessHandler extends Library.Handler {
+class FbClientFeatureAccessHandler implements InvocationHandler {
 
     private static final Method HAS_FEATURE;
     private static final Method GET_FEATURES;
@@ -50,11 +48,15 @@ class FbClientFeatureAccessHandler extends Library.Handler {
         }
     }
 
+    private final FbClientLibrary clientLibrary;
     private final Set<FbClientFeature> clientFeatures;
+    private final InvocationHandler delegatedHandler;
 
-    FbClientFeatureAccessHandler(Library.Handler originalHandler) {
-        super(originalHandler.getLibraryName(), originalHandler.getInterfaceClass(), extractOptions(originalHandler));
-        clientFeatures = unmodifiableSet(determineClientFeatures(originalHandler.getNativeLibrary()));
+    private FbClientFeatureAccessHandler(FbClientLibrary clientLibrary, Set<FbClientFeature> clientFeatures,
+            InvocationHandler delegatedHandler) {
+        this.clientLibrary = clientLibrary;
+        this.clientFeatures = clientFeatures;
+        this.delegatedHandler = delegatedHandler;
     }
 
     @Override
@@ -67,11 +69,48 @@ class FbClientFeatureAccessHandler extends Library.Handler {
         if (GET_FEATURES.equals(method)) {
             return clientFeatures;
         }
-        
-        return super.invoke(proxy, method, inArgs);
+
+        return delegatedHandler.invoke(clientLibrary, method, inArgs);
     }
 
-    private static Set<FbClientFeature> determineClientFeatures(NativeLibrary nativeLibrary) {
+    /**
+     * Creates a {@code FbClientLibrary} proxy implementing {@link FbClientFeatureAccess}.
+     *
+     * @param library
+     *         The original {@code FbClientLibrary} proxy object
+     * @return New proxy for {@code library} that implements {@link FbClientFeatureAccess}
+     * @throws IllegalArgumentException
+     *         if {@code library} is not a proxy with {@link Library.Handler} as its invocation handler
+     */
+    static FbClientLibrary decorateWithFeatureAccess(FbClientLibrary library) {
+        Class<?> libraryClass = library.getClass();
+        if (!Proxy.isProxyClass(libraryClass)) {
+            throw new IllegalArgumentException(
+                    "Could not decorate client library with FbClientFeatureAccess: not a proxy");
+        }
+        InvocationHandler ih = Proxy.getInvocationHandler(library);
+        if (!(ih instanceof Library.Handler)) {
+            throw new IllegalArgumentException("Could not decorate client library with FbClientFeatureAccess: "
+                    + "unexpected invocation handler type " + ih.getClass());
+        }
+
+        Library.Handler originalHandler = (Library.Handler) ih;
+        Set<FbClientFeature> clientFeatures = determineClientFeatures(originalHandler);
+
+        InvocationHandler delegatedHandler = syncWrapIfNecessary(library, originalHandler);
+
+        FbClientFeatureAccessHandler fbClientFeatureAccessHandler =
+                new FbClientFeatureAccessHandler(library, clientFeatures, delegatedHandler);
+        
+        Class<?> interfaceClass = originalHandler.getInterfaceClass();
+        ClassLoader loader = interfaceClass.getClassLoader();
+        Object proxy = Proxy.newProxyInstance(loader, new Class[] { interfaceClass, FbClientFeatureAccess.class },
+                fbClientFeatureAccessHandler);
+        return (FbClientLibrary) proxy;
+    }
+
+    private static Set<FbClientFeature> determineClientFeatures(Library.Handler originalHandler) {
+        NativeLibrary nativeLibrary = originalHandler.getNativeLibrary();
         EnumSet<FbClientFeature> features = EnumSet.allOf(FbClientFeature.class);
         for (FbClientFeature feature : FbClientFeature.values()) {
             for (String methodName : feature.methodNames()) {
@@ -93,17 +132,18 @@ class FbClientFeatureAccessHandler extends Library.Handler {
         }
     }
 
-    private static Map<String, ?> extractOptions(Library.Handler originalHandler) {
-        try {
-            Field optionsField = Library.Handler.class.getDeclaredField("options");
-            optionsField.setAccessible(true);
-            @SuppressWarnings("unchecked") Map<String, ?> optionsMap =
-                    (Map<String, ?>) optionsField.get(originalHandler);
-            return optionsMap;
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            LoggerFactory.getLogger(FbClientFeatureAccessHandler.class)
-                    .warn("Unable to determine options, using empty options: " + e);
-            return Collections.emptyMap();
+    private static InvocationHandler syncWrapIfNecessary(FbClientLibrary clientLibrary,
+            Library.Handler originalHandler) {
+        if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
+            // Mimics com.sun.jna.Native.synchronizedLibrary(..) with creating a proxy
+            return new InvocationHandler() {
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    synchronized (originalHandler.getNativeLibrary()) {
+                        return originalHandler.invoke(clientLibrary, method, args);
+                    }
+                }
+            };
         }
+        return originalHandler;
     }
 }
