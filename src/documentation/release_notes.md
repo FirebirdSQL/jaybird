@@ -2136,6 +2136,8 @@ The following methods will be removed in Jaybird 5:
 -   `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
 -   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
     use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
+-   `FBField.isType(FieldDescriptor, int)`, use 
+    `JdbcTypeConverter.isJdbcType(FieldDescriptor, int)`
     
 ### Removal of deprecated classes ###
 
