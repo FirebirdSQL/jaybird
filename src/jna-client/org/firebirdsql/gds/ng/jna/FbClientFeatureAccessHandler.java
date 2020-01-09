@@ -101,7 +101,7 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
 
         FbClientFeatureAccessHandler fbClientFeatureAccessHandler =
                 new FbClientFeatureAccessHandler(library, clientFeatures, delegatedHandler);
-        
+
         Class<?> interfaceClass = originalHandler.getInterfaceClass();
         ClassLoader loader = interfaceClass.getClassLoader();
         Object proxy = Proxy.newProxyInstance(loader, new Class[] { interfaceClass, FbClientFeatureAccess.class },
@@ -132,8 +132,8 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
         }
     }
 
-    private static InvocationHandler syncWrapIfNecessary(FbClientLibrary clientLibrary,
-            Library.Handler originalHandler) {
+    private static InvocationHandler syncWrapIfNecessary(final FbClientLibrary clientLibrary,
+            final Library.Handler originalHandler) {
         if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
             // Mimics com.sun.jna.Native.synchronizedLibrary(..) with creating a proxy
             return new InvocationHandler() {
