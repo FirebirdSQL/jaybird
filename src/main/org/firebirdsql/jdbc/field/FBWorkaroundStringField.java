@@ -112,8 +112,8 @@ public final class FBWorkaroundStringField extends FBStringField {
         
         if (result == null)
             return null;
-        
-        if (isType(fieldDescriptor, Types.VARCHAR))
+
+        if (JdbcTypeConverter.isJdbcType(fieldDescriptor, Types.VARCHAR))
             return result;
         
         // fix incorrect padding done by the database for multibyte charsets

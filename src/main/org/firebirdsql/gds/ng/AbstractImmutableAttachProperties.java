@@ -24,7 +24,7 @@ package org.firebirdsql.gds.ng;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties> implements IAttachProperties<T> {
+public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
     private final String serverName;
     private final int portNumber;
@@ -39,6 +39,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     private final WireCrypt wireCrypt;
     private final String dbCryptConfig;
     private final String authPlugins;
+    private final boolean wireCompression;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -50,7 +51,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
      * @param src
      *         Source to copy from
      */
-    public AbstractImmutableAttachProperties(IAttachProperties src) {
+    protected AbstractImmutableAttachProperties(IAttachProperties<T> src) {
         serverName = src.getServerName();
         portNumber = src.getPortNumber();
         user = src.getUser();
@@ -64,6 +65,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
         wireCrypt = src.getWireCrypt();
         dbCryptConfig = src.getDbCryptConfig();
         authPlugins = src.getAuthPlugins();
+        wireCompression = src.isWireCompression();
     }
 
     @Override
@@ -193,6 +195,16 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public void setAuthPlugins(String authPlugins) {
+        immutable();
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return wireCompression;
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
         immutable();
     }
 

@@ -288,7 +288,7 @@ public final class FirebirdSupportInfo {
 
     /**
      * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
-     * (10-13 at this time).
+     * (10-15 at this time, although v14 is only implemented as part of v15).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -304,6 +304,12 @@ public final class FirebirdSupportInfo {
             return isVersionEqualOrAbove(2, 5);
         case 13:
             return isVersionEqualOrAbove(3, 0);
+        case 14:
+            // fall-through: Jaybird has only implemented protocol version 14 as part of version 15
+        case 15:
+            return isVersionEqualOrAbove(3, 0, 2);
+        case 16:
+            return isVersionEqualOrAbove(4, 0, 0);
         default:
             return false;
         }
@@ -428,6 +434,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when zlib wire compression is supported
+     */
+    public boolean supportsWireCompression() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
      */
     public boolean supportsNativeUserDefinedFunctions() {
@@ -534,6 +547,13 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
      */
     public boolean supportsFloatBinaryPrecision() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports statement timeouts.
+     */
+    public boolean supportsStatementTimeouts() {
         return isVersionEqualOrAbove(4, 0);
     }
 

@@ -36,7 +36,9 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
+import java.util.Set;
 
+import static java.util.Collections.emptySet;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
@@ -47,7 +49,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * @since 3.0
  */
 public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
-        implements JnaAttachment, TransactionListener {
+        implements JnaAttachment, TransactionListener, FbClientFeatureAccess {
 
     // TODO Find out if there are any exception from JNA that we need to be prepared to handle.
 
@@ -56,12 +58,18 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public static final int MAX_STATEMENT_LENGTH = 64 * 1024;
 
     private final FbClientLibrary clientLibrary;
+    private final Set<FbClientFeature> clientFeatures;
     protected final IntByReference handle = new IntByReference(0);
     protected final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
 
     public JnaDatabase(JnaDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
+        if (clientLibrary instanceof FbClientFeatureAccess) {
+            clientFeatures = ((FbClientFeatureAccess) clientLibrary).getFeatures();
+        } else {
+            clientFeatures = emptySet();
+        }
     }
 
     /**
@@ -505,5 +513,15 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         } finally {
             super.finalize();
         }
+    }
+
+    @Override
+    public boolean hasFeature(FbClientFeature clientFeature) {
+        return clientFeatures.contains(clientFeature);
+    }
+
+    @Override
+    public Set<FbClientFeature> getFeatures() {
+        return clientFeatures;
     }
 }

@@ -38,12 +38,12 @@ public class FBTimeTzField extends FBField {
     FBTimeTzField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
-        // TODO Update instruction once property defined
         throw new FBDriverNotCapableException(
                 "The Java 7 / JDBC 4.1 version of Jaybird does not support type TIME WITH TIME ZONE, "
                         + "either upgrade to Java 8 and the Java 8 or higher version of Jaybird, "
-                        + "or execute SET TIME ZONE BIND LEGACY on this connection to convert "
-                        + "this type to TIMESTAMP WITHOUT TIME ZONE using the session time zone.");
+                        + "or set connection property dataTypeBind with value \"time with time zone to legacy\" "
+                        + "or execute SET BIND OF TIME WITH TIME ZONE TO LEGACY on this connection to convert "
+                        + "this type to TIME WITHOUT TIME ZONE using the session time zone");
     }
 
 }

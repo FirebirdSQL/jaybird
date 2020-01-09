@@ -110,6 +110,21 @@ public interface FbWireOperations {
     SqlResponse readSqlResponse(WarningMessageCallback callback) throws SQLException, IOException;
 
     /**
+     * Handles the database encryption key callback.
+     *
+     * @param dbCryptCallback
+     *         Database encryption callback plugin
+     * @throws IOException
+     *         For errors reading data from the socket
+     * @throws SQLException
+     *         For database errors
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If this protocol version does not support crypt key callbacks
+     * @since 4.0
+     */
+    void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException;
+
+    /**
      * Enqueue a deferred action.
      * <p>
      * FbDatabase implementations that do not support deferred actions are allowed to throw an
@@ -217,8 +232,11 @@ public interface FbWireOperations {
      * @param milliseconds
      *         Timeout in milliseconds; 0 means no timeout. If the attachment doesn't support milliseconds, it should
      *         round up to the nearest second.
-     * @throws SQLException If this attachment is closed, the value of {@code milliseconds} is smaller than 0, or if setting the timeout fails.
-     * @throws java.sql.SQLFeatureNotSupportedException If this attachment doesn't support changing the network timeout.
+     * @throws SQLException
+     *         If this attachment is closed, the value of {@code milliseconds} is smaller than 0, or if setting the
+     *         timeout fails.
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If this attachment doesn't support changing the network timeout.
      */
     void setNetworkTimeout(int milliseconds) throws SQLException;
 

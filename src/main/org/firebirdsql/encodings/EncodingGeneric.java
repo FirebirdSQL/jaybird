@@ -24,16 +24,8 @@ import java.nio.charset.Charset;
 /**
  * Implementation of {@link Encoding} which uses the default functionality of {@link java.nio.charset.Charset} and
  * {@link java.lang.String}.
- * <p>
- * The main use for this class is for multi-byte character sets, but it also works for single byte character sets,
- * although {@link EncodingSingleByte} is more efficient for shorter strings.
- * </p>
  */
 final class EncodingGeneric implements Encoding {
-
-    // TODO Test claim that EncodingSingleByte is more efficient
-    // Some testing seems to indicate that EncodingSingleByte is (slightly) faster for up to +/- 1500-2000 chars),
-    // while EncodingGeneric is (slightly) faster with longer strings
 
     private final Charset charset;
 

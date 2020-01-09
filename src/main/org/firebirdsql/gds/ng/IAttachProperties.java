@@ -253,7 +253,8 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * the value hasn't been set yet.
      * </p>
      *
-     * @param wireCrypt Wire encryption level ({@code null} not allowed)
+     * @param wireCrypt
+     *         Wire encryption level ({@code null} not allowed)
      * @since 4.0
      */
     void setWireCrypt(WireCrypt wireCrypt);
@@ -269,7 +270,8 @@ public interface IAttachProperties<T extends IAttachProperties> {
     /**
      * Sets the database encryption plugin configuration.
      *
-     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @param dbCryptConfig
+     *         Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
@@ -293,6 +295,32 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * @since 4.0
      */
     void setAuthPlugins(String authPlugins);
+
+    /**
+     * Get if wire compression should be enabled.
+     * <p>
+     * Wire compression requires Firebird 3 or higher, and the server must have the zlib library. If compression cannot
+     * be negotiated, the connection will be made without wire compression.
+     * </p>
+     * <p>
+     * This property will be ignored for native connections. For native connections, the configuration in
+     * {@code firebird.conf} read by the client library will be used.
+     * </p>
+     *
+     * @return {@code true} wire compression enabled
+     * @since 4.0
+     */
+    boolean isWireCompression();
+
+    /**
+     * Sets if the connection should try to enable wire compression.
+     *
+     * @param wireCompression
+     *         {@code true} enable wire compression, {@code false} disable wire compression (the default)
+     * @see #isWireCompression()
+     * @since 4.0
+     */
+    void setWireCompression(boolean wireCompression);
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}

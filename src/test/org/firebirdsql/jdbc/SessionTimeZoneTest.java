@@ -121,10 +121,9 @@ public class SessionTimeZoneTest {
         if (zoneName != null) {
             props.setProperty("sessionTimeZone", zoneName);
         }
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement()) {
-            // TODO Replace with connection property once implemented
-            stmt.execute("set time zone bind legacy");
 
             try (ResultSet rs = stmt.executeQuery("select " + timeValue + ", "
                     + "cast(" + timeValue + " as varchar(100)) from rdb$database")) {
@@ -143,10 +142,9 @@ public class SessionTimeZoneTest {
         if (zoneName != null) {
             props.setProperty("sessionTimeZone", zoneName);
         }
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement()) {
-            // TODO Replace with connection property once implemented
-            stmt.execute("set time zone bind legacy");
 
             try (ResultSet rs = stmt.executeQuery("select " + timeValue + ", "
                     + "cast(" + timeValue + " as varchar(100)) from rdb$database")) {

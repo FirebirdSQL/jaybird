@@ -193,6 +193,18 @@ public interface WireProtocolConstants {
        It also transfers SQL messages in the packed (null aware) format. */
     int PROTOCOL_VERSION13 = (FB_PROTOCOL_FLAG | 13);
 
+    /* Protocol 14:
+    	- fixes a bug in database crypt key callback */
+    int PROTOCOL_VERSION14	= (FB_PROTOCOL_FLAG | 14);
+
+    /* Protocol 15:
+    	- supports crypt key callback at connect phase */
+    int PROTOCOL_VERSION15 = (FB_PROTOCOL_FLAG | 15);
+
+    /* Protocol 16:
+    	- supports statement timeouts */
+    int PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
     
@@ -229,6 +241,9 @@ public interface WireProtocolConstants {
     int ptype_batch_send = 3; // Batch sends, no asynchrony
     int ptype_out_of_band = 4; // Batch sends w/ out of band notification
     int ptype_lazy_send = 5; // Deferred packets delivery
+    int ptype_MASK = 0xFF; // Mask - up to 255 types of protocol
+
+    int pflag_compress = 0x100; // Turn on compression if possible
 
     int P_REQ_async = 1;
 }

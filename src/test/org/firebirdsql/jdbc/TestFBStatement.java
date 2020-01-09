@@ -407,8 +407,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
     @Test
     public void testSetQueryTimeout_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
+            expectedException.expect(SQLNonTransientException.class);
+            expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
 
             stmt.setQueryTimeout(-1);
         }

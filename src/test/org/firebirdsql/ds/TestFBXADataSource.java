@@ -18,9 +18,12 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jca.TestXABase.XidImpl;
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -34,10 +37,12 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -300,6 +305,23 @@ public class TestFBXADataSource {
         ds.setNonStandardProperty("someProperty", "someValue");
         
         assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+    }
+
+    @Test
+    public void enableWireCompression() throws Exception {
+        assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
+        assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
+        ds.setWireCompression(true);
+
+        XAConnection xaConnection = ds.getXAConnection();
+        try (Connection connection = xaConnection.getConnection()){
+            assertTrue(connection.isValid(0));
+            GDSServerVersion serverVersion =
+                    connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
+            assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+        } finally {
+            xaConnection.close();
+        }
     }
 
 }

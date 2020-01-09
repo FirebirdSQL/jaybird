@@ -188,6 +188,16 @@ public class FBServiceManager implements ServiceManager {
         serviceProperties.setAuthPlugins(authPlugins);
     }
 
+    @Override
+    public boolean isWireCompression() {
+        return serviceProperties.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        serviceProperties.setWireCompression(wireCompression);
+    }
+
     /**
      * @return Returns the out.
      */

@@ -78,6 +78,11 @@ public interface ProtocolDescriptor {
     int getMaximumType();
 
     /**
+     * @return {@code true} when zlib wire compression is supported
+     */
+    boolean supportsWireCompression();
+
+    /**
      * @return Preference weight
      */
     int getWeight();

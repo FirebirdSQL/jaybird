@@ -70,7 +70,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
-Version: `3.0.6`
+Version: `3.0.8`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -81,7 +81,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.6</version>
+    <version>3.0.8</version>
 </dependency>
 ~~~
 
@@ -93,7 +93,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.6</version>
+    <version>3.0.8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -192,7 +192,7 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 4 supports Java 7, 8, 11 and 12. Support for Java 9 and higher is 
+Jaybird 4 supports Java 7, 8, 11 and 13. Support for Java 9 and higher is 
 limited to the latest LTS and current latest release, but in practice Jaybird
 should work on all Java 9+ versions.
 
@@ -200,9 +200,12 @@ Jaybird 4 is the last version to support Java 7, support will be dropped with
 Jaybird 5. Java 8 support may be dropped from Jaybird 5 as well depending on
 the actual release timeline. 
 
-Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9.
+Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9 and higher
+using the Java 8 version of the driver. Support for Java 9 and higher is 
+limited to the latest LTS and current latest release, but in practice Jaybird
+should work on all Java 9+ versions.
 
-Jaybird 2.2 supports Java 6, 7 and 8. 
+Jaybird 2.2 supports Java 6, 7 and 8.
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all 
 JDBC 4.2 features are supported or fully implemented.
@@ -295,6 +298,7 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 * Create pull requests on GitHub (<https://github.com/FirebirdSQL/jaybird>)
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
+* Donate to the Firebird Foundation (see <https://www.firebirdsql.org/en/donate/>)
 * Become a paying member or sponsor of the Firebird Foundation (see
   <https://www.firebirdsql.org/en/firebird-foundation/>)
 

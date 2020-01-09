@@ -447,13 +447,13 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     }
 
     @Override
-    public String getTimeZoneBind() {
-        return connectionProperties.getTimeZoneBind();
+    public String getDataTypeBind() {
+        return connectionProperties.getDataTypeBind();
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
-        connectionProperties.setTimeZoneBind(timeZoneBind);
+    public void setDataTypeBind(String dataTypeBind) {
+        connectionProperties.setDataTypeBind(dataTypeBind);
     }
 
     @Override
@@ -474,6 +474,16 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
         connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return connectionProperties.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        connectionProperties.setWireCompression(wireCompression);
     }
 
     public int hashCode() {

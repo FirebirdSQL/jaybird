@@ -43,7 +43,8 @@ public final class JdbcTypeConverter {
     /**
      * Gets the JDBC type value from {@link java.sql.Types} for the field descriptor.
      *
-     * @param fieldDescriptor Field descriptor
+     * @param fieldDescriptor
+     *         Field descriptor
      * @return JDBC type, or {@link Types#OTHER} for unknown types
      */
     public static int toJdbcType(final FieldDescriptor fieldDescriptor) {
@@ -55,15 +56,31 @@ public final class JdbcTypeConverter {
     }
 
     /**
+     * Determines if a field descriptor matches a JDBC type value from {@link java.sql.Types}.
+     *
+     * @param fieldDescriptor
+     *         Field descritpor
+     * @param jdbcType
+     *         JDBC type
+     * @return {@code true} if the field descriptor and JDBC type are equivalent (using {@link #toJdbcType(FieldDescriptor)})
+     */
+    public static boolean isJdbcType(final FieldDescriptor fieldDescriptor, final int jdbcType) {
+        return toJdbcType(fieldDescriptor) == jdbcType;
+    }
+
+    /**
      * Converts from the Firebird type, subtype and scale to the JDBC type value from {@link java.sql.Types}.
      * <p>
      * This method is not capable of identifying {@link java.sql.Types#ROWID}; this will be identified
      * as {@link java.sql.Types#BINARY} instead.
      * </p>
      *
-     * @param firebirdType Firebird type value (from {@link ISCConstants} {@code SQL_*} with or without nullable bit set
-     * @param subtype Subtype
-     * @param scale Scale
+     * @param firebirdType
+     *         Firebird type value (from {@link ISCConstants} {@code SQL_*} with or without nullable bit set
+     * @param subtype
+     *         Subtype
+     * @param scale
+     *         Scale
      * @return JDBC type, or {@link Types#OTHER} for unknown types
      */
     public static int fromFirebirdToJdbcType(int firebirdType, int subtype, int scale) {
@@ -146,9 +163,13 @@ public final class JdbcTypeConverter {
 
     /**
      * Converts from the metadata type (as used in the system tables) to JDBC type values from {@link java.sql.Types}.
-     * @param metaDataType Metadata type value
-     * @param subtype Subtype
-     * @param scale Scale
+     *
+     * @param metaDataType
+     *         Metadata type value
+     * @param subtype
+     *         Subtype
+     * @param scale
+     *         Scale
      * @return JDBC type, or {@link Types#OTHER} for unknown types
      */
     public static int fromMetaDataToJdbcType(int metaDataType, int subtype, int scale) {
@@ -158,7 +179,8 @@ public final class JdbcTypeConverter {
     /**
      * Converts the metadata type value to the Firebird type value (null bit not set).
      *
-     * @param metaDataType Metadata type value
+     * @param metaDataType
+     *         Metadata type value
      * @return Firebird type value
      */
     public static int fromMetaDataToFirebirdType(int metaDataType) {

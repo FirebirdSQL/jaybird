@@ -100,7 +100,6 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
             return;
         }
 
-        // TODO Reject +/-Infinity, +/-Nan and +/-sNaN?
         try {
             setFieldData(decimalHandling.encode(fieldDescriptor, value));
         } catch (ArithmeticException e) {

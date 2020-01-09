@@ -293,6 +293,11 @@ public interface FbClientLibrary extends com.sun.jna.Library {
 	ISC_STATUS isc_dsql_sql_info(ISC_STATUS[] statusVector, IntByReference stmtHandle, short itemListBufferLength,
             byte[] itemListBuffer, short responseBufferLength, ByteBuffer responseBuffer);
 	/**
+	 * Original signature : <code>ISC_STATUS ISC_EXPORT fb_dsql_set_timeout(ISC_STATUS*, isc_stmt_handle*, ISC_ULONG)</code><br>
+	 * <i>native declaration : D:\DevSoft\FB_tests\Firebird-4.0.0.1691-0_x64\include\ibase.h:629</i>
+	 */
+	ISC_STATUS fb_dsql_set_timeout(ISC_STATUS[] statusVector, IntByReference stmtHandle, int timeoutMs);
+	/**
 	 * Original signature : <code>void isc_encode_date(const void*, ISC_QUAD*)</code><br>
 	 * <i>native declaration : C:\Program Files\Firebird\Firebird_2_5\include\ibase.h:636</i>
 	 */

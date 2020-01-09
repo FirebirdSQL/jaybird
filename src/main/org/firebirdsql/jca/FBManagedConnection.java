@@ -228,17 +228,19 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         // if connection sharing is not enabled, notify currently associated
         // connection handle about the state change.
         if (!connectionSharing) {
-            if (connectionHandles.size() > 1)
-                throw new javax.resource.spi.IllegalStateException(
-                    "Multiple connections associated with this managed " +
-                    "connection in non-sharing mode.");
+            synchronized (connectionHandles) {
+                if (connectionHandles.size() > 1)
+                    throw new javax.resource.spi.IllegalStateException(
+                            "Multiple connections associated with this managed " +
+                                    "connection in non-sharing mode.");
 
-            // there will be at most one connection.
-            for (FBConnection connection : connectionHandles) {
-                try {
-                    connection.setManagedEnvironment(managedEnvironment);
-                } catch(SQLException ex) {
-                    throw new FBResourceException(ex);
+                // there will be at most one connection.
+                for (FBConnection connection : connectionHandles) {
+                    try {
+                        connection.setManagedEnvironment(managedEnvironment);
+                    } catch (SQLException ex) {
+                        throw new FBResourceException(ex);
+                    }
                 }
             }
         }
@@ -465,13 +467,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private void disassociateConnections() throws ResourceException {
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
 
-        // Iterate over copy of list as connection.close() will remove connection
-        List<FBConnection> connectionHandleCopy = new ArrayList<>(connectionHandles);
-        for (FBConnection connection : connectionHandleCopy) {
-            try {
-                connection.close();
-            } catch(SQLException sqlex) {
-                chain.append(sqlex);
+        synchronized (connectionHandles) {
+            // Iterate over copy of list as connection.close() will remove connection
+            List<FBConnection> connectionHandleCopy = new ArrayList<>(connectionHandles);
+            for (FBConnection connection : connectionHandleCopy) {
+                try {
+                    connection.close();
+                } catch (SQLException sqlex) {
+                    chain.append(sqlex);
+                }
             }
         }
 
@@ -483,16 +487,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Disassociate connections without cleanly closing them.
      */
     private void forceDisassociateConnections() {
-        Iterator<FBConnection> connectionIterator = connectionHandles.iterator();
-        while (connectionIterator.hasNext()) {
-            FBConnection connection = connectionIterator.next();
-            connection.setManagedConnection(null);
-            try {
-                connection.close();
-            } catch(SQLException sqlex) {
-                log.debug("Exception ignored during forced disassociation", sqlex);
+        synchronized (connectionHandles) {
+            Iterator<FBConnection> connectionIterator = connectionHandles.iterator();
+            while (connectionIterator.hasNext()) {
+                FBConnection connection = connectionIterator.next();
+                connection.setManagedConnection(null);
+                try {
+                    connection.close();
+                } catch (SQLException sqlex) {
+                    log.debug("Exception ignored during forced disassociation", sqlex);
+                }
+                connectionIterator.remove();
             }
-            connectionIterator.remove();
         }
     }
 
@@ -1499,16 +1505,17 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     private void notifyWarning(SQLWarning warning) {
-        // Note: minor chance of a race condition here, but we take the chance.
-        if (connectionHandles.isEmpty()) {
-            if (unnotifiedWarnings == null) {
-                unnotifiedWarnings = warning;
-            } else {
-                unnotifiedWarnings.setNextWarning(warning);
+        synchronized (connectionHandles) {
+            if (connectionHandles.isEmpty()) {
+                if (unnotifiedWarnings == null) {
+                    unnotifiedWarnings = warning;
+                } else {
+                    unnotifiedWarnings.setNextWarning(warning);
+                }
             }
-        }
-        for (FBConnection connection : new ArrayList<>(connectionHandles)) {
-            connection.addWarning(warning);
+            for (FBConnection connection : connectionHandles) {
+                connection.addWarning(warning);
+            }
         }
     }
 

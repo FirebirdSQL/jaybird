@@ -19,17 +19,21 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.GDSException;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import javax.resource.ResourceException;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.net.URLDecoder;
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
@@ -53,7 +57,9 @@ public class FBDriver implements FirebirdDriver {
     public static final String DATABASE = "database";
     public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
     public static final String TPB_MAPPING = "tpb_mapping";
-    
+
+    private static final String URL_CHARSET = "UTF-8";
+
     /*
      * @todo implement the default subject for the
      * standard connection.
@@ -182,9 +188,9 @@ public class FBDriver implements FirebirdDriver {
         return false;
     }
 
-     // TODO check the correctness of implementation
-     // TODO convert parameters into constants
-     @Override
+    // TODO check the correctness of implementation
+    // TODO convert parameters into constants
+    @Override
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
         return FBDriverPropertyManager.getDriverPropertyInfo(info);
     }
@@ -215,11 +221,15 @@ public class FBDriver implements FirebirdDriver {
      * If a property is present in both, the property specified in the JDBC url takes precedence.
      * </p>
      *
-     * @param jdbcUrl JDBC Url
-     * @param connectionProperties Properties object
+     * @param jdbcUrl
+     *         JDBC Url
+     * @param connectionProperties
+     *         Properties object
      * @return Map with connection properties
+     * @throws SQLException
+     *         For failures to extract connection properties from {@code jdbcUrl} (URL decoding errors)
      */
-    private static Properties mergeProperties(String jdbcUrl, Properties connectionProperties) {
+    private static Properties mergeProperties(String jdbcUrl, Properties connectionProperties) throws SQLException {
         Properties mergedProperties = new Properties();
         if (connectionProperties != null) {
             for (String propertyName : connectionProperties.stringPropertyNames()) {
@@ -238,10 +248,11 @@ public class FBDriver implements FirebirdDriver {
      * @param url
      *         specified URL.
      * @param info
-     *         instance of {@link Map} into which values should
-     *         be extracted.
+     *         instance of {@link Map} into which values should be extracted.
+     * @throws SQLException
+     *         For failures to extract connection properties from {@code url} (URL decoding errors)
      */
-    private static void convertUrlParams(String url, Properties info) {
+    private static void convertUrlParams(String url, Properties info) throws SQLException {
         if (url == null) {
             return;
         }
@@ -258,12 +269,35 @@ public class FBDriver implements FirebirdDriver {
             String propertyString = st.nextToken();
             int iIs = propertyString.indexOf("=");
             if (iIs > -1) {
-                String property = propertyString.substring(0, iIs);
-                String value = propertyString.substring(iIs + 1);
+                String property = urlDecode(propertyString.substring(0, iIs), url);
+                String value = urlDecode(propertyString.substring(iIs + 1), url);
                 info.setProperty(property, value);
             } else {
-                info.setProperty(propertyString, "");
+                info.setProperty(urlDecode(propertyString, url), "");
             }
+        }
+    }
+
+    /**
+     * Decodes URL encoded value, transforming exceptions to SQLExceptions
+     *
+     * @param encodedValue
+     *         The value to decode
+     * @return The decoded value
+     * @throws SQLException
+     *         If decoding fails (failures of {@link URLDecoder#decode(String, String)}
+     */
+    private static String urlDecode(String encodedValue, String url) throws SQLException {
+        try {
+            return URLDecoder.decode(encodedValue, URL_CHARSET);
+        } catch (RuntimeException | UnsupportedEncodingException e) {
+            // NOTE: The UnsupportedEncodingException shouldn't occur because UTF-8 support is required in Java
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    .messageParameter(url)
+                    .messageParameter(e.toString())
+                    .cause(e)
+                    .toFlatSQLException();
         }
     }
 }

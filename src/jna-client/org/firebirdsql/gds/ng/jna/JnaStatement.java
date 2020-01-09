@@ -51,7 +51,7 @@ public class JnaStatement extends AbstractFbStatement {
     private static final Logger log = LoggerFactory.getLogger(JnaStatement.class);
 
     private final IntByReference handle = new IntByReference(0);
-    private JnaDatabase database;
+    private final JnaDatabase database;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
     private XSQLDA inXSqlDa;
@@ -170,12 +170,13 @@ public class JnaStatement extends AbstractFbStatement {
                 reset(false);
 
                 switchState(StatementState.EXECUTING);
+                updateStatementTimeout();
 
                 setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
                 final StatementType statementType = getType();
                 final boolean hasSingletonResult = hasSingletonResult();
 
-                try (OperationCloseHandle operationCloseHandle = signalExecute()){
+                try (OperationCloseHandle operationCloseHandle = signalExecute()) {
                     if (operationCloseHandle.isCancelled()) {
                         // operation was synchronously cancelled from an OperationAware implementation
                         throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
@@ -441,6 +442,16 @@ public class JnaStatement extends AbstractFbStatement {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
+    }
+
+    private void updateStatementTimeout() throws SQLException {
+        if (!database.hasFeature(FbClientFeature.STATEMENT_TIMEOUT)) {
+            // no statement timeouts, do nothing
+            return;
+        }
+        int allowedTimeout = (int) getAllowedTimeout();
+        clientLibrary.fb_dsql_set_timeout(statusVector, handle, allowedTimeout);
+        processStatusVector();
     }
 
     @Override

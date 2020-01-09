@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import com.sun.jna.Native;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
@@ -39,6 +39,7 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeRes
  */
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractNativeDatabaseFactory.class);
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private FbClientResource resource;
 
@@ -88,7 +89,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
             writeLock.lock();
             try {
                 if (resource == null) {
-                    FbClientLibrary newLibrary = syncWrapIfNecessary(createClientLibrary());
+                    FbClientLibrary newLibrary = FbClientFeatureAccessHandler.decorateWithFeatureAccess(createClientLibrary());
                     resource = registerNativeResource(new FbClientResource(newLibrary, this));
                 }
                 readLock.lock();
@@ -117,8 +118,10 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
     /**
      * Called when a resource registered by this factory is disposed.
      *
-     * @param disposedResource client resource to dispose
-     * @param disposeAction Dispose action to run if {@code disposedResource} matches the current resource
+     * @param disposedResource
+     *         client resource to dispose
+     * @param disposeAction
+     *         Dispose action to run if {@code disposedResource} matches the current resource
      * @since 4.0
      */
     final void disposing(FbClientResource disposedResource, Runnable disposeAction) {
@@ -152,19 +155,14 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      * advised to copy the attach properties before modification and return this copy.
      * </p>
      *
-     * @param attachProperties Attach properties
-     * @param <T> Type of attach properties
+     * @param attachProperties
+     *         Attach properties
+     * @param <T>
+     *         Type of attach properties
      * @return Filtered properties
      */
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {
         return attachProperties;
-    }
-
-    private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
-        if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
-            return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
-        }
-        return clientLibrary;
     }
 
 }

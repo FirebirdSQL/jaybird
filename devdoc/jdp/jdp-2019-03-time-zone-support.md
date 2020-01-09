@@ -30,8 +30,9 @@ Relevant highlights:
   This can be done with `set time zone {time zone '<name>' | local}` or through 
   a DPB item `isc_dpb_session_time_zone`.
 - It is possible to transform the `WITH TIME ZONE` types to `WITHOUT TIME ZONE`
-  types (ie `TIME` and `TIMESTAMP`) by setting `set time zone bind legacy` or 
-  DPB item `isc_dpb_time_zone_bind`.
+  types (ie `TIME` and `TIMESTAMP`) by setting `set bind of TIME WITH TIME ZONE
+  to legacy` and `set bind of TIMESTAMP WITH TIME ZONE to legacy` or DPB item 
+  `isc_dpb_set_bind`.
   
 JDBC 4.2 (Java 8) introduced support for `TIMESTAMP WITH TIME ZONE` (`java.sql.Types.TIMESTAMP_WITH_TIMEZONE`) 
 and `TIME WITH TIME ZONE` (`java.sql.Types.TIME_WITH_TIMEZONE`) mapping to 
@@ -114,15 +115,16 @@ Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time
 6.  Only support `WITH TIME ZONE` on Java 8 and higher. Support will not be
     implemented for Java 7.
 
-    This will require setting `set time zone bind legacy` or `timeZoneBind=legacy` 
+    This will require setting `set bind of TIME WITH TIME ZONE to legacy` and 
+    `set bind of TIMESTAMP WITH TIME ZONE to legacy` or 
+    `dataTypeBind=TIME WITH TIME ZONE to legacy;TIME WITH TIME ZONE to legacy` 
     for support on Java 7 (by user, see also point 7 below).
     
     Simplifies implementation in some parts, avoids some ambiguity in Java code 
     with mapping to `java.sql.Timestamp`/`java.sql.Time`.
     
-7.  Provide connection property `timeZoneBind` to set the time zone bind (native 
-    (default) or legacy). This will map to Firebird DPB item 
-    `isc_dpb_time_zone_bind`.
+7.  Provide connection property `dataTypeBind` to set the bind for the time zone 
+    types. This will map to Firebird DPB item `isc_dpb_set_bind`.
     
     Java 7 users will need to explicitly set this if they want to use `WITH TIME 
     ZONE` types (including `CURRENT_TIME` and `CURRENT_TIMESTAMP`).

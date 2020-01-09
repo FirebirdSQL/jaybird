@@ -25,7 +25,7 @@ import org.junit.ClassRule;
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version12.V12Statement} in the V13 protocol, reuses test for V12.
+ * Tests for {@link org.firebirdsql.gds.ng.wire.version13.V13Statement} in the V13 protocol, reuses test for V12.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

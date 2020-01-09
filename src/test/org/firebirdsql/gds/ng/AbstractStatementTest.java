@@ -48,6 +48,7 @@ import java.util.List;
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -810,6 +811,45 @@ public abstract class AbstractStatementTest {
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }
 
+    @Test
+    public void setTimeout_nonZeroThenZero() throws Exception {
+        allocateStatement();
+
+        statement.setTimeout(1);
+        assertEquals(1, statement.getTimeout());
+
+        statement.setTimeout(0);
+        assertEquals(0, statement.getTimeout());
+    }
+
+    /**
+     * Even though the maximum supported timeout (in Firebird 4) is ‭4294967295‬ (2^32), the setter allows full range.
+     */
+    @Test
+    public void setTimeout_max_long_allowed() throws Exception {
+        allocateStatement();
+
+        statement.setTimeout(Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, statement.getTimeout());
+    }
+
+    @Test
+    public void setTimeout_negativeValue_throwsException() throws Exception {
+        allocateStatement();
+
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
+
+        statement.setTimeout(-1);
+    }
+
+    @Test
+    public void getTimeout_defaultZero() throws Exception {
+        allocateStatement();
+
+        assertEquals(0, statement.getTimeout());
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -817,6 +857,13 @@ public abstract class AbstractStatementTest {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.startTransaction(tpb);
+    }
+
+    protected FbTransaction getOrCreateTransaction() throws SQLException {
+        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
+            transaction = getTransaction();
+        }
+        return transaction;
     }
 
     protected void allocateStatement() throws SQLException {

@@ -48,7 +48,7 @@ public class TimeZoneBindLegacyTest {
     @Test
     public void testCurrentTimestamp_legacyBind() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select CURRENT_TIMESTAMP from RDB$DATABASE")) {
@@ -69,7 +69,7 @@ public class TimeZoneBindLegacyTest {
     @Test
     public void testCurrentTime_legacyBind() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "time with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select CURRENT_TIME from RDB$DATABASE")) {
@@ -84,7 +84,7 @@ public class TimeZoneBindLegacyTest {
     public void testRoundTrip_legacyBind() throws Exception {
         assumeTrue("Requires time zone support", getDefaultSupportInfo().supportsTimeZones());
         Properties props = getDefaultPropertiesForConnection();
-        props.setProperty("timeZoneBind", "legacy");
+        props.setProperty("dataTypeBind", "time with time zone to legacy;timestamp with time zone to legacy");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             try (Statement stmt = connection.createStatement()) {
                 stmt.execute("create table testtbl ("

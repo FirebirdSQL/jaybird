@@ -21,10 +21,16 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
+import org.firebirdsql.gds.ng.dbcrypt.simple.StaticValueDbCryptCallbackSpi;
 import org.firebirdsql.jdbc.SQLStateConstants;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
 
 /**
  * Abstract class with common logic for connections.
@@ -35,6 +41,8 @@ import java.sql.SQLNonTransientConnectionException;
  * @since 3.0
  */
 public abstract class AbstractConnection<T extends IAttachProperties<T>, C extends FbAttachment> {
+
+    private static final DbCryptCallbackSpi DEFAULT_DB_CRYPT_CALLBACK_SPI = new StaticValueDbCryptCallbackSpi();
 
     protected final T attachProperties;
     private final EncodingDefinition encodingDefinition;
@@ -103,5 +111,25 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
 
     public final IEncodingFactory getEncodingFactory() {
         return encodingFactory;
+    }
+
+    /**
+     * Creates an instance of {@link DbCryptCallback} for this connection.
+     *
+     * @return Database encryption callback.
+     * @throws SQLException For errors initializing the callback
+     */
+    @InternalApi
+    public final DbCryptCallback createDbCryptCallback() throws SQLException {
+        // TODO Make plugin selectable from config
+        try {
+            final String dbCryptConfig = getAttachProperties().getDbCryptConfig();
+            return DEFAULT_DB_CRYPT_CALLBACK_SPI.createDbCryptCallback(dbCryptConfig);
+        } catch (RuntimeException e) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(jb_dbCryptCallbackInitError)
+                    .cause(e)
+                    .toSQLException();
+        }
     }
 }

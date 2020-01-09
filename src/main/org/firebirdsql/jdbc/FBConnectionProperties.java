@@ -64,9 +64,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String DB_CRYPT_CONFIG = "dbCryptConfig";
     public static final String AUTH_PLUGINS = "authPlugins";
     public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
-    public static final String TIME_ZONE_BIND = "timeZoneBind";
+    public static final String DATA_TYPE_BIND = "dataTypeBind";
     public static final String SESSION_TIME_ZONE = "sessionTimeZone";
     public static final String IGNORE_PROCEDURE_TYPE = "ignoreProcedureType";
+    public static final String WIRE_COMPRESSION = "wireCompression";
 
     private Map<String, Object> properties = new HashMap<>();
     private String type;
@@ -396,13 +397,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     @Override
-    public String getTimeZoneBind() {
-        return getStringProperty(TIME_ZONE_BIND);
+    public String getDataTypeBind() {
+        return getStringProperty(DATA_TYPE_BIND);
     }
 
     @Override
-    public void setTimeZoneBind(String timeZoneBind) {
-        setStringProperty(TIME_ZONE_BIND, timeZoneBind);
+    public void setDataTypeBind(String dataTypeBind) {
+        setStringProperty(DATA_TYPE_BIND, dataTypeBind);
     }
 
     @Override
@@ -423,6 +424,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
         setBooleanProperty(IGNORE_PROCEDURE_TYPE, ignoreProcedureType);
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return getBooleanProperty(WIRE_COMPRESSION);
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        setBooleanProperty(WIRE_COMPRESSION, wireCompression);
     }
 
     public void setNonStandardProperty(String propertyMapping) {
