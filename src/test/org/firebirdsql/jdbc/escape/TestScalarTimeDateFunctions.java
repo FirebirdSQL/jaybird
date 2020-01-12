@@ -119,7 +119,8 @@ public class TestScalarTimeDateFunctions {
         /*19*/ testcase("HOUR(TIME '19:13:05')", new SimpleValidator(19)),
         /*20*/ testcase("MINUTE(TIME '19:13:05')", new SimpleValidator(13)),
         /*21*/ testcase("MONTH(DATE '2012-12-22')", new SimpleValidator(12)),
-        /*22*/ unsupported("MONTHNAME(CURRENT_DATE)"),
+        // See test cases 61-71 for other month names
+        /*22*/ testcase("MONTHNAME(DATE '2020-01-12')", new SimpleValidator("January")),
         /*23*/ testcase("NOW()", new CurrentTimestampValidator()),
         /*24*/ testcase("QUARTER(DATE '2012-01-01')", new SimpleValidator(1)),
         /*25*/ testcase("QUARTER(DATE '2012-03-31')", new SimpleValidator(1)),
@@ -189,7 +190,19 @@ public class TestScalarTimeDateFunctions {
         /*57*/ testcase("DAYNAME(DATE '2020-01-15')", new SimpleValidator("Wednesday")),
         /*58*/ testcase("DAYNAME(DATE '2020-01-16')", new SimpleValidator("Thursday")),
         /*59*/ testcase("DAYNAME(DATE '2020-01-17')", new SimpleValidator("Friday")),
-        /*60*/ testcase("DAYNAME(DATE '2020-01-18')", new SimpleValidator("Saturday"))
+        /*60*/ testcase("DAYNAME(DATE '2020-01-18')", new SimpleValidator("Saturday")),
+        // See test case 22 for January
+        /*61*/ testcase("MONTHNAME(DATE '2020-02-12')", new SimpleValidator("February")),
+        /*62*/ testcase("MONTHNAME(DATE '2020-03-12')", new SimpleValidator("March")),
+        /*63*/ testcase("MONTHNAME(DATE '2020-04-12')", new SimpleValidator("April")),
+        /*64*/ testcase("MONTHNAME(DATE '2020-05-12')", new SimpleValidator("May")),
+        /*65*/ testcase("MONTHNAME(DATE '2020-06-12')", new SimpleValidator("June")),
+        /*66*/ testcase("MONTHNAME(DATE '2020-07-12')", new SimpleValidator("July")),
+        /*67*/ testcase("MONTHNAME(DATE '2020-08-12')", new SimpleValidator("August")),
+        /*68*/ testcase("MONTHNAME(DATE '2020-09-12')", new SimpleValidator("September")),
+        /*69*/ testcase("MONTHNAME(DATE '2020-10-12')", new SimpleValidator("October")),
+        /*70*/ testcase("MONTHNAME(DATE '2020-11-12')", new SimpleValidator("November")),
+        /*71*/ testcase("MONTHNAME(DATE '2020-12-12')", new SimpleValidator("December"))
 //@formatter:on
         );
     }

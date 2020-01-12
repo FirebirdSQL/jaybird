@@ -91,7 +91,7 @@ public class FBEscapedFunctionHelper {
         functionMap.put("SOUNDEX", null);
 
         // Time and date
-        functionMap.put("MONTHNAME", null); // TODO Implement with DECODE or CASE?
+        // ...none
 
         // System
         functionMap.put("DATABASE", null); // TODO Implement with RDB$GET_CONTEXT
@@ -184,6 +184,19 @@ public class FBEscapedFunctionHelper {
         functionMap.put("HOUR", new PatternSQLFunction("EXTRACT(HOUR FROM {0})"));
         functionMap.put("MINUTE", new PatternSQLFunction("EXTRACT(MINUTE FROM {0})"));
         functionMap.put("MONTH", new PatternSQLFunction("EXTRACT(MONTH FROM {0})"));
+        functionMap.put("MONTHNAME", new PatternSQLFunction("trim(decode(extract(month from {0}), "
+                + "1, ''January'', "
+                + "2, ''February'', "
+                + "3, ''March'', "
+                + "4, ''April'', "
+                + "5, ''May'', "
+                + "6, ''June'', "
+                + "7, ''July'', "
+                + "8, ''August'', "
+                + "9, ''September'', "
+                + "10, ''October'', "
+                + "11, ''November'', "
+                + "12, ''December''))"));
         functionMap.put("NOW", currentTimestamp);
         functionMap.put("QUARTER", new PatternSQLFunction("(1+(EXTRACT(MONTH FROM {0})-1)/3)"));
         functionMap.put("SECOND", new PatternSQLFunction("EXTRACT(SECOND FROM {0})"));
