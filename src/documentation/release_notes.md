@@ -109,6 +109,8 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   New feature: Support for zlib wire compression in the pure Java wire
     protocol implementation (Firebird 3 and higher) ([JDBC-606](http://tracker.firebirdsql.org/browse/JDBC-606)) \
     See also [Wire compression support].
+-   New feature: Support for JDBC escape DAYNAME, will always return day names
+    in English ([JDBC-607](http://tracker.firebirdsql.org/browse/JDBC-607))
 
 Support
 =======
@@ -1450,6 +1452,8 @@ with the following caveats:
     -   _interval_ values that are not specified in JDBC will be passed as is, 
     resulting in an error from the Firebird engine if it is an invalid interval 
     name for `DATEDIFF`.
+-   `DAYNAME(date)` - A character string representing the day component of date;
+    implemented to always return English day names (ie Sunday, Monday, etc)
 
 ### Improved JDBC function escapes ###
 

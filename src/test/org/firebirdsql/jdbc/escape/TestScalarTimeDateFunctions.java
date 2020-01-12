@@ -104,7 +104,8 @@ public class TestScalarTimeDateFunctions {
         /* 5*/ testcase("CURRENT_TIMESTAMP()", new CurrentTimestampValidator()),
         /* 6*/ testcase("CURDATE()", new CurrentDateValidator()),
         /* 7*/ testcase("CURTIME()", new CurrentTimeValidator()),
-        /* 8*/ unsupported("DAYNAME(CURRENT_DATE)"),
+        // See test cases 55-60 for other week days
+        /* 8*/ testcase("DAYNAME(DATE '2020-01-12')", new SimpleValidator("Sunday")),
         /* 9*/ testcase("DAYOFMONTH(DATE '2012-12-22')", new SimpleValidator(22)),
         /*10*/ testcase("DAYOFWEEK(DATE '2012-12-22')", new SimpleValidator(7)),
         /*11*/ testcase("DAYOFWEEK(DATE '2012-12-23')", new SimpleValidator(1)),
@@ -181,7 +182,14 @@ public class TestScalarTimeDateFunctions {
                     "TIMESTAMPDIFF(SQL_TSI_YEAR,TIMESTAMP'2017-11-23 12:00:00',TIMESTAMP'2019-01-01 12:00:03')",
                     new SimpleValidator(2L)),
         /*53*/ testcase("WEEK(DATE '2012-12-22')", new SimpleValidator(51)),
-        /*54*/ testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012))
+        /*54*/ testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)),
+        // See test case 8 for Sunday
+        /*55*/ testcase("DAYNAME(DATE '2020-01-13')", new SimpleValidator("Monday")),
+        /*56*/ testcase("DAYNAME(DATE '2020-01-14')", new SimpleValidator("Tuesday")),
+        /*57*/ testcase("DAYNAME(DATE '2020-01-15')", new SimpleValidator("Wednesday")),
+        /*58*/ testcase("DAYNAME(DATE '2020-01-16')", new SimpleValidator("Thursday")),
+        /*59*/ testcase("DAYNAME(DATE '2020-01-17')", new SimpleValidator("Friday")),
+        /*60*/ testcase("DAYNAME(DATE '2020-01-18')", new SimpleValidator("Saturday"))
 //@formatter:on
         );
     }

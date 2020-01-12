@@ -91,7 +91,6 @@ public class FBEscapedFunctionHelper {
         functionMap.put("SOUNDEX", null);
 
         // Time and date
-        functionMap.put("DAYNAME", null); // TODO Implement with DECODE or CASE?
         functionMap.put("MONTHNAME", null); // TODO Implement with DECODE or CASE?
 
         // System
@@ -170,6 +169,14 @@ public class FBEscapedFunctionHelper {
         functionMap.put("CURRENT_TIMESTAMP", currentTimestamp);
         functionMap.put("CURDATE", currentDate);
         functionMap.put("CURTIME", currentTime);
+        functionMap.put("DAYNAME", new PatternSQLFunction("trim(decode(extract(weekday from {0}), "
+                + "0, ''Sunday'', "
+                + "1, ''Monday'', "
+                + "2, ''Tuesday'', "
+                + "3, ''Wednesday'', "
+                + "4, ''Thursday'', "
+                + "5, ''Friday'', "
+                + "6, ''Saturday''))"));
         functionMap.put("DAYOFMONTH", new PatternSQLFunction("EXTRACT(DAY FROM {0})"));
         functionMap.put("DAYOFWEEK", new PatternSQLFunction("EXTRACT(WEEKDAY FROM {0})+1"));
         functionMap.put("DAYOFYEAR", new PatternSQLFunction("EXTRACT(YEARDAY FROM {0})+1"));
