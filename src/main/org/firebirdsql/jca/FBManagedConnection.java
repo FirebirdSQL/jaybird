@@ -75,7 +75,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private final FBManagedConnectionFactory mcf;
 
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
-    // TODO Review synchronization of connectionHandles (especially in blocks like in disassociateConnections, setConnectionSharing etc)
     private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
     // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
     private SQLWarning unnotifiedWarnings;
