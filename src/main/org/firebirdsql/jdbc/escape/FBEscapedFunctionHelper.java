@@ -94,7 +94,7 @@ public class FBEscapedFunctionHelper {
         // ...none
 
         // System
-        functionMap.put("DATABASE", null); // TODO Implement with RDB$GET_CONTEXT
+        // ...none
 
         FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
     }
@@ -209,7 +209,8 @@ public class FBEscapedFunctionHelper {
     }
 
     private static Map<String, SQLFunction> getSystemFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(2, 1.0f);
+        Map<String, SQLFunction> functionMap = new HashMap<>(4, 1.0f);
+        functionMap.put("DATABASE", new ConstantSQLFunction("RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')"));
         functionMap.put("IFNULL", new PatternSQLFunction("COALESCE({0}, {1})"));
         functionMap.put("USER", new ConstantSQLFunction("USER"));
 

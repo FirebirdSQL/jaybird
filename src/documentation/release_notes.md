@@ -113,6 +113,7 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     in English ([JDBC-607](http://tracker.firebirdsql.org/browse/JDBC-607))
 -   New feature: Support for JDBC escape `MONTHNAME`, will always return month
     names in English ([JDBC-608](http://tracker.firebirdsql.org/browse/JDBC-608))
+-   New feature: Support for JDBC escape `DATABASE` ([JDBC-609](http://tracker.firebirdsql.org/browse/JDBC-609))
 
 Support
 =======
@@ -1460,6 +1461,8 @@ with the following caveats:
 -   `MONTHNAME(date)` - A character string representing the month component of
     _date_; implemented to always return English month names (ie January,
     February, etc)
+-   `DATABASE()` Name of the database; implemented as
+    `RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')`
 
 ### Improved JDBC function escapes ###
 
