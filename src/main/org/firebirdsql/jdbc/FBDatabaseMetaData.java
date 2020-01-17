@@ -1092,8 +1092,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxStatementLength() throws SQLException {
-        // TODO 10MB (or 2GB?) for Firebird 3 (test if we don't need to change anything else to support this)
-        return 65536;
+        if (gdsHelper.compareToVersion(3, 0) >= 0) {
+            // 10 MB
+            return 10 * 1024 * 1024;
+        } else {
+            // 64 KB
+            return 64 * 1024;
+        }
     }
 
     @Override
