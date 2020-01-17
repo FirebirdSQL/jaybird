@@ -75,7 +75,7 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     Support for the old format will be removed after Jaybird 4.0.0-beta-2. See
     also [Firebird 4 extended numeric precision support].
 -   New experimental feature: A way to monitor driver operations (specifically
-    statement executes and fetches). ([JDBC-597](http://tracker.firebirdsql.org/browse/JDBC-597) \ 
+    statement executes and fetches). ([JDBC-597](http://tracker.firebirdsql.org/browse/JDBC-597)) \
     See [Operation monitoring] for details. \
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 -   Fixed: On Firebird 3 and 4 with `WireCrypt = Enabled`, the connection could
@@ -172,7 +172,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION@ was tested against Firebird 2.5.8, 3.0.4, and a recent 
+Jaybird @VERSION@ was tested against Firebird 2.5.9, 3.0.5, and a recent 
 Firebird 4 snapshot build, but should also support other Firebird versions from 
 2.5 and up.
 
@@ -544,7 +544,8 @@ property can be set as follows:
 Because of the limitation of connection URL parsing, we strongly suggest to
 avoid plain string values with `&` or `;`. Likewise, avoid `:` so that we can
 support other prefixes similar to `base64:` in the future. If you need these 
-characters, consider using a base64 encoded value instead.
+characters, consider using a base64 encoded value instead, or ensure these
+characters are URL encoded: `&`: `%26`, `;`: `%3B`, `:`: `%3A`, `%`: `%25`.
 
 For service operations, as implemented in the `org.firebirdsql.management` 
 package, Firebird requires the `KeyHolderPlugin` configuration to be globally 
@@ -577,11 +578,10 @@ Wire compression support
 Support for zlib wire compression was added in the pure Java wire protocol.
 Compression can be enabled using boolean connection property `wireCompression`.
 
-The connection property only has effect for the pure Java wire protocol
-connections on Firebird 3 and higher, if the server has the zlib library. Native
-connections will follow the `WireCompression` configuration in 
-the `firebird.conf` read by the client library, if the zlib library is on the
-search path.
+The connection property only affects the pure Java wire protocol connections on
+Firebird 3 and higher, if the server has the zlib library. Native connections
+will follow the `WireCompression` configuration in the `firebird.conf` read by
+the client library, if the zlib library is on the search path.
 
 Compression is currently disabled by default. We may change this in future 
 versions of Jaybird to be enabled by default.
@@ -748,8 +748,8 @@ configuration, which means that they are retained (or reverted to) when
 executing `ALTER SESSION RESET`.
 
 This feature replaces the connection properties `timeZoneBind` and
-`decfloatBind` from earlier Jaybird 4 versions. The `timeZoneBind` and
-`decfloatBind` properties are no longer supported. 
+`decfloatBind` from earlier Jaybird 4 beta or snapshot versions. The
+`timeZoneBind` and `decfloatBind` properties are no longer supported. 
 
 Firebird 4 DECFLOAT support
 ---------------------------
@@ -792,7 +792,7 @@ additional dependencies.
 ### Precision and range ###
 
 The `DECFLOAT` datatype supports values with a precision of 16 or 34 decimal 
-digits, and an exponent [^decimalFormat] between -398 and 369 (`DECFLOAT(16)`), or 
+digits, and an exponent[^decimalFormat] between -398 and 369 (`DECFLOAT(16)`), or 
 between -6176 and 6111 (`DECFLOAT(34)`), so the minimum and maximum values are:
 
 [^decimalFormat]: The `DECFLOAT` decimal format stores values as sign, integral 
@@ -889,7 +889,7 @@ differences in rounding, and the result of calculations may be out of range.
     retrieval of these values will result in a `SQLException`, with a 
     `DecimalInconvertibleException` cause with details on the special. The 
     support for these special values is currently under discussion and
-    may be removed in future Firebird 4 snapshots.
+    may be removed in future Firebird 4 snapshots, or may be disabled by default.
 
 2.  `byte` in Java is signed, and historically Jaybird has preserved sign when
 storing byte values, and it considers values outside -128 and +127 out of range.
@@ -915,7 +915,7 @@ precision.
 8.  If the magnitude of the `DECFLOAT` value is too great to be represented in 
 `float` or `double`, +Infinity or -Infinity may be returned (see 
 `BigDecimal.doubleValue()`). This behavior is subject to change, future releases 
-may throw a `SQLException` instead, see also related note 8.
+may throw a `SQLException` instead, see also related note 9.
  
 9.  Storing and retrieving values NaN, +Infinity and -Infinity are currently 
 supported, but this may change as this doesn't seem to be allowed by the 
@@ -1006,8 +1006,8 @@ Decimal128 to a maximum precision of 38 backed by an Int128.
 Current test versions of Jaybird 4.0.0 support both formats, but support for the
 old 'DEC_FIXED' format backed by a Decimal128 will be removed after Jaybird
 4.0.0-beta-2. The old format is only supported in statements and result sets.
-Metadata may report incorrect incorrect information regarding precision (ie 38
-instead of 34).
+Metadata may report incorrect information regarding precision (ie 38 instead of
+34).
 
 Firebird 4 time zone support
 ----------------------------
@@ -1388,7 +1388,7 @@ after the `AS` clause.
 or `"UDR"` (Firebird 3+)
 -  `JB_MODULE_NAME` - Value of `RDB$MODULE_NAME`, is `null` for PSQL functions
 - `JB_ENTRYPOINT` - Value of `RDB$ENTRYPOINT`, is `null` for PSQL functions
-- `JB_ENGINE_NAME` - Value of `RDB$ENGINE_NAME`, is `null for UDF and PSQL
+- `JB_ENGINE_NAME` - Value of `RDB$ENGINE_NAME`, is `null` for UDF and PSQL
 functions
 
 JDBC DatabaseMetaData.getFunctionColumns implemented
@@ -1999,7 +1999,7 @@ See also [Generated keys grammar simplification].
 
 ### DatabaseMetaData ###
 
-### Excluding procedures from packages ###
+#### Excluding procedures from packages ####
 
 The definition of `getProcedures` and `getProcedureColumns` does not offer a way
 to return information on procedures in packages without breaking tools or
@@ -2101,7 +2101,7 @@ The following constants have been removed in Jaybird 4:
 
 -   All `SQL_STATE_*` constants in `FBSQLException`,
     `FBResourceTransactionException`, `FBResourceException`, and
-    `FBDriverNotCapableException` will be removed. Use equivalent constants in
+    `FBDriverNotCapableException` have been removed. Use equivalent constants in
     `org.firebirdsql.jdbc.SQLStateConstants`.
 
 Breaking changes for Jaybird 5
