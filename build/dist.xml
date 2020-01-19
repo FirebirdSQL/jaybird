@@ -22,9 +22,6 @@
             </sourcepath>
             <sourcepath refid="source.java.openoffice"/>
             <sourcepath refid="source.java.additional"/>
-            <link
-                    href="https://docs.oracle.com/javase/8/docs/api/"
-                    packagelistURL="https://docs.oracle.com/javase/8/docs/api/package-list"/>
         </javadoc>
     </target>
 
