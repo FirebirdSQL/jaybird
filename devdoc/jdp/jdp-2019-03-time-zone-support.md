@@ -281,5 +281,5 @@ Time zone support in Jaybird will not include the following:
 
 ## Consequences
 
-See [Decision] and [Rejected options].
+See [Decision](#decision) and [Rejected options](#rejected-options).
     
