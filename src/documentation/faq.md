@@ -12,8 +12,8 @@ NOTE: Jaybird 4 is in beta. Use [Jaybird 3.0](#jaybird-3.0) for production.
 
 Jaybird 4 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-XX` (where `XX` is `jdk17`, `jdk18` or `java11`)  
+Groupid: `org.firebirdsql.jdbc`, \
+Artifactid: `jaybird`, \
 Version: `4.0.0.javaXX-beta-1` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
