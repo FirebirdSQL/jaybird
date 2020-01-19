@@ -26,6 +26,8 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
     See also [DatabaseMetaData getFunctionColumns implemented](#databasemetadata-getfunctioncolumns-implemented).
 -   Fixed: Connection property `defaultIsolation`/`isolation` did not work
     through `DriverManager`, but only on `DataSource` implementations. ([JDBC-584](http://tracker.firebirdsql.org/browse/JDBC-584))
+-   Changed: Changed version numbering and naming scheme ([JDBC-585](http://tracker.firebirdsql.org/browse/JDBC-585)) \
+    See [Changes in artifact and library names](#changes-in-artifact-and-library-names)
 -   Fixed: attempts to use a blob after it was freed or after transaction end
     could throw a `NullPointerException` or just work depending on whether the
     connection had a new transaction. ([JDBC-587](http://tracker.firebirdsql.org/browse/JDBC-587)) \
@@ -114,6 +116,16 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-1
 -   New feature: Support for JDBC escape `MONTHNAME`, will always return month
     names in English ([JDBC-608](http://tracker.firebirdsql.org/browse/JDBC-608))
 -   New feature: Support for JDBC escape `DATABASE` ([JDBC-609](http://tracker.firebirdsql.org/browse/JDBC-609))
+
+Known issues
+============
+
+-   Using a native connection with a Firebird 3 client library to a Firebird 2.5
+    or older server may be slow to connect. The workaround is to specify the
+    IPv4 address instead of the host name in the connection string, or to use a
+    Firebird 2.5 or earlier `fbclient.dll`.
+    
+    This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
 
 Support
 =======
@@ -383,11 +395,14 @@ Forced by this issue, we have overhauled the naming convention entirely to bring
 more consistency between Maven artifacts and the Jaybird zip distribution. The
 full naming convention is documented in [jdp-2019-04](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-04-version-number-and-naming-scheme.md).
 
+This new naming convention has been changed compared to the one from Jaybird
+4.0.0-beta-1.
+
 This new naming convention has the following effects:
 
 -   The targeted Java version is no longer part of the Maven artifact id. The
     artifact id is now `jaybird` for all Java versions. We provide a relocation
-    artifact for `jaybird-jdk17` and `jaybird-jdk18`.
+    artifact for `jaybird-jdk17` and `jaybird-jdk18` for backwards compatibility.
 -   The targeted Java version is now part of the version (eg `4.0.0.java11`)
 -   Names of libraries in the distribution zip are now consistent with the Maven
     naming convention
@@ -1809,16 +1824,6 @@ Removal of deprecated classes and packages
 
 See [Removal of deprecated classes, packages and methods](#removal-of-deprecated-classes-packages-and-methods)
 in [Compatibility changes](#compatibility-changes) for more details.
-
-Known Issues
-============
-
--   Using a native connection with a Firebird 3 client library to a Firebird 2.5
-    or older server may be slow to connect. The workaround is to specify the
-    IPv4 address instead of the host name in the connection string, or to use a
-    Firebird 2.5 or earlier `fbclient.dll`.
-    
-    This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
 
 Compatibility changes
 =====================
