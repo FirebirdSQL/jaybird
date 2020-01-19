@@ -17,7 +17,10 @@
         <property name="build.id" value="${build.number}"/>
 
         <!-- Java 7 specific properties -->
-        <condition property="maven.jdkversion" value="jdk17">
+        <condition property="maven.jdkversion" value="java7">
+            <javaversion exactly="1.7"/>
+        </condition>
+        <condition property="maven.oldartifact" value="jaybird-jdk17">
             <javaversion exactly="1.7"/>
         </condition>
         <condition property="javac.level" value="1.7">
@@ -25,7 +28,10 @@
         </condition>
 
         <!-- Java 8 specific properties -->
-        <condition property="maven.jdkversion" value="jdk18">
+        <condition property="maven.jdkversion" value="java8">
+            <javaversion exactly="1.8"/>
+        </condition>
+        <condition property="maven.oldartifact" value="jaybird-jdk18">
             <javaversion exactly="1.8"/>
         </condition>
         <condition property="javac.level" value="1.8">
@@ -64,10 +70,11 @@
         <property name="Name" value="Jaybird"/>
         <property name="name" value="jaybird"/>
 
-        <property name="version.maven" value="${version.major}.${version.minor}.${version.revision}${version.tag}"/>
+        <property name="version.simple" value="${version.major}.${version.minor}.${version.revision}"/>
+        <property name="version.maven" value="${version.simple}.${maven.jdkversion}${version.tag}"/>
 
         <!-- Names for maven -->
-        <property name="maven.artifactId" value="${name}-${maven.jdkversion}"/>
+        <property name="maven.artifactId" value="${name}"/>
         <property name="archive.maven.simple" value="${maven.artifactId}-${version.maven}.jar"/>
         <property name="archive.maven.sources" value="${maven.artifactId}-${version.maven}-sources.jar"/>
         <property name="archive.maven.javadoc" value="${maven.artifactId}-${version.maven}-javadoc.jar"/>
@@ -77,8 +84,8 @@
         <property name="archive.name.sources" value="${archive.maven.sources}"/>
         <property name="archive.name.javadoc" value="${archive.maven.javadoc}"/>
         <property name="archive.name.rar" value="${maven.artifactId}-${version.maven}.rar"/>
-        <property name="archive.name.full" value="${name}-full-${maven.jdkversion}-${version.maven}.jar"/>
-        <property name="archive.name.test" value="${name}-test-${maven.jdkversion}-${version.maven}.jar"/>
+        <property name="archive.name.full" value="${name}-full-${version.maven}.jar"/>
+        <property name="archive.name.test" value="${name}-test-${version.maven}.jar"/>
 
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
@@ -158,21 +165,24 @@
         <property name="build.maven" value="${module.output}/maven"/>
 
         <!-- Maven locations -->
-        <property name="maven.artifact.location" value="${build.maven}/${maven.artifactId}"/>
+        <property name="maven.artifact.location" value="${build.maven}/${maven.artifactId}-${maven.jdkversion}"/>
         <property name="maven.pom.template" value="${module.root}/build/maven-release/jaybird-template.pom"/>
         <property name="maven.pom.target" value="${maven.artifactId}-${version.maven}.pom"/>
         <filterset id="maven.filterSet">
+            <filter token="OLD_ARTIFACT_ID" value="${maven.oldartifact}"/>
             <filter token="ARTIFACT_ID" value="${maven.artifactId}"/>
             <filter token="VERSION" value="${version.maven}"/>
         </filterset>
 
         <!-- generate maven relocation artifact for org.firebirdsql.jdbc:jaybird -->
         <condition property="maven.generateRelocation" value="true">
-            <javaversion exactly="1.8"/>
+            <not>
+                <javaversion atleast="11"/>
+            </not>
         </condition>
-        <property name="maven.relocation.location" value="${build.maven}/relocation"/>
+        <property name="maven.relocation.location" value="${build.maven}/relocation-${maven.jdkversion}"/>
         <property name="maven.relocation.template" value="${module.root}/build/maven-release/jaybird-relocation.pom"/>
-        <property name="maven.relocation.target" value="jaybird-${version.maven}.pom"/>
+        <property name="maven.relocation.target" value="${maven.oldartifact}-${version.maven}.pom"/>
 
         <property name="junit.timeout" value="600000"/>
         <!-- 10 minutes -->

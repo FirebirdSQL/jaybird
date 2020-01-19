@@ -150,7 +150,7 @@
             </fileset>
             <filterset>
                 <filter token="NAME" value="${Name}"/>
-                <filter token="VERSION" value="${version.major}.${version.minor}.${version.revision}"/>
+                <filter token="VERSION" value="${version.simple}"/>
                 <filter token="MAVEN_NAME" value="${maven.artifactId}"/>
                 <filter token="VERSION_FULL" value="${version.maven}"/>
                 <filter token="VERSION_MAJOR" value="${version.major}"/>

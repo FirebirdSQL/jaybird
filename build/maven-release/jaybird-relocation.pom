@@ -1,7 +1,7 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>jaybird</artifactId>
+    <artifactId>@OLD_ARTIFACT_ID@</artifactId>
     <version>@VERSION@</version>
     <distributionManagement>
         <relocation>

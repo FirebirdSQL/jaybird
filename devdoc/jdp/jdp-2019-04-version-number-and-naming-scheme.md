@@ -2,8 +2,8 @@
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 4
+- Published: 2020-01-19
+- Implemented in: Jaybird 4
 - Replaces: jdp-2019-02 
 
 ## Type
@@ -78,7 +78,9 @@ This change will be applied for all supported Java versions.
 
 When referencing a Jaybird version in text, use `Jaybird <major>`. For legacy
 versions 2.2 and earlier, use `Jaybird <major>.<minor>`. If the specific patch
-version is relevant, use `Jaybird <major>.<minor>.<patch>`.
+version is relevant, use `Jaybird <major>.<minor>.<patch>`. If the pre-release
+status is relevant, but not the Java version, use 
+`Jaybird <major>.<minor>.<patch>-<pre-release>`.
 
 In the various artifacts, the name Jaybird must be used lowercase (`jaybird`). 
 
@@ -104,7 +106,8 @@ the scheme is:
 
 In written text, the shortest form of a version will be used, for example 
 _Jaybird 4_ or _Jaybird 2.2_. Only when the patch is relevant will we use the 
-full version: _Jaybird 3.0.5_.
+full version: _Jaybird 3.0.5_. Only when the pre-release status is relevant, but
+not the Java target, use : _Jaybird 4.0.0-beta-2_.
 
 The version number and naming scheme will improve the consistency of the naming 
 of various artifacts.

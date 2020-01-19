@@ -3,7 +3,7 @@
 ## Status
 
 - Published: 2019-04-27
-- Implemented in: Jaybird 4
+- Replaced by: jdp-2019-04
 
 ## Type
 
