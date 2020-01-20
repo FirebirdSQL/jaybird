@@ -564,13 +564,16 @@ implementations have an equivalent property with the same name. This
 property can be set as follows:
 
 -   Absent or empty value: empty response to callback (depending on the database 
-    encryption plugin this may just work or yield an error later)
+    encryption plugin this may just work or yield an error later).
 -   Strings prefixed with `base64:`: rest of the string is decoded as base64 to 
     bytes. The `=` padding characters are optional, but when present they must
     be valid (that is: if you use padding, you must use the right number of 
-    padding characters for the length)
+    padding characters for the length). \
+    When the base64 encoded value contains `+`, it must be escaped as `%2B` in
+    the JDBC URL. For backwards compatibility with Jaybird 3, we can't switch to
+    the URL-safe variant of base64.
 -   Plain string value: string is encoded to bytes using UTF-8, and these bytes
-    are used as the response
+    are used as the response. Avoid use of `:` in the plain string value.
     
 Because of the limitation of connection URL parsing, we strongly suggest to
 avoid plain string values with `&` or `;`. Likewise, avoid `:` so that we can
@@ -1600,8 +1603,9 @@ string. Jaybird will always use UTF-8 for decoding.
 
 This change introduces the following backwards incompatibilities:
 
-- `+` in the query part now means _space_ (0x20), so occurrences
-of `+` (_plus_) need to be escaped as `%2B`
+- `+` in the query part now means _space_ (0x20), so occurrences of `+` (_plus_)
+need to be escaped as `%2B`; make sure to do this for base64 encoded values of
+`dbCryptConfig`
 - `%` in the query part now introduces an escape, so occurrences 
 of `%` (_percent_) need to be escaped as `%25`
 
@@ -1949,7 +1953,8 @@ Incompatibilities due to URL encoding in JDBC URL query part
 
 With the introduction of URL encoding for the query part of the JDBC URL, the
 use of characters `+` and `%` in the query part of a JDBC URL now have different
-meaning and can lead to errors or unexpected results.
+meaning and can lead to errors or unexpected results. This is especially
+relevant for base64 encoded values of `dbCryptConfig`.
 
 See [URL encoding in query part of JDBC URL](#url-encoding-in-query-part-of-jdbc-url)
 for more information.
