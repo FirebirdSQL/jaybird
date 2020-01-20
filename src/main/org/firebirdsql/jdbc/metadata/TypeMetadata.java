@@ -126,8 +126,8 @@ public class TypeMetadata {
                 return coalesce(precision, NUMERIC_INTEGER_PRECISION);
             case smallint_type:
                 return coalesce(precision, NUMERIC_SMALLINT_PRECISION);
-            case dec_fixed_type:
-                return coalesce(precision, NUMERIC_DEC_FIXED_PRECISION);
+            case int128_type:
+                return coalesce(precision, NUMERIC_INT128_PRECISION);
             default:
                 throw new IllegalStateException(String.format(
                         "Incorrect derivation of NUMERIC/DECIMAL precision for jdbcType %d, type %d, subType %d, scale %d",
@@ -276,7 +276,7 @@ public class TypeMetadata {
         case int64_type:
         case double_type:
         case d_float_type:
-        case dec_fixed_type:
+        case int128_type:
             if (sqlSubType == SUBTYPE_NUMERIC || (sqlSubType == 0 && sqlScale < 0)) {
                 return "NUMERIC";
             } else if (sqlSubType == SUBTYPE_DECIMAL) {
@@ -292,7 +292,7 @@ public class TypeMetadata {
                 case double_type:
                 case d_float_type:
                     return "DOUBLE PRECISION";
-                case dec_fixed_type:
+                case int128_type:
                     // no equivalent primary type
                     return "NUMERIC";
                 default:

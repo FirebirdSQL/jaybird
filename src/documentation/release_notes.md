@@ -15,6 +15,16 @@ Jaybird 4.0.x changelog
 Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4). For known
 issues, consult [Known Issues](#known-issues).
 
+Jaybird 4.0.0
+-------------
+
+The following has been changed or fixed since Jaybird 4.0.0-beta-2
+
+-   Changed: The 'DEC_FIXED' extended numeric precision support (for Firebird
+    4.0.0-beta-1) has been removed ([JDBC-596](http://tracker.firebirdsql.org/browse/JDBC-596)) \
+    Now only the 'INT128' extended numeric precision (for Firebird 4.0.0-beta-2
+    and higher) is supported. 
+
 Jaybird 4.0.0-beta-2
 --------------------
 
@@ -1026,11 +1036,8 @@ The implementation of extended numeric precision was changed after Firebird
 4.0.0-beta-1 (in build 1604) from a maximum precision of 34 backed by a 
 Decimal128 to a maximum precision of 38 backed by an Int128. 
 
-Current test versions of Jaybird 4.0.0 support both formats, but support for the
-old 'DEC_FIXED' format backed by a Decimal128 will be removed after Jaybird
-4.0.0-beta-2. The old format is only supported in statements and result sets.
-Metadata may report incorrect information regarding precision (ie 38 instead of
-34).
+Support for the old 'DEC_FIXED' format backed by a Decimal128 was removed in
+Jaybird 4.0.0-beta-2.
 
 Firebird 4 time zone support
 ----------------------------
