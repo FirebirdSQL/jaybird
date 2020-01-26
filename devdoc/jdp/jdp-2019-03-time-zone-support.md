@@ -2,7 +2,7 @@
 
 ## Status
 
-- Draft
+- Published: 2020-01-26
 - Implemented in: Jaybird 4
 
 ## Type
@@ -53,8 +53,6 @@ current JVM time zone.
 Jaybird 4 will support Java 7 and higher, and Java 7 does not include `java.time`.
 
 ## Decision
-
-**no final decisions yet**
 
 1.  When persisting, only persists offsets, no named zones.
 

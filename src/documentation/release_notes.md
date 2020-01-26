@@ -634,7 +634,7 @@ The original `Srp` plugin uses SHA-1, the new Srp-variants use SHA-224, SHA-256,
 SHA-384 and SHA-512 respectively[^srpHash].
 
 [^srpHash]: Internally `SrpNNN` continues to uses SHA-1, only the client-proof 
-applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/browse/CORE-5788)).
+applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/browse/CORE-5788).
 
 Be aware, support for these plugins depends on support of these hash algorithms 
 in the JVM. For example, SHA-224 is not supported in Oracle Java 7 by default 
@@ -1150,7 +1150,6 @@ The types `java.time.LocalTime`, `java.time.LocalDateTime` and
 ambiguous. If you need to use these, then either apply the necessary conversions 
 yourself, enable legacy time zone bind, or define or cast your columns as `TIME` 
 or `TIMESTAMP`. 
-**NOTE: This is not final yet**
 
 Jaybird also does not support non-standard extensions like `java.time.Instant`,
 or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
@@ -1273,7 +1272,6 @@ In addition to the standard-defined types, it also supports the type names
 
 -   Time zone fields do not support `java.time.LocalDate`, `java.time.LocalTime`, 
     `java.time.LocalDateTime`. 
-    **NOTE: This is not final yet**
     
 -   Firebird 4 redefines `CURRENT_TIME` and `CURRENT_TIMESTAMP` to return a 
     `WITH TIME ZONE` type. Use `LOCALTIME` and `LOCALTIMESTAMP` (introduced in 
@@ -1670,7 +1668,7 @@ Possible statement type values (case insensitive) are:
 - `update_or_insert`
 - `merge`
 
-Invalid values will be ignored. If none of he specified statement types are 
+Invalid values will be ignored. If none of the specified statement types are 
 supported by Firebird, it will behave as `ignored`[^generated15].
 
 [^generated15]: This is not the case for the unsupported Firebird 1.0 and 1.5
