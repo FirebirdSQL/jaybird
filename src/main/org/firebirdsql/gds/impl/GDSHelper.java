@@ -27,8 +27,12 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jdbc.Synchronizable;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.TimeZone;
+
+import static org.firebirdsql.gds.ng.IConnectionProperties.SESSION_TIME_ZONE_SERVER;
 
 /**
  * Helper class for all GDS-related operations.
@@ -40,6 +44,7 @@ public final class GDSHelper implements Synchronizable {
     private final FbDatabase database;
     private final Object syncObject;
     private FbTransaction transaction;
+    private TimeZone sessionTimeZone;
 
     /**
      * Create instance of this class.
@@ -276,6 +281,36 @@ public final class GDSHelper implements Synchronizable {
 
     public String getJavaEncoding() {
         return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
+    }
+
+    /**
+     * Get the session time zone as configured in the connection property.
+     * <p>
+     * NOTE: This is not necessarily the actual server time zone.
+     * </p>
+     *
+     * @return Value of connection property {@code sessionTimeZone}
+     */
+    public TimeZone getSessionTimeZone() {
+        if (sessionTimeZone == null) {
+            return initSessionTimeZone();
+        }
+        return sessionTimeZone;
+    }
+
+    private TimeZone initSessionTimeZone() {
+        String sessionTimeZoneName = database.getConnectionProperties().getSessionTimeZone();
+        if (sessionTimeZoneName == null || SESSION_TIME_ZONE_SERVER.equalsIgnoreCase(sessionTimeZoneName)) {
+            return sessionTimeZone = TimeZone.getDefault();
+        }
+        TimeZone timeZone = TimeZone.getTimeZone(sessionTimeZoneName);
+        if ("GMT".equals(timeZone.getID()) && !"GMT".equalsIgnoreCase(sessionTimeZoneName)) {
+            String message = "TimeZone fallback to GMT from " + sessionTimeZoneName
+                    + "; possible cause: value of sessionTimeZone unknown in Java. Time and Timestamp values may "
+                    + "yield unexpected values. Consider setting a different value for sessionTimeZone.";
+            LoggerFactory.getLogger(getClass()).warn(message);
+        }
+        return sessionTimeZone = timeZone;
     }
 
     @Override

@@ -27,13 +27,11 @@
 package org.firebirdsql.gds.impl.wire;
 
 import org.firebirdsql.encodings.Encoding;
+import org.firebirdsql.util.InternalApi;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * <code>XdrInputStream</code> is an input stream for reading in data that
@@ -48,11 +46,11 @@ import java.io.InputStream;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public final class XdrInputStream {
-
-    private InputStream in = null;
+public final class XdrInputStream extends FilterInputStream implements EncryptedStreamSupport {
 
     private static final int DEFAULT_BUFFER_SIZE = 16384;
+    private boolean compressed;
+    private boolean encrypted;
 
     /**
      * Create a new instance of <code>XdrInputStream</code>.
@@ -60,7 +58,7 @@ public final class XdrInputStream {
      * @param in The underlying <code>InputStream</code> to read from
      */
     public XdrInputStream(InputStream in) {
-        this.in = new BufferedInputStream(in, DEFAULT_BUFFER_SIZE);
+        super(new BufferedInputStream(in, DEFAULT_BUFFER_SIZE));
     }
 
     /**
@@ -76,26 +74,41 @@ public final class XdrInputStream {
      * @see XdrOutputStream#writePadding(int, int)
      */
     public int skipPadding(int length) throws IOException {
-        return skipFully((4 - length) & 3);
+        int bytesToSkip = (4 - length) & 3;
+        int actual = skipFully(bytesToSkip);
+        assert actual == bytesToSkip
+                : String.format("Unexpected number of bytes skipped: %d, expected: %d", actual, bytesToSkip);
+        return actual;
     }
 
     /**
      * Skips the specified number of bytes.
      *
-     * @param n
+     * @param numbytes
      *         Number of bytes to skip.
-     * @return Actual number of bytes skipped (usually <code>n</code>, unless the underlying input stream is closed).
+     * @return Actual number of bytes skipped (usually {@code numbytes}, unless the underlying input stream is closed).
      * @throws IOException
-     *         IOException if an error occurs while reading from the
-     *         underlying input stream
+     *         IOException if an error occurs while reading from the underlying input stream
      */
-    public int skipFully(int n) throws IOException {
-        int total = 0;
-        int cur;
-        while (total < n && (cur = (int) in.skip(n - total)) > 0) {
-            total += cur;
+    public int skipFully(int numbytes) throws IOException {
+        // This is the skip from SocketInputStream, which will read all bytes unless the stream is closed.
+        // We can't rely on InputStream.skip(int), because for example CipherInputStream will simply not skip beyond
+        // its current buffer.
+        if (numbytes <= 0) {
+            return 0;
         }
-        return total;
+        // TODO Switch the readNBytes in Java 9, and simplify as it's currently only used for 1 - 3 bytes.
+        int n = numbytes;
+        int buflen = Math.min(1024, n);
+        byte[] data = new byte[buflen];
+        while (n > 0) {
+            int r = read(data, 0, Math.min(buflen, n));
+            if (r < 0) {
+                break;
+            }
+            n -= r;
+        }
+        return numbytes - n;
     }
 
     /**
@@ -139,7 +152,7 @@ public final class XdrInputStream {
         return encoding.decodeFromCharset(buffer);
     }
 
-    private final byte readBuffer[] = new byte[8];
+    private final byte[] readBuffer = new byte[8];
 
     /**
      * Read in a <code>long</code>.
@@ -168,10 +181,10 @@ public final class XdrInputStream {
      *         underlying input stream
      */
     public int readInt() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        int ch3 = in.read();
-        int ch4 = in.read();
+        int ch1 = read();
+        int ch2 = read();
+        int ch3 = read();
+        int ch4 = read();
         if ((ch1 | ch2 | ch3 | ch4) < 0)
             throw new EOFException();
         return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4));
@@ -185,8 +198,8 @@ public final class XdrInputStream {
      *         underlying input stream
      */
     public int readShort() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
+        int ch1 = read();
+        int ch2 = read();
         if ((ch1 | ch2) < 0)
             throw new EOFException();
         return (ch1 << 8) + (ch2);
@@ -203,12 +216,12 @@ public final class XdrInputStream {
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
-    public void readFully(byte b[], int off, int len) throws IOException {
+    public void readFully(byte[] b, int off, int len) throws IOException {
         if (len < 0)
             throw new IndexOutOfBoundsException();
         int n = 0;
         while (n < len) {
-            int count = in.read(b, off + n, len - n);
+            int count = read(b, off + n, len - n);
             if (count < 0)
                 throw new EOFException();
             n += count;
@@ -216,19 +229,31 @@ public final class XdrInputStream {
     }
 
     /**
-     * Close this input stream and the underlying input stream.
+     * Wraps the underlying stream for zlib decompression.
      *
-     * @throws IOException if an error occurs while closing the underlying
-     *         input stream
+     * @throws IOException
+     *         If the underlying stream is already set up for decompression
      */
-    public void close() throws IOException {
-        in.close();
+    @InternalApi
+    public synchronized void enableDecompression() throws IOException {
+        if (compressed) {
+            throw new IOException("Input stream already compressed");
+        }
+        in = new FbInflaterInputStream(in);
+        compressed = true;
     }
 
-    public void setCipher(Cipher cipher) throws IOException {
-        if (in instanceof CipherInputStream) {
+    @Override
+    public synchronized void setCipher(Cipher cipher) throws IOException {
+        if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }
-        in = new CipherInputStream(in, cipher);
+        InputStream currentStream = in;
+        if (currentStream instanceof EncryptedStreamSupport) {
+            ((EncryptedStreamSupport) currentStream).setCipher(cipher);
+        } else {
+            in = new CipherInputStream(currentStream, cipher);
+        }
+        encrypted = true;
     }
 }

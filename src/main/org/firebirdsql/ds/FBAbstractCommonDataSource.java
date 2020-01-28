@@ -548,7 +548,82 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setAuthPlugins(authPlugins);
         }
     }
-    
+
+    @Override
+    public String getGeneratedKeysEnabled() {
+        synchronized (lock) {
+            return connectionProperties.getGeneratedKeysEnabled();
+        }
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
+        }
+    }
+
+    @Override
+    public String getDataTypeBind() {
+        synchronized (lock) {
+            return connectionProperties.getDataTypeBind();
+        }
+    }
+
+    @Override
+    public void setDataTypeBind(String dataTypeBind) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setDataTypeBind(dataTypeBind);
+        }
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        synchronized (lock) {
+            return connectionProperties.getSessionTimeZone();
+        }
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setSessionTimeZone(sessionTimeZone);
+        }
+    }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        synchronized (lock) {
+            return connectionProperties.isIgnoreProcedureType();
+        }
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+        }
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        synchronized (lock) {
+            return connectionProperties.isWireCompression();
+        }
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setWireCompression(wireCompression);
+        }
+    }
+
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties

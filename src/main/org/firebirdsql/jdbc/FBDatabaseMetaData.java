@@ -28,13 +28,13 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
+import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
-import org.firebirdsql.jdbc.field.JdbcTypeConverter;
+import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.firebirdsql.util.SqlLikeMatcher;
 
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
@@ -43,6 +43,9 @@ import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
+import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataType;
+import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -55,18 +58,10 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
-    private static final String SPACES_31 = "                               "; // 31 spaces
-    private static final String SPACES_15 = "               "; // 15 spaces
-    private static final int OBJECT_NAME_LENGTH_BEFORE_V4_0 = 31;
-    private static final int OBJECT_NAME_LENGTH_V4_0 = 63;
-    private static final int OBJECT_NAME_LENGTH = OBJECT_NAME_LENGTH_V4_0;
-
-    private static final int DRIVER_MAJOR_VERSION = 4;
-    private static final int DRIVER_MINOR_VERSION = 0;
-    private static final String DRIVER_VERSION = DRIVER_MAJOR_VERSION + "." + DRIVER_MINOR_VERSION;
-
-    private static final int SUBTYPE_NUMERIC = 1;
-    private static final int SUBTYPE_DECIMAL = 2;
+    // Extra space to allow for longer patterns (avoids string right truncation errors)
+    private static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
+    private static final String OBJECT_NAME_TYPE = "varchar(" + OBJECT_NAME_LENGTH + ")";
+    private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
 
     protected static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
@@ -100,16 +95,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] PROCEDURE_NULLABLE = createShort(DatabaseMetaData.procedureNullable);
     private static final byte[] PROCEDURE_COLUMN_IN = createShort(DatabaseMetaData.procedureColumnIn);
     private static final byte[] PROCEDURE_COLUMN_OUT = createShort(DatabaseMetaData.procedureColumnOut);
-    private static final byte[] FLOAT_PRECISION = createInt(7);
-    private static final byte[] DOUBLE_PRECISION = createInt(15);
     private static final byte[] BIGINT_PRECISION = createInt(19);
     private static final byte[] INTEGER_PRECISION = createInt(10);
     private static final byte[] SMALLINT_PRECISION = createInt(5);
     private static final byte[] DATE_PRECISION = createInt(10);
     private static final byte[] TIME_PRECISION = createInt(8);
     private static final byte[] TIMESTAMP_PRECISION = createInt(19);
-    private static final byte[] NUMERIC_PRECISION = createInt(18);
-    private static final byte[] DECIMAL_PRECISION = createInt(18);
+    private static final byte[] TIME_WITH_TIMEZONE_PRECISION = createInt(19);
+    private static final byte[] TIMESTAMP_WITH_TIMEZONE_PRECISION = createInt(30);
     private static final byte[] BOOLEAN_PRECISION = createInt(1);
     private static final byte[] DECFLOAT_16_PRECISION = createInt(16);
     private static final byte[] DECFLOAT_34_PRECISION = createInt(34);
@@ -235,18 +228,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getDriverVersion() throws SQLException {
-        // TODO Return full version?
-        return DRIVER_VERSION;
+        return Version.JAYBIRD_SIMPLE_VERSION;
     }
 
     @Override
     public int getDriverMajorVersion() {
-        return DRIVER_MAJOR_VERSION;
+        return Version.JAYBIRD_MAJOR_VERSION;
     }
 
     @Override
     public int getDriverMinorVersion() {
-        return DRIVER_MINOR_VERSION;
+        return Version.JAYBIRD_MINOR_VERSION;
     }
 
     @Override
@@ -418,7 +410,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * {@inheritDoc}
      * <p>
-     * See also {@link org.firebirdsql.jdbc.escape.ConvertFunction} for caveats.
+     * See also {@code org.firebirdsql.jdbc.escape.ConvertFunction} for caveats.
      * </p>
      */
     @Override
@@ -521,10 +513,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.ROWID:
                 // As size of rowid is context dependent, we can't cast to it using the convert escape
                 return false;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                return fromType != Types.ROWID && firebirdSupportInfo.supportsTimeZones();
             default:
                 return false;
             }
@@ -535,11 +526,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIMESTAMP:
                 return true;
             case Types.TIME:
-            case Types.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
                 return false;
-            case Types.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -565,10 +555,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return true;
             case Types.DATE:
                 return false;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -593,10 +582,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIME:
             case Types.DATE:
                 return true;
-            case Types.TIME_WITH_TIMEZONE:
-            case Types.TIMESTAMP_WITH_TIMEZONE:
-                // TODO JDBC-540
-                return false;
+            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
@@ -645,9 +633,65 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
             return false;
 
-        case Types.TIME_WITH_TIMEZONE:
-        case Types.TIMESTAMP_WITH_TIMEZONE:
-            // TODO JDBC-540
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            if (firebirdSupportInfo.supportsTimeZones()) {
+                switch (toType) {
+                case Types.TIME:
+                case Types.TIMESTAMP:
+                    return true;
+                case Types.DATE:
+                    return false;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    return true;
+                case Types.CHAR:
+                case Types.VARCHAR:
+                case Types.LONGVARCHAR:
+                case Types.CLOB:
+                case Types.NCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NVARCHAR:
+                case Types.NCLOB:
+                    return true;
+                // casting date/time values to binary types will result in ASCII bytes of string conversion
+                case Types.BINARY:
+                case Types.VARBINARY:
+                case Types.LONGVARBINARY:
+                case Types.BLOB:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            return false;
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            if (firebirdSupportInfo.supportsTimeZones()) {
+                switch (toType) {
+                case Types.TIME:
+                case Types.TIMESTAMP:
+                case Types.DATE:
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    return true;
+                case Types.CHAR:
+                case Types.VARCHAR:
+                case Types.LONGVARCHAR:
+                case Types.CLOB:
+                case Types.NCHAR:
+                case Types.LONGNVARCHAR:
+                case Types.NVARCHAR:
+                case Types.NCLOB:
+                    return true;
+                // casting date/time values to binary types will result in ASCII bytes of string conversion
+                case Types.BINARY:
+                case Types.VARBINARY:
+                case Types.LONGVARBINARY:
+                case Types.BLOB:
+                    return true;
+                default:
+                    return false;
+                }
+            }
             return false;
 
         case Types.ARRAY:
@@ -662,7 +706,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         case Types.REF:
         case Types.DATALINK:
         case Types.SQLXML:
-        case Types.REF_CURSOR:
+        case JaybirdTypeCodes.REF_CURSOR:
         default:
             return false;
         }
@@ -1048,8 +1092,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxStatementLength() throws SQLException {
-        // TODO 10MB (or 2GB?) for Firebird 3 (test if we don't need to change anything else to support this)
-        return 65536;
+        if (gdsHelper.compareToVersion(3, 0) >= 0) {
+            // 10 MB
+            return 10 * 1024 * 1024;
+        } else {
+            // 64 KB
+            return 64 * 1024;
+        }
     }
 
     @Override
@@ -1071,8 +1120,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public int getMaxUserNameLength() throws SQLException {
-        // TODO getMaxObjectNameLength?
-        return 31;//I don't know??
+        return getMaxObjectNameLength();
     }
 
     //----------------------------------------------------------------------
@@ -1140,7 +1188,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + "cast(RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
+        + "cast(RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
         + "RDB$DESCRIPTION as REMARKS,"
         + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from "
@@ -1168,6 +1216,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         String sql = GET_PROCEDURES_START;
         sql += procedureClause.getCondition();
+        if (firebirdSupportInfo.supportsPackages()) {
+            sql += "RDB$PACKAGE_NAME is null and ";
+        }
         sql += GET_PROCEDURES_END;
 
         List<String> params = procedureClause.hasCondition()
@@ -1195,8 +1246,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "cast(PP.RDB$PROCEDURE_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PROCEDURE_NAME,"
-        + "cast(PP.RDB$PARAMETER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(PP.RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
+        + "cast(PP.RDB$PARAMETER_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
         + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
         + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
@@ -1251,6 +1302,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         String sql = GET_PROCEDURE_COLUMNS_START;
         sql += procedureClause.getCondition();
         sql += columnClause.getCondition();
+        if (firebirdSupportInfo.supportsPackages()) {
+            sql += "PP.RDB$PACKAGE_NAME is null and ";
+        }
         sql += GET_PROCEDURE_COLUMNS_END;
 
         List<String> params = new ArrayList<>(2);
@@ -1269,6 +1323,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
             final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            final boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
             do {
                 final short columnType = rs.getShort("COLUMN_TYPE");
                 final short fieldType = rs.getShort("FIELD_TYPE");
@@ -1317,10 +1372,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     valueBuilder.at(16).set(valueBuilder.get(8));
                     break;
                 case Types.FLOAT:
-                    valueBuilder.at(7).set(FLOAT_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(7).set(createInt(FLOAT_BINARY_PRECISION))
+                                .at(10).set(RADIX_BINARY_SHORT);
+                    } else {
+                        valueBuilder.at(7).set(createInt(FLOAT_DECIMAL_PRECISION));
+                    }
                     break;
                 case Types.DOUBLE:
-                    valueBuilder.at(7).set(DOUBLE_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(7).set(createInt(DOUBLE_BINARY_PRECISION))
+                                .at(10).set(RADIX_BINARY_SHORT);
+                    } else {
+                        valueBuilder.at(7).set(createInt(DOUBLE_DECIMAL_PRECISION));
+                    }
                     break;
                 case Types.BIGINT:
                     valueBuilder
@@ -1345,6 +1412,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     break;
                 case Types.TIMESTAMP:
                     valueBuilder.at(7).set(TIMESTAMP_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                    valueBuilder.at(7).set(TIME_WITH_TIMEZONE_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    valueBuilder.at(7).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
                     break;
                 case Types.BOOLEAN:
                     valueBuilder
@@ -1376,13 +1449,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     /**
      * Table types supported for Firebird 2.5 and up (will also work with 2.1 and earlier though)
      */
-    public static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
+    private static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
     /**
      * Table types supported for Firebird 2.1 and lower
      */
-    public static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
-    @SuppressWarnings("unused")
-    public static final String[] ALL_TYPES = ALL_TYPES_2_5;
+    private static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
 
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
@@ -1401,9 +1472,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String LEGACY_IS_VIEW = " rdb$relation_type is null and rdb$view_blr is not null ";
 
     private static final String TABLE_COLUMNS_2_5 =
-            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+            " select cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
             + "cast(case"
             + "  when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
             + "  when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'"
@@ -1412,12 +1483,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
             + "end as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as " + OBJECT_NAME_TYPE + ") as OWNER_NAME "
             + "from RDB$RELATIONS ";
     //@formatter:on
 
@@ -1483,17 +1554,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String TABLE_COLUMNS_FORMAT_2_1 =
-            " select cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
+            " select cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_SCHEM,"
+            + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
             + "cast('%s' as varchar(31)) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_CAT,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as TYPE_SCHEM,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_CAT,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
-            + "cast(null as varchar(" + OBJECT_NAME_LENGTH + ")) as SELF_REFERENCING_COL_NAME,"
+            + "cast(null as " + OBJECT_NAME_TYPE + ") as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as OWNER_NAME "
+            + "cast(RDB$OWNER_NAME as " + OBJECT_NAME_TYPE + ") as OWNER_NAME "
             + "from RDB$RELATIONS ";
 
     private static final String TABLE_COLUMNS_SYSTEM_2_1 =
@@ -1519,29 +1590,43 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String GET_TABLES_EXACT_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + " union"
             + TABLE_COLUMNS_NORMAL
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + " union"
             + TABLE_COLUMNS_VIEW
             + " where ? = 'T' and rdb$view_blr is not null"
-            + " and cast(RDB$RELATION_NAME as varchar(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+            + " and RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
             + GET_TABLE_ORDER_BY;
 
     private static final String GET_TABLES_LIKE_2_1 =
             TABLE_COLUMNS_SYSTEM_2_1
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
             + " union"
             + TABLE_COLUMNS_NORMAL
             + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\'"
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
             + " union"
             + TABLE_COLUMNS_VIEW
             + " where ? = 'T' and rdb$view_blr is not null"
-            + " and RDB$RELATION_NAME || '" + SPACES_31 + "' like ? escape '\\' "
+            + " and trim(trailing from RDB$RELATION_NAME) like " + OBJECT_NAME_PARAMETER + " escape '\\'"
+            + GET_TABLE_ORDER_BY;
+
+    private static final String GET_TABLES_STARTING_WITH_2_1 =
+            TABLE_COLUMNS_SYSTEM_2_1
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 1 and rdb$view_blr is null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
+            + " union"
+            + TABLE_COLUMNS_NORMAL
+            + " where ? = 'T' and RDB$SYSTEM_FLAG = 0 and rdb$view_blr is null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
+            + " union"
+            + TABLE_COLUMNS_VIEW
+            + " where ? = 'T' and rdb$view_blr is not null"
+            + " and RDB$RELATION_NAME starting with " + OBJECT_NAME_PARAMETER
             + GET_TABLE_ORDER_BY;
     //@formatter:on
 
@@ -1552,35 +1637,38 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (types == null) {
             types = ALL_TYPES_2_1;
         }
+        MetadataPattern metadataPattern = MetadataPattern.compile(tableNamePattern);
         String sql;
         List<String> params;
-        if (isAllCondition(tableNamePattern)) {
+        MetadataPattern.ConditionType conditionType = metadataPattern.getConditionType();
+        if (conditionType == MetadataPattern.ConditionType.NONE) {
             sql = GET_TABLES_ALL_2_1;
-            params = new ArrayList<>(3);
-            params.add(getWantsSystemTables(types));
-            params.add(getWantsTables(types));
-            params.add(getWantsViews(types));
-        } else if (hasNoWildcards(tableNamePattern)) {
-            tableNamePattern = stripEscape(tableNamePattern);
-            sql = GET_TABLES_EXACT_2_1;
-            params = new ArrayList<>(6);
-            params.add(getWantsSystemTables(types));
-            params.add(tableNamePattern);
-            params.add(getWantsTables(types));
-            params.add(tableNamePattern);
-            params.add(getWantsViews(types));
-            params.add(tableNamePattern);
+            params = Arrays.asList(
+                    getWantsSystemTables(types),
+                    getWantsTables(types),
+                    getWantsViews(types));
         } else {
-            // See also comment in Clause for explanation
-            tableNamePattern = tableNamePattern + SPACES_15 + "%";
-            sql = GET_TABLES_LIKE_2_1;
-            params = new ArrayList<>(6);
-            params.add(getWantsSystemTables(types));
-            params.add(tableNamePattern);
-            params.add(getWantsTables(types));
-            params.add(tableNamePattern);
-            params.add(getWantsViews(types));
-            params.add(tableNamePattern);
+            switch (conditionType) {
+            case SQL_EQUALS:
+                sql = GET_TABLES_EXACT_2_1;
+                break;
+            case SQL_LIKE:
+                sql = GET_TABLES_LIKE_2_1;
+                break;
+            case SQL_STARTING_WITH:
+                sql = GET_TABLES_STARTING_WITH_2_1;
+                break;
+            default:
+                throw new AssertionError("Unexpected condition type " + conditionType);
+            }
+            String conditionValue = metadataPattern.getConditionValue();
+            params = Arrays.asList(
+                    getWantsSystemTables(types),
+                    conditionValue,
+                    getWantsTables(types),
+                    conditionValue,
+                    getWantsViews(types),
+                    conditionValue);
         }
         return doQuery(sql, params);
     }
@@ -1617,14 +1705,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, rows);
     }
 
+    @Override
+    public String[] getTableTypeNames() throws SQLException {
+        String[] allTypes = hasGlobalTemporaryTables()
+                ? ALL_TYPES_2_5
+                : ALL_TYPES_2_1;
+        return Arrays.copyOf(allTypes, allTypes.length);
+    }
+
     private boolean hasGlobalTemporaryTables() throws SQLException {
         return getOdsMajorVersion() == 11 && getOdsMinorVersion() >= 2 || getOdsMajorVersion() > 11;
     }
 
     //@formatter:off
     private static final String GET_COLUMNS_COMMON =
-            "SELECT cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS RELATION_NAME," +
-            "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS FIELD_NAME," +
+            "SELECT cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS RELATION_NAME," +
+            "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") AS FIELD_NAME," +
             "F.RDB$FIELD_TYPE AS FIELD_TYPE," +
             "F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
             "F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
@@ -1742,6 +1838,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
             final List<RowValue> rows = new ArrayList<>();
             final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+            final boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
             do {
                 final short fieldType = rs.getShort("FIELD_TYPE");
                 final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
@@ -1775,10 +1872,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     }
                     break;
                 case Types.FLOAT:
-                    valueBuilder.at(6).set(FLOAT_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(6).set(createInt(FLOAT_BINARY_PRECISION))
+                                .at(9).set(RADIX_BINARY);
+                    } else {
+                        valueBuilder.at(6).set(createInt(FLOAT_DECIMAL_PRECISION));
+                    }
                     break;
                 case Types.DOUBLE:
-                    valueBuilder.at(6).set(DOUBLE_PRECISION);
+                    if (supportsFloatBinaryPrecision) {
+                        valueBuilder
+                                .at(6).set(createInt(DOUBLE_BINARY_PRECISION))
+                                .at(9).set(RADIX_BINARY);
+                    } else {
+                        valueBuilder.at(6).set(createInt(DOUBLE_DECIMAL_PRECISION));
+                    }
                     break;
                 case Types.BIGINT:
                     valueBuilder
@@ -1803,6 +1912,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     break;
                 case Types.TIMESTAMP:
                     valueBuilder.at(6).set(TIMESTAMP_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                    valueBuilder.at(6).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
+                    break;
+                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                    valueBuilder.at(6).set(TIME_WITH_TIMEZONE_PRECISION);
                     break;
                 case Types.BOOLEAN:
                     valueBuilder
@@ -1911,128 +2026,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return scopeCatalog;
     }
 
-    private static final int smallint_type = 7;
-    private static final int integer_type = 8;
-    private static final int quad_type = 9;
-    private static final int float_type = 10;
-    private static final int d_float_type = 11;
-    private static final int date_type = 12;
-    private static final int time_type = 13;
-    private static final int char_type = 14;
-    private static final int int64_type = 16;
-    private static final int dec16_type = 24;
-    private static final int dec34_type = 25;
-    private static final int dec_fixed_type = 26;
-    private static final int double_type = 27;
-    private static final int timestamp_type = 35;
-    private static final int varchar_type = 37;
-//  private static final int cstring_type = 40;
-    private static final int blob_type = 261;
-    private static final short boolean_type = 23;
-
-    private static int getDataType(int fieldType, int fieldSubType, int fieldScale, int characterSetId) {
-        // TODO Preserved for backwards compatibility, is this really necessary?
-        if (fieldType == blob_type && fieldSubType > 1) {
-            return Types.OTHER;
-        }
-        final int jdbcType = JdbcTypeConverter.fromMetaDataToJdbcType(fieldType, fieldSubType, fieldScale);
-        // Metadata from RDB$ tables does not contain character set in subtype, manual fixup
-        if (characterSetId == CS_BINARY) {
-            if (jdbcType == Types.CHAR) {
-                return Types.BINARY;
-            } else if (jdbcType == Types.VARCHAR) {
-                return Types.VARBINARY;
-            }
-        }
-        return jdbcType;
-    }
-
-    // TODO Unify with AbstractFieldMetadata
-    private static String getDataTypeName(int sqltype, int sqlsubtype, int sqlscale) {
-        switch (sqltype) {
-            case smallint_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "SMALLINT";
-                }
-            case integer_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "INTEGER";
-                }
-            case double_type:
-            case d_float_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "DOUBLE PRECISION";
-                }
-            case float_type:
-                return "FLOAT";
-            case char_type:
-                return "CHAR";
-            case varchar_type:
-                return "VARCHAR";
-            case timestamp_type:
-                return "TIMESTAMP";
-            case time_type:
-                return "TIME";
-            case date_type:
-                return "DATE";
-            case int64_type:
-                if (sqlsubtype == SUBTYPE_NUMERIC || (sqlsubtype == 0 && sqlscale < 0)) {
-                    return "NUMERIC";
-                } else if (sqlsubtype == SUBTYPE_DECIMAL) {
-                    return "DECIMAL";
-                } else {
-                    return "BIGINT";
-                }
-            case blob_type:
-                if (sqlsubtype < 0) {
-                    // TODO Include actual subtype?
-                    return "BLOB SUB_TYPE <0";
-                } else if (sqlsubtype == BLOB_SUB_TYPE_BINARY) {
-                    return "BLOB SUB_TYPE 0";
-                } else if (sqlsubtype == BLOB_SUB_TYPE_TEXT) {
-                    return "BLOB SUB_TYPE 1";
-                } else {
-                    return "BLOB SUB_TYPE " + sqlsubtype;
-                }
-            case quad_type:
-                return "ARRAY";
-            case boolean_type:
-                return "BOOLEAN";
-            case dec_fixed_type:
-                switch (sqlsubtype) {
-                case SUBTYPE_DECIMAL:
-                    return "DECIMAL";
-                case SUBTYPE_NUMERIC:
-                default:
-                    return "NUMERIC";
-                }
-            case dec16_type:
-            case dec34_type:
-                return "DECFLOAT";
-            default:
-                return "NULL";
-        }
-    }
-
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        /*+ "null as TABLE_CAT,"
-        + "null as TABLE_SCHEM,"*/
-        + "cast(RF.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(RF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
-        + "cast(UP.RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
-        + "cast(UP.RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
+        + "cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
+        + "cast(UP.RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
+        + "cast(UP.RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
         + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
@@ -2044,7 +2042,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         + "RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME  and "
         + "(UP.RDB$FIELD_NAME is null or "
         + "UP.RDB$FIELD_NAME = RF.RDB$FIELD_NAME) and "
-        + "CAST(UP.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and ((";
+        + "UP.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER + " and ((";
     private static final String GET_COLUMN_PRIVILEGES_END = " UP.RDB$OBJECT_TYPE = 0) or "
         + "(RF.RDB$FIELD_NAME is null and UP.RDB$OBJECT_TYPE = 0)) "
         + "order by 2,5 ";
@@ -2123,11 +2121,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_TABLE_PRIVILEGES_START = "select "
-        /*+ " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM,"*/
-        + "cast(RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(RDB$GRANTOR as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTOR,"
-        + "cast(RDB$USER as varchar(" + OBJECT_NAME_LENGTH + ")) as GRANTEE,"
+        + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
+        + "cast(RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
         + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
         + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
@@ -2193,7 +2189,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //@formatter:off
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS varchar(" + OBJECT_NAME_LENGTH + ")) AS column_name," +
+            "CAST(rf.rdb$field_name AS " + OBJECT_NAME_TYPE + ") AS column_name," +
             "f.rdb$field_type AS field_type," +
             "f.rdb$field_sub_type AS field_sub_type," +
             "f.rdb$field_scale AS field_scale," +
@@ -2205,7 +2201,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
             "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
             "WHERE " +
-            "CAST(rc.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? " +
+            "rc.rdb$relation_name = " + OBJECT_NAME_PARAMETER +
             "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
     //@formatter:on
 
@@ -2363,17 +2359,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PRIMARY_KEYS = "select "
-        /*+ " null as TABLE_CAT, "
-        + " null as TABLE_SCHEM, "*/
-        + "cast(RC.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as TABLE_NAME,"
-        + "cast(ISGMT.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME,"
+        + "cast(RC.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
+        + "cast(ISGMT.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "cast(RC.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME "
+        + "cast(RC.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC "
         + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
-        + "where CAST(RC.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-        + "RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
+        + "where RC.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+        + "and RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
         + "order by ISGMT.RDB$FIELD_NAME ";
 
     @Override
@@ -2411,28 +2405,23 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_IMPORTED_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -2510,27 +2499,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_EXPORTED_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME "
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+    +"WHERE PK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
     +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
@@ -2587,29 +2571,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_CROSS_KEYS = "select "
-    /*+" null as PKTABLE_CAT "
-    +" ,null as PKTABLE_SCHEM "*/
-    +"cast(PK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PKCOLUMN_NAME"
-    /*+" ,null as FKTABLE_CAT "
-    +" ,null as FKTABLE_SCHEM "*/
-    +",cast(FK.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FKCOLUMN_NAME"
+    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
+    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
+    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
+    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
     +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
     +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as FK_NAME"
-    /*+" ,null as DEFERRABILITY "*/
+    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
+    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME"
     +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
     +",RDB$REF_CONSTRAINTS RC"
     +",RDB$INDEX_SEGMENTS ISP"
     +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE CAST(PK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? and "
-    +"CAST(FK.RDB$RELATION_NAME AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) +")) = ? and "
-    +" FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
+    +"WHERE PK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
+    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
     +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
     +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
     +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
@@ -2720,7 +2699,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         final List<RowValue> rows = new ArrayList<>(20);
 
         // DECFLOAT=-6001 (TODO Change when standardized)
-        if (getDatabaseMajorVersion() >= 4) {
+        if (firebirdSupportInfo.supportsDecfloat()) {
             rows.add(RowValue.of(rowDescriptor,
                     getBytes("DECFLOAT"), createInt(JaybirdTypeCodes.DECFLOAT), DECFLOAT_34_PRECISION, null, null,
                     getBytes("precision"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE,
@@ -2735,21 +2714,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         //LONGVARBINARY=-4
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("BLOB SUB_TYPE BINARY"), createInt(Types.LONGVARBINARY), INT_ZERO, null, null,
-                null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
+                getBytes("BLOB SUB_TYPE BINARY"), createInt(Types.LONGVARBINARY), INT_ZERO, getBytes("x'"),
+                getBytes("'"), null, TYPE_NULLABLE, CASESENSITIVE, blobTypePred, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
         //VARBINARY=-3
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("VARCHAR"), createInt(Types.VARBINARY), createInt(32765), null, null, getBytes("length"),
-                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_VARYING), null, RADIX_TEN));
+                getBytes("VARCHAR"), createInt(Types.VARBINARY), createInt(32765), getBytes("x'"), getBytes("'"),
+                getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC,
+                null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_VARYING), null, RADIX_TEN));
 
         //BINARY=-2
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("CHAR"), createInt(Types.BINARY), createInt(32767), null, null, getBytes("length"),
-                TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_TEXT), null, RADIX_TEN));
+                getBytes("CHAR"), createInt(Types.BINARY), createInt(32767), getBytes("x'"), getBytes("'"),
+                getBytes("length"), TYPE_NULLABLE, CASESENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC,
+                null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TEXT), null, RADIX_TEN));
 
         //LONGVARCHAR=-1
         rows.add(RowValue.of(rowDescriptor,
@@ -2764,19 +2743,20 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO, createInt(SQL_TEXT), null,
                 RADIX_TEN));
 
+        // also for numeric
+        final byte[] maxDecimalPrecision = createInt(firebirdSupportInfo.maxDecimalPrecision());
+        final byte[] maxDecimalScale = maxDecimalPrecision;
         //NUMERIC=2
-        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("NUMERIC"), createInt(Types.NUMERIC), NUMERIC_PRECISION, null, null,
+                getBytes("NUMERIC"), createInt(Types.NUMERIC), maxDecimalPrecision, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, NUMERIC_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
+                NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
 
         //DECIMAL=3
-        // TODO Handle DEC_FIXED
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("DECIMAL"), createInt(Types.DECIMAL), DECIMAL_PRECISION, null, null,
+                getBytes("DECIMAL"), createInt(Types.DECIMAL), maxDecimalPrecision, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
-                NOTAUTOINC, null, SHORT_ZERO, DECIMAL_PRECISION, createInt(SQL_INT64), null, RADIX_TEN));
+                NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
 
         //INTEGER=4
         rows.add(RowValue.of(rowDescriptor,
@@ -2790,17 +2770,25 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null,
                 SHORT_ZERO, SHORT_ZERO, createInt(SQL_SHORT), null, RADIX_TEN));
 
+        boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
+
         //FLOAT=6
+        // Technically this describes REAL, but historically FLOAT == REAL in Firebird, and Jaybird has only used FLOAT
+        int floatPrecision = supportsFloatBinaryPrecision ? 24 : 7;
+        // We're intentionally not communicating the max FLOAT precision of 53 (which is a synonym of DOUBLE PRECISION)
+        // nor are we reporting "precision" for column CREATE_PARAMS
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("FLOAT"), createInt(Types.FLOAT), FLOAT_PRECISION, null, null, null,
+                getBytes("FLOAT"), createInt(Types.FLOAT), createInt(floatPrecision), null, null, null,
                 TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null, SHORT_ZERO,
-                SHORT_ZERO, createInt(SQL_FLOAT), null, RADIX_TEN));
+                SHORT_ZERO, createInt(SQL_FLOAT), null, supportsFloatBinaryPrecision ? RADIX_BINARY : RADIX_TEN));
 
         //DOUBLE=8
+        int doublePrecision = supportsFloatBinaryPrecision ? 53 : 15;
         rows.add(RowValue.of(rowDescriptor,
-                getBytes("DOUBLE PRECISION"), createInt(Types.DOUBLE), DOUBLE_PRECISION, null, null,
+                getBytes("DOUBLE PRECISION"), createInt(Types.DOUBLE), createInt(doublePrecision), null, null,
                 null, TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, VARIABLESCALE, NOTAUTOINC, null,
-                SHORT_ZERO, SHORT_ZERO, createInt(SQL_DOUBLE), null, RADIX_TEN));
+                SHORT_ZERO, SHORT_ZERO, createInt(SQL_DOUBLE), null,
+                supportsFloatBinaryPrecision ? RADIX_BINARY : RADIX_TEN));
 
         //VARCHAR=12
         rows.add(RowValue.of(rowDescriptor,
@@ -2849,22 +2837,38 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 TYPE_NULLABLE, CASESENSITIVE, TYPE_PRED_NONE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
                 SHORT_ZERO, createInt(SQL_BLOB), null, RADIX_TEN));
 
+        if (firebirdSupportInfo.supportsTimeZones()) {
+            //TIME_WITH_TIMEZONE=2013
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("TIME WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIME_WITH_TIMEZONE),
+                    TIME_WITH_TIMEZONE_PRECISION, getBytes("time'"), getBytes("'"), null, TYPE_NULLABLE,
+                    CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                    createInt(SQL_TIME_TZ), null, RADIX_TEN));
+
+            //TIMESTAMP_WITH_TIMEZONE=2014
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("TIMESTAMP WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE),
+                    TIMESTAMP_WITH_TIMEZONE_PRECISION, getBytes("timestamp'"), getBytes("'"), null, TYPE_NULLABLE,
+                    CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
+                    createInt(SQL_TIMESTAMP_TZ), null, RADIX_TEN));
+        }
+
         return new FBResultSet(rowDescriptor, rows);
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
-        + "cast(ind.RDB$RELATION_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) AS TABLE_NAME"
+        + "cast(ind.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",cast(ind.RDB$INDEX_NAME as varchar(" + OBJECT_NAME_LENGTH + ")) as INDEX_NAME"
+        + ",cast(ind.RDB$INDEX_NAME as " + OBJECT_NAME_TYPE + ") as INDEX_NAME"
         + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",cast(ise.rdb$field_name as varchar(" + OBJECT_NAME_LENGTH + ")) as COLUMN_NAME"
+        + ",cast(ise.rdb$field_name as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME"
         + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "
         + "rdb$indices ind "
         + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
         + "WHERE "
-        + "CAST(ind.rdb$relation_name AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? "
+        + "ind.rdb$relation_name = " + OBJECT_NAME_PARAMETER
         + "ORDER BY 2, 3, 4";
 
     @Override
@@ -3098,8 +3102,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        return AbstractGeneratedKeysQuery.isGeneratedKeysSupportLoaded()
-                && firebirdSupportInfo.supportsInsertReturning();
+        return firebirdSupportInfo.supportsInsertReturning()
+                && GeneratedKeysSupportFactory.isGeneratedKeysSupportLoaded()
+                && connection.getGeneratedKeysSupport().supportsGetGeneratedKeys();
     }
 
     /**
@@ -3224,47 +3229,44 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * <p>
+     * This method does not return columns of functions defined in packages.
+     * </p>
+     */
     @Override
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
-        // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(17, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTION_COLUMNS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTION_COLUMNS").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTION_COLUMNS").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "FUNCTION_COLUMNS").addField()
-                .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "FUNCTION_COLUMNS").addField()
-                .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "FUNCTION_COLUMNS").addField()
-                .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "FUNCTION_COLUMNS").addField()
-                .at(7).simple(SQL_LONG, 0, "PRECISION", "FUNCTION_COLUMNS").addField()
-                .at(8).simple(SQL_LONG, 0, "LENGTH", "FUNCTION_COLUMNS").addField()
-                .at(9).simple(SQL_SHORT, 0, "SCALE", "FUNCTION_COLUMNS").addField()
-                .at(10).simple(SQL_SHORT, 0, "RADIX", "FUNCTION_COLUMNS").addField()
-                .at(11).simple(SQL_SHORT, 0, "NULLABLE", "FUNCTION_COLUMNS").addField()
-                .at(12).simple(SQL_VARYING, 80, "REMARKS", "FUNCTION_COLUMNS").addField()
-                .at(13).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "FUNCTION_COLUMNS").addField()
-                .at(14).simple(SQL_LONG, 0, "ORDINAL_POSITION", "FUNCTION_COLUMNS").addField()
-                .at(15).simple(SQL_VARYING, 31, "IS_NULLABLE", "FUNCTION_COLUMNS").addField()
-                .at(16).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return GetFunctionColumns.create(getDbMetadataMediator())
+                .getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Jaybird defines a number of additional columns. As these are not defined in JDBC, their position may change with
+     * revisions of JDBC. We recommend to retrieve these columns by name. The following additional columns are
+     * available:
+     * <ol start="7">
+     * <li><b>JB_FUNCTION_SOURCE</b> String  => The source of the function (for Firebird 3+ PSQL functions only)).</li>
+     * <li><b>JB_FUNCTION_KIND</b> String => The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
+     * "UDR" (Firebird 3+)</li>
+     * <li><b>JB_MODULE_NAME</b> String => Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENTRYPOINT</b> String => Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENGINE_NAME</b> String => Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
+     * </ol>
+     * </p>
+     * <p>
+     * This method does not return functions defined in packages.
+     * </p>
+     */
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        // FIXME implement this method to return actual result
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FUNCTION_NAME", "FUNCTIONS").addField()
-                .at(3).simple(SQL_VARYING, 80, "REMARKS", "FUNCTIONS").addField()
-                .at(4).simple(SQL_SHORT, 0, "FUNCTION_TYPE", "FUNCTIONS").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTIONS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
     }
 
     @Override
@@ -3290,19 +3292,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return iface.cast(this);
     }
 
-    protected static boolean isAllCondition(String pattern) {
-        return pattern == null || "%".equals(pattern);
-    }
-
     /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the
-     * given pattern.
+     * Determine if there are no SQL wildcard characters ('%' or '_') in the given pattern.
      *
      * @param pattern
      *         The pattern to be checked for wildcards
      * @return <code>true</code> if there are no wildcards in the pattern,
      * <code>false</code> otherwise
+     * @deprecated Will be removed in Jaybird 5
      */
+    @Deprecated
     public static boolean hasNoWildcards(String pattern) {
         if (pattern == null) return true;
 
@@ -3327,7 +3326,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * @param pattern
      *         The string to be stripped
      * @return pattern with all backslash-escapes removed
+     * @deprecated Will be removed in Jaybird 5
      */
+    @Deprecated
     public static String stripEscape(String pattern) {
         if (pattern == null) return null;
         StringBuilder stripped = new StringBuilder(pattern.length());
@@ -3346,13 +3347,17 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
+     * <p>
+     * Primary purpose is to escape object names with wildcards for use in metadata patterns for literal matches, but
+     * it can also be used to escape for SQL {@code LIKE}.
+     * </p>
      *
      * @param objectName
-     *         Object name to escape (not {@code null}).
+     *         Object name to escape.
      * @return Object name with wildcards escaped.
      */
     public static String escapeWildcards(String objectName) {
-        return objectName != null ? objectName.replaceAll("([\\\\_%])", "\\\\$1") : null;
+        return MetadataPattern.escapeWildcards(objectName);
     }
 
     protected String getWantsSystemTables(String[] types) {
@@ -3436,17 +3441,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         final boolean supportsRecordVersion = firebirdSupportInfo.supportsRecordVersionPseudoColumn();
-        final boolean retrieveDbKey;
-        final boolean retrieveRecordVersion;
-
-        if (isAllCondition(columnNamePattern)) {
-            retrieveDbKey = true;
-            retrieveRecordVersion = supportsRecordVersion;
-        } else {
-            SqlLikeMatcher matcher = SqlLikeMatcher.compile(columnNamePattern);
-            retrieveDbKey = matcher.matches("RDB$DB_KEY");
-            retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
-        }
+        final MetadataPatternMatcher matcher = MetadataPattern.compile(columnNamePattern).toMetadataPatternMatcher();
+        final boolean retrieveDbKey = matcher.matches("RDB$DB_KEY");
+        final boolean retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
 
         if (!(retrieveDbKey || retrieveRecordVersion)) {
             // No matching columns
@@ -3454,9 +3451,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25) +
-                (tableNameClause.hasCondition() ? " where " + tableNameClause.getCondition(false) : "") +
-                GET_PSEUDO_COLUMNS_END;
+        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25);
+        if (tableNameClause.hasCondition()) {
+            sql += " where " + tableNameClause.getCondition(false);
+        }
+        sql += GET_PSEUDO_COLUMNS_END;
         List<String> params = tableNameClause.hasCondition()
                 ? Collections.<String>singletonList(tableNameClause.getValue())
                 : Collections.<String>emptyList();
@@ -3560,52 +3559,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
 
         return sResult;
-    }
-
-    protected static final class Clause {
-        private final String condition;
-        private final String value;
-
-        public Clause(String columnName, String pattern) {
-            if (isAllCondition(pattern)) {
-                condition = "";
-                value = null;
-            } else if (hasNoWildcards(pattern)) {
-                value = stripEscape(pattern);
-                // We are casting to VARCHAR( max object length + 10) to accommodate slightly larger object names
-                condition = "CAST(" + columnName + " AS VARCHAR(" + (OBJECT_NAME_LENGTH + 10) + ")) = ? ";
-            } else {
-                // We are padding the column with 31 spaces to accommodate arguments longer than the actual column length.
-                // The argument itself is padded with 15 spaces and a % to prevent false positives, this allows 15 character longer patterns
-                value = pattern + SPACES_15 + "%";
-                condition = columnName + " || '" + SPACES_31 + "' like ? escape '\\' ";
-            }
-        }
-
-        /**
-         * @return Result of {@code getCondition(true)}
-         */
-        public String getCondition() {
-            return getCondition(true);
-        }
-
-        public String getCondition(boolean includeAnd) {
-            if (!hasCondition()) {
-                return "";
-            }
-            if (includeAnd) {
-                return condition + " and ";
-            }
-            return condition;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public boolean hasCondition() {
-            return !condition.isEmpty();
-        }
     }
 
     protected static byte[] getBytes(String value) {
@@ -3763,6 +3716,23 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 log.debug("Closing eldest cached metadata statement yielded an exception; ignored", e);
             }
             return true;
+        }
+    }
+
+    protected DbMetadataMediator getDbMetadataMediator() {
+        return new DbMetadataMediatorImpl();
+    }
+
+    private class DbMetadataMediatorImpl extends DbMetadataMediator {
+
+        @Override
+        protected FirebirdSupportInfo getFirebirdSupportInfo() {
+            return firebirdSupportInfo;
+        }
+
+        @Override
+        protected ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException {
+            return doQuery(metadataQuery.getQueryText(), metadataQuery.getParameters(), metadataQuery.isStandalone());
         }
     }
 }

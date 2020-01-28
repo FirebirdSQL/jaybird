@@ -18,10 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
-import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
@@ -58,6 +55,24 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
         wireOperations = descriptor.createWireOperations(connection, getDatabaseWarningCallback(),
                 getSynchronizationObject());
+    }
+
+    @Override
+    public void forceClose() throws SQLException {
+        try {
+            if (connection.isConnected()) {
+                connection.close();
+            }
+        } catch (IOException e) {
+            throw new FbExceptionBuilder()
+                    .exception(ISCConstants.isc_net_write_err)
+                    .cause(e)
+                    .toFlatSQLException();
+        } finally {
+            databaseListenerDispatcher.detached(this);
+            databaseListenerDispatcher.shutdown();
+            exceptionListenerDispatcher.shutdown();
+        }
     }
 
     /**
@@ -145,6 +160,19 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            try {
+                checkConnected();
+                wireOperations.setNetworkTimeout(milliseconds);
+            } catch (SQLException e) {
+                exceptionListenerDispatcher.errorOccurred(e);
+                throw e;
+            }
+        }
+    }
+
+    @Override
     public final FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
         final FbWireBlob outputBlob =
                 protocolDescriptor.createOutputBlob(this, (FbWireTransaction) transaction, blobParameterBuffer);
@@ -223,6 +251,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         }
     }
 
+    @Override
     public final void countEvents(EventHandle eventHandle) throws SQLException {
         try {
             if (!(eventHandle instanceof WireEventHandle))

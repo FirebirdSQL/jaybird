@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
@@ -199,6 +200,18 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     public IntByReference getJnaHandle() {
         return handle;
+    }
+
+    @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        throw new FBDriverNotCapableException(
+                "Setting network timeout not supported in native implementation");
+    }
+
+    @Override
+    public int getNetworkTimeout() throws SQLException {
+        throw new FBDriverNotCapableException(
+                "Getting network timeout not supported in native implementation");
     }
 
     private void processStatusVector() throws SQLException {

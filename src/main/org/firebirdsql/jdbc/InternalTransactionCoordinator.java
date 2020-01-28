@@ -280,6 +280,9 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                     localTransaction.begin();
                 }
             } catch (ResourceException ex) {
+                if (ex.getCause() instanceof SQLException) {
+                    throw (SQLException) ex.getCause();
+                }
                 throw new FBSQLException(ex);
             }
         }

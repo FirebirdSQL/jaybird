@@ -755,7 +755,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        return new FBResultSetMetaData(fbStatement.getFieldDescriptor(), connection);
+        return new FBResultSetMetaData(fbStatement.getRowDescriptor(), connection);
     }
 
     @Override
@@ -816,6 +816,11 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     @Override
     public String getExecutionPlan() throws SQLException {
         return super.getExecutionPlan();
+    }
+
+    @Override
+    public String getExplainedExecutionPlan() throws SQLException {
+        return super.getExplainedExecutionPlan();
     }
 
     @Override

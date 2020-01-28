@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -197,18 +198,60 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
     }
 
     /**
-     * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non existent table.
+     * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with {@link Statement#RETURN_GENERATED_KEYS} with an INSERT which already has a RETURNING clause.
+     * <p>
+     * Expected: TYPE_EXEC_PROCEDURE statement type, all columns of table returned, single row result set
+     * </p>
+     */
+    @Test
+    public void testPrepare_INSERT_returnGeneratedKeys_withReturningAll() throws Exception {
+        assumeTrue("requires RETURNING * support", getDefaultSupportInfo().supportsReturningAll());
+
+        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING *", Statement.RETURN_GENERATED_KEYS);
+        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
+        stmt.setString(1, TEXT_VALUE);
+        assertFalse("Expected statement to not produce a result set", stmt.execute());
+
+        ResultSet rs = stmt.getGeneratedKeys();
+        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+        assertFalse("Generated keys result set should be open", rs.isClosed());
+
+        ResultSetMetaData metaData = rs.getMetaData();
+        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+
+        assertTrue("Expected first row in result set", rs.next());
+        assertEquals(513, rs.getInt(1));
+        assertEquals(TEXT_VALUE, rs.getString(2));
+        assertFalse("Expected no second row", rs.next());
+
+        closeQuietly(rs);
+        closeQuietly(stmt);
+    }
+
+    /**
+     * Test for PreparedStatement created through {@link FBConnection#prepareStatement(String, int)} with
+     * {@link Statement#RETURN_GENERATED_KEYS} with an INSERT for a non existent table.
      * <p>
      * Expected: SQLException Table unknown
      * </p>
      */
     @Test
     public void testPrepare_INSERT_returnGeneratedKeys_nonExistentTable() throws Exception {
+        // Firebird 4+ uses RETURNING *, while earlier version produce a custom error as the columns can't be retrieved
+        boolean usesReturningAll = getDefaultSupportInfo().supportsReturningAll();
+        int errorCode = usesReturningAll
+                ? ISCConstants.isc_dsql_relation_err
+                : JaybirdErrorCodes.jb_generatedKeysNoColumnsFound;
         expectedException.expect(allOf(
-                isA(SQLException.class),
-                errorCode(equalTo(ISCConstants.isc_dsql_relation_err)),
+                isA(SQLSyntaxErrorException.class),
+                errorCode(equalTo(errorCode)),
                 sqlState(equalTo("42S02")),
-                message(containsString("Table unknown; TABLE_NON_EXISTENT"))
+                fbMessageContains(errorCode, "TABLE_NON_EXISTENT")
         ));
 
         con.prepareStatement("INSERT INTO TABLE_NON_EXISTENT(TEXT) VALUES (?)", Statement.RETURN_GENERATED_KEYS);

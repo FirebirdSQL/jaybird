@@ -602,6 +602,20 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void testGetExplainedExecutionPlan() throws SQLException {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
+
+        try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement("SELECT * FROM TESTTAB WHERE ID = 2")) {
+            String detailedExecutionPlan = stmt.getExplainedExecutionPlan();
+            assertThat("Ensure that a valid detailed execution plan is retrieved",
+                    detailedExecutionPlan, containsString("TESTTAB"));
+        }
+    }
+
     protected void checkStatementType(String query, int expectedStatementType, String assertionMessage) throws SQLException {
         try (FBPreparedStatement stmt = (FBPreparedStatement) con.prepareStatement(query)) {
             assertEquals(assertionMessage, expectedStatementType, stmt.getStatementType());

@@ -47,6 +47,7 @@ public final class Version10Descriptor extends AbstractProtocolDescriptor implem
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc,
                 WireProtocolConstants.ptype_batch_send,
+                false,
                 1);
     }
 

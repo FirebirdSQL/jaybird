@@ -45,7 +45,7 @@ public class V13Statement extends V12Statement {
 
     @Override
     protected RowValue readSqlData() throws SQLException, IOException {
-        final RowDescriptor rowDescriptor = getFieldDescriptor();
+        final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
         final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
 

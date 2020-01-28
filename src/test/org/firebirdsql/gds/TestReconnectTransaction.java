@@ -124,8 +124,8 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
             DataProvider dataProvider0 = new DataProvider(rows, 0);
             DataProvider dataProvider1 = new DataProvider(rows, 1);
 
-            FBField field0 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getFieldDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
 
             boolean foundInLimboTx = false;
             int row = 0;

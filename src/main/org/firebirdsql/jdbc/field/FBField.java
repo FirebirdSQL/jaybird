@@ -54,6 +54,7 @@ public abstract class FBField {
     static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
     static final String BIG_INTEGER_CONVERSION_ERROR = "Error converting to BigInteger.";
     static final String DECIMAL_CONVERSION_ERROR = "Error converting to Decimal";
+    static final String INT128_CONVERSION_ERROR = "Error converting to Int128";
     static final String OVERFLOW_ERROR =
             "Value is too large to fit in target type, or cannot be represented by the target type";
     static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";
@@ -160,81 +161,12 @@ public abstract class FBField {
 
     /**
      * @return <code>true</code> if the field is of type <code>type</code>.
-     * TODO write correct ISCConstants.SQL_QUAD support
-     * TODO Consider moving to FieldDescriptor itself
+     * @deprecated This method will be removed in Jaybird 5, as a replacement use
+     * {@link JdbcTypeConverter#isJdbcType(FieldDescriptor, int)}
      */
+    @Deprecated
     public static boolean isType(FieldDescriptor field, int jdbcType) {
-        return isType(field.getType(), field.getSubType(), jdbcType)
-                || jdbcType == Types.ROWID && field.isDbKey();
-    }
-
-    private static boolean isType(int fbType, int subType, int jdbcType) {
-        // TODO No handling for NUMERIC/DECIMAL?
-        // turn off null flag, in this case we're not interested in it.
-        final int tempType = fbType & ~1;
-        switch (tempType) {
-        case ISCConstants.SQL_ARRAY:
-            return jdbcType == Types.ARRAY;
-
-        case ISCConstants.SQL_BLOB:
-            if (subType < 0) {
-                return jdbcType == Types.BLOB;
-            }
-            if (subType == ISCConstants.BLOB_SUB_TYPE_TEXT) {
-                return jdbcType == Types.LONGVARCHAR;
-            } else {
-                return jdbcType == Types.LONGVARBINARY
-                        || jdbcType == Types.VARBINARY
-                        || jdbcType == Types.BINARY;
-            }
-
-        case ISCConstants.SQL_D_FLOAT:
-            return false; // not supported right now
-
-        case ISCConstants.SQL_DOUBLE:
-            return jdbcType == Types.DOUBLE;
-
-        case ISCConstants.SQL_FLOAT:
-            return jdbcType == Types.FLOAT;
-
-        case ISCConstants.SQL_INT64:
-            return jdbcType == Types.BIGINT;
-
-        case ISCConstants.SQL_LONG:
-            return jdbcType == Types.INTEGER;
-
-        case ISCConstants.SQL_QUAD:
-            return false; // not supported right now
-
-        case ISCConstants.SQL_SHORT:
-            return jdbcType == Types.SMALLINT;
-
-        case ISCConstants.SQL_TEXT:
-            return subType != ISCConstants.CS_BINARY && jdbcType == Types.CHAR
-                    || subType == ISCConstants.CS_BINARY && jdbcType == Types.BINARY;
-
-        case ISCConstants.SQL_TIMESTAMP:
-            return jdbcType == Types.TIMESTAMP;
-
-        case ISCConstants.SQL_TYPE_DATE:
-            return jdbcType == Types.DATE;
-
-        case ISCConstants.SQL_TYPE_TIME:
-            return jdbcType == Types.TIME;
-
-        case ISCConstants.SQL_VARYING:
-            return subType != ISCConstants.CS_BINARY && jdbcType == Types.VARCHAR
-                    || subType == ISCConstants.CS_BINARY && jdbcType == Types.VARBINARY;
-
-        case ISCConstants.SQL_NULL:
-            return false;
-
-        case ISCConstants.SQL_BOOLEAN:
-            return jdbcType == Types.BOOLEAN;
-
-        default:
-            return false;
-        }
+        return JdbcTypeConverter.isJdbcType(field, jdbcType);
     }
 
     /**
@@ -278,6 +210,10 @@ public abstract class FBField {
             return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
         case Types.TIMESTAMP:
             return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
         case Types.CHAR:
         case Types.VARCHAR:
             /*
@@ -512,8 +448,9 @@ public abstract class FBField {
             if (isNull()) {
                 return null;
             } else {
+                Timestamp timestamp = getTimestamp();
                 Calendar calendar = GregorianCalendar.getInstance();
-                calendar.setTimeInMillis(getTimestamp().getTime());
+                calendar.setTimeInMillis(timestamp.getTime());
                 return (T) calendar;
             }
         case CLOB_CLASS_NAME:

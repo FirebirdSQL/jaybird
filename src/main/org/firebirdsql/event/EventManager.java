@@ -34,23 +34,47 @@ import java.sql.SQLException;
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public interface EventManager {
+public interface EventManager extends AutoCloseable {
 
     /**
      * Make a connection with a database to listen for events.
      *
      * @throws SQLException
      *         If a database communication error occurs
+     * @throws IllegalStateException
+     *         If already connected
      */
     void connect() throws SQLException;
+
+    /**
+     * If connected, disconnects, otherwise does nothing.
+     * <p>
+     * Contrary to {@link #disconnect()}, this method does not throw {@link IllegalStateException} when not connected.
+     * </p>
+     *
+     * @throws SQLException
+     *         For errors during disconnect
+     * @since 3.0.7
+     */
+    void close() throws SQLException;
 
     /**
      * Close the connection to the database.
      *
      * @throws SQLException
      *         If a database communication error occurs
+     * @throws IllegalStateException
+     *         If not currently connected
+     * @see #close()
      */
     void disconnect() throws SQLException;
+
+    /**
+     * @return {@code true} when connected and able to listen for events
+     * @see #connect()
+     * @see #disconnect()
+     */
+    boolean isConnected();
 
     /**
      * Sets the username for the connection to the database .
@@ -128,7 +152,8 @@ public interface EventManager {
     /**
      * Set the wire encryption level.
      *
-     * @param wireCrypt Wire encryption level ({@code null} not allowed)
+     * @param wireCrypt
+     *         Wire encryption level ({@code null} not allowed)
      * @since 3.0.4
      */
     void setWireCrypt(WireCrypt wireCrypt);
@@ -144,7 +169,8 @@ public interface EventManager {
     /**
      * Sets the database encryption plugin configuration.
      *
-     * @param dbCryptConfig Database encryption plugin configuration, meaning plugin specific
+     * @param dbCryptConfig
+     *         Database encryption plugin configuration, meaning plugin specific
      * @since 3.0.4
      */
     void setDbCryptConfig(String dbCryptConfig);
@@ -168,6 +194,27 @@ public interface EventManager {
      * @since 4.0
      */
     void setAuthPlugins(String authPlugins);
+
+    /**
+     * Get the poll timeout in milliseconds of the async thread to check whether it was stopped or not.
+     * <p>
+     * Default value is 1000 (1 second).
+     * </p>
+     *
+     * @return wait timeout in milliseconds
+     */
+    long getWaitTimeout();
+
+    /**
+     * Set the poll timeout in milliseconds of the async thread to check whether it was stopped or not.
+     * <p>
+     * Default value is 1000 (1 second).
+     * </p>
+     *
+     * @param waitTimeout
+     *         wait timeout in milliseconds
+     */
+    void setWaitTimeout(long waitTimeout);
 
     /**
      * Register an EventListener that will be called when an event occurs.
@@ -231,5 +278,5 @@ public interface EventManager {
      *         If a database access error occurs
      */
     int waitForEvent(String eventName, int timeout) throws InterruptedException, SQLException;
-    
+
 }

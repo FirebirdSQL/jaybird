@@ -19,9 +19,11 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.*;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetFactory;
@@ -186,10 +188,10 @@ public class TestFBResultSetMetaData {
             assertEquals("Column 3, unexpected columnName", "ADD", metaData.getColumnName(3));
             assertEquals("Column 3, unexpected columnLabel", "ADD", metaData.getColumnLabel(3));
 
-            if (con.getMetaData().getDatabaseMajorVersion() < 3) {
-                assertEquals("Column 4, unexpected columnName", "", metaData.getColumnName(4));
-            } else {
+            if (getDefaultSupportInfo().isVersionEqualOrAbove(2, 5, 8)) {
                 assertEquals("Column 4, unexpected columnName", "SUBTRACT", metaData.getColumnName(4));
+            } else {
+                assertEquals("Column 4, unexpected columnName", "", metaData.getColumnName(4));
             }
             assertEquals("Column 4, unexpected columnLabel", "COLUMN4ALIAS", metaData.getColumnLabel(4));
 
@@ -320,7 +322,10 @@ public class TestFBResultSetMetaData {
     @Test
     public void getTableAliasCTE() throws Exception {
         // TODO Also works for 2.5.8+ and 3.0.3+, relax to isVersionEqualOrAbove(2, 5) after release of 2.5.8 and 3.0.3
-        assumeTrue("Firebird 4 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue("Firebird 2.5.8+, 3.0.3+, or 4 or higher",
+                supportInfo.isVersionEqualOrAbove(2, 5, 8) && !supportInfo.isVersionEqualOrAbove(3, 0) ||
+                supportInfo.isVersionEqualOrAbove(3, 0, 3));
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             stmt.execute("\n"
@@ -354,10 +359,10 @@ public class TestFBResultSetMetaData {
     /**
      * Test for CORE-5713
      */
-    @Ignore
     @Test
     public void core5713() throws Exception {
-        //assumeTrue("Firebird 4 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue("Test for CORE-5713, broken in version before 3.0.3", supportInfo.isVersionEqualOrAbove(3, 0, 3));
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
 
@@ -376,17 +381,11 @@ public class TestFBResultSetMetaData {
                             + "select 1 a1, coalesce(cast(null as varchar(64)), 0) a2\n"
                             + "from rdb$database"
             }) {
-
                 try (ResultSet rs = stmt.executeQuery(query)) {
-                    System.out.println(query);
                     FirebirdResultSetMetaData rsmd = rs.getMetaData().unwrap(FirebirdResultSetMetaData.class);
-                    final String columnLabel1 = rsmd.getColumnLabel(1);
-                    final String columnLabel2 = rsmd.getColumnLabel(2);
-                    System.out.println("'" + columnLabel1 + "', '" + columnLabel2 + "'");
-                    assertEquals("columnLabel1", "A1", columnLabel1);
-                    assertEquals("columnLabel2", "A2", columnLabel2);
+                    assertEquals("columnLabel1", "A1", rsmd.getColumnLabel(1));
+                    assertEquals("columnLabel2", "A2", rsmd.getColumnLabel(2));
                 }
-                System.out.println("---------");
             }
         }
     }

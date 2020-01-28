@@ -22,6 +22,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbEmbeddedDatabaseFactory;
 
+import java.util.Arrays;
+
 public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String EMBEDDED_TYPE_NAME = "EMBEDDED";
@@ -45,7 +47,7 @@ public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
     
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {

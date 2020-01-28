@@ -1,11 +1,14 @@
 # Jaybird
-Jaybird is a JCA/JDBC driver suite to connect to Firebird database servers.
+Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
-This driver is based on both the JCA standard for application server connections to enterprise information systems and the well-known JDBC standard.
-
-The JCA standard specifies an architecture in which an application server can cooperate with a driver so that the application server manages transactions, security, and resource pooling, and the driver supplies only the connection functionality. While similar to the JDBC XADataSource concept, the JCA specification is considerably clearer on the division of responsibility between the application server and driver.
-
+[![Build Status](https://travis-ci.com/FirebirdSQL/jaybird.svg?branch=master)](https://travis-ci.com/FirebirdSQL/jaybird)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird-jdk18/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird-jdk18/)
+
+## Reporting bugs or improvements
+
+For security vulnerabilities, see [Security Policy](https://github.com/FirebirdSQL/jaybird/security/policy).
+
+For bugs or improvement, go to our [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC).
 
 ## Resources
 
@@ -15,6 +18,17 @@ The JCA standard specifies an architecture in which an application server can co
 - [FAQ](src/documentation/faq.md)
 - [Release notes](src/documentation/release_notes.md)
 - [How to contribute](CONTRIBUTING.md)
+
+## License
+
+Jaybird is licensed under LGPL 2.1 or later, with extension interfaces licensed
+under the BSD 3-clause. See source headers for the specific license.
+
+`SPDX-License-Identifier: LGPL-2.1-or-later AND BSD-3-Clause`
+
+## Support
+
+Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=readme).
 
 ## Sponsors
 

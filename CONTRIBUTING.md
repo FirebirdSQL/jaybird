@@ -8,6 +8,7 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 * Create pull requests on GitHub (<https://github.com/FirebirdSQL/jaybird>)
 * Become a developer (for Jaybird contact us on firebird-java, for Firebird in
   general, use the Firebird-devel mailing list)
+* Donate to the Firebird Foundation (see <https://www.firebirdsql.org/en/donate/>)
 * Become a paying member or sponsor of the Firebird Foundation (see
   <http://www.firebirdsql.org/en/firebird-foundation/>
 

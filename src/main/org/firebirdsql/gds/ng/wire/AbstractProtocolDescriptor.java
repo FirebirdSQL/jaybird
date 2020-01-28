@@ -37,6 +37,7 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     private final int architecture;
     private final int minimumType;
     private final int maximumType;
+    private final boolean supportsWireCompression;
     private final int weight;
     private final int hashCode;
 
@@ -51,15 +52,19 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
      *         Minimum supported protocol type
      * @param maximumType
      *         Maximum supported protocol type
+     * @param supportsWireCompression
+     *         {@code true} if this version supports zlib wire compression
      * @param weight
-     *         Preference weight
+     *         Selection weight (higher values have higher preference)
      */
-    protected AbstractProtocolDescriptor(int version, int architecture, int minimumType, int maximumType, int weight) {
+    protected AbstractProtocolDescriptor(int version, int architecture, int minimumType, int maximumType,
+            boolean supportsWireCompression, int weight) {
         this.version = version;
         this.architecture = architecture;
         this.minimumType = minimumType;
         this.maximumType = maximumType;
         this.weight = weight;
+        this.supportsWireCompression = supportsWireCompression;
         hashCode = Objects.hash(version, architecture, minimumType, maximumType, weight);
     }
 
@@ -81,6 +86,11 @@ public abstract class AbstractProtocolDescriptor implements ProtocolDescriptor {
     @Override
     public final int getMaximumType() {
         return maximumType;
+    }
+
+    @Override
+    public final boolean supportsWireCompression() {
+        return supportsWireCompression;
     }
 
     @Override

@@ -148,6 +148,24 @@ public class SQLExceptionMatchers {
     }
 
     /**
+     * Convenience factory for matcher that checks a Firebird exception message if it contains a message based on its
+     * error code and message parameters.
+     * <p>
+     * This matcher does not check the error code itself, it just constructs and checks the message looked up
+     * with the error code and populated with the parameters.
+     * </p>
+     *
+     * @param fbErrorCode
+     *         The Firebird error code, see {@link org.firebirdsql.gds.ISCConstants}
+     * @param messageParameters
+     *         The message parameters
+     * @return The Matcher
+     */
+    public static Matcher<Exception> fbMessageContains(int fbErrorCode, String... messageParameters) {
+        return message(containsString(getFbMessage(fbErrorCode, messageParameters)));
+    }
+
+    /**
      * Creates a Firebird exception message based on its error code and message parameters.
      *
      * @param fbErrorCode

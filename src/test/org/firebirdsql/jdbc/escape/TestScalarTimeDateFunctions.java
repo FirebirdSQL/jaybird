@@ -31,8 +31,9 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Properties;
 
-import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -59,7 +60,12 @@ public class TestScalarTimeDateFunctions {
     @BeforeClass
     public static void setUp() throws Exception {
         // We create a connection and statement for all tests executed for performance reasons
-        con = getConnectionViaDriverManager();
+        Properties props = getDefaultPropertiesForConnection();
+        if (getDefaultSupportInfo().supportsTimeZones()) {
+            // Test uses java.sql.Time/java.sql.Timestamp, avoid complications with CURRENT_TIME(STAMP)
+            props.setProperty("dataTypeBind", "time with time zone to legacy;timestamp with time zone to legacy");
+        }
+        con = DriverManager.getConnection(getUrl(), props);
         stmt = con.createStatement();
     }
 
@@ -98,7 +104,8 @@ public class TestScalarTimeDateFunctions {
         /* 5*/ testcase("CURRENT_TIMESTAMP()", new CurrentTimestampValidator()),
         /* 6*/ testcase("CURDATE()", new CurrentDateValidator()),
         /* 7*/ testcase("CURTIME()", new CurrentTimeValidator()),
-        /* 8*/ unsupported("DAYNAME(CURRENT_DATE)"),
+        // See test cases 55-60 for other week days
+        /* 8*/ testcase("DAYNAME(DATE '2020-01-12')", new SimpleValidator("Sunday")),
         /* 9*/ testcase("DAYOFMONTH(DATE '2012-12-22')", new SimpleValidator(22)),
         /*10*/ testcase("DAYOFWEEK(DATE '2012-12-22')", new SimpleValidator(7)),
         /*11*/ testcase("DAYOFWEEK(DATE '2012-12-23')", new SimpleValidator(1)),
@@ -112,7 +119,8 @@ public class TestScalarTimeDateFunctions {
         /*19*/ testcase("HOUR(TIME '19:13:05')", new SimpleValidator(19)),
         /*20*/ testcase("MINUTE(TIME '19:13:05')", new SimpleValidator(13)),
         /*21*/ testcase("MONTH(DATE '2012-12-22')", new SimpleValidator(12)),
-        /*22*/ unsupported("MONTHNAME(CURRENT_DATE)"),
+        // See test cases 61-71 for other month names
+        /*22*/ testcase("MONTHNAME(DATE '2020-01-12')", new SimpleValidator("January")),
         /*23*/ testcase("NOW()", new CurrentTimestampValidator()),
         /*24*/ testcase("QUARTER(DATE '2012-01-01')", new SimpleValidator(1)),
         /*25*/ testcase("QUARTER(DATE '2012-03-31')", new SimpleValidator(1)),
@@ -175,7 +183,26 @@ public class TestScalarTimeDateFunctions {
                     "TIMESTAMPDIFF(SQL_TSI_YEAR,TIMESTAMP'2017-11-23 12:00:00',TIMESTAMP'2019-01-01 12:00:03')",
                     new SimpleValidator(2L)),
         /*53*/ testcase("WEEK(DATE '2012-12-22')", new SimpleValidator(51)),
-        /*54*/ testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012))
+        /*54*/ testcase("YEAR(DATE '2012-12-22')", new SimpleValidator(2012)),
+        // See test case 8 for Sunday
+        /*55*/ testcase("DAYNAME(DATE '2020-01-13')", new SimpleValidator("Monday")),
+        /*56*/ testcase("DAYNAME(DATE '2020-01-14')", new SimpleValidator("Tuesday")),
+        /*57*/ testcase("DAYNAME(DATE '2020-01-15')", new SimpleValidator("Wednesday")),
+        /*58*/ testcase("DAYNAME(DATE '2020-01-16')", new SimpleValidator("Thursday")),
+        /*59*/ testcase("DAYNAME(DATE '2020-01-17')", new SimpleValidator("Friday")),
+        /*60*/ testcase("DAYNAME(DATE '2020-01-18')", new SimpleValidator("Saturday")),
+        // See test case 22 for January
+        /*61*/ testcase("MONTHNAME(DATE '2020-02-12')", new SimpleValidator("February")),
+        /*62*/ testcase("MONTHNAME(DATE '2020-03-12')", new SimpleValidator("March")),
+        /*63*/ testcase("MONTHNAME(DATE '2020-04-12')", new SimpleValidator("April")),
+        /*64*/ testcase("MONTHNAME(DATE '2020-05-12')", new SimpleValidator("May")),
+        /*65*/ testcase("MONTHNAME(DATE '2020-06-12')", new SimpleValidator("June")),
+        /*66*/ testcase("MONTHNAME(DATE '2020-07-12')", new SimpleValidator("July")),
+        /*67*/ testcase("MONTHNAME(DATE '2020-08-12')", new SimpleValidator("August")),
+        /*68*/ testcase("MONTHNAME(DATE '2020-09-12')", new SimpleValidator("September")),
+        /*69*/ testcase("MONTHNAME(DATE '2020-10-12')", new SimpleValidator("October")),
+        /*70*/ testcase("MONTHNAME(DATE '2020-11-12')", new SimpleValidator("November")),
+        /*71*/ testcase("MONTHNAME(DATE '2020-12-12')", new SimpleValidator("December"))
 //@formatter:on
         );
     }

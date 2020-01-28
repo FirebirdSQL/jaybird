@@ -26,9 +26,6 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Service} in the V13 protocol.
- * <p>
- * TODO We will probably need a V13Service implementation
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0

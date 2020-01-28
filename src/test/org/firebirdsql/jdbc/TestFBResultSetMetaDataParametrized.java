@@ -28,13 +28,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static java.sql.ResultSetMetaData.*;
+import static java.sql.ResultSetMetaData.columnNullable;
 import static java.sql.Types.*;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
@@ -85,6 +87,7 @@ public class TestFBResultSetMetaDataParametrized {
         "  /* boolean */ " +
         "  /* decfloat */ " +
         "  /* extended numerics */ " +
+        "  /* time zone */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -96,6 +99,7 @@ public class TestFBResultSetMetaDataParametrized {
             "/* boolean */ " +
             "/* decfloat */ " +
             "/* extended numerics */ " +
+            "/* time zone */ " +
             "FROM test_p_metadata";
     //@formatter:on
 
@@ -132,10 +136,15 @@ public class TestFBResultSetMetaDataParametrized {
                     ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
             testQuery = testQuery.replace("/* decfloat */", ", decfloat16_field, decfloat34_field");
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5");
+        }
+        if (supportInfo.supportsTimeZones()) {
+            createTable = createTable.replace("/* time zone */",
+                    ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
+            testQuery = testQuery.replace("/* time zone */", ", col_timetz, col_timestamptz");
         }
 
         DdlHelper.executeCreateTable(connection, createTable);
@@ -166,6 +175,7 @@ public class TestFBResultSetMetaDataParametrized {
 
     @Parameterized.Parameters(name = "Index {0} ({2})")
     public static Collection<Object[]> testData() {
+        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         List<Object[]> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
@@ -173,8 +183,8 @@ public class TestFBResultSetMetaDataParametrized {
                 create(4, "java.lang.Long", 20, "LONG_FIELD", "LONG_FIELD", BIGINT, "BIGINT", 19, 0, TABLE_NAME, columnNullable, true, true),
                 create(5, "java.lang.Integer", 11, "INT_FIELD", "INT_FIELD", INTEGER, "INTEGER", 10, 0, TABLE_NAME, columnNullable, true, true),
                 create(6, "java.lang.Integer", 6, "SHORT_FIELD", "SHORT_FIELD", SMALLINT, "SMALLINT", 5, 0, TABLE_NAME, columnNullable, true, true),
-                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", 7, 0, TABLE_NAME, columnNullable, true, true),
-                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", 15, 0, TABLE_NAME, columnNullable, true, true),
+                create(7, "java.lang.Double", 13, "FLOAT_FIELD", "FLOAT_FIELD", FLOAT, "FLOAT", supportsFloatBinaryPrecision ? 24 : 7, 0, TABLE_NAME, columnNullable, true, true),
+                create(8, "java.lang.Double", 22, "DOUBLE_FIELD", "DOUBLE_FIELD", DOUBLE, "DOUBLE PRECISION", supportsFloatBinaryPrecision ? 53 : 15, 0, TABLE_NAME, columnNullable, true, true),
                 create(9, "java.math.BigDecimal", 5, "SMALLINT_NUMERIC", "SMALLINT_NUMERIC", NUMERIC, "NUMERIC", 3, 1, TABLE_NAME, columnNullable, true, true),
                 create(10, "java.math.BigDecimal", 5, "INTEGER_DECIMAL_1", "INTEGER_DECIMAL_1", DECIMAL, "DECIMAL", 3, 1, TABLE_NAME, columnNullable, true, true),
                 create(11, "java.math.BigDecimal", 7, "INTEGER_NUMERIC", "INTEGER_NUMERIC", NUMERIC, "NUMERIC", 5, 2, TABLE_NAME, columnNullable, true, true),
@@ -197,9 +207,13 @@ public class TestFBResultSetMetaDataParametrized {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 23, "DECFLOAT16_FIELD", "DECFLOAT16_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 16, 0, TABLE_NAME, columnNullable, true, true));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 42, "DECFLOAT34_FIELD", "DECFLOAT34_FIELD", JaybirdTypeCodes.DECFLOAT, "DECFLOAT", 34, 0, TABLE_NAME, columnNullable, true, true));
         }
-        if (supportInfo.supportsDecimalPrecision(34)) {
+        if (supportInfo.supportsDecimalPrecision(38)) {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 27, "COL_NUMERIC25_20", "COL_NUMERIC25_20", NUMERIC, "NUMERIC", 25, 20, TABLE_NAME, columnNullable, true, true));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, TABLE_NAME, columnNullable, true, true));
+        }
+        if (supportInfo.supportsTimeZones()) {
+            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
         }
 
         return testData;

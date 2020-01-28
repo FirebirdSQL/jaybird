@@ -20,10 +20,12 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
-import org.firebirdsql.jdbc.Synchronizable;
+import org.firebirdsql.jdbc.FirebirdBlob;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -39,7 +41,7 @@ import java.sql.SQLException;
  */
 class FBBlobField extends FBField implements FBFlushableField {
 
-    private FBBlob blob;
+    protected FirebirdBlob blob;
     private long length;
     private InputStream binaryStream;
     private Reader characterStream;
@@ -64,16 +66,22 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
-    @Override
-    public Blob getBlob() throws SQLException {
+    protected FirebirdBlob getBlobInternal() {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
         if (bytes == null) return null;
 
         /*@todo convert this into a method of FirebirdConnection */
         blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes));
-
+        
         return blob;
+    }
+
+    @Override
+    public Blob getBlob() throws SQLException {
+        FirebirdBlob blob = getBlobInternal();
+        // Need to use detached blob to ensure the blob is usable after resultSet.next()
+        return blob != null ? registerWithTransaction(blob.detach()) : null;
     }
 
     @Override
@@ -85,7 +93,7 @@ class FBBlobField extends FBField implements FBFlushableField {
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        Blob blob = getBlob();
+        Blob blob = getBlobInternal();
         if (blob == null) return null;
 
         return blob.getBinaryStream();
@@ -101,7 +109,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (blobIdBuffer == null) return null;
 
         final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
-        synchronized (((Synchronizable) getBlob()).getSynchronizationObject()) {
+        synchronized (gdsHelper.getSynchronizationObject()) {
             try (FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED)) {
                 final int blobLength = (int) blobHandle.length();
                 final int bufferLength = gdsHelper.getBlobBufferLength();
@@ -158,7 +166,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (fieldDescriptor.getSubType() < 0)
             throw new TypeConversionException(STRING_CONVERSION_ERROR);
 
-        Blob blob = getBlob();
+        Blob blob = getBlobInternal();
 
         if (blob == null) return null;
 
@@ -271,5 +279,15 @@ class FBBlobField extends FBField implements FBFlushableField {
             bytes = null;
             length = 0;
         }
+    }
+
+    private <T extends FirebirdBlob> T registerWithTransaction(T blob) {
+        if (blob instanceof TransactionListener) {
+            FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
+            if (currentTransaction != null) {
+                currentTransaction.addWeakTransactionListener((TransactionListener) blob);
+            }
+        }
+        return blob;
     }
 }

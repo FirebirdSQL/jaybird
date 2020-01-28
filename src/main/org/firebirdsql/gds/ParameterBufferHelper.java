@@ -31,7 +31,7 @@ import java.util.Properties;
 
 /**
  * This class maps the extended JDBC properties to parameter buffer types (for transaction and database
- * parameter buffers). It uses <code>java.lang.reflection</code> to determine correct type of the parameter
+ * parameter buffers). It uses {@code java.lang.reflection} to determine correct type of the parameter
  * passed to the {@link java.sql.Driver#connect(String, Properties)} method.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -104,8 +104,7 @@ public class ParameterBufferHelper {
      *
      * @param name
      *         name of the key.
-     * @return instance of {@link Integer} corresponding to the specified name
-     *         or <code>null</code> if value is not known.
+     * @return instance of {@link Integer} corresponding to the specified name or {@code null} if value is not known.
      */
     public static Integer getDpbKey(String name) {
         return dpbTypes.get(name);
@@ -116,7 +115,7 @@ public class ParameterBufferHelper {
      *
      * @param name
      *         Name of the dpb item
-     * @return <code>DpbParameterType</code> instance, or <code>null</code> if there is no item with this name
+     * @return {@code DpbParameterType} instance, or {@code null} if there is no item with this name
      */
     public static DpbParameterType getDpbParameterType(final String name) {
         DpbParameterType dpbParameterType = dpbParameterTypes.get(name);
@@ -134,14 +133,43 @@ public class ParameterBufferHelper {
     /**
      * Get mapping between DPB names and their keys.
      *
-     * @return instance of {@link Map}, where key is the name of DPB parameter,
-     *         value is its DPB key.
+     * @return instance of {@link Map}, where key is the name of DPB parameter, value is its DPB key.
      */
     public static Map<String, Integer> getDpbMap() {
         return dpbTypes;
     }
 
+    /**
+     * Parse object to DPB value.
+     *
+     * @param name
+     *         Name of DPB item
+     * @param value
+     *         Value to parse
+     * @return Object type appropriate for this DPB type
+     * @deprecated In general, {@link #parseDpbString(String, String)} should be used; this method is not planned for
+     * removal
+     */
+    @Deprecated
     public static Object parseDpbString(String name, Object value) {
+        DpbParameterType type = dpbParameterTypes.get(name);
+
+        if (type == null)
+            type = UNKNOWN_DPB_TYPE;
+
+        return type.parseDpbString(value);
+    }
+
+    /**
+     * Parse string to DPB value.
+     *
+     * @param name
+     *         Name of DPB item
+     * @param value
+     *         Value to parse
+     * @return Object type appropriate for this DPB type
+     */
+    public static Object parseDpbString(String name, String value) {
         DpbParameterType type = dpbParameterTypes.get(name);
 
         if (type == null)
@@ -155,10 +183,8 @@ public class ParameterBufferHelper {
      * match string representation of the TPB parameter with its value.
      *
      * @param name
-     *         string representation of TPB parameter, can have "isc_tpb_"
-     *         prefix.
-     * @return value corresponding to the specified parameter name or null if
-     *         nothing was found.
+     *         string representation of TPB parameter, can have "isc_tpb_" prefix.
+     * @return value corresponding to the specified parameter name or {@code null} if nothing was found.
      */
     public static Integer getTpbParam(String name) {
         return tpbTypes.get(name);
@@ -171,10 +197,9 @@ public class ParameterBufferHelper {
      * @param resource
      *         path to the resource relative to the root of the
      *         classloader.
-     * @return instance of {@link Properties} containing loaded resources or
-     *         <code>null</code> if resource was not found.
+     * @return instance of {@link Properties} containing loaded resources or {@code null} if resource was not found.
      * @throws IOException
-     *         if I/O error occured.
+     *         if I/O error occurred.
      */
     private static Properties loadProperties(String resource) throws IOException {
         ClassLoader cl = ParameterBufferHelper.class.getClassLoader();
@@ -222,15 +247,20 @@ public class ParameterBufferHelper {
             }
 
             final DpbValueType typeValue;
-            if ("boolean".equals(value)) {
+            switch (value) {
+            case "boolean":
                 typeValue = DpbValueType.TYPE_BOOLEAN;
-            } else if ("byte".equals(value)) {
+                break;
+            case "byte":
                 typeValue = DpbValueType.TYPE_BYTE;
-            } else if ("int".equals(value)) {
+                break;
+            case "int":
                 typeValue = DpbValueType.TYPE_INT;
-            } else if ("string".equals(value)) {
+                break;
+            case "string":
                 typeValue = DpbValueType.TYPE_STRING;
-            } else {
+                break;
+            default:
                 continue;
             }
             final Integer dpbKey = dpbTypes.get(key);
@@ -347,20 +377,32 @@ public class ParameterBufferHelper {
          * @param value
          *         The value to parse
          * @return Parsed value (either a Boolean, Byte, Integer or String)
+         * @deprecated In general, {@link #parseDpbString(String)} should be used; this method is not planned for
+         * removal
          */
+        @Deprecated
         public Object parseDpbString(Object value) {
-            // for the sake of unification we allow passing boolean, byte and integer
-            // types too, we loose some cycles here, but that is called relatively
-            // rarely, a trade off between code maintainability and CPU cycles.
-            if (!(value instanceof String)) {
-                if (value instanceof Boolean || value instanceof Byte || value instanceof Integer)
-                    return value;
-
-                // if passed value is not string, throw an exception
-                if (value != null)
-                    throw new ClassCastException(value.getClass().getName());
+            if (value == null || value instanceof String) {
+                return type.parseDpbString((String) value);
             }
-            return type.parseDpbString((String) value);
+            // for the sake of unification we allow passing boolean, byte and integer types too
+            if (value instanceof Boolean || value instanceof Byte || value instanceof Integer) {
+                return value;
+            }
+
+            // if passed value is not an accepted type, throw an exception
+            throw new ClassCastException(value.getClass().getName());
+        }
+
+        /**
+         * Parses the supplied String to the type appropriate for this DpbParameterType.
+         *
+         * @param value
+         *         The value to parse
+         * @return Parsed value (either a Boolean, Byte, Integer or String)
+         */
+        public Object parseDpbString(String value) {
+            return type.parseDpbString(value);
         }
     }
 }

@@ -20,7 +20,6 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
-import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
@@ -38,35 +37,20 @@ public final class FbClientDatabaseFactory extends AbstractNativeDatabaseFactory
 
     private static final FbClientDatabaseFactory INSTANCE = new FbClientDatabaseFactory();
 
-    @Override
-    protected FbClientLibrary getClientLibrary() {
-        return ClientHolder.clientLibrary;
-    }
-
     public static FbClientDatabaseFactory getInstance() {
         return INSTANCE;
     }
 
-    /**
-     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
-     */
-    private static final class ClientHolder {
-
-        private static final FbClientLibrary clientLibrary = syncWrapIfNecessary(initClientLibrary());
-
-        private static FbClientLibrary initClientLibrary() {
+    @Override
+    protected FbClientLibrary createClientLibrary() {
+        try {
             if (Platform.isWindows()) {
                 return Native.loadLibrary("fbclient", WinFbClientLibrary.class);
             } else {
                 return Native.loadLibrary("fbclient", FbClientLibrary.class);
             }
-        }
-
-        private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {
-            if (JaybirdSystemProperties.isSyncWrapNativeLibrary()) {
-                return (FbClientLibrary) Native.synchronizedLibrary(clientLibrary);
-            }
-            return clientLibrary;
+        } catch (RuntimeException | UnsatisfiedLinkError e) {
+            throw new NativeLibraryLoadException("Could not load fbclient", e);
         }
     }
 

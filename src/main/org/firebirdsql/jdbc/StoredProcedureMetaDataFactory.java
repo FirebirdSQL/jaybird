@@ -55,17 +55,18 @@ public abstract class StoredProcedureMetaDataFactory {
     }
 
     private static boolean connectionHasProcedureMetadata(FBConnection connection) throws SQLException {
+        if (connection.isIgnoreProcedureType()) {
+            return false;
+        }
         FirebirdDatabaseMetaData metaData = (FirebirdDatabaseMetaData) connection.getMetaData();
 
-        return versionInformationEqualOrAbove(metaData.getDatabaseMajorVersion(), metaData.getDatabaseMinorVersion(), 2, 1)
-                && versionInformationEqualOrAbove(metaData.getOdsMajorVersion(), metaData.getOdsMinorVersion(), 2, 1);
+        return versionEqualOrAboveFB21(metaData.getDatabaseMajorVersion(), metaData.getDatabaseMinorVersion())
+                && versionEqualOrAboveFB21(metaData.getOdsMajorVersion(), metaData.getOdsMinorVersion());
     }
 
-    private static boolean versionInformationEqualOrAbove(int majorVersion, int minorVersion,
-            int requiredMajorVersion, int requiredMinorVersion) {
-
-        return majorVersion > requiredMajorVersion ||
-                (majorVersion == requiredMajorVersion && minorVersion >= requiredMinorVersion);
+    private static boolean versionEqualOrAboveFB21(int majorVersion, int minorVersion) {
+        return majorVersion > 2 ||
+                (majorVersion == 2 && minorVersion >= 1);
     }
 }
 

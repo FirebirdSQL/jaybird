@@ -64,7 +64,7 @@ public interface FbDatabase extends FbAttachment {
      * The cancellation types are:
      * <dl>
      *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_disable}</dt>
-     *     <dd>disables execution of fb_cancel_raise requests for the specified attachment. It can be useful when your0
+     *     <dd>disables execution of fb_cancel_raise requests for the specified attachment. It can be useful when your
      *     program is executing critical operations, such as cleanup, for example.</dd>
      *     <dt>{@link org.firebirdsql.gds.ISCConstants#fb_cancel_enable}</dt>
      *     <dd>re-enables delivery of a cancel execution that was previously disabled. The 'cancel' state is effective

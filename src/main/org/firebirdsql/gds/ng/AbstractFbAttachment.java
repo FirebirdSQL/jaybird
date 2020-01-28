@@ -22,9 +22,6 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSServerVersionException;
-import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
-import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallbackSpi;
-import org.firebirdsql.gds.ng.dbcrypt.simple.StaticValueDbCryptCallbackSpi;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.logging.Logger;
@@ -35,7 +32,6 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
 
 /**
  * Common behavior for {@link AbstractFbService} and {@link AbstractFbDatabase}.
@@ -59,6 +55,17 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     protected AbstractFbAttachment(T connection, DatatypeCoder datatypeCoder) {
         this.connection = requireNonNull(connection, "parameter connection should be non-null");
         this.datatypeCoder = requireNonNull(datatypeCoder, "parameter datatypeCoder should be non-null");
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Default implementation, calls {@link #close()}
+     * </p>
+     */
+    @Override
+    public void forceClose() throws SQLException {
+        close();
     }
 
     @Override
@@ -137,6 +144,13 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     }
 
     @Override
+    public int getNetworkTimeout() throws SQLException {
+        checkConnected();
+        int soTimeout = connection.getAttachProperties().getSoTimeout();
+        return soTimeout != -1 ? soTimeout : 0;
+    }
+
+    @Override
     public final void addExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.addListener(listener);
     }
@@ -162,26 +176,4 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
             log.debug("Exception on safely detach", ex);
         }
     }
-
-    private static final DbCryptCallbackSpi DEFAULT_DB_CRYPT_CALLBACK_SPI = new StaticValueDbCryptCallbackSpi();
-
-    /**
-     * Creates an instance of {@link DbCryptCallback} for this attachment.
-     *
-     * @return Database encryption callback.
-     * @throws SQLException For errors initializing the callback
-     */
-    protected final DbCryptCallback createDbCryptCallback() throws SQLException {
-        // TODO Make plugin selectable from config
-        try {
-            final String dbCryptConfig = connection.getAttachProperties().getDbCryptConfig();
-            return DEFAULT_DB_CRYPT_CALLBACK_SPI.createDbCryptCallback(dbCryptConfig);
-        } catch (RuntimeException e) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(jb_dbCryptCallbackInitError)
-                    .cause(e)
-                    .toSQLException();
-        }
-    }
-    
 }

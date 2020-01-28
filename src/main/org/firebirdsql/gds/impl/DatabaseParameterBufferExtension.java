@@ -41,21 +41,17 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int SOCKET_BUFFER_SIZE              = ISCConstants.isc_dpb_socket_buffer_size;
     int BLOB_BUFFER_SIZE                = ISCConstants.isc_dpb_blob_buffer_size;
     int USE_STREAM_BLOBS                = ISCConstants.isc_dpb_use_stream_blobs;
-    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     int PARANOIA_MODE                   = ISCConstants.isc_dpb_paranoia_mode;
     int TIMESTAMP_USES_LOCAL_TIMEZONE   = ISCConstants.isc_dpb_timestamp_uses_local_timezone;
     int USE_STANDARD_UDF                = ISCConstants.isc_dpb_use_standard_udf;
     int LOCAL_ENCODING                  = ISCConstants.isc_dpb_local_encoding;
-    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     int MAPPING_PATH                    = ISCConstants.isc_dpb_mapping_path;
-    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     int NO_RESULT_SET_TRACKING          = ISCConstants.isc_dpb_no_result_set_tracking;
     int RESULT_SET_HOLDABLE             = ISCConstants.isc_dpb_result_set_holdable;
     int FILENAME_CHARSET                = ISCConstants.isc_dpb_filename_charset;
-    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     int OCTETS_AS_BYTES                 = ISCConstants.isc_dpb_octets_as_bytes;
     int SO_TIMEOUT                      = ISCConstants.isc_dpb_so_timeout;
@@ -63,13 +59,17 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int USE_FIREBIRD_AUTOCOMMIT         = ISCConstants.isc_dpb_use_firebird_autocommit;
     int WIRE_CRYPT_LEVEL                = ISCConstants.isc_dpb_wire_crypt_level;
     int DB_CRYPT_CONFIG                 = ISCConstants.isc_dpb_db_crypt_config;
+    int GENERATED_KEYS_ENABLED          = ISCConstants.isc_dpb_generated_keys_enabled;
+    int IGNORE_PROCEDURE_TYPE           = ISCConstants.isc_dpb_ignore_procedure_type;
     
     /**
-     * List of the DPB extensions. This array is used to filter the parameters
+     * List of the DPB extensions. This array was used to filter the parameters
      * from the DPB before sending it to Firebird. Any new extension code MUST
      * be listed here.
+     *
+     * @deprecated Will be removed in Jaybird 5 without formal replacement
      */
-    @SuppressWarnings("deprecation")
+    @Deprecated
     int[] EXTENSION_PARAMETERS = new int[] {
         SOCKET_BUFFER_SIZE,
         BLOB_BUFFER_SIZE, 
@@ -87,7 +87,9 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
         COLUMN_LABEL_FOR_NAME,
         USE_FIREBIRD_AUTOCOMMIT,
         WIRE_CRYPT_LEVEL,
-        DB_CRYPT_CONFIG
+        DB_CRYPT_CONFIG,
+        GENERATED_KEYS_ENABLED,
+        IGNORE_PROCEDURE_TYPE
     };
 
     /**

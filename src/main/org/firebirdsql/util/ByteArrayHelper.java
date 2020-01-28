@@ -77,6 +77,24 @@ public final class ByteArrayHelper {
     }
 
     /**
+     * Converts the provided hexadecimal string to a byte array.
+     *
+     * @param hexString
+     *         Hexadecimal string
+     * @return byte array
+     * @since 4.0
+     */
+    public static byte[] fromHexString(String hexString) {
+        final int length = hexString.length() / 2;
+        final byte[] bytes = new byte[length];
+        for (int byteIdx = 0; byteIdx < length; byteIdx++) {
+            bytes[byteIdx] = (byte) ((Character.digit(hexString.charAt(2 * byteIdx), 16) << 4)
+                    + Character.digit(hexString.charAt(2 * byteIdx + 1), 16));
+        }
+        return bytes;
+    }
+
+    /**
      * Decodes a base64 encoded string to a byte array.
      *
      * @param base64

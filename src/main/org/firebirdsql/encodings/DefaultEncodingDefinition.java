@@ -23,7 +23,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
@@ -185,10 +184,6 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
     private void initEncoding() {
         if (isInformationOnly()) {
             encoding = null;
-        } else if (getMaxBytesPerChar() == 1
-                // Exception for NONE / UTF-8 (prevents it from creating a single byte encoding)
-                && !("NONE".equals(firebirdEncodingName) && StandardCharsets.UTF_8.equals(getJavaCharset()))) {
-            encoding = new EncodingSingleByte(getJavaCharset());
         } else {
             encoding = new EncodingGeneric(getJavaCharset());
         }

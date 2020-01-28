@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.ng.IConnectionProperties.SESSION_TIME_ZONE_SERVER;
 
 /**
  * Abstract class for behavior common to {@code ParameterConverter} implementations.
@@ -82,6 +83,10 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
         dpb.addArgument(isc_dpb_sql_dialect, props.getConnectionDialect());
         if (props.getConnectTimeout() != IConnectionProperties.DEFAULT_CONNECT_TIMEOUT) {
             dpb.addArgument(isc_dpb_connect_timeout, props.getConnectTimeout());
+        }
+        String sessionTimeZone = props.getSessionTimeZone();
+        if (sessionTimeZone != null && !SESSION_TIME_ZONE_SERVER.equalsIgnoreCase(sessionTimeZone)) {
+            dpb.addArgument(isc_dpb_session_time_zone, sessionTimeZone);
         }
     }
 

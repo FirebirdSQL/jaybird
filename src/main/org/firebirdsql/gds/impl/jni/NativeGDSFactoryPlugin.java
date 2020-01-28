@@ -22,6 +22,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.jna.FbClientDatabaseFactory;
 
+import java.util.Arrays;
+
 public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
@@ -40,11 +42,11 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getTypeAliases() {
-        return TYPE_ALIASES;
+        return Arrays.copyOf(TYPE_ALIASES, TYPE_ALIASES.length);
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{

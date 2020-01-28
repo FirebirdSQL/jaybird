@@ -26,8 +26,10 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -261,6 +263,11 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     }
 
     @Override
+    public void handleCryptKeyCallback(DbCryptCallback dbCryptCallback) throws IOException, SQLException {
+        throw new FBDriverNotCapableException("Crypt key callbacks not supported in this protocol version");
+    }
+
+    @Override
     public final void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback) {
         while (numberOfResponses > 0) {
             numberOfResponses--;
@@ -279,6 +286,16 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     @Override
     public final void writeDirect(byte[] data) throws IOException {
         connection.writeDirect(data);
+    }
+
+    @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        if (milliseconds < 0) {
+            throw FbExceptionBuilder
+                    .forException(JaybirdErrorCodes.jb_invalidTimeout)
+                    .toFlatSQLException();
+        }
+        connection.setSoTimeout(milliseconds);
     }
 
     protected final Object getSynchronizationObject() {

@@ -23,6 +23,8 @@ import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 import org.firebirdsql.jdbc.oo.OOConnection;
 
+import java.util.Arrays;
+
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String TYPE_NAME = "OOREMOTE";
@@ -49,7 +51,7 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {

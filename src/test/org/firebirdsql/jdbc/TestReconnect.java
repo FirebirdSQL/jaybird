@@ -18,25 +18,26 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestBase;
+import org.firebirdsql.common.FBJUnit4TestBase;
+import org.junit.After;
+import org.junit.Test;
 
 import java.sql.*;
 import java.util.Random;
 
-/**
- * Describe class <code>TestReconnect</code> here.
- *
- * @author Stephan Perktold
- * @version 1.0
- */
-public class TestReconnect extends FBTestBase {
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+
+public class TestReconnect extends FBJUnit4TestBase {
 
     private static final int TABLE_COUNT = 10;
 
     private Connection con;
 
-    public TestReconnect(String testName) {
-        super(testName);
+    @After
+    public void tearDown() throws SQLException {
+        if (con != null) {
+            con.close();
+        }
     }
 
     private static String getTableName(int no) {
@@ -44,22 +45,11 @@ public class TestReconnect extends FBTestBase {
     }
 
     private void execute(String sql) throws SQLException {
-        Statement stmt = con.createStatement();
-        try {
+        try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate(sql);
-            Statement stmt2 = stmt;
-            stmt = null;
-            stmt2.close();
         } catch (SQLException e) {
             if (log != null) {
-                log.info("Error executing:");
-                log.info(sql);
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (Exception ignore) {
-                }
+                log.info("Error executing:" + sql);
             }
             throw e;
         }
@@ -287,36 +277,22 @@ public class TestReconnect extends FBTestBase {
     }
 
     private void openConnection() throws SQLException {
-        con = this.getConnectionViaDriverManager();
+        con = getConnectionViaDriverManager();
         con.setAutoCommit(true);
         con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     }
 
+    @Test
     public void testReconnect() throws Exception {
-        try {
-            openConnection();
-            dropTestTables();
-            createTestTables();
-            populateTestTables(100);
+        openConnection();
+        dropTestTables();
+        createTestTables();
+        populateTestTables(100);
 
-            readResult("TYPE INFO", con.getMetaData().getTypeInfo(), true);
-            readMetaData();
-            alterForeignKeys(true);
-            readMetaData();
-            alterForeignKeys(false);
-
-            Connection con2 = con;
-            con = null;
-            con2.close();
-        } catch (Exception e) {
-            if (con != null) {
-                try {
-                    if (!con.isClosed())
-                        con.close();
-                } catch (Exception ignore) {
-                }
-            }
-            throw e;
-        }
+        readResult("TYPE INFO", con.getMetaData().getTypeInfo(), true);
+        readMetaData();
+        alterForeignKeys(true);
+        readMetaData();
+        alterForeignKeys(false);
     }
 }

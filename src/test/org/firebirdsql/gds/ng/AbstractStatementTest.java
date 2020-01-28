@@ -23,6 +23,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
@@ -38,6 +39,7 @@ import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,9 +47,13 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -162,7 +168,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
@@ -218,7 +224,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
@@ -289,7 +295,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -335,7 +341,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -366,7 +372,7 @@ public abstract class AbstractStatementTest {
         // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
         assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Collections.singletonList(
@@ -417,6 +423,60 @@ public abstract class AbstractStatementTest {
         statement.close();
 
         statement.getExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_unsupportedVersion() throws Exception {
+        assumeFalse("Test expects explained execution plan not supported",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        expectedException.expect(SQLFeatureNotSupportedException.class);
+        expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported));
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_withStatementPrepared() throws Exception {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        String executionPlan = statement.getExplainedExecutionPlan();
+
+        assertEquals("Unexpected plan for prepared statement", "Select Expression\n" +
+                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan);
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_noStatementPrepared() throws Exception {
+        allocateStatement();
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement not yet allocated");
+
+        statement.getExplainedExecutionPlan();
+    }
+
+    @Test
+    public void test_GetExplainedExecutionPlan_StatementClosed() throws Exception {
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expectMessage("Statement closed");
+        allocateStatement();
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+        statement.close();
+
+        statement.getExplainedExecutionPlan();
     }
 
     @Test
@@ -731,7 +791,7 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
 
-        final RowDescriptor fields = statement.getFieldDescriptor();
+        final RowDescriptor fields = statement.getRowDescriptor();
         assertNotNull("Fields", fields);
         List<FieldDescriptor> expectedFields =
                 Arrays.asList(
@@ -751,6 +811,45 @@ public abstract class AbstractStatementTest {
         assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
     }
 
+    @Test
+    public void setTimeout_nonZeroThenZero() throws Exception {
+        allocateStatement();
+
+        statement.setTimeout(1);
+        assertEquals(1, statement.getTimeout());
+
+        statement.setTimeout(0);
+        assertEquals(0, statement.getTimeout());
+    }
+
+    /**
+     * Even though the maximum supported timeout (in Firebird 4) is ‭4294967295‬ (2^32), the setter allows full range.
+     */
+    @Test
+    public void setTimeout_max_long_allowed() throws Exception {
+        allocateStatement();
+
+        statement.setTimeout(Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, statement.getTimeout());
+    }
+
+    @Test
+    public void setTimeout_negativeValue_throwsException() throws Exception {
+        allocateStatement();
+
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
+
+        statement.setTimeout(-1);
+    }
+
+    @Test
+    public void getTimeout_defaultZero() throws Exception {
+        allocateStatement();
+
+        assertEquals(0, statement.getTimeout());
+    }
+
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
         tpb.addArgument(ISCConstants.isc_tpb_read_committed);
@@ -758,6 +857,13 @@ public abstract class AbstractStatementTest {
         tpb.addArgument(ISCConstants.isc_tpb_write);
         tpb.addArgument(ISCConstants.isc_tpb_wait);
         return db.startTransaction(tpb);
+    }
+
+    protected FbTransaction getOrCreateTransaction() throws SQLException {
+        if (transaction == null || transaction.getState() != TransactionState.ACTIVE) {
+            transaction = getTransaction();
+        }
+        return transaction;
     }
 
     protected void allocateStatement() throws SQLException {

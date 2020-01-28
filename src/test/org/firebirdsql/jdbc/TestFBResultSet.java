@@ -107,7 +107,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected Connection connection;
+    private Connection connection;
 
     @Before
     public void setUp() throws Exception {
@@ -801,6 +801,37 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         java.sql.DatabaseMetaData metaData = connection.getMetaData();
         try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
             assertEquals("Non-statement-based result set has no execution plan", "", rs.getExecutionPlan());
+        }
+    }
+
+    @Test
+    public void testGetExplainedExecutionPlan() throws Exception {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+        try (Statement stmt = connection.createStatement();
+             FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
+
+            String execPlan = rs.getExplainedExecutionPlan();
+            assertTrue("Detailed execution plan should reference test_table",
+                    execPlan.toUpperCase().contains("TEST_TABLE"));
+        }
+
+        try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
+             FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
+            String execPlan = rs.getExplainedExecutionPlan();
+            assertTrue("Detailed execution plan should reference test_table",
+                    execPlan.toUpperCase().contains("TEST_TABLE"));
+        }
+
+        // Ensure there isn't a crash when attempting to retrieve the
+        // detailed execution plan from a non-statement-based ResultSet
+        java.sql.DatabaseMetaData metaData = connection.getMetaData();
+        try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
+            assertEquals("Non-statement-based result set has no detailed execution plan", "",
+                    rs.getExplainedExecutionPlan());
         }
     }
 

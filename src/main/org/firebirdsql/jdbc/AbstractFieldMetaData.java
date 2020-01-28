@@ -24,10 +24,13 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.sql.Wrapper;
 import java.util.Map;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Base class for {@link org.firebirdsql.jdbc.FBResultSetMetaData} and
@@ -111,7 +114,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_INT64:
         case ISCConstants.SQL_DEC16:
         case ISCConstants.SQL_DEC34:
-        case ISCConstants.SQL_DEC_FIXED:
+        case ISCConstants.SQL_INT128:
             return true;
         default:
             return false;
@@ -170,6 +173,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
         case Types.DATE:
             return SQL_DATE_CLASS_NAME;
+
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            return OFFSET_TIME_CLASS_NAME;
+
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return OFFSET_DATE_TIME_CLASS_NAME;
 
         case Types.NUMERIC:
         case Types.DECIMAL:
@@ -235,7 +244,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_DEC16:
         case ISCConstants.SQL_DEC34:
             return "DECFLOAT";
-        case ISCConstants.SQL_DEC_FIXED:
+        case ISCConstants.SQL_INT128:
             if (sqlSubtype == SUBTYPE_NUMERIC) {
                 return "NUMERIC";
             } else {
@@ -253,6 +262,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return "TIME";
         case ISCConstants.SQL_TYPE_DATE:
             return "DATE";
+        case ISCConstants.SQL_TIMESTAMP_TZ:
+            return "TIMESTAMP WITH TIME ZONE";
+        case ISCConstants.SQL_TIME_TZ:
+            return "TIME WITH TIME ZONE";
         case ISCConstants.SQL_BLOB:
             if (sqlSubtype < 0) {
                 return "BLOB SUB_TYPE <0"; // TODO report actual subtype
@@ -331,10 +344,20 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return var.getLength();
         }
 
-        case Types.FLOAT:
-            return 7;
-        case Types.DOUBLE:
-            return 15;
+        case Types.FLOAT: {
+            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+                return 24;
+            } else {
+                return 7;
+            }
+        }
+        case Types.DOUBLE: {
+            if (supportInfoFor(connection).supportsFloatBinaryPrecision()) {
+                return 53;
+            } else {
+                return 15;
+            }
+        }
         case Types.INTEGER:
             return 10;
         case Types.BIGINT:
@@ -346,6 +369,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.TIME:
             return 8;
         case Types.TIMESTAMP:
+            return 19;
+        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            return 30;
+        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
             return 19;
         case Types.BOOLEAN:
             return 1;
@@ -368,8 +395,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_DEC16:
             return 16;
         case ISCConstants.SQL_DEC34:
-        case ISCConstants.SQL_DEC_FIXED:
             return 34;
+        case ISCConstants.SQL_INT128:
+            return 38;
         default:
             return 0;
         }
@@ -403,14 +431,13 @@ public abstract class AbstractFieldMetaData implements Wrapper {
      * information about fields in a database.
      */
     protected static class ExtendedFieldInfo {
-        String relationName;
-        String fieldName;
-        int fieldLength;
-        int fieldPrecision;
-        int fieldScale;
-        int fieldSubtype;
-        int characterLength;
-        int characterSetId;
+        final FieldKey fieldKey;
+        final int fieldPrecision;
+
+        public ExtendedFieldInfo(String relationName, String fieldName, int precision) {
+            fieldKey = new FieldKey(relationName, fieldName);
+            fieldPrecision = precision;
+        }
     }
 
     /**

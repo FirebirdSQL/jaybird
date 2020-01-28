@@ -53,5 +53,22 @@ public enum JaybirdType implements SQLType {
     public Integer getVendorTypeNumber() {
         return type;
     }
-    
+
+    /**
+     * Returns the {@code JaybirdType} for a {@link JaybirdTypeCodes} value.
+     *
+     * @param type
+     *         {@code JaybirdTypeCodes} value
+     * @return The {@code JaybirdType} constant
+     * @throws IllegalArgumentException
+     *         if this enum type has no constant with the specified {@code JaybirdTypeCodes} value
+     */
+    public static JaybirdType valueOf(int type) {
+        for (JaybirdType jaybirdType : values()) {
+            if (type == jaybirdType.type)
+                return jaybirdType;
+        }
+        throw new IllegalArgumentException("Type:" + type + " is not a valid JaybirdTypeCodes value.");
+    }
+
 }

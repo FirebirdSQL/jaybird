@@ -18,10 +18,18 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeResource;
 
 /**
  * Common implementation for client library and embedded database factory.
@@ -31,21 +39,114 @@ import java.sql.SQLException;
  */
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractNativeDatabaseFactory.class);
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private FbClientResource resource;
+
     @Override
-    public FbDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
-        final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
-                filterProperties(connectionProperties));
-        return jnaDatabaseConnection.identify();
+    public JnaDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
+        try {
+            final JnaDatabaseConnection jnaDatabaseConnection = new JnaDatabaseConnection(getClientLibrary(),
+                    filterProperties(connectionProperties));
+            return jnaDatabaseConnection.identify();
+        } catch (NativeLibraryLoadException e) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
+                    .cause(e)
+                    .toFlatSQLException();
+        }
     }
 
     @Override
-    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
-        final JnaServiceConnection jnaServiceConnection = new JnaServiceConnection(getClientLibrary(),
-                filterProperties(serviceProperties));
-        return jnaServiceConnection.identify();
+    public JnaService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+        try {
+            final JnaServiceConnection jnaServiceConnection = new JnaServiceConnection(getClientLibrary(),
+                    filterProperties(serviceProperties));
+            return jnaServiceConnection.identify();
+        } catch (NativeLibraryLoadException e) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
+                    .cause(e)
+                    .toFlatSQLException();
+        }
     }
 
-    protected abstract FbClientLibrary getClientLibrary();
+    /**
+     * Gets the current instance of the client library.
+     * <p>
+     * Most implementations should <b>not</b> override this method (contrary to previous versions of Jaybird), to ensure
+     * native libraries are properly disposed of.
+     * </p>
+     *
+     * @return Client library instance.
+     */
+    protected FbClientLibrary getClientLibrary() {
+        Lock readLock = rwLock.readLock();
+        readLock.lock();
+        if (resource == null) {
+            readLock.unlock();
+            Lock writeLock = rwLock.writeLock();
+            writeLock.lock();
+            try {
+                if (resource == null) {
+                    FbClientLibrary newLibrary = FbClientFeatureAccessHandler.decorateWithFeatureAccess(createClientLibrary());
+                    resource = registerNativeResource(new FbClientResource(newLibrary, this));
+                }
+                readLock.lock();
+            } finally {
+                writeLock.unlock();
+            }
+        }
+        try {
+            return resource.get();
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    /**
+     * Creates and initialize a new instance of the client library.
+     * <p>
+     * Instances should not be cached (caching - if any - is the responsibility of the caller).
+     * </p>
+     *
+     * @return new client library instance
+     * @since 4.0
+     */
+    protected abstract FbClientLibrary createClientLibrary();
+
+    /**
+     * Called when a resource registered by this factory is disposed.
+     *
+     * @param disposedResource
+     *         client resource to dispose
+     * @param disposeAction
+     *         Dispose action to run if {@code disposedResource} matches the current resource
+     * @since 4.0
+     */
+    final void disposing(FbClientResource disposedResource, Runnable disposeAction) {
+        if (disposedResource == null) {
+            throw new IllegalStateException("disposedResource was null");
+        }
+        Lock readLock = rwLock.readLock();
+        readLock.lock();
+        try {
+            if (resource != disposedResource) {
+                throw new IllegalStateException("disposedResource does not match current resource");
+            }
+        } finally {
+            readLock.unlock();
+        }
+        // NOTE: we accept the potential race that may occur here between the read and write lock
+        Lock writeLock = rwLock.writeLock();
+        writeLock.lock();
+        try {
+            resource = null;
+            disposeAction.run();
+        } finally {
+            writeLock.unlock();
+        }
+    }
 
     /**
      * Allows the database factory to perform modification of the attach properties before use.
@@ -54,11 +155,14 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
      * advised to copy the attach properties before modification and return this copy.
      * </p>
      *
-     * @param attachProperties Attach properties
-     * @param <T> Type of attach properties
+     * @param attachProperties
+     *         Attach properties
+     * @param <T>
+     *         Type of attach properties
      * @return Filtered properties
      */
     protected <T extends IAttachProperties<T>> T filterProperties(T attachProperties) {
         return attachProperties;
     }
+
 }

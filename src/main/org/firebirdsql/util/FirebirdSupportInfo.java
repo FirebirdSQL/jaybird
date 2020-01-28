@@ -135,6 +135,8 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * Support for decimal (and numeric) precision.
+     *
      * @param precision Precision
      * @return {@code true} when DECIMAL (and NUMERIC) support the supplied precision; 0 or negative precision always
      * return {@code false}
@@ -145,10 +147,21 @@ public final class FirebirdSupportInfo {
         } else if (precision <= 18) {
             // all Firebird versions
             return true;
-        } else if (precision <= 34) {
+        } else if (precision <= 38) {
+            // NOTE: Can result in problems for Firebird 4.0.0.1603 or earlier
             return isVersionEqualOrAbove(4, 0);
         }
         return false;
+    }
+
+    /**
+     * @return The maximum decimal and numeric precision
+     */
+    public int maxDecimalPrecision() {
+        if (isVersionEqualOrAbove(4, 0)) {
+            return 38;
+        }
+        return 18;
     }
 
     /**
@@ -203,6 +216,13 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsUpdateReturning() {
         return isVersionEqualOrAbove(2, 1);
+    }
+
+    /**
+     * @return {@code true} when {@code RETURNING *} and {@code RETURNING ref.*} is supported.
+     */
+    public boolean supportsReturningAll() {
+        return isVersionEqualOrAbove(4, 0);
     }
 
     /**
@@ -264,7 +284,7 @@ public final class FirebirdSupportInfo {
 
     /**
      * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
-     * (10-13 at this time).
+     * (10-15 at this time, although v14 is only implemented as part of v15).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -280,6 +300,12 @@ public final class FirebirdSupportInfo {
             return isVersionEqualOrAbove(2, 5);
         case 13:
             return isVersionEqualOrAbove(3, 0);
+        case 14:
+            // fall-through: Jaybird has only implemented protocol version 14 as part of version 15
+        case 15:
+            return isVersionEqualOrAbove(3, 0, 2);
+        case 16:
+            return isVersionEqualOrAbove(4, 0, 0);
         default:
             return false;
         }
@@ -404,6 +430,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when zlib wire compression is supported
+     */
+    public boolean supportsWireCompression() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
      * @return {@code true} when UDFs (User Defined Functions) - backed by a native library - are supported
      */
     public boolean supportsNativeUserDefinedFunctions() {
@@ -413,7 +446,7 @@ public final class FirebirdSupportInfo {
     /**
      * @return {@code true} when PSQL functions are supported
      */
-    public boolean supportsPSQLFunctions() {
+    public boolean supportsPsqlFunctions() {
         return isVersionEqualOrAbove(3, 0);
     }
 
@@ -472,7 +505,7 @@ public final class FirebirdSupportInfo {
         } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
             return 50;
         } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
-            return 50;
+            return 51;
         } else {
             return -1;
         }
@@ -483,6 +516,41 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsCaseSensitiveUserNames() {
         return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports explained (detailed) execution plans.
+     */
+    public boolean supportsExplainedExecutionPlan() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports {@code TIME(STAMP) WITH TIME ZONE}
+     */
+    public boolean supportsTimeZones() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports packages.
+     */
+    public boolean supportsPackages() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports FLOAT(p) with binary precision.
+     */
+    public boolean supportsFloatBinaryPrecision() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports statement timeouts.
+     */
+    public boolean supportsStatementTimeouts() {
+        return isVersionEqualOrAbove(4, 0);
     }
 
     /**
@@ -527,4 +595,5 @@ public final class FirebirdSupportInfo {
             throw new IllegalStateException(e);
         }
     }
+
 }

@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
@@ -41,6 +42,8 @@ import java.util.Set;
  * @since 3.0
  */
 public abstract class AbstractFbStatement implements FbStatement {
+
+    private static final long MAX_STATEMENT_TIMEOUT = 0xFF_FF_FF_FFL;
 
     /**
      * Set of states that will be reset to {@link StatementState#PREPARED} on transaction change
@@ -64,6 +67,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     private volatile RowDescriptor parameterDescriptor;
     private volatile RowDescriptor fieldDescriptor;
     private volatile FbTransaction transaction;
+    private long timeout;
 
     private final TransactionListener transactionListener = new TransactionListener() {
         @Override
@@ -103,6 +107,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     protected AbstractFbStatement(Object syncObject) {
         this.syncObject = syncObject;
+        exceptionListenerDispatcher.addListener(new StatementCancelledListener());
     }
 
     /**
@@ -183,6 +188,16 @@ public abstract class AbstractFbStatement implements FbStatement {
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    @Override
+    public final void ensureClosedCursor(boolean transactionEnd) throws SQLException {
+        if (getState().isCursorOpen()) {
+            if (log.isDebugEnabled()) {
+                log.debug("ensureClosedCursor has to close a cursor at", new RuntimeException("debugging stacktrace"));
+            }
+            closeCursor(transactionEnd);
         }
     }
 
@@ -310,7 +325,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
             if (resetAll) {
                 setParameterDescriptor(null);
-                setFieldDescriptor(null);
+                setRowDescriptor(null);
                 setType(StatementType.NONE);
             }
         }
@@ -346,8 +361,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    @Deprecated
     public final RowDescriptor getFieldDescriptor() {
-        return fieldDescriptor;
+        return getRowDescriptor();
     }
 
     /**
@@ -355,9 +371,26 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param fieldDescriptor
      *         Field descriptor
+     * @deprecated Use {@link #setRowDescriptor(RowDescriptor)} instead; will be removed in Jaybird 5
      */
+    @Deprecated
     protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
-        this.fieldDescriptor = fieldDescriptor;
+        setRowDescriptor(fieldDescriptor);
+    }
+
+    @Override
+    public final RowDescriptor getRowDescriptor() {
+        return fieldDescriptor;
+    }
+
+    /**
+     * Sets the (result set) row descriptor.
+     *
+     * @param rowDescriptor
+     *         Row descriptor
+     */
+    protected void setRowDescriptor(RowDescriptor rowDescriptor) {
+        this.fieldDescriptor = rowDescriptor;
     }
 
     /**
@@ -406,6 +439,28 @@ public abstract class AbstractFbStatement implements FbStatement {
     public final String getExecutionPlan() throws SQLException {
         final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
         return getSqlInfo(processor.getDescribePlanInfoItems(), getDefaultSqlInfoSize(), processor);
+    }
+
+    @Override
+    public final String getExplainedExecutionPlan() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkExplainedExecutionPlanSupport();
+            final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
+            return getSqlInfo(processor.getDescribeExplainedPlanInfoItems(), getDefaultSqlInfoSize(), processor);
+        }
+    }
+
+    private void checkExplainedExecutionPlanSupport() throws SQLException {
+        try {
+            checkStatementValid();
+            if (!getDatabase().getServerVersion().isEqualOrAbove(3, 0)) {
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported)
+                        .toFlatSQLException();
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
     }
 
     /**
@@ -522,6 +577,21 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
+    /**
+     * Performs the same check as {@link #checkStatementValid()}, but considers {@code ignoreState} as valid.
+     *
+     * @param ignoreState
+     *         The invalid state (see {@link #checkStatementValid()} to ignore
+     * @throws SQLException
+     *         When this statement is closed or in error state.
+     */
+    protected final void checkStatementValid(StatementState ignoreState) throws SQLException {
+        if (ignoreState == getState()) {
+            return;
+        }
+        checkStatementValid();
+    }
+
     @Override
     protected void finalize() throws Throwable {
         try {
@@ -576,6 +646,45 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     }
 
+    @Override
+    public void setTimeout(long statementTimeout) throws SQLException {
+        try {
+            if (statementTimeout < 0) {
+                throw new FbExceptionBuilder()
+                        .nonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
+                        .toFlatSQLException();
+            }
+            synchronized (getSynchronizationObject()) {
+                checkStatementValid(StatementState.NEW);
+                this.timeout = statementTimeout;
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public long getTimeout() throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkStatementValid(StatementState.NEW);
+            return timeout;
+        }
+    }
+
+    /**
+     * @return The timeout value, or {@code 0} if the timeout is larger than supported
+     * @throws SQLException
+     *         If the statement is invalid
+     */
+    protected long getAllowedTimeout() throws SQLException {
+        long timeout = getTimeout();
+        if (timeout > MAX_STATEMENT_TIMEOUT) {
+            return 0;
+        }
+        return timeout;
+    }
+
     /**
      * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
      * request is done using {@link #getStatementInfoRequestItems()}
@@ -588,7 +697,7 @@ public abstract class AbstractFbStatement implements FbStatement {
         InfoProcessor.StatementInfo statementInfo = infoProcessor.process(statementInfoResponse);
 
         setType(statementInfo.getStatementType());
-        setFieldDescriptor(statementInfo.getFields());
+        setRowDescriptor(statementInfo.getFields());
         setParameterDescriptor(statementInfo.getParameters());
     }
 
@@ -603,8 +712,51 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return {@code true} if this statement has at least one output field (either singleton or result set)
      */
     protected final boolean hasFields() {
-        RowDescriptor fieldDescriptor = getFieldDescriptor();
+        RowDescriptor fieldDescriptor = getRowDescriptor();
         return fieldDescriptor != null && fieldDescriptor.getCount() > 0;
+    }
+
+    /**
+     * Signals the start of an execute for this statement.
+     *
+     * @return {@code OperationCloseHandle} handle for the operation
+     */
+    protected final OperationCloseHandle signalExecute() {
+        return FbDatabaseOperation.signalExecute(getDatabase());
+    }
+
+    /**
+     * Signals the start of a fetch for this statement.
+     *
+     * @return {@code OperationCloseHandle} handle for the operation
+     */
+    protected final OperationCloseHandle signalFetch() {
+        return FbDatabaseOperation.signalFetch(getDatabase());
+    }
+
+    /**
+     * Listener to reset the statement state when it has been cancelled due to statement timeout.
+     */
+    private class StatementCancelledListener implements ExceptionListener {
+
+        @Override
+        public void errorOccurred(Object source, SQLException ex) {
+            if (source != AbstractFbStatement.this) {
+                return;
+            }
+            switch (ex.getErrorCode()) {
+            case ISCConstants.isc_cfg_stmt_timeout:
+            case ISCConstants.isc_att_stmt_timeout:
+            case ISCConstants.isc_req_stmt_timeout:
+                // Close cursor so statement can be reused
+                try {
+                    closeCursor();
+                } catch (SQLException e) {
+                    log.error("Unable to close cursor after statement timeout", e);
+                }
+                break;
+            }
+        }
     }
 
     public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {

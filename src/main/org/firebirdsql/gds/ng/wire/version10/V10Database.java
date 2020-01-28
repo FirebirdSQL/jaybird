@@ -584,7 +584,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
-        final DbCryptCallback dbCryptCallback = createDbCryptCallback();
+        final DbCryptCallback dbCryptCallback = connection.createDbCryptCallback();
         wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, new FbWireOperations.ProcessAttachCallback() {
             @Override
             public void processAttachResponse(GenericResponse response) {

@@ -50,7 +50,6 @@ final class FBBigDecimalField extends FBField {
 
     private static final BigDecimal BD_MAX_DOUBLE = new BigDecimal(MAX_DOUBLE_VALUE);
     private static final BigDecimal BD_MIN_DOUBLE = new BigDecimal(MIN_DOUBLE_VALUE);
-    private static final int MAX_DEC_FIXED_PRECISION = 34;
 
     private final FieldDataSize fieldDataSize;
 
@@ -275,31 +274,22 @@ final class FBBigDecimalField extends FBField {
                 return fieldDescriptor.getDatatypeCoder().encodeDouble(value.doubleValue());
             }
         },
-        DEC_FIXED {
+        INT128 {
             @Override
-            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException {
-                try {
-                    final Decimal128 decimal128 = fieldDescriptor.getDatatypeCoder().decodeDecimal128(fieldData);
-                    return decimal128.toBigDecimal();
-                } catch (ArithmeticException e) {
-                    // Values received should always be a normal value; this catch block is just a precaution
-                    throw new TypeConversionException(OVERFLOW_ERROR, e);
-                }
+            protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
+                BigInteger int128Value = fieldDescriptor.getDatatypeCoder().decodeInt128(fieldData);
+                return new BigDecimal(int128Value, -1 * fieldDescriptor.getScale());
             }
 
             @Override
             protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
-                try {
-                    final BigDecimal normalizedValue = value
-                            .setScale(-1 * fieldDescriptor.getScale(), RoundingMode.HALF_EVEN);
-                    if (normalizedValue.precision() > MAX_DEC_FIXED_PRECISION) {
-                        throw new TypeConversionException(OVERFLOW_ERROR);
-                    }
-                    final Decimal128 decimal128 = Decimal128.valueOf(normalizedValue);
-                    return fieldDescriptor.getDatatypeCoder().encodeDecimal128(decimal128);
-                } catch (ArithmeticException e) {
-                    throw new TypeConversionException(OVERFLOW_ERROR, e);
+                BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
+                if (unscaledValue.bitLength() > 127) {
+                    // value will not fit in a 16-byte byte array,
+                    // using 127 and not 128 because bitLength() does not include sign bit
+                    throw new TypeConversionException(INT128_CONVERSION_ERROR + ": " + OVERFLOW_ERROR);
                 }
+                return fieldDescriptor.getDatatypeCoder().encodeInt128(unscaledValue);
             }
         };
 
@@ -359,8 +349,8 @@ final class FBBigDecimalField extends FBField {
                 return LONG;
             case ISCConstants.SQL_DOUBLE:
                 return DOUBLE;
-            case ISCConstants.SQL_DEC_FIXED:
-                return DEC_FIXED;
+            case ISCConstants.SQL_INT128:
+                return INT128;
             default:
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
                         .messageParameter(fieldDescriptor.getType())

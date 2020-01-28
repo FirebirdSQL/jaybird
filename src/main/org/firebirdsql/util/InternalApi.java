@@ -23,7 +23,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Indicates that the annotated class, method or value is for internal use only.
+ * Indicates that the annotated package, class, method or value is for internal use only.
  * <p>
  * Future versions may radically change, move, or make inaccessible this type.
  * </p>

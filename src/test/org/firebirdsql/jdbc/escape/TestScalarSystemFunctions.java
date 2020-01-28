@@ -25,9 +25,9 @@ import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.junit.Assert.*;
 
 /**
@@ -42,15 +42,13 @@ public class TestScalarSystemFunctions {
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
     @Test
-    public void testDatabase() {
+    public void testDatabase() throws Exception {
         try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
             Statement stmt = con.createStatement();
-            stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
-            // TODO Consider implementing using RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')
-            fail("JDBC escape DATABASE() not supported");
-        } catch (SQLException ex) {
-            // TODO validate exception?
-            //fail("Validation of unsupported functions not yet implemented");
+            ResultSet rs = stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
+            assertTrue("Expected at least one row", rs.next());
+            assertThat("Unexpected result for function escape DATABASE()",
+                    rs.getString(1), endsWith(FBTestProperties.DB_NAME.toUpperCase()));
         }
     }
 

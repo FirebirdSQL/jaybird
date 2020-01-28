@@ -125,10 +125,14 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         try {
             synchronized (getSynchronizationObject()) {
                 if (!isOpen()) return;
-                checkDatabaseAttached();
-                checkTransactionActive();
                 try {
-                    closeImpl();
+                    if (isEndingTransaction()) {
+                        releaseResources();
+                    } else {
+                        checkDatabaseAttached();
+                        checkTransactionActive();
+                        closeImpl();
+                    }
                 } finally {
                     setOpen(false);
                 }
@@ -151,10 +155,14 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     public final void cancel() throws SQLException {
         try {
             synchronized (getSynchronizationObject()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
                 try {
-                    cancelImpl();
+                    if (isEndingTransaction()) {
+                        releaseResources();
+                    } else {
+                        checkDatabaseAttached();
+                        checkTransactionActive();
+                        cancelImpl();
+                    }
                 } finally {
                     setOpen(false);
                 }
@@ -171,6 +179,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected abstract void cancelImpl() throws SQLException;
 
+    /**
+     * Release Java resources held. This should not communicate with the Firebird server.
+     */
+    protected abstract void releaseResources();
+
     @Override
     public final Object getSynchronizationObject() {
         return syncObject;
@@ -184,11 +197,21 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             return;
         }
         switch (newState) {
+        case COMMITTING:
+        case ROLLING_BACK:
+        case PREPARING:
+            try {
+                close();
+            } catch (SQLException e) {
+                log.error("Exception while closing blob during transaction end", e);
+            }
+            break;
         case COMMITTED:
         case ROLLED_BACK:
             synchronized (getSynchronizationObject()) {
                 clearTransaction();
                 setOpen(false);
+                releaseResources();
             }
             break;
         default:
@@ -223,6 +246,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
                 open = false;
                 clearDatabase();
                 clearTransaction();
+                releaseResources();
             }
         }
         database.removeDatabaseListener(this);
@@ -231,6 +255,20 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     @Override
     public void warningReceived(FbDatabase database, SQLWarning warning) {
         // Do nothing
+    }
+
+    /**
+     * @return {@code true} if the transaction is committing, rolling back or preparing
+     */
+    protected final boolean isEndingTransaction() {
+        FbTransaction transaction = getTransaction();
+        if (transaction != null) {
+            TransactionState transactionState = transaction.getState();
+            return transactionState == TransactionState.COMMITTING
+                    || transactionState == TransactionState.ROLLING_BACK
+                    || transactionState == TransactionState.PREPARING;
+        }
+        return false;
     }
 
     /**

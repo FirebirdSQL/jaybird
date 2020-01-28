@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.jdbc.field.JdbcTypeConverter;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -48,7 +49,7 @@ class FBCachedFetcher implements FBFetcher {
             FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
         this.fetcherListener = fetcherListener;
         this.forwardOnly = forwardOnly;
-        final RowDescriptor rowDescriptor = stmt_handle.getFieldDescriptor();
+        final RowDescriptor rowDescriptor = stmt_handle.getRowDescriptor();
 
         // Check if there is blobs to catch
         final boolean[] isBlob = new boolean[rowDescriptor.getCount()];
@@ -132,9 +133,9 @@ class FBCachedFetcher implements FBFetcher {
         boolean hasBlobs = false;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final FieldDescriptor field = rowDescriptor.getFieldDescriptor(i);
-            isBlob[i] = FBField.isType(field, Types.BLOB) ||
-                    FBField.isType(field, Types.LONGVARBINARY) ||
-                    FBField.isType(field, Types.LONGVARCHAR);
+            isBlob[i] = JdbcTypeConverter.isJdbcType(field, Types.BLOB) ||
+                    JdbcTypeConverter.isJdbcType(field, Types.LONGVARBINARY) ||
+                    JdbcTypeConverter.isJdbcType(field, Types.LONGVARCHAR);
             if (isBlob[i])
                 hasBlobs = true;
         }

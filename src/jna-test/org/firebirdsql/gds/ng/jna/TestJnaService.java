@@ -42,6 +42,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Tests for JNA service
@@ -115,6 +116,7 @@ public class TestJnaService {
 
     @Test
     public void testBasicStatusVectorProcessing_wrongService() throws Exception {
+        assumeTrue("Incorrect service name ignored in Firebird 4+", getDefaultSupportInfo().isVersionBelow(4, 0));
         // set invalid database
         final String invalidServiceName = "doesnotexist";
         connectionInfo.setServiceName(invalidServiceName);

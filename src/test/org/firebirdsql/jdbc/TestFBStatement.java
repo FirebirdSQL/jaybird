@@ -407,8 +407,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
     @Test
     public void testSetQueryTimeout_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
+            expectedException.expect(SQLNonTransientException.class);
+            expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
 
             stmt.setQueryTimeout(-1);
         }
@@ -482,6 +482,44 @@ public class TestFBStatement extends FBJUnit4TestBase {
             ));
 
             stmt.getLastExecutionPlan();
+        }
+    }
+
+    /**
+     * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
+     */
+    @Test
+    public void testGetLastExplainedExecutionPlan_select() throws SQLException {
+        assumeTrue("Test requires explained execution plan support",
+                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+        
+        executeCreateTable(con, CREATE_TABLE);
+
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(SELECT_DATA);
+            rs.close();
+
+            String plan = stmt.getLastExplainedExecutionPlan();
+            assertThat("Expected non-empty detailed plan", plan, not(isEmptyOrNullString()));
+        }
+    }
+
+    /**
+     * Test retrieval of detailed execution plan ({@link FBStatement#getLastExplainedExecutionPlan()})
+     * when no statement has been executed yet.
+     * <p>
+     * Expected: exception
+     * </p>
+     */
+    @Test
+    public void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
+        try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
+            expectedException.expect(allOf(
+                    isA(SQLException.class),
+                    message(equalTo("No statement was executed, detailed plan cannot be obtained."))
+            ));
+
+            stmt.getLastExplainedExecutionPlan();
         }
     }
 

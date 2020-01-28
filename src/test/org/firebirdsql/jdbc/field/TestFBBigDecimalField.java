@@ -126,14 +126,14 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     @Test
-    public void getBigDecimalDecFixed() throws SQLException {
-        fieldDescriptor = createDecFixedFieldDescriptor(-8);
+    public void getBigDecimalInt128() throws SQLException {
+        fieldDescriptor = createInt128FieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        final String value = "47243233292513.00020001";
-        toReturnDecFixedExpectations(value);
+        toReturnInt128Expectations(new BigInteger("4724323329251300020001"));
 
+        final String value = "47243233292513.00020001";
         BigDecimal expectedValue = new BigDecimal(value);
-        assertEquals("Unexpected value for decFixed BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals("Unexpected value for Int128 BigDecimal", expectedValue, field.getBigDecimal());
     }
     
     @Test
@@ -254,38 +254,38 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     @Test
-    public void setBigDecimalDecFixed() throws SQLException {
-        fieldDescriptor = createDecFixedFieldDescriptor(-3);
+    public void setBigDecimalInt128() throws SQLException {
+        fieldDescriptor = createInt128FieldDescriptor(-3);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        final String value = "1234.567";
-        setDecFixedExpectations(value);
+        setInt128Expectations(new BigInteger("1234567"));
 
-        field.setBigDecimal(new BigDecimal("1234.567"));
+        final String value = "1234.567";
+        field.setBigDecimal(new BigDecimal(value));
     }
 
     @Test
-    public void setBigDecimalDecFixedTooHigh() throws SQLException {
+    public void setBigDecimalInt128TooHigh() throws SQLException {
         expectedException.expect(TypeConversionException.class);
-        fieldDescriptor = createDecFixedFieldDescriptor(-2);
+        fieldDescriptor = createInt128FieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        final String maxValue = "99999999999999999999999999999999.99";
+        final String maxValue = "9999999999999999999999999999999999999.99";
 
         field.setBigDecimal(new BigDecimal(maxValue).add(new BigDecimal("0.01")));
     }
 
     @Test
-    public void setBigDecimalDecFixedTooLow() throws SQLException {
+    public void setBigDecimalInt128TooLow() throws SQLException {
         expectedException.expect(TypeConversionException.class);
-        fieldDescriptor = createDecFixedFieldDescriptor(-2);
+        fieldDescriptor = createInt128FieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        final String minValue = "-99999999999999999999999999999999.99";
+        final String minValue = "-9999999999999999999999999999999999999.99";
 
         field.setBigDecimal(new BigDecimal(minValue).subtract(new BigDecimal("0.01")));
     }
 
     @Test
-    public void setBigDecimalDecFixedNull() throws SQLException {
-        fieldDescriptor = createDecFixedFieldDescriptor(-1);
+    public void setBigDecimalInt128Null() throws SQLException {
+        fieldDescriptor = createInt128FieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         setNullExpectations();
 
@@ -945,9 +945,9 @@ public class TestFBBigDecimalField extends BaseJUnit4TestFBField<FBBigDecimalFie
                 .toFieldDescriptor();
     }
 
-    private FieldDescriptor createDecFixedFieldDescriptor(int scale) {
+    private FieldDescriptor createInt128FieldDescriptor(int scale) {
         return new RowDescriptorBuilder(1, datatypeCoder)
-                .setType(ISCConstants.SQL_DEC_FIXED)
+                .setType(ISCConstants.SQL_INT128)
                 .setScale(scale)
                 .toFieldDescriptor();
     }

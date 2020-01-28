@@ -4,7 +4,8 @@
     <!-- runs the junit tests                                                -->
     <!-- =================================================================== -->
 
-    <target name="all-tests-pure-java" depends="jars">
+    <target name="all-tests-pure-java" depends="jars,all-tests-pure-java-only"/>
+    <target name="all-tests-pure-java-only" depends="init">
 
         <!-- Override JUnit defaults -->
 
@@ -316,6 +317,10 @@
 
     <target name="one-test-embedded" depends="jars"
             description="Execute a single test.">
+
+        <!-- Override JUnit defaults -->
+        <property name="test.gds_type" value="EMBEDDED"/>
+        
         <mkdir dir="${test.db.dir}"/>
         <mkdir dir="${build.reports.embedded}"/>
         <mkdir dir="${build.testlog}"/>
@@ -329,12 +334,14 @@
                jvm="${junit.jvm}">
 
             <jvmarg line="${junit.jvm.options}"/>
-            <j line="${java.module.arg}"/>
+            <jvmarg line="${java.module.arg}"/>
             <sysproperty key="jbosstest.deploy.dir" file="${build.lib}"/>
             <sysproperty key="test.db.dir" value="${test.db.dir}"/>
             <sysproperty key="test.db.host" value="${test.db.host}"/>
             <sysproperty key="test.db.port" value="${test.db.port}"/>
             <sysproperty key="test.db.lc_ctype" value="${test.db.lc_ctype}"/>
+            <sysproperty key="test.gds_type" value="EMBEDDED"/>
+            <sysproperty key="jna.library.path" value="${test.jna.library.path}"/>
 
             <classpath>
                 <pathelement location="${build.classes}"/>
@@ -366,7 +373,8 @@
     </target>
 
 
-    <target name="tests-report-html-pure-java" depends="all-tests-pure-java">
+    <target name="tests-report-html-pure-java" depends="all-tests-pure-java,tests-report-html-pure-java-only"/>
+    <target name="tests-report-html-pure-java-only" depends="init">
         <mkdir dir="${build.reports.pure_java}/html"/>
 
         <junitreport todir="${build.reports.pure_java}">

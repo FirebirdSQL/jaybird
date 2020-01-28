@@ -91,11 +91,10 @@ public class FBEscapedFunctionHelper {
         functionMap.put("SOUNDEX", null);
 
         // Time and date
-        functionMap.put("DAYNAME", null); // TODO Implement with DECODE or CASE?
-        functionMap.put("MONTHNAME", null); // TODO Implement with DECODE or CASE?
+        // ...none
 
         // System
-        functionMap.put("DATABASE", null); // TODO Implement with RDB$GET_CONTEXT
+        // ...none
 
         FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
     }
@@ -170,6 +169,14 @@ public class FBEscapedFunctionHelper {
         functionMap.put("CURRENT_TIMESTAMP", currentTimestamp);
         functionMap.put("CURDATE", currentDate);
         functionMap.put("CURTIME", currentTime);
+        functionMap.put("DAYNAME", new PatternSQLFunction("trim(decode(extract(weekday from {0}), "
+                + "0, ''Sunday'', "
+                + "1, ''Monday'', "
+                + "2, ''Tuesday'', "
+                + "3, ''Wednesday'', "
+                + "4, ''Thursday'', "
+                + "5, ''Friday'', "
+                + "6, ''Saturday''))"));
         functionMap.put("DAYOFMONTH", new PatternSQLFunction("EXTRACT(DAY FROM {0})"));
         functionMap.put("DAYOFWEEK", new PatternSQLFunction("EXTRACT(WEEKDAY FROM {0})+1"));
         functionMap.put("DAYOFYEAR", new PatternSQLFunction("EXTRACT(YEARDAY FROM {0})+1"));
@@ -177,6 +184,19 @@ public class FBEscapedFunctionHelper {
         functionMap.put("HOUR", new PatternSQLFunction("EXTRACT(HOUR FROM {0})"));
         functionMap.put("MINUTE", new PatternSQLFunction("EXTRACT(MINUTE FROM {0})"));
         functionMap.put("MONTH", new PatternSQLFunction("EXTRACT(MONTH FROM {0})"));
+        functionMap.put("MONTHNAME", new PatternSQLFunction("trim(decode(extract(month from {0}), "
+                + "1, ''January'', "
+                + "2, ''February'', "
+                + "3, ''March'', "
+                + "4, ''April'', "
+                + "5, ''May'', "
+                + "6, ''June'', "
+                + "7, ''July'', "
+                + "8, ''August'', "
+                + "9, ''September'', "
+                + "10, ''October'', "
+                + "11, ''November'', "
+                + "12, ''December''))"));
         functionMap.put("NOW", currentTimestamp);
         functionMap.put("QUARTER", new PatternSQLFunction("(1+(EXTRACT(MONTH FROM {0})-1)/3)"));
         functionMap.put("SECOND", new PatternSQLFunction("EXTRACT(SECOND FROM {0})"));
@@ -189,7 +209,8 @@ public class FBEscapedFunctionHelper {
     }
 
     private static Map<String, SQLFunction> getSystemFunctions() {
-        Map<String, SQLFunction> functionMap = new HashMap<>(2, 1.0f);
+        Map<String, SQLFunction> functionMap = new HashMap<>(4, 1.0f);
+        functionMap.put("DATABASE", new ConstantSQLFunction("RDB$GET_CONTEXT('SYSTEM', 'DB_NAME')"));
         functionMap.put("IFNULL", new PatternSQLFunction("COALESCE({0}, {1})"));
         functionMap.put("USER", new ConstantSQLFunction("USER"));
 

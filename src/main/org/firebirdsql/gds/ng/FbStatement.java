@@ -70,8 +70,15 @@ public interface FbStatement extends ExceptionListenable {
 
     /**
      * @return descriptor of the fields returned by this statement
+     * @deprecated Use {@link #getRowDescriptor()} instead; will be removed in Jaybird 5
      */
+    @Deprecated
     RowDescriptor getFieldDescriptor();
+
+    /**
+     * @return descriptor of the row returned by this statement
+     */
+    RowDescriptor getRowDescriptor();
 
     /**
      * @return The statement type
@@ -113,7 +120,8 @@ public interface FbStatement extends ExceptionListenable {
      * implementations may opt to not close the cursor on the server if the server closes the cursor automatically.
      * </p>
      *
-     * @param transactionEnd Close is in response to a transaction end.
+     * @param transactionEnd
+     *         Close is in response to a transaction end.
      * @throws SQLException
      */
     void closeCursor(boolean transactionEnd) throws SQLException;
@@ -229,6 +237,13 @@ public interface FbStatement extends ExceptionListenable {
     String getExecutionPlan() throws SQLException;
 
     /**
+     * @return The detailed execution plan of the currently prepared statement
+     * @throws SQLException
+     *         If this statement is closed.
+     */
+    String getExplainedExecutionPlan() throws SQLException;
+
+    /**
      * Retrieves the SQL counts for the last execution of this statement.
      * <p>
      * The retrieved SQL counts are also notified to all registered {@link StatementListener}s.
@@ -259,6 +274,58 @@ public interface FbStatement extends ExceptionListenable {
      * @return A potentially cached empty row descriptor for this statement or database.
      */
     RowDescriptor emptyRowDescriptor();
+
+    /**
+     * Ensures that the statement cursor is closed. Resets a statement so it is ready to be reused for re-execute or
+     * prepare.
+     * <p>
+     * Implementations should only close an open cursor and log this fact with a stacktrace on debug. This is a stopgap
+     * measure for situations where the code using this statement handle has not been able to properly close the
+     * cursor.
+     * </p>
+     *
+     * @param transactionEnd
+     *         Close is in response to a transaction end
+     * @throws SQLException
+     *         If this statement is closed or the cursor could not be closed.
+     * @since 3.0.6
+     */
+    void ensureClosedCursor(boolean transactionEnd) throws SQLException;
+
+    /**
+     * Sets the statement timeout.
+     * <p>
+     * The statement timeout value is ignored in implementations that do not support timeouts. If the provided
+     * timeout value is greater than supported (eg greater than ‭4294967295‬ milliseconds on Firebird 4), the
+     * implementation should behave as if zero ({@code 0}) was set, but still report the original value.
+     * </p>
+     * <p>
+     * The configured timeout only affects subsequent executes on this statement. The timeout includes time spent
+     * between reading from the result set.
+     * </p>
+     *
+     * @param timeoutMillis
+     *         Timeout value in milliseconds
+     * @throws SQLException
+     *         If the value is less than zero, this statement is closed, or a database access error occurs
+     * @since 4.0
+     */
+    void setTimeout(long timeoutMillis) throws SQLException;
+
+    /**
+     * Gets the current statement timeout for this statement.
+     * <p>
+     * This method will only return the current statement timeout value for this method, it will not consider attachment
+     * or connection level timeouts. This is an implementation decision that might change in a point release.
+     * </p>
+     *
+     * @return The configured timeout in milliseconds; read the documentation in {@link #setTimeout(long)}
+     * @throws SQLException
+     *         If this statement is closed, or a database access error occurs
+     * @see #setTimeout(long)
+     * @since 4.0
+     */
+    long getTimeout() throws SQLException;
 
     /**
      * Creates a batch that call prepared statement to get a metadata.

@@ -87,8 +87,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setBlobBufferSize(length);
     }
     
-    
-    
     /**
      * Get name of the database. 
      * 
@@ -411,6 +409,56 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setAuthPlugins(String authPlugins) {
         mcf.setAuthPlugins(authPlugins);
+    }
+
+    @Override
+    public String getGeneratedKeysEnabled() {
+        return mcf.getGeneratedKeysEnabled();
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        mcf.setGeneratedKeysEnabled(generatedKeysEnabled);
+    }
+
+    @Override
+    public String getDataTypeBind() {
+        return mcf.getDataTypeBind();
+    }
+
+    @Override
+    public void setDataTypeBind(String dataTypeBind) {
+        mcf.setDataTypeBind(dataTypeBind);
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return mcf.getSessionTimeZone();
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        mcf.setSessionTimeZone(sessionTimeZone);
+    }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return mcf.isIgnoreProcedureType();
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        mcf.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return mcf.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        mcf.setWireCompression(wireCompression);
     }
 
     /*

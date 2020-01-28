@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractAttachProperties<T extends IAttachProperties> implements IAttachProperties<T> {
+public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
     private String serverName = IAttachProperties.DEFAULT_SERVER_NAME;
     private int portNumber = IAttachProperties.DEFAULT_PORT;
@@ -41,6 +41,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     private WireCrypt wireCrypt = WireCrypt.DEFAULT;
     private String dbCryptConfig;
     private String authPlugins;
+    private boolean wireCompression;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -51,7 +52,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
      * @param src
      *         Source to copy from
      */
-    protected AbstractAttachProperties(IAttachProperties src) {
+    protected AbstractAttachProperties(IAttachProperties<T> src) {
         if (src != null) {
             serverName = src.getServerName();
             portNumber = src.getPortNumber();
@@ -66,6 +67,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
             wireCrypt = src.getWireCrypt();
             dbCryptConfig = src.getDbCryptConfig();
             authPlugins = src.getAuthPlugins();
+            wireCompression = src.isWireCompression();
         }
     }
 
@@ -215,6 +217,17 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties> impl
     @Override
     public void setAuthPlugins(String authPlugins) {
         this.authPlugins = authPlugins;
+        dirtied();
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return wireCompression;
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        this.wireCompression = wireCompression;
         dirtied();
     }
 

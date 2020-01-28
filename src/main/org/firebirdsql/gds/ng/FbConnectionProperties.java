@@ -27,6 +27,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.TimeZone;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -47,6 +48,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     private int pageCacheSize;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
+    private String sessionTimeZone = TimeZone.getDefault().getID();
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp(
             DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
             EncodingFactory.getPlatformEncoding());
@@ -71,6 +73,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             pageCacheSize = src.getPageCacheSize();
             resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
             columnLabelForName = src.isColumnLabelForName();
+            sessionTimeZone = src.getSessionTimeZone();
             for (Parameter parameter : src.getExtraDatabaseParameters()) {
                 parameter.copyTo(extraDatabaseParameters, null);
             }
@@ -144,6 +147,18 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        this.sessionTimeZone = sessionTimeZone != null ? sessionTimeZone : TimeZone.getDefault().getID();
+        dirtied();
+
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return sessionTimeZone;
+    }
+
+    @Override
     public DatabaseParameterBuffer getExtraDatabaseParameters() {
         return extraDatabaseParameters;
     }
@@ -174,7 +189,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Deprecated
     public void fromDpb(DatabaseParameterBuffer dpb) throws SQLException {
         for (Parameter parameter : dpb) {
-            switch (parameter.getType()) {
+            final int parameterType = parameter.getType();
+            switch (parameterType) {
             case isc_dpb_user_name:
                 setUser(parameter.getValueAsString());
                 break;
@@ -198,6 +214,9 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                 break;
             case isc_dpb_connect_timeout:
                 setConnectTimeout(parameter.getValueAsInt());
+                break;
+            case isc_dpb_session_time_zone:
+                setSessionTimeZone(parameter.getValueAsString());
                 break;
             case isc_dpb_so_timeout:
                 setSoTimeout(parameter.getValueAsInt());
@@ -228,15 +247,31 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             case isc_dpb_auth_plugin_list:
                 setAuthPlugins(parameter.getValueAsString());
                 break;
+            case isc_dpb_wire_compression:
+                setWireCompression(true);
+                break;
             case isc_dpb_utf8_filename:
                 // Filter out, handled explicitly in protocol implementation
                 break;
             case isc_dpb_specific_auth_data:
                 break;
-            default:
-                log.warn(String.format("Unknown or unsupported parameter with type %d added to extra database parameters", parameter.getType()));
-                parameter.copyTo(getExtraDatabaseParameters(), null);
+            case isc_dpb_process_id:
+            case isc_dpb_process_name:
+            case isc_dpb_set_bind:
+            case isc_dpb_decfloat_round:
+            case isc_dpb_decfloat_traps:
+                parameter.copyTo(extraDatabaseParameters, null);
                 dirtied();
+                break;
+            default:
+                if (parameterType < jaybirdMinIscDpbValue || parameterType > jaybirdMaxIscDpbValue) {
+                    log.warn(String.format(
+                            "Unknown or unsupported parameter with type %d added to extra database parameters",
+                            parameterType));
+                }
+                parameter.copyTo(extraDatabaseParameters, null);
+                dirtied();
+                break;
             }
         }
     }

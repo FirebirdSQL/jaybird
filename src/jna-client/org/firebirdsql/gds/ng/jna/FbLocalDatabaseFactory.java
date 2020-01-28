@@ -45,6 +45,11 @@ public class FbLocalDatabaseFactory extends AbstractNativeDatabaseFactory {
         return attachPropertiesCopy;
     }
 
+    @Override
+    protected final FbClientLibrary createClientLibrary() {
+        throw new UnsupportedOperationException("Access should be delegated to FbClientDatabaseFactory");
+    }
+
     public static FbLocalDatabaseFactory getInstance() {
         return INSTANCE;
     }

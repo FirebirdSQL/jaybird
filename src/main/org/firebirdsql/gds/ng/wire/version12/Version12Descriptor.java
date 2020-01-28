@@ -49,6 +49,7 @@ public final class Version12Descriptor extends AbstractProtocolDescriptor implem
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
+                false,
                 3);
     }
 

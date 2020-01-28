@@ -68,7 +68,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
             isc_info_end };
     // @formatter:on
 
-    private final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
+    protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
     private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<FbTransaction>());
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override

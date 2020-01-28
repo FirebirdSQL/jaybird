@@ -238,26 +238,27 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     protected void closeImpl() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.isc_close_blob(statusVector, getJnaHandle());
-                processStatusVector();
-            } finally {
-                byteBuffer = null;
-            }
+        try {
+            clientLibrary.isc_close_blob(statusVector, getJnaHandle());
+            processStatusVector();
+        } finally {
+            releaseResources();
         }
     }
 
     @Override
     protected void cancelImpl() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
-                processStatusVector();
-            } finally {
-                byteBuffer = null;
-            }
+        try {
+            clientLibrary.isc_cancel_blob(statusVector, getJnaHandle());
+            processStatusVector();
+        } finally {
+            releaseResources();
         }
+    }
+
+    @Override
+    protected void releaseResources() {
+        byteBuffer = null;
     }
 
     private void processStatusVector() throws SQLException {

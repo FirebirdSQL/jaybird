@@ -458,5 +458,114 @@ public interface FirebirdConnectionProperties {
      * @since 4.0
      */
     void setAuthPlugins(String authPlugins);
-    
+
+    /**
+     * Get the {@code generatedKeysEnabled} configuration.
+     *
+     * @return configuration value for {@code generatedKeysEnabled}, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getGeneratedKeysEnabled();
+
+    /**
+     * Sets the {@code generatedKeysEnabled} configuration.
+     *
+     * @param generatedKeysEnabled
+     *         Generated keys support configuration: {@code default} (or null/empty), {@code disabled}, {@code ignored},
+     *         or a list of statement types to enable (possible values: {@code insert}, {@code update}, {@code delete},
+     *         {@code update_or_insert}, {@code merge})
+     */
+    void setGeneratedKeysEnabled(String generatedKeysEnabled);
+
+    /**
+     * Get the {@code dataTypeBind} configuration.
+     *
+     * @return configuration value for {@code dataTypeBind}, or {@code null} for driver default
+     * @since 4.0
+     */
+    String getDataTypeBind();
+
+    /**
+     * Sets the {@code dataTypeBind} configuration.
+     * <p>
+     * If the value is explicitly set to a non-null value and the connected server is Firebird 4 or higher, this will
+     * configure the data type binding with the specified values using {@code isc_dpb_set_bind}, which is equivalent to
+     * executing {@code SET BIND} statements with the values.
+     * </p>
+     * <p>
+     * See also Firebird documentation for {@code SET BIND}.
+     * </p>
+     *
+     * @param dataTypeBind
+     *         Firebird 4+ data type bind configuration, a semicolon-separated list of {@code <from-type> TO <to-type>}
+     * @since 4.0
+     */
+    void setDataTypeBind(String dataTypeBind);
+
+    /**
+     * Get the {@code sessionTimeZone}.
+     *
+     * @return value for {@code sessionTimeZone}, or {@code null} for driver default (JVM default time zone)
+     * @since 4.0
+     */
+    String getSessionTimeZone();
+
+    /**
+     * Sets the {@code sessionTimeZone}.
+     *
+     * @param sessionTimeZone
+     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
+     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
+     * @since 4.0
+     */
+    void setSessionTimeZone(String sessionTimeZone);
+
+    /**
+     * Get the value for {@code ignoreProcedureType}.
+     *
+     * @return value for {@code ignoreProcedureType}
+     * @since 3.0.6
+     */
+    boolean isIgnoreProcedureType();
+
+    /**
+     * Sets the value {@code ignoreProcedureType}.
+     * <p>
+     * When set to true, the {@link java.sql.CallableStatement} implementation in Jaybird will ignore metadata
+     * information about the stored procedure type and default to using {@code EXECUTE PROCEDURE}, unless the type is
+     * explicitly set using {@link FirebirdCallableStatement#setSelectableProcedure(boolean)}. This can be useful in
+     * situations where a stored procedure is selectable, but tooling or code expects an executable stored procedure.
+     * </p>
+     *
+     * @param ignoreProcedureType
+     *         {@code true} Ignore procedure type
+     * @since 3.0.6
+     */
+    void setIgnoreProcedureType(boolean ignoreProcedureType);
+
+    /**
+     * Get if wire compression should be enabled.
+     * <p>
+     * Wire compression requires Firebird 3 or higher, and the server must have the zlib library. If compression cannot
+     * be negotiated, the connection will be made without wire compression.
+     * </p>
+     * <p>
+     * This property will be ignored for native connections. For native connections, the configuration in
+     * {@code firebird.conf} read by the client library will be used.
+     * </p>
+     *
+     * @return {@code true} wire compression enabled
+     * @since 4.0
+     */
+    boolean isWireCompression();
+
+    /**
+     * Sets if the connection should try to enable wire compression.
+     *
+     * @param wireCompression
+     *         {@code true} enable wire compression, {@code false} disable wire compression (the default)
+     * @see #isWireCompression()
+     * @since 4.0
+     */
+    void setWireCompression(boolean wireCompression);
 }

@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,9 +38,7 @@ import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForCon
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBBlob}.
@@ -461,6 +460,152 @@ public class TestFBBlob extends FBJUnit4TestBase {
         expectedException.expect(IOException.class);
         expectedException.expectMessage("Output stream is already closed.");
         binaryStream.write(1);
+    }
+
+    /**
+     * Checks if the blob cannot be used after transaction end.
+     */
+    @Test
+    public void testBlobUseAfterCommit_notAllowed() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            Blob blob = rs.getBlob(1);
+
+            connection.commit();
+
+            expectedException.expect(SQLException.class);
+            expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_blobClosed));
+            blob.getBinaryStream();
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    /**
+     * Checks if the cached blob can still be used after transaction end.
+     */
+    @Test
+    public void testCachedBlobUseAfterCommit_allowed() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT bin_data FROM test_blob",  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            Blob blob = rs.getBlob(1);
+
+            connection.commit();
+
+            InputStream binaryStream = blob.getBinaryStream();
+            assertEquals(1, binaryStream.read());
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    /**
+     * A stream obtained from a Blob instance should remain open after result set next.
+     */
+    @Test
+    public void testStreamFromBlobAfterResultSetNext_shouldRemainOpen() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+
+            Blob blob = rs.getBlob(1);
+            InputStream binaryStream = blob.getBinaryStream();
+
+            rs.next();
+
+            assertEquals(1, binaryStream.read());
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    /**
+     * Bytes from a Blob instance should remain available after result set next.
+     */
+    @Test
+    public void testBytesFromCachedBlobAfterResultSetNext_shouldRemainAvailable() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT bin_data FROM test_blob",  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+
+            Blob blob = rs.getBlob(1);
+
+            rs.next();
+
+            assertNotNull(blob.getBytes(1, 10));
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
+    }
+
+    /**
+     * A stream obtained from the result set should be closed after result set next.
+     */
+    @Test
+    public void testStreamFromResultSetAfterResultSetNext_shouldBeClosed() throws Exception {
+        Connection connection = getConnectionViaDriverManager();
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            populateBlob(connection, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 });
+
+            connection.setAutoCommit(false);
+
+            // Intentionally not closing the created statement, result set and blob
+            PreparedStatement stmt = connection.prepareStatement("SELECT bin_data FROM test_blob");
+            ResultSet rs = stmt.executeQuery();
+            assertTrue("Expected at least one row", rs.next());
+            InputStream binaryStream = rs.getBinaryStream(1);
+
+            rs.next();
+
+            expectedException.expect(IOException.class);
+            expectedException.expectMessage("Input stream is already closed.");
+            //noinspection ResultOfMethodCallIgnored
+            binaryStream.read();
+        } finally {
+            // This should not trigger an exception
+            connection.close();
+        }
     }
 
     private void populateBlob(Connection conn, byte[] bytes) throws SQLException {
