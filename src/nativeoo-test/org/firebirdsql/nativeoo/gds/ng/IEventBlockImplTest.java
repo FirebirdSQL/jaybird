@@ -7,12 +7,9 @@ import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 
@@ -81,7 +78,7 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
         db = (IDatabaseImpl) factory.connect(connectionInfo);
         db.attach();
 
-        IEventBlockImpl eventBlock = (IEventBlockImpl)db.createEventHandle("TEST_EVENT", new EventHandler() {
+        IEventImpl eventBlock = (IEventImpl)db.createEventHandle("TEST_EVENT", new EventHandler() {
             @Override
             public void eventOccurred(EventHandle eventHandle) {
             }

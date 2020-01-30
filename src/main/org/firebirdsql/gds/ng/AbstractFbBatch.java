@@ -207,6 +207,28 @@ public abstract class AbstractFbBatch implements FbBatch {
         getField(parameterIndex).setString(x);
     }
 
+    /**
+     * Sets the designated parameter to the given String value. This is a
+     * workaround for the ambiguous "operation was cancelled" response from the
+     * server for when an oversized string is set for a limited-size field. This
+     * method sets the string parameter without checking size constraints.
+     *
+     * @param parameterIndex
+     *            the first parameter is 1, the second is 2, ...
+     * @param x
+     *            The String value to be set
+     * @throws SQLException
+     *             if a database access occurs
+     */
+    public void setStringForced(int parameterIndex, String x) throws SQLException {
+        FBField field = getField(parameterIndex);
+        if (field instanceof FBWorkaroundStringField) {
+            ((FBWorkaroundStringField) field).setStringForced(x);
+        } else {
+            field.setString(x);
+        }
+    }
+
     public void setTime(int parameterIndex, Time x) throws SQLException {
         getField(parameterIndex).setTime(x);
     }
@@ -268,6 +290,48 @@ public abstract class AbstractFbBatch implements FbBatch {
     }
 
     /**
+     * Method is no longer supported since Jaybird 3.0.
+     * <p>
+     * For old behavior use {@link #setBinaryStream(int, InputStream, int)}. For JDBC suggested behavior,
+     * use {@link #setCharacterStream(int, Reader, int)}.
+     * </p>
+     *
+     * @throws SQLFeatureNotSupportedException Always
+     * @deprecated
+     */
+    @Deprecated
+    public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
+        throw new SQLFeatureNotSupportedException(UNICODE_STREAM_NOT_SUPPORTED);
+    }
+
+    /**
+     * <p>
+     * Jaybird does not support array types.
+     * </p>
+     */
+    public void setURL(int parameterIndex, URL url) throws SQLException {
+        throw new FBDriverNotCapableException("Type URL not supported");
+    }
+
+    /**
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(int, Reader, long)}.
+     * </p>
+     */
+    public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
+        setCharacterStream(parameterIndex, value, length);
+    }
+
+    /**
+     * <p>
+     * Implementation note: This method behaves exactly the same as {@link #setCharacterStream(int, Reader)}.
+     * </p>
+     */
+    public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
+        setCharacterStream(parameterIndex, value);
+    }
+
+    /**
      * <p>
      * Implementation note: This method behaves exactly the same as {@link #setString(int, String)}.
      * </p>
@@ -301,6 +365,9 @@ public abstract class AbstractFbBatch implements FbBatch {
         setObject(parameterIndex, x);
     }
 
+    public void setRef(int i, Ref x) throws SQLException {
+        throw new FBDriverNotCapableException("Type REF not supported");
+    }
 
     protected void setBlob(int parameterIndex, Blob blob) throws SQLException {
         getField(parameterIndex).setBlob((FBBlob) blob);
@@ -308,5 +375,17 @@ public abstract class AbstractFbBatch implements FbBatch {
 
     protected void setClob(int parameterIndex, Clob clob) throws SQLException {
         getField(parameterIndex).setClob((FBClob) clob);
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
+        getField(parameterIndex).setCharacterStream(reader, length);
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
+        getField(parameterIndex).setCharacterStream(reader, length);
+    }
+
+    public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
+        getField(parameterIndex).setCharacterStream(reader);
     }
 }

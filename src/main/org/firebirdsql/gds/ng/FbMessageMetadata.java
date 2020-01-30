@@ -1,7 +1,5 @@
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
-
 import java.sql.SQLException;
 
 /**
@@ -42,5 +40,5 @@ public interface FbMessageMetadata {
 
     int getType(int index) throws SQLException;
 
-    IMetadataBuilder getBuilder() throws SQLException;
+    FbMetadataBuilder getBuilder() throws SQLException;
 }

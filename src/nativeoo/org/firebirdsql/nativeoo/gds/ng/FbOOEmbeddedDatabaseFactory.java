@@ -49,7 +49,7 @@ public class FbOOEmbeddedDatabaseFactory extends AbstractNativeOODatabaseFactory
             final List<Throwable> throwables = new ArrayList<>();
             for (String libraryName : LIBRARIES_TO_TRY) {
                 try {
-                    return Native.loadLibrary(libraryName, FbClientLibrary.class);
+                    return Native.load(libraryName, FbInterface.class);
                 } catch (UnsatisfiedLinkError e) {
                     throwables.add(e);
                     log.debug("Attempt to load " + libraryName + " failed", e);

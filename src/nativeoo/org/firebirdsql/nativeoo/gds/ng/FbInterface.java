@@ -13,6 +13,12 @@ import org.firebirdsql.jna.fbclient.*;
  */
 public interface FbInterface extends FbClientLibrary
 {
+	/**
+	 * Original signature : <code>extern "C" IMaster* ISC_EXPORT fb_get_master_interface();</code><br>
+	 * <i>native declaration : firebird/include/firebird/interface.h:364</i>
+	 */
+	IMaster fb_get_master_interface();
+
 	public static interface IVersionedIntf
 	{
 	}
@@ -101,6 +107,7 @@ public interface FbInterface extends FbClientLibrary
 		public long asInteger(int key);
 		public String asString(int key);
 		public boolean asBoolean(int key);
+		public int getVersion(IStatus status);
 	}
 
 	public static interface IPluginConfigIntf extends IReferenceCountedIntf
@@ -134,9 +141,7 @@ public interface FbInterface extends FbClientLibrary
 		public static int TYPE_WIRE_CRYPT = 8;
 		public static int TYPE_DB_CRYPT = 9;
 		public static int TYPE_KEY_HOLDER = 10;
-		public static int TYPE_CRYPTO_API = 11;
-		public static int TYPE_LDAP = 12;
-		public static int TYPE_COUNT = 13;
+		public static int TYPE_COUNT = 11;
 
 		public void registerPluginFactory(int pluginType, String defaultName, IPluginFactory factory);
 		public void registerModule(IPluginModule cleanup);
@@ -332,6 +337,12 @@ public interface FbInterface extends FbClientLibrary
 		public void getStatus(IStatus status, IStatus to, int pos);
 	}
 
+	public static interface IReplicatorIntf extends IReferenceCountedIntf
+	{
+		public void process(IStatus status, int length, byte[] data);
+		public void close(IStatus status);
+	}
+
 	public static interface IRequestIntf extends IReferenceCountedIntf
 	{
 		public void receive(IStatus status, int level, int msgType, int length, com.sun.jna.Pointer message);
@@ -346,16 +357,6 @@ public interface FbInterface extends FbClientLibrary
 	public static interface IEventsIntf extends IReferenceCountedIntf
 	{
 		public void cancel(IStatus status);
-	}
-
-	public static interface IEventBlockIntf extends IDisposableIntf
-	{
-		public int getLength();
-		public com.sun.jna.Pointer getValues();
-		public com.sun.jna.Pointer getBuffer();
-		public int getCount();
-		public com.sun.jna.Pointer getCounters();
-		public void counts();
 	}
 
 	public static interface IAttachmentIntf extends IReferenceCountedIntf
@@ -383,6 +384,7 @@ public interface FbInterface extends FbClientLibrary
 		public int getStatementTimeout(IStatus status);
 		public void setStatementTimeout(IStatus status, int timeOut);
 		public IBatch createBatch(IStatus status, ITransaction transaction, int stmtLength, String sqlStmt, int dialect, IMessageMetadata inMetadata, int parLength, byte[] par);
+		public IReplicator createReplicator(IStatus status);
 	}
 
 	public static interface IServiceIntf extends IReferenceCountedIntf
@@ -443,8 +445,6 @@ public interface FbInterface extends FbClientLibrary
 	{
 		public String getLogin();
 		public String getPassword();
-		public String getCertificate();
-		public String getRepositoryPin();
 		public com.sun.jna.Pointer getData(com.sun.jna.Pointer length);
 		public void putData(IStatus status, int length, com.sun.jna.Pointer data);
 		public ICryptKey newKey(IStatus status);
@@ -542,6 +542,8 @@ public interface FbInterface extends FbClientLibrary
 		public void setKey(IStatus status, ICryptKey key);
 		public void encrypt(IStatus status, int length, com.sun.jna.Pointer from, com.sun.jna.Pointer to);
 		public void decrypt(IStatus status, int length, com.sun.jna.Pointer from, com.sun.jna.Pointer to);
+		public com.sun.jna.Pointer getSpecificData(IStatus status, String keyType, com.sun.jna.Pointer length);
+		public void setSpecificData(IStatus status, String keyType, int length, byte[] data);
 	}
 
 	public static interface ICryptKeyCallbackIntf extends IVersionedIntf
@@ -617,7 +619,7 @@ public interface FbInterface extends FbClientLibrary
 		public static int ACTION_DDL = 9;
 
 		public void getCharSet(IStatus status, IExternalContext context, com.sun.jna.Pointer name, int nameSize);
-		public void execute(IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg, com.sun.jna.Pointer oldDbKey, com.sun.jna.Pointer newDbKey);
+		public void execute(IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg);
 	}
 
 	public static interface IRoutineMetadataIntf extends IVersionedIntf
@@ -674,11 +676,15 @@ public interface FbInterface extends FbClientLibrary
 		public int getClientVersion();
 		public IXpbBuilder getXpbBuilder(IStatus status, int kind, byte[] buf, int len);
 		public int setOffsets(IStatus status, IMessageMetadata metadata, IOffsetsCallback callback);
-		public IEventBlock createEventBlock(IStatus status, String[] events);
 		public IDecFloat16 getDecFloat16(IStatus status);
 		public IDecFloat34 getDecFloat34(IStatus status);
 		public ITransaction getTransactionByHandle(IStatus status, com.sun.jna.ptr.LongByReference hndlPtr);
 		public IStatement getStatementByHandle(IStatus status, com.sun.jna.ptr.LongByReference hndlPtr);
+		public void decodeTimeTz(IStatus status, ISC_TIME_TZ[] timeTz, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer);
+		public void decodeTimeStampTz(IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, com.sun.jna.Pointer year, com.sun.jna.Pointer month, com.sun.jna.Pointer day, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer);
+		public void encodeTimeTz(IStatus status, ISC_TIME_TZ[] timeTz, int hours, int minutes, int seconds, int fractions, String timeZone);
+		public void encodeTimeStampTz(IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, int year, int month, int day, int hours, int minutes, int seconds, int fractions, String timeZone);
+		public IInt128 getInt128(IStatus status);
 	}
 
 	public static interface IOffsetsCallbackIntf extends IVersionedIntf
@@ -729,7 +735,6 @@ public interface FbInterface extends FbClientLibrary
 		public String getCharSet();
 		public String getRemoteProtocol();
 		public String getRemoteAddress();
-		public String getRemoteHwAddress();
 		public int getRemoteProcessID();
 		public String getRemoteProcessName();
 	}
@@ -853,6 +858,7 @@ public interface FbInterface extends FbClientLibrary
 	public static interface ITraceLogWriterIntf extends IReferenceCountedIntf
 	{
 		public int write(com.sun.jna.Pointer buf, int size);
+		public int write_s(IStatus status, com.sun.jna.Pointer buf, int size);
 	}
 
 	public static interface ITraceInitInfoIntf extends IVersionedIntf
@@ -860,11 +866,9 @@ public interface FbInterface extends FbClientLibrary
 		public String getConfigText();
 		public int getTraceSessionID();
 		public String getTraceSessionName();
-		public int getTraceSessionFlags();
 		public String getFirebirdRootDirectory();
 		public String getDatabaseName();
 		public ITraceDatabaseConnection getConnection();
-		public ITraceServiceConnection getService();
 		public ITraceLogWriter getLogWriter();
 	}
 
@@ -879,7 +883,7 @@ public interface FbInterface extends FbClientLibrary
 		public static int SWEEP_STATE_PROGRESS = 4;
 
 		public String trace_get_error();
-		public boolean trace_attach(ITraceDatabaseConnection connection, boolean create_db, int dpb_length, byte[] dpb, int att_result);
+		public boolean trace_attach(ITraceDatabaseConnection connection, boolean create_db, int att_result);
 		public boolean trace_detach(ITraceDatabaseConnection connection, boolean drop_db);
 		public boolean trace_transaction_start(ITraceDatabaseConnection connection, ITraceTransaction transaction, int tpb_length, byte[] tpb, int tra_result);
 		public boolean trace_transaction_end(ITraceDatabaseConnection connection, ITraceTransaction transaction, boolean commit, boolean retain_context, int tra_result);
@@ -892,14 +896,13 @@ public interface FbInterface extends FbClientLibrary
 		public boolean trace_blr_compile(ITraceDatabaseConnection connection, ITraceTransaction transaction, ITraceBLRStatement statement, long time_millis, int req_result);
 		public boolean trace_blr_execute(ITraceDatabaseConnection connection, ITraceTransaction transaction, ITraceBLRStatement statement, int req_result);
 		public boolean trace_dyn_execute(ITraceDatabaseConnection connection, ITraceTransaction transaction, ITraceDYNRequest request, long time_millis, int req_result);
-		public boolean trace_service_attach(ITraceServiceConnection service, int spb_length, byte[] spb, int att_result);
+		public boolean trace_service_attach(ITraceServiceConnection service, int att_result);
 		public boolean trace_service_start(ITraceServiceConnection service, int switches_length, String switches, int start_result);
 		public boolean trace_service_query(ITraceServiceConnection service, int send_item_length, byte[] send_items, int recv_item_length, byte[] recv_items, int query_result);
 		public boolean trace_service_detach(ITraceServiceConnection service, int detach_result);
 		public boolean trace_event_error(ITraceConnection connection, ITraceStatusVector status, String function);
 		public boolean trace_event_sweep(ITraceDatabaseConnection connection, ITraceSweepInfo sweep, int sweep_state);
 		public boolean trace_func_execute(ITraceDatabaseConnection connection, ITraceTransaction transaction, ITraceFunction function, boolean started, int func_result);
-		public boolean trace_privilege_change(ITraceDatabaseConnection connection, ITraceTransaction transaction, String executor, String grantor, boolean is_grant, String object_name, String field_name, String user_name, String privileges, int options, int change_result);
 	}
 
 	public static interface ITraceFactoryIntf extends IPluginBaseIntf
@@ -924,8 +927,7 @@ public interface FbInterface extends FbClientLibrary
 		public static int TRACE_EVENT_ERROR = 17;
 		public static int TRACE_EVENT_SWEEP = 18;
 		public static int TRACE_EVENT_FUNC_EXECUTE = 19;
-		public static int TRACE_EVENT_PRIVILEGE_CHANGE = 20;
-		public static int TRACE_EVENT_MAX = 21;
+		public static int TRACE_EVENT_MAX = 20;
 
 		public long trace_needs();
 		public ITracePlugin trace_create(IStatus status, ITraceInitInfo init_info);
@@ -979,179 +981,48 @@ public interface FbInterface extends FbClientLibrary
 		public void fromString(IStatus status, String from, FB_DEC34[] to);
 	}
 
-	public static interface ICryptoKeyIntf extends IVersionedIntf
+	public static interface IInt128Intf extends IVersionedIntf
 	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int loadFromFile(String fileName);
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length);
-		public int loadFromCurrentRepository();
-		public int saveToFile(String fileName);
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-		public int saveToRepository(ICryptoRepository repository, String name);
-		public int setAgreeKeyFromRepository(ICryptoRepository repository);
-		public int setExchangeKey(ICryptoKey key);
-		public int generateKey();
-		public int getIV(byte[] iv, int length, com.sun.jna.Pointer realLength);
-		public int setIV(byte[] iv, int length);
-		public int createFromBuffer(byte[] buffer, int length);
+		public static int STRING_SIZE = 46;
+
+		public void toString(IStatus status, FB_I128[] from, int scale, int bufferLength, com.sun.jna.Pointer buffer);
+		public void fromString(IStatus status, int scale, String from, FB_I128[] to);
 	}
 
-	public static interface ICryptoKeyPairIntf extends IVersionedIntf
+	public static interface IReplicatedRecordIntf extends IVersionedIntf
 	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int loadFromFile(String fileName);
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length);
-		public int loadFromRepository(ICryptoRepository repository, String name);
-		public int loadFromCurrentRepository();
-		public int saveToFile(String fileName);
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-		public int saveToRepository(ICryptoRepository repository, String name);
-		public int setAgreeKeyFromRepository(ICryptoRepository repository);
-		public int setExchangeKey(ICryptoKey key);
-		public int generateKeyPair();
-		public int getPublicKey(ICryptoKey key);
-		public int createPublicKey(ICryptoKey[] key);
-		public int deletePublicKey(ICryptoKey key);
+		public int getRawLength();
+		public com.sun.jna.Pointer getRawData();
 	}
 
-	public static interface ICryptoRandomFactoryIntf extends IVersionedIntf
+	public static interface IReplicatedBlobIntf extends IVersionedIntf
 	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int generateRandom(byte[] buffer, int length, ICryptoProvider providerName);
+		public int getLength();
+		public boolean isEof();
+		public int getSegment(int length, byte[] buffer);
 	}
 
-	public static interface ICryptoHashFactoryIntf extends IVersionedIntf
+	public static interface IReplicatedTransactionIntf extends IDisposableIntf
 	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int createHash(byte[] buffer, int bufferLength, byte[] hash, int hashLength, com.sun.jna.Pointer realHashLength, boolean asString);
-		public int setKeyForHash(ICryptoKey key);
+		public boolean prepare();
+		public boolean commit();
+		public boolean rollback();
+		public boolean startSavepoint();
+		public boolean releaseSavepoint();
+		public boolean rollbackSavepoint();
+		public boolean insertRecord(String name, IReplicatedRecord record);
+		public boolean updateRecord(String name, IReplicatedRecord orgRecord, IReplicatedRecord newRecord);
+		public boolean deleteRecord(String name, IReplicatedRecord record);
+		public boolean storeBlob(com.sun.jna.ptr.LongByReference blobId, IReplicatedBlob blob);
+		public boolean executeSql(String sql);
 	}
 
-	public static interface ICryptoSymmetricFactoryIntf extends IVersionedIntf
+	public static interface IReplicatedSessionIntf extends IDisposableIntf
 	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int encrypt(byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoKey key);
-		public int decrypt(byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoKey key);
-		public int createKey(ICryptoRepository repository, ICryptoKey[] key);
-		public int deleteKey(ICryptoKey key);
-	}
-
-	public static interface ICryptoSignatureFactoryIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int createKeyPair(ICryptoRepository repository, ICryptoKeyPair[] key);
-		public int deleteKeyPair(ICryptoKeyPair keyPair);
-		public int sign(byte[] data, int dataLength, ICryptoSignature signature, ICryptoKeyPair privateKey);
-		public int verifySign(byte[] data, int dataLength, ICryptoSignature signature, ICryptoKey publicKey);
-		public int createSignature(ICryptoSignature[] signature);
-		public int deleteSignature(ICryptoSignature signature);
-	}
-
-	public static interface ICryptoSignatureIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int saveToFile(String fileName);
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-		public int loadFromFile(String fileName);
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length);
-	}
-
-	public static interface ICryptoCertificateFactoryIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int createCertificate(ICryptoRepository repository, ICryptoCertificate[] certificate);
-		public int deleteCertificate(ICryptoCertificate certificate);
-		public int encrypt(byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoCertificate certificate);
-		public int decrypt(byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoRepository repository);
-	}
-
-	public static interface ICryptoCertificateIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int loadFromFile(String fileName);
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length);
-		public int loadFromBinaryBuffer(com.sun.jna.Pointer buffer, int length);
-		public int loadFromRepository(ICryptoRepository repository, String name);
-		public int saveToFile(String fileName);
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-		public int saveToBinaryBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-		public int verifyCertificate(ICryptoCertificate certificate);
-		public int getId(byte[] id, com.sun.jna.Pointer length);
-		public int getIssuerName(byte[] issuerName, com.sun.jna.Pointer length);
-		public int getPublicKey(ICryptoKey key);
-		public int getPublicKeyMethod(com.sun.jna.Pointer method, com.sun.jna.Pointer length);
-		public int createPublicKeyFromCertificate(ICryptoRepository repository, ICryptoKey[] key);
-		public int deleteCertificatePublicKey(ICryptoKey key);
-		public int getSerialNumber(byte[] serialNumber, com.sun.jna.Pointer length);
-		public int getOwnerName(com.sun.jna.Pointer ownerName, com.sun.jna.Pointer length, String user_dn);
-		public int getKeyContainer(com.sun.jna.Pointer container, com.sun.jna.Pointer length);
-	}
-
-	public static interface ICryptoRepositoryIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int getRepositoryName(com.sun.jna.Pointer name, int length, com.sun.jna.Pointer realLength);
-		public int open(String path, int openMode, int repositoryLocation, int providerType);
-		public int close();
-		public int createPublicKey(int method, ICryptoKey[] key);
-		public int getPublicKey(ICryptoKey key);
-		public int deletePublicKey(ICryptoKey key);
-		public boolean isOpened();
-	}
-
-	public static interface ICryptoProviderIntf extends IVersionedIntf
-	{
-		public com.sun.jna.Pointer getObjectInfo();
-		public int createRepository(ICryptoRepository[] repository, int type, String pin);
-		public int deleteRepository(ICryptoRepository repository);
-	}
-
-	public static interface IListCryptoObjectsIntf extends IVersionedIntf
-	{
-		public void list(CryptoObjectInfo[] objInfo);
-	}
-
-	public static interface ICryptoFactoryIntf extends IPluginBaseIntf
-	{
-		public void setTrace(boolean need);
-		public ICryptoProvider getCryptoProvider(CryptoObjectInfo[] objInfo);
-		public ICryptoRandomFactory getCryptoRandomFactory(CryptoObjectInfo[] objInfo);
-		public ICryptoHashFactory getCryptoHashFactory(CryptoObjectInfo[] objInfo);
-		public ICryptoSymmetricFactory getCryptoSymmetricFactory(CryptoObjectInfo[] objInfo);
-		public ICryptoSignatureFactory getCryptoSignatureFactory(CryptoObjectInfo[] objInfo);
-		public ICryptoCertificateFactory getCryptoCertificateFactory(CryptoObjectInfo[] objInfo);
-		public int getCryptoObjects(int type, IListCryptoObjects callback);
-	}
-
-	public static interface ILdapPluginIntf extends IReferenceCountedIntf
-	{
-		public static int SYNC_RESULT_SUCCESS = 0;
-		public static int SYNC_RESULT_NO_USER = 1;
-		public static int SYNC_RESULT_ERROR = 2;
-		public static int CERT_TEXT = 0;
-		public static int CERT_BINARY = 1;
-		public static int CERT_ERROR = 2;
-
-		public void connect();
-		public boolean is_connected();
-		public boolean bind();
-		public boolean bind_as(String user, String password);
-		public boolean find_user(String name, com.sun.jna.Pointer password, com.sun.jna.Pointer mf_password, com.sun.jna.Pointer hash_alg);
-		public boolean find_srp_user(String name, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt);
-		public int get_certificate(String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length, String attr_name);
-		public boolean get_user_attr(String name, String attr, com.sun.jna.Pointer value);
-		public boolean get_policy(String name, com.sun.jna.Pointer policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time);
-		public boolean set_policy(String name, String policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time);
-		public boolean get_password_history(String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length);
-		public void find_user_groups(com.sun.jna.Pointer userId);
-		public int change_legacy_password(String name, String password, boolean[] active);
-		public int change_mf_password(String name, String password, com.sun.jna.Pointer hash, boolean[] active);
-		public int change_srp_password(String name, String password, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt, boolean[] active);
-	}
-
-	public static interface ILdapFactoryIntf extends IPluginBaseIntf
-	{
-		public ILdapPlugin getLdapPlugin(IStatus status);
+		public IStatus getStatus();
+		public IReplicatedTransaction startTransaction(long number);
+		public boolean cleanupTransaction(long number);
+		public boolean setSequence(String name, long value);
 	}
 
 	public static class IVersioned extends com.sun.jna.Structure implements IVersionedIntf
@@ -2502,6 +2373,11 @@ public interface FbInterface extends FbClientLibrary
 				public boolean invoke(IFirebirdConf self, int key);
 			}
 
+			public static interface Callback_getVersion extends com.sun.jna.Callback
+			{
+				public int invoke(IFirebirdConf self, IStatus status);
+			}
+
 			public VTable(com.sun.jna.Pointer pointer)
 			{
 				super(pointer);
@@ -2542,6 +2418,22 @@ public interface FbInterface extends FbClientLibrary
 						return obj.asBoolean(key);
 					}
 				};
+
+				getVersion = new Callback_getVersion() {
+					@Override
+					public int invoke(IFirebirdConf self, IStatus status)
+					{
+						try
+						{
+							return obj.getVersion(status);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+							return 0;
+						}
+					}
+				};
 			}
 
 			public VTable()
@@ -2552,12 +2444,13 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_asInteger asInteger;
 			public Callback_asString asString;
 			public Callback_asBoolean asBoolean;
+			public Callback_getVersion getVersion;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getKey", "asInteger", "asString", "asBoolean"));
+				fields.addAll(java.util.Arrays.asList("getKey", "asInteger", "asString", "asBoolean", "getVersion"));
 				return fields;
 			}
 		}
@@ -2605,6 +2498,13 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			boolean result = vTable.asBoolean.invoke(this, key);
+			return result;
+		}
+
+		public int getVersion(IStatus status)
+		{
+			VTable vTable = getVTable();
+			int result = vTable.getVersion.invoke(this, status);
 			return result;
 		}
 	}
@@ -6181,6 +6081,107 @@ public interface FbInterface extends FbClientLibrary
 		}
 	}
 
+	public static class IReplicator extends IReferenceCounted implements IReplicatorIntf
+	{
+		public static class VTable extends IReferenceCounted.VTable
+		{
+			public static interface Callback_process extends com.sun.jna.Callback
+			{
+				public void invoke(IReplicator self, IStatus status, int length, byte[] data);
+			}
+
+			public static interface Callback_close extends com.sun.jna.Callback
+			{
+				public void invoke(IReplicator self, IStatus status);
+			}
+
+			public VTable(com.sun.jna.Pointer pointer)
+			{
+				super(pointer);
+			}
+
+			public VTable(final IReplicatorIntf obj)
+			{
+				super(obj);
+
+				process = new Callback_process() {
+					@Override
+					public void invoke(IReplicator self, IStatus status, int length, byte[] data)
+					{
+						try
+						{
+							obj.process(status, length, data);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+
+				close = new Callback_close() {
+					@Override
+					public void invoke(IReplicator self, IStatus status)
+					{
+						try
+						{
+							obj.close(status);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+			}
+
+			public VTable()
+			{
+			}
+
+			public Callback_process process;
+			public Callback_close close;
+
+			@Override
+			protected java.util.List<String> getFieldOrder()
+			{
+				java.util.List<String> fields = super.getFieldOrder();
+				fields.addAll(java.util.Arrays.asList("process", "close"));
+				return fields;
+			}
+		}
+
+		public IReplicator()
+		{
+		}
+
+		public IReplicator(final IReplicatorIntf obj)
+		{
+			vTable = new VTable(obj);
+			vTable.write();
+			cloopVTable = vTable.getPointer();
+			write();
+		}
+
+		@Override
+		protected VTable createVTable()
+		{
+			return new VTable(cloopVTable);
+		}
+
+		public void process(IStatus status, int length, byte[] data)
+		{
+			VTable vTable = getVTable();
+			vTable.process.invoke(this, status, length, data);
+		}
+
+		public void close(IStatus status)
+		{
+			VTable vTable = getVTable();
+			vTable.close.invoke(this, status);
+		}
+	}
+
 	public static class IRequest extends IReferenceCounted implements IRequestIntf
 	{
 		public static class VTable extends IReferenceCounted.VTable
@@ -6491,178 +6492,6 @@ public interface FbInterface extends FbClientLibrary
 		}
 	}
 
-	public static class IEventBlock extends IDisposable implements IEventBlockIntf
-	{
-		public static class VTable extends IDisposable.VTable
-		{
-			public static interface Callback_getLength extends com.sun.jna.Callback
-			{
-				public int invoke(IEventBlock self);
-			}
-
-			public static interface Callback_getValues extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(IEventBlock self);
-			}
-
-			public static interface Callback_getBuffer extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(IEventBlock self);
-			}
-
-			public static interface Callback_getCount extends com.sun.jna.Callback
-			{
-				public int invoke(IEventBlock self);
-			}
-
-			public static interface Callback_getCounters extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(IEventBlock self);
-			}
-
-			public static interface Callback_counts extends com.sun.jna.Callback
-			{
-				public void invoke(IEventBlock self);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final IEventBlockIntf obj)
-			{
-				super(obj);
-
-				getLength = new Callback_getLength() {
-					@Override
-					public int invoke(IEventBlock self)
-					{
-						return obj.getLength();
-					}
-				};
-
-				getValues = new Callback_getValues() {
-					@Override
-					public com.sun.jna.Pointer invoke(IEventBlock self)
-					{
-						return obj.getValues();
-					}
-				};
-
-				getBuffer = new Callback_getBuffer() {
-					@Override
-					public com.sun.jna.Pointer invoke(IEventBlock self)
-					{
-						return obj.getBuffer();
-					}
-				};
-
-				getCount = new Callback_getCount() {
-					@Override
-					public int invoke(IEventBlock self)
-					{
-						return obj.getCount();
-					}
-				};
-
-				getCounters = new Callback_getCounters() {
-					@Override
-					public com.sun.jna.Pointer invoke(IEventBlock self)
-					{
-						return obj.getCounters();
-					}
-				};
-
-				counts = new Callback_counts() {
-					@Override
-					public void invoke(IEventBlock self)
-					{
-						obj.counts();
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getLength getLength;
-			public Callback_getValues getValues;
-			public Callback_getBuffer getBuffer;
-			public Callback_getCount getCount;
-			public Callback_getCounters getCounters;
-			public Callback_counts counts;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getLength", "getValues", "getBuffer", "getCount", "getCounters", "counts"));
-				return fields;
-			}
-		}
-
-		public IEventBlock()
-		{
-		}
-
-		public IEventBlock(final IEventBlockIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public int getLength()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getLength.invoke(this);
-			return result;
-		}
-
-		public com.sun.jna.Pointer getValues()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getValues.invoke(this);
-			return result;
-		}
-
-		public com.sun.jna.Pointer getBuffer()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getBuffer.invoke(this);
-			return result;
-		}
-
-		public int getCount()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getCount.invoke(this);
-			return result;
-		}
-
-		public com.sun.jna.Pointer getCounters()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getCounters.invoke(this);
-			return result;
-		}
-
-		public void counts()
-		{
-			VTable vTable = getVTable();
-			vTable.counts.invoke(this);
-		}
-	}
-
 	public static class IAttachment extends IReferenceCounted implements IAttachmentIntf
 	{
 		public static class VTable extends IReferenceCounted.VTable
@@ -6780,6 +6609,11 @@ public interface FbInterface extends FbClientLibrary
 			public static interface Callback_createBatch extends com.sun.jna.Callback
 			{
 				public IBatch invoke(IAttachment self, IStatus status, ITransaction transaction, int stmtLength, String sqlStmt, int dialect, IMessageMetadata inMetadata, int parLength, byte[] par);
+			}
+
+			public static interface Callback_createReplicator extends com.sun.jna.Callback
+			{
+				public IReplicator invoke(IAttachment self, IStatus status);
 			}
 
 			public VTable(com.sun.jna.Pointer pointer)
@@ -7148,6 +6982,22 @@ public interface FbInterface extends FbClientLibrary
 						}
 					}
 				};
+
+				createReplicator = new Callback_createReplicator() {
+					@Override
+					public IReplicator invoke(IAttachment self, IStatus status)
+					{
+						try
+						{
+							return obj.createReplicator(status);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+							return null;
+						}
+					}
+				};
 			}
 
 			public VTable()
@@ -7177,12 +7027,13 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_getStatementTimeout getStatementTimeout;
 			public Callback_setStatementTimeout setStatementTimeout;
 			public Callback_createBatch createBatch;
+			public Callback_createReplicator createReplicator;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getInfo", "startTransaction", "reconnectTransaction", "compileRequest", "transactRequest", "createBlob", "openBlob", "getSlice", "putSlice", "executeDyn", "prepare", "execute", "openCursor", "queEvents", "cancelOperation", "ping", "detach", "dropDatabase", "getIdleTimeout", "setIdleTimeout", "getStatementTimeout", "setStatementTimeout", "createBatch"));
+				fields.addAll(java.util.Arrays.asList("getInfo", "startTransaction", "reconnectTransaction", "compileRequest", "transactRequest", "createBlob", "openBlob", "getSlice", "putSlice", "executeDyn", "prepare", "execute", "openCursor", "queEvents", "cancelOperation", "ping", "detach", "dropDatabase", "getIdleTimeout", "setIdleTimeout", "getStatementTimeout", "setStatementTimeout", "createBatch", "createReplicator"));
 				return fields;
 			}
 		}
@@ -7353,6 +7204,13 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			IBatch result = vTable.createBatch.invoke(this, status, transaction, stmtLength, sqlStmt, dialect, inMetadata, parLength, par);
+			return result;
+		}
+
+		public IReplicator createReplicator(IStatus status)
+		{
+			VTable vTable = getVTable();
+			IReplicator result = vTable.createReplicator.invoke(this, status);
 			return result;
 		}
 	}
@@ -8261,16 +8119,6 @@ public interface FbInterface extends FbClientLibrary
 				public String invoke(IClientBlock self);
 			}
 
-			public static interface Callback_getCertificate extends com.sun.jna.Callback
-			{
-				public String invoke(IClientBlock self);
-			}
-
-			public static interface Callback_getRepositoryPin extends com.sun.jna.Callback
-			{
-				public String invoke(IClientBlock self);
-			}
-
 			public static interface Callback_getData extends com.sun.jna.Callback
 			{
 				public com.sun.jna.Pointer invoke(IClientBlock self, com.sun.jna.Pointer length);
@@ -8313,22 +8161,6 @@ public interface FbInterface extends FbClientLibrary
 					public String invoke(IClientBlock self)
 					{
 						return obj.getPassword();
-					}
-				};
-
-				getCertificate = new Callback_getCertificate() {
-					@Override
-					public String invoke(IClientBlock self)
-					{
-						return obj.getCertificate();
-					}
-				};
-
-				getRepositoryPin = new Callback_getRepositoryPin() {
-					@Override
-					public String invoke(IClientBlock self)
-					{
-						return obj.getRepositoryPin();
 					}
 				};
 
@@ -8394,8 +8226,6 @@ public interface FbInterface extends FbClientLibrary
 
 			public Callback_getLogin getLogin;
 			public Callback_getPassword getPassword;
-			public Callback_getCertificate getCertificate;
-			public Callback_getRepositoryPin getRepositoryPin;
 			public Callback_getData getData;
 			public Callback_putData putData;
 			public Callback_newKey newKey;
@@ -8405,7 +8235,7 @@ public interface FbInterface extends FbClientLibrary
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getLogin", "getPassword", "getCertificate", "getRepositoryPin", "getData", "putData", "newKey", "getAuthBlock"));
+				fields.addAll(java.util.Arrays.asList("getLogin", "getPassword", "getData", "putData", "newKey", "getAuthBlock"));
 				return fields;
 			}
 		}
@@ -8439,20 +8269,6 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			String result = vTable.getPassword.invoke(this);
-			return result;
-		}
-
-		public String getCertificate()
-		{
-			VTable vTable = getVTable();
-			String result = vTable.getCertificate.invoke(this);
-			return result;
-		}
-
-		public String getRepositoryPin()
-		{
-			VTable vTable = getVTable();
-			String result = vTable.getRepositoryPin.invoke(this);
 			return result;
 		}
 
@@ -9870,6 +9686,16 @@ public interface FbInterface extends FbClientLibrary
 				public void invoke(IWireCryptPlugin self, IStatus status, int length, com.sun.jna.Pointer from, com.sun.jna.Pointer to);
 			}
 
+			public static interface Callback_getSpecificData extends com.sun.jna.Callback
+			{
+				public com.sun.jna.Pointer invoke(IWireCryptPlugin self, IStatus status, String keyType, com.sun.jna.Pointer length);
+			}
+
+			public static interface Callback_setSpecificData extends com.sun.jna.Callback
+			{
+				public void invoke(IWireCryptPlugin self, IStatus status, String keyType, int length, byte[] data);
+			}
+
 			public VTable(com.sun.jna.Pointer pointer)
 			{
 				super(pointer);
@@ -9939,6 +9765,37 @@ public interface FbInterface extends FbClientLibrary
 						}
 					}
 				};
+
+				getSpecificData = new Callback_getSpecificData() {
+					@Override
+					public com.sun.jna.Pointer invoke(IWireCryptPlugin self, IStatus status, String keyType, com.sun.jna.Pointer length)
+					{
+						try
+						{
+							return obj.getSpecificData(status, keyType, length);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+							return null;
+						}
+					}
+				};
+
+				setSpecificData = new Callback_setSpecificData() {
+					@Override
+					public void invoke(IWireCryptPlugin self, IStatus status, String keyType, int length, byte[] data)
+					{
+						try
+						{
+							obj.setSpecificData(status, keyType, length, data);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
 			}
 
 			public VTable()
@@ -9949,12 +9806,14 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_setKey setKey;
 			public Callback_encrypt encrypt;
 			public Callback_decrypt decrypt;
+			public Callback_getSpecificData getSpecificData;
+			public Callback_setSpecificData setSpecificData;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getKnownTypes", "setKey", "encrypt", "decrypt"));
+				fields.addAll(java.util.Arrays.asList("getKnownTypes", "setKey", "encrypt", "decrypt", "getSpecificData", "setSpecificData"));
 				return fields;
 			}
 		}
@@ -10000,6 +9859,19 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			vTable.decrypt.invoke(this, status, length, from, to);
+		}
+
+		public com.sun.jna.Pointer getSpecificData(IStatus status, String keyType, com.sun.jna.Pointer length)
+		{
+			VTable vTable = getVTable();
+			com.sun.jna.Pointer result = vTable.getSpecificData.invoke(this, status, keyType, length);
+			return result;
+		}
+
+		public void setSpecificData(IStatus status, String keyType, int length, byte[] data)
+		{
+			VTable vTable = getVTable();
+			vTable.setSpecificData.invoke(this, status, keyType, length, data);
 		}
 	}
 
@@ -11037,7 +10909,7 @@ public interface FbInterface extends FbClientLibrary
 
 			public static interface Callback_execute extends com.sun.jna.Callback
 			{
-				public void invoke(IExternalTrigger self, IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg, com.sun.jna.Pointer oldDbKey, com.sun.jna.Pointer newDbKey);
+				public void invoke(IExternalTrigger self, IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg);
 			}
 
 			public VTable(com.sun.jna.Pointer pointer)
@@ -11066,11 +10938,11 @@ public interface FbInterface extends FbClientLibrary
 
 				execute = new Callback_execute() {
 					@Override
-					public void invoke(IExternalTrigger self, IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg, com.sun.jna.Pointer oldDbKey, com.sun.jna.Pointer newDbKey)
+					public void invoke(IExternalTrigger self, IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg)
 					{
 						try
 						{
-							obj.execute(status, context, action, oldMsg, newMsg, oldDbKey, newDbKey);
+							obj.execute(status, context, action, oldMsg, newMsg);
 						}
 						catch (Throwable t)
 						{
@@ -11120,10 +10992,10 @@ public interface FbInterface extends FbClientLibrary
 			vTable.getCharSet.invoke(this, status, context, name, nameSize);
 		}
 
-		public void execute(IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg, com.sun.jna.Pointer oldDbKey, com.sun.jna.Pointer newDbKey)
+		public void execute(IStatus status, IExternalContext context, int action, com.sun.jna.Pointer oldMsg, com.sun.jna.Pointer newMsg)
 		{
 			VTable vTable = getVTable();
-			vTable.execute.invoke(this, status, context, action, oldMsg, newMsg, oldDbKey, newDbKey);
+			vTable.execute.invoke(this, status, context, action, oldMsg, newMsg);
 		}
 	}
 
@@ -11961,11 +11833,6 @@ public interface FbInterface extends FbClientLibrary
 				public int invoke(IUtil self, IStatus status, IMessageMetadata metadata, IOffsetsCallback callback);
 			}
 
-			public static interface Callback_createEventBlock extends com.sun.jna.Callback
-			{
-				public IEventBlock invoke(IUtil self, IStatus status, String[] events);
-			}
-
 			public static interface Callback_getDecFloat16 extends com.sun.jna.Callback
 			{
 				public IDecFloat16 invoke(IUtil self, IStatus status);
@@ -11984,6 +11851,31 @@ public interface FbInterface extends FbClientLibrary
 			public static interface Callback_getStatementByHandle extends com.sun.jna.Callback
 			{
 				public IStatement invoke(IUtil self, IStatus status, com.sun.jna.ptr.LongByReference hndlPtr);
+			}
+
+			public static interface Callback_decodeTimeTz extends com.sun.jna.Callback
+			{
+				public void invoke(IUtil self, IStatus status, ISC_TIME_TZ[] timeTz, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer);
+			}
+
+			public static interface Callback_decodeTimeStampTz extends com.sun.jna.Callback
+			{
+				public void invoke(IUtil self, IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, com.sun.jna.Pointer year, com.sun.jna.Pointer month, com.sun.jna.Pointer day, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer);
+			}
+
+			public static interface Callback_encodeTimeTz extends com.sun.jna.Callback
+			{
+				public void invoke(IUtil self, IStatus status, ISC_TIME_TZ[] timeTz, int hours, int minutes, int seconds, int fractions, String timeZone);
+			}
+
+			public static interface Callback_encodeTimeStampTz extends com.sun.jna.Callback
+			{
+				public void invoke(IUtil self, IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, int year, int month, int day, int hours, int minutes, int seconds, int fractions, String timeZone);
+			}
+
+			public static interface Callback_getInt128 extends com.sun.jna.Callback
+			{
+				public IInt128 invoke(IUtil self, IStatus status);
 			}
 
 			public VTable(com.sun.jna.Pointer pointer)
@@ -12151,22 +12043,6 @@ public interface FbInterface extends FbClientLibrary
 					}
 				};
 
-				createEventBlock = new Callback_createEventBlock() {
-					@Override
-					public IEventBlock invoke(IUtil self, IStatus status, String[] events)
-					{
-						try
-						{
-							return obj.createEventBlock(status, events);
-						}
-						catch (Throwable t)
-						{
-							FbInterfaceException.catchException(status, t);
-							return null;
-						}
-					}
-				};
-
 				getDecFloat16 = new Callback_getDecFloat16() {
 					@Override
 					public IDecFloat16 invoke(IUtil self, IStatus status)
@@ -12230,6 +12106,82 @@ public interface FbInterface extends FbClientLibrary
 						}
 					}
 				};
+
+				decodeTimeTz = new Callback_decodeTimeTz() {
+					@Override
+					public void invoke(IUtil self, IStatus status, ISC_TIME_TZ[] timeTz, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer)
+					{
+						try
+						{
+							obj.decodeTimeTz(status, timeTz, hours, minutes, seconds, fractions, timeZoneBufferLength, timeZoneBuffer);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+
+				decodeTimeStampTz = new Callback_decodeTimeStampTz() {
+					@Override
+					public void invoke(IUtil self, IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, com.sun.jna.Pointer year, com.sun.jna.Pointer month, com.sun.jna.Pointer day, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer)
+					{
+						try
+						{
+							obj.decodeTimeStampTz(status, timeStampTz, year, month, day, hours, minutes, seconds, fractions, timeZoneBufferLength, timeZoneBuffer);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+
+				encodeTimeTz = new Callback_encodeTimeTz() {
+					@Override
+					public void invoke(IUtil self, IStatus status, ISC_TIME_TZ[] timeTz, int hours, int minutes, int seconds, int fractions, String timeZone)
+					{
+						try
+						{
+							obj.encodeTimeTz(status, timeTz, hours, minutes, seconds, fractions, timeZone);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+
+				encodeTimeStampTz = new Callback_encodeTimeStampTz() {
+					@Override
+					public void invoke(IUtil self, IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, int year, int month, int day, int hours, int minutes, int seconds, int fractions, String timeZone)
+					{
+						try
+						{
+							obj.encodeTimeStampTz(status, timeStampTz, year, month, day, hours, minutes, seconds, fractions, timeZone);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+						}
+					}
+				};
+
+				getInt128 = new Callback_getInt128() {
+					@Override
+					public IInt128 invoke(IUtil self, IStatus status)
+					{
+						try
+						{
+							return obj.getInt128(status);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+							return null;
+						}
+					}
+				};
 			}
 
 			public VTable()
@@ -12249,17 +12201,21 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_getClientVersion getClientVersion;
 			public Callback_getXpbBuilder getXpbBuilder;
 			public Callback_setOffsets setOffsets;
-			public Callback_createEventBlock createEventBlock;
 			public Callback_getDecFloat16 getDecFloat16;
 			public Callback_getDecFloat34 getDecFloat34;
 			public Callback_getTransactionByHandle getTransactionByHandle;
 			public Callback_getStatementByHandle getStatementByHandle;
+			public Callback_decodeTimeTz decodeTimeTz;
+			public Callback_decodeTimeStampTz decodeTimeStampTz;
+			public Callback_encodeTimeTz encodeTimeTz;
+			public Callback_encodeTimeStampTz encodeTimeStampTz;
+			public Callback_getInt128 getInt128;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getFbVersion", "loadBlob", "dumpBlob", "getPerfCounters", "executeCreateDatabase", "decodeDate", "decodeTime", "encodeDate", "encodeTime", "formatStatus", "getClientVersion", "getXpbBuilder", "setOffsets", "createEventBlock", "getDecFloat16", "getDecFloat34", "getTransactionByHandle", "getStatementByHandle"));
+				fields.addAll(java.util.Arrays.asList("getFbVersion", "loadBlob", "dumpBlob", "getPerfCounters", "executeCreateDatabase", "decodeDate", "decodeTime", "encodeDate", "encodeTime", "formatStatus", "getClientVersion", "getXpbBuilder", "setOffsets", "getDecFloat16", "getDecFloat34", "getTransactionByHandle", "getStatementByHandle", "decodeTimeTz", "decodeTimeStampTz", "encodeTimeTz", "encodeTimeStampTz", "getInt128"));
 				return fields;
 			}
 		}
@@ -12367,13 +12323,6 @@ public interface FbInterface extends FbClientLibrary
 			return result;
 		}
 
-		public IEventBlock createEventBlock(IStatus status, String[] events)
-		{
-			VTable vTable = getVTable();
-			IEventBlock result = vTable.createEventBlock.invoke(this, status, events);
-			return result;
-		}
-
 		public IDecFloat16 getDecFloat16(IStatus status)
 		{
 			VTable vTable = getVTable();
@@ -12399,6 +12348,37 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			IStatement result = vTable.getStatementByHandle.invoke(this, status, hndlPtr);
+			return result;
+		}
+
+		public void decodeTimeTz(IStatus status, ISC_TIME_TZ[] timeTz, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer)
+		{
+			VTable vTable = getVTable();
+			vTable.decodeTimeTz.invoke(this, status, timeTz, hours, minutes, seconds, fractions, timeZoneBufferLength, timeZoneBuffer);
+		}
+
+		public void decodeTimeStampTz(IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, com.sun.jna.Pointer year, com.sun.jna.Pointer month, com.sun.jna.Pointer day, com.sun.jna.Pointer hours, com.sun.jna.Pointer minutes, com.sun.jna.Pointer seconds, com.sun.jna.Pointer fractions, int timeZoneBufferLength, com.sun.jna.Pointer timeZoneBuffer)
+		{
+			VTable vTable = getVTable();
+			vTable.decodeTimeStampTz.invoke(this, status, timeStampTz, year, month, day, hours, minutes, seconds, fractions, timeZoneBufferLength, timeZoneBuffer);
+		}
+
+		public void encodeTimeTz(IStatus status, ISC_TIME_TZ[] timeTz, int hours, int minutes, int seconds, int fractions, String timeZone)
+		{
+			VTable vTable = getVTable();
+			vTable.encodeTimeTz.invoke(this, status, timeTz, hours, minutes, seconds, fractions, timeZone);
+		}
+
+		public void encodeTimeStampTz(IStatus status, ISC_TIMESTAMP_TZ[] timeStampTz, int year, int month, int day, int hours, int minutes, int seconds, int fractions, String timeZone)
+		{
+			VTable vTable = getVTable();
+			vTable.encodeTimeStampTz.invoke(this, status, timeStampTz, year, month, day, hours, minutes, seconds, fractions, timeZone);
+		}
+
+		public IInt128 getInt128(IStatus status)
+		{
+			VTable vTable = getVTable();
+			IInt128 result = vTable.getInt128.invoke(this, status);
 			return result;
 		}
 	}
@@ -13125,11 +13105,6 @@ public interface FbInterface extends FbClientLibrary
 				public String invoke(ITraceConnection self);
 			}
 
-			public static interface Callback_getRemoteHwAddress extends com.sun.jna.Callback
-			{
-				public String invoke(ITraceConnection self);
-			}
-
 			public static interface Callback_getRemoteProcessID extends com.sun.jna.Callback
 			{
 				public int invoke(ITraceConnection self);
@@ -13205,14 +13180,6 @@ public interface FbInterface extends FbClientLibrary
 					}
 				};
 
-				getRemoteHwAddress = new Callback_getRemoteHwAddress() {
-					@Override
-					public String invoke(ITraceConnection self)
-					{
-						return obj.getRemoteHwAddress();
-					}
-				};
-
 				getRemoteProcessID = new Callback_getRemoteProcessID() {
 					@Override
 					public int invoke(ITraceConnection self)
@@ -13241,7 +13208,6 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_getCharSet getCharSet;
 			public Callback_getRemoteProtocol getRemoteProtocol;
 			public Callback_getRemoteAddress getRemoteAddress;
-			public Callback_getRemoteHwAddress getRemoteHwAddress;
 			public Callback_getRemoteProcessID getRemoteProcessID;
 			public Callback_getRemoteProcessName getRemoteProcessName;
 
@@ -13249,7 +13215,7 @@ public interface FbInterface extends FbClientLibrary
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getKind", "getProcessID", "getUserName", "getRoleName", "getCharSet", "getRemoteProtocol", "getRemoteAddress", "getRemoteHwAddress", "getRemoteProcessID", "getRemoteProcessName"));
+				fields.addAll(java.util.Arrays.asList("getKind", "getProcessID", "getUserName", "getRoleName", "getCharSet", "getRemoteProtocol", "getRemoteAddress", "getRemoteProcessID", "getRemoteProcessName"));
 				return fields;
 			}
 		}
@@ -13318,13 +13284,6 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			String result = vTable.getRemoteAddress.invoke(this);
-			return result;
-		}
-
-		public String getRemoteHwAddress()
-		{
-			VTable vTable = getVTable();
-			String result = vTable.getRemoteHwAddress.invoke(this);
 			return result;
 		}
 
@@ -15068,6 +15027,11 @@ public interface FbInterface extends FbClientLibrary
 				public int invoke(ITraceLogWriter self, com.sun.jna.Pointer buf, int size);
 			}
 
+			public static interface Callback_write_s extends com.sun.jna.Callback
+			{
+				public int invoke(ITraceLogWriter self, IStatus status, com.sun.jna.Pointer buf, int size);
+			}
+
 			public VTable(com.sun.jna.Pointer pointer)
 			{
 				super(pointer);
@@ -15084,6 +15048,22 @@ public interface FbInterface extends FbClientLibrary
 						return obj.write(buf, size);
 					}
 				};
+
+				write_s = new Callback_write_s() {
+					@Override
+					public int invoke(ITraceLogWriter self, IStatus status, com.sun.jna.Pointer buf, int size)
+					{
+						try
+						{
+							return obj.write_s(status, buf, size);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
+							return 0;
+						}
+					}
+				};
 			}
 
 			public VTable()
@@ -15091,12 +15071,13 @@ public interface FbInterface extends FbClientLibrary
 			}
 
 			public Callback_write write;
+			public Callback_write_s write_s;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("write"));
+				fields.addAll(java.util.Arrays.asList("write", "write_s"));
 				return fields;
 			}
 		}
@@ -15125,6 +15106,13 @@ public interface FbInterface extends FbClientLibrary
 			int result = vTable.write.invoke(this, buf, size);
 			return result;
 		}
+
+		public int write_s(IStatus status, com.sun.jna.Pointer buf, int size)
+		{
+			VTable vTable = getVTable();
+			int result = vTable.write_s.invoke(this, status, buf, size);
+			return result;
+		}
 	}
 
 	public static class ITraceInitInfo extends IVersioned implements ITraceInitInfoIntf
@@ -15146,11 +15134,6 @@ public interface FbInterface extends FbClientLibrary
 				public String invoke(ITraceInitInfo self);
 			}
 
-			public static interface Callback_getTraceSessionFlags extends com.sun.jna.Callback
-			{
-				public int invoke(ITraceInitInfo self);
-			}
-
 			public static interface Callback_getFirebirdRootDirectory extends com.sun.jna.Callback
 			{
 				public String invoke(ITraceInitInfo self);
@@ -15164,11 +15147,6 @@ public interface FbInterface extends FbClientLibrary
 			public static interface Callback_getConnection extends com.sun.jna.Callback
 			{
 				public ITraceDatabaseConnection invoke(ITraceInitInfo self);
-			}
-
-			public static interface Callback_getService extends com.sun.jna.Callback
-			{
-				public ITraceServiceConnection invoke(ITraceInitInfo self);
 			}
 
 			public static interface Callback_getLogWriter extends com.sun.jna.Callback
@@ -15209,14 +15187,6 @@ public interface FbInterface extends FbClientLibrary
 					}
 				};
 
-				getTraceSessionFlags = new Callback_getTraceSessionFlags() {
-					@Override
-					public int invoke(ITraceInitInfo self)
-					{
-						return obj.getTraceSessionFlags();
-					}
-				};
-
 				getFirebirdRootDirectory = new Callback_getFirebirdRootDirectory() {
 					@Override
 					public String invoke(ITraceInitInfo self)
@@ -15241,14 +15211,6 @@ public interface FbInterface extends FbClientLibrary
 					}
 				};
 
-				getService = new Callback_getService() {
-					@Override
-					public ITraceServiceConnection invoke(ITraceInitInfo self)
-					{
-						return obj.getService();
-					}
-				};
-
 				getLogWriter = new Callback_getLogWriter() {
 					@Override
 					public ITraceLogWriter invoke(ITraceInitInfo self)
@@ -15265,18 +15227,16 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_getConfigText getConfigText;
 			public Callback_getTraceSessionID getTraceSessionID;
 			public Callback_getTraceSessionName getTraceSessionName;
-			public Callback_getTraceSessionFlags getTraceSessionFlags;
 			public Callback_getFirebirdRootDirectory getFirebirdRootDirectory;
 			public Callback_getDatabaseName getDatabaseName;
 			public Callback_getConnection getConnection;
-			public Callback_getService getService;
 			public Callback_getLogWriter getLogWriter;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getConfigText", "getTraceSessionID", "getTraceSessionName", "getTraceSessionFlags", "getFirebirdRootDirectory", "getDatabaseName", "getConnection", "getService", "getLogWriter"));
+				fields.addAll(java.util.Arrays.asList("getConfigText", "getTraceSessionID", "getTraceSessionName", "getFirebirdRootDirectory", "getDatabaseName", "getConnection", "getLogWriter"));
 				return fields;
 			}
 		}
@@ -15320,13 +15280,6 @@ public interface FbInterface extends FbClientLibrary
 			return result;
 		}
 
-		public int getTraceSessionFlags()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getTraceSessionFlags.invoke(this);
-			return result;
-		}
-
 		public String getFirebirdRootDirectory()
 		{
 			VTable vTable = getVTable();
@@ -15345,13 +15298,6 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			ITraceDatabaseConnection result = vTable.getConnection.invoke(this);
-			return result;
-		}
-
-		public ITraceServiceConnection getService()
-		{
-			VTable vTable = getVTable();
-			ITraceServiceConnection result = vTable.getService.invoke(this);
 			return result;
 		}
 
@@ -15374,7 +15320,7 @@ public interface FbInterface extends FbClientLibrary
 
 			public static interface Callback_trace_attach extends com.sun.jna.Callback
 			{
-				public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, boolean create_db, int dpb_length, byte[] dpb, int att_result);
+				public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, boolean create_db, int att_result);
 			}
 
 			public static interface Callback_trace_detach extends com.sun.jna.Callback
@@ -15439,7 +15385,7 @@ public interface FbInterface extends FbClientLibrary
 
 			public static interface Callback_trace_service_attach extends com.sun.jna.Callback
 			{
-				public boolean invoke(ITracePlugin self, ITraceServiceConnection service, int spb_length, byte[] spb, int att_result);
+				public boolean invoke(ITracePlugin self, ITraceServiceConnection service, int att_result);
 			}
 
 			public static interface Callback_trace_service_start extends com.sun.jna.Callback
@@ -15472,11 +15418,6 @@ public interface FbInterface extends FbClientLibrary
 				public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, ITraceTransaction transaction, ITraceFunction function, boolean started, int func_result);
 			}
 
-			public static interface Callback_trace_privilege_change extends com.sun.jna.Callback
-			{
-				public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, ITraceTransaction transaction, String executor, String grantor, boolean is_grant, String object_name, String field_name, String user_name, String privileges, int options, int change_result);
-			}
-
 			public VTable(com.sun.jna.Pointer pointer)
 			{
 				super(pointer);
@@ -15496,9 +15437,9 @@ public interface FbInterface extends FbClientLibrary
 
 				trace_attach = new Callback_trace_attach() {
 					@Override
-					public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, boolean create_db, int dpb_length, byte[] dpb, int att_result)
+					public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, boolean create_db, int att_result)
 					{
-						return obj.trace_attach(connection, create_db, dpb_length, dpb, att_result);
+						return obj.trace_attach(connection, create_db, att_result);
 					}
 				};
 
@@ -15600,9 +15541,9 @@ public interface FbInterface extends FbClientLibrary
 
 				trace_service_attach = new Callback_trace_service_attach() {
 					@Override
-					public boolean invoke(ITracePlugin self, ITraceServiceConnection service, int spb_length, byte[] spb, int att_result)
+					public boolean invoke(ITracePlugin self, ITraceServiceConnection service, int att_result)
 					{
-						return obj.trace_service_attach(service, spb_length, spb, att_result);
+						return obj.trace_service_attach(service, att_result);
 					}
 				};
 
@@ -15653,14 +15594,6 @@ public interface FbInterface extends FbClientLibrary
 						return obj.trace_func_execute(connection, transaction, function, started, func_result);
 					}
 				};
-
-				trace_privilege_change = new Callback_trace_privilege_change() {
-					@Override
-					public boolean invoke(ITracePlugin self, ITraceDatabaseConnection connection, ITraceTransaction transaction, String executor, String grantor, boolean is_grant, String object_name, String field_name, String user_name, String privileges, int options, int change_result)
-					{
-						return obj.trace_privilege_change(connection, transaction, executor, grantor, is_grant, object_name, field_name, user_name, privileges, options, change_result);
-					}
-				};
 			}
 
 			public VTable()
@@ -15688,13 +15621,12 @@ public interface FbInterface extends FbClientLibrary
 			public Callback_trace_event_error trace_event_error;
 			public Callback_trace_event_sweep trace_event_sweep;
 			public Callback_trace_func_execute trace_func_execute;
-			public Callback_trace_privilege_change trace_privilege_change;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("trace_get_error", "trace_attach", "trace_detach", "trace_transaction_start", "trace_transaction_end", "trace_proc_execute", "trace_trigger_execute", "trace_set_context", "trace_dsql_prepare", "trace_dsql_free", "trace_dsql_execute", "trace_blr_compile", "trace_blr_execute", "trace_dyn_execute", "trace_service_attach", "trace_service_start", "trace_service_query", "trace_service_detach", "trace_event_error", "trace_event_sweep", "trace_func_execute", "trace_privilege_change"));
+				fields.addAll(java.util.Arrays.asList("trace_get_error", "trace_attach", "trace_detach", "trace_transaction_start", "trace_transaction_end", "trace_proc_execute", "trace_trigger_execute", "trace_set_context", "trace_dsql_prepare", "trace_dsql_free", "trace_dsql_execute", "trace_blr_compile", "trace_blr_execute", "trace_dyn_execute", "trace_service_attach", "trace_service_start", "trace_service_query", "trace_service_detach", "trace_event_error", "trace_event_sweep", "trace_func_execute"));
 				return fields;
 			}
 		}
@@ -15724,10 +15656,10 @@ public interface FbInterface extends FbClientLibrary
 			return result;
 		}
 
-		public boolean trace_attach(ITraceDatabaseConnection connection, boolean create_db, int dpb_length, byte[] dpb, int att_result)
+		public boolean trace_attach(ITraceDatabaseConnection connection, boolean create_db, int att_result)
 		{
 			VTable vTable = getVTable();
-			boolean result = vTable.trace_attach.invoke(this, connection, create_db, dpb_length, dpb, att_result);
+			boolean result = vTable.trace_attach.invoke(this, connection, create_db, att_result);
 			return result;
 		}
 
@@ -15815,10 +15747,10 @@ public interface FbInterface extends FbClientLibrary
 			return result;
 		}
 
-		public boolean trace_service_attach(ITraceServiceConnection service, int spb_length, byte[] spb, int att_result)
+		public boolean trace_service_attach(ITraceServiceConnection service, int att_result)
 		{
 			VTable vTable = getVTable();
-			boolean result = vTable.trace_service_attach.invoke(this, service, spb_length, spb, att_result);
+			boolean result = vTable.trace_service_attach.invoke(this, service, att_result);
 			return result;
 		}
 
@@ -15861,13 +15793,6 @@ public interface FbInterface extends FbClientLibrary
 		{
 			VTable vTable = getVTable();
 			boolean result = vTable.trace_func_execute.invoke(this, connection, transaction, function, started, func_result);
-			return result;
-		}
-
-		public boolean trace_privilege_change(ITraceDatabaseConnection connection, ITraceTransaction transaction, String executor, String grantor, boolean is_grant, String object_name, String field_name, String user_name, String privileges, int options, int change_result)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.trace_privilege_change.invoke(this, connection, transaction, executor, grantor, is_grant, object_name, field_name, user_name, privileges, options, change_result);
 			return result;
 		}
 	}
@@ -16709,73 +16634,18 @@ public interface FbInterface extends FbClientLibrary
 		}
 	}
 
-	public static class ICryptoKey extends IVersioned implements ICryptoKeyIntf
+	public static class IInt128 extends IVersioned implements IInt128Intf
 	{
 		public static class VTable extends IVersioned.VTable
 		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
+			public static interface Callback_toString extends com.sun.jna.Callback
 			{
-				public com.sun.jna.Pointer invoke(ICryptoKey self);
+				public void invoke(IInt128 self, IStatus status, FB_I128[] from, int scale, int bufferLength, com.sun.jna.Pointer buffer);
 			}
 
-			public static interface Callback_loadFromFile extends com.sun.jna.Callback
+			public static interface Callback_fromString extends com.sun.jna.Callback
 			{
-				public int invoke(ICryptoKey self, String fileName);
-			}
-
-			public static interface Callback_loadFromBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, com.sun.jna.Pointer buffer, int length);
-			}
-
-			public static interface Callback_loadFromCurrentRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self);
-			}
-
-			public static interface Callback_saveToFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, String fileName);
-			}
-
-			public static interface Callback_saveToBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_saveToRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, ICryptoRepository repository, String name);
-			}
-
-			public static interface Callback_setAgreeKeyFromRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, ICryptoRepository repository);
-			}
-
-			public static interface Callback_setExchangeKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, ICryptoKey key);
-			}
-
-			public static interface Callback_generateKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self);
-			}
-
-			public static interface Callback_getIV extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, byte[] iv, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_setIV extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, byte[] iv, int length);
-			}
-
-			public static interface Callback_createFromBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKey self, byte[] buffer, int length);
+				public void invoke(IInt128 self, IStatus status, int scale, String from, FB_I128[] to);
 			}
 
 			public VTable(com.sun.jna.Pointer pointer)
@@ -16783,2863 +16653,36 @@ public interface FbInterface extends FbClientLibrary
 				super(pointer);
 			}
 
-			public VTable(final ICryptoKeyIntf obj)
+			public VTable(final IInt128Intf obj)
 			{
 				super(obj);
 
-				getObjectInfo = new Callback_getObjectInfo() {
+				toString = new Callback_toString() {
 					@Override
-					public com.sun.jna.Pointer invoke(ICryptoKey self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				loadFromFile = new Callback_loadFromFile() {
-					@Override
-					public int invoke(ICryptoKey self, String fileName)
-					{
-						return obj.loadFromFile(fileName);
-					}
-				};
-
-				loadFromBuffer = new Callback_loadFromBuffer() {
-					@Override
-					public int invoke(ICryptoKey self, com.sun.jna.Pointer buffer, int length)
-					{
-						return obj.loadFromBuffer(buffer, length);
-					}
-				};
-
-				loadFromCurrentRepository = new Callback_loadFromCurrentRepository() {
-					@Override
-					public int invoke(ICryptoKey self)
-					{
-						return obj.loadFromCurrentRepository();
-					}
-				};
-
-				saveToFile = new Callback_saveToFile() {
-					@Override
-					public int invoke(ICryptoKey self, String fileName)
-					{
-						return obj.saveToFile(fileName);
-					}
-				};
-
-				saveToBuffer = new Callback_saveToBuffer() {
-					@Override
-					public int invoke(ICryptoKey self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.saveToBuffer(buffer, length, realLength);
-					}
-				};
-
-				saveToRepository = new Callback_saveToRepository() {
-					@Override
-					public int invoke(ICryptoKey self, ICryptoRepository repository, String name)
-					{
-						return obj.saveToRepository(repository, name);
-					}
-				};
-
-				setAgreeKeyFromRepository = new Callback_setAgreeKeyFromRepository() {
-					@Override
-					public int invoke(ICryptoKey self, ICryptoRepository repository)
-					{
-						return obj.setAgreeKeyFromRepository(repository);
-					}
-				};
-
-				setExchangeKey = new Callback_setExchangeKey() {
-					@Override
-					public int invoke(ICryptoKey self, ICryptoKey key)
-					{
-						return obj.setExchangeKey(key);
-					}
-				};
-
-				generateKey = new Callback_generateKey() {
-					@Override
-					public int invoke(ICryptoKey self)
-					{
-						return obj.generateKey();
-					}
-				};
-
-				getIV = new Callback_getIV() {
-					@Override
-					public int invoke(ICryptoKey self, byte[] iv, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.getIV(iv, length, realLength);
-					}
-				};
-
-				setIV = new Callback_setIV() {
-					@Override
-					public int invoke(ICryptoKey self, byte[] iv, int length)
-					{
-						return obj.setIV(iv, length);
-					}
-				};
-
-				createFromBuffer = new Callback_createFromBuffer() {
-					@Override
-					public int invoke(ICryptoKey self, byte[] buffer, int length)
-					{
-						return obj.createFromBuffer(buffer, length);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_loadFromFile loadFromFile;
-			public Callback_loadFromBuffer loadFromBuffer;
-			public Callback_loadFromCurrentRepository loadFromCurrentRepository;
-			public Callback_saveToFile saveToFile;
-			public Callback_saveToBuffer saveToBuffer;
-			public Callback_saveToRepository saveToRepository;
-			public Callback_setAgreeKeyFromRepository setAgreeKeyFromRepository;
-			public Callback_setExchangeKey setExchangeKey;
-			public Callback_generateKey generateKey;
-			public Callback_getIV getIV;
-			public Callback_setIV setIV;
-			public Callback_createFromBuffer createFromBuffer;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "loadFromFile", "loadFromBuffer", "loadFromCurrentRepository", "saveToFile", "saveToBuffer", "saveToRepository", "setAgreeKeyFromRepository", "setExchangeKey", "generateKey", "getIV", "setIV", "createFromBuffer"));
-				return fields;
-			}
-		}
-
-		public ICryptoKey()
-		{
-		}
-
-		public ICryptoKey(final ICryptoKeyIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int loadFromFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromBuffer.invoke(this, buffer, length);
-			return result;
-		}
-
-		public int loadFromCurrentRepository()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromCurrentRepository.invoke(this);
-			return result;
-		}
-
-		public int saveToFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToBuffer.invoke(this, buffer, length, realLength);
-			return result;
-		}
-
-		public int saveToRepository(ICryptoRepository repository, String name)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToRepository.invoke(this, repository, name);
-			return result;
-		}
-
-		public int setAgreeKeyFromRepository(ICryptoRepository repository)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setAgreeKeyFromRepository.invoke(this, repository);
-			return result;
-		}
-
-		public int setExchangeKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setExchangeKey.invoke(this, key);
-			return result;
-		}
-
-		public int generateKey()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.generateKey.invoke(this);
-			return result;
-		}
-
-		public int getIV(byte[] iv, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getIV.invoke(this, iv, length, realLength);
-			return result;
-		}
-
-		public int setIV(byte[] iv, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setIV.invoke(this, iv, length);
-			return result;
-		}
-
-		public int createFromBuffer(byte[] buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createFromBuffer.invoke(this, buffer, length);
-			return result;
-		}
-	}
-
-	public static class ICryptoKeyPair extends IVersioned implements ICryptoKeyPairIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoKeyPair self);
-			}
-
-			public static interface Callback_loadFromFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, String fileName);
-			}
-
-			public static interface Callback_loadFromBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, com.sun.jna.Pointer buffer, int length);
-			}
-
-			public static interface Callback_loadFromRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoRepository repository, String name);
-			}
-
-			public static interface Callback_loadFromCurrentRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self);
-			}
-
-			public static interface Callback_saveToFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, String fileName);
-			}
-
-			public static interface Callback_saveToBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_saveToRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoRepository repository, String name);
-			}
-
-			public static interface Callback_setAgreeKeyFromRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoRepository repository);
-			}
-
-			public static interface Callback_setExchangeKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoKey key);
-			}
-
-			public static interface Callback_generateKeyPair extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self);
-			}
-
-			public static interface Callback_getPublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoKey key);
-			}
-
-			public static interface Callback_createPublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoKey[] key);
-			}
-
-			public static interface Callback_deletePublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoKeyPair self, ICryptoKey key);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoKeyPairIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoKeyPair self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				loadFromFile = new Callback_loadFromFile() {
-					@Override
-					public int invoke(ICryptoKeyPair self, String fileName)
-					{
-						return obj.loadFromFile(fileName);
-					}
-				};
-
-				loadFromBuffer = new Callback_loadFromBuffer() {
-					@Override
-					public int invoke(ICryptoKeyPair self, com.sun.jna.Pointer buffer, int length)
-					{
-						return obj.loadFromBuffer(buffer, length);
-					}
-				};
-
-				loadFromRepository = new Callback_loadFromRepository() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoRepository repository, String name)
-					{
-						return obj.loadFromRepository(repository, name);
-					}
-				};
-
-				loadFromCurrentRepository = new Callback_loadFromCurrentRepository() {
-					@Override
-					public int invoke(ICryptoKeyPair self)
-					{
-						return obj.loadFromCurrentRepository();
-					}
-				};
-
-				saveToFile = new Callback_saveToFile() {
-					@Override
-					public int invoke(ICryptoKeyPair self, String fileName)
-					{
-						return obj.saveToFile(fileName);
-					}
-				};
-
-				saveToBuffer = new Callback_saveToBuffer() {
-					@Override
-					public int invoke(ICryptoKeyPair self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.saveToBuffer(buffer, length, realLength);
-					}
-				};
-
-				saveToRepository = new Callback_saveToRepository() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoRepository repository, String name)
-					{
-						return obj.saveToRepository(repository, name);
-					}
-				};
-
-				setAgreeKeyFromRepository = new Callback_setAgreeKeyFromRepository() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoRepository repository)
-					{
-						return obj.setAgreeKeyFromRepository(repository);
-					}
-				};
-
-				setExchangeKey = new Callback_setExchangeKey() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoKey key)
-					{
-						return obj.setExchangeKey(key);
-					}
-				};
-
-				generateKeyPair = new Callback_generateKeyPair() {
-					@Override
-					public int invoke(ICryptoKeyPair self)
-					{
-						return obj.generateKeyPair();
-					}
-				};
-
-				getPublicKey = new Callback_getPublicKey() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoKey key)
-					{
-						return obj.getPublicKey(key);
-					}
-				};
-
-				createPublicKey = new Callback_createPublicKey() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoKey[] key)
-					{
-						return obj.createPublicKey(key);
-					}
-				};
-
-				deletePublicKey = new Callback_deletePublicKey() {
-					@Override
-					public int invoke(ICryptoKeyPair self, ICryptoKey key)
-					{
-						return obj.deletePublicKey(key);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_loadFromFile loadFromFile;
-			public Callback_loadFromBuffer loadFromBuffer;
-			public Callback_loadFromRepository loadFromRepository;
-			public Callback_loadFromCurrentRepository loadFromCurrentRepository;
-			public Callback_saveToFile saveToFile;
-			public Callback_saveToBuffer saveToBuffer;
-			public Callback_saveToRepository saveToRepository;
-			public Callback_setAgreeKeyFromRepository setAgreeKeyFromRepository;
-			public Callback_setExchangeKey setExchangeKey;
-			public Callback_generateKeyPair generateKeyPair;
-			public Callback_getPublicKey getPublicKey;
-			public Callback_createPublicKey createPublicKey;
-			public Callback_deletePublicKey deletePublicKey;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "loadFromFile", "loadFromBuffer", "loadFromRepository", "loadFromCurrentRepository", "saveToFile", "saveToBuffer", "saveToRepository", "setAgreeKeyFromRepository", "setExchangeKey", "generateKeyPair", "getPublicKey", "createPublicKey", "deletePublicKey"));
-				return fields;
-			}
-		}
-
-		public ICryptoKeyPair()
-		{
-		}
-
-		public ICryptoKeyPair(final ICryptoKeyPairIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int loadFromFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromBuffer.invoke(this, buffer, length);
-			return result;
-		}
-
-		public int loadFromRepository(ICryptoRepository repository, String name)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromRepository.invoke(this, repository, name);
-			return result;
-		}
-
-		public int loadFromCurrentRepository()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromCurrentRepository.invoke(this);
-			return result;
-		}
-
-		public int saveToFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToBuffer.invoke(this, buffer, length, realLength);
-			return result;
-		}
-
-		public int saveToRepository(ICryptoRepository repository, String name)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToRepository.invoke(this, repository, name);
-			return result;
-		}
-
-		public int setAgreeKeyFromRepository(ICryptoRepository repository)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setAgreeKeyFromRepository.invoke(this, repository);
-			return result;
-		}
-
-		public int setExchangeKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setExchangeKey.invoke(this, key);
-			return result;
-		}
-
-		public int generateKeyPair()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.generateKeyPair.invoke(this);
-			return result;
-		}
-
-		public int getPublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getPublicKey.invoke(this, key);
-			return result;
-		}
-
-		public int createPublicKey(ICryptoKey[] key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createPublicKey.invoke(this, key);
-			return result;
-		}
-
-		public int deletePublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deletePublicKey.invoke(this, key);
-			return result;
-		}
-	}
-
-	public static class ICryptoRandomFactory extends IVersioned implements ICryptoRandomFactoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoRandomFactory self);
-			}
-
-			public static interface Callback_generateRandom extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRandomFactory self, byte[] buffer, int length, ICryptoProvider providerName);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoRandomFactoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoRandomFactory self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				generateRandom = new Callback_generateRandom() {
-					@Override
-					public int invoke(ICryptoRandomFactory self, byte[] buffer, int length, ICryptoProvider providerName)
-					{
-						return obj.generateRandom(buffer, length, providerName);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_generateRandom generateRandom;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "generateRandom"));
-				return fields;
-			}
-		}
-
-		public ICryptoRandomFactory()
-		{
-		}
-
-		public ICryptoRandomFactory(final ICryptoRandomFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int generateRandom(byte[] buffer, int length, ICryptoProvider providerName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.generateRandom.invoke(this, buffer, length, providerName);
-			return result;
-		}
-	}
-
-	public static class ICryptoHashFactory extends IVersioned implements ICryptoHashFactoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoHashFactory self);
-			}
-
-			public static interface Callback_createHash extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoHashFactory self, byte[] buffer, int bufferLength, byte[] hash, int hashLength, com.sun.jna.Pointer realHashLength, boolean asString);
-			}
-
-			public static interface Callback_setKeyForHash extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoHashFactory self, ICryptoKey key);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoHashFactoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoHashFactory self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				createHash = new Callback_createHash() {
-					@Override
-					public int invoke(ICryptoHashFactory self, byte[] buffer, int bufferLength, byte[] hash, int hashLength, com.sun.jna.Pointer realHashLength, boolean asString)
-					{
-						return obj.createHash(buffer, bufferLength, hash, hashLength, realHashLength, asString);
-					}
-				};
-
-				setKeyForHash = new Callback_setKeyForHash() {
-					@Override
-					public int invoke(ICryptoHashFactory self, ICryptoKey key)
-					{
-						return obj.setKeyForHash(key);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_createHash createHash;
-			public Callback_setKeyForHash setKeyForHash;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "createHash", "setKeyForHash"));
-				return fields;
-			}
-		}
-
-		public ICryptoHashFactory()
-		{
-		}
-
-		public ICryptoHashFactory(final ICryptoHashFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int createHash(byte[] buffer, int bufferLength, byte[] hash, int hashLength, com.sun.jna.Pointer realHashLength, boolean asString)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createHash.invoke(this, buffer, bufferLength, hash, hashLength, realHashLength, asString);
-			return result;
-		}
-
-		public int setKeyForHash(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.setKeyForHash.invoke(this, key);
-			return result;
-		}
-	}
-
-	public static class ICryptoSymmetricFactory extends IVersioned implements ICryptoSymmetricFactoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoSymmetricFactory self);
-			}
-
-			public static interface Callback_encrypt extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSymmetricFactory self, byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoKey key);
-			}
-
-			public static interface Callback_decrypt extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSymmetricFactory self, byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoKey key);
-			}
-
-			public static interface Callback_createKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSymmetricFactory self, ICryptoRepository repository, ICryptoKey[] key);
-			}
-
-			public static interface Callback_deleteKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSymmetricFactory self, ICryptoKey key);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoSymmetricFactoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoSymmetricFactory self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				encrypt = new Callback_encrypt() {
-					@Override
-					public int invoke(ICryptoSymmetricFactory self, byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoKey key)
-					{
-						return obj.encrypt(data, dataLength, cryptData, cryptDataLength, realCryptDataLength, key);
-					}
-				};
-
-				decrypt = new Callback_decrypt() {
-					@Override
-					public int invoke(ICryptoSymmetricFactory self, byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoKey key)
-					{
-						return obj.decrypt(cryptData, cryptDataLength, data, dataLength, realDataLength, key);
-					}
-				};
-
-				createKey = new Callback_createKey() {
-					@Override
-					public int invoke(ICryptoSymmetricFactory self, ICryptoRepository repository, ICryptoKey[] key)
-					{
-						return obj.createKey(repository, key);
-					}
-				};
-
-				deleteKey = new Callback_deleteKey() {
-					@Override
-					public int invoke(ICryptoSymmetricFactory self, ICryptoKey key)
-					{
-						return obj.deleteKey(key);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_encrypt encrypt;
-			public Callback_decrypt decrypt;
-			public Callback_createKey createKey;
-			public Callback_deleteKey deleteKey;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "encrypt", "decrypt", "createKey", "deleteKey"));
-				return fields;
-			}
-		}
-
-		public ICryptoSymmetricFactory()
-		{
-		}
-
-		public ICryptoSymmetricFactory(final ICryptoSymmetricFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int encrypt(byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.encrypt.invoke(this, data, dataLength, cryptData, cryptDataLength, realCryptDataLength, key);
-			return result;
-		}
-
-		public int decrypt(byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.decrypt.invoke(this, cryptData, cryptDataLength, data, dataLength, realDataLength, key);
-			return result;
-		}
-
-		public int createKey(ICryptoRepository repository, ICryptoKey[] key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createKey.invoke(this, repository, key);
-			return result;
-		}
-
-		public int deleteKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteKey.invoke(this, key);
-			return result;
-		}
-	}
-
-	public static class ICryptoSignatureFactory extends IVersioned implements ICryptoSignatureFactoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoSignatureFactory self);
-			}
-
-			public static interface Callback_createKeyPair extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, ICryptoRepository repository, ICryptoKeyPair[] key);
-			}
-
-			public static interface Callback_deleteKeyPair extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, ICryptoKeyPair keyPair);
-			}
-
-			public static interface Callback_sign extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, byte[] data, int dataLength, ICryptoSignature signature, ICryptoKeyPair privateKey);
-			}
-
-			public static interface Callback_verifySign extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, byte[] data, int dataLength, ICryptoSignature signature, ICryptoKey publicKey);
-			}
-
-			public static interface Callback_createSignature extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, ICryptoSignature[] signature);
-			}
-
-			public static interface Callback_deleteSignature extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignatureFactory self, ICryptoSignature signature);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoSignatureFactoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoSignatureFactory self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				createKeyPair = new Callback_createKeyPair() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, ICryptoRepository repository, ICryptoKeyPair[] key)
-					{
-						return obj.createKeyPair(repository, key);
-					}
-				};
-
-				deleteKeyPair = new Callback_deleteKeyPair() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, ICryptoKeyPair keyPair)
-					{
-						return obj.deleteKeyPair(keyPair);
-					}
-				};
-
-				sign = new Callback_sign() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, byte[] data, int dataLength, ICryptoSignature signature, ICryptoKeyPair privateKey)
-					{
-						return obj.sign(data, dataLength, signature, privateKey);
-					}
-				};
-
-				verifySign = new Callback_verifySign() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, byte[] data, int dataLength, ICryptoSignature signature, ICryptoKey publicKey)
-					{
-						return obj.verifySign(data, dataLength, signature, publicKey);
-					}
-				};
-
-				createSignature = new Callback_createSignature() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, ICryptoSignature[] signature)
-					{
-						return obj.createSignature(signature);
-					}
-				};
-
-				deleteSignature = new Callback_deleteSignature() {
-					@Override
-					public int invoke(ICryptoSignatureFactory self, ICryptoSignature signature)
-					{
-						return obj.deleteSignature(signature);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_createKeyPair createKeyPair;
-			public Callback_deleteKeyPair deleteKeyPair;
-			public Callback_sign sign;
-			public Callback_verifySign verifySign;
-			public Callback_createSignature createSignature;
-			public Callback_deleteSignature deleteSignature;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "createKeyPair", "deleteKeyPair", "sign", "verifySign", "createSignature", "deleteSignature"));
-				return fields;
-			}
-		}
-
-		public ICryptoSignatureFactory()
-		{
-		}
-
-		public ICryptoSignatureFactory(final ICryptoSignatureFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int createKeyPair(ICryptoRepository repository, ICryptoKeyPair[] key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createKeyPair.invoke(this, repository, key);
-			return result;
-		}
-
-		public int deleteKeyPair(ICryptoKeyPair keyPair)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteKeyPair.invoke(this, keyPair);
-			return result;
-		}
-
-		public int sign(byte[] data, int dataLength, ICryptoSignature signature, ICryptoKeyPair privateKey)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.sign.invoke(this, data, dataLength, signature, privateKey);
-			return result;
-		}
-
-		public int verifySign(byte[] data, int dataLength, ICryptoSignature signature, ICryptoKey publicKey)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.verifySign.invoke(this, data, dataLength, signature, publicKey);
-			return result;
-		}
-
-		public int createSignature(ICryptoSignature[] signature)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createSignature.invoke(this, signature);
-			return result;
-		}
-
-		public int deleteSignature(ICryptoSignature signature)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteSignature.invoke(this, signature);
-			return result;
-		}
-	}
-
-	public static class ICryptoSignature extends IVersioned implements ICryptoSignatureIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoSignature self);
-			}
-
-			public static interface Callback_saveToFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignature self, String fileName);
-			}
-
-			public static interface Callback_saveToBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignature self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_loadFromFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignature self, String fileName);
-			}
-
-			public static interface Callback_loadFromBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoSignature self, com.sun.jna.Pointer buffer, int length);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoSignatureIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoSignature self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				saveToFile = new Callback_saveToFile() {
-					@Override
-					public int invoke(ICryptoSignature self, String fileName)
-					{
-						return obj.saveToFile(fileName);
-					}
-				};
-
-				saveToBuffer = new Callback_saveToBuffer() {
-					@Override
-					public int invoke(ICryptoSignature self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.saveToBuffer(buffer, length, realLength);
-					}
-				};
-
-				loadFromFile = new Callback_loadFromFile() {
-					@Override
-					public int invoke(ICryptoSignature self, String fileName)
-					{
-						return obj.loadFromFile(fileName);
-					}
-				};
-
-				loadFromBuffer = new Callback_loadFromBuffer() {
-					@Override
-					public int invoke(ICryptoSignature self, com.sun.jna.Pointer buffer, int length)
-					{
-						return obj.loadFromBuffer(buffer, length);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_saveToFile saveToFile;
-			public Callback_saveToBuffer saveToBuffer;
-			public Callback_loadFromFile loadFromFile;
-			public Callback_loadFromBuffer loadFromBuffer;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "saveToFile", "saveToBuffer", "loadFromFile", "loadFromBuffer"));
-				return fields;
-			}
-		}
-
-		public ICryptoSignature()
-		{
-		}
-
-		public ICryptoSignature(final ICryptoSignatureIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int saveToFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToBuffer.invoke(this, buffer, length, realLength);
-			return result;
-		}
-
-		public int loadFromFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromBuffer.invoke(this, buffer, length);
-			return result;
-		}
-	}
-
-	public static class ICryptoCertificateFactory extends IVersioned implements ICryptoCertificateFactoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoCertificateFactory self);
-			}
-
-			public static interface Callback_createCertificate extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificateFactory self, ICryptoRepository repository, ICryptoCertificate[] certificate);
-			}
-
-			public static interface Callback_deleteCertificate extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificateFactory self, ICryptoCertificate certificate);
-			}
-
-			public static interface Callback_encrypt extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificateFactory self, byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoCertificate certificate);
-			}
-
-			public static interface Callback_decrypt extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificateFactory self, byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoRepository repository);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoCertificateFactoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoCertificateFactory self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				createCertificate = new Callback_createCertificate() {
-					@Override
-					public int invoke(ICryptoCertificateFactory self, ICryptoRepository repository, ICryptoCertificate[] certificate)
-					{
-						return obj.createCertificate(repository, certificate);
-					}
-				};
-
-				deleteCertificate = new Callback_deleteCertificate() {
-					@Override
-					public int invoke(ICryptoCertificateFactory self, ICryptoCertificate certificate)
-					{
-						return obj.deleteCertificate(certificate);
-					}
-				};
-
-				encrypt = new Callback_encrypt() {
-					@Override
-					public int invoke(ICryptoCertificateFactory self, byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoCertificate certificate)
-					{
-						return obj.encrypt(data, dataLength, cryptData, cryptDataLength, realCryptDataLength, certificate);
-					}
-				};
-
-				decrypt = new Callback_decrypt() {
-					@Override
-					public int invoke(ICryptoCertificateFactory self, byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoRepository repository)
-					{
-						return obj.decrypt(cryptData, cryptDataLength, data, dataLength, realDataLength, repository);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_createCertificate createCertificate;
-			public Callback_deleteCertificate deleteCertificate;
-			public Callback_encrypt encrypt;
-			public Callback_decrypt decrypt;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "createCertificate", "deleteCertificate", "encrypt", "decrypt"));
-				return fields;
-			}
-		}
-
-		public ICryptoCertificateFactory()
-		{
-		}
-
-		public ICryptoCertificateFactory(final ICryptoCertificateFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int createCertificate(ICryptoRepository repository, ICryptoCertificate[] certificate)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createCertificate.invoke(this, repository, certificate);
-			return result;
-		}
-
-		public int deleteCertificate(ICryptoCertificate certificate)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteCertificate.invoke(this, certificate);
-			return result;
-		}
-
-		public int encrypt(byte[] data, int dataLength, byte[] cryptData, int cryptDataLength, com.sun.jna.Pointer realCryptDataLength, ICryptoCertificate certificate)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.encrypt.invoke(this, data, dataLength, cryptData, cryptDataLength, realCryptDataLength, certificate);
-			return result;
-		}
-
-		public int decrypt(byte[] cryptData, int cryptDataLength, byte[] data, int dataLength, com.sun.jna.Pointer realDataLength, ICryptoRepository repository)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.decrypt.invoke(this, cryptData, cryptDataLength, data, dataLength, realDataLength, repository);
-			return result;
-		}
-	}
-
-	public static class ICryptoCertificate extends IVersioned implements ICryptoCertificateIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoCertificate self);
-			}
-
-			public static interface Callback_loadFromFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, String fileName);
-			}
-
-			public static interface Callback_loadFromBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length);
-			}
-
-			public static interface Callback_loadFromBinaryBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length);
-			}
-
-			public static interface Callback_loadFromRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, ICryptoRepository repository, String name);
-			}
-
-			public static interface Callback_saveToFile extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, String fileName);
-			}
-
-			public static interface Callback_saveToBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_saveToBinaryBuffer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_verifyCertificate extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, ICryptoCertificate certificate);
-			}
-
-			public static interface Callback_getId extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, byte[] id, com.sun.jna.Pointer length);
-			}
-
-			public static interface Callback_getIssuerName extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, byte[] issuerName, com.sun.jna.Pointer length);
-			}
-
-			public static interface Callback_getPublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, ICryptoKey key);
-			}
-
-			public static interface Callback_getPublicKeyMethod extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer method, com.sun.jna.Pointer length);
-			}
-
-			public static interface Callback_createPublicKeyFromCertificate extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, ICryptoRepository repository, ICryptoKey[] key);
-			}
-
-			public static interface Callback_deleteCertificatePublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, ICryptoKey key);
-			}
-
-			public static interface Callback_getSerialNumber extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, byte[] serialNumber, com.sun.jna.Pointer length);
-			}
-
-			public static interface Callback_getOwnerName extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer ownerName, com.sun.jna.Pointer length, String user_dn);
-			}
-
-			public static interface Callback_getKeyContainer extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoCertificate self, com.sun.jna.Pointer container, com.sun.jna.Pointer length);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoCertificateIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoCertificate self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				loadFromFile = new Callback_loadFromFile() {
-					@Override
-					public int invoke(ICryptoCertificate self, String fileName)
-					{
-						return obj.loadFromFile(fileName);
-					}
-				};
-
-				loadFromBuffer = new Callback_loadFromBuffer() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length)
-					{
-						return obj.loadFromBuffer(buffer, length);
-					}
-				};
-
-				loadFromBinaryBuffer = new Callback_loadFromBinaryBuffer() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length)
-					{
-						return obj.loadFromBinaryBuffer(buffer, length);
-					}
-				};
-
-				loadFromRepository = new Callback_loadFromRepository() {
-					@Override
-					public int invoke(ICryptoCertificate self, ICryptoRepository repository, String name)
-					{
-						return obj.loadFromRepository(repository, name);
-					}
-				};
-
-				saveToFile = new Callback_saveToFile() {
-					@Override
-					public int invoke(ICryptoCertificate self, String fileName)
-					{
-						return obj.saveToFile(fileName);
-					}
-				};
-
-				saveToBuffer = new Callback_saveToBuffer() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.saveToBuffer(buffer, length, realLength);
-					}
-				};
-
-				saveToBinaryBuffer = new Callback_saveToBinaryBuffer() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.saveToBinaryBuffer(buffer, length, realLength);
-					}
-				};
-
-				verifyCertificate = new Callback_verifyCertificate() {
-					@Override
-					public int invoke(ICryptoCertificate self, ICryptoCertificate certificate)
-					{
-						return obj.verifyCertificate(certificate);
-					}
-				};
-
-				getId = new Callback_getId() {
-					@Override
-					public int invoke(ICryptoCertificate self, byte[] id, com.sun.jna.Pointer length)
-					{
-						return obj.getId(id, length);
-					}
-				};
-
-				getIssuerName = new Callback_getIssuerName() {
-					@Override
-					public int invoke(ICryptoCertificate self, byte[] issuerName, com.sun.jna.Pointer length)
-					{
-						return obj.getIssuerName(issuerName, length);
-					}
-				};
-
-				getPublicKey = new Callback_getPublicKey() {
-					@Override
-					public int invoke(ICryptoCertificate self, ICryptoKey key)
-					{
-						return obj.getPublicKey(key);
-					}
-				};
-
-				getPublicKeyMethod = new Callback_getPublicKeyMethod() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer method, com.sun.jna.Pointer length)
-					{
-						return obj.getPublicKeyMethod(method, length);
-					}
-				};
-
-				createPublicKeyFromCertificate = new Callback_createPublicKeyFromCertificate() {
-					@Override
-					public int invoke(ICryptoCertificate self, ICryptoRepository repository, ICryptoKey[] key)
-					{
-						return obj.createPublicKeyFromCertificate(repository, key);
-					}
-				};
-
-				deleteCertificatePublicKey = new Callback_deleteCertificatePublicKey() {
-					@Override
-					public int invoke(ICryptoCertificate self, ICryptoKey key)
-					{
-						return obj.deleteCertificatePublicKey(key);
-					}
-				};
-
-				getSerialNumber = new Callback_getSerialNumber() {
-					@Override
-					public int invoke(ICryptoCertificate self, byte[] serialNumber, com.sun.jna.Pointer length)
-					{
-						return obj.getSerialNumber(serialNumber, length);
-					}
-				};
-
-				getOwnerName = new Callback_getOwnerName() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer ownerName, com.sun.jna.Pointer length, String user_dn)
-					{
-						return obj.getOwnerName(ownerName, length, user_dn);
-					}
-				};
-
-				getKeyContainer = new Callback_getKeyContainer() {
-					@Override
-					public int invoke(ICryptoCertificate self, com.sun.jna.Pointer container, com.sun.jna.Pointer length)
-					{
-						return obj.getKeyContainer(container, length);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_loadFromFile loadFromFile;
-			public Callback_loadFromBuffer loadFromBuffer;
-			public Callback_loadFromBinaryBuffer loadFromBinaryBuffer;
-			public Callback_loadFromRepository loadFromRepository;
-			public Callback_saveToFile saveToFile;
-			public Callback_saveToBuffer saveToBuffer;
-			public Callback_saveToBinaryBuffer saveToBinaryBuffer;
-			public Callback_verifyCertificate verifyCertificate;
-			public Callback_getId getId;
-			public Callback_getIssuerName getIssuerName;
-			public Callback_getPublicKey getPublicKey;
-			public Callback_getPublicKeyMethod getPublicKeyMethod;
-			public Callback_createPublicKeyFromCertificate createPublicKeyFromCertificate;
-			public Callback_deleteCertificatePublicKey deleteCertificatePublicKey;
-			public Callback_getSerialNumber getSerialNumber;
-			public Callback_getOwnerName getOwnerName;
-			public Callback_getKeyContainer getKeyContainer;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "loadFromFile", "loadFromBuffer", "loadFromBinaryBuffer", "loadFromRepository", "saveToFile", "saveToBuffer", "saveToBinaryBuffer", "verifyCertificate", "getId", "getIssuerName", "getPublicKey", "getPublicKeyMethod", "createPublicKeyFromCertificate", "deleteCertificatePublicKey", "getSerialNumber", "getOwnerName", "getKeyContainer"));
-				return fields;
-			}
-		}
-
-		public ICryptoCertificate()
-		{
-		}
-
-		public ICryptoCertificate(final ICryptoCertificateIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int loadFromFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int loadFromBuffer(com.sun.jna.Pointer buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromBuffer.invoke(this, buffer, length);
-			return result;
-		}
-
-		public int loadFromBinaryBuffer(com.sun.jna.Pointer buffer, int length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromBinaryBuffer.invoke(this, buffer, length);
-			return result;
-		}
-
-		public int loadFromRepository(ICryptoRepository repository, String name)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.loadFromRepository.invoke(this, repository, name);
-			return result;
-		}
-
-		public int saveToFile(String fileName)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToFile.invoke(this, fileName);
-			return result;
-		}
-
-		public int saveToBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToBuffer.invoke(this, buffer, length, realLength);
-			return result;
-		}
-
-		public int saveToBinaryBuffer(com.sun.jna.Pointer buffer, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.saveToBinaryBuffer.invoke(this, buffer, length, realLength);
-			return result;
-		}
-
-		public int verifyCertificate(ICryptoCertificate certificate)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.verifyCertificate.invoke(this, certificate);
-			return result;
-		}
-
-		public int getId(byte[] id, com.sun.jna.Pointer length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getId.invoke(this, id, length);
-			return result;
-		}
-
-		public int getIssuerName(byte[] issuerName, com.sun.jna.Pointer length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getIssuerName.invoke(this, issuerName, length);
-			return result;
-		}
-
-		public int getPublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getPublicKey.invoke(this, key);
-			return result;
-		}
-
-		public int getPublicKeyMethod(com.sun.jna.Pointer method, com.sun.jna.Pointer length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getPublicKeyMethod.invoke(this, method, length);
-			return result;
-		}
-
-		public int createPublicKeyFromCertificate(ICryptoRepository repository, ICryptoKey[] key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createPublicKeyFromCertificate.invoke(this, repository, key);
-			return result;
-		}
-
-		public int deleteCertificatePublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteCertificatePublicKey.invoke(this, key);
-			return result;
-		}
-
-		public int getSerialNumber(byte[] serialNumber, com.sun.jna.Pointer length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getSerialNumber.invoke(this, serialNumber, length);
-			return result;
-		}
-
-		public int getOwnerName(com.sun.jna.Pointer ownerName, com.sun.jna.Pointer length, String user_dn)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getOwnerName.invoke(this, ownerName, length, user_dn);
-			return result;
-		}
-
-		public int getKeyContainer(com.sun.jna.Pointer container, com.sun.jna.Pointer length)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getKeyContainer.invoke(this, container, length);
-			return result;
-		}
-	}
-
-	public static class ICryptoRepository extends IVersioned implements ICryptoRepositoryIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoRepository self);
-			}
-
-			public static interface Callback_getRepositoryName extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self, com.sun.jna.Pointer name, int length, com.sun.jna.Pointer realLength);
-			}
-
-			public static interface Callback_open extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self, String path, int openMode, int repositoryLocation, int providerType);
-			}
-
-			public static interface Callback_close extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self);
-			}
-
-			public static interface Callback_createPublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self, int method, ICryptoKey[] key);
-			}
-
-			public static interface Callback_getPublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self, ICryptoKey key);
-			}
-
-			public static interface Callback_deletePublicKey extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoRepository self, ICryptoKey key);
-			}
-
-			public static interface Callback_isOpened extends com.sun.jna.Callback
-			{
-				public boolean invoke(ICryptoRepository self);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoRepositoryIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoRepository self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				getRepositoryName = new Callback_getRepositoryName() {
-					@Override
-					public int invoke(ICryptoRepository self, com.sun.jna.Pointer name, int length, com.sun.jna.Pointer realLength)
-					{
-						return obj.getRepositoryName(name, length, realLength);
-					}
-				};
-
-				open = new Callback_open() {
-					@Override
-					public int invoke(ICryptoRepository self, String path, int openMode, int repositoryLocation, int providerType)
-					{
-						return obj.open(path, openMode, repositoryLocation, providerType);
-					}
-				};
-
-				close = new Callback_close() {
-					@Override
-					public int invoke(ICryptoRepository self)
-					{
-						return obj.close();
-					}
-				};
-
-				createPublicKey = new Callback_createPublicKey() {
-					@Override
-					public int invoke(ICryptoRepository self, int method, ICryptoKey[] key)
-					{
-						return obj.createPublicKey(method, key);
-					}
-				};
-
-				getPublicKey = new Callback_getPublicKey() {
-					@Override
-					public int invoke(ICryptoRepository self, ICryptoKey key)
-					{
-						return obj.getPublicKey(key);
-					}
-				};
-
-				deletePublicKey = new Callback_deletePublicKey() {
-					@Override
-					public int invoke(ICryptoRepository self, ICryptoKey key)
-					{
-						return obj.deletePublicKey(key);
-					}
-				};
-
-				isOpened = new Callback_isOpened() {
-					@Override
-					public boolean invoke(ICryptoRepository self)
-					{
-						return obj.isOpened();
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_getRepositoryName getRepositoryName;
-			public Callback_open open;
-			public Callback_close close;
-			public Callback_createPublicKey createPublicKey;
-			public Callback_getPublicKey getPublicKey;
-			public Callback_deletePublicKey deletePublicKey;
-			public Callback_isOpened isOpened;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "getRepositoryName", "open", "close", "createPublicKey", "getPublicKey", "deletePublicKey", "isOpened"));
-				return fields;
-			}
-		}
-
-		public ICryptoRepository()
-		{
-		}
-
-		public ICryptoRepository(final ICryptoRepositoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int getRepositoryName(com.sun.jna.Pointer name, int length, com.sun.jna.Pointer realLength)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getRepositoryName.invoke(this, name, length, realLength);
-			return result;
-		}
-
-		public int open(String path, int openMode, int repositoryLocation, int providerType)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.open.invoke(this, path, openMode, repositoryLocation, providerType);
-			return result;
-		}
-
-		public int close()
-		{
-			VTable vTable = getVTable();
-			int result = vTable.close.invoke(this);
-			return result;
-		}
-
-		public int createPublicKey(int method, ICryptoKey[] key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createPublicKey.invoke(this, method, key);
-			return result;
-		}
-
-		public int getPublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getPublicKey.invoke(this, key);
-			return result;
-		}
-
-		public int deletePublicKey(ICryptoKey key)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deletePublicKey.invoke(this, key);
-			return result;
-		}
-
-		public boolean isOpened()
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.isOpened.invoke(this);
-			return result;
-		}
-	}
-
-	public static class ICryptoProvider extends IVersioned implements ICryptoProviderIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_getObjectInfo extends com.sun.jna.Callback
-			{
-				public com.sun.jna.Pointer invoke(ICryptoProvider self);
-			}
-
-			public static interface Callback_createRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoProvider self, ICryptoRepository[] repository, int type, String pin);
-			}
-
-			public static interface Callback_deleteRepository extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoProvider self, ICryptoRepository repository);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoProviderIntf obj)
-			{
-				super(obj);
-
-				getObjectInfo = new Callback_getObjectInfo() {
-					@Override
-					public com.sun.jna.Pointer invoke(ICryptoProvider self)
-					{
-						return obj.getObjectInfo();
-					}
-				};
-
-				createRepository = new Callback_createRepository() {
-					@Override
-					public int invoke(ICryptoProvider self, ICryptoRepository[] repository, int type, String pin)
-					{
-						return obj.createRepository(repository, type, pin);
-					}
-				};
-
-				deleteRepository = new Callback_deleteRepository() {
-					@Override
-					public int invoke(ICryptoProvider self, ICryptoRepository repository)
-					{
-						return obj.deleteRepository(repository);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_getObjectInfo getObjectInfo;
-			public Callback_createRepository createRepository;
-			public Callback_deleteRepository deleteRepository;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getObjectInfo", "createRepository", "deleteRepository"));
-				return fields;
-			}
-		}
-
-		public ICryptoProvider()
-		{
-		}
-
-		public ICryptoProvider(final ICryptoProviderIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public com.sun.jna.Pointer getObjectInfo()
-		{
-			VTable vTable = getVTable();
-			com.sun.jna.Pointer result = vTable.getObjectInfo.invoke(this);
-			return result;
-		}
-
-		public int createRepository(ICryptoRepository[] repository, int type, String pin)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.createRepository.invoke(this, repository, type, pin);
-			return result;
-		}
-
-		public int deleteRepository(ICryptoRepository repository)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.deleteRepository.invoke(this, repository);
-			return result;
-		}
-	}
-
-	public static class IListCryptoObjects extends IVersioned implements IListCryptoObjectsIntf
-	{
-		public static class VTable extends IVersioned.VTable
-		{
-			public static interface Callback_list extends com.sun.jna.Callback
-			{
-				public void invoke(IListCryptoObjects self, CryptoObjectInfo[] objInfo);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final IListCryptoObjectsIntf obj)
-			{
-				super(obj);
-
-				list = new Callback_list() {
-					@Override
-					public void invoke(IListCryptoObjects self, CryptoObjectInfo[] objInfo)
-					{
-						obj.list(objInfo);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_list list;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("list"));
-				return fields;
-			}
-		}
-
-		public IListCryptoObjects()
-		{
-		}
-
-		public IListCryptoObjects(final IListCryptoObjectsIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public void list(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			vTable.list.invoke(this, objInfo);
-		}
-	}
-
-	public static class ICryptoFactory extends IPluginBase implements ICryptoFactoryIntf
-	{
-		public static class VTable extends IPluginBase.VTable
-		{
-			public static interface Callback_setTrace extends com.sun.jna.Callback
-			{
-				public void invoke(ICryptoFactory self, boolean need);
-			}
-
-			public static interface Callback_getCryptoProvider extends com.sun.jna.Callback
-			{
-				public ICryptoProvider invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoRandomFactory extends com.sun.jna.Callback
-			{
-				public ICryptoRandomFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoHashFactory extends com.sun.jna.Callback
-			{
-				public ICryptoHashFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoSymmetricFactory extends com.sun.jna.Callback
-			{
-				public ICryptoSymmetricFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoSignatureFactory extends com.sun.jna.Callback
-			{
-				public ICryptoSignatureFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoCertificateFactory extends com.sun.jna.Callback
-			{
-				public ICryptoCertificateFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo);
-			}
-
-			public static interface Callback_getCryptoObjects extends com.sun.jna.Callback
-			{
-				public int invoke(ICryptoFactory self, int type, IListCryptoObjects callback);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ICryptoFactoryIntf obj)
-			{
-				super(obj);
-
-				setTrace = new Callback_setTrace() {
-					@Override
-					public void invoke(ICryptoFactory self, boolean need)
-					{
-						obj.setTrace(need);
-					}
-				};
-
-				getCryptoProvider = new Callback_getCryptoProvider() {
-					@Override
-					public ICryptoProvider invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoProvider(objInfo);
-					}
-				};
-
-				getCryptoRandomFactory = new Callback_getCryptoRandomFactory() {
-					@Override
-					public ICryptoRandomFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoRandomFactory(objInfo);
-					}
-				};
-
-				getCryptoHashFactory = new Callback_getCryptoHashFactory() {
-					@Override
-					public ICryptoHashFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoHashFactory(objInfo);
-					}
-				};
-
-				getCryptoSymmetricFactory = new Callback_getCryptoSymmetricFactory() {
-					@Override
-					public ICryptoSymmetricFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoSymmetricFactory(objInfo);
-					}
-				};
-
-				getCryptoSignatureFactory = new Callback_getCryptoSignatureFactory() {
-					@Override
-					public ICryptoSignatureFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoSignatureFactory(objInfo);
-					}
-				};
-
-				getCryptoCertificateFactory = new Callback_getCryptoCertificateFactory() {
-					@Override
-					public ICryptoCertificateFactory invoke(ICryptoFactory self, CryptoObjectInfo[] objInfo)
-					{
-						return obj.getCryptoCertificateFactory(objInfo);
-					}
-				};
-
-				getCryptoObjects = new Callback_getCryptoObjects() {
-					@Override
-					public int invoke(ICryptoFactory self, int type, IListCryptoObjects callback)
-					{
-						return obj.getCryptoObjects(type, callback);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_setTrace setTrace;
-			public Callback_getCryptoProvider getCryptoProvider;
-			public Callback_getCryptoRandomFactory getCryptoRandomFactory;
-			public Callback_getCryptoHashFactory getCryptoHashFactory;
-			public Callback_getCryptoSymmetricFactory getCryptoSymmetricFactory;
-			public Callback_getCryptoSignatureFactory getCryptoSignatureFactory;
-			public Callback_getCryptoCertificateFactory getCryptoCertificateFactory;
-			public Callback_getCryptoObjects getCryptoObjects;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("setTrace", "getCryptoProvider", "getCryptoRandomFactory", "getCryptoHashFactory", "getCryptoSymmetricFactory", "getCryptoSignatureFactory", "getCryptoCertificateFactory", "getCryptoObjects"));
-				return fields;
-			}
-		}
-
-		public ICryptoFactory()
-		{
-		}
-
-		public ICryptoFactory(final ICryptoFactoryIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public void setTrace(boolean need)
-		{
-			VTable vTable = getVTable();
-			vTable.setTrace.invoke(this, need);
-		}
-
-		public ICryptoProvider getCryptoProvider(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoProvider result = vTable.getCryptoProvider.invoke(this, objInfo);
-			return result;
-		}
-
-		public ICryptoRandomFactory getCryptoRandomFactory(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoRandomFactory result = vTable.getCryptoRandomFactory.invoke(this, objInfo);
-			return result;
-		}
-
-		public ICryptoHashFactory getCryptoHashFactory(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoHashFactory result = vTable.getCryptoHashFactory.invoke(this, objInfo);
-			return result;
-		}
-
-		public ICryptoSymmetricFactory getCryptoSymmetricFactory(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoSymmetricFactory result = vTable.getCryptoSymmetricFactory.invoke(this, objInfo);
-			return result;
-		}
-
-		public ICryptoSignatureFactory getCryptoSignatureFactory(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoSignatureFactory result = vTable.getCryptoSignatureFactory.invoke(this, objInfo);
-			return result;
-		}
-
-		public ICryptoCertificateFactory getCryptoCertificateFactory(CryptoObjectInfo[] objInfo)
-		{
-			VTable vTable = getVTable();
-			ICryptoCertificateFactory result = vTable.getCryptoCertificateFactory.invoke(this, objInfo);
-			return result;
-		}
-
-		public int getCryptoObjects(int type, IListCryptoObjects callback)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.getCryptoObjects.invoke(this, type, callback);
-			return result;
-		}
-	}
-
-	public static class ILdapPlugin extends IReferenceCounted implements ILdapPluginIntf
-	{
-		public static class VTable extends IReferenceCounted.VTable
-		{
-			public static interface Callback_connect extends com.sun.jna.Callback
-			{
-				public void invoke(ILdapPlugin self);
-			}
-
-			public static interface Callback_is_connected extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self);
-			}
-
-			public static interface Callback_bind extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self);
-			}
-
-			public static interface Callback_bind_as extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String user, String password);
-			}
-
-			public static interface Callback_find_user extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer password, com.sun.jna.Pointer mf_password, com.sun.jna.Pointer hash_alg);
-			}
-
-			public static interface Callback_find_srp_user extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt);
-			}
-
-			public static interface Callback_get_certificate extends com.sun.jna.Callback
-			{
-				public int invoke(ILdapPlugin self, String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length, String attr_name);
-			}
-
-			public static interface Callback_get_user_attr extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, String attr, com.sun.jna.Pointer value);
-			}
-
-			public static interface Callback_get_policy extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time);
-			}
-
-			public static interface Callback_set_policy extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, String policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time);
-			}
-
-			public static interface Callback_get_password_history extends com.sun.jna.Callback
-			{
-				public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length);
-			}
-
-			public static interface Callback_find_user_groups extends com.sun.jna.Callback
-			{
-				public void invoke(ILdapPlugin self, com.sun.jna.Pointer userId);
-			}
-
-			public static interface Callback_change_legacy_password extends com.sun.jna.Callback
-			{
-				public int invoke(ILdapPlugin self, String name, String password, boolean[] active);
-			}
-
-			public static interface Callback_change_mf_password extends com.sun.jna.Callback
-			{
-				public int invoke(ILdapPlugin self, String name, String password, com.sun.jna.Pointer hash, boolean[] active);
-			}
-
-			public static interface Callback_change_srp_password extends com.sun.jna.Callback
-			{
-				public int invoke(ILdapPlugin self, String name, String password, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt, boolean[] active);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ILdapPluginIntf obj)
-			{
-				super(obj);
-
-				connect = new Callback_connect() {
-					@Override
-					public void invoke(ILdapPlugin self)
-					{
-						obj.connect();
-					}
-				};
-
-				is_connected = new Callback_is_connected() {
-					@Override
-					public boolean invoke(ILdapPlugin self)
-					{
-						return obj.is_connected();
-					}
-				};
-
-				bind = new Callback_bind() {
-					@Override
-					public boolean invoke(ILdapPlugin self)
-					{
-						return obj.bind();
-					}
-				};
-
-				bind_as = new Callback_bind_as() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String user, String password)
-					{
-						return obj.bind_as(user, password);
-					}
-				};
-
-				find_user = new Callback_find_user() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer password, com.sun.jna.Pointer mf_password, com.sun.jna.Pointer hash_alg)
-					{
-						return obj.find_user(name, password, mf_password, hash_alg);
-					}
-				};
-
-				find_srp_user = new Callback_find_srp_user() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt)
-					{
-						return obj.find_srp_user(name, verifier, salt);
-					}
-				};
-
-				get_certificate = new Callback_get_certificate() {
-					@Override
-					public int invoke(ILdapPlugin self, String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length, String attr_name)
-					{
-						return obj.get_certificate(name, buffer, buffer_length, attr_name);
-					}
-				};
-
-				get_user_attr = new Callback_get_user_attr() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, String attr, com.sun.jna.Pointer value)
-					{
-						return obj.get_user_attr(name, attr, value);
-					}
-				};
-
-				get_policy = new Callback_get_policy() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time)
-					{
-						return obj.get_policy(name, policy, passwd_time, failed_count, access_time);
-					}
-				};
-
-				set_policy = new Callback_set_policy() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, String policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time)
-					{
-						return obj.set_policy(name, policy, passwd_time, failed_count, access_time);
-					}
-				};
-
-				get_password_history = new Callback_get_password_history() {
-					@Override
-					public boolean invoke(ILdapPlugin self, String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length)
-					{
-						return obj.get_password_history(name, buffer, buffer_length);
-					}
-				};
-
-				find_user_groups = new Callback_find_user_groups() {
-					@Override
-					public void invoke(ILdapPlugin self, com.sun.jna.Pointer userId)
-					{
-						obj.find_user_groups(userId);
-					}
-				};
-
-				change_legacy_password = new Callback_change_legacy_password() {
-					@Override
-					public int invoke(ILdapPlugin self, String name, String password, boolean[] active)
-					{
-						return obj.change_legacy_password(name, password, active);
-					}
-				};
-
-				change_mf_password = new Callback_change_mf_password() {
-					@Override
-					public int invoke(ILdapPlugin self, String name, String password, com.sun.jna.Pointer hash, boolean[] active)
-					{
-						return obj.change_mf_password(name, password, hash, active);
-					}
-				};
-
-				change_srp_password = new Callback_change_srp_password() {
-					@Override
-					public int invoke(ILdapPlugin self, String name, String password, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt, boolean[] active)
-					{
-						return obj.change_srp_password(name, password, verifier, salt, active);
-					}
-				};
-			}
-
-			public VTable()
-			{
-			}
-
-			public Callback_connect connect;
-			public Callback_is_connected is_connected;
-			public Callback_bind bind;
-			public Callback_bind_as bind_as;
-			public Callback_find_user find_user;
-			public Callback_find_srp_user find_srp_user;
-			public Callback_get_certificate get_certificate;
-			public Callback_get_user_attr get_user_attr;
-			public Callback_get_policy get_policy;
-			public Callback_set_policy set_policy;
-			public Callback_get_password_history get_password_history;
-			public Callback_find_user_groups find_user_groups;
-			public Callback_change_legacy_password change_legacy_password;
-			public Callback_change_mf_password change_mf_password;
-			public Callback_change_srp_password change_srp_password;
-
-			@Override
-			protected java.util.List<String> getFieldOrder()
-			{
-				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("connect", "is_connected", "bind", "bind_as", "find_user", "find_srp_user", "get_certificate", "get_user_attr", "get_policy", "set_policy", "get_password_history", "find_user_groups", "change_legacy_password", "change_mf_password", "change_srp_password"));
-				return fields;
-			}
-		}
-
-		public ILdapPlugin()
-		{
-		}
-
-		public ILdapPlugin(final ILdapPluginIntf obj)
-		{
-			vTable = new VTable(obj);
-			vTable.write();
-			cloopVTable = vTable.getPointer();
-			write();
-		}
-
-		@Override
-		protected VTable createVTable()
-		{
-			return new VTable(cloopVTable);
-		}
-
-		public void connect()
-		{
-			VTable vTable = getVTable();
-			vTable.connect.invoke(this);
-		}
-
-		public boolean is_connected()
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.is_connected.invoke(this);
-			return result;
-		}
-
-		public boolean bind()
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.bind.invoke(this);
-			return result;
-		}
-
-		public boolean bind_as(String user, String password)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.bind_as.invoke(this, user, password);
-			return result;
-		}
-
-		public boolean find_user(String name, com.sun.jna.Pointer password, com.sun.jna.Pointer mf_password, com.sun.jna.Pointer hash_alg)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.find_user.invoke(this, name, password, mf_password, hash_alg);
-			return result;
-		}
-
-		public boolean find_srp_user(String name, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.find_srp_user.invoke(this, name, verifier, salt);
-			return result;
-		}
-
-		public int get_certificate(String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length, String attr_name)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.get_certificate.invoke(this, name, buffer, buffer_length, attr_name);
-			return result;
-		}
-
-		public boolean get_user_attr(String name, String attr, com.sun.jna.Pointer value)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.get_user_attr.invoke(this, name, attr, value);
-			return result;
-		}
-
-		public boolean get_policy(String name, com.sun.jna.Pointer policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.get_policy.invoke(this, name, policy, passwd_time, failed_count, access_time);
-			return result;
-		}
-
-		public boolean set_policy(String name, String policy, ISC_TIMESTAMP[] passwd_time, com.sun.jna.Pointer failed_count, ISC_TIMESTAMP[] access_time)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.set_policy.invoke(this, name, policy, passwd_time, failed_count, access_time);
-			return result;
-		}
-
-		public boolean get_password_history(String name, com.sun.jna.Pointer buffer, com.sun.jna.Pointer buffer_length)
-		{
-			VTable vTable = getVTable();
-			boolean result = vTable.get_password_history.invoke(this, name, buffer, buffer_length);
-			return result;
-		}
-
-		public void find_user_groups(com.sun.jna.Pointer userId)
-		{
-			VTable vTable = getVTable();
-			vTable.find_user_groups.invoke(this, userId);
-		}
-
-		public int change_legacy_password(String name, String password, boolean[] active)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.change_legacy_password.invoke(this, name, password, active);
-			return result;
-		}
-
-		public int change_mf_password(String name, String password, com.sun.jna.Pointer hash, boolean[] active)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.change_mf_password.invoke(this, name, password, hash, active);
-			return result;
-		}
-
-		public int change_srp_password(String name, String password, com.sun.jna.Pointer verifier, com.sun.jna.Pointer salt, boolean[] active)
-		{
-			VTable vTable = getVTable();
-			int result = vTable.change_srp_password.invoke(this, name, password, verifier, salt, active);
-			return result;
-		}
-	}
-
-	public static class ILdapFactory extends IPluginBase implements ILdapFactoryIntf
-	{
-		public static class VTable extends IPluginBase.VTable
-		{
-			public static interface Callback_getLdapPlugin extends com.sun.jna.Callback
-			{
-				public ILdapPlugin invoke(ILdapFactory self, IStatus status);
-			}
-
-			public VTable(com.sun.jna.Pointer pointer)
-			{
-				super(pointer);
-			}
-
-			public VTable(final ILdapFactoryIntf obj)
-			{
-				super(obj);
-
-				getLdapPlugin = new Callback_getLdapPlugin() {
-					@Override
-					public ILdapPlugin invoke(ILdapFactory self, IStatus status)
+					public void invoke(IInt128 self, IStatus status, FB_I128[] from, int scale, int bufferLength, com.sun.jna.Pointer buffer)
 					{
 						try
 						{
-							return obj.getLdapPlugin(status);
+							obj.toString(status, from, scale, bufferLength, buffer);
 						}
 						catch (Throwable t)
 						{
 							FbInterfaceException.catchException(status, t);
-							return null;
+						}
+					}
+				};
+
+				fromString = new Callback_fromString() {
+					@Override
+					public void invoke(IInt128 self, IStatus status, int scale, String from, FB_I128[] to)
+					{
+						try
+						{
+							obj.fromString(status, scale, from, to);
+						}
+						catch (Throwable t)
+						{
+							FbInterfaceException.catchException(status, t);
 						}
 					}
 				};
@@ -19649,22 +16692,23 @@ public interface FbInterface extends FbClientLibrary
 			{
 			}
 
-			public Callback_getLdapPlugin getLdapPlugin;
+			public Callback_toString toString;
+			public Callback_fromString fromString;
 
 			@Override
 			protected java.util.List<String> getFieldOrder()
 			{
 				java.util.List<String> fields = super.getFieldOrder();
-				fields.addAll(java.util.Arrays.asList("getLdapPlugin"));
+				fields.addAll(java.util.Arrays.asList("toString", "fromString"));
 				return fields;
 			}
 		}
 
-		public ILdapFactory()
+		public IInt128()
 		{
 		}
 
-		public ILdapFactory(final ILdapFactoryIntf obj)
+		public IInt128(final IInt128Intf obj)
 		{
 			vTable = new VTable(obj);
 			vTable.write();
@@ -19678,10 +16722,623 @@ public interface FbInterface extends FbClientLibrary
 			return new VTable(cloopVTable);
 		}
 
-		public ILdapPlugin getLdapPlugin(IStatus status)
+		public void toString(IStatus status, FB_I128[] from, int scale, int bufferLength, com.sun.jna.Pointer buffer)
 		{
 			VTable vTable = getVTable();
-			ILdapPlugin result = vTable.getLdapPlugin.invoke(this, status);
+			vTable.toString.invoke(this, status, from, scale, bufferLength, buffer);
+		}
+
+		public void fromString(IStatus status, int scale, String from, FB_I128[] to)
+		{
+			VTable vTable = getVTable();
+			vTable.fromString.invoke(this, status, scale, from, to);
+		}
+	}
+
+	public static class IReplicatedRecord extends IVersioned implements IReplicatedRecordIntf
+	{
+		public static class VTable extends IVersioned.VTable
+		{
+			public static interface Callback_getRawLength extends com.sun.jna.Callback
+			{
+				public int invoke(IReplicatedRecord self);
+			}
+
+			public static interface Callback_getRawData extends com.sun.jna.Callback
+			{
+				public com.sun.jna.Pointer invoke(IReplicatedRecord self);
+			}
+
+			public VTable(com.sun.jna.Pointer pointer)
+			{
+				super(pointer);
+			}
+
+			public VTable(final IReplicatedRecordIntf obj)
+			{
+				super(obj);
+
+				getRawLength = new Callback_getRawLength() {
+					@Override
+					public int invoke(IReplicatedRecord self)
+					{
+						return obj.getRawLength();
+					}
+				};
+
+				getRawData = new Callback_getRawData() {
+					@Override
+					public com.sun.jna.Pointer invoke(IReplicatedRecord self)
+					{
+						return obj.getRawData();
+					}
+				};
+			}
+
+			public VTable()
+			{
+			}
+
+			public Callback_getRawLength getRawLength;
+			public Callback_getRawData getRawData;
+
+			@Override
+			protected java.util.List<String> getFieldOrder()
+			{
+				java.util.List<String> fields = super.getFieldOrder();
+				fields.addAll(java.util.Arrays.asList("getRawLength", "getRawData"));
+				return fields;
+			}
+		}
+
+		public IReplicatedRecord()
+		{
+		}
+
+		public IReplicatedRecord(final IReplicatedRecordIntf obj)
+		{
+			vTable = new VTable(obj);
+			vTable.write();
+			cloopVTable = vTable.getPointer();
+			write();
+		}
+
+		@Override
+		protected VTable createVTable()
+		{
+			return new VTable(cloopVTable);
+		}
+
+		public int getRawLength()
+		{
+			VTable vTable = getVTable();
+			int result = vTable.getRawLength.invoke(this);
+			return result;
+		}
+
+		public com.sun.jna.Pointer getRawData()
+		{
+			VTable vTable = getVTable();
+			com.sun.jna.Pointer result = vTable.getRawData.invoke(this);
+			return result;
+		}
+	}
+
+	public static class IReplicatedBlob extends IVersioned implements IReplicatedBlobIntf
+	{
+		public static class VTable extends IVersioned.VTable
+		{
+			public static interface Callback_getLength extends com.sun.jna.Callback
+			{
+				public int invoke(IReplicatedBlob self);
+			}
+
+			public static interface Callback_isEof extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedBlob self);
+			}
+
+			public static interface Callback_getSegment extends com.sun.jna.Callback
+			{
+				public int invoke(IReplicatedBlob self, int length, byte[] buffer);
+			}
+
+			public VTable(com.sun.jna.Pointer pointer)
+			{
+				super(pointer);
+			}
+
+			public VTable(final IReplicatedBlobIntf obj)
+			{
+				super(obj);
+
+				getLength = new Callback_getLength() {
+					@Override
+					public int invoke(IReplicatedBlob self)
+					{
+						return obj.getLength();
+					}
+				};
+
+				isEof = new Callback_isEof() {
+					@Override
+					public boolean invoke(IReplicatedBlob self)
+					{
+						return obj.isEof();
+					}
+				};
+
+				getSegment = new Callback_getSegment() {
+					@Override
+					public int invoke(IReplicatedBlob self, int length, byte[] buffer)
+					{
+						return obj.getSegment(length, buffer);
+					}
+				};
+			}
+
+			public VTable()
+			{
+			}
+
+			public Callback_getLength getLength;
+			public Callback_isEof isEof;
+			public Callback_getSegment getSegment;
+
+			@Override
+			protected java.util.List<String> getFieldOrder()
+			{
+				java.util.List<String> fields = super.getFieldOrder();
+				fields.addAll(java.util.Arrays.asList("getLength", "isEof", "getSegment"));
+				return fields;
+			}
+		}
+
+		public IReplicatedBlob()
+		{
+		}
+
+		public IReplicatedBlob(final IReplicatedBlobIntf obj)
+		{
+			vTable = new VTable(obj);
+			vTable.write();
+			cloopVTable = vTable.getPointer();
+			write();
+		}
+
+		@Override
+		protected VTable createVTable()
+		{
+			return new VTable(cloopVTable);
+		}
+
+		public int getLength()
+		{
+			VTable vTable = getVTable();
+			int result = vTable.getLength.invoke(this);
+			return result;
+		}
+
+		public boolean isEof()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.isEof.invoke(this);
+			return result;
+		}
+
+		public int getSegment(int length, byte[] buffer)
+		{
+			VTable vTable = getVTable();
+			int result = vTable.getSegment.invoke(this, length, buffer);
+			return result;
+		}
+	}
+
+	public static class IReplicatedTransaction extends IDisposable implements IReplicatedTransactionIntf
+	{
+		public static class VTable extends IDisposable.VTable
+		{
+			public static interface Callback_prepare extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_commit extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_rollback extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_startSavepoint extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_releaseSavepoint extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_rollbackSavepoint extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self);
+			}
+
+			public static interface Callback_insertRecord extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord record);
+			}
+
+			public static interface Callback_updateRecord extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord orgRecord, IReplicatedRecord newRecord);
+			}
+
+			public static interface Callback_deleteRecord extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord record);
+			}
+
+			public static interface Callback_storeBlob extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self, com.sun.jna.ptr.LongByReference blobId, IReplicatedBlob blob);
+			}
+
+			public static interface Callback_executeSql extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedTransaction self, String sql);
+			}
+
+			public VTable(com.sun.jna.Pointer pointer)
+			{
+				super(pointer);
+			}
+
+			public VTable(final IReplicatedTransactionIntf obj)
+			{
+				super(obj);
+
+				prepare = new Callback_prepare() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.prepare();
+					}
+				};
+
+				commit = new Callback_commit() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.commit();
+					}
+				};
+
+				rollback = new Callback_rollback() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.rollback();
+					}
+				};
+
+				startSavepoint = new Callback_startSavepoint() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.startSavepoint();
+					}
+				};
+
+				releaseSavepoint = new Callback_releaseSavepoint() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.releaseSavepoint();
+					}
+				};
+
+				rollbackSavepoint = new Callback_rollbackSavepoint() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self)
+					{
+						return obj.rollbackSavepoint();
+					}
+				};
+
+				insertRecord = new Callback_insertRecord() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord record)
+					{
+						return obj.insertRecord(name, record);
+					}
+				};
+
+				updateRecord = new Callback_updateRecord() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord orgRecord, IReplicatedRecord newRecord)
+					{
+						return obj.updateRecord(name, orgRecord, newRecord);
+					}
+				};
+
+				deleteRecord = new Callback_deleteRecord() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self, String name, IReplicatedRecord record)
+					{
+						return obj.deleteRecord(name, record);
+					}
+				};
+
+				storeBlob = new Callback_storeBlob() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self, com.sun.jna.ptr.LongByReference blobId, IReplicatedBlob blob)
+					{
+						return obj.storeBlob(blobId, blob);
+					}
+				};
+
+				executeSql = new Callback_executeSql() {
+					@Override
+					public boolean invoke(IReplicatedTransaction self, String sql)
+					{
+						return obj.executeSql(sql);
+					}
+				};
+			}
+
+			public VTable()
+			{
+			}
+
+			public Callback_prepare prepare;
+			public Callback_commit commit;
+			public Callback_rollback rollback;
+			public Callback_startSavepoint startSavepoint;
+			public Callback_releaseSavepoint releaseSavepoint;
+			public Callback_rollbackSavepoint rollbackSavepoint;
+			public Callback_insertRecord insertRecord;
+			public Callback_updateRecord updateRecord;
+			public Callback_deleteRecord deleteRecord;
+			public Callback_storeBlob storeBlob;
+			public Callback_executeSql executeSql;
+
+			@Override
+			protected java.util.List<String> getFieldOrder()
+			{
+				java.util.List<String> fields = super.getFieldOrder();
+				fields.addAll(java.util.Arrays.asList("prepare", "commit", "rollback", "startSavepoint", "releaseSavepoint", "rollbackSavepoint", "insertRecord", "updateRecord", "deleteRecord", "storeBlob", "executeSql"));
+				return fields;
+			}
+		}
+
+		public IReplicatedTransaction()
+		{
+		}
+
+		public IReplicatedTransaction(final IReplicatedTransactionIntf obj)
+		{
+			vTable = new VTable(obj);
+			vTable.write();
+			cloopVTable = vTable.getPointer();
+			write();
+		}
+
+		@Override
+		protected VTable createVTable()
+		{
+			return new VTable(cloopVTable);
+		}
+
+		public boolean prepare()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.prepare.invoke(this);
+			return result;
+		}
+
+		public boolean commit()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.commit.invoke(this);
+			return result;
+		}
+
+		public boolean rollback()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.rollback.invoke(this);
+			return result;
+		}
+
+		public boolean startSavepoint()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.startSavepoint.invoke(this);
+			return result;
+		}
+
+		public boolean releaseSavepoint()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.releaseSavepoint.invoke(this);
+			return result;
+		}
+
+		public boolean rollbackSavepoint()
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.rollbackSavepoint.invoke(this);
+			return result;
+		}
+
+		public boolean insertRecord(String name, IReplicatedRecord record)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.insertRecord.invoke(this, name, record);
+			return result;
+		}
+
+		public boolean updateRecord(String name, IReplicatedRecord orgRecord, IReplicatedRecord newRecord)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.updateRecord.invoke(this, name, orgRecord, newRecord);
+			return result;
+		}
+
+		public boolean deleteRecord(String name, IReplicatedRecord record)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.deleteRecord.invoke(this, name, record);
+			return result;
+		}
+
+		public boolean storeBlob(com.sun.jna.ptr.LongByReference blobId, IReplicatedBlob blob)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.storeBlob.invoke(this, blobId, blob);
+			return result;
+		}
+
+		public boolean executeSql(String sql)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.executeSql.invoke(this, sql);
+			return result;
+		}
+	}
+
+	public static class IReplicatedSession extends IDisposable implements IReplicatedSessionIntf
+	{
+		public static class VTable extends IDisposable.VTable
+		{
+			public static interface Callback_getStatus extends com.sun.jna.Callback
+			{
+				public IStatus invoke(IReplicatedSession self);
+			}
+
+			public static interface Callback_startTransaction extends com.sun.jna.Callback
+			{
+				public IReplicatedTransaction invoke(IReplicatedSession self, long number);
+			}
+
+			public static interface Callback_cleanupTransaction extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedSession self, long number);
+			}
+
+			public static interface Callback_setSequence extends com.sun.jna.Callback
+			{
+				public boolean invoke(IReplicatedSession self, String name, long value);
+			}
+
+			public VTable(com.sun.jna.Pointer pointer)
+			{
+				super(pointer);
+			}
+
+			public VTable(final IReplicatedSessionIntf obj)
+			{
+				super(obj);
+
+				getStatus = new Callback_getStatus() {
+					@Override
+					public IStatus invoke(IReplicatedSession self)
+					{
+						return obj.getStatus();
+					}
+				};
+
+				startTransaction = new Callback_startTransaction() {
+					@Override
+					public IReplicatedTransaction invoke(IReplicatedSession self, long number)
+					{
+						return obj.startTransaction(number);
+					}
+				};
+
+				cleanupTransaction = new Callback_cleanupTransaction() {
+					@Override
+					public boolean invoke(IReplicatedSession self, long number)
+					{
+						return obj.cleanupTransaction(number);
+					}
+				};
+
+				setSequence = new Callback_setSequence() {
+					@Override
+					public boolean invoke(IReplicatedSession self, String name, long value)
+					{
+						return obj.setSequence(name, value);
+					}
+				};
+			}
+
+			public VTable()
+			{
+			}
+
+			public Callback_getStatus getStatus;
+			public Callback_startTransaction startTransaction;
+			public Callback_cleanupTransaction cleanupTransaction;
+			public Callback_setSequence setSequence;
+
+			@Override
+			protected java.util.List<String> getFieldOrder()
+			{
+				java.util.List<String> fields = super.getFieldOrder();
+				fields.addAll(java.util.Arrays.asList("getStatus", "startTransaction", "cleanupTransaction", "setSequence"));
+				return fields;
+			}
+		}
+
+		public IReplicatedSession()
+		{
+		}
+
+		public IReplicatedSession(final IReplicatedSessionIntf obj)
+		{
+			vTable = new VTable(obj);
+			vTable.write();
+			cloopVTable = vTable.getPointer();
+			write();
+		}
+
+		@Override
+		protected VTable createVTable()
+		{
+			return new VTable(cloopVTable);
+		}
+
+		public IStatus getStatus()
+		{
+			VTable vTable = getVTable();
+			IStatus result = vTable.getStatus.invoke(this);
+			return result;
+		}
+
+		public IReplicatedTransaction startTransaction(long number)
+		{
+			VTable vTable = getVTable();
+			IReplicatedTransaction result = vTable.startTransaction.invoke(this, number);
+			return result;
+		}
+
+		public boolean cleanupTransaction(long number)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.cleanupTransaction.invoke(this, number);
+			return result;
+		}
+
+		public boolean setSequence(String name, long value)
+		{
+			VTable vTable = getVTable();
+			boolean result = vTable.setSequence.invoke(this, name, value);
 			return result;
 		}
 	}

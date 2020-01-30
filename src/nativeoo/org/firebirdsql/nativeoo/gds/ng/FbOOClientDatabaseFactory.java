@@ -24,7 +24,7 @@ public class FbOOClientDatabaseFactory extends AbstractNativeOODatabaseFactory {
         private static final FbClientLibrary clientLibrary = syncWrapIfNecessary(initClientLibrary());
 
         private static FbClientLibrary initClientLibrary() {
-            return Native.loadLibrary("fbclient", FbInterface.class);
+            return Native.load("fbclient", FbInterface.class);
         }
 
         private static FbClientLibrary syncWrapIfNecessary(FbClientLibrary clientLibrary) {

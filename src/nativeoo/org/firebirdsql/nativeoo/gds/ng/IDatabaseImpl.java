@@ -4,8 +4,10 @@ import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
+import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
 
 import java.io.ByteArrayOutputStream;
@@ -40,7 +42,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     public IDatabaseImpl(NativeDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
-        master = clientLibrary.fb_get_master_interface();        
+        master = ((FbInterface)clientLibrary).fb_get_master_interface();
         provider = master.getDispatcher();
         util = master.getUtilInterface();
         attachment = null;
@@ -274,13 +276,19 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         throw new UnsupportedOperationException( "Native OO API not support database handle" );
     }
 
-    protected IEventBlockImpl validateEventHandle(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof IEventBlockImpl)) {
+    @Override
+    public void setNetworkTimeout(int milliseconds) throws SQLException {
+        throw new FBDriverNotCapableException(
+                "Setting network timeout not supported in native implementation");
+    }
+
+    protected IEventImpl validateEventHandle(EventHandle eventHandle) throws SQLException {
+        if (!(eventHandle instanceof IEventImpl)) {
             // TODO SQLState and/or Firebird specific error
             throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
-                    eventHandle.getClass(), IEventBlockImpl.class));
+                    eventHandle.getClass(), IEventImpl.class));
         }
-        IEventBlockImpl event = (IEventBlockImpl) eventHandle;
+        IEventImpl event = (IEventImpl) eventHandle;
         if (event.getSize() == -1) {
             // TODO SQLState and/or Firebird specific error
             throw new SQLTransientException("Event handle hasn't been initialized");
@@ -290,12 +298,12 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
 
     @Override
     public EventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
-        final IEventBlockImpl eventHandle = new IEventBlockImpl(eventName, eventHandler, getEncoding());
+        final IEventImpl eventHandle = new IEventImpl(eventName, eventHandler, getEncoding());
         synchronized (getSynchronizationObject()) {
             synchronized (eventHandle) {
-                IUtil util = master.getUtilInterface();
-                IEventBlock eventBlock = util.createEventBlock(getStatus(), new String[]{eventName});
-                eventHandle.setEventBlock(eventBlock);
+                int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
+                        (short) 1, eventHandle.getEventNameMemory());
+                eventHandle.setSize(size);
             }
         }
         return eventHandle;
@@ -304,14 +312,17 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     @Override
     public void countEvents(EventHandle eventHandle) throws SQLException {
         try {
-            final IEventBlockImpl eventBlock = validateEventHandle(eventHandle);
+            final IEventImpl event = validateEventHandle(eventHandle);
             int count;
             synchronized (getSynchronizationObject()) {
-                synchronized (eventBlock) {
-                    count = eventBlock.getEventBlock().getCount();
+                synchronized (event) {
+                    ISC_STATUS[] status = new ISC_STATUS[20];
+                    clientLibrary.isc_event_counts(status, (short) event.getSize(),
+                            event.getEventBuffer().getValue(), event.getResultBuffer().getValue());
+                    count = status[0].intValue();
                 }
             }
-            eventBlock.setEventCount(count);
+            event.setEventCount(count);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -322,13 +333,13 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     public void queueEvent(EventHandle eventHandle) throws SQLException {
         try {
             checkConnected();
-            final IEventBlockImpl eventBlock = validateEventHandle(eventHandle);
+            final IEventImpl event = validateEventHandle(eventHandle);
 
             synchronized (getSynchronizationObject()) {
-                synchronized (eventBlock) {
-                    int length = eventBlock.getEventBlock().getLength();
-                    byte[] array = eventBlock.getEventBlock().getValues().getByteArray(0, length);
-                    events = attachment.queEvents(getStatus(), eventBlock.getCallback(),
+                synchronized (event) {
+                    int length = event.getSize();
+                    byte[] array = event.getEventBuffer().getValue().getByteArray(0, length);
+                    events = attachment.queEvents(getStatus(), event.getCallback(),
                             length,
                             array);
                 }
@@ -343,14 +354,14 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
         try {
             checkConnected();
-            final IEventBlockImpl eventBlock = validateEventHandle(eventHandle);
+            final IEventImpl event = validateEventHandle(eventHandle);
 
             synchronized (getSynchronizationObject()) {
-                synchronized (eventBlock) {
+                synchronized (event) {
                     try {
                         events.cancel(getStatus());
                     } finally {
-                        eventBlock.releaseMemory();
+                        event.releaseMemory();
                     }
                 }
             }

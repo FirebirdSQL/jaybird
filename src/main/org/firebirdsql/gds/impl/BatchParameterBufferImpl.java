@@ -3,7 +3,6 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface;
 
 /**
  *
@@ -18,7 +17,7 @@ public class BatchParameterBufferImpl extends ParameterBufferBase implements Bat
 
     private enum BatchMetaData implements ParameterBufferMetaData {
 
-        BATCH_VERSION_1(FbInterface.IBatch.VERSION1);
+        BATCH_VERSION_1(VERSION1);
 
         private final int batchVersion;
 

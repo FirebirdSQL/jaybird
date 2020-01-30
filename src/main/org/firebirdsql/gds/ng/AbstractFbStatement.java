@@ -734,6 +734,10 @@ public abstract class AbstractFbStatement implements FbStatement {
         return FbDatabaseOperation.signalFetch(getDatabase());
     }
 
+    public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {
+        throw new FBDriverNotCapableException();
+    }
+
     /**
      * Listener to reset the statement state when it has been cancelled due to statement timeout.
      */
@@ -757,9 +761,5 @@ public abstract class AbstractFbStatement implements FbStatement {
                 break;
             }
         }
-    }
-
-    public FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException {
-        throw new FBDriverNotCapableException();
     }
 }

@@ -130,6 +130,7 @@ public class IStatementImpl extends AbstractFbStatement {
                 reset(false);
 
                 switchState(StatementState.EXECUTING);
+                updateStatementTimeout();
 
                 setMetaData(getParameterDescriptor(), parameters);
 
@@ -144,26 +145,32 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
                 Pointer outPtr = null;
 
-                if ((statement.getFlags(getStatus()) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
-                    cursor = statement.openCursor(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, 0);
-                } else {
-                    ByteBuffer outMessage = ByteBuffer.allocate(getMaxSqlInfoSize());
-                    outPtr = new Memory(outMessage.array().length);
-                    outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
-                    statement.execute(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, outPtr);
-                }
-                processStatus();
+                try (OperationCloseHandle operationCloseHandle = signalExecute()) {
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
+                    if ((statement.getFlags(getStatus()) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
+                        cursor = statement.openCursor(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, 0);
+                    } else {
+                        ByteBuffer outMessage = ByteBuffer.allocate(getMaxSqlInfoSize());
+                        outPtr = new Memory(outMessage.array().length);
+                        outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
+                        statement.execute(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, outPtr);
+                    }
+                    processStatus();
 
-                if (hasSingletonResult) {
-                    /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                     * have a result set that will be fetched, instead we have a singleton result if we have fields
-                     */
-                    statementListenerDispatcher.statementExecuted(this, false, true);
-                    queueRowData(toRowValue(getFieldDescriptor(), outMeta, outPtr));
-                    setAllRowsFetched(true);
-                } else {
-                    // A normal execute is never a singleton result (even if it only produces a single result)
-                    statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                    if (hasSingletonResult) {
+                        /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                         * have a result set that will be fetched, instead we have a singleton result if we have fields
+                         */
+                        statementListenerDispatcher.statementExecuted(this, false, true);
+                        queueRowData(toRowValue(getFieldDescriptor(), outMeta, outPtr));
+                        setAllRowsFetched(true);
+                    } else {
+                        // A normal execute is never a singleton result (even if it only produces a single result)
+                        statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                    }
                 }
 
                 if (getState() != StatementState.ERROR) {
@@ -193,8 +200,19 @@ public class IStatementImpl extends AbstractFbStatement {
 
             byte[] fieldData = parameters.getFieldData(idx);
             if (fieldData == null) {
-                // Note this only works because we mark the type as nullable in allocateXSqlDa
-
+                // Note this only works because we mark the type as nullable in inMessage
+                final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
+                nullShort = new byte[]{-1, -1};
+                // clear status
+                getStatus();
+                offset = inMeta.getOffset(status, idx) - align;
+                int nullOffset = inMeta.getNullOffset(status, idx);
+                inMessage.position(offset);
+                processStatus();
+                // clear status
+                getStatus();
+                inMessage.position(nullOffset);
+                inMessage.put(nullShort);
             } else {
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
                 // clear status
@@ -251,21 +269,27 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
                 if (isAllRowsFetched()) return;
 
-                ByteBuffer message = ByteBuffer.allocate(outMeta.getMessageLength(getStatus()) + 1);
-                processStatus();
-                Pointer ptr = new Memory(message.array().length);
-//                ptr.write(0, message.array(), 0, message.array().length);
-                int fetchStatus = cursor.fetchNext(getStatus(), ptr);
-                processStatus();
-                if (fetchStatus == IStatus.RESULT_OK) {
-                    queueRowData(toRowValue(getFieldDescriptor(), outMeta, ptr));
-                } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
-                    setAllRowsFetched(true);
-                    // Note: we are not explicitly 'closing' the cursor here
-                } else {
-                    final String errorMessage = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;
-                    log.error(errorMessage);
-                    throw new SQLException(errorMessage);
+                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                    if (operationCloseHandle.isCancelled()) {
+                        // operation was synchronously cancelled from an OperationAware implementation
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                    }
+
+                    ByteBuffer message = ByteBuffer.allocate(outMeta.getMessageLength(getStatus()) + 1);
+                    processStatus();
+                    Pointer ptr = new Memory(message.array().length);
+                    int fetchStatus = cursor.fetchNext(getStatus(), ptr);
+                    processStatus();
+                    if (fetchStatus == IStatus.RESULT_OK) {
+                        queueRowData(toRowValue(getFieldDescriptor(), outMeta, ptr));
+                    } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
+                        setAllRowsFetched(true);
+                        // Note: we are not explicitly 'closing' the cursor here
+                    } else {
+                        final String errorMessage = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;
+                        log.error(errorMessage);
+                        throw new SQLException(errorMessage);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -367,5 +391,10 @@ public class IStatementImpl extends AbstractFbStatement {
 
     private void processStatus() throws SQLException {
         getDatabase().processStatus(status, getStatementWarningCallback());
+    }
+
+    private void updateStatementTimeout() throws SQLException {
+        int allowedTimeout = (int) getAllowedTimeout();
+        statement.setTimeout(getStatus(), allowedTimeout);
     }
 }

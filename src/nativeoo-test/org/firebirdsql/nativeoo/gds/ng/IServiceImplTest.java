@@ -4,12 +4,9 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
-import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.Before;
@@ -34,6 +31,7 @@ import static org.hamcrest.CoreMatchers.endsWith;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 public class IServiceImplTest {
 
@@ -103,6 +101,7 @@ public class IServiceImplTest {
 
     @Test
     public void testBasicStatusVectorProcessing_wrongService() throws Exception {
+        assumeTrue("Incorrect service name ignored in Firebird 4+", getDefaultSupportInfo().isVersionBelow(4, 0));
         // set invalid database
         final String invalidServiceName = "doesnotexist";
         connectionInfo.setServiceName(invalidServiceName);

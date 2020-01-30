@@ -15,7 +15,7 @@ import java.sql.SQLException;
 public class IMessageMetadataImpl implements FbMessageMetadata {
 
     private final IDatabaseImpl database;
-    private final IMetadataBuilderImpl metadataBuilderImpl;
+    private IMetadataBuilderImpl metadataBuilderImpl;
     private final IMetadataBuilder metadataBuilder;
     private final IMessageMetadata metadata;
     private final IStatus status;
@@ -131,10 +131,11 @@ public class IMessageMetadataImpl implements FbMessageMetadata {
         return result;
     }
 
-    public IMetadataBuilder getBuilder() throws SQLException {
-        IMetadataBuilder result = metadata.getBuilder(getStatus());
+    public FbMetadataBuilder getBuilder() throws SQLException {
+        if (metadataBuilderImpl == null)
+            metadataBuilderImpl = new IMetadataBuilderImpl(this.database, metadata.getCount(getStatus()));
         processStatus();
-        return result;
+        return metadataBuilderImpl;
     }
 
     private IStatus getStatus() {

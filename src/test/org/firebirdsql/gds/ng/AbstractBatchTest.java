@@ -9,7 +9,6 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.BatchParameterBufferImpl;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.After;
@@ -195,7 +194,7 @@ public abstract class AbstractBatchTest {
     public void testCreateBatchWithoutMetadata() throws SQLException {
         allocateTransaction();
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
-        buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
+        buffer.addArgument(BatchParameterBuffer.TAG_RECORD_COUNTS, 1);
         FbBatch batch = db.createBatch(transaction, INSERT_QUERY, buffer);
     }
 
@@ -239,8 +238,8 @@ public abstract class AbstractBatchTest {
         }
 
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
-        buffer.addArgument(FbInterface.IBatch.TAG_RECORD_COUNTS, 1);
-        FbBatch batch = db.createBatch(transaction, INSERT_QUERY, metadataBuilder.getMessageMetadata(), buffer);
+        buffer.addArgument(BatchParameterBuffer.TAG_RECORD_COUNTS, 1);
+        db.createBatch(transaction, INSERT_QUERY, metadataBuilder.getMessageMetadata(), buffer);
     }
 
     private FbTransaction getTransaction() throws SQLException {
