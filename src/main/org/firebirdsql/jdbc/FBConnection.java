@@ -41,7 +41,7 @@ import java.lang.ref.WeakReference;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.GENERATED_KEYS_ENABLED;
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.IGNORE_PROCEDURE_TYPE;
@@ -827,12 +827,14 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     private Set<String> clientInfoPropNames = new HashSet<>();
-    
-    private final AtomicInteger savepointCounter = new AtomicInteger();
+
+    private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
+            AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");
+    private volatile int savepointCounter;
     private final List<FBSavepoint> savepoints = new ArrayList<>();
 
     private int getNextSavepointCounter() {
-        return savepointCounter.getAndIncrement();
+        return SAVEPOINT_COUNTER_UPDATE.getAndIncrement(this);
     }
 
     @Override
