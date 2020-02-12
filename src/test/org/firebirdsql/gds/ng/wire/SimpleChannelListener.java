@@ -23,7 +23,6 @@ package org.firebirdsql.gds.ng.wire;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.wire.AsynchronousChannelListener} for testing purposes
@@ -33,12 +32,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class SimpleChannelListener implements AsynchronousChannelListener {
 
-    private AtomicBoolean receivedChannelClosing = new AtomicBoolean();
+    private volatile boolean receivedChannelClosing;
     private final List<Event> receivedEvents = Collections.synchronizedList(new ArrayList<Event>());
 
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
-        receivedChannelClosing.set(true);
+        receivedChannelClosing = true;
     }
 
     @Override
@@ -47,7 +46,7 @@ public class SimpleChannelListener implements AsynchronousChannelListener {
     }
 
     public boolean hasReceivedChannelClosing() {
-        return receivedChannelClosing.get();
+        return receivedChannelClosing;
     }
 
     public List<Event> getReceivedEvents() {
