@@ -23,7 +23,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-2
 -   Changed: The 'DEC_FIXED' extended numeric precision support (for Firebird
     4.0.0-beta-1) has been removed ([JDBC-596](http://tracker.firebirdsql.org/browse/JDBC-596)) \
     Now only the 'INT128' extended numeric precision (for Firebird 4.0.0-beta-2
-    and higher) is supported. 
+    and higher) is supported.
+-   Changed: Updated dependency on JNA from 5.3.0 to 5.5.0 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)) \
+    Make sure to replace `jna-5.3.0.jar` (or `jna-4.4.0.jar` when coming from
+    Jaybird 3) with `jna-5.5.0.jar`. 
 
 Jaybird 4.0.0-beta-2
 --------------------
@@ -306,13 +309,13 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 5.3.0 as a dependency:
+explicitly include JNA 5.5.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.3.0</version>
+    <version>5.5.0</version>
 </dependency>
 ~~~
 
@@ -339,7 +342,7 @@ application server.
 For `getGeneratedKeys` support you will need to include 
 `antlr-runtime-4.7.2.jar` on your classpath.
 
-For native, local or embedded support, you will need to include `jna-5.3.0.jar` 
+For native, local or embedded support, you will need to include `jna-5.5.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver](#type-2-native-and-embedded-driver).
 
 Upgrading from Jaybird 3 to Jaybird 4
@@ -356,7 +359,7 @@ Change the artifact id from `jaybird-jdkXX` to `jaybird`, and change the version
 of the dependency to `@VERSION_SIMPLE@.javaXX@VERSION_TAG@` (where `XX` is your
 Java version, `7` for Java 7, `8` for Java 8 and `11` for Java 11). If you use
 native or embedded verify that you upgrade JNA (`net.java.dev.jna:jna`) from
-4.4.0 to 5.3.0.
+4.4.0 to 5.5.0.
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 4](#getting-jaybird-4). 
@@ -375,7 +378,7 @@ If you manage your dependencies manually, you need to do the following:
     `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
     support.
     
-3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.3.0.jar`.
+3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.5.0.jar`.
     This library is only necessary for native, local or embedded connections.
     If you use pure-java connections (the default), you don't need JNA.
     
@@ -1811,7 +1814,7 @@ database character set during database creation ([JDBC-541](http://tracker.fireb
    
     This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
     
--   Upgraded jna library used for native/embedded from 4.4 to 5.3 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
+-   Upgraded jna library used for native/embedded from 4.4 to 5.5 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)
 
     The pull request to upgrade (from 4.4 to 5.2) was contributed by [Julien Nabet](https://github.com/serval2412).
     
@@ -2217,7 +2220,7 @@ Type 2 (native) and embedded driver
 -----------------------------------
 
 Jaybird uses JNA to access the client library. If you want to use the Type 2 
-driver, or Firebird embedded, then you need to include `jna-5.3.0.jar` on the 
+driver, or Firebird embedded, then you need to include `jna-5.5.0.jar` on the 
 classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we 
@@ -2227,7 +2230,7 @@ don't depend on it by default (it is specified as an optional dependency):
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.3.0</artifactId>
+    <version>5.5.0</artifactId>
 </dependency>
 ```
 
@@ -2244,7 +2247,7 @@ and `local` protocol. Be aware that this dependency does not support `embedded`.
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>fbclient</artifactId>
-    <version>3.0.4.0</artifactId>
+    <version>3.0.5.1</artifactId>
 </dependency>
 ```
 
