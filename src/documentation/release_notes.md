@@ -920,13 +920,16 @@ implementations have an equivalent property with the same name. This
 property can be set as follows:
 
 -   Absent or empty value: empty response to callback (depending on the database 
-    encryption plugin this may just work or yield an error later)
+    encryption plugin this may just work or yield an error later).
 -   Strings prefixed with `base64:`: rest of the string is decoded as base64 to 
     bytes. The `=` padding characters are optional, but when present they must
     be valid (that is: if you use padding, you must use the right number of 
-    padding characters for the length)
+    padding characters for the length). \
+    When the base64 encoded value contains `+`, it must be escaped as `%2B` in
+    the JDBC URL. For backwards compatibility with previous versions of
+    Jaybird 3, we can't switch to the URL-safe variant of base64.
 -   Plain string value: string is encoded to bytes using UTF-8, and these bytes
-    are used as the response
+    are used as the response. Avoid use of `:` in the plain string value.
     
 Because of the limitation of connection URL parsing, we strongly suggest to
 avoid plain string values with `&` or `;`. Likewise, avoid `:` so that we can
