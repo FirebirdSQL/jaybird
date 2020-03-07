@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
+import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.AbstractStatementTimeoutTest;
@@ -43,6 +44,9 @@ public class V16StatementTimeoutTest extends AbstractStatementTimeoutTest {
 
     @ClassRule
     public static final RequireProtocol requireProtocol = requireProtocolVersion(16);
+
+    @ClassRule
+    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
     private final V16CommonConnectionInfo commonConnectionInfo;
 
