@@ -26,7 +26,9 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-2
     and higher) is supported.
 -   Changed: Updated dependency on JNA from 5.3.0 to 5.5.0 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)) \
     Make sure to replace `jna-5.3.0.jar` (or `jna-4.4.0.jar` when coming from
-    Jaybird 3) with `jna-5.5.0.jar`. 
+    Jaybird 3) with `jna-5.5.0.jar`.
+-   Fixed: Problem connecting to Firebird 4.0.0.1737 and higher with 
+    `SQLException` with message "Unexpected tag type: 3" ([JDBC-612](http://tracker.firebirdsql.org/browse/JDBC-612)) 
 
 Jaybird 4.0.0-beta-2
 --------------------

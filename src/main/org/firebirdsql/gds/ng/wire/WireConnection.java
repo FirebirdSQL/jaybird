@@ -399,27 +399,31 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     void addServerKeys(byte[] serverKeys) throws SQLException {
         final ClumpletReader newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
         for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
-            if (newKeys.getClumpTag() == TAG_KNOWN_PLUGINS) {
-                continue;
-            }
-
             int currentTag = newKeys.getClumpTag();
-            if (currentTag != TAG_KEY_TYPE) {
-                throw new SQLException("Unexpected tag type: " + currentTag);
-            }
-            String keyType = newKeys.getString(StandardCharsets.US_ASCII);
+            switch (currentTag) {
+            case TAG_KNOWN_PLUGINS:
+            case TAG_PLUGIN_SPECIFIC:
+                // Nothing to do (yet) 
+                break;
+            case TAG_KEY_TYPE: {
+                String keyType = newKeys.getString(StandardCharsets.US_ASCII);
 
-            newKeys.moveNext();
-            if (newKeys.isEof()) {
+                newKeys.moveNext();
+                if (newKeys.isEof()) {
+                    break;
+                }
+                currentTag = newKeys.getClumpTag();
+                if (currentTag != TAG_KEY_PLUGINS) {
+                    throw new SQLException("Unexpected tag type: " + currentTag);
+                }
+                
+                String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
+                knownServerKeys.add(new KnownServerKey(keyType, keyPlugins));
+            }
+            default:
+                log.debug("Ignored unexpected tag type: " + currentTag);
                 break;
             }
-            currentTag = newKeys.getClumpTag();
-            if (currentTag != TAG_KEY_PLUGINS) {
-                throw new SQLException("Unexpected tag type: " + currentTag);
-            }
-
-            String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
-            knownServerKeys.add(new KnownServerKey(keyType, keyPlugins));
         }
     }
 

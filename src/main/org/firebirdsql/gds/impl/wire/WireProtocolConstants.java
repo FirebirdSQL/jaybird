@@ -233,6 +233,7 @@ public interface WireProtocolConstants {
     int TAG_KEY_TYPE = 0;
     int TAG_KEY_PLUGINS = 1;
     int TAG_KNOWN_PLUGINS = 2;
+    int TAG_PLUGIN_SPECIFIC = 3;
     
     // Protocol Types
     // p_acpt_type
