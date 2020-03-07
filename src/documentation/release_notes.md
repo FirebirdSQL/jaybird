@@ -27,6 +27,13 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-2
 -   Changed: Updated dependency on JNA from 5.3.0 to 5.5.0 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)) \
     Make sure to replace `jna-5.3.0.jar` (or `jna-4.4.0.jar` when coming from
     Jaybird 3) with `jna-5.5.0.jar`.
+-   New feature: Support for `EXTENDED TIME(STAMP) WITH TIME ZONE` types
+    introduced in Firebird 4.0.0.1795 ([JDBC-611](http://tracker.firebirdsql.org/browse/JDBC-611)) \
+    The 'extended' time zone types are a 'bind-only' data type that provides an
+    additional offset, so an offset is also known for values using a named zone.
+    Jaybird ignores this information and handles these types exactly the same as
+    normal time zone types. \
+    See also [jdp-2020-01: Extended Time Zone Types Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-01-extended-time-zone-types-support.md) 
 -   Fixed: Problem connecting to Firebird 4.0.0.1737 and higher with 
     `SQLException` with message "Unexpected tag type: 3" ([JDBC-612](http://tracker.firebirdsql.org/browse/JDBC-612)) 
 
@@ -408,7 +415,7 @@ would be reused for Java 15.
 
 Forced by this issue, we have overhauled the naming convention entirely to bring
 more consistency between Maven artifacts and the Jaybird zip distribution. The
-full naming convention is documented in [jdp-2019-04](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-04-version-number-and-naming-scheme.md).
+full naming convention is documented in [jdp-2019-04: Version Number and Naming Scheme](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-04-version-number-and-naming-scheme.md).
 
 This new naming convention has been changed compared to the one from Jaybird
 4.0.0-beta-1.
@@ -1063,7 +1070,7 @@ equivalent `TIME` and `TIMESTAMP` (`WITHOUT TIME ZONE`) types using the session
 time zone. Time zone bind can be configured with connection property 
 `dataTypeBind`, for more information see [Time zone bind configuration](#time-zone-bind-configuration).
 
-See also [jdp-2019-03 Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
+See also [jdp-2019-03: Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
 
 NOTE: documentation below reflects state as currently implemented
 
@@ -1134,6 +1141,18 @@ marked with * are not defined in JDBC)
   milliseconds and uses `new java.sql.Date(millis)`
   - On set applies `toLocalDate()` at start of day and derives the offset date 
   time for the default JVM time zone
+  
+In addition, Firebird 4 has 'bind-only' data types `EXTENDED TIME/TIMESTAMP WITH
+TIME ZONE`. These data types can be set through the data type bind configuration
+and include an extra offset in its data so clients without access to ICU or
+other time zone data can use the offset as determined by Firebird.
+
+Jaybird provides minimal support for these types by handling them the same as
+the normal `WITH TIME ZONE` types. That means the extra offset information is
+ignored and Jaybird will always use the Java time zone information to calculate
+the offset of a named zone, and if a zone is unknown in Java, Jaybird will
+fallback to UTC even when the actual offset is available in the 'extended' time
+zone type. See also [jdp-2020-01: Extended Time Zone Types Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-01-extended-time-zone-types-support.md). 
 
 #### Support for legacy JDBC date/time types ####
 
@@ -1182,6 +1201,11 @@ Properties props = new Properties();
 props.setProperty("dataTypeBind", 
         "time with time zone to legacy;timestamp with time zone to legacy");
 ```
+
+The `TIME ZONE TO EXTENDED` binds (including type-specific variants) is only
+supported under Java 8 and higher using the Java 8 or higher version of Jaybird.
+As mentioned earlier, the support for 'extended' time zone types will behave
+identical to the normal time zone types. 
 
 **Important**: These features requires Firebird 4 beta 2 or higher (or a snapshot
 build version 4.0.0.1683 or later). It will be ignored in builds before 1481 as
@@ -1767,7 +1791,7 @@ will throw an `SQLException`.
 This feature is experimental and its API may be removed or changed, and
 operation types may be added or removed in point releases.
 
-See also [jdp-2019-06 Ability to monitor driver operations](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-06-ability-to-monitor-driver-operations.md)
+See also [jdp-2019-06: Ability to monitor driver operations](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-06-ability-to-monitor-driver-operations.md)
 
 This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 

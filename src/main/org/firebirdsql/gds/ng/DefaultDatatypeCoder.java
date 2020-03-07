@@ -99,6 +99,11 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
+    public int sizeOfShort() {
+        return 4;
+    }
+
+    @Override
     public byte[] encodeShort(short value) {
         return intToBytes(value);
     }

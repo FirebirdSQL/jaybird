@@ -59,6 +59,11 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
+    public int sizeOfShort() {
+        return 2;
+    }
+
+    @Override
     public byte[] encodeShort(short value) {
         byte[] ret = new byte[2];
         ret[0] = (byte) (value & 0xff);
@@ -74,7 +79,6 @@ public final class LittleEndianDatatypeCoder extends DefaultDatatypeCoder {
 
     @Override
     public short decodeShort(byte[] byte_int) {
-
         return (short)
                 ((byte_int[0] & 0xFF) +
                 ((byte_int[1] & 0xFF) << 8));

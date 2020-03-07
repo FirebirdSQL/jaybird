@@ -263,8 +263,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_TYPE_DATE:
             return "DATE";
         case ISCConstants.SQL_TIMESTAMP_TZ:
+        case ISCConstants.SQL_TIMESTAMP_TZ_EX:
             return "TIMESTAMP WITH TIME ZONE";
         case ISCConstants.SQL_TIME_TZ:
+        case ISCConstants.SQL_TIME_TZ_EX:
             return "TIME WITH TIME ZONE";
         case ISCConstants.SQL_BLOB:
             if (sqlSubtype < 0) {

@@ -33,14 +33,18 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_TIME_CLASS_NAME;
  * Superclass for {@link FBTimeTzField}, {@link FBTimestampTzField} to handle legacy date/time types and common behaviour.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0
  */
 abstract class AbstractWithTimeZoneField extends FBField {
 
     private ZoneId defaultZoneId;
+    private final TimeZoneDatatypeCoder.TimeZoneCodec timeZoneCodec;
 
     AbstractWithTimeZoneField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
+        timeZoneCodec = TimeZoneDatatypeCoder.getInstanceFor(getDatatypeCoder())
+                .getTimeZoneCodecFor(fieldDescriptor);
     }
 
     abstract OffsetDateTime getOffsetDateTime() throws SQLException;
@@ -149,8 +153,8 @@ abstract class AbstractWithTimeZoneField extends FBField {
         setTimestamp(value);
     }
 
-    final TimeZoneDatatypeCoder getTimeZoneDatatypeCoder() {
-        return TimeZoneDatatypeCoder.getInstanceFor(getDatatypeCoder());
+    final TimeZoneDatatypeCoder.TimeZoneCodec getTimeZoneCodec() {
+        return timeZoneCodec;
     }
 
     final ZoneId getDefaultZoneId() {

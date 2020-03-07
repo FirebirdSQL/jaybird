@@ -79,6 +79,8 @@ public final class FbMetadataConstants {
     public static final int double_type = 27;
     public static final int time_tz_type = 28;
     public static final int timestamp_tz_type = 29;
+    public static final int ex_time_tz_type = 30;
+    public static final int ex_timestamp_tz_type = 31;
     public static final int timestamp_type = 35;
     public static final int varchar_type = 37;
     public static final int cstring_type = 40;

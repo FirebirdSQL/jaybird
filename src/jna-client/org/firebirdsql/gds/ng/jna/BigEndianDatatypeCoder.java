@@ -55,6 +55,11 @@ public final class BigEndianDatatypeCoder extends DefaultDatatypeCoder {
     }
 
     @Override
+    public int sizeOfShort() {
+        return 2;
+    }
+
+    @Override
     public byte[] encodeShort(short value) {
         byte[] ret = new byte[2];
         ret[0] = (byte) ((value >>> 8) & 0xff);

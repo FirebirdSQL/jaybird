@@ -136,8 +136,10 @@ public final class JdbcTypeConverter {
         case ISCConstants.SQL_TYPE_DATE:
             return Types.DATE;
         case ISCConstants.SQL_TIMESTAMP_TZ:
+        case ISCConstants.SQL_TIMESTAMP_TZ_EX:
             return JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE;
         case ISCConstants.SQL_TIME_TZ:
+        case ISCConstants.SQL_TIME_TZ_EX:
             return JaybirdTypeCodes.TIME_WITH_TIMEZONE;
         case ISCConstants.SQL_BLOB:
             if (subtype < 0) {
@@ -213,6 +215,12 @@ public final class JdbcTypeConverter {
             return ISCConstants.SQL_TIME_TZ;
         case timestamp_tz_type:
             return ISCConstants.SQL_TIMESTAMP_TZ;
+        case ex_time_tz_type:
+            // Shouldn't occur as metadata data type, mapping for consistency
+            return ISCConstants.SQL_TIME_TZ_EX;
+        case ex_timestamp_tz_type:
+            // Shouldn't occur as metadata data type, mapping for consistency
+            return ISCConstants.SQL_TIMESTAMP_TZ_EX;
         case char_type:
             return ISCConstants.SQL_TEXT;
         case cstring_type:

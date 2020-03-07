@@ -18,13 +18,19 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DatatypeCoder.RawDateTimeStruct;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.sql.SQLException;
 import java.time.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
  * Datatype coder for {@code TIME WITH TIME ZONE} and {@code TIMESTAMP WITH TIME ZONE}.
@@ -42,6 +48,10 @@ public class TimeZoneDatatypeCoder {
     private static final Map<DatatypeCoder, TimeZoneDatatypeCoder> instanceCache = new ConcurrentHashMap<>(MAX_CACHED);
     private final DatatypeCoder datatypeCoder;
     private final TimeZoneMapping timeZoneMapping = TimeZoneMapping.getInstance();
+    // Always cache because this is the default mapping of the type
+    private final DefaultTimeZoneCodec defaultTimeZoneCodec = new DefaultTimeZoneCodec();
+    // Lazily cache because this is the exception
+    private ExtendedTimeZoneCodec extendedTimeZoneCodec;
 
     /**
      * Initializes a time zone datatype coder.
@@ -53,8 +63,44 @@ public class TimeZoneDatatypeCoder {
         this.datatypeCoder = datatypeCoder;
     }
 
+    /**
+     * Obtains the {@link TimeZoneCodec} implementation for the field described by {@code fieldDescriptor}.
+     *
+     * @param fieldDescriptor
+     *         Field descriptor
+     * @return Suitable instance of {@code TimeZoneCodec}
+     * @throws SQLException
+     *         When {@code fieldDescriptor} is not a TIME/TIMESTAMP WITH TIME ZONE type field
+     */
+    public TimeZoneCodec getTimeZoneCodecFor(FieldDescriptor fieldDescriptor) throws SQLException {
+        switch (fieldDescriptor.getType() & ~1) {
+        case SQL_TIMESTAMP_TZ:
+        case SQL_TIME_TZ:
+            return defaultTimeZoneCodec;
+        case SQL_TIMESTAMP_TZ_EX:
+        case SQL_TIME_TZ_EX:
+            if (extendedTimeZoneCodec != null) {
+                return extendedTimeZoneCodec;
+            }
+            return extendedTimeZoneCodec = new ExtendedTimeZoneCodec();
+        default:
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
+                    .messageParameter(fieldDescriptor.getType())
+                    .toFlatSQLException();
+        }
+    }
+
     public OffsetDateTime decodeTimestampTz(byte[] timestampTzBytes) {
         assert timestampTzBytes.length == 12 : "timestampTzBytes not length 12";
+        return decodeTimestampTzImpl(timestampTzBytes);
+    }
+
+    public OffsetDateTime decodeExTimestampTz(byte[] exTimestampTzBytes) {
+        assert exTimestampTzBytes.length == sizeOfExTimestampTz() : "exTimestampTzBytes wrong length";
+        return decodeTimestampTzImpl(exTimestampTzBytes);
+    }
+
+    private OffsetDateTime decodeTimestampTzImpl(byte[] timestampTzBytes) {
         int encodedDate = datatypeCoder.decodeInt(timestampTzBytes);
         int encodedTime = datatypeCoder.decodeInt(timestampTzBytes, 4);
         int timeZoneId = datatypeCoder.decodeShort(timestampTzBytes, 8) & 0xFFFF; // handle as unsigned short
@@ -70,6 +116,14 @@ public class TimeZoneDatatypeCoder {
     }
 
     public byte[] encodeTimestampTz(OffsetDateTime offsetDateTime) {
+        return encodeTimestampTzImpl(offsetDateTime, 12);
+    }
+
+    public byte[] encodeExTimestampTz(OffsetDateTime offsetDateTime) {
+        return encodeTimestampTzImpl(offsetDateTime, sizeOfExTimestampTz());
+    }
+
+    private byte[] encodeTimestampTzImpl(OffsetDateTime offsetDateTime, int bufferSize) {
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetDateTime.getOffset());
 
         OffsetDateTime utcDateTime = offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC);
@@ -82,7 +136,7 @@ public class TimeZoneDatatypeCoder {
         raw.second = utcDateTime.getSecond();
         raw.setFractionsFromNanos(utcDateTime.getNano());
 
-        byte[] timestampTzBytes = new byte[12];
+        byte[] timestampTzBytes = new byte[bufferSize];
         datatypeCoder.encodeInt(raw.getEncodedDate(), timestampTzBytes, 0);
         datatypeCoder.encodeInt(raw.getEncodedTime(), timestampTzBytes, 4);
         datatypeCoder.encodeShort(firebirdZoneId, timestampTzBytes, 8);
@@ -92,6 +146,15 @@ public class TimeZoneDatatypeCoder {
 
     public OffsetTime decodeTimeTz(byte[] timeTzBytes) {
         assert timeTzBytes.length == 8 : "timeTzBytes not length 8";
+        return decodeTimeTzImpl(timeTzBytes);
+    }
+
+    public OffsetTime decodeExTimeTz(byte[] exTimeTzBytes) {
+        assert exTimeTzBytes.length == sizeOfExTimeTz() : "exTimeTzBytes wrong length";
+        return decodeTimeTzImpl(exTimeTzBytes);
+    }
+
+    OffsetTime decodeTimeTzImpl(byte[] timeTzBytes) {
         int encodedTime = datatypeCoder.decodeInt(timeTzBytes);
         int timeZoneId = datatypeCoder.decodeShort(timeTzBytes, 4) & 0xFFFF; // handle as unsigned short
         RawDateTimeStruct raw = new RawDateTimeStruct(0, false, encodedTime, true);
@@ -116,6 +179,14 @@ public class TimeZoneDatatypeCoder {
     }
 
     public byte[] encodeTimeTz(OffsetTime offsetTime) {
+        return encodeTimeTzImpl(offsetTime, 8);
+    }
+
+    public byte[] encodeExTimeTz(OffsetTime offsetTime) {
+        return encodeTimeTzImpl(offsetTime, sizeOfExTimeTz());
+    }
+
+    private byte[] encodeTimeTzImpl(OffsetTime offsetTime, int bufferSize) {
         int firebirdZoneId = timeZoneMapping.toTimeZoneId(offsetTime.getOffset());
 
         OffsetTime utcTime = offsetTime.withOffsetSameInstant(ZoneOffset.UTC);
@@ -125,11 +196,19 @@ public class TimeZoneDatatypeCoder {
         raw.second = utcTime.getSecond();
         raw.setFractionsFromNanos(utcTime.getNano());
 
-        byte[] timeTzBytes = new byte[8];
+        byte[] timeTzBytes = new byte[bufferSize];
         datatypeCoder.encodeInt(raw.getEncodedTime(), timeTzBytes, 0);
         datatypeCoder.encodeShort(firebirdZoneId, timeTzBytes, 4);
 
         return timeTzBytes;
+    }
+
+    private int sizeOfExTimestampTz() {
+        return datatypeCoder.sizeOfShort() == 4 ? 16 : 12;
+    }
+
+    private int sizeOfExTimeTz() {
+        return datatypeCoder.sizeOfShort() == 4 ? 12 : 8;
     }
 
     /**
@@ -159,6 +238,101 @@ public class TimeZoneDatatypeCoder {
         TimeZoneDatatypeCoder value = new TimeZoneDatatypeCoder(rootCoder);
         instanceCache.putIfAbsent(rootCoder, value);
         return value;
+    }
+
+    /**
+     * Simpler API for encoding or decoding offset date times.
+     */
+    public interface TimeZoneCodec {
+
+        /**
+         * Encode an offset date time to an encoded TIMESTAMP WITH TIME ZONE value.
+         *
+         * @param offsetDateTime
+         *         Offset date time instance
+         * @return Byte array with encoded value
+         */
+        byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime);
+
+        /**
+         * Decodes an encoded TIMESTAMP WITH TIME ZONE value to an offset date time.
+         *
+         * @param fieldData
+         *         Byte array with encoded value
+         * @return Offset date time instance
+         */
+        OffsetDateTime decodeOffsetDateTime(byte[] fieldData);
+
+        /**
+         * Encode an offset time to an encoded TIME WITH TIME ZONE value.
+         *
+         * @param offsetTime
+         *         Offset time instance
+         * @return Byte array with encoded value
+         */
+        byte[] encodeOffsetTime(OffsetTime offsetTime);
+
+        /**
+         * Decodes an encoded TIME WITH TIME ZONE value to an offset time.
+         *
+         * @param fieldData
+         *         Byte array with encoded value
+         * @return Offset time instance
+         */
+        OffsetTime decodeOffsetTime(byte[] fieldData);
+
+    }
+
+    /**
+     * Codec for the 'normal' WITH TIME ZONE types.
+     */
+    private class DefaultTimeZoneCodec implements TimeZoneCodec {
+
+        @Override
+        public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
+            return encodeTimestampTz(offsetDateTime);
+        }
+
+        @Override
+        public OffsetDateTime decodeOffsetDateTime(byte[] fieldData) {
+            return decodeTimestampTz(fieldData);
+        }
+
+        @Override
+        public byte[] encodeOffsetTime(OffsetTime offsetTime) {
+            return encodeTimeTz(offsetTime);
+        }
+
+        @Override
+        public OffsetTime decodeOffsetTime(byte[] fieldData) {
+            return decodeTimeTz(fieldData);
+        }
+    }
+
+    /**
+     * Codec for the 'extended' WITH TIME ZONE types.
+     */
+    private class ExtendedTimeZoneCodec implements TimeZoneCodec {
+
+        @Override
+        public byte[] encodeOffsetDateTime(OffsetDateTime offsetDateTime) {
+            return encodeExTimestampTz(offsetDateTime);
+        }
+
+        @Override
+        public OffsetDateTime decodeOffsetDateTime(byte[] fieldData) {
+            return decodeExTimestampTz(fieldData);
+        }
+
+        @Override
+        public byte[] encodeOffsetTime(OffsetTime offsetTime) {
+            return encodeExTimeTz(offsetTime);
+        }
+
+        @Override
+        public OffsetTime decodeOffsetTime(byte[] fieldData) {
+            return decodeExTimeTz(fieldData);
+        }
     }
 
 }

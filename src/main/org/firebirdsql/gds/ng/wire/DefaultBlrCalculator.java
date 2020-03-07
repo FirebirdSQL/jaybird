@@ -197,6 +197,12 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_TIME_TZ:
             bout.write(blr_sql_time_tz);
             break;
+        case SQL_TIMESTAMP_TZ_EX:
+            bout.write(blr_ex_timestamp_tz);
+            break;
+        case SQL_TIME_TZ_EX:
+            bout.write(blr_ex_time_tz);
+            break;
         default:
             throw new FbExceptionBuilder().exception(isc_dsql_sqlda_value_err).toSQLException();
         }
@@ -228,7 +234,9 @@ public class DefaultBlrCalculator implements BlrCalculator {
         case SQL_TIME_TZ:
             return -8;
         case SQL_TIMESTAMP_TZ:
+        case SQL_TIME_TZ_EX:
             return -12;
+        case SQL_TIMESTAMP_TZ_EX:
         case SQL_DEC34:
         case SQL_INT128:
             return -16;

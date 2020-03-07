@@ -132,6 +132,11 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     // Methods delegating to parent coder
 
     @Override
+    public int sizeOfShort() {
+        return parentCoder.sizeOfShort();
+    }
+
+    @Override
     public byte[] encodeShort(short value) {
         return parentCoder.encodeShort(value);
     }

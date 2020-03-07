@@ -2349,8 +2349,10 @@ public interface ISCConstants {
     int SQL_TYPE_TIME = 560;
     int SQL_TYPE_DATE = 570;
     int SQL_INT64     = 580;
+    int SQL_TIMESTAMP_TZ_EX = 32748;
+    int SQL_TIME_TZ_EX      = 32750;
     int SQL_INT128    = 32752;
-    int SQL_TIMESTAMP_TZ = 32754;
+    int SQL_TIMESTAMP_TZ    = 32754;
     int SQL_TIME_TZ   = 32756;
     // Replaced by SQL_INT128 in 4.0.0.1604
     @Deprecated

@@ -43,12 +43,12 @@ class FBTimeTzField extends AbstractWithTimeZoneField {
     OffsetTime getOffsetTime() throws SQLException {
         if (isNull()) return null;
 
-        return getTimeZoneDatatypeCoder().decodeTimeTz(getFieldData());
+        return getTimeZoneCodec().decodeOffsetTime(getFieldData());
     }
 
     @Override
     void setOffsetTime(OffsetTime offsetTime) {
-        setFieldData(getTimeZoneDatatypeCoder().encodeTimeTz(offsetTime));
+        setFieldData(getTimeZoneCodec().encodeOffsetTime(offsetTime));
     }
 
     @Override

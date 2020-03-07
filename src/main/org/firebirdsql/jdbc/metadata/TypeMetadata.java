@@ -315,8 +315,10 @@ public class TypeMetadata {
         case date_type:
             return "DATE";
         case time_tz_type:
+        case ex_time_tz_type:
             return "TIME WITH TIME ZONE";
         case timestamp_tz_type:
+        case ex_timestamp_tz_type:
             return "TIMESTAMP WITH TIME ZONE";
         case blob_type:
             if (sqlSubType == BLOB_SUB_TYPE_BINARY) {
