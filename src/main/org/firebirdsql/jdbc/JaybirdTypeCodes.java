@@ -40,15 +40,6 @@ public final class JaybirdTypeCodes {
     @Volatile(reason = "To be standardized by future version of JDBC, type code may change")
     public static final int DECFLOAT = -6001;
 
-    // TODO Remove when Java 7 support is removed
-
-    @Volatile(reason = "Provided for JDBC 4.1 / Java 7 compatibility")
-    public static final int REF_CURSOR = 2012; // java.sql.Types.REF_CURSOR
-    @Volatile(reason = "Provided for JDBC 4.1 / Java 7 compatibility")
-    public static final int TIME_WITH_TIMEZONE = 2013; // java.sql.Types.TIME_WITH_TIMEZONE
-    @Volatile(reason = "Provided for JDBC 4.1 / Java 7 compatibility")
-    public static final int TIMESTAMP_WITH_TIMEZONE = 2014; // java.sql.Types.TIMESTAMP_WITH_TIMEZONE
-
     private JaybirdTypeCodes() {
         // no instances
     }

@@ -212,8 +212,8 @@ public class TestFBResultSetMetaDataParametrized {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 32, "COL_DECIMAL30_5", "COL_DECIMAL30_5", DECIMAL, "DECIMAL", 30, 5, TABLE_NAME, columnNullable, true, true));
         }
         if (supportInfo.supportsTimeZones()) {
-            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
-            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
+            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
         }
 
         return testData;

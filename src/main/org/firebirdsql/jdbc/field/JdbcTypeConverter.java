@@ -137,10 +137,10 @@ public final class JdbcTypeConverter {
             return Types.DATE;
         case ISCConstants.SQL_TIMESTAMP_TZ:
         case ISCConstants.SQL_TIMESTAMP_TZ_EX:
-            return JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE;
+            return Types.TIMESTAMP_WITH_TIMEZONE;
         case ISCConstants.SQL_TIME_TZ:
         case ISCConstants.SQL_TIME_TZ_EX:
-            return JaybirdTypeCodes.TIME_WITH_TIMEZONE;
+            return Types.TIME_WITH_TIMEZONE;
         case ISCConstants.SQL_BLOB:
             if (subtype < 0) {
                 return Types.BLOB;

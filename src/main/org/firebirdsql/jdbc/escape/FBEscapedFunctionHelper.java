@@ -692,28 +692,28 @@ public class FBEscapedFunctionHelper {
     }
 
     /**
-     * @return Set of JDBC numeric functions supported (as defined in appendix D.1 of JDBC 4.1)
+     * @return Set of JDBC numeric functions supported (as defined in appendix C.1 of JDBC 4.3)
      */
     public static Set<String> getSupportedNumericFunctions() {
         return SUPPORTED_NUMERIC_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC string functions supported (as defined in appendix D.2 of JDBC 4.1)
+     * @return Set of JDBC string functions supported (as defined in appendix C.2 of JDBC 4.3)
      */
     public static Set<String> getSupportedStringFunctions() {
         return SUPPORTED_STRING_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC time and date functions supported (as defined in appendix D.3 of JDBC 4.1)
+     * @return Set of JDBC time and date functions supported (as defined in appendix C.3 of JDBC 4.3)
      */
     public static Set<String> getSupportedTimeDateFunctions() {
         return SUPPORTED_TIME_DATE_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC system functions supported (as defined in appendix D.4 of JDBC 4.1)
+     * @return Set of JDBC system functions supported (as defined in appendix C.4 of JDBC 4.3)
      */
     public static Set<String> getSupportedSystemFunctions() {
         return SUPPORTED_SYSTEM_FUNCTIONS;

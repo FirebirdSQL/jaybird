@@ -216,8 +216,8 @@ public class TestFBPreparedStatementMetaData {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 38, 5, parameterNullable, true, "col_decimal30_5"));
         }
         if (shouldTestTimeZoneSupport()) {
-            testData.add(create(testData.size() + 1, "java.time.OffsetTime", parameterModeIn, JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, parameterNullable, false, "col_timetz"));
-            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", parameterModeIn, JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, parameterNullable, false, "col_timestamptz"));
+            testData.add(create(testData.size() + 1, "java.time.OffsetTime", parameterModeIn, TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, parameterNullable, false, "col_timetz"));
+            testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", parameterModeIn, TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, parameterNullable, false, "col_timestamptz"));
         }
 
         return testData;

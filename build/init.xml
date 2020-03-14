@@ -16,17 +16,6 @@
         </tstamp>
         <property name="build.id" value="${build.number}"/>
 
-        <!-- Java 7 specific properties -->
-        <condition property="maven.jdkversion" value="java7">
-            <javaversion exactly="1.7"/>
-        </condition>
-        <condition property="maven.oldartifact" value="jaybird-jdk17">
-            <javaversion exactly="1.7"/>
-        </condition>
-        <condition property="javac.level" value="1.7">
-            <javaversion exactly="1.7"/>
-        </condition>
-
         <!-- Java 8 specific properties -->
         <condition property="maven.jdkversion" value="java8">
             <javaversion exactly="1.8"/>
@@ -50,10 +39,6 @@
             <javaversion atleast="11"/>
         </condition>
 
-        <condition property="jdbc.41" value="true">
-            <javaversion exactly="1.7"/>
-        </condition>
-
         <condition property="jdbc.42" value="true">
             <or>
                 <javaversion exactly="1.8"/>
@@ -64,7 +49,6 @@
 
         <echo message="maven.jdkversion: ${maven.jdkversion}"/>
         <echo message="javac.level: ${javac.level}"/>
-        <echo message="jdbc.41: ${jdbc.41}"/>
         <echo message="jdbc.42: ${jdbc.42}"/>
 
         <property name="Name" value="Jaybird"/>
@@ -89,9 +73,6 @@
 
         <!-- Manifest version info -->
         <property name="specification.title" value="JSR 221 JDBC API"/>
-        <condition property="specification.version" value="4.1">
-            <javaversion exactly="1.7"/>
-        </condition>
         <condition property="specification.version" value="4.2">
             <javaversion exactly="1.8"/>
         </condition>
@@ -131,7 +112,6 @@
         <property name="source.java" value="${module.source}/main"/>
         <property name="source.extern" value="${module.source}/extern"/>
         <property name="source.openoffice" value="${module.source}/openoffice"/>
-        <property name="source.jdbc.41" value="${module.source}/jdbc_41"/>
         <property name="source.jdbc.42" value="${module.source}/jdbc_42"/>
         <property name="source.jna-client" value="${module.source}/jna-client"/>
         <property name="source.etc" value="${module.source}/etc"/>
@@ -238,10 +218,7 @@
             <pathelement location="${lib.dir}/junit.jar"/>
             <pathelement location="${module.thirdparty}/fscontext.jar"/>
             <pathelement location="${module.thirdparty}/providerutil.jar"/>
-            <fileset dir="${lib_test.dir}" includes="*.jar">
-                <exclude name="objenesis-2.6.jar" unless:set="jdbc.41"/>
-                <exclude name="objenesis-3.0.1.jar" if:set="jdbc.41"/>
-            </fileset>
+            <fileset dir="${lib_test.dir}" includes="*.jar"/>
         </path>
 
         <!--

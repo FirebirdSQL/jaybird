@@ -61,9 +61,9 @@ Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
 Currently that means we support Java 11 and Java 13.
 
-Jaybird 5 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
-have the same source and all JDBC 4.3 related functionality and can be used on
-Java 9 and higher as well.
+Jaybird 5 provides libraries for Java 8 and Java 11. The Java 8 builds have the
+same source and all JDBC 4.3 related functionality and can be used on Java 9 and
+higher as well.
 
 Jaybird 5 is not modularized, but all versions declare the automatic module name 
 `org.firebirdsql.jaybird`.
@@ -217,7 +217,7 @@ Java support
 
 ### Java 7 support dropped ###
 
-Java 7 is no longer supported
+Java 7 is no longer supported. See also [jdp-2020-02 Drop Java 7 support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-02-drop-java-7-support.md).
 
 ### Java 8 ###
 
@@ -275,10 +275,23 @@ breaking changes.
 not listed, please report it as bug.** It might have been a change we forgot to
 document, but it could just as well be an implementation bug.
 
+Support for Java 7 dropped
+--------------------------
+
+Jaybird 5 does not support Java 7. You will need to upgrade to Java 8 or higher,
+or remain on Jaybird 4.
+
+Removal of constants without deprecation
+----------------------------------------
+
+The following constants have been removed in Jaybird 5:
+
+-   `TIME_WITH_TIMEZONE` and `TIMESTAMP_WITH_TIMEZONE` from
+    `org.firebirdsql.jdbc.JaybirdTypeCodes`. Use the constants with the same
+    name from `java.sql.Types`.
+
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
-
-...
 
 Breaking changes for Jaybird 5
 ------------------------------
@@ -286,10 +299,6 @@ Breaking changes for Jaybird 5
 <!-- TODO Move relevant parts to Compatibility changes once actually removed -->
 
 With Jaybird 5 the following breaking changes will be introduced.
-
-### Dropping support for Java 7 ###
-
-Jaybird 5 will drop support for Java 7.
 
 ### Dropping support for Java 8 (tentative) ###
 

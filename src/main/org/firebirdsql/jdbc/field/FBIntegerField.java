@@ -207,7 +207,6 @@ final class FBIntegerField extends FBField {
         if (value.compareTo(BI_MAX_INT) > 0 || value.compareTo(BI_MIN_INT) < 0)
             throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
 
-        // TODO Use value.intValueExact when we no longer support Java 1.7
-        setLong(value.intValue());
+        setLong(value.intValueExact());
     }
 }

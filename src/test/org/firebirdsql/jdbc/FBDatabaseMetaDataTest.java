@@ -880,9 +880,6 @@ public class FBDatabaseMetaDataTest {
         String javaVersion = System.getProperty("java.specification.version");
         int expectedMinor;
         switch (javaVersion) {
-        case "1.7":
-            expectedMinor = 1;
-            break;
         case "1.8":
             expectedMinor = 2;
             break;

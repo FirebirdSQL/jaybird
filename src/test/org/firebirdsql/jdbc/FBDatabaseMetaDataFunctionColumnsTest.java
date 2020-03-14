@@ -336,9 +336,9 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
     private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample2Columns() {
         return Arrays.asList(
                 createReturnColumnPsqlExample2(),
-                createDateTime(JaybirdTypeCodes.TIME_WITH_TIMEZONE, PSQL_EXAMPLE_2, "C$01$TIME_WITH_TIME_ZONE", 1,
+                createDateTime(Types.TIME_WITH_TIMEZONE, PSQL_EXAMPLE_2, "C$01$TIME_WITH_TIME_ZONE", 1,
                         true),
-                createDateTime(JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, PSQL_EXAMPLE_2,
+                createDateTime(Types.TIMESTAMP_WITH_TIMEZONE, PSQL_EXAMPLE_2,
                         "C$02$TIMESTAMP_WITH_TIME_ZONE", 2, true),
                 createDecfloat(PSQL_EXAMPLE_2, "C$03$DECFLOAT", 3, 34, true),
                 createDecfloat(PSQL_EXAMPLE_2, "C$04$DECFLOAT16", 4, 16, true),
@@ -501,12 +501,12 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
             precision = TIMESTAMP_PRECISION;
             length = 8;
             break;
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             typeName = "TIME WITH TIME ZONE";
             precision = TIME_WITH_TIMEZONE_PRECISION;
             length = 8; // TODO Possibly 6
             break;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             typeName = "TIMESTAMP WITH TIME ZONE";
             precision = TIMESTAMP_WITH_TIMEZONE_PRECISION;
             length = 12; // TODO Possibly 10

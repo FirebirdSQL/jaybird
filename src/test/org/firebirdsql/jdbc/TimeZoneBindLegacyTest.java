@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
- * See also Java 8 or higher companion test {@link TimeZoneBindTest}.
+ * See also companion test {@link TimeZoneBindTest}.
  */
 public class TimeZoneBindLegacyTest {
 

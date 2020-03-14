@@ -293,8 +293,6 @@ public class FBDriverTest {
     @Test
     public void testConnectionSrp224() throws Exception {
         // Might fail if plugin not enabled
-        assumeThat("Srp224 not supported in Java 7 (SHA-224 not available by default)",
-                System.getProperty("java.version"), not(startsWith("1.7")));
         checkAuthenticationPlugin(Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME);
     }
 

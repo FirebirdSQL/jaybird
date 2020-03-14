@@ -20,7 +20,6 @@
             <fileset dir="${build.resources}">
                 <exclude name="log4j.properties"/>
                 <exclude name="META-INF/ra.xml"/>
-                <exclude name="org/firebirdsql/gds/ng/tz/firebird_time_zone_mapping.properties" if:set="jdbc.41"/>
                 <include name="**/*.properties"/>
                 <include name="**/*.xml"/>
             </fileset>
@@ -39,7 +38,6 @@
             <fileset dir="${build.resources}">
                 <exclude name="log4j.properties"/>
                 <exclude name="META-INF/ra.xml"/>
-                <exclude name="org/firebirdsql/gds/ng/tz/firebird_time_zone_mapping.properties" if:set="jdbc.41"/>
                 <include name="**/*.properties"/>
                 <include name="**/*.xml"/>
             </fileset>
@@ -86,7 +84,6 @@
             </fileset>
             <fileset dir="${source.resources}">
                 <exclude name="log4j.properties"/>
-                <exclude name="org/firebirdsql/gds/ng/tz/firebird_time_zone_mapping.properties" if:set="jdbc.41"/>
                 <include name="**/*.properties"/>
                 <include name="**/*.xml"/>
             </fileset>

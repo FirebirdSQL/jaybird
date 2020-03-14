@@ -101,14 +101,8 @@ public class TestFBDatabaseMetaDataColumns {
     private static final String ADD_COMMENT_ON_COLUMN =
             "COMMENT ON COLUMN test_column_metadata.col_integer IS 'Some comment'";
 
-    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA;
-    private static final Set<ColumnMetaData> JDBC_40_COLUMN_METADATA;
-    static {
-        JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
-                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATLOG)));
-        JDBC_40_COLUMN_METADATA = Collections.unmodifiableSet(
-                EnumSet.complementOf(EnumSet.of(ColumnMetaData.SCOPE_CATALOG)));
-    }
+    private static final Set<ColumnMetaData> JDBC_41_COLUMN_METADATA = Collections.unmodifiableSet(
+            EnumSet.allOf(ColumnMetaData.class));
 
     private static final MetaDataTestSupport<ColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(ColumnMetaData.class, getRequiredMetaData());
@@ -136,12 +130,7 @@ public class TestFBDatabaseMetaDataColumns {
     }
 
     private static Set<ColumnMetaData> getRequiredMetaData() {
-        if (FBDatabaseMetaData.JDBC_MAJOR_VERSION > 4
-                || FBDatabaseMetaData.JDBC_MAJOR_VERSION == 4 && FBDatabaseMetaData.JDBC_MINOR_VERSION >= 1) {
-            return EnumSet.copyOf(JDBC_41_COLUMN_METADATA);
-        } else {
-            return EnumSet.copyOf(JDBC_40_COLUMN_METADATA);
-        }
+        return EnumSet.copyOf(JDBC_41_COLUMN_METADATA);
     }
 
     private static List<String> getCreateStatements() {
@@ -931,7 +920,7 @@ public class TestFBDatabaseMetaDataColumns {
         assumeTrue("Test requires time zone support",
                 supportInfoFor(con).supportsTimeZones());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.TIME_WITH_TIMEZONE);
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIME_WITH_TIMEZONE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIME WITH TIME ZONE");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 19);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 45);
@@ -944,7 +933,7 @@ public class TestFBDatabaseMetaDataColumns {
         assumeTrue("Test requires time zone support",
                 supportInfoFor(con).supportsTimeZones());
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
-        validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE);
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIMESTAMP_WITH_TIMEZONE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIMESTAMP WITH TIME ZONE");
         validationRules.put(ColumnMetaData.COLUMN_SIZE, 30);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 46);
@@ -991,6 +980,7 @@ public class TestFBDatabaseMetaDataColumns {
         defaults.put(ColumnMetaData.IS_NULLABLE, "YES");
         defaults.put(ColumnMetaData.SCOPE_SCHEMA, null);
         defaults.put(ColumnMetaData.SCOPE_TABLE, null);
+        defaults.put(ColumnMetaData.SCOPE_CATALOG, null);
         defaults.put(ColumnMetaData.SOURCE_DATA_TYPE, null);
         defaults.put(ColumnMetaData.IS_AUTOINCREMENT, "NO");
         defaults.put(ColumnMetaData.IS_GENERATEDCOLUMN, "NO");
@@ -1001,13 +991,7 @@ public class TestFBDatabaseMetaDataColumns {
     }
 
     private static Map<ColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
-        Map<ColumnMetaData, Object> defaults = new EnumMap<>(DEFAULT_COLUMN_VALUES);
-        if (dbmd.getJDBCMajorVersion() > 4 || dbmd.getJDBCMajorVersion() == 4 && dbmd.getJDBCMinorVersion() >= 1) {
-            defaults.put(ColumnMetaData.SCOPE_CATALOG, null);
-        } else {
-            defaults.put(ColumnMetaData.SCOPE_CATLOG, null);
-        }
-        return defaults;
+        return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
     
     /**
@@ -1032,8 +1016,7 @@ public class TestFBDatabaseMetaDataColumns {
         CHAR_OCTET_LENGTH(16, Integer.class), 
         ORDINAL_POSITION(17, Integer.class), 
         IS_NULLABLE(18, String.class), 
-        SCOPE_CATLOG(19, String.class), // JDBC 3.0 and 4.0
-        SCOPE_CATALOG(19, String.class), // JDBC 4.1 and up
+        SCOPE_CATALOG(19, String.class),
         SCOPE_SCHEMA(20, String.class), 
         SCOPE_TABLE(21, String.class), 
         SOURCE_DATA_TYPE(22, Short.class), 

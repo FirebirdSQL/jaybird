@@ -210,9 +210,9 @@ public abstract class FBField {
             return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
         case Types.TIMESTAMP:
             return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
         case Types.CHAR:
         case Types.VARCHAR:

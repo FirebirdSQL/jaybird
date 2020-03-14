@@ -31,10 +31,7 @@ import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 /**
  * Root superclass for the datasources in Firebird.
- * <p>
- * Used to workaround incompatibilities introduced for JDBC 3.0 and earlier by JDBC 4.1 (getParentLogger).
- * </p>
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */

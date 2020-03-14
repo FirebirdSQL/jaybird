@@ -208,7 +208,6 @@ final class FBLongField extends FBField {
         if (value.compareTo(BI_MAX_LONG) > 0 || value.compareTo(BI_MIN_LONG) < 0)
             throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
 
-        // TODO Use value.longValueExact when we no longer support Java 1.7
-        setLong(value.longValue());
+        setLong(value.longValueExact());
     }
 }

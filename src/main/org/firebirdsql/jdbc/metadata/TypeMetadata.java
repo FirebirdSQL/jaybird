@@ -139,9 +139,9 @@ public class TypeMetadata {
             return TIME_PRECISION;
         case Types.TIMESTAMP:
             return TIMESTAMP_PRECISION;
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return TIME_WITH_TIMEZONE_PRECISION;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return TIMESTAMP_WITH_TIMEZONE_PRECISION;
         case JaybirdTypeCodes.DECFLOAT:
             switch (type) {

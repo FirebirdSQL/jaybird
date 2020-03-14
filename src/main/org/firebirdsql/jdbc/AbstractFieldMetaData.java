@@ -174,10 +174,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.DATE:
             return SQL_DATE_CLASS_NAME;
 
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return OFFSET_TIME_CLASS_NAME;
 
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return OFFSET_DATE_TIME_CLASS_NAME;
 
         case Types.NUMERIC:
@@ -372,9 +372,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return 8;
         case Types.TIMESTAMP:
             return 19;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return 30;
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return 19;
         case Types.BOOLEAN:
             return 1;

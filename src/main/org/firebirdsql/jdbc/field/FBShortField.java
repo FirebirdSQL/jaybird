@@ -215,7 +215,6 @@ class FBShortField extends FBField {
         if (value.compareTo(BI_MAX_SHORT) > 0 || value.compareTo(BI_MIN_SHORT) < 0)
             throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
 
-        // TODO Use value.shortValueExact when we no longer support Java 1.7
-        setLong(value.shortValue());
+        setLong(value.shortValueExact());
     }
 }

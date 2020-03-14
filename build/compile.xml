@@ -12,12 +12,6 @@
         <unjar src="${module.thirdparty}/connector-api-1.5.jar" dest="${build.j2ee}"/>
     </target>
 
-    <target name="set-jdbc-41-src" if="jdbc.41">
-        <path id="source.java.additional">
-            <pathelement path="${source.jdbc.41}"/>
-        </path>
-    </target>
-
     <target name="set-jdbc-42-src" if="jdbc.42">
         <path id="source.java.additional">
             <pathelement path="${source.jdbc.42}"/>
@@ -31,7 +25,7 @@
         </path>
     </target>
 
-    <target name="set-driver-sources" depends="init,set-jdbc-41-src,set-jdbc-42-src,set-openoffice-src-14"/>
+    <target name="set-driver-sources" depends="init,set-jdbc-42-src,set-openoffice-src-14"/>
 
     <target name="compile-driver" depends="set-driver-sources">
         <mkdir dir="${build.classes}"/>
@@ -60,18 +54,13 @@
         </javac>
     </target>
 
-    <target name="set-jdbc-41-test" if="jdbc.41">
-        <path id="source.test.additional">
-        </path>
-    </target>
-
     <target name="set-jdbc-42-test" if="jdbc.42">
         <path id="source.test.additional">
             <pathelement path="${source.test.42}"/>
         </path>
     </target>
 
-    <target name="compile-tests" depends="compile-driver,set-jdbc-41-test,set-jdbc-42-test">
+    <target name="compile-tests" depends="compile-driver,set-jdbc-42-test">
         <mkdir dir="${build.test}"/>
         <javac
                 destdir="${build.test}"
