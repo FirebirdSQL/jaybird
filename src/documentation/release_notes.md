@@ -1,14 +1,3 @@
-WARNING {-}
-=======
-
-Jaybird 4 is still in development. This version is provided for testing
-purposes only. We'd appreciate your feedback, but we'd like to emphasize that
-this version is **not intended for production**.
-
-Bug reports about undocumented changes in behavior are appreciated. Feedback can
-be sent to the Firebird-java mailing list or reported on the issue tracker
-<http://tracker.firebirdsql.org/browse/JDBC>.
-
 Jaybird 4.0.x changelog
 =======================
 
@@ -23,10 +12,10 @@ The following has been changed or fixed since Jaybird 4.0.0-beta-2
 -   Changed: The 'DEC_FIXED' extended numeric precision support (for Firebird
     4.0.0-beta-1) has been removed ([JDBC-596](http://tracker.firebirdsql.org/browse/JDBC-596)) \
     Now only the 'INT128' extended numeric precision (for Firebird 4.0.0-beta-2
-    and higher) is supported.
+    and higher, or snapshot 4.0.0.1604 or higher) is supported.
 -   Changed: Updated dependency on JNA from 5.3.0 to 5.5.0 ([JDBC-509](http://tracker.firebirdsql.org/browse/JDBC-509)) \
-    Make sure to replace `jna-5.3.0.jar` (or `jna-4.4.0.jar` when coming from
-    Jaybird 3) with `jna-5.5.0.jar`.
+    Make sure to replace `jna-4.4.0.jar` (or `jna-5.3.0.jar` when coming from
+    an earlier test version of Jaybird 4) with `jna-5.5.0.jar`.
 -   New feature: Support for `EXTENDED TIME(STAMP) WITH TIME ZONE` types
     introduced in Firebird 4.0.0.1795 ([JDBC-611](http://tracker.firebirdsql.org/browse/JDBC-611)) \
     The 'extended' time zone types are a 'bind-only' data type that provides an
@@ -224,12 +213,25 @@ protocol. The compression is disabled by default.
 
 ### Notes on Firebird 4 support
 
+At the time of release of Jaybird 4, Firebird 4 was still in testing. As a
+result, support for Firebird 4 is tentative. There can be incompatibilities with
+features or changes after Firebird version 4.0.0.1803. Once Firebird 4 is
+released, incompatibilities or otherwise breaking changes will be addressed in
+a point release of Jaybird 4.
+
 Jaybird 4 supports the protocol improvements of Firebird 4 for statement
 timeouts, but does not implement the new batch protocol.
 
 Jaybird time zone support uses functionality added after Firebird 4 beta 1 (4.0.0.1436), 
 you will need version 4.0.0.1683 or later for the `dataTypeBind` connection 
 property.
+
+Jaybird 4 supports the extended numeric precision types introduced after
+Firebird 4 beta 1 (4.0.0.1436), you will need version 4.0.0.1604 to be able to
+use `NUMERIC` or `DECIMAL` with a precision higher than 18.
+
+Jaybird does not support the ChaCha wire encryption plugin. This may be added in
+a future major or point release.
 
 Supported Java versions
 -----------------------
@@ -499,7 +501,9 @@ Firebird support
 Support for Firebird 2.0 and 2.1 has been dropped. See [Firebird 2.0 and 2.1 no
 longer supported](#firebird-2.0-and-2.1-no-longer-supported) for details.
 
-Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
+Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported. Firebird 4 support
+may require an additional point release of Jaybird 4 to address possible
+incompatibilities since release of Jaybird 4.
 
 Wire encryption support
 -----------------------
@@ -537,6 +541,8 @@ made some preparations to support this. If you want to develop such a plugin,
 contact us on the Firebird-Java mailing list so we can work out the details of 
 adding plugin support.
 
+The new ChaCha wire encryption introduced in Firebird 4 is not yet supported.
+
 **WARNING**
 
 The implementation comes with a number of caveats:
@@ -567,8 +573,8 @@ value from a connection property. Be aware that a static value response for
 database encryption is not very secure as it can easily lead to replay attacks 
 or unintended key exposure. 
 
-Future versions of Jaybird (likely 5, maybe 4) will introduce plugin support for 
-database encryption plugins that require a more complex callback.
+Future versions of Jaybird (likely 5) will introduce plugin support for database
+encryption plugins that require a more complex callback.
 
 The static response value of the encryption callback can be set through the 
 `dbCryptConfig` connection property. `DataSource` and `ServiceManager` 
@@ -591,7 +597,8 @@ Because of the limitation of connection URL parsing, we strongly suggest to
 avoid plain string values with `&` or `;`. Likewise, avoid `:` so that we can
 support other prefixes similar to `base64:` in the future. If you need these 
 characters, consider using a base64 encoded value instead, or ensure these
-characters are URL encoded: `&`: `%26`, `;`: `%3B`, `:`: `%3A`, `%`: `%25`.
+characters are URL encoded: `&`: `%26`, `;`: `%3B`, `:`: `%3A`, `%`: `%25`,
+`+`: `%2B`.
 
 For service operations, as implemented in the `org.firebirdsql.management` 
 package, Firebird requires the `KeyHolderPlugin` configuration to be globally 
@@ -603,7 +610,7 @@ other than `gstat -h` or `gstat -e`).
 Other warnings and limitations
 
 -   Database encryption callback support is only available in the pure Java
-    implementation. Support for native and embedded connections will be added
+    implementation. Support for native and embedded connections may be added
     in a future version.
 -   The database encryption callback does not require an encrypted connection, 
     so the key can be exchanged unencrypted if wire protocol encryption has been 
@@ -612,7 +619,7 @@ Other warnings and limitations
     encryption (caveat: see the next point).
 -   Firebird may ask for the database encryption key before the connection has
     been encrypted (for example if the encrypted database itself is used as the
-    security database). _This applies to v15 protocol support._
+    security database). _This applies to v15 and higher protocol support._
 -   We cannot guarantee that the `dbCryptConfig` value cannot be obtained by 
     someone with access to your application or the machine hosting your 
     application (although that in itself would already imply a severe security 
@@ -739,7 +746,7 @@ This support is experimental and comes with a number of caveats:
 -   We haven't tested this extensively (except for loading Jaybird's own 
     plugins internally)
 -   The authentication plugin (and provider) interfaces should be considered 
-    unstable; they may change with point-releases (although we will try to avoid 
+    unstable; they may change with point releases (although we will try to avoid 
     that) 
 -   For now it will be necessary for the jar containing the authentication 
     plugin to be loaded by the same class loader as Jaybird itself
@@ -922,7 +929,20 @@ applied:
 If you need other rounding and overflow behavior, make sure you round the values
 appropriately before you set them.
 
-*TODO*: Document decfloat bind/traps/round connection property.
+### Configuring decfloat traps and rounding
+
+To configure the server-side(!) error and rounding behaviour of the `DECFLOAT`
+data types, you can configure use the following connection properties:
+
+-   `decfloatRound` (alias: `decfloat_round`) \
+    Possible values: `ceiling`, `up`, `half_up` (default), `half_even`,
+    `half_down`, `down`, `floor`, `reround`
+-   `decfloatTraps` (alias: `decfloat_traps`) \
+    Comma-separated list with options: `Division_by_zero` (default), `Inexact`,
+    `Invalid_operation` (default), `Overflow` (default), `Underflow`
+    
+Configuring these options does not change driver behaviour, only server-side
+behaviour.
      
 ### Notes ###
 
@@ -1072,8 +1092,6 @@ time zone. Time zone bind can be configured with connection property
 
 See also [jdp-2019-03: Time Zone Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2019-03-time-zone-support.md)  
 
-NOTE: documentation below reflects state as currently implemented
-
 ### Scope of time zone support ###
 
 JDBC 4.2 introduced support for time zones, and maps these types to 
@@ -1192,14 +1210,13 @@ To redefine the data type binding, you can use the connection property
 `dataTypeBind`. See [Firebird 4 data type bind configuration support](#firebird-4-data-type-bind-configuration-support)
 for details.
 
-You will need to individually map the time zone types, either to `legacy` (which
-uses `time` and `timestamp` (without time zone)) or to a desired target data
-type (for example `time` or `varchar`):
+You will need to map the time zone types, either to `legacy` (which uses `time`
+and `timestamp` (without time zone)) or to a desired target data type (for
+example `time` or `varchar`). You can map per type or for both types together:
 
 ```
 Properties props = new Properties();
-props.setProperty("dataTypeBind", 
-        "time with time zone to legacy;timestamp with time zone to legacy");
+props.setProperty("dataTypeBind", "time zone to legacy");
 ```
 
 The `TIME ZONE TO EXTENDED` binds (including type-specific variants) is only

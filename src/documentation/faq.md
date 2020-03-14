@@ -8,13 +8,11 @@ Where do I get Jaybird?
 
 #### Jaybird 4 ####
 
-NOTE: Jaybird 4 is in beta. Use [Jaybird 3.0](#jaybird-3.0) for production.
-
 Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.0.javaXX-beta-1` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
@@ -26,7 +24,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8-beta-1</version>
+    <version>4.0.0.java8</version>
 </dependency>
 ~~~
 
@@ -38,7 +36,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8-beta-1</version>
+    <version>4.0.0.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -68,6 +66,8 @@ explicitly include JNA 5.5.0 as a dependency:
 #### Jaybird 3.0 ####
 <!-- For GitHub markdown compatibility -->
 <a name="jaybird-3.0"></a>
+
+Jaybird 3.0 is currently maintained, but we recommend upgrading to Jaybird 4.
 
 Jaybird 3.0 is available from Maven central:
 
@@ -124,6 +124,8 @@ explicitly include JNA 4.4.0 as a dependency:
 ~~~
 
 #### Jaybird 2.2 ####
+
+Jaybird 2.2 is end-of-life. We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2 is available on maven, with a separate artifact
 for each supported Java version.
@@ -775,10 +777,11 @@ not provide a connection pool**, but is intended to be used by a connection pool
 connection pool.
 
 If your application is built on a Java EE application server, we suggest you use
-the connection pooling provided by the application server. Either through the
-resource-adapter of the JCA implementation of Jaybird, or using the
-`java.sql.ConnectionPoolDataSource` implementation
-`org.firebirdsql.ds.FBConnectionPoolDataSource`.
+the connection pooling provided by the application server using the
+`javax.sql.ConnectionPoolDataSource` implementation
+`org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the 
+`javax.sql.XADataSource` implementation
+`org.firebirdsql.ds.FBXADataSource`.
 
 If you develop standalone applications, or you use an application server without
 connection pooling, we suggest you use third-party libraries like:
