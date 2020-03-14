@@ -3273,59 +3273,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the given pattern.
-     *
-     * @param pattern
-     *         The pattern to be checked for wildcards
-     * @return <code>true</code> if there are no wildcards in the pattern,
-     * <code>false</code> otherwise
-     * @deprecated Will be removed in Jaybird 5
-     */
-    @Deprecated
-    public static boolean hasNoWildcards(String pattern) {
-        if (pattern == null) return true;
-
-        for (int pos = 0; pos < pattern.length(); pos++) {
-            char ch = pattern.charAt(pos);
-            if (ch == '_' || ch == '%') {
-                return false;
-            } else if (ch == '\\' && pos < pattern.length() - 1) {
-                char nextCh = pattern.charAt(pos + 1);
-                if (nextCh == '\\' || nextCh == '%' || nextCh == '_') {
-                    // We were an escape, skip next character
-                    pos += 1;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Strips all backslash-escapes from a string.
-     *
-     * @param pattern
-     *         The string to be stripped
-     * @return pattern with all backslash-escapes removed
-     * @deprecated Will be removed in Jaybird 5
-     */
-    @Deprecated
-    public static String stripEscape(String pattern) {
-        if (pattern == null) return null;
-        StringBuilder stripped = new StringBuilder(pattern.length());
-        for (int pos = 0; pos < pattern.length(); pos++) {
-            char ch = pattern.charAt(pos);
-            if (ch != '\\') {
-                stripped.append(ch);
-            } else if (pos < pattern.length() - 1 && pattern.charAt(pos + 1) == '\\') {
-                // We are an escape for a backslash, append backslash and skip next position
-                stripped.append('\\');
-                pos += 1;
-            }
-        }
-        return stripped.toString();
-    }
-
-    /**
      * Escapes the like wildcards and escape ({@code \_%} in the provided search string with a {@code \}.
      * <p>
      * Primary purpose is to escape object names with wildcards for use in metadata patterns for literal matches, but

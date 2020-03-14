@@ -91,19 +91,6 @@ public interface TraceManager extends ServiceManager {
     void listTraceSessions() throws SQLException;
 
     /**
-     * Loads a configuration from the specified fileName using the default character set.
-     *
-     * @param fileName
-     *         File name
-     * @throws IOException
-     * @deprecated We suggest you use standard Java functionality instead (eg
-     * {@code new String(Files.readAllBytes(Paths.get(fileName)), Charset.defaultCharset())}.
-     * This method will be removed in Jaybird 5.
-     */
-    @Deprecated
-    String loadConfigurationFromFile(String fileName) throws IOException;
-
-    /**
      * Gets the sessionId for the given name.
      * <p>
      * Returns null if the sessionName does not exist or hasn't been initialized yet.

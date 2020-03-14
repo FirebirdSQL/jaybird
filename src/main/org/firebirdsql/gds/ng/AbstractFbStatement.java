@@ -359,24 +359,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    @Deprecated
-    public final RowDescriptor getFieldDescriptor() {
-        return getRowDescriptor();
-    }
-
-    /**
-     * Sets the (result set) field descriptor.
-     *
-     * @param fieldDescriptor
-     *         Field descriptor
-     * @deprecated Use {@link #setRowDescriptor(RowDescriptor)} instead; will be removed in Jaybird 5
-     */
-    @Deprecated
-    protected void setFieldDescriptor(RowDescriptor fieldDescriptor) {
-        setRowDescriptor(fieldDescriptor);
-    }
-
-    @Override
     public final RowDescriptor getRowDescriptor() {
         return fieldDescriptor;
     }

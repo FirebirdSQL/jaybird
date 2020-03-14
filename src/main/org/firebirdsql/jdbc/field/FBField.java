@@ -160,16 +160,6 @@ public abstract class FBField {
     }
 
     /**
-     * @return <code>true</code> if the field is of type <code>type</code>.
-     * @deprecated This method will be removed in Jaybird 5, as a replacement use
-     * {@link JdbcTypeConverter#isJdbcType(FieldDescriptor, int)}
-     */
-    @Deprecated
-    public static boolean isType(FieldDescriptor field, int jdbcType) {
-        return JdbcTypeConverter.isJdbcType(field, jdbcType);
-    }
-
-    /**
      * This is a factory method that creates appropriate instance of the
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.

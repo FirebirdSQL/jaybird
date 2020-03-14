@@ -32,12 +32,6 @@ public class FBSQLParseException extends SQLSyntaxErrorException {
 
     private static final long serialVersionUID = 4217078230221445003L;
 
-    /**
-     * @deprecated Use {@link SQLStateConstants#SQL_STATE_INVALID_ESCAPE_SEQ}; will be removed in Jaybird 5.
-     */
-    @Deprecated
-    public static final String SQL_STATE_INVALID_ESCAPE_SEQ = SQLStateConstants.SQL_STATE_INVALID_ESCAPE_SEQ;
-
     public FBSQLParseException(String msg) {
         super(msg, SQLStateConstants.SQL_STATE_INVALID_ESCAPE_SEQ);
     }

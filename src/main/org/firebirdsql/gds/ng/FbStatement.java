@@ -68,13 +68,6 @@ public interface FbStatement extends ExceptionListenable {
     RowDescriptor getParameterDescriptor();
 
     /**
-     * @return descriptor of the fields returned by this statement
-     * @deprecated Use {@link #getRowDescriptor()} instead; will be removed in Jaybird 5
-     */
-    @Deprecated
-    RowDescriptor getFieldDescriptor();
-
-    /**
      * @return descriptor of the row returned by this statement
      */
     RowDescriptor getRowDescriptor();

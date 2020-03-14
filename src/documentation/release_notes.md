@@ -303,6 +303,42 @@ The following constants have been removed in Jaybird 5:
 Removal of deprecated classes, packages and methods
 ---------------------------------------------------
 
+### Removal of deprecated methods ###
+
+The following methods have been removed in Jaybird 5:
+
+-   `MaintenanceManager.listLimboTransactions()`, use
+    `MaintenanceManager.limboTransactionsAsList()` or 
+    `MaintenanceManager.getLimboTransactions()` instead.
+-   `TraceManager.loadConfigurationFromFile(String)`, use standard Java 
+    functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
+-   `FBDatabaseMetaData.hasNoWildcards(String pattern)`
+-   `FBDatabaseMetaData.stripEscape(String pattern)`
+-   `StatementParser.parseInsertStatement(String sql)`, use 
+    `StatementParser.parseStatement(String sql)`
+-   `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
+-   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
+    use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
+-   `FBField.isType(FieldDescriptor, int)`, use 
+    `JdbcTypeConverter.isJdbcType(FieldDescriptor, int)`
+    
+### Removal of deprecated classes ###
+
+The following classes have been removed in Jaybird 5:
+
+-   `FBMissingParameterException`, exception is no longer used.
+    
+### Removal of deprecated constants ###
+
+The following constants have been removed in Jaybird 5:
+
+-   All `SQL_STATE_*` constants in `FBSQLParseException`. Use equivalent
+    constants in `org.firebirdsql.jdbc.SQLStateConstants`.
+-   `DatabaseParameterBufferExtension.EXTENSION_PARAMETERS` has been removed.
+    There is no official replacement as this should be considered an
+    implementation detail. It is possible that `DatabaseParameterBufferExtension`
+    will be removed entirely.
+
 Breaking changes for Jaybird 5
 ------------------------------
 
@@ -329,41 +365,6 @@ If you are currently using Jaybird as a JCA driver, please let us know on the
 Firebird-Java mailing list. We may reconsider this decision and instead 
 restructure Jaybird so the dependency on JCA is only needed when Jaybird is used 
 as a JCA driver. 
-
-### Removal of deprecated methods ###
-
-The following methods will be removed in Jaybird 5:
-
--   `MaintenanceManager.listLimboTransactions()`, use
-    `MaintenanceManager.limboTransactionsAsList()` or 
-    `MaintenanceManager.getLimboTransactions()` instead.
--   `TraceManager.loadConfigurationFromFile(String)`, use standard Java 
-    functionality like `new String(Files.readAllBytes(Paths.get(fileName)), <charset>)`
--   `FBDatabaseMetaData.hasNoWildcards(String pattern)`
--   `FBDatabaseMetaData.stripEscape(String pattern)`
--   `StatementParser.parseInsertStatement(String sql)`, use 
-    `StatementParser.parseStatement(String sql)`
--   `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
--   `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`, 
-    use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
--   `FBField.isType(FieldDescriptor, int)`, use 
-    `JdbcTypeConverter.isJdbcType(FieldDescriptor, int)`
-    
-### Removal of deprecated classes ###
-
-The following classes will be removed in Jaybird 5:
-
--   `FBMissingParameterException`, exception is no longer used.
-    
-### Removal of deprecated constants ###
-
-The following constants will be removed in Jaybird 5:
-
--   All `SQL_STATE_*` constants in `FBSQLParseException` will be removed. Use equivalent 
-    constants in `org.firebirdsql.jdbc.SQLStateConstants`.
--   `DatabaseParameterBufferExtension.EXTENSION_PARAMETERS` will be removed. There is no
-    official replacement as this should be considered an implementation detail. It is
-    possible that `DatabaseParameterBufferExtension` will be removed entirely.
 
 ### Removal of UDF support for JDBC escapes ###
 

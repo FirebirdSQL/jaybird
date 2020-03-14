@@ -259,12 +259,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
         return traceSessions.get(sessionName);
     }
 
-    @Override
-    @Deprecated
-    public String loadConfigurationFromFile(String fileName) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(fileName)), Charset.defaultCharset());
-    }
-
     private class TraceStream extends FilterOutputStream {
         private static final String START_TEXT = "Trace session ID ";
 

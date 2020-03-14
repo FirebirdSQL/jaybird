@@ -169,22 +169,6 @@ public class FBDatabaseMetaDataTest {
     }
 
     @Test
-    public void testHasNoWildcards() {
-        assertTrue("claims test\\_me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\_me"));
-        assertTrue("claims test\\%me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\%me"));
-        assertFalse("claims test\\\\%me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test\\\\%me"));
-        assertFalse("claims test_me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test_me"));
-        assertFalse("claims test%me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test%me"));
-    }
-
-    @Test
-    public void testStripEscape() {
-        assertEquals("strip escape wrong", "test_me", FBDatabaseMetaData.stripEscape("test\\_me"));
-        assertEquals("strip escape wrong", "test\\me", FBDatabaseMetaData.stripEscape("test\\\\me"));
-        assertEquals("strip escape wrong", "test\\_me", FBDatabaseMetaData.stripEscape("test\\\\\\_me"));
-    }
-
-    @Test
     public void testEscapeWildcards() {
         // NOTE: fully tested in MetadataPatternTest#testEscapeWildcards
         assertEquals("escape wildcard incorrect", "test\\_me", FBDatabaseMetaData.escapeWildcards("test_me"));
