@@ -714,7 +714,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     success = true;
                     return responses;
                 } catch (SQLException e) {
-                    throw jdbcVersionSupport.createBatchUpdateException(e.getMessage(), e.getSQLState(),
+                    throw createBatchUpdateException(e.getMessage(), e.getSQLState(),
                             e.getErrorCode(), toLargeArray(responses), e);
                 } finally {
                     clearBatch();
@@ -728,12 +728,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private void executeSingleForBatch(List<Long> responses, String sql) throws SQLException {
         if (internalExecute(sql)) {
             // TODO SQL state?
-            throw jdbcVersionSupport.createBatchUpdateException(
+            throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
                     SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(responses), null);
         } else {
             responses.add(getLargeUpdateCount());
         }
+    }
+
+    protected final BatchUpdateException createBatchUpdateException(String reason, String SQLState, int vendorCode,
+            long[] updateCounts, Throwable cause) {
+        return new BatchUpdateException(reason, SQLState, vendorCode, updateCounts, cause);
     }
 
     /**

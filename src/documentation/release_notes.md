@@ -281,8 +281,18 @@ Support for Java 7 dropped
 Jaybird 5 does not support Java 7. You will need to upgrade to Java 8 or higher,
 or remain on Jaybird 4.
 
-Removal of constants without deprecation
-----------------------------------------
+Removal of classes, packages and methods without deprecation
+------------------------------------------------------------
+
+### Removal of methods without deprecation ###
+
+The following methods have been removed in Jaybird 5:
+
+-   `JdbcVersionSupport.createBatchUpdateException`, the `JdbcVersionSupport`
+    interface is an internal API of Jaybird, but was previously not marked as
+    such.
+
+### Removal of constants without deprecation ###
 
 The following constants have been removed in Jaybird 5:
 

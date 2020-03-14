@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSHelper;
 
 import java.sql.SQLException;
-import java.sql.SQLType;
 
 /**
  * JDBC 4.2 implementation of {@link java.sql.PreparedStatement} interface.
@@ -43,75 +42,4 @@ public class FBCallableStatement extends AbstractCallableStatement {
         super(c, sql, rsType, rsConcurrency, rsHoldability, storedProcMetaData, statementListener, blobListener);
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(int, int)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(int parameterIndex, SQLType sqlType) throws SQLException {
-        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber());
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(int, int, int)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(int parameterIndex, SQLType sqlType, int scale) throws SQLException {
-        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber(), scale);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(int, int, String)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(int parameterIndex, SQLType sqlType, String typeName) throws SQLException {
-        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber(), typeName);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(String, int)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(String parameterName, SQLType sqlType) throws SQLException {
-        registerOutParameter(parameterName, sqlType.getVendorTypeNumber());
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(String, int, int)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(String parameterName, SQLType sqlType, int scale) throws SQLException {
-        registerOutParameter(parameterName, sqlType.getVendorTypeNumber(), scale);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Implementation note: behaves as {@link #registerOutParameter(String, int, String)} called with
-     * {@link SQLType#getVendorTypeNumber()}.
-     * </p>
-     */
-    @Override
-    public void registerOutParameter(String parameterName, SQLType sqlType, String typeName) throws SQLException {
-        registerOutParameter(parameterName, sqlType.getVendorTypeNumber(), typeName);
-    }
 }

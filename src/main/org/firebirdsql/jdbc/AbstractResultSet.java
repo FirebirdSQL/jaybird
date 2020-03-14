@@ -1165,10 +1165,32 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateObject(columnIndex, x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird delegates to {@link #updateObject(int, Object, int)} and ignores the value of <code>targetSqlType</code>
+     * </p>
+     */
+    @Override
+    public void updateObject(int columnIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
+        updateObject(columnIndex, x, scaleOrLength);
+    }
+
     @Override
     public void updateObject(int columnIndex, Object x) throws SQLException {
         checkUpdatable();
         getField(columnIndex).setObject(x);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the value of <code>targetSqlType</code>
+     * </p>
+     */
+    @Override
+    public void updateObject(int columnIndex, Object x, SQLType targetSqlType) throws SQLException {
+        updateObject(columnIndex, x);
     }
 
     @Override
@@ -1434,10 +1456,32 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         updateObject(columnName, x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird delegates to {@link #updateObject(String, Object, int)} and ignores the value of <code>targetSqlType</code>
+     * </p>
+     */
+    @Override
+    public void updateObject(String columnLabel, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
+        updateObject(columnLabel, x, scaleOrLength);
+    }
+
     @Override
     public void updateObject(String columnName, Object x) throws SQLException {
         checkUpdatable();
         getField(columnName).setObject(x);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of <code>targetSqlType</code>
+     * </p>
+     */
+    @Override
+    public void updateObject(String columnLabel, Object x, SQLType targetSqlType) throws SQLException {
+        updateObject(columnLabel, x);
     }
 
     @Override

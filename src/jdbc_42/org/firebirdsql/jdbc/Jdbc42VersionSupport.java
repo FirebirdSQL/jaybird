@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.BatchUpdateException;
+import org.firebirdsql.util.InternalApi;
 
 /**
  * JDBC 4.2 version support.
@@ -26,12 +26,7 @@ import java.sql.BatchUpdateException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-@SuppressWarnings("Since15")
+@InternalApi
 public final class Jdbc42VersionSupport implements JdbcVersionSupport {
 
-    @Override
-    public BatchUpdateException createBatchUpdateException(String reason, String SQLState, int vendorCode,
-            long[] updateCounts, Throwable cause) {
-        return new BatchUpdateException(reason, SQLState, vendorCode, updateCounts, cause);
-    }
 }

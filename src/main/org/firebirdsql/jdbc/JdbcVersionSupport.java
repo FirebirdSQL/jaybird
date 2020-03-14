@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
-import java.sql.BatchUpdateException;
+import org.firebirdsql.util.InternalApi;
 
 /**
  * Interface to mediate between differences in JDBC versions.
@@ -26,27 +26,7 @@ import java.sql.BatchUpdateException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@InternalApi
 public interface JdbcVersionSupport {
 
-    /**
-     * Constructs a {@link java.sql.BatchUpdateException}.
-     * <p>
-     * For JDBC versions < 4.2, the {@code updateCounts} can be converted to integers without taking overflow into
-     * account.
-     * </p>
-     *
-     * @param reason
-     *         A description of the error
-     * @param SQLState
-     *         SQL state of the error
-     * @param vendorCode
-     *         Vendor specific error code (use {@code 0} if there is no specific error code)
-     * @param updateCounts
-     *         An array of {@code long} update counts
-     * @param cause
-     *         Underlying cause (may be {@code null}).
-     * @return The created BatchUpdateException.
-     */
-    BatchUpdateException createBatchUpdateException(String reason, String SQLState, int vendorCode, long[] updateCounts,
-            Throwable cause);
 }
