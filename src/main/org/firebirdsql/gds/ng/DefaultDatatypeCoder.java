@@ -252,12 +252,15 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (cal == null) {
             return value;
         } else {
-            long time = value.getTime() +
-                    (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                            Calendar.getInstance().getTimeZone().getRawOffset());
+            long time = value.getTime() + calculateOffset(cal, invertTimeZone);
 
             return new Timestamp(time);
         }
+    }
+
+    private int calculateOffset(Calendar cal, boolean invertTimeZone) {
+        return (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
+                Calendar.getInstance().getTimeZone().getRawOffset());
     }
 
     @Override
@@ -294,9 +297,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (cal == null) {
             return value;
         } else {
-            long time = value.getTime() -
-                    (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                            Calendar.getInstance().getTimeZone().getRawOffset());
+            long time = value.getTime() - calculateOffset(cal, invertTimeZone);
 
             return new Timestamp(time);
         }
@@ -324,9 +325,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (cal == null) {
             return d;
         } else {
-            long time = d.getTime() +
-                    (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                            Calendar.getInstance().getTimeZone().getRawOffset());
+            long time = d.getTime() + calculateOffset(cal, invertTimeZone);
 
             return new Time(time);
         }
@@ -353,9 +352,7 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
         if (cal == null) {
             return d;
         } else {
-            long time = d.getTime() -
-                    (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
-                            Calendar.getInstance().getTimeZone().getRawOffset());
+            long time = d.getTime() - calculateOffset(cal, invertTimeZone);
 
             return new Time(time);
         }
