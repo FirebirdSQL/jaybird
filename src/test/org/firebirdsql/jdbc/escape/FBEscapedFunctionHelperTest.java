@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -36,8 +35,6 @@ public class FBEscapedFunctionHelperTest {
     private static final String ESCAPED_FUNCTION_CALL = "test(\"arg1\", 12, ',\"')";
     private static final String ESCAPED_FUNCTION_NAME = "test";
     private static final List<String> ESCAPED_FUNCTION_PARAMS = Arrays.asList("\"arg1\"", "12", "',\"'");
-    private static final String LCASE_FUNCTION_CALL = "{fn lcase('some name')}";
-    private static final String LCASE_FUNCTION_TEST = "LOWER('some name')";
     private static final String UCASE_FUNCTION_CALL = "{fn ucase(some_identifier)}";
     private static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
 
@@ -62,19 +59,8 @@ public class FBEscapedFunctionHelperTest {
 
     @Test
     public void testEscapedFunctionCall() throws SQLException {
-        FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
-
-        String ucaseTest = parser.parse(UCASE_FUNCTION_CALL);
+        String ucaseTest = FBEscapedParser.toNativeSql(UCASE_FUNCTION_CALL);
         assertEquals("ucase function parsing should be correct",
                 UCASE_FUNCTION_TEST, ucaseTest);
-    }
-
-    @Test
-    public void testUseStandardUdf() throws SQLException {
-        FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_STANDARD_UDF);
-
-        String lcaseTest = parser.parse(LCASE_FUNCTION_CALL);
-        assertEquals("lcase function parsing should be correct",
-                LCASE_FUNCTION_TEST, lcaseTest);
     }
 }

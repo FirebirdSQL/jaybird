@@ -276,10 +276,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
         return connectionProperties.isTimestampUsesLocalTimezone();
     }
 
-    public boolean isUseStandardUdf() {
-        return connectionProperties.isUseStandardUdf();
-    }
-
     public boolean isUseStreamBlobs() {
         return connectionProperties.isUseStreamBlobs();
     }
@@ -358,10 +354,6 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
 
     public void setUserName(String userName) {
         connectionProperties.setUserName(userName);        
-    }
-
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        connectionProperties.setUseStandardUdf(useStandardUdf);        
     }
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {

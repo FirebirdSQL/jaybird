@@ -31,7 +31,6 @@ import org.firebirdsql.jca.FBLocalTransaction;
 import org.firebirdsql.jca.FBManagedConnection;
 import org.firebirdsql.jca.FirebirdLocalTransaction;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -86,7 +85,6 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
 
     private StoredProcedureMetaData storedProcedureMetaData;
-    private FBEscapedParser escapedParser;
     private GeneratedKeysSupport generatedKeysSupport;
 	 
     /**
@@ -327,24 +325,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public String nativeSQL(String sql) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            return getEscapedParser().parse(sql);
+            return FBEscapedParser.toNativeSql(sql);
         }
-    }
-    
-    /**
-     * Returns the FBEscapedParser instance for this connection.
-     * 
-     * @return Instance of FBEscapedParser
-     */
-    protected FBEscapedParser getEscapedParser() {
-        if (escapedParser == null) {
-            DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
-            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF)
-                    ? EscapeParserMode.USE_STANDARD_UDF
-                    : EscapeParserMode.USE_BUILT_IN;
-            escapedParser = new FBEscapedParser(mode);
-        }
-        return escapedParser;
     }
 
     @Override

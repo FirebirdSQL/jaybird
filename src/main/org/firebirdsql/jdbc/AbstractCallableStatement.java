@@ -18,21 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.TypeConversionException;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.util.*;
-
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
-import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.TypeConversionException;
 
 /**
  * Abstract implementation of {@link java.sql.CallableStatement}.
@@ -63,14 +60,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     throws SQLException {
         super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
 
-        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
-
-        EscapeParserMode mode = EscapeParserMode.USE_BUILT_IN;
-
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
-            mode = EscapeParserMode.USE_STANDARD_UDF;
-
-        FBEscapedCallParser parser = new FBEscapedCallParser(mode);
+        FBEscapedCallParser parser = new FBEscapedCallParser();
 
         // here statement is parsed twice, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe

@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,41 +36,27 @@ import static org.junit.Assert.fail;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class FBEscapedCallParserTest {
-    public static final String CALL_TEST_1 =
-            "{call my_proc(?, {d 01-12-11})}";
 
-    public static final String CALL_TEST_2 =
-            "{?= call my_proc ?, {d 01-12-11}}";
-
-    public static final String CALL_TEST_3 =
-            "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
-
-    public static final String CALL_TEST_4 =
-            "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
-
-    public static final String CALL_TEST_5 =
+    //TODO Why are CALL_TEST_1 - CALL_TEST_4 unused? Sign of missing test coverage?
+    private static final String CALL_TEST_1 = "{call my_proc(?, {d 01-12-11})}";
+    private static final String CALL_TEST_2 = "{?= call my_proc ?, {d 01-12-11}}";
+    private static final String CALL_TEST_3 = "EXECUTE PROCEDURE my_proc(?, {d 01-12-11})";
+    private static final String CALL_TEST_4 = "EXECUTE PROCEDURE my_proc(?, '11-dec-2001');";
+    private static final String CALL_TEST_5 =
             "{? = call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
-
-    public static final String CALL_TEST_5_1 =
+    private static final String CALL_TEST_5_1 =
             "{?=call my_proc(UPPER(?), '11-dec-2001',out 'test string, with comma')}";
-
-    public static final String CALL_TEST_6 =
+    private static final String CALL_TEST_6 =
             "{call my_proc(?, {fn ucase(?)}, '11-dec-2001',out 'test string, with comma')}";
+    private static final String CALL_TEST_7 = "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
+    private static final String CALL_TEST_8 = "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";
+    private static final String CALL_TEST_9 = "   \t  EXECUTE\nPROCEDURE  my_proc   (    UPPER(?), '11-dec-2001')  \t";
 
-    public static final String CALL_TEST_7 =
-            "EXECUTE PROCEDURE my_proc(UPPER(?), '11-dec-2001')";
-
-    public static final String CALL_TEST_8 =
-            "EXECUTE PROCEDURE my_proc (UPPER(?), '11-dec-2001')";
-
-    public static final String CALL_TEST_9 =
-            "   \t  EXECUTE\nPROCEDURE  my_proc   (    UPPER(?), '11-dec-2001')  \t";
-
-    protected FBProcedureCall testProcedureCall;
-    protected FBProcedureParam param1 = new FBProcedureParam(0, "?");
-    protected FBProcedureParam param2 = new FBProcedureParam(1, "UPPER(?)");
-    protected FBProcedureParam param3 = new FBProcedureParam(2, "'11-dec-2001'");
-    protected FBProcedureParam param4 = new FBProcedureParam(3, "'test string, with comma'");
+    private FBProcedureCall testProcedureCall;
+    private FBProcedureParam param1 = new FBProcedureParam(0, "?");
+    private FBProcedureParam param2 = new FBProcedureParam(1, "UPPER(?)");
+    private FBProcedureParam param3 = new FBProcedureParam(2, "'11-dec-2001'");
+    private FBProcedureParam param4 = new FBProcedureParam(3, "'test string, with comma'");
 
     @Before
     public void setUp() throws SQLException {
@@ -93,7 +78,7 @@ public class FBEscapedCallParserTest {
 
     @Test
     public void testProcessEscapedCall() throws Exception {
-        FBEscapedCallParser parser = new FBEscapedCallParser(EscapeParserMode.USE_BUILT_IN);
+        FBEscapedCallParser parser = new FBEscapedCallParser();
 
         FBProcedureCall procedureCall = parser.parseCall(CALL_TEST_5);
         procedureCall.registerOutParam(1, Types.INTEGER);

@@ -338,6 +338,28 @@ The following constants have been removed in Jaybird 5:
     There is no official replacement as this should be considered an
     implementation detail. It is possible that `DatabaseParameterBufferExtension`
     will be removed entirely.
+    
+Removal of UDF support for JDBC escapes
+---------------------------------------
+
+Given recent Firebird versions have significantly improved support for built-in
+functions, and UDFs are now deprecated, the support to map JDBC function escapes
+to UDFs from `ib_udf` instead of built-in functions using the boolean connection
+property `useStandarUdf`\[sic\] has been removed.
+
+As a result, the following methods, constants, properties and others are no
+longer available:
+
+-   Connection property `useStandarUdf`\[sic\] and its alias `use_standard_udf`
+-   `isUseStandardUdf()` and `setUseStandardUdf(boolean useStandardUdf)` in
+    `FirebirdConnectionProperties` and in implementations of `DataSource` and
+    other classes
+-   Constants `FBConnectionProperties.USE_STANDARD_UDF_PROPERTY`, 
+    `DatabaseParameterBufferExtension.USE_STANDARD_UDF`,
+    `ISCConstants.isc_dpb_use_standard_udf`
+-   Enum `EscapeParserMode` and its usages in `FBEscapedCallParser` and
+    `FBEscapedParser`
+-   Public classes in package are now marked as internal-api 
 
 Breaking changes for Jaybird 5
 ------------------------------
@@ -365,15 +387,6 @@ If you are currently using Jaybird as a JCA driver, please let us know on the
 Firebird-Java mailing list. We may reconsider this decision and instead 
 restructure Jaybird so the dependency on JCA is only needed when Jaybird is used 
 as a JCA driver. 
-
-### Removal of UDF support for JDBC escapes ###
-
-Jaybird 4 and earlier have support to map JDBC function escapes to UDFs from
-`ib_udf` instead of built-in function using the boolean connection property
-`useStandarUdf`\[sic\].
-
-Given recent Firebird versions have significantly improved support for built-in
-functions, and UDFs are now deprecated, this option will be removed in Jaybird 5. 
     
 Compatibility notes
 ===================

@@ -45,7 +45,6 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     @Deprecated
     int PARANOIA_MODE                   = ISCConstants.isc_dpb_paranoia_mode;
     int TIMESTAMP_USES_LOCAL_TIMEZONE   = ISCConstants.isc_dpb_timestamp_uses_local_timezone;
-    int USE_STANDARD_UDF                = ISCConstants.isc_dpb_use_standard_udf;
     int LOCAL_ENCODING                  = ISCConstants.isc_dpb_local_encoding;
     @Deprecated
     int MAPPING_PATH                    = ISCConstants.isc_dpb_mapping_path;

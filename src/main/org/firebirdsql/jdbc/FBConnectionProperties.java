@@ -50,7 +50,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String ROLE_NAME_PROPERTY = "roleName";
     public static final String SQL_DIALECT_PROPERTY = "sqlDialect";
     public static final String USE_STREAM_BLOBS_PROPERTY = "useStreamBlobs";
-    public static final String USE_STANDARD_UDF_PROPERTY = "useStandardUdf";
     public static final String SOCKET_BUFFER_SIZE_PROPERTY = "socketBufferSize";
     public static final String TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY = "timestampUsesLocalTimezone";
     public static final String USER_NAME_PROPERTY = "userName";
@@ -258,14 +257,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
         setBooleanProperty(USE_STREAM_BLOBS_PROPERTY, useStreamBlobs);
-    }
-
-    public boolean isUseStandardUdf() {
-        return getBooleanProperty(USE_STANDARD_UDF_PROPERTY);
-    }
-
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        setBooleanProperty(USE_STANDARD_UDF_PROPERTY, useStandardUdf);
     }
 
     public int getSocketBufferSize() {

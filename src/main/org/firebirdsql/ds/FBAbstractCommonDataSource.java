@@ -321,21 +321,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
 
     @Override
-    public boolean isUseStandardUdf() {
-        synchronized (lock) {
-            return connectionProperties.isUseStandardUdf();
-        }
-    }
-
-    @Override
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setUseStandardUdf(useStandardUdf);
-        }
-    }
-
-    @Override
     public int getSocketBufferSize() {
         synchronized (lock) {
             return connectionProperties.getSocketBufferSize();

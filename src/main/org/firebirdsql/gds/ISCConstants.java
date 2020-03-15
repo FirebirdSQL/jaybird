@@ -180,7 +180,7 @@ public interface ISCConstants {
     @Deprecated
     int isc_dpb_paranoia_mode           = 132;
     int isc_dpb_timestamp_uses_local_timezone        = 133;
-    int isc_dpb_use_standard_udf        = 134;
+    // unused 134 (was isc_dpb_use_standard_udf)
     int isc_dpb_local_encoding          = 135;
     @Deprecated
     int isc_dpb_mapping_path            = 136;

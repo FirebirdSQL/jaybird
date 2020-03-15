@@ -131,19 +131,6 @@ public interface FirebirdConnectionProperties {
     void setUseStreamBlobs(boolean useStreamBlobs);
 
     /**
-     * @return <code>true</code> if driver should assume that standard UDF are
-     * installed.
-     */
-    boolean isUseStandardUdf();
-
-    /**
-     * @param useStandardUdf
-     *         <code>true</code> if driver should assume that standard UDF
-     *         are installed.
-     */
-    void setUseStandardUdf(boolean useStandardUdf);
-
-    /**
      * @return socket buffer size in bytes, or -1 is not specified.
      */
     int getSocketBufferSize();
