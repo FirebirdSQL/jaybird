@@ -1,0 +1,9 @@
+path_classifiers:
+  test:
+    - "/src/jna-test/**"
+    - "/src/test/**"
+    - "/src/test_*/**"
+  libary:
+    - "/lib/**"
+    - "/src/lib/**"
+    - "/bin/**"
