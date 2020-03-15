@@ -92,7 +92,7 @@ public final class ByteArrayArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof ByteArrayArgument)) {
+        if (!(other instanceof ByteArrayArgument)) {
             return false;
         }
 

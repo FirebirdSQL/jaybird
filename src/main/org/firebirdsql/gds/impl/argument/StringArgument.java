@@ -59,7 +59,9 @@ public final class StringArgument extends Argument {
         asBytes = encoding.encodeToCharset(value);
         this.encoding = encoding;
         if (asBytes.length > argumentType.getMaxLength()) {
-            throw new IllegalArgumentException(String.format("byte array derived from String value should not be longer than %d bytes, length was %d", argumentType.getMaxLength(), asBytes.length));
+            throw new IllegalArgumentException(String.format(
+                    "byte array derived from String value should not be longer than %d bytes, length was %d",
+                    argumentType.getMaxLength(), asBytes.length));
         }
     }
 
@@ -92,12 +94,15 @@ public final class StringArgument extends Argument {
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        int result = 23;
+        result = 41 * result + getType();
+        result = 41 * result + value.hashCode();
+        return result;
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof StringArgument)) {
+        if (!(other instanceof StringArgument)) {
             return false;
         }
 

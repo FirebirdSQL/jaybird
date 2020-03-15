@@ -85,7 +85,7 @@ public final class NumericArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof NumericArgument)) {
+        if (!(other instanceof NumericArgument)) {
             return false;
         }
 

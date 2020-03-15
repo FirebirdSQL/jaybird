@@ -53,14 +53,12 @@ public final class BigIntArgument extends Argument {
     }
 
     public int getLength() {
-        switch (argumentType) {
-        case IntSpb:
+        if (argumentType == ArgumentType.IntSpb) {
             // 5: 1 for type + 4 for data
             return 5 + argumentType.getLengthSize();
-        default:
-            // 9: 1 for type + 8 for data
-            return 9 + argumentType.getLengthSize();
         }
+        // 9: 1 for type + 8 for data
+        return 9 + argumentType.getLengthSize();
     }
 
     protected void writeValue(final OutputStream outputStream, final long value) throws IOException {
@@ -85,7 +83,7 @@ public final class BigIntArgument extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof BigIntArgument)) {
+        if (!(other instanceof BigIntArgument)) {
             return false;
         }
 
@@ -97,7 +95,7 @@ public final class BigIntArgument extends Argument {
     @Override
     public int hashCode() {
         int result = 41 * 23 + getType();
-        result = 41 * result + (int) (this.value ^ (this.value >>> 32));
+        result = 41 * result + Long.hashCode(value);
         return result;
     }
 }

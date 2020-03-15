@@ -43,12 +43,18 @@ public final class SingleItem extends Argument {
 
     @Override
     public boolean equals(Object other) {
-        if (other == null || !(other instanceof SingleItem))
+        if (!(other instanceof SingleItem)) {
             return false;
+        }
 
         final SingleItem otherSingleItem = (SingleItem) other;
 
         return this.getType() == otherSingleItem.getType();
+    }
+
+    @Override
+    public int hashCode() {
+        return getType();
     }
 
     @Override
