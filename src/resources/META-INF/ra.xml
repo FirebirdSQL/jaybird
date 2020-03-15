@@ -10,7 +10,7 @@
 	<eis-type>Relational Database</eis-type>
 	<version>1.0</version>
 	<resourceadapter>
-		<managedconnectionfactory-class>org.firebirdsql.jca.FBManagedConnectionFactory</managedconnectionfactory-class>
+		<managedconnectionfactory-class>org.firebirdsql.jaybird.xca.FBManagedConnectionFactory</managedconnectionfactory-class>
 		<connectionfactory-interface>javax.sql.DataSource</connectionfactory-interface>
 		<connectionfactory-impl-class>org.firebirdsql.jdbc.FBDataSource</connectionfactory-impl-class>
 		<connection-interface>java.sql.Connection</connection-interface>

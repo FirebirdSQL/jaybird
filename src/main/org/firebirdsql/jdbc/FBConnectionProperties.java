@@ -24,7 +24,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
-import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.jaybird.xca.FBResourceException;
 
 import java.io.Serializable;
 import java.sql.Connection;

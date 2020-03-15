@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.StatementType;
-import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.jaybird.xca.FirebirdLocalTransaction;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.resource.ResourceException;

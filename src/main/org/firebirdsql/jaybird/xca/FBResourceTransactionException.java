@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jca;
+package org.firebirdsql.jaybird.xca;
 
 /**
  * Exception represents transaction error in resource.

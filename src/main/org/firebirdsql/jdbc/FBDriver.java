@@ -24,7 +24,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

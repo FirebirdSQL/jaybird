@@ -25,7 +25,7 @@ import java.sql.SQLException;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
-import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;

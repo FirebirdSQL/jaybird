@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jca;
+package org.firebirdsql.jaybird.xca;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;

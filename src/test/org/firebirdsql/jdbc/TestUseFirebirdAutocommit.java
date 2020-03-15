@@ -20,7 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.junit.Test;
 
 import java.sql.*;

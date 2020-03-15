@@ -22,7 +22,8 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.TestXABase.XidImpl;
+import org.firebirdsql.jaybird.xca.TestFBXAResource;
+import org.firebirdsql.jaybird.xca.TestXABase.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.*;
@@ -47,7 +48,7 @@ import static org.junit.Assume.assumeTrue;
 
 /**
  * Test for XADataSource. Note behavior of XAResource (ManagedConnection) is tested in
- * {@link org.firebirdsql.jca.TestFBXAResource}.
+ * {@link TestFBXAResource}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2

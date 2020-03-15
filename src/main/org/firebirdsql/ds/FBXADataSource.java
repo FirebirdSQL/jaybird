@@ -35,8 +35,8 @@ import javax.sql.XADataSource;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FBSQLException;

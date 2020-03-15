@@ -22,7 +22,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 

@@ -23,8 +23,8 @@ import java.sql.SQLException;
 import javax.resource.ResourceException;
 
 import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.jca.FBXAException;
+import org.firebirdsql.jaybird.xca.FBResourceException;
+import org.firebirdsql.jaybird.xca.FBXAException;
 
 public class FBSQLException extends SQLException {
 

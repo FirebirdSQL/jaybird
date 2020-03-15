@@ -20,7 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jca.FBResourceException;
+import org.firebirdsql.jaybird.xca.FBResourceException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

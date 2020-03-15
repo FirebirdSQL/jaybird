@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;

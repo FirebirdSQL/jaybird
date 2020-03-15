@@ -19,8 +19,8 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.ds.RootCommonDataSource;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBConnectionRequestInfo;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 
 import javax.naming.Reference;
 import javax.resource.Referenceable;

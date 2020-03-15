@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -18,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jca;
+package org.firebirdsql.jaybird.xca;
 
 import javax.resource.spi.ManagedConnectionMetaData;
 import javax.resource.ResourceException;
