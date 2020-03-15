@@ -139,7 +139,7 @@ public class FBEscapedCallParser {
         }
 
         // Exclude open and close curly brace (we are assuming they match)
-        if (startIndex < endIndex && sql.charAt(startIndex) == '{' && endIndex > 0 && sql.charAt(endIndex - 1) == '}') {
+        if (startIndex < endIndex && sql.charAt(startIndex) == '{' && sql.charAt(endIndex - 1) == '}') {
             startIndex++;
             endIndex--;
         }
