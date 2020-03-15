@@ -23,3 +23,8 @@ libraries, and potentially allow us to modernize the build in other ways.
 ## Decision
 
 Starting with Jaybird 5, Java 7 will no longer be supported.
+
+## Consequences
+
+Starting with Jaybird 5, Java 7 support will no longer be available. Jaybird
+users requiring Java 7 can continue to use Jaybird 4 or earlier.
