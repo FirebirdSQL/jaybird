@@ -1190,14 +1190,14 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             stmt.setString(1, name);
             stmt.setString(2, value);
     
-            ResultSet rs = stmt.executeQuery();
-            if (!rs.next())
-                throw new FBDriverConsistencyCheckException(
-                        "Expected result from RDB$SET_CONTEXT call");
-    
-            // needed, since the value is set on fetch!!!
-            rs.getInt(1);
-    
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new FBDriverConsistencyCheckException("Expected result from RDB$SET_CONTEXT call");
+                }
+
+                // needed, since the value is set on fetch!!!
+                rs.getInt(1);
+            }
         } catch (SQLException ex) {
             throw new SQLClientInfoException(null, ex);
         }
