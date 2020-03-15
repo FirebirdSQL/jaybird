@@ -42,6 +42,14 @@ public final class SyncObject {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SyncObject that = (SyncObject) o;
+        return id == that.id;
+    }
+
+    @Override
     public String toString() {
         return "SyncObject[" + id + "]";
     }
