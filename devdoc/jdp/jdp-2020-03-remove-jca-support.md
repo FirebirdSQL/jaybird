@@ -70,5 +70,13 @@ around a JDBC driver.
 Jaybird 5 will no longer depend on `connector-api-1.5.jar`, and the
 `jaybird-full` artifact will be dropped from the zip-distribution.
 
+Third-party code relying directly on `org.firebirdsql.jca` will break.
+
+This change will introduce some backwards compatibility issues in the
+`org.firebirdsql.jdbc` package, as some of the classes and interfaces return.
+accept or throw classes from `org.firebirdsql.jca` or `javax.resource`,
+however as these are generally intended as internal API, this backwards
+incompatibility will be limited.
+
 Removing JCA support will make it simpler to evolve code in Jaybird, and
 hopefully allow us to reduce complexity.
