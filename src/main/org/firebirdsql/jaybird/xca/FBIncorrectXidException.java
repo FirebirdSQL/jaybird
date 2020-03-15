@@ -19,22 +19,9 @@
 package org.firebirdsql.jaybird.xca;
 
 /**
- * This error is thrown when message read from the RDB$TRANSACTIONS table does
- * not represent a serialized Xid.
+ * This error is thrown when message read from the RDB$TRANSACTIONS table does not represent a serialized Xid.
  */
-public class FBIncorrectXidException extends FBResourceException {
-
-    public FBIncorrectXidException(Exception original) {
-        super(original);
-    }
-
-    public FBIncorrectXidException(String reason, Exception original) {
-        super(reason, original);
-    }
-
-    public FBIncorrectXidException(String reason, String errorCode) {
-        super(reason, errorCode);
-    }
+public class FBIncorrectXidException extends Exception {
 
     public FBIncorrectXidException(String reason) {
         super(reason);

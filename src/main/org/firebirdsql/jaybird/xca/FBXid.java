@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import javax.resource.ResourceException;
 import javax.transaction.xa.Xid;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
@@ -96,31 +96,28 @@ class FBXid implements Xid {
      *         Xid serialized in format of {@link #toBytes()} as {@link java.io.InputStream}
      * @param firebirdTransactionId
      *         The Firebird transactionId of the recovered Xid.
-     * @throws ResourceException
-     *         if an error occurs
+     * @throws FBIncorrectXidException
+     *         if an unexpected value is read from the input stream
+     * @throws IOException
+     *         for errors reading from the input stream
      */
-    FBXid(InputStream rawIn, long firebirdTransactionId) throws ResourceException {
+    FBXid(InputStream rawIn, long firebirdTransactionId) throws FBIncorrectXidException, IOException {
         this.firebirdTransactionId = firebirdTransactionId;
-
-        try {
-            if (read(rawIn) != TDR_VERSION) {
-                throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
-            }
-            if (read(rawIn) != TDR_XID_FORMAT_ID) {
-                throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
-            }
-            formatId = readInt(rawIn);
-            if (read(rawIn) != TDR_XID_GLOBAL_ID) {
-                throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
-            }
-            globalId = readBuffer(rawIn);
-            if (read(rawIn) != TDR_XID_BRANCH_ID) {
-                throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
-            }
-            branchId = readBuffer(rawIn);
-        } catch (IOException ioe) {
-            throw new FBResourceException("IOException: " + ioe, ioe);
+        if (read(rawIn) != TDR_VERSION) {
+            throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
         }
+        if (read(rawIn) != TDR_XID_FORMAT_ID) {
+            throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
+        }
+        formatId = readInt(rawIn);
+        if (read(rawIn) != TDR_XID_GLOBAL_ID) {
+            throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
+        }
+        globalId = readBuffer(rawIn);
+        if (read(rawIn) != TDR_XID_BRANCH_ID) {
+            throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
+        }
+        branchId = readBuffer(rawIn);
     }
 
     /**
