@@ -891,6 +891,7 @@ public class FBDatabaseMetaDataTest {
         case "11":
         case "12":
         case "13":
+        case "14":
             expectedMinor = 3;
             break;
         default:
