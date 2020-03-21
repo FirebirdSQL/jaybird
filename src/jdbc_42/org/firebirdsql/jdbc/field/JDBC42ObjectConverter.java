@@ -37,7 +37,7 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
  * @since 2.2
  */
 @InternalApi
-public class JDBC42ObjectConverter implements ObjectConverter {
+class JDBC42ObjectConverter implements ObjectConverter {
 
     @Override
     public boolean setObject(final FBField field, final Object object) throws SQLException {

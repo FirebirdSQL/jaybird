@@ -1762,7 +1762,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * Jaybird defines these additional columns:
      * <ol start="25">
-     * <li><b>JB_IS_IDENTITY</b> String  => Indicates whether this column is an identity column (<b>NOTE: Jaybird
+     * <li><b>JB_IS_IDENTITY</b> String  =&gt; Indicates whether this column is an identity column (<b>NOTE: Jaybird
      * specific column; retrieve by name!</b>).
      * There is a subtle difference with the meaning of {@code IS_AUTOINCREMENT}. This column indicates if the column
      * is a true identity column.
@@ -1771,7 +1771,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <li> NO            --- if the column is not an identity column</li>
      * </ul>
      * </li>
-     * <li><b>JB_IDENTITY_TYPE</b> String  => Type of identity column (<b>NOTE: Jaybird specific column; retrieve by
+     * <li><b>JB_IDENTITY_TYPE</b> String  =&gt; Type of identity column (<b>NOTE: Jaybird specific column; retrieve by
      * name!</b>)
      * <ul>
      * <li> ALWAYS        --- for a GENERATED ALWAYS AS IDENTITY column (not yet supported in Firebird 3!)</li>
@@ -3231,12 +3231,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * revisions of JDBC. We recommend to retrieve these columns by name. The following additional columns are
      * available:
      * <ol start="7">
-     * <li><b>JB_FUNCTION_SOURCE</b> String  => The source of the function (for Firebird 3+ PSQL functions only)).</li>
-     * <li><b>JB_FUNCTION_KIND</b> String => The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
+     * <li><b>JB_FUNCTION_SOURCE</b> String  =&gt; The source of the function (for Firebird 3+ PSQL functions only)).</li>
+     * <li><b>JB_FUNCTION_KIND</b> String =&gt; The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
      * "UDR" (Firebird 3+)</li>
-     * <li><b>JB_MODULE_NAME</b> String => Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
-     * <li><b>JB_ENTRYPOINT</b> String => Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
-     * <li><b>JB_ENGINE_NAME</b> String => Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
+     * <li><b>JB_MODULE_NAME</b> String =&gt; Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENTRYPOINT</b> String =&gt; Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENGINE_NAME</b> String =&gt; Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
      * </ol>
      * </p>
      * <p>

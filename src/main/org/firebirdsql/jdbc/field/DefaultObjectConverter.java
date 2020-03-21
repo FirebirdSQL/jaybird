@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.util.InternalApi;
+
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
@@ -30,7 +32,9 @@ import java.sql.SQLNonTransientException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public final class DefaultObjectConverter implements ObjectConverter {
+@InternalApi
+@SuppressWarnings("unused")
+final class DefaultObjectConverter implements ObjectConverter {
     /**
      * {@inheritDoc}
      * <p>

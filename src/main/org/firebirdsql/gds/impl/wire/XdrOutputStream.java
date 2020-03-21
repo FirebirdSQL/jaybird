@@ -89,7 +89,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
 
     /**
      * Writes the <code>0x00</code> alignment for the specified length. This padding is calculated as
-     * <code>(4 - length) & 3</code>.
+     * {@code (4 - length) & 3}.
      *
      * @param length
      *         The length of the previously written buffer to pad
@@ -165,10 +165,10 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Write a <code>byte</code> buffer to the underlying output stream in
+     * Write a {@code byte} buffer to the underlying output stream in
      * XDR format.
      *
-     * @param buffer The <code>byte</code> buffer to be written
+     * @param buffer The {@code byte} buffer to be written
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
@@ -196,9 +196,9 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Write an <code>Xdrable</code> to this output stream.
+     * Write an {@code Xdrable} to this output stream.
      *
-     * @param type Type of the <code>Xdrable</code> to be written,
+     * @param type Type of the {@code Xdrable} to be written,
      *        e.g. {@link ISCConstants#isc_tpb_version3}
      * @param item The object to be written
      * @throws IOException if an error occurs while writing to the
@@ -226,9 +226,9 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     private final byte[] writeBuffer = new byte[8];
 
     /**
-     * Write a <code>long</code> value to the underlying stream in XDR format.
+     * Write a {@code long} value to the underlying stream in XDR format.
      *
-     * @param v The <code>long</code> value to be written
+     * @param v The {@code long} value to be written
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
@@ -246,9 +246,9 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Write an <code>int</code> value to the underlying stream in XDR format.
+     * Write an {@code int} value to the underlying stream in XDR format.
      *
-     * @param v The <code>int</code> value to be written
+     * @param v The {@code int} value to be written
      * @throws IOException if an error occurs while writing to the
      *         underlying output stream
      */
@@ -260,10 +260,10 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Write a <code>byte</code> buffer to the underlying output stream
+     * Write a {@code byte} buffer to the underlying output stream
      * in XDR format.
      *
-     * @param b The <code>byte</code> buffer to be written
+     * @param b The {@code byte} buffer to be written
      * @param offset The start offset in the buffer
      * @param len The number of bytes to write
      * @param pad The number of (blank) padding bytes to write
@@ -277,8 +277,8 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     /**
-     * Writes <code>len</code> bytes from the specified byte array
-     * starting at offset <code>off</code> to this output stream as defined by {@link java.io.OutputStream#write(byte[], int, int)}.
+     * Writes {@code len} bytes from the specified byte array
+     * starting at offset {@code off} to this output stream as defined by {@link java.io.OutputStream#write(byte[], int, int)}.
      * <p>
      * <b>Important</b>: do not confuse this method with {@link #write(byte[], int, int, int)} which originally had
      * the signature of this method.

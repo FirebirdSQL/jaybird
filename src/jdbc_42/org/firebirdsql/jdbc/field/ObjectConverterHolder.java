@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -37,7 +35,7 @@ enum ObjectConverterHolder {
 
     private final ObjectConverter objectConverter;
 
-    private ObjectConverterHolder(ObjectConverter objectConverter) {
+    ObjectConverterHolder(ObjectConverter objectConverter) {
         this.objectConverter = objectConverter;
     }
 
