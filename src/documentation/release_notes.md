@@ -158,9 +158,21 @@ upgrading to Jaybird 5.
 Maven
 -----
 
-Change the artifact id from `jaybird-jdkXX` to `jaybird`, and change the version
-of the dependency to `@VERSION_SIMPLE@.javaXX@VERSION_TAG@` (where `XX` is your
-Java version, `8` for Java 8 and `11` for Java 11).
+Change the version of the dependency to `@VERSION_SIMPLE@.javaXX@VERSION_TAG@`
+(where `XX` is your Java version, `8` for Java 8 and `11` for Java 11).
+If you're still using the artifact id `jaybird-jdkXX`, change it to `jaybird`. 
+
+When your Jaybird dependency defines the exclusion for `javax.resource:connector-api`
+(see below), you can remove it.
+
+```xml
+<exclusions>
+    <exclusion>
+        <groupId>javax.resource</groupId>
+        <artifactId>connector-api</artifactId>
+    </exclusion>
+</exclusions>
+```
 
 For more detailed instructions, see also the information on Maven in
 [Getting Jaybird 5](#getting-jaybird-5). 
@@ -173,7 +185,9 @@ If you manage your dependencies manually, you need to do the following:
 1.  Replace the Jaybird 4 library with the Jaybird 5 version
     - `jaybird-3.0.x.jar` with `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar`
     (where `XX` is `8` or `11`) 
-    - `jaybird-full-4.0.x.jar` with `jaybird-full-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar`
+    - `jaybird-full-4.0.x.jar` with `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar`, the
+    `jaybird-full` library no longer exists
+2.  Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
     
 Gotcha's
 --------
