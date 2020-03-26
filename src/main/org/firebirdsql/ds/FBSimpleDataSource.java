@@ -70,7 +70,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      *         GDS type
      */
     public FBSimpleDataSource(GDSType type) {
-        mcf = new FBManagedConnectionFactory(type);
+        mcf = new FBManagedConnectionFactory(false, type);
     }
 
     /**

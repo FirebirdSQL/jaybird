@@ -18,13 +18,18 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestFBManagedConnectionFactory extends TestXABase {
+public class FBManagedConnectionFactoryTest extends TestXABase {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void testCreateMcf() {
@@ -49,6 +54,36 @@ public class TestFBManagedConnectionFactory extends TestXABase {
 
         assertEquals("Default tx isolation level must be READ_COMMITTED",
                 Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation());
+    }
+
+    @Test
+    public void cannotChangeConfigurationAfterStartForSharedMcf() throws Exception {
+        FBManagedConnectionFactory mcf = initMcf(true);
+
+        // possible before connecting
+        mcf.setBlobBufferSize(1024);
+
+        FBManagedConnection mc = mcf.createManagedConnection();
+        mc.destroy();
+
+        expectedException.expect(IllegalStateException.class);
+
+        // not possible after creating a connection
+        mcf.setBlobBufferSize(2048);
+    }
+
+    @Test
+    public void canChangeConfigurationAfterStartForUnsharedMcf() throws Exception {
+        FBManagedConnectionFactory mcf = initMcf(false);
+
+        // possible before connecting
+        mcf.setBlobBufferSize(1024);
+
+        FBManagedConnection mc = mcf.createManagedConnection();
+        mc.destroy();
+
+        // still possible after creating a connection
+        mcf.setBlobBufferSize(2048);
     }
 }
 

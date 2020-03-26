@@ -22,10 +22,7 @@ import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBConnectionProperties;
 import org.firebirdsql.logging.LoggerFactory;
 
-import javax.naming.Context;
-import javax.naming.Name;
-import javax.naming.RefAddr;
-import javax.naming.Reference;
+import javax.naming.*;
 import javax.naming.spi.ObjectFactory;
 import java.io.*;
 import java.util.Hashtable;
@@ -78,7 +75,7 @@ public class DataSourceFactory implements ObjectFactory {
             mcf = (FBManagedConnectionFactory) deserialize(data);
         }
         if (mcf == null) {
-            mcf = new FBManagedConnectionFactory();
+            mcf = new FBManagedConnectionFactory(false);
         }
         FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
         ds.setDescription(getRefAddr(ref, FBSimpleDataSource.REF_DESCRIPTION));
@@ -125,7 +122,7 @@ public class DataSourceFactory implements ObjectFactory {
         return content != null ? content.toString() : null;
     }
 
-    protected static byte[] serialize(Object obj) {
+    protected static byte[] serialize(Object obj) throws NamingException {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(bout);
@@ -133,8 +130,9 @@ public class DataSourceFactory implements ObjectFactory {
             out.flush();
             return bout.toByteArray();
         } catch (IOException e) {
-            LoggerFactory.getLogger(DataSourceFactory.class).warn("Could not serialize object, returning null", e);
-            return null;
+            NamingException namingException = new NamingException("Could not serialize object");
+            namingException.initCause(e);
+            throw namingException;
         }
     }
 

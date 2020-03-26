@@ -4,8 +4,11 @@ import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.JdbcResourceHelper;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FirebirdConnection;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,29 +25,28 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TestFBSimpleDataSource extends FBJUnit4TestBase {
+public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * Test for JDBC-314 : setting charSet connection property to (alias of) file.encoding system property makes prepare statement fail
      */
     @Test
-    public void testJavaCharSetIsDefaultCharSet() throws Exception {
+    public void testJavaCharSetIsDefaultCharSet() {
         FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
         ds.setUserName(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
         ds.setCharSet(System.getProperty("file.encoding"));
-        Connection con = null;
-        try {
-            con = ds.getConnection();
+        try (Connection con = ds.getConnection()) {
             PreparedStatement ps = con.prepareStatement("SELECT * FROM RDB$DATABASE");
             JdbcResourceHelper.closeQuietly(ps);
         } catch (Exception e) {
             e.printStackTrace();
             fail("Preparing statement with property charSet equal to file.encoding should not fail");
-        } finally {
-            JdbcResourceHelper.closeQuietly(con);
         }
     }
 
@@ -83,5 +85,46 @@ public class TestFBSimpleDataSource extends FBJUnit4TestBase {
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
             assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
         }
+    }
+
+    @Test
+    public void canChangeConfigAfterConnectionCreation() throws Exception {
+        FBSimpleDataSource ds = new FBSimpleDataSource();
+        ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
+        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setPassword(FBTestProperties.DB_PASSWORD);
+        ds.setType(FBTestProperties.getGdsType().toString());
+
+        // possible before connecting
+        ds.setBlobBufferSize(1024);
+
+        try (Connection connection = ds.getConnection()) {
+            assertTrue(connection.isValid(1000));
+        }
+
+        // still possible after creating a connection
+        ds.setBlobBufferSize(2048);
+    }
+
+    @Test
+    public void cannotChangeConfigAfterConnectionCreation_usingSharedMCF() throws Exception {
+        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
+        FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
+        ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
+        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setPassword(FBTestProperties.DB_PASSWORD);
+        ds.setType(FBTestProperties.getGdsType().toString());
+
+        // possible before connecting
+        ds.setBlobBufferSize(1024);
+
+        try (Connection connection = ds.getConnection()) {
+            assertTrue(connection.isValid(1000));
+        }
+
+        expectedException.expect(IllegalStateException.class);
+
+        // not possible after creating a connection
+        ds.setBlobBufferSize(2048);
     }
 }

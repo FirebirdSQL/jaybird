@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.*;
+import org.firebirdsql.logging.LoggerFactory;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAException;
@@ -87,27 +88,89 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     private final Object startLock = new Object();
     private boolean started = false;
+    // When a MCF is shared, its configuration has to be stable after first connection/datasource creation
+    private final boolean shared;
 
     private final FBConnectionProperties connectionProperties;
 
     /**
      * Create a new pure-Java FBManagedConnectionFactory.
+     * <p>
+     * This managed connection factory can be shared.
+     * </p>
      */
     public FBManagedConnectionFactory() {
-        this(GDSFactory.getDefaultGDSType(), null);
+        this(true);
     }
 
     /**
-     * Create a new FBManagedConnectionFactory based around the given GDSType.
+     * Create a new pure-Java FBManagedConnectionFactory.
+     *
+     * @param shared
+     *         Indicates that this Managed Connection Factory can be shared or not. When {@code true} configuration
+     *         changes are not allowed after the first connection or datasource has been created to ensure all shared
+     *         users have the same expectation of configuration.
+     */
+    public FBManagedConnectionFactory(boolean shared) {
+        this(shared, GDSFactory.getDefaultGDSType(), null);
+    }
+
+    /**
+     * Create a new FBManagedConnectionFactory based on the given GDSType.
+     * <p>
+     * This managed connection factory can be shared.
+     * </p>
      *
      * @param gdsType
      *         The GDS implementation to use
      */
     public FBManagedConnectionFactory(GDSType gdsType) {
-        this(gdsType, null);
+        this(true, gdsType);
     }
 
+    /**
+     * Create a new FBManagedConnectionFactory based on the given GDSType.
+     *
+     * @param shared
+     *         Indicates that this Managed Connection Factory can be shared or not. When {@code true} configuration
+     *         changes are not allowed after the first connection or datasource has been created to ensure all shared
+     *         users have the same expectation of configuration.
+     * @param gdsType
+     *         The GDS implementation to use
+     */
+    public FBManagedConnectionFactory(boolean shared, GDSType gdsType) {
+        this(shared, gdsType, null);
+    }
+
+    /**
+     * Create a new FBManagedConnectionFactory based on the given GDSType and connection properties.
+     * <p>
+     * This managed connection factory can be shared.
+     * </p>
+     *
+     * @param gdsType
+     *         The GDS implementation to use
+     * @param connectionProperties
+     *         Initial connection properties (will be copied), use of {@code null} is allowed
+     */
     public FBManagedConnectionFactory(GDSType gdsType, FBConnectionProperties connectionProperties) {
+        this(true, gdsType, connectionProperties);
+    }
+
+    /**
+     * Create a new FBManagedConnectionFactory based on the given GDSType and connection properties.
+     *
+     * @param shared
+     *         Indicates that this Managed Connection Factory can be shared or not. When {@code true} configuration
+     *         changes are not allowed after the first connection or datasource has been created to ensure all shared
+     *         users have the same expectation of configuration.
+     * @param gdsType
+     *         The GDS implementation to use
+     * @param connectionProperties
+     *         Initial connection properties (will be copied), use of {@code null} is allowed
+     */
+    public FBManagedConnectionFactory(boolean shared, GDSType gdsType, FBConnectionProperties connectionProperties) {
+        this.shared = shared;
         this.connectionProperties = connectionProperties != null
                 ? (FBConnectionProperties) connectionProperties.clone()
                 : new FBConnectionProperties();
@@ -131,6 +194,14 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
         gdsType = GDSType.getType(getType());
         return gdsType;
+    }
+
+    /**
+     * @return {@code true} if this instance can be safely shared (modification disallowed after creation of first
+     * connection/data source)
+     */
+    public boolean getShared() {
+        return shared;
     }
 
     public int getBlobBufferSize() {
@@ -210,83 +281,85 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setBlobBufferSize(int bufferSize) {
-        connectionProperties.setBlobBufferSize(bufferSize);
+        ensureCanModify(() -> connectionProperties.setBlobBufferSize(bufferSize));
     }
 
     public void setBuffersNumber(int buffersNumber) {
-        connectionProperties.setBuffersNumber(buffersNumber);
+        ensureCanModify(() -> connectionProperties.setBuffersNumber(buffersNumber));
     }
 
     public void setCharSet(String charSet) {
-        connectionProperties.setCharSet(charSet);
+        ensureCanModify(() -> connectionProperties.setCharSet(charSet));
     }
 
     public void setDatabase(String database) {
-        connectionProperties.setDatabase(database);
+        ensureCanModify(() -> connectionProperties.setDatabase(database));
     }
 
     public void setDefaultIsolation(String isolation) {
-        connectionProperties.setDefaultIsolation(isolation);
+        ensureCanModify(() -> connectionProperties.setDefaultIsolation(isolation));
     }
 
     public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel);
+        ensureCanModify(() -> connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel));
     }
 
     public void setEncoding(String encoding) {
-        connectionProperties.setEncoding(encoding);
+        ensureCanModify(() -> connectionProperties.setEncoding(encoding));
     }
 
     public void setNonStandardProperty(String key, String value) {
-        connectionProperties.setNonStandardProperty(key, value);
+        ensureCanModify(() -> connectionProperties.setNonStandardProperty(key, value));
     }
 
     public void setNonStandardProperty(String propertyMapping) {
-        connectionProperties.setNonStandardProperty(propertyMapping);
+        ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
     }
 
     public void setPassword(String password) {
-        connectionProperties.setPassword(password);
+        ensureCanModify(() -> connectionProperties.setPassword(password));
     }
 
     public void setRoleName(String roleName) {
-        connectionProperties.setRoleName(roleName);
+        ensureCanModify(() -> connectionProperties.setRoleName(roleName));
     }
 
     public void setSocketBufferSize(int socketBufferSize) {
-        connectionProperties.setSocketBufferSize(socketBufferSize);
+        ensureCanModify(() -> connectionProperties.setSocketBufferSize(socketBufferSize));
     }
 
     public void setSqlDialect(String sqlDialect) {
-        connectionProperties.setSqlDialect(sqlDialect);
+        ensureCanModify(() -> connectionProperties.setSqlDialect(sqlDialect));
     }
 
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
+        ensureCanModify(() -> connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone));
     }
 
     public void setTpbMapping(String tpbMapping) {
-        connectionProperties.setTpbMapping(tpbMapping);
+        ensureCanModify(() -> connectionProperties.setTpbMapping(tpbMapping));
     }
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        connectionProperties.setTransactionParameters(isolation, tpb);
+        ensureCanModify(() -> connectionProperties.setTransactionParameters(isolation, tpb));
     }
 
     public void setType(String type) {
-        if (gdsType != null) {
-            throw new IllegalStateException("Cannot change GDS type at runtime.");
-        }
+        ensureCanModify(() -> {
+            if (gdsType != null) {
+                throw new IllegalStateException("Cannot change GDS type at runtime.");
+            }
 
-        connectionProperties.setType(type);
+            connectionProperties.setType(type);
+        });
     }
 
     public void setUserName(String userName) {
-        connectionProperties.setUserName(userName);
+        ensureCanModify(() -> connectionProperties.setUserName(userName));
     }
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
-        connectionProperties.setUseStreamBlobs(useStreamBlobs);
+        ensureCanModify(() -> connectionProperties.setUseStreamBlobs(useStreamBlobs));
     }
 
     public boolean isDefaultResultSetHoldable() {
@@ -294,13 +367,16 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setDefaultResultSetHoldable(boolean isHoldable) {
-        connectionProperties.setDefaultResultSetHoldable(isHoldable);
+        ensureCanModify(() -> connectionProperties.setDefaultResultSetHoldable(isHoldable));
     }
 
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
-        // Ensures that instances with different connection managers do not resolve to the same connection manager
-        connectionProperties.setNonStandardProperty(DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
-        this.defaultCm = defaultCm;
+        ensureCanModify(() -> {
+            // Ensures that instances with different connection managers do not resolve to the same connection manager
+            connectionProperties.setNonStandardProperty(
+                    DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
+            this.defaultCm = defaultCm;
+        });
     }
 
     public int getSoTimeout() {
@@ -308,7 +384,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setSoTimeout(int soTimeout) {
-        connectionProperties.setSoTimeout(soTimeout);
+        ensureCanModify(() -> connectionProperties.setSoTimeout(soTimeout));
     }
 
     public int getConnectTimeout() {
@@ -316,7 +392,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setConnectTimeout(int connectTimeout) {
-        connectionProperties.setConnectTimeout(connectTimeout);
+        ensureCanModify(() -> connectionProperties.setConnectTimeout(connectTimeout));
     }
 
     @Override
@@ -326,7 +402,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
+        ensureCanModify(() -> connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit));
     }
 
     @Override
@@ -336,7 +412,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setWireCrypt(String wireCrypt) {
-        connectionProperties.setWireCrypt(wireCrypt);
+        ensureCanModify(() -> connectionProperties.setWireCrypt(wireCrypt));
     }
 
     @Override
@@ -346,7 +422,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setDbCryptConfig(String dbCryptConfig) {
-        connectionProperties.setDbCryptConfig(dbCryptConfig);
+        ensureCanModify(() -> connectionProperties.setDbCryptConfig(dbCryptConfig));
     }
 
     @Override
@@ -356,7 +432,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setAuthPlugins(String authPlugins) {
-        connectionProperties.setAuthPlugins(authPlugins);
+        ensureCanModify(() -> connectionProperties.setAuthPlugins(authPlugins));
     }
 
     @Override
@@ -366,7 +442,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
+        ensureCanModify(() -> connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled));
     }
 
     @Override
@@ -376,7 +452,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setDataTypeBind(String dataTypeBind) {
-        connectionProperties.setDataTypeBind(dataTypeBind);
+        ensureCanModify(() -> connectionProperties.setDataTypeBind(dataTypeBind));
     }
 
     @Override
@@ -386,7 +462,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setSessionTimeZone(String sessionTimeZone) {
-        connectionProperties.setSessionTimeZone(sessionTimeZone);
+        ensureCanModify(() -> connectionProperties.setSessionTimeZone(sessionTimeZone));
     }
 
     @Override
@@ -396,7 +472,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
+        ensureCanModify(() -> connectionProperties.setIgnoreProcedureType(ignoreProcedureType));
     }
 
     @Override
@@ -406,7 +482,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setWireCompression(boolean wireCompression) {
-        connectionProperties.setWireCompression(wireCompression);
+        ensureCanModify(() -> connectionProperties.setWireCompression(wireCompression));
     }
 
     @Override
@@ -414,17 +490,17 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         if (hashCode != 0) {
             return hashCode;
         }
+        if (!started) {
+            return hashCodeImpl();
+        }
+        return hashCode = hashCodeImpl();
+    }
 
-        int result = 17;
-        result = 37 * result + connectionProperties.hashCode();
+    private int hashCodeImpl() {
+        int result = connectionProperties.hashCode();
         if (result == 0) {
-            result = 17;
+            return 17;
         }
-
-        if (gdsType != null) {
-            hashCode = result;
-        }
-
         return result;
     }
 
@@ -444,16 +520,21 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public FBTpb getDefaultTpb() throws SQLException {
-        int defaultTransactionIsolation = connectionProperties.getMapper().getDefaultTransactionIsolation();
-        
+        int defaultTransactionIsolation = connectionProperties.getDefaultTransactionIsolation();
         return getTpb(defaultTransactionIsolation);
     }
 
-    public FBTpb getTpb(int defaultTransactionIsolation) throws SQLException {
-        return new FBTpb(connectionProperties.getMapper().getMapping(
-                defaultTransactionIsolation));
+    public FBTpb getTpb(int isolation) throws SQLException {
+        return new FBTpb(connectionProperties.getMapper().getMapping(isolation));
     }
 
+    /**
+     * Get a copy of the current transaction mapping.
+     *
+     * @return Copy of the transaction mapping
+     * @throws SQLException
+     *         For errors on obtaining or creating the transaction mapping
+     */
     FBTpbMapper getTransactionMappingCopy() throws SQLException {
         return (FBTpbMapper) connectionProperties.getMapper().clone();
     }
@@ -528,6 +609,10 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
      * @return a {@code FBManagedConnectionFactory} value
      */
     public FBManagedConnectionFactory canonicalize() {
+        if (!shared) {
+            LoggerFactory.getLogger(FBManagedConnectionFactory.class)
+                    .debug("canonicalize called on MCF with shared=false", new RuntimeException("trace exception"));
+        }
         final FBManagedConnectionFactory mcf = internalCanonicalize();
         if (mcf != null) return mcf;
         start();
@@ -549,10 +634,24 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     private void start() {
         synchronized (startLock) {
             if (started) return;
-            mcfInstances.put(getCacheKey(), new SoftReference<>(this, mcfReferenceQueue));
             started = true;
+            if (shared) {
+                mcfInstances.put(getCacheKey(), new SoftReference<>(this, mcfReferenceQueue));
+            }
         }
         cleanMcfInstances();
+    }
+
+    private void ensureCanModify(Runnable runnable) {
+        synchronized (startLock) {
+            if (started && shared) {
+                throw new IllegalStateException(
+                        "Managed connection factory is shared and already started, configuration change not allowed");
+            }
+            runnable.run();
+            // Reset cached hash code
+            hashCode = 0;
+        }
     }
 
     /**
@@ -774,11 +873,13 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
         private static final long serialVersionUID = 1L;
 
+        private final boolean shared;
         private final XcaConnectionManager fbCm;
         private final String type;
         private final FBConnectionProperties fbConnectionProperties;
 
         private SerializationProxy(FBManagedConnectionFactory connectionFactory) {
+            this.shared = connectionFactory.shared;
             this.fbCm = connectionFactory.defaultCm;
             this.type = connectionFactory.getType();
             this.fbConnectionProperties = connectionFactory.connectionProperties;
@@ -791,6 +892,9 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
             }
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType, fbConnectionProperties);
             mcf.setDefaultConnectionManager(fbCm);
+            if (!shared) {
+                return mcf;
+            }
             FBManagedConnectionFactory canonicalizedMcf = mcf.internalCanonicalize();
             return canonicalizedMcf != null ? canonicalizedMcf : mcf;
         }

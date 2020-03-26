@@ -194,16 +194,14 @@ public final class FBTestProperties {
     // FACTORY METHODS
     //
     // These methods should be used where possible so as to create the objects
-    // bound to the
-    // appropriate GDS implementation.
+    // bound to the appropriate GDS implementation.
 
     public static FbDatabaseFactory getFbDatabaseFactory() {
         return GDSFactory.getDatabaseFactoryForType(getGdsType());
     }
 
-    @SuppressWarnings("unused")
-    public static FBManagedConnectionFactory createFBManagedConnectionFactory() {
-        return new FBManagedConnectionFactory(getGdsType());
+    public static FBManagedConnectionFactory createFBManagedConnectionFactory(boolean shared) {
+        return new FBManagedConnectionFactory(shared, getGdsType());
     }
 
     public static FBManager createFBManager() {
