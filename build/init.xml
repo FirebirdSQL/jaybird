@@ -67,8 +67,6 @@
         <property name="archive.name.simple" value="${archive.maven.simple}"/>
         <property name="archive.name.sources" value="${archive.maven.sources}"/>
         <property name="archive.name.javadoc" value="${archive.maven.javadoc}"/>
-        <property name="archive.name.rar" value="${maven.artifactId}-${version.maven}.rar"/>
-        <property name="archive.name.full" value="${name}-full-${version.maven}.jar"/>
         <property name="archive.name.test" value="${name}-test-${version.maven}.jar"/>
 
         <!-- Manifest version info -->
@@ -91,12 +89,6 @@
         <!--where everything goes -->
         <property name="lib.dir" value="${basedir}/lib"/>
         <property name="lib_test.dir" value="${lib.dir}/test"/>
-
-        <!--you will presumably need to change this if you want to use it.-->
-        <!--
-        <property name="jboss.base.dir" value="/usr/java/jboss/rc1/jboss-all/build/output/jboss-3.0.1RC1"/>
-        <property name="jboss.deploy.dir" value="${jboss.base.dir}/server/all/deploy"/>
-        -->
 
         <!-- Setup the module environment. -->
         <property name="module.root" value="${basedir}"/>
@@ -122,11 +114,7 @@
         <property name="source.test.jna" value="${module.source}/jna-test"/>
         <property name="source.documentation" value="${module.source}/documentation"/>
 
-        <property name="thirdparty" value="${module.root}/thirdparty"/>
-        <property name="jboss.source.root" location="${thirdparty}/jboss/"/>
-
         <!-- Where build generated files will go -->
-        <property name="build.j2ee" value="${module.output}/j2ee"/>
         <property name="build.classes" value="${module.output}/classes"/>
         <property name="build.test" value="${module.output}/test"/>
         <property name="build.lib" value="${module.output}/lib"/>
@@ -200,13 +188,7 @@
         -->
         <property name="pandoc.app" location="/home/${user.name}/.cabal/bin/pandoc"/>
 
-        <path id="javac.j2ee.classpath">
-            <pathelement location="${module.thirdparty}/connector-api-1.5.jar"/>
-        </path>
-
         <path id="javac.driver.classpath">
-            <path refid="javac.j2ee.classpath"/>
-            <pathelement location="${build.j2ee}"/>
             <pathelement location="${module.thirdparty}/antlr-runtime-4.7.2.jar"/>
             <pathelement location="${module.thirdparty}/jna-5.5.0.jar"/>
             <pathelement location="${module.thirdparty}/servlet-api.jar"/>

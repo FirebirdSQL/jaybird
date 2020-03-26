@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,10 +22,10 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.jaybird.xca.FBResourceException;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -208,9 +208,9 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * Meaning of these constants and possible combinations you can find in a
      * documentation.
      *
-     * @throws FBResourceException if mapping contains incorrect values.
+     * @throws SQLException if mapping contains incorrect values.
      */
-    public FBTpbMapper(Map<String, String> stringMapping) throws FBResourceException {
+    public FBTpbMapper(Map<String, String> stringMapping) throws SQLException {
         this();
         processMapping(stringMapping);
     }
@@ -221,17 +221,18 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *
      * @param stringMapping
      *         mapping to process.
-     * @throws FBResourceException
+     * @throws SQLException
      *         if mapping contains incorrect values.
      */
-    private void processMapping(Map<String, String> stringMapping) throws FBResourceException {
+    private void processMapping(Map<String, String> stringMapping) throws SQLException {
         for (Map.Entry<String, String> entry : stringMapping.entrySet()) {
             String jdbcTxIsolation = entry.getKey();
-            Integer isolationLevel;
+            int isolationLevel;
             try {
                 isolationLevel = getTransactionIsolationLevel(jdbcTxIsolation);
             } catch (IllegalArgumentException ex) {
-                throw new FBResourceException("Transaction isolation " + jdbcTxIsolation + " is not supported.");
+                // TODO More specific exception, Jaybird error code
+                throw new SQLException("Transaction isolation " + jdbcTxIsolation + " is not supported.");
             }
             TransactionParameterBuffer tpb = processMapping(entry.getValue());
             mapping.put(isolationLevel, tpb);
@@ -239,18 +240,16 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     /**
-     * Create instance of this class and load mapping from the specified
-     * resource.
+     * Create instance of this class and load mapping from the specified resource.
      *
      * @param mappingResource
      *         name of the resource to load.
      * @param cl
      *         class loader that should be used to load specified resource.
-     * @throws FBResourceException
-     *         if resource cannot be loaded or contains
-     *         incorrect values.
+     * @throws SQLException
+     *         if resource cannot be loaded or contains incorrect values.
      */
-    public FBTpbMapper(String mappingResource, ClassLoader cl) throws FBResourceException {
+    public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
         try {
             ResourceBundle res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
 
@@ -266,7 +265,8 @@ public class FBTpbMapper implements Serializable, Cloneable {
             processMapping(mapping);
 
         } catch (MissingResourceException mrex) {
-            throw new FBResourceException("Cannot load TPB mapping." + mrex.getMessage());
+            // TODO More specific exception, Jaybird error code
+            throw new SQLException("Cannot load TPB mapping. " + mrex.getMessage(), mrex);
         }
     }
 
@@ -286,11 +286,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         FirebirdConnectionProperties to set transaction state
      * @param info
      *         connection parameters passed into a driver.
-     * @throws FBResourceException
+     * @throws SQLException
      *         if specified mapping is incorrect.
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Properties info)
-            throws FBResourceException {
+            throws SQLException {
         for (String isolationName : ISOLATION_LEVEL_NAMES) {
             String property = info.getProperty(isolationName);
             if (property == null) continue;
@@ -307,11 +307,10 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @param mapping
      *         comma-separated list of keywords.
      * @return set containing values corresponding to the specified keywords.
-     * @throws FBResourceException
-     *         if mapping contains keyword that is not
-     *         a TPB parameter.
+     * @throws SQLException
+     *         if mapping contains keyword that is not a TPB parameter.
      */
-    public static TransactionParameterBuffer processMapping(String mapping) throws FBResourceException {
+    public static TransactionParameterBuffer processMapping(String mapping) throws SQLException {
         // TODO instance creation should be delegated to FbDatabase
         TransactionParameterBuffer result = new TransactionParameterBufferImpl();
 
@@ -324,13 +323,15 @@ public class FBTpbMapper implements Serializable, Cloneable {
                 try {
                     argValue = Integer.valueOf(parts[1]);
                 } catch (NumberFormatException ex) {
-                    throw new FBResourceException(parts[1] + " is not valid integer value");
+                    // TODO More specific exception, Jaybird error code
+                    throw new SQLException(parts[1] + " is not valid integer value");
                 }
                 token = parts[0];
             }
             Integer value = ParameterBufferHelper.getTpbParam(token);
             if (value == null) {
-                throw new FBResourceException("Keyword " + token + " unknown. Please check your mapping.");
+                // TODO More specific exception, Jaybird error code
+                throw new SQLException("Keyword " + token + " unknown. Please check your mapping.");
             }
 
             if (argValue == null) {
@@ -365,6 +366,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
 
         case Connection.TRANSACTION_NONE:
         default:
+            // TODO Throw SQLException instead?
             throw new IllegalArgumentException(
                     "Transaction isolation level " + transactionIsolation + " is not supported.");
         }
@@ -391,6 +393,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
         case Connection.TRANSACTION_READ_UNCOMMITTED:
         case Connection.TRANSACTION_NONE:
         default:
+            // TODO Throw SQLException instead?
             throw new IllegalArgumentException(
                     "Transaction isolation level " + transactionIsolation + " is not supported.");
         }

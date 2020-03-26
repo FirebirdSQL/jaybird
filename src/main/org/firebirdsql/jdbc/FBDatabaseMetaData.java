@@ -223,6 +223,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getDriverName() throws SQLException {
+        // Retain JCA in name for compatibility with tools that consult metadata and use this string
         return "Jaybird JCA/JDBC driver";
     }
 

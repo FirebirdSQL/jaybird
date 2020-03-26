@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,7 +28,6 @@ import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import javax.resource.ResourceException;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -114,12 +113,12 @@ public class FBDriver implements FirebirdDriver {
 
             return dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
 
-        } catch (ResourceException | GDSException resex) {
-            throw new FBSQLException(resex);
+        } catch (GDSException e) {
+            throw new FBSQLException(e);
         }
     }
 
-    private FBDataSource createDataSource(final FBManagedConnectionFactory mcf) throws ResourceException {
+    private FBDataSource createDataSource(final FBManagedConnectionFactory mcf) {
         final FBConnectionProperties cacheKey = mcf.getCacheKey();
         FBDataSource dataSource = dataSourceFromCache(cacheKey);
         if (dataSource != null) return dataSource;
@@ -153,20 +152,14 @@ public class FBDriver implements FirebirdDriver {
     @Override
     public FirebirdConnection connect(FirebirdConnectionProperties properties) throws SQLException {
         GDSType type = GDSType.getType(properties.getType());
-
-        if (type == null)
+        if (type == null) {
             type = GDSFactory.getDefaultGDSType();
-        try {
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
-
-            mcf = mcf.canonicalize();
-
-            FBDataSource dataSource = createDataSource(mcf);
-
-            return (FirebirdConnection) dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
-        } catch (ResourceException ex) {
-            throw new FBSQLException(ex);
         }
+        
+        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type, (FBConnectionProperties) properties)
+                .canonicalize();
+        FBDataSource dataSource = createDataSource(mcf);
+        return (FirebirdConnection) dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
     }
 
     @Override

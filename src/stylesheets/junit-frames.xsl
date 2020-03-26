@@ -43,7 +43,7 @@
 
 -->
 <xsl:param name="output.dir" select="'.'"/>
-<xsl:param name="TITLE">Firebirdsql pure java jca-jdbc driver Test Suite Results</xsl:param>
+<xsl:param name="TITLE">Firebirdsql pure java jdbc driver Test Suite Results</xsl:param>
 
 
 <xsl:template match="testsuites">

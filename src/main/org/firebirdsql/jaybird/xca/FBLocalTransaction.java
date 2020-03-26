@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,173 +18,77 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.EISSystemException;
-import javax.resource.spi.LocalTransactionException;
-import javax.resource.spi.ResourceAdapterInternalException;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.SQLException;
 
 /**
- * The class {@code FBLocalTransaction} implements LocalTransaction both
- * in the cci and spi meanings. A flag is used to distinguish the current
- * functionality. This class works by delegating the operations to the internal
- * implementations of the XAResource functionality in FBManagedConnection.
+ * The class {@code FBLocalTransaction} represent a local, not distributed, transaction. A flag is used to
+ * distinguish the current functionality. This class works by delegating the operations to the internal implementation
+ * of the XAResource functionality in FBManagedConnection.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
-public class FBLocalTransaction implements FirebirdLocalTransaction,
-        javax.resource.cci.LocalTransaction {
+public final class FBLocalTransaction {
 
-    protected final FBManagedConnection mc;
+    private final FBManagedConnection mc;
+    private Xid xid = null;
 
-    protected Xid xid = null;
-
-    // used to determine if local transaction events notify
-    // ConnectionEventListeners see jca spec section 6.8. Basically
-    // not null means this is cci LocalTransaction, null means
-    // spi.LocalTransaction.
-    protected final ConnectionEvent beginEvent;
-
-    protected final ConnectionEvent commitEvent;
-
-    protected final ConnectionEvent rollbackEvent;
-
-    // should be package!!! perhaps reorganize and eliminate jdbc!!!
-    public FBLocalTransaction(FBManagedConnection mc, FBConnection c) {
+    FBLocalTransaction(FBManagedConnection mc) {
         this.mc = mc;
-        if (c == null) {
-            beginEvent = null;
-            commitEvent = null;
-            rollbackEvent = null;
-        } else {
-            beginEvent = new ConnectionEvent(mc,
-                    ConnectionEvent.LOCAL_TRANSACTION_STARTED, null);
-            beginEvent.setConnectionHandle(c);
-
-            commitEvent = new ConnectionEvent(mc,
-                    ConnectionEvent.LOCAL_TRANSACTION_COMMITTED, null);
-            commitEvent.setConnectionHandle(c);
-
-            rollbackEvent = new ConnectionEvent(mc,
-                    ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK, null);
-            rollbackEvent.setConnectionHandle(c);
-        }
     }
 
     /**
-     * Get the associated Xid.
+     * Check if managed connection is currently participating in transaction.
      *
-     * @return instance of {@link Xid} representing a transaction ID that is managed by this local transaction.
+     * @return {@code true} if managed connection is participating in transaction.
+     * @throws SQLException
+     *         if operation cannot be completed.
      */
-    public Xid getXid() {
-        return xid;
-    }
-
-    /**
-     * Check whether a started transaction is associated with the current
-     * database connection.
-     */
-    public boolean inTransaction() throws ResourceException {
-        try {
-            return mc.getGDSHelper().inTransaction();
-        } catch (SQLException ex) {
-            throw new FBResourceException(ex);
-        }
+    public boolean inTransaction() throws SQLException {
+        return mc.getGDSHelper().inTransaction();
     }
 
     /**
      * Begin a local transaction.
      *
-     * @throws ResourceException
+     * @throws SQLException
      *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
      */
-    public void begin() throws ResourceException {
-        internalBegin();
-    }
-
-    /**
-     * Perform the internal operations to begin a local transaction.
-     *
-     * @throws ResourceException
-     *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
-     */
-    public void internalBegin() throws ResourceException {
-        if (xid != null) {
-
-            // throw exception only if xid is known to the managed connection
-            if (mc.isXidActive(xid))
-                throw new FBResourceTransactionException(
-                        "Local transaction active: can't begin another",
-                        SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE);
+    public void begin() throws SQLException {
+        // throw exception only if xid is known to the managed connection
+        if (xid != null && mc.isXidActive(xid)) {
+            // TODO More specific exception, Jaybird error code
+            throw new SQLException("Local transaction active: can't begin another",
+                    SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE);
         }
 
         xid = new FBLocalXid();
 
         try {
             mc.internalStart(xid, XAResource.TMNOFLAGS);
-        } catch (XAException | SQLException ex) {
+        } catch (XAException ex) {
             xid = null;
-            throw new FBResourceException(ex);
+            if (ex.getCause() instanceof SQLException) {
+                throw (SQLException) ex.getCause();
+            }
+            // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
+            throw new SQLException(ex.getMessage(), ex);
         }
-
-        if (beginEvent != null)
-            mc.notify(FBManagedConnection.localTransactionStartedNotifier, beginEvent);
     }
 
     /**
      * Commit a local transaction.
      *
-     * @throws ResourceException
+     * @throws SQLException
      *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
      */
-    public void commit() throws ResourceException {
-        internalCommit();
-    }
-
-    /**
-     * Perform the internal processing to commit a local transaction.
-     *
-     * @throws ResourceException
-     *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
-     */
-    public void internalCommit() throws ResourceException {
-
-        // if there is no xid assigned, but we are still here,
-        // that means that automatic commit was called in managed
-        // scenario when managed connection was enlisted in global
-        // transaction
+    public void commit() throws SQLException {
+        // if there is no xid assigned, but we are still here, that means that automatic commit was called in managed
+        // scenario when managed connection was enlisted in global transaction
         if (xid == null) return;
 
         synchronized (mc.getSynchronizationObject()) {
@@ -192,14 +96,13 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
                 mc.internalEnd(xid, XAResource.TMSUCCESS);
                 mc.internalCommit(xid, true);
             } catch (XAException ex) {
-                throw new FBResourceTransactionException(ex.getMessage(), ex);
-            } catch (SQLException ex) {
-                throw new FBResourceException(ex);
+                if (ex.getCause() instanceof SQLException) {
+                    throw (SQLException) ex.getCause();
+                }
+                // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
+                throw new SQLException(ex.getMessage(), ex);
             } finally {
                 xid = null;
-            }
-            if (commitEvent != null) {
-                mc.notify(FBManagedConnection.localTransactionCommittedNotifier, commitEvent);
             }
         }
     }
@@ -207,51 +110,27 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
     /**
      * Rollback a local transaction.
      *
-     * @throws ResourceException
+     * @throws SQLException
      *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
      */
-    public void rollback() throws ResourceException {
-        internalRollback();
-    }
-
-    /**
-     * Perform the internal processing to rollback a local transaction.
-     *
-     * @throws ResourceException
-     *         generic exception if operation fails
-     * @throws LocalTransactionException
-     *         error condition related to local transaction management
-     * @throws ResourceAdapterInternalException
-     *         error condition internal to resource adapter
-     * @throws EISSystemException
-     *         EIS instance specific error condition
-     */
-    public void internalRollback() throws ResourceException {
-
-        // if there is no xid assigned, but we are still here,
-        // that means that automatic commit was called in managed
-        // scenario when managed connection was enlisted in global
-        // transaction
+    public void rollback() throws SQLException {
+        // if there is no xid assigned, but we are still here, that means that automatic commit was called in managed
+        // scenario when managed connection was enlisted in global transaction
         if (xid == null) return;
 
         synchronized (mc.getSynchronizationObject()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
-                                                           // --FBManagedConnection is its own XAResource
+                // --FBManagedConnection is its own XAResource
                 mc.internalRollback(xid);
-            } catch (XAException | SQLException ex) {
-                throw new FBResourceTransactionException(ex.getMessage(), ex);
+            } catch (XAException ex) {
+                if (ex.getCause() instanceof SQLException) {
+                    throw (SQLException) ex.getCause();
+                }
+                // TODO More specific exception, Jaybird error code (or is this flow unlikely to hit?)
+                throw new SQLException(ex.getMessage(), ex);
             } finally {
                 xid = null;
-            }
-            if (rollbackEvent != null) {
-                mc.notify(FBManagedConnection.localTransactionRolledbackNotifier, rollbackEvent);
             }
         }
     }
@@ -259,13 +138,13 @@ public class FBLocalTransaction implements FirebirdLocalTransaction,
     // This is an intentionally non-implemented xid, so if prepare is called
     // with it, it won't work.
     // Only object identity works for equals!
-    public static class FBLocalXid implements Xid {
+    private static final class FBLocalXid implements Xid {
 
         private static final int formatId = 0x0102;// ????????????
 
-        private String strValue;
+        private final String strValue;
 
-        public FBLocalXid() {
+        private FBLocalXid() {
             strValue = "Xid[" + hashCode() + "]";
         }
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,6 +24,7 @@ import javax.transaction.xa.Xid;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 
@@ -31,15 +32,12 @@ import static org.firebirdsql.common.FBTestProperties.*;
  * THIS FILE INCLUDES AN XID IMPLEMENTATION FROM THE JBOSS PROJECT
  * www.jboss.org.
  *
- * Describe class <code>TestXABase</code> here.
- *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
 public abstract class TestXABase extends FBJUnit4TestBase {
 
     public FBManagedConnectionFactory initMcf() {
-        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(new InternalConnectionManager());
+        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory();
         mcf.setDatabase(DB_DATASOURCE_URL);
         mcf.setUserName(DB_USER);
         mcf.setPassword(DB_PASSWORD);
@@ -62,15 +60,13 @@ public abstract class TestXABase extends FBJUnit4TestBase {
      * This object encapsulates the ID of a transaction.
      * This implementation is immutable and always serializable at runtime.
      *
-     * @author Rickard �berg (rickard.oberg@telkel.com)
+     * @author Rickard Oberg (rickard.oberg@telkel.com)
      * @author <a href="mailto:osh@sparre.dk">Ole Husgaard</a>
-     * @version $Revision$
      */
-    public static class XidImpl
-            implements Xid, Serializable {
-        // Constants -----------------------------------------------------
+    public static class XidImpl implements Xid, Serializable {
 
         public static final int JBOSS_FORMAT_ID = 0x0101;
+        private static final long serialVersionUID = 1L;
 
         // Attributes ----------------------------------------------------
 
@@ -81,9 +77,11 @@ public abstract class TestXABase extends FBJUnit4TestBase {
 
         /**
          * Global transaction id of this instance.
+         * <p>
          * The coding of this class depends on the fact that this variable is
          * initialized in the constructor and never modified. References to
          * this array are never given away, instead a clone is delivered.
+         * </p>
          */
         private byte[] globalId;
 
@@ -93,48 +91,49 @@ public abstract class TestXABase extends FBJUnit4TestBase {
          */
         private byte[] branchId;
 
-        // Static --------------------------------------------------------
-
         /**
          * The host name of this host, followed by a slash.
-         *
+         * <p>
          * This is used for building globally unique transaction identifiers.
          * It would be safer to use the IP address, but a host name is better
          * for humans to read and will do for now.
+         * </p>
          */
-        private static String hostName;
+        private static final String HOST_NAME;
 
         /**
          * The next transaction id to use on this host.
          */
-        static private int nextId = 0;
+        private static final AtomicInteger nextId = new AtomicInteger();
 
         /**
          * Return a new unique transaction id to use on this host.
          */
-        static private synchronized int getNextId() {
-            return nextId++;
+        private static synchronized int getNextId() {
+            return nextId.getAndIncrement();
         }
 
         /**
          * Singleton for no branch qualifier.
          */
-        static private byte[] noBranchQualifier = new byte[0];
+        private static final byte[] noBranchQualifier = new byte[0];
 
         /*
          *  Initialize the <code>hostName</code> class variable.
          */
         static {
+            String tempHostName;
             try {
-                hostName = InetAddress.getLocalHost().getHostName() + "/";
-                // Ensure room for 14 digits of serial no.
-                if (hostName.length() > MAXGTRIDSIZE - 15) {
-                    hostName = hostName.substring(0, MAXGTRIDSIZE - 15);
-                    hostName = hostName + "/";
-                }
+                tempHostName = InetAddress.getLocalHost().getHostName() + "/";
             } catch (UnknownHostException e) {
-                hostName = "localhost/";
+                tempHostName = "localhost/";
             }
+            // Ensure room for 14 digits of serial no.
+            if (tempHostName.length() > MAXGTRIDSIZE - 15) {
+                tempHostName = tempHostName.substring(0, MAXGTRIDSIZE - 15);
+                tempHostName = tempHostName + "/";
+            }
+            HOST_NAME = tempHostName;
         }
 
         /**
@@ -160,27 +159,9 @@ public abstract class TestXABase extends FBJUnit4TestBase {
          */
         public XidImpl() {
             hash = getNextId();
-            globalId = (hostName + Integer.toString(hash)).getBytes();
+            globalId = (HOST_NAME + hash).getBytes();
             branchId = noBranchQualifier;
         }
-
-        /**
-         * Create a new branch of an existing global transaction ID.
-         *
-         * @param xid
-         *         The transaction ID to create a new branch of.
-         * @param branchId
-         *         The ID of the new branch.
-         */
-        public XidImpl(XidImpl xid, int branchId) {
-            this.hash = xid.hash;
-            this.globalId = xid.globalId; // reuse array instance, we never modify.
-            this.branchId = Integer.toString(branchId).getBytes();
-        }
-
-        // Public --------------------------------------------------------
-
-        // Xid implementation --------------------------------------------
 
         /**
          * Return the global transaction id of this transaction.
@@ -193,10 +174,11 @@ public abstract class TestXABase extends FBJUnit4TestBase {
          * Return the branch qualifier of this transaction.
          */
         public byte[] getBranchQualifier() {
-            if (branchId.length == 0)
+            if (branchId.length == 0) {
                 return branchId; // Zero length arrays are immutable.
-            else
+            } else {
                 return branchId.clone();
+            }
         }
 
         /**
@@ -232,17 +214,21 @@ public abstract class TestXABase extends FBJUnit4TestBase {
             if (obj instanceof XidImpl) {
                 XidImpl other = (XidImpl) obj;
 
-                if (globalId.length != other.globalId.length ||
-                        branchId.length != other.branchId.length)
+                if (globalId.length != other.globalId.length || branchId.length != other.branchId.length) {
                     return false;
+                }
 
-                for (int i = 0; i < globalId.length; ++i)
-                    if (globalId[i] != other.globalId[i])
+                for (int i = 0; i < globalId.length; ++i) {
+                    if (globalId[i] != other.globalId[i]) {
                         return false;
+                    }
+                }
 
-                for (int i = 0; i < branchId.length; ++i)
-                    if (branchId[i] != other.branchId[i])
+                for (int i = 0; i < branchId.length; ++i) {
+                    if (branchId[i] != other.branchId[i]) {
                         return false;
+                    }
+                }
 
                 return true;
             }
@@ -256,17 +242,5 @@ public abstract class TestXABase extends FBJUnit4TestBase {
         public String toString() {
             return toString(this);
         }
-
-        /**
-         * Return the global transaction id of this transaction.
-         * Unlike the {@link #getGlobalTransactionId()} method, this one
-         * returns a reference to the global id byte array that may <em>not</em>
-         * be changed.
-         */
-        public byte[] getInternalGlobalTransactionId() {
-            return globalId.clone();
-        }
-
     }
-
 }

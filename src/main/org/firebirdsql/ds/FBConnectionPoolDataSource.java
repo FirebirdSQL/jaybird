@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,26 +12,23 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.ds;
 
-import java.sql.SQLException;
-
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.resource.ResourceException;
-import javax.sql.ConnectionPoolDataSource;
-import javax.sql.PooledConnection;
-
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FBSQLException;
+
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.PooledConnection;
+import java.sql.SQLException;
 
 /**
  * Bare-bones implementation of {@link javax.sql.ConnectionPoolDataSource}.
@@ -41,15 +36,18 @@ import org.firebirdsql.jdbc.FBSQLException;
  * Please be aware that this is not a connectionpool. This class provides
  * PooledConnection objects for connection pool implementations (eg as provided
  * by a JEE application server). If you need a standalone connectionpool,
- * consider using a connectionpool implementation like c3p0, BoneCP or DBCP.
+ * consider using a connectionpool implementation like HikariCP, c3p0 or DBCP.
  * </p>
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource implements ConnectionPoolDataSource, Referenceable {
+public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource implements ConnectionPoolDataSource,
+        Referenceable {
 
-    private volatile transient FBDataSource internalDs;
+    // TODO Implement in terms of FBManagedConnectionFactory
+
+    private volatile FBDataSource internalDs;
 
     public PooledConnection getPooledConnection() throws SQLException {
         return getPooledConnection(getUser(), getPassword());
@@ -67,18 +65,13 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
             if (internalDs != null) {
                 return;
             }
-            try {
-                GDSType gdsType = GDSType.getType(getType());
-                if (gdsType == null) {
-                    gdsType = GDSFactory.getDefaultGDSType();
-                }
-                FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(
-                        gdsType, getConnectionProperties());
-                internalDs = (FBDataSource) mcf.createConnectionFactory();
-                internalDs.setLogWriter(getLogWriter());
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
+            GDSType gdsType = GDSType.getType(getType());
+            if (gdsType == null) {
+                gdsType = GDSFactory.getDefaultGDSType();
             }
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType, getConnectionProperties());
+            internalDs = (FBDataSource) mcf.createConnectionFactory();
+            internalDs.setLogWriter(getLogWriter());
         }
     }
 
@@ -89,7 +82,8 @@ public class FBConnectionPoolDataSource extends FBAbstractCommonDataSource imple
     }
 
     public Reference getReference() throws NamingException {
-        Reference ref = new Reference(getClass().getName(), DataSourceFactory.class.getName(), null);
+        Reference ref = new Reference(FBConnectionPoolDataSource.class.getName(),
+                DataSourceFactory.class.getName(), null);
         
         FBAbstractCommonDataSource.updateReference(ref, this);
 

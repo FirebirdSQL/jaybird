@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,8 +21,6 @@ package org.firebirdsql.jaybird.xca;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.Test;
 
-import javax.resource.spi.LocalTransaction;
-import javax.resource.spi.ManagedConnection;
 import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -31,19 +29,13 @@ import java.sql.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.junit.Assert.*;
 
-/**
- * Describe class <code>TestFBResultSet</code> here.
- *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
- */
 public class TestFBResultSet extends TestXABase {
 
     @Test
     public void testUseResultSet() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
-        try (Connection c = (Connection) mc.getConnection(null, null);
+        FBManagedConnection mc = mcf.createManagedConnection();
+        try (Connection c = mc.getConnection();
              Statement s = c.createStatement()) {
             XAResource xa = mc.getXAResource();
             Exception ex = null;
@@ -86,8 +78,8 @@ public class TestFBResultSet extends TestXABase {
     @Test
     public void testUseResultSetMore() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
-        try (Connection c = (Connection) mc.getConnection(null, null);
+        FBManagedConnection mc = mcf.createManagedConnection();
+        try (Connection c = mc.getConnection();
              Statement s = c.createStatement()) {
             XAResource xa = mc.getXAResource();
             Exception ex = null;
@@ -148,10 +140,10 @@ public class TestFBResultSet extends TestXABase {
     @Test
     public void testUseResultSetWithPreparedStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
-            LocalTransaction t = c.getLocalTransaction();
+            FBLocalTransaction t = c.getLocalTransaction();
             Exception ex = null;
             t.begin();
             try {
@@ -238,10 +230,10 @@ public class TestFBResultSet extends TestXABase {
     @Test
     public void testUsePreparedStatementAcrossTransactions() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
-            LocalTransaction t = c.getLocalTransaction();
+            FBLocalTransaction t = c.getLocalTransaction();
             t.begin();
             executeCreateTable(c, "DROP TABLE T1");
             t.commit();
@@ -334,10 +326,10 @@ public class TestFBResultSet extends TestXABase {
     @Test
     public void testUseResultSetWithCount() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
-            LocalTransaction t = c.getLocalTransaction();
+            FBLocalTransaction t = c.getLocalTransaction();
             Exception ex = null;
             t.begin();
             try {
@@ -375,10 +367,10 @@ public class TestFBResultSet extends TestXABase {
     @Test
     public void testExecutableProcedure() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
-            LocalTransaction t = c.getLocalTransaction();
+            FBLocalTransaction t = c.getLocalTransaction();
             t.begin();
             executeCreateTable(c, "DROP PROCEDURE testproc");
             t.commit();

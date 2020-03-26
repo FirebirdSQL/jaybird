@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,101 +21,55 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.ds.RootCommonDataSource;
 import org.firebirdsql.jaybird.xca.FBConnectionRequestInfo;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.XcaConnectionManager;
+import org.firebirdsql.util.InternalApi;
 
-import javax.naming.Reference;
-import javax.resource.Referenceable;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ManagedConnectionFactory;
 import javax.sql.DataSource;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * The class <code>FBDataSource</code> is a ConnectionFactory for jdbc
- * Connection objects.  All work is delegated to a ConnectionManager.
+ * The class {@code FBDataSource} is a ConnectionFactory for jdbc Connection objects. All work is delegated to a
+ * XcaConnectionManager.
+ * <p>
+ * This data source is for internal use inside Jaybird. For a simple data source, use
+ * {@link org.firebirdsql.ds.FBSimpleDataSource}, for XA {@link org.firebirdsql.ds.FBXADataSource}.
+ * </p>
+ * <p>
+ * If you need a standalone connection pool, consider using a connection pool implementation like HikariCP, c3p0 or
+ * DBCP.
+ * </p>
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
-public class FBDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable {
+@InternalApi
+public class FBDataSource extends RootCommonDataSource implements DataSource, Serializable {
 
     private static final long serialVersionUID = 1178461472062969634L;
 
-    private final ConnectionManager cm;
-
+    private final XcaConnectionManager cm;
     private final FBManagedConnectionFactory mcf;
-
-    private Reference jndiReference;
 
     private int loginTimeout = 0;
 
-    // this constructor is needed to make BES happy.
-    public FBDataSource(ManagedConnectionFactory mcf, ConnectionManager cm) {
-        this((FBManagedConnectionFactory) mcf, cm);
-    }
-
-    public FBDataSource(FBManagedConnectionFactory mcf, ConnectionManager cm) {
+    public FBDataSource(FBManagedConnectionFactory mcf, XcaConnectionManager cm) {
         this.mcf = mcf;
         this.cm = cm;
     }
 
-    /**
-     * Set the JNDI <code>Reference</code> for this DataSource.
-     *
-     * @param ref
-     *         The JNDI reference for this DataSource
-     */
-    @Override
-    public void setReference(Reference ref) {
-        this.jndiReference = ref;
-    }
-
-    /**
-     * Get the JNDI <code>Reference</code> for this DataSource.
-     *
-     * @return The JNDI reference
-     */
-    @Override
-    public Reference getReference() {
-        return jndiReference;
-    }
-
-    @SuppressWarnings("deprecation")
     @Override
     public Connection getConnection() throws SQLException {
-        try {
-            return (Connection) cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
-        } catch (ResourceException re) {
-            if (re.getCause() instanceof SQLException) {
-                throw (SQLException) re.getCause();
-            }
-            if (re.getLinkedException() instanceof SQLException) {
-                throw (SQLException) re.getLinkedException();
-            }
-            throw new FBSQLException(re);
-        }
+        return cm.allocateConnection(mcf, mcf.getDefaultConnectionRequestInfo());
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        try {
-            //mcf makes a copy for us.
-            FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
-            subjectCri.setUserName(username);
-            subjectCri.setPassword(password);
-            return (Connection) cm.allocateConnection(mcf, subjectCri);
-        } catch (ResourceException re) {
-            if (re.getCause() instanceof SQLException) {
-                throw (SQLException) re.getCause();
-            }
-            if (re.getLinkedException() instanceof SQLException) {
-                throw (SQLException) re.getLinkedException();
-            }
-            throw new FBSQLException(re);
-        }
+        //mcf makes a copy for us.
+        FBConnectionRequestInfo subjectCri = mcf.getDefaultConnectionRequestInfo();
+        subjectCri.setUserName(username);
+        subjectCri.setPassword(password);
+        return cm.allocateConnection(mcf, subjectCri);
     }
 
     @Override
@@ -135,8 +89,9 @@ public class FBDataSource extends RootCommonDataSource implements DataSource, Se
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
+        if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + iface.getName());
+        }
 
         return iface.cast(this);
     }

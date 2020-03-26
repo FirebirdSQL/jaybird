@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -687,10 +687,11 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
     
     protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
+        if (connectionProperties == null) {
+            throw new NullPointerException("null value not allowed for connectionProperties");
+        }
         synchronized (lock) {
-            if (connectionProperties == null) {
-                throw new NullPointerException("null value not allowed for connectionProperties");
-            }
+            checkNotStarted();
             this.connectionProperties = connectionProperties;
         }
     }

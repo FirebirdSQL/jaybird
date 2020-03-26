@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,10 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.firebirdsql.gds.*;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -29,25 +32,17 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
-import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.jdbc.Synchronizable;
+import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
 
-import javax.resource.ResourceException;
-import javax.resource.spi.*;
-import javax.resource.spi.security.PasswordCredential;
-import javax.security.auth.Subject;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -56,16 +51,16 @@ import java.sql.SQLWarning;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
- * The class <code>FBManagedConnection</code> implements both the
- * ManagedConnection and XAResource interfaces.
+ * A physical connection handle to a Firebird database, providing a {@code XAResource}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBManagedConnection implements ManagedConnection, XAResource, ExceptionListener, Synchronizable {
+public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
     public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set ";
     public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
@@ -75,10 +70,14 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
     private final FBManagedConnectionFactory mcf;
 
-    private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
-    private final List<FBConnection> connectionHandles = Collections.synchronizedList(new ArrayList<FBConnection>());
+    private final List<XcaConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
+    private static final AtomicReferenceFieldUpdater<FBManagedConnection, FBConnection> connectionHandleUpdater =
+            AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, FBConnection.class, "connectionHandle");
+    private volatile FBConnection connectionHandle;
     // This is a bit of hack to be able to get attach warnings into the FBConnection that is created later.
-    private SQLWarning unnotifiedWarnings;
+    private static final AtomicReferenceFieldUpdater<FBManagedConnection, SQLWarning> unnotifiedWarningsUpdater =
+            AtomicReferenceFieldUpdater.newUpdater(FBManagedConnection.class, SQLWarning.class, "unnotifiedWarnings");
+    private volatile SQLWarning unnotifiedWarnings;
 
     private int timeout = 0;
 
@@ -87,125 +86,98 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private GDSHelper gdsHelper;
     private final FbDatabase database;
     private final Object syncObject;
-
+    private XAResource xaResource;
     private final FBConnectionRequestInfo cri;
     private FBTpb tpb;
     private int transactionIsolation;
 
     private volatile boolean managedEnvironment = true;
-    private volatile boolean connectionSharing = true;
-    private final Set<Xid> preparedXid = Collections.synchronizedSet(new HashSet<Xid>());
+    private final Set<Xid> preparedXid = Collections.synchronizedSet(new HashSet<>());
     private volatile boolean inDistributedTransaction = false;
 
-    FBManagedConnection(Subject subject, ConnectionRequestInfo cri, FBManagedConnectionFactory mcf)
-            throws ResourceException {
+    FBManagedConnection(FBConnectionRequestInfo cri, FBManagedConnectionFactory mcf) throws SQLException {
         this.mcf = mcf;
-        this.cri = getCombinedConnectionRequestInfo(subject, cri);
+        this.cri = getCombinedConnectionRequestInfo(cri);
         this.tpb = mcf.getDefaultTpb();
         this.transactionIsolation = mcf.getDefaultTransactionIsolation();
 
         //TODO: XIDs in limbo should be loaded so that XAER_DUPID can be thrown appropriately
 
-        try {
-            DatabaseParameterBuffer dpb = this.cri.getDpb();
+        DatabaseParameterBuffer dpb = this.cri.getDpb();
 
-            if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null
-                    && dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING) == null) {
-                String defaultEncoding = getDefaultConnectionEncoding();
-                if (defaultEncoding == null) {
-                    throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
-                            SQLStateConstants.SQL_STATE_CONNECTION_ERROR) ;
-                }
-                dpb.addArgument(DatabaseParameterBuffer.LC_CTYPE, defaultEncoding);
-
-                String warningMessage = WARNING_NO_CHARSET + defaultEncoding;
-                log.warn(warningMessage);
-                notifyWarning(new SQLWarning(warningMessage));
+        if (dpb.getArgumentAsString(DatabaseParameterBuffer.LC_CTYPE) == null
+                && dpb.getArgumentAsString(DatabaseParameterBufferExtension.LOCAL_ENCODING) == null) {
+            String defaultEncoding = getDefaultConnectionEncoding();
+            if (defaultEncoding == null) {
+                throw new SQLNonTransientConnectionException(ERROR_NO_CHARSET,
+                        SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
             }
+            dpb.addArgument(DatabaseParameterBuffer.LC_CTYPE, defaultEncoding);
 
-            if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
-                dpb.addArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT, DriverManager.getLoginTimeout());
-            }
-
-            final FbConnectionProperties connectionProperties = new FbConnectionProperties();
-            connectionProperties.fromDpb(dpb);
-            // TODO Move this logic to the GDSType or database factory?
-            final String gdsTypeName = mcf.getGDSType().toString();
-            if (!(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(gdsTypeName)
-                    || LocalGDSFactoryPlugin.LOCAL_TYPE_NAME.equals(gdsTypeName))) {
-                final DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString(mcf.getDatabase());
-                connectionProperties.setServerName(dbAttachInfo.getServer());
-                connectionProperties.setPortNumber(dbAttachInfo.getPort());
-                connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
-            } else {
-                connectionProperties.setDatabaseName(mcf.getDatabase());
-            }
-
-            database = mcf.getDatabaseFactory().connect(connectionProperties);
-            database.addDatabaseListener(new MCDatabaseListener());
-            database.addExceptionListener(this);
-            database.attach();
-            syncObject = database.getSynchronizationObject();
-
-            gdsHelper = new GDSHelper(database);
-        } catch(SQLException ex) {
-            throw new FBResourceException(ex);
+            String warningMessage = WARNING_NO_CHARSET + defaultEncoding;
+            log.warn(warningMessage);
+            notifyWarning(new SQLWarning(warningMessage));
         }
+
+        if (!dpb.hasArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT) && DriverManager.getLoginTimeout() > 0) {
+            dpb.addArgument(DatabaseParameterBuffer.CONNECT_TIMEOUT, DriverManager.getLoginTimeout());
+        }
+
+        final FbConnectionProperties connectionProperties = new FbConnectionProperties();
+        connectionProperties.fromDpb(dpb);
+        // TODO Move this logic to the GDSType or database factory?
+        final String gdsTypeName = mcf.getGDSType().toString();
+        if (!(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(gdsTypeName)
+                || LocalGDSFactoryPlugin.LOCAL_TYPE_NAME.equals(gdsTypeName))) {
+            final DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString(mcf.getDatabase());
+            connectionProperties.setServerName(dbAttachInfo.getServer());
+            connectionProperties.setPortNumber(dbAttachInfo.getPort());
+            connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
+        } else {
+            connectionProperties.setDatabaseName(mcf.getDatabase());
+        }
+
+        database = mcf.getDatabaseFactory().connect(connectionProperties);
+        database.addDatabaseListener(new MCDatabaseListener());
+        database.addExceptionListener(this);
+        database.attach();
+        syncObject = database.getSynchronizationObject();
+
+        gdsHelper = new GDSHelper(database);
     }
 
     @Override
     public void errorOccurred(Object source, SQLException ex) {
         log.trace(ex.getMessage());
 
-        if (!FatalGDSErrorHelper.isFatal(ex))
+        if (!FatalGDSErrorHelper.isFatal(ex)) {
             return;
-
-        ConnectionEvent event = new ConnectionEvent(FBManagedConnection.this, ConnectionEvent.CONNECTION_ERROR_OCCURRED,
+        }
+        XcaConnectionEvent event = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED,
                 ex);
 
-        FBManagedConnection.this.notify(connectionErrorOccurredNotifier, event);
+        notify(connectionErrorOccurredNotifier, event);
     }
 
-    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(Subject subject, ConnectionRequestInfo cri)
-            throws ResourceException {
+    private FBConnectionRequestInfo getCombinedConnectionRequestInfo(FBConnectionRequestInfo cri) throws SQLException {
         if (cri == null) {
-            cri = mcf.getDefaultConnectionRequestInfo();
+            return mcf.getDefaultConnectionRequestInfo();
         }
-        try {
-            FBConnectionRequestInfo fbcri = (FBConnectionRequestInfo) cri;
-            if (subject != null) {
-                // see connector spec, section 8.2.6, contract for
-                // ManagedConnectionFactory, option A.
-                for (Object cred : subject.getPrivateCredentials()) {
-                    if (cred instanceof PasswordCredential
-                            && mcf.equals(((PasswordCredential) cred)
-                            .getManagedConnectionFactory())) {
-                        PasswordCredential pcred = (PasswordCredential) cred;
-                        String user = pcred.getUserName();
-                        String password = new String(pcred.getPassword());
-                        fbcri.setPassword(password);
-                        fbcri.setUserName(user);
-                        break;
-                    }
-                }
-            }
-
-            return fbcri;
-        } catch (ClassCastException cce) {
-            throw new FBResourceException("Incorrect ConnectionRequestInfo class supplied");
-        }
+        return cri;
     }
 
     /**
      * Get instance of {@link GDSHelper} connected with this managed connection.
      *
      * @return instance of {@link GDSHelper}.
-     * @throws SQLException If this connection has no GDSHelper
+     * @throws SQLException
+     *         If this connection has no GDSHelper
      */
     public GDSHelper getGDSHelper() throws SQLException {
-        if (gdsHelper == null)
+        if (gdsHelper == null) {
             // TODO Right error code?
             throw new FbExceptionBuilder().exception(ISCConstants.isc_req_no_trans).toSQLException();
+        }
 
         return gdsHelper;
     }
@@ -222,386 +194,189 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         return gdsHelper != null && gdsHelper.inTransaction();
     }
 
-    public void setManagedEnvironment(boolean managedEnvironment) throws ResourceException{
+    public void setManagedEnvironment(boolean managedEnvironment) throws SQLException {
         this.managedEnvironment = managedEnvironment;
-
-        // if connection sharing is not enabled, notify currently associated
-        // connection handle about the state change.
-        if (!connectionSharing) {
-            synchronized (connectionHandles) {
-                if (connectionHandles.size() > 1)
-                    throw new javax.resource.spi.IllegalStateException(
-                            "Multiple connections associated with this managed " +
-                                    "connection in non-sharing mode.");
-
-                // there will be at most one connection.
-                for (FBConnection connection : connectionHandles) {
-                    try {
-                        connection.setManagedEnvironment(managedEnvironment);
-                    } catch (SQLException ex) {
-                        throw new FBResourceException(ex);
-                    }
-                }
-            }
+        final FBConnection connection = connectionHandle;
+        if (connection != null) {
+            connection.setManagedEnvironment(managedEnvironment);
         }
     }
 
     /**
-     * Check if connection sharing is enabled. When connection sharing is
-     * enabled, multiple connection handles ({@link FBConnection} instances)
-     * can access this managed connection in thread-safe manner (they synchronize
-     * on this instance). This feature can be enabled only in JCA environment,
-     * any other environment must not use connection sharing.
-     *
-     * @return <code>true</code> if connection sharing is enabled.
-     */
-    public boolean isConnectionSharing() {
-        return connectionSharing;
-    }
-
-    /**
-     * Enable or disable connection sharing. See {@link #isConnectionSharing()}
-     * method for details.
-     *
-     * @param connectionSharing <code>true</code> if connection sharing must be
-     * enabled.
-     * @throws ResourceException If connection sharing state cannot be changed
-     */
-    public void setConnectionSharing(boolean connectionSharing) throws ResourceException {
-        if (!connectionHandles.isEmpty())
-            throw new javax.resource.spi.IllegalStateException(
-                "Cannot change connection sharing with active connection handles.");
-
-        this.connectionSharing = connectionSharing;
-    }
-    /**
-     * Returns a <code>javax.resource.spi.LocalTransaction</code> instance.
-     * The LocalTransaction interface is used by the container to manage local
+     * Returns a {@code FBLocalTransaction} instance.
+     * <p>
+     * The FBLocalTransaction is used by the container to manage local
      * transactions for a RM instance.
+     * </p>
      *
-     * @return LocalTransaction instance
-     * @throws ResourceException
-     *             generic exception if operation fails
-     * @throws javax.resource.NotSupportedException
-     *             if the operation is not supported
-     * @throws ResourceAdapterInternalException
-     *             resource adapter internal error condition
+     * @return FBLocalTransaction instance
      */
-    public LocalTransaction getLocalTransaction() {
-        return new FBLocalTransaction(this, null);
+    public FBLocalTransaction getLocalTransaction() {
+        return new FBLocalTransaction(this);
     }
 
     /**
-     * Gets the metadata information for this connection's underlying EIS
-     * resource manager instance. The ManagedConnectionMetaData interface
-     * provides information about the underlying EIS instance associated with
-     * the ManagedConenction instance.
-     *
-     * @return ManagedConnectionMetaData instance
-     * @throws ResourceException
-     *             generic exception if operation fails
-     * @throws javax.resource.NotSupportedException
-     *             if the operation is not supported
-     */
-    public ManagedConnectionMetaData getMetaData() throws ResourceException {
-        return new FBManagedConnectionMetaData(this);
-    }
-
-    /**
-     * Sets the log writer for this ManagedConnection instance.
-     * <P>
-     * The log writer is a character output stream to which all logging and
-     * tracing messages for this ManagedConnection instance will be printed.
-     * Application Server manages the association of output stream with the
-     * ManagedConnection instance based on the connection pooling requirements.
-     * <P>
-     * When a ManagedConnection object is initially created, the default log
-     * writer associated with this instance is obtained from the
-     * <code>ManagedConnectionFactory</code>. An application server can set a
-     * log writer specific to this ManagedConnection to log/trace this instance
-     * using setLogWriter method.
-     *
-     * @param out
-     *            Character Output stream to be associated
-     * @throws ResourceException
-     *             generic exception if operation fails
-     * @throws ResourceAdapterInternalException
-     *             resource adapter related error condition
-     */
-    public void setLogWriter(PrintWriter out) {
-        // ignore, we are using alternative logging
-    }
-
-    /**
-     * Gets the log writer for this ManagedConnection instance.
-     * <P>
-     * The log writer is a character output stream to which all logging and
-     * tracing messages for this ManagedConnection instance will be printed.
-     * <code>ConnectionManager</code> manages the association of output stream
-     * with the <code>ManagedConnection</code> instance based on the
-     * connection pooling requirements.
-     * <P>
-     * The Log writer associated with a <code>ManagedConnection</code>
-     * instance can be one set as default from the ManagedConnectionFactory
-     * (that created this connection) or one set specifically for this instance
-     * by the application server.
-     *
-     * @return Character ourput stream associated with this
-     *         <code>ManagedConnection</code>
-     * @throws ResourceException
-     *             generic exception if operation fails
-     */
-    public PrintWriter getLogWriter() {
-        return null;// we are using alternative logging
-    }
-
-    /**
-     * Add an <code>ConnectionEventListener</code> listener. The listener will
-     * be notified when a <code>ConnectionEvent</code> occurs.
+     * Add an {@code XcaConnectionEventListener} listener. The listener will be notified when a
+     * {@code XcaConnectionEvent} occurs.
      *
      * @param listener
-     *            The <code>ConnectionEventListener</code> to be added
+     *         The {@code XcaConnectionEventListener} to be added
      */
-    public void addConnectionEventListener(ConnectionEventListener listener) {
+    public void addConnectionEventListener(XcaConnectionEventListener listener) {
         connectionEventListeners.add(listener);
     }
 
     /**
-     * Remove a <code>ConnectionEventListner</code> from the listing of
-     * listeners that will be notified for a <code>ConnectionEvent</code>.
+     * Remove a {@code XcaConnectionEventListener} from the listing of listeners that will be notified for a
+     * {@code XcaConnectionEvent}.
      *
      * @param listener
-     *            The <code>ConnectionEventListener</code> to be removed
+     *         The {@code FirebirdConnectionEventListener} to be removed
      */
-    public void removeConnectionEventListener(ConnectionEventListener listener) {
+    public void removeConnectionEventListener(XcaConnectionEventListener listener) {
         connectionEventListeners.remove(listener);
     }
 
     /**
-     * Used by the container to change the association of an application-level
-     * connection handle with a ManagedConneciton instance. The container should
-     * find the right ManagedConnection instance and call the
-     * associateConnection method.
-     * <P>
-     * The resource adapter is required to implement the associateConnection
-     * method. The method implementation for a ManagedConnection should
-     * dissociate the connection handle (passed as a parameter) from its
-     * currently associated ManagedConnection and associate the new connection
-     * handle with itself.
+     * Application server calls this method to force any cleanup on the managed connection instance.
+     * <p>
+     * The method {@code cleanup} initiates a cleanup of the any client-specific state as maintained by a managed
+     * connection instance. The cleanup should invalidate all connection handles that had been created using this
+     * managed connection instance. Any attempt by an application component to use the connection handle after cleanup
+     * of the underlying managed connection should result in an exception.
+     * </p>
+     * <p>
+     * The cleanup of managed connection is always driven by an application server. An application server should not
+     * invoke {@code cleanup} when there is an uncompleted transaction (associated with a managed connection instance)
+     * in progress.
+     * </p>
+     * <p>
+     * The invocation of the {@code cleanup} method on an already cleaned-up connection should not throw an exception.
+     * </p>
+     * <p>
+     * The cleanup of a managed connection instance resets its client specific state and prepares the connection to be
+     * put back in to a connection pool. The cleanup method should not cause resource adapter to close the physical pipe
+     * and reclaim system resources associated with the physical connection.
+     * </p>
      *
-     * @param connection
-     *            Application-level connection handle
-     * @throws ResourceException
-     *             Failed to associate the connection handle with this
-     *             ManagedConnection instance
-     * @throws javax.resource.spi.IllegalStateException
-     *             Illegal state for invoking this method
-     * @throws ResourceAdapterInternalException
-     *             Resource adapter internal error condition
+     * @throws SQLException
+     *         generic exception if operation fails
      */
-    public void associateConnection(Object connection) throws ResourceException {
-        if (!connectionSharing)
+    // TODO Consider removing (though might be used to implement XADataSource/ConnectionPoolDataSource without proxies)
+    public void cleanup() throws SQLException {
+        synchronized (syncObject) {
             disassociateConnections();
 
-        try {
-            final FBConnection abstractConnection = (FBConnection) connection;
-            abstractConnection.setManagedConnection(this);
-            connectionHandles.add(abstractConnection);
-        } catch (ClassCastException cce) {
-            throw new FBResourceException("invalid connection supplied to associateConnection.", cce);
-        }
-    }
-
-    /**
-     * Application server calls this method to force any cleanup on the
-     * <code>ManagedConnection</code> instance.
-     * <P>
-     * The method {@link ManagedConnection#cleanup}initiates a cleanup of the
-     * any client-specific state as maintained by a ManagedConnection instance.
-     * The cleanup should invalidate all connection handles that had been
-     * created using this <code>ManagedConnection</code> instance. Any attempt
-     * by an application component to use the connection handle after cleanup of
-     * the underlying <code>ManagedConnection</code> should result in an
-     * exception.
-     * <P>
-     * The cleanup of ManagedConnection is always driven by an application
-     * server. An application server should not invoke
-     * {@link ManagedConnection#cleanup}when there is an uncompleted
-     * transaction (associated with a ManagedConnection instance) in progress.
-     * <P>
-     * The invocation of {@link ManagedConnection#cleanup}method on an already
-     * cleaned-up connection should not throw an exception.
-     *
-     * The cleanup of <code>ManagedConnection</code> instance resets its
-     * client specific state and prepares the connection to be put back in to a
-     * connection pool. The cleanup method should not cause resource adapter to
-     * close the physical pipe and reclaim system resources associated with the
-     * physical connection.
-     *
-     * @throws ResourceException
-     *             generic exception if operation fails
-     * @throws ResourceAdapterInternalException
-     *             resource adapter internal error condition
-     * @throws javax.resource.spi.IllegalStateException
-     *             Illegal state for calling connection cleanup. Example - if a
-     *             local transaction is in progress that doesn't allow
-     *             connection cleanup
-     */
-    public void cleanup() throws ResourceException {
-        disassociateConnections();
-
-        try {
             getGDSHelper().setCurrentTransaction(null);
-        } catch (SQLException e) {
-            throw new FBResourceException(e);
-        }
 
-        // reset the TPB from the previous transaction.
-        this.tpb = mcf.getDefaultTpb();
-        this.transactionIsolation = mcf.getDefaultTransactionIsolation();
+            // reset the TPB from the previous transaction.
+            tpb = mcf.getDefaultTpb();
+            transactionIsolation = mcf.getDefaultTransactionIsolation();
+        }
     }
 
     /**
      * Disassociate connections from current managed connection.
      */
-    private void disassociateConnections() throws ResourceException {
-        SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
-
-        synchronized (connectionHandles) {
-            // Iterate over copy of list as connection.close() will remove connection
-            List<FBConnection> connectionHandleCopy = new ArrayList<>(connectionHandles);
-            for (FBConnection connection : connectionHandleCopy) {
-                try {
-                    connection.close();
-                } catch (SQLException sqlex) {
-                    chain.append(sqlex);
-                }
-            }
+    private void disassociateConnections() throws SQLException {
+        final FBConnection connection = connectionHandle;
+        if (connection != null) {
+            connection.close();
         }
-
-        if (chain.hasException())
-            throw new FBResourceException(chain.getException());
     }
 
     /**
      * Disassociate connections without cleanly closing them.
      */
     private void forceDisassociateConnections() {
-        synchronized (connectionHandles) {
-            Iterator<FBConnection> connectionIterator = connectionHandles.iterator();
-            while (connectionIterator.hasNext()) {
-                FBConnection connection = connectionIterator.next();
+        final FBConnection connection = connectionHandleUpdater.getAndSet(this, null);
+        if (connection != null) {
+            try {
                 connection.setManagedConnection(null);
-                try {
-                    connection.close();
-                } catch (SQLException sqlex) {
-                    log.debug("Exception ignored during forced disassociation", sqlex);
-                }
-                connectionIterator.remove();
+                connection.close();
+            } catch (SQLException sqlex) {
+                log.debug("Exception ignored during forced disassociation", sqlex);
             }
         }
     }
 
     /**
-     * Creates a new connection handle for the underlying physical connection
-     * represented by the <code>ManagedConnection</code> instance. This
-     * connection handle is used by the application code to refer to the
-     * underlying physical connection. A connection handle is tied to its
-     * <code>ManagedConnection</code> instance in a resource adapter
-     * implementation specific way.
-     * <P>
+     * Creates a new connection handle for the underlying physical connection represented by the managed connection
+     * instance. This connection handle is used by the application code to refer to the underlying physical connection.
      *
-     * The <code>ManagedConnection</code> uses the Subject and additional
-     * <code>ConnectionRequestInfo</code> (which is specific to resource
-     * adapter and opaque to application server) to set the state of the
-     * physical connection.
-     *
-     * @param subject
-     *            security context as JAAS subject
-     * @param cri
-     *            ConnectionRequestInfo instance
-     * @return generic <code>Object</code> instance representing the
-     *         connection handle. For CCI, the connection handle created by a
-     *         <code>ManagedConnection</code> instance is of the type
-     *         <code>javax.resource.cci.Connection</code>.
-     * @throws ResourceException
-     *             generic exception if operation fails
-     * @throws ResourceAdapterInternalException
-     *             resource adapter internal error condition
-     * @throws javax.resource.spi.SecurityException
-     *             security related error condition
-     * @throws CommException
-     *             failed communication with EIS instance
-     * @throws EISSystemException
-     *             internal error condition in EIS instance - used if EIS
-     *             instance is involved in setting state of
-     *             <code>ManagedConnection</code>
+     * @return instance representing the connection handle
+     * @throws SQLException
+     *         generic exception if operation fails
      */
-    public Object getConnection(Subject subject, ConnectionRequestInfo cri)
-            throws ResourceException {
-
-        if (!matches(subject, cri))
-            throw new FBResourceException("Incompatible subject or ConnectionRequestInfo in getConnection!");
-
-        if (!connectionSharing)
-            disassociateConnections();
+    public FBConnection getConnection() throws SQLException {
+        disassociateConnections();
 
         FBConnection c = mcf.newConnection(this);
-        try {
-            if (unnotifiedWarnings != null) {
-                c.addWarning(unnotifiedWarnings);
-                unnotifiedWarnings = null;
+        c.setManagedEnvironment(isManagedEnvironment());
+        FBConnection previous = connectionHandleUpdater.getAndSet(this, c);
+        if (previous != null) {
+            previous.setManagedConnection(null);
+            if (log.isDebugEnabled()) {
+                // This would indicate a concurrent getConnection call on this managed connection
+                log.debug("A connection was already associated with the managed connection",
+                        new RuntimeException("debug call trace"));
             }
-            c.setManagedEnvironment(isManagedEnvironment());
-            connectionHandles.add(c);
-            return c;
-        } catch(SQLException ex) {
-            throw new FBResourceException(ex);
+            try {
+                previous.setManagedConnection(null);
+                previous.close();
+            } catch (SQLException e) {
+                log.debug("Error forcing previous connection to close", e);
+            }
         }
+        final SQLWarning warnings = unnotifiedWarningsUpdater.getAndSet(this, null);
+        if (warnings != null) {
+            c.addWarning(warnings);
+        }
+        return c;
     }
 
     /**
-     * Destroys the physical connection to the underlying resource manager. To
-     * manage the size of the connection pool, an application server can
-     * explictly call {@link ManagedConnection#destroy}to destroy a physical
-     * connection. A resource adapter should destroy all allocated system
-     * resources for this <code>ManagedConnection</code> instance when the
-     * method destroy is called.
+     * Destroys the physical connection to the underlying resource manager.
+     * <p>
+     * To manage the size of the connection pool, an application server can explicitly call {@code destroy} to destroy
+     * a physical connection. A resource adapter should destroy all allocated system resources for this managed
+     * connection instance when the method destroy is called.
+     * </p>
      *
-     * @throws ResourceException
-     *             generic exception if operation failed
-     * @throws javax.resource.spi.IllegalStateException
-     *             illegal state for destroying connection
+     * @throws SQLException
+     *         generic exception if operation failed
      */
-    public void destroy() throws ResourceException {
+    public void destroy() throws SQLException {
         destroy(null);
     }
 
-    public void destroy(ConnectionEvent connectionEvent) throws ResourceException {
-        if (gdsHelper == null)
+    public void destroy(XcaConnectionEvent connectionEvent) throws SQLException {
+        if (gdsHelper == null) {
             return;
+        }
 
         try {
             if (isBrokenConnection(connectionEvent)) {
                 FbDatabase currentDatabase = gdsHelper.getCurrentDatabase();
                 currentDatabase.forceClose();
             } else {
-                if (inTransaction())
-                    throw new javax.resource.spi.IllegalStateException(
-                            "Can't destroy managed connection with active transaction");
+                if (inTransaction()) {
+                    // TODO More specific exception, Jaybird error code
+                    // TODO should we skip disassociation in this case?
+                    throw new SQLException("Can't destroy managed connection with active transaction");
+                }
 
                 gdsHelper.detachDatabase();
             }
-        } catch (SQLException ge) {
-            throw new FBResourceException("Can't detach from db.", ge);
         } finally {
             gdsHelper = null;
             forceDisassociateConnections();
         }
     }
 
-    private boolean isBrokenConnection(ConnectionEvent connectionEvent) {
-        if (connectionEvent == null || connectionEvent.getId() != ConnectionEvent.CONNECTION_ERROR_OCCURRED) {
+    private boolean isBrokenConnection(XcaConnectionEvent connectionEvent) {
+        if (connectionEvent == null
+                || connectionEvent.getEventType() != XcaConnectionEvent.EventType.CONNECTION_ERROR_OCCURRED) {
             return false;
         }
 
@@ -619,6 +394,8 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             return true;
         }
 
+        // TODO Should this test for SocketException or something else, as SocketTimeoutException is also tested in the
+        //  previous check
         //noinspection RedundantIfStatement
         if (findException(connectionEventException, SocketTimeoutException.class) != null) {
             return true;
@@ -645,20 +422,25 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     /**
-     * Return an XA resource to the caller.
-     * <P>
-     * In both <code>javax.sql.XAConnection</code> and
-     * <code>javax.resource.spi.MangagedConnection</code>.
+     * Returns an {@code javax.transaction.xa.XAresource} instance. An application server enlists this XAResource
+     * instance with the Transaction Manager if the FBManagedConnection instance is being used in a Java EE transaction
+     * that is coordinated by the Transaction Manager.
      *
-     * @return the XAResource
+     * @return XAResource instance
      */
     public XAResource getXAResource() {
         log.debug("XAResource requested from FBManagedConnection");
-        return this;
+        synchronized (syncObject) {
+            if (xaResource == null) {
+                xaResource = new FbMcXaResource();
+            }
+            return xaResource;
+        }
     }
 
     // --------------------------------------------------------------
     // XAResource implementation
+    // The actual XAResource is exposed using the inner class FbMcXaResource
     // --------------------------------------------------------------
 
     // TODO validate correctness of state set
@@ -669,53 +451,43 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         return transaction != null && XID_ACTIVE_STATE.contains(transaction.getState());
     }
 
-    /**
-     * Commits a transaction.
-     *
-     * @throws XAException
-     *             Occurs when the state was not correct (end never called), the
-     *             transaction ID is wrong, the connection was set to
-     *             Auto-Commit, or the commit on the underlying connection
-     *             fails. The error code differs depending on the exact
-     *             situation.
-     */
-    public void commit(Xid id, boolean onePhase) throws XAException {
-        try {
-            mcf.notifyCommit(this, id, onePhase);
-        } catch (GDSException ge) {
-            throw new XAException(ge.getXAErrorCode());
-        }
+    private void commit(Xid id, boolean onePhase) throws XAException {
+        mcf.notifyCommit(this, id, onePhase);
     }
 
     /**
-     * The <code>internalCommit</code> method performs the requested commit
-     * and may throw a GDSException to be interpreted by the caller.
+     * The {@code internalCommit} method performs the requested commit and may throw an XAException to be interpreted
+     * by the caller.
      *
      * @param xid
-     *            a <code>Xid</code> value
+     *         a {@code Xid} value
      * @param onePhase
-     *            a <code>boolean</code> value
-     * @exception XAException
-     *                if an error occurs
+     *         a {@code true} if this is not a two-phase commit (not a distributed transaction)
+     * @throws XAException
+     *         if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
         if (log.isTraceEnabled()) log.trace("Commit called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
 
         // check that prepare has NOT been called when onePhase = true
-        if (onePhase && isPrepared(xid))
+        if (onePhase && isPrepared(xid)) {
             throw new FBXAException("Cannot commit one-phase when transaction has been prepared", XAException.XAER_PROTO);
+        }
 
         // check that prepare has been called when onePhase = false
-        if (!onePhase && !isPrepared(xid))
+        if (!onePhase && !isPrepared(xid)) {
             throw new FBXAException("Cannot commit two-phase when transaction has not been prepared", XAException.XAER_PROTO);
+        }
 
-        if (committingTr == null)
+        if (committingTr == null) {
             throw new FBXAException("Commit called with unknown transaction", XAException.XAER_NOTA);
+        }
 
         try {
-            if (committingTr == getGDSHelper().getCurrentTransaction())
+            if (committingTr == getGDSHelper().getCurrentTransaction()) {
                 throw new FBXAException("Commit called with non-ended xid", XAException.XAER_PROTO);
+            }
 
             committingTr.commit();
         } catch (SQLException ge) {
@@ -743,48 +515,42 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Dissociates a resource from a global transaction.
      *
      * @throws XAException
-     *             Occurs when the state was not correct (end called twice), or
-     *             the transaction ID is wrong.
+     *         Occurs when the state was not correct (end called twice), or the transaction ID is wrong.
      */
-    public void end(Xid id, int flags) throws XAException {
+    private void end(Xid id, int flags) throws XAException {
         if (flags != XAResource.TMSUCCESS && flags != XAResource.TMFAIL && flags != XAResource.TMSUSPEND)
             throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSUCCESS, TMFAIL, TMSUSPEND", XAException.XAER_PROTO);
-        try {
-            internalEnd(id, flags);
-        } catch (SQLException e) {
-            throw new FBXAException(XAException.XAER_RMERR, e);
-        }
+        internalEnd(id, flags);
         mcf.notifyEnd(this, id);
         inDistributedTransaction = false;
 
         try {
             // This will reset the managed environment of the associated connections and set the transaction coordinator to local
-            // TODO This is a bit of a hack; need to find a better way; this doesn't work with connectionSharing = true
+            // TODO This is a bit of a hack; need to find a better way
             setManagedEnvironment(isManagedEnvironment());
-        } catch (ResourceException ex) {
+        } catch (SQLException ex) {
             throw new FBXAException("Reset of managed state failed", XAException.XAER_RMERR, ex);
         }
     }
 
     /**
-     * The <code>internalEnd</code> method ends the xid as requested if
-     * appropriate and throws a GDSException including the appropriate XA error
-     * code and a message if not. The caller can decode the exception as
-     * necessary.
+     * The {@code internalEnd} method ends the xid as requested if appropriate and throws a XAException including the
+     * appropriate XA error code and a message if not. The caller can decode the exception as necessary.
      *
      * @param xid
-     *            a <code>Xid</code> value
+     *         a {@code Xid} value
      * @param flags
-     *            an <code>int</code> value
-     * @exception XAException
-     *                if an error occurs
+     *         an {@code int} value
+     * @throws XAException
+     *         if an error occurs
      */
-    void internalEnd(Xid xid, int flags) throws XAException, SQLException {
+    void internalEnd(Xid xid, int flags) throws XAException {
         if (log.isDebugEnabled()) log.debug("End called: " + xid);
         FbTransaction endingTr = xidMap.get(xid);
 
-        if (endingTr == null)
+        if (endingTr == null) {
             throw new FBXAException("Unrecognized transaction", XAException.XAER_NOTA);
+        }
 
         if (flags == XAResource.TMFAIL) {
             try {
@@ -793,26 +559,25 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             } catch (SQLException ex) {
                 throw new FBXAException("can't rollback transaction", XAException.XAER_RMFAIL, ex);
             }
-        }
-        else if (flags == XAResource.TMSUCCESS) {
-            if (gdsHelper != null && endingTr == gdsHelper.getCurrentTransaction())
+        } else if (flags == XAResource.TMSUCCESS) {
+            if (gdsHelper != null && endingTr == gdsHelper.getCurrentTransaction()) {
                 gdsHelper.setCurrentTransaction(null);
-            else
+            } else {
                 throw new FBXAException("You are trying to end a transaction that is not the current transaction",
                         XAException.XAER_INVAL);
-        }
-        else if (flags == XAResource.TMSUSPEND) {
-            if (gdsHelper != null && endingTr == gdsHelper.getCurrentTransaction())
+            }
+        } else if (flags == XAResource.TMSUSPEND) {
+            if (gdsHelper != null && endingTr == gdsHelper.getCurrentTransaction()) {
                 gdsHelper.setCurrentTransaction(null);
-            else
+            } else {
                 throw new FBXAException("You are trying to suspend a transaction that is not the current transaction",
                         XAException.XAER_INVAL);
-
+            }
         }
     }
 
     private final static String FORGET_FIND_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-                                                  + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE IN (2, 3)";
+            + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE IN (2, 3)";
     private final static String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
 
     /**
@@ -821,10 +586,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * called after a failed commit or rollback.
      *
      * @throws XAException
-     *             Occurs when the state was not correct (end never called), or
-     *             the transaction ID is wrong.
+     *         Occurs when the state was not correct (end never called), or the transaction ID is wrong.
      */
-    public void forget(Xid id) throws XAException {
+    private void forget(Xid id) throws XAException {
+        // TODO Should this method call FBManagedConnectionFactory.forget?
         long inLimboId = -1;
 
         try {
@@ -850,7 +615,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
 
             int row = 0;
-            while(row < dataProvider0.getRowCount()) {
+            while (row < dataProvider0.getRowCount()) {
                 dataProvider0.setRow(row);
                 dataProvider1.setRow(row);
 
@@ -867,7 +632,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                         inLimboId = inLimboTxId;
                         break;
                     }
-                } catch(FBIncorrectXidException ex) {
+                } catch (FBIncorrectXidException ex) {
                     String message = "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
                     log.warn(message + ": " + ex + "; see debug level for stacktrace");
                     log.debug(message, ex);
@@ -883,8 +648,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
         }
 
-        if (inLimboId == -1)
+        if (inLimboId == -1) {
             throw new FBXAException("XID not found", XAException.XAER_NOTA); // TODO: is XAER_NOTA the proper error code ?
+        }
 
         try {
             // delete XID
@@ -903,53 +669,31 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
     }
 
-    /**
-     * Gets the transaction timeout.
-     */
-    public int getTransactionTimeout() throws javax.transaction.xa.XAException {
+    private int getTransactionTimeout() throws XAException {
         return timeout;
-    }
-
-    /**
-     * Retrieve whether this <code>FBManagedConnection</code> uses the same
-     * ResourceManager as <code>res</code>. This method relies on
-     * <code>res</code> being a Firebird implementation of
-     * <code>XAResource</code>.
-     *
-     * @param res
-     *            The other <code>XAResource</code> to compare to
-     * @return <code>true</code> if <code>res</code> uses the same
-     *         ResourceManager, <code>false</code> otherwise
-     */
-    public boolean isSameRM(XAResource res) throws XAException {
-        return res instanceof FBManagedConnection
-                && database == ((FBManagedConnection) res).database;
     }
 
     /**
      * Prepares a transaction to commit.
      *
      * @throws XAException
-     *             Occurs when the state was not correct (end never called), the
-     *             transaction ID is wrong, or the connection was set to
-     *             Auto-Commit.
+     *         Occurs when the state was not correct (end never called), the transaction ID is wrong, or the connection
+     *         was set to Auto-Commit.
      */
-    public int prepare(Xid xid) throws javax.transaction.xa.XAException {
-        try {
-            return mcf.notifyPrepare(this, xid);
-        } catch (GDSException ge) {
-            throw new FBXAException(XAException.XAER_RMERR, ge);
-        }
+    private int prepare(Xid xid) throws XAException {
+        return mcf.notifyPrepare(this, xid);
     }
 
     int internalPrepare(Xid xid) throws FBXAException {
         if (log.isTraceEnabled()) log.trace("prepare called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
-        if (committingTr == null)
+        if (committingTr == null) {
             throw new FBXAException("Prepare called with unknown transaction", XAException.XAER_NOTA);
+        }
         try {
-            if (committingTr == getGDSHelper().getCurrentTransaction())
+            if (committingTr == getGDSHelper().getCurrentTransaction()) {
                 throw new FBXAException("Prepare called with non-ended xid", XAException.XAER_PROTO);
+            }
 
             FBXid fbxid;
             if (xid instanceof FBXid) {
@@ -978,11 +722,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
 
         preparedXid.add(xid);
-        return XA_OK;
+        return XAResource.XA_OK;
     }
 
-    private static final String RECOVERY_QUERY =
-            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
+    private static final String RECOVERY_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS";
 
     /**
@@ -992,20 +735,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * heuristically completed states.
      *
      * @param flags
-     *            One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS must be
-     *            used when no other flags are set in flags.
-     * @return The resource manager returns zero or more XIDs for the
-     *         transaction branches that are currently in a prepared or
-     *         heuristically completed state. If an error occurs during the
-     *         operation, the resource manager should throw the appropriate
-     *         XAException.
+     *         One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS must be used when no other flags are set in flags.
+     * @return The resource manager returns zero or more XIDs for the transaction branches that are currently in a
+     * prepared or heuristically completed state. If an error occurs during the operation, the resource manager should
+     * throw the appropriate XAException.
      * @throws XAException
-     *             An error has occurred. Possible values are XAER_RMERR,
-     *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+     *         An error has occurred. Possible values are XAER_RMERR, XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
-    public Xid[] recover(int flags) throws javax.transaction.xa.XAException {
-        if (flags != XAResource.TMSTARTRSCAN && flags != XAResource.TMENDRSCAN && flags != XAResource.TMNOFLAGS && flags != (XAResource.TMSTARTRSCAN|XAResource.TMENDRSCAN))
+    private Xid[] recover(int flags) throws javax.transaction.xa.XAException {
+        if (flags != XAResource.TMSTARTRSCAN && flags != XAResource.TMENDRSCAN && flags != XAResource.TMNOFLAGS
+                && flags != (XAResource.TMSTARTRSCAN | XAResource.TMENDRSCAN)) {
             throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS, TMSTARTRSCAN|TMENDRSCAN", XAException.XAER_PROTO);
+        }
 
         try {
             // if (!((flags & XAResource.TMSTARTRSCAN) == 0))
@@ -1035,7 +776,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
 
             int row = 0;
-            while(row < dataProvider0.getRowCount()) {
+            while (row < dataProvider0.getRowCount()) {
                 dataProvider0.setRow(row);
                 dataProvider1.setRow(row);
 
@@ -1045,7 +786,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 try {
                     FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
                     xids.add(xid);
-                } catch(FBIncorrectXidException ex) {
+                } catch (FBIncorrectXidException ex) {
                     log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
 
@@ -1070,11 +811,11 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Obtain a single prepared transaction branch from a resource manager, based on a Xid
      *
      * @param externalXid
-     *            The Xid to find
+     *         The Xid to find
      * @return The Xid if found, otherwise null.
      * @throws XAException
-     *             An error has occurred. Possible values are XAER_RMERR,
-     *             XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+     *         An error has occurred. Possible values are XAER_RMERR,
+     *         XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
     protected Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
@@ -1111,7 +852,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
 
                 try {
                     xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
-                } catch(FBIncorrectXidException ex) {
+                } catch (FBIncorrectXidException ex) {
                     log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
             }
@@ -1166,25 +907,19 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * transaction.
      *
      * @throws XAException
-     *             Occurs when the state was not correct (end never called), the
-     *             transaction ID is wrong, the connection was set to
-     *             Auto-Commit, or the rollback on the underlying connection
-     *             fails. The error code differs depending on the exact
-     *             situation.
+     *         Occurs when the state was not correct (end never called), the transaction ID is wrong, the connection
+     *         was set to Auto-Commit, or the rollback on the underlying connection fails. The error code differs
+     *         depending on the exact situation.
      */
-    public void rollback(Xid xid) throws XAException {
-        try {
-            mcf.notifyRollback(this, xid);
-        } catch (GDSException ge) {
-            throw new FBXAException(ge.getXAErrorCode(), ge);
-        }
+    private void rollback(Xid xid) throws XAException {
+        mcf.notifyRollback(this, xid);
     }
 
     void internalRollback(Xid xid) throws XAException {
         if (log.isTraceEnabled()) log.trace("rollback called: " + xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
-            throw new FBXAException ("Rollback called with unknown transaction: " + xid);
+            throw new FBXAException("Rollback called with unknown transaction: " + xid);
         }
 
         try {
@@ -1208,10 +943,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * the current implementation.
      *
      * @param timeout
-     *            The timeout to be set in seconds
+     *         The timeout to be set in seconds
      */
-    public boolean setTransactionTimeout(int timeout)
-            throws javax.transaction.xa.XAException {
+    private boolean setTransactionTimeout(int timeout) throws XAException {
         this.timeout = timeout;
         return true;
     }
@@ -1229,22 +963,21 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * transaction ID or illegal transaction ID (since you can't have two
      * transactions associated with one DB connection).
      *
-     *
      * @param id
-     *            A global transaction identifier to be associated with the
-     *            resource
+     *         A global transaction identifier to be associated with the resource
      * @param flags
-     *            One of TMNOFLAGS, TMJOIN, or TMRESUME
+     *         One of TMNOFLAGS, TMJOIN, or TMRESUME
      * @throws XAException
-     *             Occurs when the state was not correct (start called twice),
-     *             the transaction ID is wrong, or the instance has already been
-     *             closed.
+     *         Occurs when the state was not correct (start called twice), the transaction ID is wrong, or the instance
+     *         has already been closed.
      */
-    public void start(Xid id, int flags) throws XAException {
-        if (flags != XAResource.TMNOFLAGS && flags != XAResource.TMJOIN && flags != XAResource.TMRESUME)
+    private void start(Xid id, int flags) throws XAException {
+        if (flags != XAResource.TMNOFLAGS && flags != XAResource.TMJOIN && flags != XAResource.TMRESUME) {
             throw new FBXAException("flag not allowed in this context: " + flags + ", valid flags are TMNOFLAGS, TMJOIN, TMRESUME", XAException.XAER_PROTO);
-        if (flags == XAResource.TMJOIN)
+        }
+        if (flags == XAResource.TMJOIN) {
             throw new FBXAException("Joining two transactions is not supported", XAException.XAER_RMFAIL);
+        }
 
         try {
             // reset the transaction parameters for the managed scenario 
@@ -1257,12 +990,10 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
             inDistributedTransaction = true;
 
             // This will reset the managed environment of the associated connections and set the transaction coordinator to managed
-            // TODO This is a bit of a hack; need to find a better way; this doesn't work with connectionSharing = true
+            // TODO This is a bit of a hack; need to find a better way
             setManagedEnvironment(isManagedEnvironment());
 
-        } catch (GDSException ge) {
-            throw new FBXAException(ge.getXAErrorCode(), ge);
-        } catch (SQLException | ResourceException e) {
+        } catch (SQLException e) {
             throw new FBXAException(XAException.XAER_RMERR, e);
         }
     }
@@ -1271,14 +1002,15 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Perform the internal processing to start associate a JDBC connection with
      * a global transaction.
      *
-     * @see #start(Xid, int)
      * @param id
-     *            A global transaction identifier to be associated with the
-     *            resource
+     *         A global transaction identifier to be associated with the resource
      * @param flags
-     *            One of TMNOFLAGS, TMJOIN, or TMRESUME
-     * @throws XAException If the transaction is already started, or this connection cannot participate in the distributed transaction
+     *         One of TMNOFLAGS, TMJOIN, or TMRESUME
+     * @throws XAException
+     *         If the transaction is already started, or this connection cannot participate in the distributed
+     *         transaction
      * @throws SQLException
+     * @see #start(Xid, int)
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
         if (log.isTraceEnabled()) log.trace("start called: " + id);
@@ -1292,17 +1024,18 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     // FB public methods. Could be package if packages reorganized.
 
     /**
-     * Close this connection with regards to a wrapping
-     * <code>AbstractConnection</code>.
+     * Close this connection with regards to a wrapping {@code AbstractConnection}.
      *
      * @param c
-     *            The <code>AbstractConnection</code> that is being closed
+     *         The {@code AbstractConnection} that is being closed
      */
     public void close(FBConnection c) {
         c.setManagedConnection(null);
-        connectionHandles.remove(c);
-        ConnectionEvent ce = new ConnectionEvent(this,
-                ConnectionEvent.CONNECTION_CLOSED, null);
+        if (!connectionHandleUpdater.compareAndSet(this, c, null) && log.isDebugEnabled()) {
+            log.debug("Call of close for connection not currently associated with this managed connection",
+                    new RuntimeException("debug call trace"));
+        }
+        XcaConnectionEvent ce = new XcaConnectionEvent(this, XcaConnectionEvent.EventType.CONNECTION_CLOSED);
         ce.setConnectionHandle(c);
         notify(connectionClosedNotifier, ce);
     }
@@ -1331,10 +1064,6 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams) {
         mcf.setTransactionParameters(isolation, transactionParams);
     }
-
-    // --------------------------------------------------------------------
-    // package visibility
-    // --------------------------------------------------------------------
 
     private void findIscTrHandle(Xid xid, int flags) throws SQLException, XAException {
         // FIXME return old tr handle if it is still valid before proceeding
@@ -1371,115 +1100,59 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
         }
     }
 
-    void notify(CELNotifier notifier, ConnectionEvent ce) {
-        for (ConnectionEventListener cel : connectionEventListeners) {
+    void notify(CELNotifier notifier, XcaConnectionEvent ce) {
+        for (XcaConnectionEventListener cel : connectionEventListeners) {
             notifier.notify(cel, ce);
         }
     }
 
+    @FunctionalInterface
     interface CELNotifier {
-
-        void notify(ConnectionEventListener cel, ConnectionEvent ce);
+        void notify(XcaConnectionEventListener cel, XcaConnectionEvent ce);
     }
 
-    static final CELNotifier connectionClosedNotifier = new CELNotifier() {
-
-        public void notify(ConnectionEventListener cel, ConnectionEvent ce) {
-            cel.connectionClosed(ce);
-        }
-    };
-
-    static final CELNotifier connectionErrorOccurredNotifier = new CELNotifier() {
-
-        public void notify(ConnectionEventListener cel, ConnectionEvent ce) {
-            cel.connectionErrorOccurred(ce);
-        }
-    };
-
-    static final CELNotifier localTransactionStartedNotifier = new CELNotifier() {
-
-        public void notify(ConnectionEventListener cel, ConnectionEvent ce) {
-            cel.localTransactionStarted(ce);
-        }
-    };
-
-    static final CELNotifier localTransactionCommittedNotifier = new CELNotifier() {
-
-        public void notify(ConnectionEventListener cel, ConnectionEvent ce) {
-            cel.localTransactionCommitted(ce);
-        }
-    };
-
-    static final CELNotifier localTransactionRolledbackNotifier = new CELNotifier() {
-
-        public void notify(ConnectionEventListener cel, ConnectionEvent ce) {
-            cel.localTransactionRolledback(ce);
-        }
-    };
-
-    boolean matches(Subject subj, ConnectionRequestInfo cri) {
-
-        if (cri == null) {
-            return true;
-        }
-
-        if (!(cri instanceof FBConnectionRequestInfo))
-            return false;
-
-        try {
-            return this.cri.equals(getCombinedConnectionRequestInfo(subj, cri));
-        } catch (ResourceException re) {
-            return false;
-        }
-    }
+    static final CELNotifier connectionClosedNotifier = XcaConnectionEventListener::connectionClosed;
+    static final CELNotifier connectionErrorOccurredNotifier = XcaConnectionEventListener::connectionErrorOccurred;
 
     /**
-     * Get the transaction isolation level of this connection. The level is one
-     * of the static final fields of <code>java.sql.Connection</code> (i.e.
-     * <code>TRANSACTION_READ_COMMITTED</code>,
-     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
-     * <code>TRANSACTION_REPEATABLE_READ</code>,
-     * <code>TRANSACTION_SERIALIZABLE</code>.
+     * Get the transaction isolation level of this connection. The level is one of the static final fields of
+     * {@code java.sql.Connection} (i.e. {@code TRANSACTION_READ_COMMITTED}, {@code TRANSACTION_READ_UNCOMMITTED},
+     * {@code TRANSACTION_REPEATABLE_READ}, {@code TRANSACTION_SERIALIZABLE}.
      *
+     * @return Value representing a transaction isolation level defined in {@link java.sql.Connection}.
+     * @throws SQLException
+     *         If the transaction level cannot be retrieved
      * @see java.sql.Connection
      * @see #setTransactionIsolation(int)
-     * @return Value representing a transaction isolation level defined in
-     *         {@link java.sql.Connection}.
-     * @throws ResourceException
-     *             If the transaction level cannot be retrieved
      */
-    public int getTransactionIsolation() throws ResourceException {
+    public int getTransactionIsolation() throws SQLException {
         return transactionIsolation;
     }
 
     /**
-     * Set the transaction level for this connection. The level is one of the
-     * static final fields of <code>java.sql.Connection</code> (i.e.
-     * <code>TRANSACTION_READ_COMMITTED</code>,
-     * <code>TRANSACTION_READ_UNCOMMITTED</code>,
-     * <code>TRANSACTION_REPEATABLE_READ</code>,
-     * <code>TRANSACTION_SERIALIZABLE</code>.
+     * Set the transaction level for this connection. The level is one of the static final fields of
+     * {@code java.sql.Connection} (i.e. {@code TRANSACTION_READ_COMMITTED}, {@code TRANSACTION_READ_UNCOMMITTED},
+     * {@code TRANSACTION_REPEATABLE_READ}, {@code TRANSACTION_SERIALIZABLE}.
      *
+     * @param isolation
+     *         Value representing a transaction isolation level defined in {@link java.sql.Connection}.
+     * @throws SQLException
+     *         If the transaction level cannot be retrieved
      * @see java.sql.Connection
      * @see #getTransactionIsolation()
-     * @param isolation
-     *            Value representing a transaction isolation level defined in
-     *            {@link java.sql.Connection}.
-     * @throws ResourceException
-     *             If the transaction level cannot be retrieved
      */
-    public void setTransactionIsolation(int isolation) throws ResourceException {
+    public void setTransactionIsolation(int isolation) throws SQLException {
         transactionIsolation = isolation;
-
+        
         tpb = mcf.getTpb(isolation);
     }
 
     /**
      * Get the managed connection factory that created this managed connection.
      *
-     * @return instance of {@link ManagedConnectionFactory}.
+     * @return instance of {@link FBManagedConnectionFactory}.
      */
-    public ManagedConnectionFactory getManagedConnectionFactory() {
+    public FBManagedConnectionFactory getManagedConnectionFactory() {
         return mcf;
     }
 
@@ -1487,8 +1160,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      * Set whether this connection is to be readonly
      *
      * @param readOnly
-     *            If <code>true</code>, the connection will be set read-only,
-     *            otherwise it will be writable
+     *         If {@code true}, the connection will be set read-only, otherwise it will be writable
      */
     public void setReadOnly(boolean readOnly) {
         tpb.setReadOnly(readOnly);
@@ -1497,25 +1169,32 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     /**
      * Retrieve whether this connection is readonly.
      *
-     * @return <code>true</code> if this connection is readonly,
-     *         <code>false</code> otherwise
+     * @return {@code true} if this connection is readonly, {@code false} otherwise
      */
     public boolean isReadOnly() {
         return tpb.isReadOnly();
     }
 
     private void notifyWarning(SQLWarning warning) {
-        synchronized (connectionHandles) {
-            if (connectionHandles.isEmpty()) {
-                if (unnotifiedWarnings == null) {
-                    unnotifiedWarnings = warning;
-                } else {
-                    unnotifiedWarnings.setNextWarning(warning);
+        final FBConnection connection = connectionHandle;
+        if (connection == null) {
+            while (true) {
+                if (!unnotifiedWarningsUpdater.compareAndSet(this, null, warning)) {
+                    final SQLWarning warnings = unnotifiedWarnings;
+                    if (warnings == null) {
+                        continue;
+                    }
+                    warnings.setNextWarning(warning);
                 }
+                break;
             }
-            for (FBConnection connection : connectionHandles) {
-                connection.addWarning(warning);
+        } else {
+            final SQLWarning warnings = unnotifiedWarningsUpdater.getAndSet(this, null);
+            if (warnings != null) {
+                warnings.setNextWarning(warning);
+                warning = warnings;
             }
+            connection.addWarning(warning);
         }
     }
 
@@ -1536,7 +1215,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     /**
-     * DatabaseListener implementation for use by this ManagedConnection.
+     * DatabaseListener implementation for use by this managed connection.
      */
     private class MCDatabaseListener extends DefaultDatabaseListener {
         @Override
@@ -1546,6 +1225,75 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
                 return;
             }
             notifyWarning(warning);
+        }
+    }
+
+    /**
+     * XAResource implementation that delegates to the managed connection itself.
+     */
+    private final class FbMcXaResource implements XAResource {
+
+        private FBManagedConnection getMc() {
+            return FBManagedConnection.this;
+        }
+
+        @Override
+        public void start(Xid xid, int flags) throws XAException {
+            FBManagedConnection.this.start(xid, flags);
+        }
+
+        @Override
+        public int prepare(Xid xid) throws XAException {
+            return FBManagedConnection.this.prepare(xid);
+        }
+
+        @Override
+        public void commit(Xid xid, boolean onePhase) throws XAException {
+            FBManagedConnection.this.commit(xid, onePhase);
+        }
+
+        @Override
+        public void rollback(Xid xid) throws XAException {
+            FBManagedConnection.this.rollback(xid);
+        }
+
+        @Override
+        public void end(Xid xid, int flags) throws XAException {
+            FBManagedConnection.this.end(xid, flags);
+        }
+
+        @Override
+        public void forget(Xid xid) throws XAException {
+            FBManagedConnection.this.forget(xid);
+        }
+
+        @Override
+        public Xid[] recover(int flag) throws XAException {
+            return FBManagedConnection.this.recover(flag);
+        }
+
+        /**
+         * Retrieve whether this {@code XAResource} uses the same ResourceManager as {@code res}. This method relies on
+         * {@code res} being a Firebird implementation of {@code XAResource}.
+         *
+         * @param res
+         *         The other {@code XAResource} to compare to
+         * @return {@code true} if {@code res} uses the same ResourceManager, {@code false} otherwise
+         */
+        @Override
+        public boolean isSameRM(XAResource res) throws XAException {
+            return res == this
+                    || res instanceof FbMcXaResource && database == ((FbMcXaResource) res).getMc().database;
+        }
+
+        @Override
+        public int getTransactionTimeout() throws XAException {
+            return FBManagedConnection.this.getTransactionTimeout();
+        }
+
+        @Override
+        public boolean setTransactionTimeout(int seconds) throws XAException {
+            return FBManagedConnection.this.setTransactionTimeout(seconds);
         }
     }
 }

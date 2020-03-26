@@ -95,7 +95,7 @@ public final class GDSType implements Serializable {
         name = s;
     }
 
-    public Object readResolve() {
+    protected Object readResolve() {
         return registerType(name);
     }
 

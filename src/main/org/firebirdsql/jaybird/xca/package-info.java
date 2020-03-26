@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,6 +22,10 @@
  * <p>
  * Historically it was derived from the JavaEE Connector Architecture specification, but that tie has been cut
  * since Jaybird 5.
+ * </p>
+ * <p>
+ * All classes, interfaces and other constructs in this package should be considered internal API of Jaybird, and may
+ * change radically between point releases. Do not use it in your own code.
  * </p>
  */
 @InternalApi

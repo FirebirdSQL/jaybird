@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,7 +38,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
     @Test
     public void testCreateDCM() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         assertNotNull("Could not get DataSource", ds);
         Connection c = ds.getConnection();
         assertNotNull("Could not get Connection", c);
@@ -48,7 +48,7 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
     @Test
     public void testCreateStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         Connection c = ds.getConnection();
         Statement s = c.createStatement();
         assertNotNull("Could not get Statement", s);
@@ -58,10 +58,10 @@ public class TestFBStandAloneConnectionManager extends TestXABase {
     @Test
     public void testUseStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         FBConnection c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
-        FirebirdLocalTransaction t = c.getLocalTransaction();
+        FBLocalTransaction t = c.getLocalTransaction();
         assertNotNull("Could not get LocalTransaction", t);
         Exception ex = null;
         t.begin();

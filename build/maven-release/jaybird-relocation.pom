@@ -30,7 +30,7 @@
             <url>https://www.gnu.org/copyleft/lesser.html</url>
             <distribution>repo</distribution>
             <comments>
-                The Jaybird JCA/JDBC driver is distributed free of charge under the
+                The Jaybird JDBC driver is distributed free of charge under the
                 GNU Lesser General Public License (LGPL). Text of the license can be
                 obtained from http://www.gnu.org/copyleft/lesser.html
             </comments>

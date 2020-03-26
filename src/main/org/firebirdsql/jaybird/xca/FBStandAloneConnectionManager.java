@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,106 +18,55 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import java.io.Serializable;
-
-import javax.resource.ResourceException;
-import javax.resource.spi.*;
-
+import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.Serializable;
+import java.sql.SQLException;
+
 /**
- * The class <code>FBStandAloneConnectionManager</code> provides the 
- * default implementation of ConnectionManager for standalone use.
- * There is no pooling or other features..
+ * The class {@code FBStandAloneConnectionManager} provides the default implementation of FirebirdConnectionManager for
+ * standalone use. There is no pooling or other features.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBStandAloneConnectionManager 
-    implements ConnectionManager, ConnectionEventListener, Serializable {
+public class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
 
-    private static final long serialVersionUID = -4933951275930670896L;
-    
-    private transient final static Logger log = 
-        LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
-        
-     //package constructor
-     FBStandAloneConnectionManager() {
-     }
+    private static final long serialVersionUID = 1L;
 
-     //javax.resource.spi.ConnectionManager implementation
+    private static final Logger log = LoggerFactory.getLogger(FBStandAloneConnectionManager.class);
 
-    /**
-     * Allocate a new <code>ManagedConnection</code>.
-     *
-     * @param mcf The <code>ManagedConnectionFactory</code> used to create 
-     *        the new connection.
-     * @param cxRequestInfo The parameters to be used in creating the 
-     *        new connection
-     * @throws ResourceException If the connection cannot be allocated
-     */
-    public Object allocateConnection(ManagedConnectionFactory mcf,
-       ConnectionRequestInfo cxRequestInfo)
-       throws ResourceException {
-
-       FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, cxRequestInfo);
-       mc.setManagedEnvironment(false);
-       mc.setConnectionSharing(false);
-       mc.addConnectionEventListener(this);
-       return mc.getConnection(null, cxRequestInfo);
+    FBStandAloneConnectionManager() {
     }
 
-    //javax.resource.spi.ConnectionEventListener implementation
+    @Override
+    public FirebirdConnection allocateConnection(FBManagedConnectionFactory mcf, FBConnectionRequestInfo cxRequestInfo)
+            throws SQLException {
+        FBManagedConnection mc = mcf.createManagedConnection(cxRequestInfo);
+        mc.setManagedEnvironment(false);
+        mc.addConnectionEventListener(this);
+        return mc.getConnection();
+    }
 
-    /**
-     * <code>javax.resource.spi.ConnectionEventListener</code> callback for 
-     * when a <code>ManagedConnection</code> is closed.
-     *
-     * @param ce contains information about the connection that has be closed
-     */
-    public void connectionClosed(ConnectionEvent ce) {
+    @Override
+    public void connectionClosed(XcaConnectionEvent ce) {
         try {
-            ((FBManagedConnection)ce.getSource()).destroy(ce);
-        }
-        catch (ResourceException e) {
-            if (log!=null) log.debug("Exception closing unmanaged connection: ", e);
+            ce.getSource().destroy(ce);
+        } catch (SQLException e) {
+            log.debug("Exception closing unmanaged connection: ", e);
         }
     }
 
-    /**
-     * <code>javax.resource.spi.ConnectionEventListener</code> callback for 
-     * when a Local Transaction was rolled back within the context of a
-     * <code>ManagedConnection</code>.
-     *
-     * @param ce contains information about the connection 
-     */
-    public void connectionErrorOccurred(ConnectionEvent ce) {
-        if (log!=null) log.debug("ConnectionErrorOccurred, ", ce.getException());
+    @Override
+    public void connectionErrorOccurred(XcaConnectionEvent ce) {
+        log.debug("ConnectionErrorOccurred, ", ce.getException());
         try {
-            ((FBManagedConnection)ce.getSource()).destroy(ce);
-        }
-        catch (ResourceException e) {
-            if (log!=null) log.debug("further problems destroying connection: ", e);
+            ce.getSource().destroy(ce);
+        } catch (SQLException e) {
+            log.debug("further problems destroying connection: ", e);
         }
     }
-
-    //We are only supposed to be notified of local transactions that a Connection started.
-    //Not much we can do with this info...
-    
-    /**
-     * Ignored event callback
-     */
-    public void localTransactionStarted(ConnectionEvent event) {}
-
-    /**
-     * Ignored event callback
-     */
-    public void localTransactionCommitted(ConnectionEvent event) {}
-
-    /**
-     * Ignored event callback
-     */
-    public void localTransactionRolledback(ConnectionEvent event) {}
 }

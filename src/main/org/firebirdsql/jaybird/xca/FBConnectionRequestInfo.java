@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,25 +25,23 @@ import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.wire.Xdrable;
 
-import javax.resource.cci.ConnectionSpec;
-import javax.resource.spi.ConnectionRequestInfo;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
 
 /**
- * The class <code>FBConnectionRequestInfo</code> holds a clumplet that is
+ * The class {@code FBConnectionRequestInfo} holds a clumplet that is
  * used to store and transfer connection-specific information such as user,
- * password, and other dpb information..
+ * password, and other dpb information.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
- * @version 2.0
  */
-public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension, ConnectionRequestInfo,
-        ConnectionSpec, Serializable {
+public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension, Serializable {
 
+    private static final long serialVersionUID = 1L;
+    
     private final DatabaseParameterBuffer dpb;
 
     public FBConnectionRequestInfo(DatabaseParameterBuffer dpb) {
@@ -164,16 +162,19 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
 
     public void setUserName(String userName) {
         removeArgument(DatabaseParameterBufferExtension.USER_NAME);
-        if (userName != null)
+        if (userName != null) {
             addArgument(DatabaseParameterBufferExtension.USER_NAME, userName);
+        }
     }
 
     public void setPassword(String password) {
         removeArgument(DatabaseParameterBufferExtension.PASSWORD);
-        if (password != null)
+        if (password != null) {
             addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
+        }
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj == this)
             return true;
@@ -184,6 +185,7 @@ public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension
         return this.dpb.equals(((FBConnectionRequestInfo) obj).dpb);
     }
 
+    @Override
     public int hashCode() {
         return dpb.hashCode();
     }

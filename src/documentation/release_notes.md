@@ -112,30 +112,6 @@ For example:
 </dependency>
 ~~~
 
-If your application is deployed to a Java EE application server, you will need to
-exclude the `javax.resource:connector-api` dependency, and add it as a provided 
-dependency:
-
-~~~ {.xml}
-<dependency>
-    <groupId>org.firebirdsql.jdbc</groupId>
-    <artifactId>jaybird</artifactId>
-    <version>@VERSION_EXAMPLE@</version>
-    <exclusions>
-        <exclusion>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-<dependency>
-    <groupId>javax.resource</groupId>
-    <artifactId>connector-api</artifactId>
-    <version>1.5</version>
-    <scope>provided</scope>
-</dependency>
-~~~
-
 If you want to use Type 2 support (native, local or embedded), you need to 
 explicitly include JNA 5.5.0 as a dependency:
 
@@ -280,6 +256,37 @@ Support for Java 7 dropped
 
 Jaybird 5 does not support Java 7. You will need to upgrade to Java 8 or higher,
 or remain on Jaybird 4.
+
+Removal of JavaEE/JakartaEE Connector Architecture (JCA)
+--------------------------------------------------------
+
+The JavaEE/JakartaEE Connector Architecture (JCA) implementation that was the
+core of Jaybird has been removed. The package `org.firebirdsql.jca` no longer
+exists, and it is no longer possible to use Jaybird as a JCA connector (Resource
+Adapter).
+
+From its inception, Jaybird has been built around the - then new - JCA
+specification. Unfortunately, this had the side-effect that Jaybird required the
+JCA api (`connector-api`) as a dependency. As far as we know, Jaybird was hardly
+used as a JCA connector, while at the same time it hindered development, as the
+JCA implementation was central to Jaybird. Lack of testing as a JCA connector
+also meant it was unclear if Jaybird actually functioned correctly as such.
+
+To reduce development overhead, we have decided to remove support for JCA from
+Jaybird. A lot of classes previously in the `org.firebirdsql.jca` package are
+now in the package `org.firebirdsql.jaybird.xca`. This new package is marked as
+internal API and is not binary compatible with the old JCA implementation. Be
+aware that the API and implementation of the classes in this package can change
+in any point release.
+
+If there turns out to be actual demand for JCA support in Jaybird after all, we
+will consider creating new support for JCA in a way that does not require JCA
+when using Jaybird as a JDBC driver. Contact us on the firebird-java mailing
+list if you're interested in such a solution.
+
+As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now
+considered internal API as well. For normal data sources, look at the classes in
+the package `org.firebirdsql.ds`.
 
 Removal of classes, packages and methods without deprecation
 ------------------------------------------------------------

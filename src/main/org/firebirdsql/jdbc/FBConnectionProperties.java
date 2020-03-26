@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,7 +24,6 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
-import org.firebirdsql.jaybird.xca.FBResourceException;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -535,7 +534,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
     }
 
-    public FBTpbMapper getMapper() throws FBResourceException {
+    public FBTpbMapper getMapper() throws SQLException {
         if (mapper != null) {
             return mapper;
         }

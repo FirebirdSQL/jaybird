@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,7 +20,6 @@ package org.firebirdsql.jaybird.xca;
 
 import org.junit.Test;
 
-import javax.resource.spi.ManagedConnection;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.Connection;
@@ -28,43 +27,24 @@ import java.sql.Statement;
 
 import static org.junit.Assert.assertNotNull;
 
-/**
- * Describe class <code>TestFBConnection</code> here.
- *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
- */
 public class TestFBConnection extends TestXABase {
 
     @Test
     public void testCreateC() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
         assertNotNull("Could not get FBManagedConnectionFactory", mcf);
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
-        assertNotNull("Could not get ManagedConnection", mc);
-        Connection c = (Connection) mc.getConnection(null, null);
+        FBManagedConnection mc = mcf.createManagedConnection();
+        assertNotNull("Could not get FBManagedConnection", mc);
+        Connection c = mc.getConnection();
         assertNotNull("Could not get Connection", c);
         mc.destroy();
     }
 
     @Test
-    public void testAssociateC() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc1 = mcf.createManagedConnection(null, null);
-        Connection c1 = (Connection) mc1.getConnection(null, null);
-        ManagedConnection mc2 = mcf.createManagedConnection(null, null);
-        Connection c2 = (Connection) mc2.getConnection(null, null);
-        mc1.associateConnection(c2);
-        mc2.associateConnection(c1);
-        mc1.destroy();
-        mc2.destroy();
-    }
-
-    @Test
     public void testCreateStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
-        Connection c = (Connection) mc.getConnection(null, null);
+        FBManagedConnection mc = mcf.createManagedConnection();
+        Connection c = mc.getConnection();
         Statement s = c.createStatement();
         assertNotNull("Could not create Statement", s);
         mc.destroy();
@@ -73,9 +53,9 @@ public class TestFBConnection extends TestXABase {
     @Test
     public void testUseStatement() throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        ManagedConnection mc = mcf.createManagedConnection(null, null);
+        FBManagedConnection mc = mcf.createManagedConnection();
         try {
-            Connection c = (Connection) mc.getConnection(null, null);
+            Connection c = mc.getConnection();
             Statement s = c.createStatement();
             XAResource xa = mc.getXAResource();
             Exception ex = null;

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,7 +22,6 @@ import org.firebirdsql.jdbc.FBConnection;
 import org.junit.After;
 import org.junit.Test;
 
-import javax.resource.spi.LocalTransaction;
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -35,23 +34,17 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Describe class <code>TestFBBlob</code> here.
- *
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
- */
 public class TestFBBlob extends TestXABase {
 
     private FBConnection c;
-    private LocalTransaction t;
+    private FBLocalTransaction t;
     private Exception ex = null;
 
     private int bloblength = 40960 * 10;
 
     protected void setupTable(String name) throws Exception {
         FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
+        DataSource ds = mcf.createConnectionFactory();
         c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         t = c.getLocalTransaction();

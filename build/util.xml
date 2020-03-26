@@ -19,13 +19,4 @@
         <delete dir="${module.output}"/>
     </target>
 
-    <!-- =================================================================== -->
-    <!-- Total cleanup                                                       -->
-    <!-- =================================================================== -->
-    <target name="total-clean" depends="clean">
-        <delete dir="${jboss.source.root}"/>
-        <delete file="${Name}-${version}.zip"/>
-        <delete file="${Name}-${version}.tar"/>
-        <delete file="${Name}-${version}.tar.gz"/>
-    </target>
 </project>

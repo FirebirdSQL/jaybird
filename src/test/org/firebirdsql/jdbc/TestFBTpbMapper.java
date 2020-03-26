@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,12 +20,12 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jaybird.xca.FBResourceException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -76,8 +76,8 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testNewMappingFileDoesNotExist_throwsFBResourceException() throws Exception {
-        expectedException.expect(FBResourceException.class);
+    public void testNewMappingFileDoesNotExist_throwsSQLException() throws Exception {
+        expectedException.expect(SQLException.class);
 
         new FBTpbMapper(TEST_TPB_MAPPING + "does_not_exist", getClass().getClassLoader());
     }
@@ -110,10 +110,10 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testNewMapContainsInvalidName_throwsFBResourceException() throws Exception {
+    public void testNewMapContainsInvalidName_throwsSQLException() throws Exception {
         final Map<String, String> map = new HashMap<>();
         map.put("special", "isc_tpb_concurrency,isc_tpb_write,isc_tpb_wait,isc_tpb_lock_timeout=5");
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         new FBTpbMapper(map);
     }
@@ -137,17 +137,17 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testProcessMapping_TokenIsNotATpbArgument_throwsFBResourceException() throws Exception {
+    public void testProcessMapping_TokenIsNotATpbArgument_throwsSQLException() throws Exception {
         String testMapping = "not_a_tpb_argument";
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         FBTpbMapper.processMapping(testMapping);
     }
 
     @Test
-    public void testProcessMapping_ValueIsNotAnInteger_throwsFBResourceException() throws Exception {
+    public void testProcessMapping_ValueIsNotAnInteger_throwsSQLException() throws Exception {
         String testMapping = "isc_tpb_lock_timeout=x";
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         FBTpbMapper.processMapping(testMapping);
     }

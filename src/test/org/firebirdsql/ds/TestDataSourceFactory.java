@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -31,7 +29,7 @@ import static org.junit.Assert.*;
 
 /**
  * Tests for {@link DataSourceFactory} and - indirectly - the correctness of the getReference() method of
- * {@link FBConnectionPoolDataSource}  and {@link FBXADataSource}.
+ * {@link FBConnectionPoolDataSource}, {@link FBXADataSource}, and {@link FBSimpleDataSource}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
@@ -50,11 +48,10 @@ public class TestDataSourceFactory {
     private static final String DESCRIPTION = "Description of originalDS";
 
     /**
-     * Fills the properties (exposed with JavaBeans setters) of FBAbstractCommonDataSource for testing. Does not set nonStandardProperty 
-     * and encoding (as it is set through charSet).
+     * Fills the properties (exposed with JavaBeans setters) of FBAbstractCommonDataSource for testing. Does not set
+     * nonStandardProperty and encoding (as it is set through charSet).
      * 
      * @param instance Instance to configure
-     * @throws SQLException
      */
     private void fillFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource instance) throws SQLException {
         instance.setDescription(DESCRIPTION);
@@ -70,10 +67,10 @@ public class TestDataSourceFactory {
     }
     
     /**
-     * Validates if the instance of FBAbstractCommonDataSource has the values as set by {@link TestDataSourceFactory#fillFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource)}.
+     * Validates if the instance of FBAbstractCommonDataSource has the values as set by
+     * {@link TestDataSourceFactory#fillFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource)}.
      * 
      * @param instance Instance to validate
-     * @throws SQLException
      */
     private void assertFBAbstractCommonDataSourceProperties(FBAbstractCommonDataSource instance) throws SQLException{
         assertEquals(DESCRIPTION, instance.getDescription());
@@ -99,7 +96,6 @@ public class TestDataSourceFactory {
      * <li>If all the properties set on the original are also set on the new instance</li>
      * </ol>
      * </p>
-     * @throws Exception
      */
     @Test
     public void testBuildFBConnectionPoolDataSource_basicProperties() throws Exception {
@@ -127,7 +123,6 @@ public class TestDataSourceFactory {
      * <li>If all the properties set on the original are also set on the new instance</li>
      * </ol>
      * </p>
-     * @throws Exception
      */
     @Test
     public void testBuildFBXADataSource_basicProperties() throws Exception {
@@ -155,7 +150,6 @@ public class TestDataSourceFactory {
      * <li>If an unset property is handled correctly</li>
      * </ol>
      * </p>
-     * @throws Exception
      */
     @Test
     public void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
@@ -185,7 +179,6 @@ public class TestDataSourceFactory {
      * <li>If an unset property is handled correctly</li> 
      * </ol>
      * </p>
-     * @throws Exception
      */
     @Test
     public void testBuildFBXADataSource_nonStandardProperties() throws Exception {
@@ -201,5 +194,41 @@ public class TestDataSourceFactory {
         assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
         assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
         assertNull(newDS.getDescription());
+    }
+
+    @Test
+    public void testBuildFBSimpleDataSource() throws Exception {
+        final FBSimpleDataSource originalDS = new FBSimpleDataSource();
+        originalDS.setDescription(DESCRIPTION);
+        originalDS.setType(TYPE);
+        final String database = String.format("//%s:%d/%s", SERVER_NAME, PORT_NUMBER, DATABASE_NAME);
+        originalDS.setDatabase(database);
+        originalDS.setUserName(USER);
+        originalDS.setPassword(PASSWORD);
+        originalDS.setEncoding(ENCODING);
+        originalDS.setLoginTimeout(LOGIN_TIMEOUT);
+        originalDS.setRoleName(ROLE_NAME);
+        originalDS.setNonStandardProperty("buffersNumber=127"); // note number of buffers is apparently byte, so using higher values can give weird results
+        originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
+        originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
+        Reference ref = originalDS.getReference();
+
+        assertEquals("Unexpected factory name", DataSourceFactory.class.getName(), ref.getFactoryClassName());
+        assertEquals("Unexpected class name", FBSimpleDataSource.class.getName(), ref.getClassName());
+
+        FBSimpleDataSource newDS =
+                (FBSimpleDataSource) new DataSourceFactory().getObjectInstance(ref, null, null, null);
+
+        assertEquals(DESCRIPTION, newDS.getDescription());
+        assertEquals(TYPE, newDS.getType());
+        assertEquals(database, newDS.getDatabase());
+        assertEquals(USER, newDS.getUserName());
+        assertEquals(PASSWORD, newDS.getPassword());
+        assertEquals(ENCODING, newDS.getEncoding());
+        assertEquals(LOGIN_TIMEOUT, newDS.getLoginTimeout());
+        assertEquals(ROLE_NAME, newDS.getRoleName());
+        assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
+        assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
+        assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
     }
 }
