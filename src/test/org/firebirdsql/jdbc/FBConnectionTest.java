@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
@@ -884,6 +885,29 @@ public class FBConnectionTest {
             GDSServerVersion serverVersion =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
             assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+        }
+    }
+
+    @Test
+    public void transactionSettingsNotShared() throws Exception {
+        try (FBConnection con1 = getConnectionViaDriverManager().unwrap(FBConnection.class);
+             FBConnection con2 = getConnectionViaDriverManager().unwrap(FBConnection.class)) {
+            TransactionParameterBuffer con2Original =
+                    con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ);
+
+            TransactionParameterBufferImpl newParameters = new TransactionParameterBufferImpl();
+            newParameters.addArgument(TransactionParameterBuffer.CONSISTENCY);
+            newParameters.addArgument(TransactionParameterBuffer.READ);
+            newParameters.addArgument(TransactionParameterBuffer.NOWAIT);
+
+            con1.setTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ, newParameters);
+
+            assertEquals("Setting of con1 update",
+                    newParameters, con1.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
+            assertEquals("Setting of con2 unchanged",
+                    con2Original, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
+            assertNotEquals("Setting of con2 not equal to new config of con1",
+                    newParameters, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
         }
     }
 

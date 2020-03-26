@@ -247,7 +247,9 @@ See also [Compatibility changes](#compatibility-changes) for details.
 Other fixes and changes
 -----------------------
 
-...
+- Fixed: changes to the transaction configuration (transaction parameter buffer
+  configuration) of one connection are no longer propagated to other connections
+  with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386))
 
 Removal of deprecated classes and packages
 ------------------------------------------

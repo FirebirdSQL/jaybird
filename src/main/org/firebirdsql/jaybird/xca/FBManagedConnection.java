@@ -88,6 +88,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
     private final Object syncObject;
     private XAResource xaResource;
     private final FBConnectionRequestInfo cri;
+    private FBTpbMapper transactionMapping;
     private FBTpb tpb;
     private int transactionIsolation;
 
@@ -269,6 +270,8 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
             getGDSHelper().setCurrentTransaction(null);
 
+            // reset the transaction mapping to use the default of the MCF
+            transactionMapping = null;
             // reset the TPB from the previous transaction.
             tpb = mcf.getDefaultTpb();
             transactionIsolation = mcf.getDefaultTransactionIsolation();
@@ -980,7 +983,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         }
 
         try {
-            // reset the transaction parameters for the managed scenario 
+            // reset the transaction parameters for the managed scenario
             setTransactionIsolation(mcf.getDefaultTransactionIsolation());
 
             internalStart(id, flags);
@@ -1050,19 +1053,40 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
     }
 
     public TransactionParameterBuffer getTransactionParameters() {
-        return tpb.getTransactionParameterBuffer();
+        synchronized (syncObject) {
+            return tpb.getTransactionParameterBuffer();
+        }
     }
 
     public void setTransactionParameters(TransactionParameterBuffer transactionParameters) {
-        tpb.setTransactionParameterBuffer(transactionParameters);
+        synchronized (syncObject) {
+            tpb.setTransactionParameterBuffer(transactionParameters);
+        }
     }
 
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        return mcf.getTransactionParameters(isolation);
+        synchronized (syncObject) {
+            final FBTpbMapper mapping = transactionMapping;
+            if (mapping == null) {
+                return mcf.getTransactionParameters(isolation);
+            }
+            return mapping.getMapping(isolation);
+        }
     }
 
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams) {
-        mcf.setTransactionParameters(isolation, transactionParams);
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams)
+            throws SQLException {
+        synchronized (syncObject) {
+            FBTpbMapper mapping = transactionMapping;
+            if (mapping == null) {
+                mapping = transactionMapping = mcf.getTransactionMappingCopy();
+            }
+            mapping.setMapping(isolation, transactionParams);
+            if (getTransactionIsolation() == isolation) {
+                // Make sure next transaction uses the new config
+                setTransactionIsolation(isolation);
+            }
+        }
     }
 
     private void findIscTrHandle(Xid xid, int flags) throws SQLException, XAException {
@@ -1126,7 +1150,9 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      * @see #setTransactionIsolation(int)
      */
     public int getTransactionIsolation() throws SQLException {
-        return transactionIsolation;
+        synchronized (syncObject) {
+            return transactionIsolation;
+        }
     }
 
     /**
@@ -1142,9 +1168,13 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      * @see #getTransactionIsolation()
      */
     public void setTransactionIsolation(int isolation) throws SQLException {
-        transactionIsolation = isolation;
-        
-        tpb = mcf.getTpb(isolation);
+        synchronized (syncObject) {
+            transactionIsolation = isolation;
+            final FBTpbMapper mapping = transactionMapping;
+            tpb = mapping == null
+                    ? mcf.getTpb(isolation)
+                    : new FBTpb(mapping.getMapping(isolation));
+        }
     }
 
     /**

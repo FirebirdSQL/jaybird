@@ -444,8 +444,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public FBTpb getDefaultTpb() throws SQLException {
-        int defaultTransactionIsolation =
-                connectionProperties.getMapper().getDefaultTransactionIsolation();
+        int defaultTransactionIsolation = connectionProperties.getMapper().getDefaultTransactionIsolation();
         
         return getTpb(defaultTransactionIsolation);
     }
@@ -453,6 +452,10 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     public FBTpb getTpb(int defaultTransactionIsolation) throws SQLException {
         return new FBTpb(connectionProperties.getMapper().getMapping(
                 defaultTransactionIsolation));
+    }
+
+    FBTpbMapper getTransactionMappingCopy() throws SQLException {
+        return (FBTpbMapper) connectionProperties.getMapper().clone();
     }
 
     /**
