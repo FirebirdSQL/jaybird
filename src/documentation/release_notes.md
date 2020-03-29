@@ -9,7 +9,14 @@ Jaybird 4.0.1
 
 The following has been changed or fixed since Jaybird 4.0.0
 
-...
+-   Fixed: changes to the transaction configuration (transaction parameter
+    buffer configuration) of one connection are no longer propagated to other
+    connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
+    This change introduce a binary incompatibility as method 
+    `setTransactionParameters(int, TransactionParameterBuffer)` in
+    `FBManagedConnection` can now throw `ResourceException` where previously it
+    did not. Under the assumption that most users of Jaybird are not directly
+    using this class, the change should not break anything.
 
 Jaybird 4.0.0
 -------------

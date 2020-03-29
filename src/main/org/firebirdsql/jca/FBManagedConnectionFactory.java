@@ -29,10 +29,7 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+import org.firebirdsql.jdbc.*;
 
 import javax.resource.NotSupportedException;
 import javax.resource.ResourceException;
@@ -529,6 +526,17 @@ public class FBManagedConnectionFactory implements ManagedConnectionFactory, Fir
     public FBTpb getTpb(int defaultTransactionIsolation) throws FBResourceException {
         return new FBTpb(connectionProperties.getMapper().getMapping(
                 defaultTransactionIsolation));
+    }
+
+    /**
+     * Get a copy of the current transaction mapping.
+     *
+     * @return Copy of the transaction mapping
+     * @throws ResourceException
+     *         For errors on obtaining or creating the transaction mapping
+     */
+    FBTpbMapper getTransactionMappingCopy() throws ResourceException {
+        return (FBTpbMapper) connectionProperties.getMapper().clone();
     }
 
     /**
