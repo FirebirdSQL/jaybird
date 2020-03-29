@@ -888,6 +888,9 @@ public class FBConnectionTest {
         }
     }
 
+    /**
+     * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-386">JDBC-386</a>
+     */
     @Test
     public void transactionSettingsNotShared() throws Exception {
         try (FBConnection con1 = getConnectionViaDriverManager().unwrap(FBConnection.class);
