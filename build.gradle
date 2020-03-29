@@ -1,0 +1,197 @@
+import org.apache.tools.ant.filters.*
+
+/*
+  Gradle build script for Jaybird - Firebird JDBC driver.
+
+  Define target Java version:
+  - -PbuildProfile=java8 or
+    not specified or unknown value : Java 8  (supported)
+  - -PbuildProfile=java11          : Java 11 (supported)
+  - -PbuildProfile=java14          : Java 14 (for compatibility testing only)
+
+  Uploading archives:
+
+  publish -PcredentialsPassphrase=<credentials password>
+ */
+
+plugins {
+    id 'java-library'
+    id 'nu.studer.credentials' version '2.1'
+    id 'maven-publish'
+    id 'signing'
+}
+
+defaultTasks 'clean', 'build'
+
+apply from: 'build-properties.gradle'
+
+group = 'org.firebirdsql.jdbc'
+version = project.'version.maven'
+
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+    tasks.withType(Test) {
+        systemProperty 'file.encoding', 'UTF-8'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    registerFeature('native') {
+        usingSourceSet(sourceSets.main)
+    }
+}
+
+dependencies {
+    implementation 'org.antlr:antlr4-runtime:4.7.2'
+    nativeImplementation 'net.java.dev.jna:jna:5.5.0'
+
+    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+
+    // Support JUnit 4
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.1'
+    testImplementation 'junit:junit:4.13'
+
+    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+
+    testImplementation 'org.jmock:jmock-junit4:2.9.0'
+    testImplementation 'org.jmock:jmock-legacy:2.9.0'
+
+    testImplementation 'cglib:cglib:3.3.0'
+    testImplementation 'org.ow2.asm:asm:7.3.1'
+    testImplementation 'org.objenesis:objenesis:3.0.1'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice']
+        }
+        resources {
+            srcDirs = ['src/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test', 'src/test_42', 'src/jna-test']
+        }
+        resources {
+            srcDirs = ['src/test_resources']
+        }
+    }
+    tools {
+        java {
+            srcDirs = ['src/messages']
+        }
+    }
+}
+
+processResources {
+    filter ReplaceTokens, tokens: [
+            'NAME'         : project.capitalizedName,
+            'VERSION'      : project.'version.simple',
+            'MAVEN_NAME'   : project.name,
+            'VERSION_FULL' : project.'version.maven',
+            'VERSION_MAJOR': project.'version.major',
+            'VERSION_MINOR': project.'version.minor'
+    ]
+}
+
+apply from: 'documentation.gradle'
+
+task dist(type: Zip) {
+    dependsOn assemble, buildAllDocs
+    destinationDirectory = file("$buildDir/dist")
+
+    from jar.outputs
+    from javadocJar.outputs
+    from sourcesJar.outputs
+    from buildReleaseNotes.outputs
+    from(buildFaq.outputs) {
+        into 'docs'
+    }
+    from(javadoc.outputs) {
+        into 'docs/api'
+    }
+    from('.') {
+        include 'CONTRIBUTING.md'
+    }
+    from(configurations.runtimeClasspath) {
+        into 'lib'
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Created-By': "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                'Specification-Title': project.'specification.title',
+                'Specification-Version': project.'specification.version',
+                'Specification-Vendor': project.'specification.vendor',
+                'Implementation-Title': project.'implementation.title',
+                'Implementation-Url': project.'implementation.url',
+                'Implementation-Version': "$project.version (build: variant=$project.name tag=${project.'version.svntag'} date=${project.'build.id'})",
+                'Implementation-Vendor': project.'implementation.vendor',
+                'Implementation-Vendor-Id': project.'implementation.vendor.id',
+                'Automatic-Module-Name': 'org.firebirdsql.jaybird'
+        )
+    }
+}
+
+javadoc {
+    options.author()
+    options.windowTitle = "$project.capitalizedName API"
+    options.docTitle = project.capitalizedName
+    options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+    options.addBooleanOption('Xdoclint:none', true)
+    exclude 'org/firebirdsql/jdbc/oo/**'
+}
+
+test {
+    // Use junit platform for unit tests
+    useJUnitPlatform()
+
+    // Test configuration, defaults specified in gradle.properties (modify through ext, or use -P<prop>=<value>)
+    systemProperties(
+            'test.user': project.'test.user',
+            'test.password': project.'test.password',
+            'test.db.dir': project.'test.db.dir',
+            'test.db.host': project.'test.db.host',
+            'test.db.port': project.'test.db.port',
+            'test.db.lc_ctype': project.'test.db.lc_ctype',
+            'test.gds_type': project.'test.gds_type',
+            'test.use_firebird_autocommit': project.'test.use_firebird_autocommit',
+            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'true'
+    )
+    if (project.hasProperty('test.jna.library.path')) {
+        systemProperty 'jna.library.path', project.'test.jna.library.path'
+    } else if (project.'test.gds_type' == 'NATIVE' || project.'test.gds_type' == 'EMBEDDED') {
+        println "Running test type ${project.'test.gds.type'} without explicit native library path. " +
+                "Specify property 'test.jna.library.path' to point to a Firebird client location (NATIVE) or " +
+                "Firebird install (EMBEDDED)."
+    }
+
+    doFirst {
+        // ensure the 'standard' database directory exists before the test runs
+        def standardDbDir = file("$buildDir/tmp/db")
+        mkdir standardDbDir
+        // ensures a Firebird server can create, use and drop databases from this directory
+        ant.chmod(dir: standardDbDir, perm: '777')
+    }
+}
+
+apply from: 'publish.gradle'

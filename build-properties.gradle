@@ -1,0 +1,58 @@
+// Property configuration for build
+
+// Standard version information config from build.properties
+def buildProperties = new Properties()
+file('build.properties').withInputStream {
+    buildProperties.load(it)
+}
+// Optional local environment config from build-local.properties
+def localBuildPropertiesFile = file('build-local.properties')
+if (localBuildPropertiesFile.exists()) {
+    localBuildPropertiesFile.withInputStream {
+        buildProperties.load(it)
+    }
+}
+buildProperties.stringPropertyNames().each {
+    ext.set(it, buildProperties[it])
+}
+
+def buildTime = new Date()
+ext.'build.id' = buildTime.format('yyyyMMddHHmm')
+ext.YEAR = buildTime.format("yyyy")
+
+// Build profile (Java version specific)
+if (findProperty('buildProfile') == 'java14') {
+    println 'Build profile: Java 14'
+    ext.'maven.jdkversion' = 'java14'
+    sourceCompatibility = JavaVersion.VERSION_14
+    targetCompatibility = JavaVersion.VERSION_14
+    ext.'specification.version' = 4.3
+} else if (findProperty('buildProfile') == 'java11') {
+    println 'Build profile: Java 11'
+    ext.'maven.jdkversion' = 'java11'
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    ext.'specification.version' = 4.3
+} else {
+    // Default to Java 8
+    println 'Build profile: Java 8'
+    // To allow other parts to query as well
+    ext.buildProfile = 'java8'
+    ext.'maven.jdkversion' = 'java8'
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    ext.'specification.version' = 4.2
+}
+
+ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
+ext.'version.maven' = "${project.'version.simple'}.${project.'maven.jdkversion'}${project.'version.tag'}".toString()
+
+ext.'signing.password' = credentials.'signing.password'
+ext.ossrhPassword = credentials.ossrhPassword
+
+ext.isReleaseVersion = provider {
+    !version.endsWith("SNAPSHOT")
+}
+
+ext.sourceDocumentation = file('src/documentation')
+ext.buildDocs = file("$buildDir/docs")

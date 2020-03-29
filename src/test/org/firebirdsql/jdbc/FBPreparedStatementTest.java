@@ -1056,6 +1056,7 @@ public class FBPreparedStatementTest extends FBJUnit4TestBase {
      * </p>
      */
     @Test
+    @Ignore
     @Unstable("Susceptible to character set transliteration issues")
     public void testRepeatedBatchExecutionWithClobFromString() throws Exception {
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
