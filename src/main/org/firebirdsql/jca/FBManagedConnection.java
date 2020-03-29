@@ -86,6 +86,7 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     private final Object syncObject;
 
     private final FBConnectionRequestInfo cri;
+    private FBTpbMapper transactionMapping;
     private FBTpb tpb;
     private int transactionIsolation;
 
@@ -444,16 +445,19 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      */
     public void cleanup() throws ResourceException {
         disassociateConnections();
+        synchronized (syncObject) {
+            try {
+                getGDSHelper().setCurrentTransaction(null);
+            } catch (SQLException e) {
+                throw new FBResourceException(e);
+            }
 
-        try {
-            getGDSHelper().setCurrentTransaction(null);
-        } catch (SQLException e) {
-            throw new FBResourceException(e);
+            // reset the transaction mapping to use the default of the MCF
+            transactionMapping = null;
+            // reset the TPB from the previous transaction.
+            this.tpb = mcf.getDefaultTpb();
+            this.transactionIsolation = mcf.getDefaultTransactionIsolation();
         }
-
-        // reset the TPB from the previous transaction.
-        this.tpb = mcf.getDefaultTpb();
-        this.transactionIsolation = mcf.getDefaultTransactionIsolation();
     }
 
     /**
@@ -1238,19 +1242,40 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
     }
 
     public TransactionParameterBuffer getTransactionParameters() {
-        return tpb.getTransactionParameterBuffer();
+        synchronized (syncObject) {
+            return tpb.getTransactionParameterBuffer();
+        }
     }
     
     public void setTransactionParameters(TransactionParameterBuffer transactionParameters) {
-        tpb.setTransactionParameterBuffer(transactionParameters);
+        synchronized (syncObject) {
+            tpb.setTransactionParameterBuffer(transactionParameters);
+        }
     }
     
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        return mcf.getTransactionParameters(isolation);
+        synchronized (syncObject) {
+            final FBTpbMapper mapping = transactionMapping;
+            if (mapping == null) {
+                return mcf.getTransactionParameters(isolation);
+            }
+            return mapping.getMapping(isolation);
+        }
     }
     
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams) {
-        mcf.setTransactionParameters(isolation, transactionParams);
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams)
+            throws ResourceException {
+        synchronized (syncObject) {
+            FBTpbMapper mapping = transactionMapping;
+            if (mapping == null) {
+                mapping = transactionMapping = mcf.getTransactionMappingCopy();
+            }
+            mapping.setMapping(isolation, transactionParams);
+            if (getTransactionIsolation() == isolation) {
+                // Make sure next transaction uses the new config
+                setTransactionIsolation(isolation);
+            }
+        }
     }
     
     // --------------------------------------------------------------------
@@ -1370,7 +1395,9 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *             If the transaction level cannot be retrieved
      */
     public int getTransactionIsolation() throws ResourceException {
-        return transactionIsolation;
+        synchronized (syncObject) {
+            return transactionIsolation;
+        }
     }
 
     /**
@@ -1390,9 +1417,13 @@ public class FBManagedConnection implements ManagedConnection, XAResource, Excep
      *             If the transaction level cannot be retrieved
      */
     public void setTransactionIsolation(int isolation) throws ResourceException {
-        transactionIsolation = isolation;
-        
-        tpb = mcf.getTpb(isolation);
+        synchronized (syncObject) {
+            transactionIsolation = isolation;
+            final FBTpbMapper mapping = transactionMapping;
+            tpb = mapping == null
+                    ? mcf.getTpb(isolation)
+                    : new FBTpb(mapping.getMapping(isolation));
+        }
     }
 
     /**

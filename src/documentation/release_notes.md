@@ -246,18 +246,26 @@ Jaybird 3.0.x changelog
 Changes in Jaybird 3.0.9
 ------------------------
 
-The following has been changed or fixed since Jaybird 3.0.9:
+The following has been changed or fixed since Jaybird 3.0.8:
 
--   New feature: Jaybird now supports UTF-8 URL encoding for connection
-    properties in the JDBC url. ([JDBC-604](http://tracker.firebirdsql.org/browse/JDBC-604)) \
-    This introduce a minor incompatibility, see also 
-    [URL encoding in query part of JDBC URL]. \
+-   Fixed: changes to the transaction configuration (transaction parameter
+    buffer configuration) of one connection are no longer propagated to other
+    connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
+    This change introduce a binary incompatibility as method 
+    `setTransactionParameters(int, TransactionParameterBuffer)` in
+    `FBManagedConnection` can now throw `ResourceException` where previously it
+    did not. Under the assumption that most users of Jaybird are not directly
+    using this class, the change should not break anything.
 -   New feature: Firebird 4 data type bind configuration support ([JDBC-603](http://tracker.firebirdsql.org/browse/JDBC-603)) \
     This change also removes the `timeZoneBind` and `decfloatBind` connection
     properties introduced in Jaybird 3.0.6 as the corresponding DPB items were
     removed from Firebird 4. This feature requires
     Firebird 4 beta 2 or snapshot Firebird 4.0.0.1683 or higher. \
-    See also [Limited support for new Firebird 4 data types]. \
+    See also [Limited support for new Firebird 4 data types].
+-   New feature: Jaybird now supports UTF-8 URL encoding for connection
+    properties in the JDBC url. ([JDBC-604](http://tracker.firebirdsql.org/browse/JDBC-604)) \
+    This introduce a minor incompatibility, see also 
+    [URL encoding in query part of JDBC URL].
 
 ### Known issues in Jaybird 3.0.9
 

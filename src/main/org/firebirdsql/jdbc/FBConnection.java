@@ -257,7 +257,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                 throw new FBSQLException("Cannot set transaction parameters in managed environment.");
             }
 
-            mc.setTransactionParameters(isolationLevel, tpb);
+            try {
+                mc.setTransactionParameters(isolationLevel, tpb);
+            } catch (ResourceException ex) {
+                throw new FBSQLException(ex);
+            }
         }
     }
     
