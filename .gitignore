@@ -1,4 +1,5 @@
 output/
+out/
 gen/
 build_*.bat
 .idea/
