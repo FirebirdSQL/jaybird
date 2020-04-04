@@ -1,0 +1,46 @@
+<code_scheme name="Jaybird" version="173">
+  <option name="FORMATTER_TAGS_ENABLED" value="true" />
+  <option name="WRAP_COMMENTS" value="true" />
+  <GroovyCodeStyleSettings>
+    <option name="IMPORT_LAYOUT_TABLE">
+      <value>
+        <package name="java" withSubpackages="true" static="false" />
+        <package name="javax" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="javassist" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="org.gradle" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="org.hibernate" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="" withSubpackages="true" static="false" />
+        <emptyLine />
+        <package name="" withSubpackages="true" static="true" />
+      </value>
+    </option>
+  </GroovyCodeStyleSettings>
+  <JavaCodeStyleSettings>
+    <option name="JD_PRESERVE_LINE_FEEDS" value="true" />
+    <option name="JD_PARAM_DESCRIPTION_ON_NEW_LINE" value="true" />
+  </JavaCodeStyleSettings>
+  <XML>
+    <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+  </XML>
+  <codeStyleSettings language="JAVA">
+    <option name="INDENT_CASE_FROM_SWITCH" value="false" />
+    <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+    <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
+    <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true" />
+    <option name="METHOD_PARAMETERS_WRAP" value="1" />
+    <option name="BINARY_OPERATION_WRAP" value="1" />
+    <option name="BINARY_OPERATION_SIGN_ON_NEXT_LINE" value="true" />
+    <option name="TERNARY_OPERATION_WRAP" value="1" />
+    <option name="TERNARY_OPERATION_SIGNS_ON_NEXT_LINE" value="true" />
+    <option name="ARRAY_INITIALIZER_WRAP" value="1" />
+    <option name="ASSIGNMENT_WRAP" value="1" />
+    <option name="WRAP_COMMENTS" value="true" />
+    <option name="ASSERT_STATEMENT_WRAP" value="1" />
+    <option name="ASSERT_STATEMENT_COLON_ON_NEXT_LINE" value="true" />
+    <option name="ENUM_CONSTANTS_WRAP" value="2" />
+  </codeStyleSettings>
+</code_scheme>
