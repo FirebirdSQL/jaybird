@@ -24,7 +24,8 @@ Download snapshot, release and staged artifacts from staging group https://oss.s
 Instructions:
 
 WARNING:
-The release of Jaybird to Maven is largely a manual process as Jaybird itself is not build using Maven.
+These instructions are out of date, but retained for documentation purposes.
+See /devdoc/publish.md for up-to-date instructions for publishing using Gradle.
 
 For actual releases (not snapshots), first tag the repository content and build from that tag.
 
