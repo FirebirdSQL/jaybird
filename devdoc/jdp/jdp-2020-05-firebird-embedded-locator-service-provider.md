@@ -161,8 +161,6 @@ public class FirebirdEmbeddedProvider
             "intl/fbintl.conf",
             "intl/fbintl.dll",
             "plugins/engine12.dll",
-            "plugins/legacy_auth.dll",
-            "plugins/srp.dll",
             "plugins/udr_engine.conf",
             "plugins/udr_engine.dll",
             "fbclient.dll",
