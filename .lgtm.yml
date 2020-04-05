@@ -1,9 +1,7 @@
 path_classifiers:
   test:
-    - "/src/jna-test/**"
-    - "/src/test/**"
-    - "/src/test_*/**"
-  libary:
-    - "/lib/**"
-    - "/src/lib/**"
-    - "/bin/**"
+    - exclude: /
+    - "src/jna-test"
+    - "src/test"
+    - "src/test_42"
+    - "src/test_resources"
