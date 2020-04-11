@@ -21,8 +21,9 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import org.firebirdsql.gds.ng.IAttachProperties;
-import org.firebirdsql.jna.embedded.FirebirdEmbeddedLibrary;
-import org.firebirdsql.jna.embedded.FirebirdEmbeddedLoader;
+import org.firebirdsql.jna.embedded.FirebirdEmbeddedLookup;
+import org.firebirdsql.jna.embedded.spi.DisposableFirebirdEmbeddedLibrary;
+import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
@@ -30,6 +31,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
@@ -85,11 +88,14 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
     }
 
     private List<String> findLibrariesToTry() {
-        Optional<FirebirdEmbeddedLibrary> optionalFbEmbeddedInstance =
-                FirebirdEmbeddedLoader.getFirebirdEmbeddedFromClasspath();
+        Optional<FirebirdEmbeddedLibrary> optionalFbEmbeddedInstance = FirebirdEmbeddedLookup.findFirebirdEmbedded();
         if (optionalFbEmbeddedInstance.isPresent()) {
             FirebirdEmbeddedLibrary firebirdEmbeddedLibrary = optionalFbEmbeddedInstance.get();
             log.info("Found Firebird Embedded " + firebirdEmbeddedLibrary.getVersion() + " on classpath");
+            if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary) {
+                NativeResourceTracker.strongRegisterNativeResource(new FirebirdEmbeddedLibraryNativeResource(
+                        (DisposableFirebirdEmbeddedLibrary) firebirdEmbeddedLibrary));
+            }
 
             Path entryPointPath = firebirdEmbeddedLibrary.getEntryPointPath().toAbsolutePath();
             List<String> librariesToTry = new ArrayList<>(LIBRARIES_TO_TRY.size() + 1);
@@ -98,6 +104,20 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
             return librariesToTry;
         }
         return LIBRARIES_TO_TRY;
+    }
+
+    private static class FirebirdEmbeddedLibraryNativeResource extends NativeResourceTracker.NativeResource {
+
+        private final DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary;
+
+        private FirebirdEmbeddedLibraryNativeResource(DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary) {
+            this.firebirdEmbeddedLibrary = requireNonNull(firebirdEmbeddedLibrary, "firebirdEmbeddedLibrary");
+        }
+
+        @Override
+        void dispose() {
+            firebirdEmbeddedLibrary.dispose();
+        }
     }
 
 }

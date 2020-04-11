@@ -38,7 +38,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class NativeResourceTracker {
 
     private static final List<Reference<NativeResource>> registeredNativeResources =
-            Collections.synchronizedList(new ArrayList<Reference<NativeResource>>());
+            Collections.synchronizedList(new ArrayList<>());
+    private static final List<NativeResource> strongRegisteredNativeResources =
+            Collections.synchronizedList(new ArrayList<>());
     private static final boolean NATIVE_RESOURCE_SHUTDOWN_DISABLED =
             JaybirdSystemProperties.isNativeResourceShutdownDisabled();
 
@@ -63,20 +65,34 @@ public final class NativeResourceTracker {
         registerShutdownThreadIfNecessary();
         synchronized (registeredNativeResources) {
             cleanupExpiredReferences();
-            registeredNativeResources.add((Reference<NativeResource>) new WeakReference<>(resource));
+            registeredNativeResources.add(new WeakReference<>(resource));
+        }
+        return resource;
+    }
+
+    /**
+     * Registers a native resource for automatic shutdown with a strong reference.
+     * <p>
+     * Use this method if the resource will not be strongly held by others and must be cleaned up on exit.
+     * </p>
+     *
+     * @param resource
+     *         FbClientResource instance
+     * @return Value of {@code resource}
+     * @see #registerNativeResource(NativeResource)
+     */
+    static <T extends NativeResource> T strongRegisterNativeResource(T resource) {
+        registerShutdownThreadIfNecessary();
+        synchronized (strongRegisteredNativeResources) {
+            cleanupExpiredReferences();
+            strongRegisteredNativeResources.add(resource);
         }
         return resource;
     }
 
     private static void cleanupExpiredReferences() {
         synchronized (registeredNativeResources) {
-            Iterator<Reference<NativeResource>> iterator = registeredNativeResources.iterator();
-            while (iterator.hasNext()) {
-                Reference<NativeResource> resourceReference = iterator.next();
-                if (resourceReference.get() == null) {
-                    iterator.remove();
-                }
-            }
+            registeredNativeResources.removeIf(resourceReference -> resourceReference.get() == null);
         }
     }
 
@@ -98,6 +114,17 @@ public final class NativeResourceTracker {
                 }
             }
             registeredNativeResources.clear();
+        }
+        synchronized (strongRegisteredNativeResources) {
+            for (NativeResource resource : strongRegisteredNativeResources) {
+                try {
+                    resource.dispose();
+                } catch (Throwable e) {
+                    LoggerFactory.getLogger(NativeResourceTracker.class)
+                            .error("Error disposing resource " + resource, e);
+                }
+            }
+            strongRegisteredNativeResources.clear();
         }
     }
 

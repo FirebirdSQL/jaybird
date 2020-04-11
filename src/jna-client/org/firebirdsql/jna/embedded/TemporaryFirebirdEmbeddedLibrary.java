@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jna.embedded;
 
+import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
+
 import java.nio.file.Path;
 
 /**
@@ -26,39 +28,29 @@ import java.nio.file.Path;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public final class FirebirdEmbeddedLibrary {
+public final class TemporaryFirebirdEmbeddedLibrary implements FirebirdEmbeddedLibrary {
 
     private final Path entryPointPath;
     private final String version;
 
-    FirebirdEmbeddedLibrary(Path entryPointPath, String version) {
+    TemporaryFirebirdEmbeddedLibrary(Path entryPointPath, String version) {
         this.entryPointPath = entryPointPath;
         this.version = version;
     }
 
-    /**
-     * @return Path of the Firebird Embedded main library file
-     */
+    @Override
     public Path getEntryPointPath() {
         return entryPointPath;
     }
 
-    /**
-     * Version of the Firebird Embedded library.
-     * <p>
-     * This version should be parseable by {@link org.firebirdsql.gds.impl.GDSServerVersion}, but this is not
-     * guaranteed.
-     * </p>
-     *
-     * @return Version of the Firebird Embedded library
-     */
+    @Override
     public String getVersion() {
         return version;
     }
 
     @Override
     public String toString() {
-        return "FirebirdEmbeddedLibrary{" +
+        return "TemporaryFirebirdEmbeddedLibrary{" +
                 "entryPointPath=" + entryPointPath +
                 ", version='" + version + '\'' +
                 '}';

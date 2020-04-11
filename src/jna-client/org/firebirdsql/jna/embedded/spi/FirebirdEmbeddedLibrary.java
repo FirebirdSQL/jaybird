@@ -16,24 +16,33 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.jna.embedded;
+package org.firebirdsql.jna.embedded.spi;
+
+import java.nio.file.Path;
 
 /**
- * Exception to signal errors when loading Firebird Embedded from the class path.
+ * Identifies a Firebird Embedded library that Jaybird can use.
+ * <p>
+ * It is recommend to implement {@link DisposableFirebirdEmbeddedLibrary} for implementations that require additional
+ * cleanup on exit.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class FirebirdEmbeddedLoadingException extends Exception {
+public interface FirebirdEmbeddedLibrary {
 
-    private static final long serialVersionUID = 1L;
+    /**
+     * @return Path of the Firebird Embedded main library file
+     */
+    Path getEntryPointPath();
 
-    public FirebirdEmbeddedLoadingException(String message) {
-        super(message);
-    }
-
-    public FirebirdEmbeddedLoadingException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
+    /**
+     * Version of the Firebird Embedded library.
+     *
+     * @return Version of the Firebird Embedded library
+     * @see FirebirdEmbeddedLibrary#getVersion()
+     */
+    String getVersion();
+    
 }

@@ -18,15 +18,13 @@
  */
 package org.firebirdsql.jna.embedded.spi;
 
-import java.util.Collection;
-
 /**
- * Service provider interface to identify a packaged Firebird Embedded library on the classpath.
+ * Service provider interface to identify a Firebird Embedded library.
  * <p>
  * Implementations that provide a Firebird Embedded library need to implement this interface to provide the necessary
- * information to identify if it is a suitable implementation, and to find the files to load. The implementations of
- * this interface need to be listed in {@code META-INF/services/org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider}
- * inside the jar that provides the implementation.
+ * information to identify if it is a suitable implementation. The implementations of this interface need to be listed
+ * in {@code META-INF/services/org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedProvider} inside the jar that provides
+ * the implementation.
  * </p>
  * <p>
  * For detailed requirements, see <a href="https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-05-firebird-embedded-locator-service-provider.md">jdp-2020-05:
@@ -47,7 +45,7 @@ public interface FirebirdEmbeddedProvider {
      * Applies the platform naming conventions of JNA.
      * </p>
      *
-     * @return Name of the platform (eg {@code "win32-x86-64"} for Windows 64 bit (x86))
+     * @return Name of the platform (eg {@code "win32-x86-64"} for Windows 64-bit (x86))
      */
     String getPlatform();
 
@@ -72,22 +70,24 @@ public interface FirebirdEmbeddedProvider {
     String getVersion();
 
     /**
-     * Relative paths against this provider class of the resources with the Firebird Embedded files.
+     * Get an instance of the provided Firebird Embedded library.
      * <p>
-     * The resources must not try to escape the current context using {@code ..}. Implementations trying to do that
-     * will not be loaded.
+     * For example, implementations could unpack a Firebird Embedded library to the filesystem, or try and find a
+     * Firebird instance installed on the system.
+     * </p>
+     * <p>
+     * If the provider has to perform initialization before the embedded library is usable (eg copy resources from the
+     * classpath to a temporary location), this must be done in this method.
+     * </p>
+     * <p>
+     * Implementations must be able to handle multiple calls to this method. It is allowed to return the same library
+     * instance on subsequent invocations.
      * </p>
      *
-     * @return Collection of resource paths of the Firebird Embedded instance
+     * @return Firebird Embedded Library information
+     * @throws FirebirdEmbeddedLoadingException
+     *         For exceptions loading or finding Firebird Embedded
      */
-    Collection<String> getResourceList();
-
-    /**
-     * Entry point of the library.
-     *
-     * @return The relative path of the library entry point (eg {@code "fbclient.dll"} or
-     * {@code "lib/libfbclient.so"})
-     */
-    String getLibraryEntryPoint();
+    FirebirdEmbeddedLibrary getFirebirdEmbeddedLibrary() throws FirebirdEmbeddedLoadingException;
 
 }
