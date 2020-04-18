@@ -28,9 +28,9 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.*;
 
 /**
  * Tests for "use Firebird autocommit" mode.
@@ -80,7 +80,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
     private void checkFirebirdAutocommitValue(String url, boolean expectedUseFirebirdAutocommit) throws SQLException {
         try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
                 FBTestProperties.DB_PASSWORD)) {
-            FBManagedConnectionFactory managedConnectionFactory = (FBManagedConnectionFactory) connection
+            FBManagedConnectionFactory managedConnectionFactory = connection
                     .getManagedConnection().getManagedConnectionFactory();
             assertEquals("useFirebirdAutocommit",
                     expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit());
@@ -150,7 +150,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
     public void firebirdAutoCommitCommitsDuringExecution() throws Exception {
         try (final Connection normalConnection = FBTestProperties.getConnectionViaDriverManager()) {
             class VerifyInsert {
-                PreparedStatement verifyInsert;
+                final PreparedStatement verifyInsert;
                 int count = 0;
                 int previousCount = -1;
 
@@ -203,7 +203,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
                 Statement selectInsert = fbAutocommitConnection.createStatement();
                 selectInsert.setFetchSize(1);
                 ResultSet rs = selectInsert.executeQuery("select selected from selectInsert");
-                assertEquals(0, verifyInsert.getCurrentCount());
+                assertThat(verifyInsert.getCurrentCount(), lessThan(2));
 
                 while (rs.next()) {
                     verifyInsert.checkCurrentCountLargerThanPrevious();
