@@ -280,11 +280,11 @@ Where to get help
 *   On [Stack Overflow](https://stackoverflow.com/), please tag your questions
     with *jaybird* and *firebird*
     
-*   The [Firebird-Java group](http://groups.yahoo.com/group/Firebird-Java) and
-    corresponding mailing list firebird-java@yahoogroups.com
+*   The [Firebird-Java group](https://groups.google.com/d/forum/firebird-java) and
+    corresponding mailing list firebird-java@googlegroups.com
 
     You can subscribe to the mailing list by sending an email to
-    [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
+    [firebird-java+subscribe@googlegroups.com](mailto:firebird-java+subscribe@googlegroups.com)
 
 *   Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
 
@@ -310,10 +310,10 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 Reporting Bugs
 --------------
 
-The developers follow the firebird-java@yahoogroups.com list. Join the list and
-post information about suspected bugs. List members may be able to help out to
-determine if it is an actual bug, provide a workaround and get you going again,
-whereas bug fixes might take awhile.
+The developers follow the [firebird-java Google Group](https://groups.google.com/d/forum/firebird-java).
+Join the list and post information about suspected bugs. List members may be
+able to help out to determine if it is an actual bug, provide a workaround and
+get you going again, whereas bug fixes might take a while.
 
 You can report bugs in the Firebird bug tracker, project
 ["Java Client (Jaybird)"](http://tracker.firebirdsql.org/browse/JDBC)
