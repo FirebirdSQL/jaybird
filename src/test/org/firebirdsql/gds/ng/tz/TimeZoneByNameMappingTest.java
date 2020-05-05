@@ -689,7 +689,9 @@ public class TimeZoneByNameMappingTest {
                 testCase(64907, "VST", "Asia/Ho_Chi_Minh"),
                 testCase(64906, "W-SU"),
                 testCase(64905, "WET"),
-                testCase(64904, "Zulu")
+                testCase(64904, "Zulu"),
+                testCase(64903, "America/Godthab"),
+                testCase(64902, "Asia/Qostanay")
         );
     }
 
