@@ -266,6 +266,8 @@ The following has been changed or fixed since Jaybird 3.0.8:
     properties in the JDBC url. ([JDBC-604](http://tracker.firebirdsql.org/browse/JDBC-604)) \
     This introduce a minor incompatibility, see also 
     [URL encoding in query part of JDBC URL].
+-   Fixed: When updating a row through an updatable result set, selected but
+    not updated blob fields were set to `NULL` ([JDBC-623](http://tracker.firebirdsql.org/browse/JDBC-623))
 
 ### Known issues in Jaybird 3.0.9
 

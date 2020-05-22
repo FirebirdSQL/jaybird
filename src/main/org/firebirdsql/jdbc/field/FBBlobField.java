@@ -41,6 +41,7 @@ import java.sql.SQLException;
 class FBBlobField extends FBField implements FBFlushableField {
 
     protected FirebirdBlob blob;
+    private boolean blobExplicitNull;
     private long length;
     private InputStream binaryStream;
     private Reader characterStream;
@@ -58,6 +59,7 @@ class FBBlobField extends FBField implements FBFlushableField {
             // forget this blob instance, resource waste but simplifies our life. BLOB handle will be
             // released by a server automatically later
             blob = null;
+            blobExplicitNull = false;
             bytes = null;
             binaryStream = null;
             characterStream = null;
@@ -157,6 +159,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         binaryStream = cachedObject.binaryStream;
         characterStream = cachedObject.characterStream;
         length = cachedObject.length;
+        blobExplicitNull = bytes == null && binaryStream == null && characterStream == null;
     }
 
     @Override
@@ -182,6 +185,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (in != null) {
             characterStream = in;
             this.length = length;
+            blobExplicitNull = false;
         }
     }
 
@@ -192,6 +196,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (in != null) {
             binaryStream = in;
             this.length = length;
+            blobExplicitNull = false;
         }
     }
 
@@ -204,7 +209,7 @@ class FBBlobField extends FBField implements FBFlushableField {
                     getDatatypeCoder().getEncodingFactory().getDefaultEncoding().getCharsetName());
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
-        } else if (blob == null) {
+        } else if (blob == null && blobExplicitNull) {
             setNull();
         }
 
@@ -218,18 +223,21 @@ class FBBlobField extends FBField implements FBFlushableField {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
 
     private void copyCharacterStream(Reader in, long length, String encoding) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
 
     private void copyBytes(byte[] bytes, int length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
 
     @Override
@@ -239,6 +247,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         if (value != null) {
             bytes = value;
             length = value.length;
+            blobExplicitNull = false;
         }
     }
 
@@ -259,6 +268,7 @@ class FBBlobField extends FBField implements FBFlushableField {
         setNull();
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
+        blobExplicitNull = false;
     }
 
     @Override
@@ -276,6 +286,7 @@ class FBBlobField extends FBField implements FBFlushableField {
             //ignore
         } finally {
             blob = null;
+            blobExplicitNull = true;
             binaryStream = null;
             characterStream = null;
             bytes = null;
