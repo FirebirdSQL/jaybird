@@ -28,9 +28,9 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.*;
 
 /**
  * Tests for "use Firebird autocommit" mode.
@@ -203,7 +203,7 @@ public class TestUseFirebirdAutocommit extends FBJUnit4TestBase {
                 Statement selectInsert = fbAutocommitConnection.createStatement();
                 selectInsert.setFetchSize(1);
                 ResultSet rs = selectInsert.executeQuery("select selected from selectInsert");
-                assertEquals(0, verifyInsert.getCurrentCount());
+                assertThat(verifyInsert.getCurrentCount(), lessThan(2));
 
                 while (rs.next()) {
                     verifyInsert.checkCurrentCountLargerThanPrevious();
