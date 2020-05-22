@@ -20,7 +20,9 @@ package org.firebirdsql.gds.ng.tz;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.time.ZoneOffset;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,12 +31,20 @@ import static org.junit.Assert.assertEquals;
  */
 public class TimeZoneMappingTest {
 
+    private static final int CURRENT_MIN_ZONE_ID;
+    static {
+        try {
+            Properties timeZoneMapping = TimeZoneMapping.loadTimeZoneMapping();
+            CURRENT_MIN_ZONE_ID = Integer.parseInt(timeZoneMapping.getProperty(TimeZoneMapping.KEY_MIN_ZONE_ID));
+        } catch (IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
 
     @Test
     public void invalidZoneIdYieldsUTC() {
-        // 64904 is current lowest id, this is one below that
-        assertEquals(ZoneOffset.UTC, mapping.timeZoneById(64903));
+        assertEquals(ZoneOffset.UTC, mapping.timeZoneById(CURRENT_MIN_ZONE_ID - 1));
     }
 
     @Test
