@@ -46,6 +46,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
     private static final int BUFF_SIZE = 4096;
     
     private FBBlob blob;
+    private boolean blobExplicitNull;
 
     // Rather then hold cached data in the XSQLDAVar we will hold it in here.
     private long length;
@@ -68,6 +69,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             // released by a server automatically later
 
             blob = null;
+            blobExplicitNull = false;
             bytes = null;
             binaryStream = null;
             characterStream = null;
@@ -142,6 +144,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         binaryStream = cachedObject.binaryStream;
         characterStream = cachedObject.characterStream;
         length = cachedObject.length;
+        blobExplicitNull = bytes == null && binaryStream == null && characterStream == null;
     }
 
     @Override
@@ -158,6 +161,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         setNull();
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
         this.blob = blob;
+        blobExplicitNull = false;
     }
 
     @Override
@@ -173,6 +177,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (in != null) {
             this.characterStream = in;
             this.length = length;
+            blobExplicitNull = false;
         }
     }
 
@@ -192,6 +197,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (value != null) {
             this.bytes = value;
             this.length = value.length;
+            blobExplicitNull = false;
         }
     }
 
@@ -202,6 +208,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         if (in != null) {
             this.binaryStream = in;
             this.length = length;
+            blobExplicitNull = false;
         }
     }
 
@@ -213,7 +220,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             copyCharacterStream(characterStream, length);
         } else if (bytes != null) {
             copyBytes(bytes, (int) length);
-        } else if (blob == null) {
+        } else if (blob == null && blobExplicitNull) {
             setNull();
         }
         
@@ -232,6 +239,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             //ignore
         } finally {
             blob = null;
+            blobExplicitNull = true;
             binaryStream = null;
             characterStream = null;
             bytes = null;
@@ -243,6 +251,7 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         FBBlob blob =  new FBBlob(gdsHelper);
         blob.copyStream(in, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
 
     private void copyCharacterStream(Reader in, long length) throws SQLException {
@@ -251,12 +260,14 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
         Encoding encoding = getDatatypeCoder().getEncoding();
         blob.copyCharacterStream(in, length, encoding);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
     
     private void copyBytes(byte[] bytes, int length) throws SQLException {
         FBBlob blob = new FBBlob(gdsHelper);
         blob.copyBytes(bytes, 0, length);
         setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+        blobExplicitNull = false;
     }
 
 }
