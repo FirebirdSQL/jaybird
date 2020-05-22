@@ -93,6 +93,8 @@ sourceSets {
     tools {
         java {
             srcDirs = ['src/messages']
+            compileClasspath += main.output
+            runtimeClasspath += main.output
         }
     }
 }
