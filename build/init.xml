@@ -238,8 +238,14 @@
          disabling seems to be the better option.
          For details see: http://blog.joda.org/2014/02/turning-off-doclint-in-jdk-8-javadoc.html
         -->
-        <condition property="javadoc.additionalparam" value="-Xdoclint:none" else="">
+        <condition property="javadoc.additionalparam" value="">
+            <javaversion exactly="1.7"/>
+        </condition>
+        <condition property="javadoc.additionalparam" value="-Xdoclint:none">
             <javaversion exactly="1.8"/>
+        </condition>
+        <condition property="javadoc.additionalparam" value="-Xdoclint:none --no-module-directories">
+            <javaversion atleast="9"/>
         </condition>
 
     </target>

@@ -10,7 +10,6 @@
                  version="true"
                  windowtitle="${Name} API"
                  doctitle="${Name}"
-                 extdirs="${module.thirdparty}"
                  additionalparam="${javadoc.additionalparam}"
                  excludepackagenames="${excludedPackages}"
                  bottom="Copyright &amp;copy; 2001-${YEAR} Jaybird (Firebird JDBC/JCA) team. All rights reserved.">
