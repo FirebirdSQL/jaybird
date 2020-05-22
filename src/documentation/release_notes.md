@@ -17,6 +17,7 @@ The following has been changed or fixed since Jaybird 4.0.0
     `FBManagedConnection` can now throw `ResourceException` where previously it
     did not. Under the assumption that most users of Jaybird are not directly
     using this class, the change should not break anything.
+-   Fixed: Search index of Javadoc in Java 11 version used incorrect links ([JDBC-619](http://tracker.firebirdsql.org/browse/JDBC-619))
 -   Fixed: The cleanup of native resources didn't dispose the native library
     held by JNA, as a change in implementation no longer allowed directly access
     to the JNA `NativeLibrary` ([JDBC-620](http://tracker.firebirdsql.org/browse/JDBC-620))
