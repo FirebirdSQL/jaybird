@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
-public class TestFBResultSet extends FBJUnit4TestBase {
+public class FBResultSetTest extends FBJUnit4TestBase {
 
     //@formatter:off
     private static final String SELECT_STATEMENT =
