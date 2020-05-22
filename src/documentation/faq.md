@@ -6,6 +6,41 @@ Where do I get Jaybird?
 
 ### Maven ###
 
+<!-- TODO Hidden for now
+#### Jaybird 5 ####
+
+Jaybird 5 is in development and not yet available from Maven central:
+
+Groupid: `org.firebirdsql.jdbc`, \
+Artifactid: `jaybird`, \
+Version: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
+
+For backwards compatibility, we also provide a Maven relocation artifact with
+artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
+recommend switching to the `jaybird` artifact.
+
+For example, for Java 8:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird</artifactId>
+    <version>4.0.0.java8</version>
+</dependency>
+~~~
+
+If you want to use Type 2 support (native, local or embedded), you need to 
+explicitly include JNA 5.5.0 as a dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+    <version>5.5.0</version>
+</dependency>
+~~~
+-->
+
 #### Jaybird 4 ####
 
 Jaybird 4 is available from Maven central:
@@ -172,8 +207,8 @@ Each release is also tagged in the repository.
 How is Jaybird licensed?
 ------------------------
 
-Jaybird JCA/JDBC driver is distributed under the GNU Lesser General Public
-License (LGPL). Text of the license can be obtained from
+Jaybird JDBC driver is distributed under the GNU Lesser General Public License
+(LGPL). Text of the license can be obtained from
 [http://www.gnu.org/copyleft/lesser.html](http://www.gnu.org/copyleft/lesser.html).
 
 Using Jaybird (by importing Jaybird's public interfaces in your Java code), and
@@ -690,15 +725,11 @@ implemented as they are not supported by Firebird.
 Implemented features:
 
 * Most useful JDBC functionality ("useful" in the opinion of the developers).
-* Complete JCA API support: may be used directly in JCA-supporting application
-  servers.
-* XA transactions with true two phase commit when used as a JCA resource adapter
-  in a managed environment (with a `TransactionManager` and JCA deployment
-  support) as well as when used via `javax.sql.XADataSource` implementation.
+* XA transactions with true two phase commit when used via
+  `javax.sql.XADataSource` implementation.
 * `ObjectFactory` implementation for use in environments with JNDI but no
   `TransactionManager`.
 * `DataSource` implementations without pooling.
-* Driver implementation for use in legacy applications.
 * Complete access to all Firebird database parameter block and transaction
   parameter block settings.
 * JMX mbean for database management (so far just database create and drop).
@@ -777,10 +808,11 @@ not provide a connection pool**, but is intended to be used by a connection pool
 connection pool.
 
 If your application is built on a Java EE application server, we suggest you use
-the connection pooling provided by the application server. Either through the
-resource-adapter of the JCA implementation of Jaybird, or using the
-`java.sql.ConnectionPoolDataSource` implementation
-`org.firebirdsql.ds.FBConnectionPoolDataSource`.
+the connection pooling provided by the application server using the
+`javax.sql.ConnectionPoolDataSource` implementation
+`org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the 
+`javax.sql.XADataSource` implementation
+`org.firebirdsql.ds.FBXADataSource`.
 
 If you develop standalone applications, or you use an application server without
 connection pooling, we suggest you use third-party libraries like:

@@ -25,6 +25,8 @@ We recommend that you do not consider Jaybird 3.0 a drop-in replacement for
 Jaybird 2.2, and study these release notes carefully. Test your application with
 Jaybird 3.0 before using it in production.
 
+Although Jaybird 3 is still maintained, we recommend updating to Jaybird 4.
+
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
 <http://tracker.firebirdsql.org/browse/JDBC>.
@@ -42,7 +44,7 @@ See also [Where to get help](https://www.firebirdsql.org/file/documentation/driv
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3.0 was tested against Firebird 2.5.9, and 3.0.4, but should also 
+Jaybird 3.0 was tested against Firebird 2.5.9, and 3.0.5, but should also 
 support other Firebird versions from 2.0 and up. Firebird 4 is not fully 
 supported in Jaybird 3.x.
 
@@ -72,9 +74,11 @@ types like `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision higher than 18 will
 be introduced in Jaybird 4.
 
 The Srp256 authentication plugin is supported, but the other SrpNNN plugins are
-not supported; support for these plugins will be introduced in Jaybird 4.
+not supported; support for these plugins has been introduced in Jaybird 4.
 
 Jaybird 3.0 does not support the Firebird 4 zlib compression.
+
+For improved support of Firebird 4, we recommend updating to Jaybird 4.
 
 Supported Java versions
 -----------------------
@@ -87,7 +91,7 @@ have the same source and all JDBC 4.3 related functionality.
 
 Given the limited support period for Java 9 and higher versions, we limit
 support on those versions to the most recent LTS version and the latest release.
-As of November 2019, this means Java 11 and Java 13 are supported.
+As of May 2020, this means Java 11 and Java 14 are supported.
 
 Jaybird 3.0 is not modularized, but since Jaybird 3.0.3, it declares the 
 automatic module name `org.firebirdsql.jaybird`.
@@ -229,13 +233,6 @@ If you manage your dependencies manually, you need to do the following:
     
 Gotcha's
 --------
-
-During tests we have have observed that using Jaybird with Firebird 3 and 4 may
-cause connection hangs when the connection is encrypted (the connection is 
-blocked in a read from the socket). The cause seems related to non-standard 
-values for the `TcpRemoteBufferSize` setting in Firebird. The workaround is to 
-disable wire encryption in Firebird or for the specific connection (see 
-[Wire encryption support]), or to use the default value for `TcpRemoteBufferSize`.
 
 If you find a problem while upgrading, or other bugs: please report it 
 on <http://tracker.firebirdsql.org/brows/JDBC>.
@@ -632,12 +629,16 @@ plugins
 [Limited support for new Firebird 4 data types] for workarounds for the 
 `WITH TIME ZONE` and `DECFLOAT` types.
 
+For improved support of Firebird 4, we recommend updating to Jaybird 4.
+
 ### Other Firebird feature support ###
 
 *   Add support for streaming backup and restore ([JDBC-256](http://tracker.firebirdsql.org/browse/JDBC-256))  
     This feature was contributed by [Ivan Arabadzhiev](https://github.com/ls4f)
 
 ### Limited support for new Firebird 4 data types ###
+
+For improved support of Firebird 4 datatypes, we recommend updating to Jaybird 4.
 
 Jaybird 3 does not support the new Firebird 4 data types `TIME WITH TIME ZONE`,
 `TIMESTAMP WITH TIME ZONE`, `DECFLOAT` and `NUMERIC`/`DECIMAL` with precision 
