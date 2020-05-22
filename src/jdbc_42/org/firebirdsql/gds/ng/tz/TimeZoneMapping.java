@@ -22,6 +22,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.StringUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -69,7 +70,7 @@ public final class TimeZoneMapping {
     private static final int MAX_CACHED_NAMED_ZONES = 10;
     private static final String FALLBACK_ZONE = "UTC";
     private static final ZoneId FALLBACK_ZONE_ID = ZoneOffset.UTC;
-    private static final String KEY_MIN_ZONE_ID = "min_zone_id";
+    static final String KEY_MIN_ZONE_ID = "min_zone_id";
     private static final String FIREBIRD_TIME_ZONE_MAPPING_PROPERTIES = "firebird_time_zone_mapping.properties";
 
     /**
@@ -303,9 +304,8 @@ public final class TimeZoneMapping {
     private static List<String> loadTimeZoneNameById() {
         // TODO Potential loading issues?
         // TODO Just hard code it instead?
-        try (InputStream in = TimeZoneMapping.class.getResourceAsStream(FIREBIRD_TIME_ZONE_MAPPING_PROPERTIES)) {
-            final Properties timeZoneMapping = new Properties();
-            timeZoneMapping.load(in);
+        try {
+            final Properties timeZoneMapping = loadTimeZoneMapping();
             final int minZoneId = Integer.parseInt(timeZoneMapping.getProperty(KEY_MIN_ZONE_ID));
 
             final int zoneIdCount = internalId(minZoneId) + 1;
@@ -324,6 +324,20 @@ public final class TimeZoneMapping {
                             + "available ", e);
             // Populating with 65535 (internalId 0) == GMT
             return Collections.singletonList("GMT");
+        }
+    }
+
+    /**
+     * Loads the time zone mapping resource as a {@link Properties} object.
+     *
+     * @return Properties object with the time zone mapping
+     * @throws IOException For issues loading the time zone mapping
+     */
+    static Properties loadTimeZoneMapping() throws IOException {
+        try (InputStream in = TimeZoneMapping.class.getResourceAsStream(FIREBIRD_TIME_ZONE_MAPPING_PROPERTIES)) {
+            Properties timeZoneMapping = new Properties();
+            timeZoneMapping.load(in);
+            return timeZoneMapping;
         }
     }
 
