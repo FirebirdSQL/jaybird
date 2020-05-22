@@ -240,6 +240,17 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.10
+-------------------------
+
+The following has been changed or fixed since Jaybird 3.0.9:
+
+-  ...
+
+### Known issues in Jaybird 3.0.10
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.9
 ------------------------
 
@@ -265,10 +276,6 @@ The following has been changed or fixed since Jaybird 3.0.8:
     [URL encoding in query part of JDBC URL].
 -   Fixed: When updating a row through an updatable result set, selected but
     not updated blob fields were set to `NULL` ([JDBC-623](http://tracker.firebirdsql.org/browse/JDBC-623))
-
-### Known issues in Jaybird 3.0.9
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.8
 ------------------------
