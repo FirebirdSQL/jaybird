@@ -9,7 +9,7 @@ Jaybird 4.0.1
 
 The following has been changed or fixed since Jaybird 4.0.0
 
--   Fixed: changes to the transaction configuration (transaction parameter
+-   Fixed: Changes to the transaction configuration (transaction parameter
     buffer configuration) of one connection are no longer propagated to other
     connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
     This change introduce a binary incompatibility as method 
@@ -20,6 +20,8 @@ The following has been changed or fixed since Jaybird 4.0.0
 -   Fixed: The cleanup of native resources didn't dispose the native library
     held by JNA, as a change in implementation no longer allowed directly access
     to the JNA `NativeLibrary` ([JDBC-620](http://tracker.firebirdsql.org/browse/JDBC-620))
+-   Fixed: When updating a row through an updatable result set, selected but
+    not updated blob fields were set to `NULL` ([JDBC-623](http://tracker.firebirdsql.org/browse/JDBC-623))
 
 Jaybird 4.0.0
 -------------

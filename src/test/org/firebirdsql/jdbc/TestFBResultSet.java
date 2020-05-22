@@ -26,6 +26,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
 import java.util.Random;
@@ -1374,6 +1375,41 @@ public class TestFBResultSet extends FBJUnit4TestBase {
 
             RowId rowId = rs.getRowId("DB_KEY");
             assertNotNull(rowId);
+        }
+    }
+
+    /**
+     * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-623">JDBC-623</a>.
+     */
+    @Test
+    public void testResultSetUpdateDoesNotNullUntouchedBlob() throws Exception {
+        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+        final String blob_str_value = "blob_str_value";
+        final byte[] blob_bin_value = "blob_bin_value".getBytes(StandardCharsets.US_ASCII);
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "insert into test_table (id, long_str, blob_str, blob_bin) values (?, ?, ?, ?)")) {
+            pstmt.setInt(1 ,1);
+            pstmt.setString(2, "long_str_initial");
+            pstmt.setString(3, blob_str_value);
+            pstmt.setBytes(4, blob_bin_value);
+            pstmt.execute();
+        }
+
+        try (Statement stmt = connection.createStatement(
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+             ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
+            assertTrue("expected a row", rs.next());
+            rs.updateString("long_str", "long_str_updated");
+            rs.updateRow();
+        }
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
+            assertTrue("expected a row", rs.next());
+            assertEquals("id", 1, rs.getInt("id"));
+            assertEquals("long_str", "long_str_updated", rs.getString("long_str"));
+            assertEquals("blob_str", blob_str_value, rs.getString("blob_str"));
+            assertArrayEquals("blob_bin", blob_bin_value, rs.getBytes("blob_bin"));
         }
     }
 
