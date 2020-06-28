@@ -128,5 +128,6 @@ Jaybird will identify `INT128` as a JDBC type `NUMERIC`. Its handling will be
 identical to the current extended precision numeric support, but - where
 possible - Jaybird will identify the SQL column type as `INT128`.
 
-The existing behaviour to return JDBC type `DECIMAL` for unknown subtypes or
-subtype 0 with scale >= 0 will be changed to return JDBC type `NUMERIC`.
+The existing behaviour to return JDBC type `DECIMAL` for Int128 with unknown
+subtypes or subtype 0 with scale >= 0 will be changed to return JDBC type
+`NUMERIC`.
