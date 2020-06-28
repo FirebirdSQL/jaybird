@@ -316,7 +316,7 @@ public class FBDriver implements FirebirdDriver {
      * @throws SQLException
      *         For failures to extract connection properties from {@code jdbcUrl} (URL decoding errors), or presence
      *         of the same property under multiple aliases.
-     * @since 4.0.1
+     * @since 3.0.10
      */
     public static Map<String, String> normalizeProperties(String jdbcUrl, Properties connectionProperties)
             throws SQLException {
