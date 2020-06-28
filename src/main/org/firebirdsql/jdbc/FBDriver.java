@@ -89,8 +89,7 @@ public class FBDriver implements FirebirdDriver {
             return null;
         }
 
-        final Properties mergedProperties = mergeProperties(url, info);
-        final Map<String, String> normalizedInfo = FBDriverPropertyManager.normalize(mergedProperties);
+        final Map<String, String> normalizedInfo = normalizeProperties(url, info);
         try {
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1) {
@@ -105,7 +104,7 @@ public class FBDriver implements FirebirdDriver {
                 mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
             }
 
-            FBTpbMapper.processMapping(mcf, mergedProperties);
+            FBTpbMapper.processMapping(mcf, normalizedInfo);
 
             mcf = mcf.canonicalize();
 
@@ -209,9 +208,40 @@ public class FBDriver implements FirebirdDriver {
     }
 
     /**
+     * Merges the properties from the JDBC URL and properties object, normalizes them to a standard name.
+     * <p>
+     * If a property with the exact same name is present in both, the property specified in the JDBC url takes
+     * precedence. Short and long form {@code isc_dpb} properties will be merged if both are present, as will two
+     * different (non-{@code isc_dpb}) aliases, but precedence is undefined. If a property is specified in the (short
+     * or long) {@code isc_dpb} form <b>and</b> as an alias, then an exception is thrown.
+     * </p>
+     * <p>
+     * The property name that is the result of normalization, is implementation specific behaviour, and might change in
+     * a future version of Jaybird. When present, the (normalized) property `"database"` will be excluded, this also
+     * might change in the future.
+     * </p>
+     *
+     * @param jdbcUrl
+     *         JDBC Url
+     * @param connectionProperties
+     *         Properties object
+     * @return New map object with the merged and normalized connection properties
+     * @throws SQLException
+     *         For failures to extract connection properties from {@code jdbcUrl} (URL decoding errors), or presence
+     *         of the same property under multiple aliases.
+     * @since 4.0.1
+     */
+    public static Map<String, String> normalizeProperties(String jdbcUrl, Properties connectionProperties)
+            throws SQLException {
+        Properties mergedProperties = mergeProperties(jdbcUrl, connectionProperties);
+        return FBDriverPropertyManager.normalize(mergedProperties);
+    }
+
+    /**
      * Merges the properties from the JDBC URL and properties object.
      * <p>
-     * If a property is present in both, the property specified in the JDBC url takes precedence.
+     * If a property with the exact same name is present in both, the property specified in the JDBC url takes
+     * precedence.
      * </p>
      *
      * @param jdbcUrl
@@ -236,12 +266,12 @@ public class FBDriver implements FirebirdDriver {
     }
 
     /**
-     * Extract properties specified as URL parameter into the specified map of properties.
+     * Extract properties specified as URL parameter into the specified properties object.
      *
      * @param url
      *         specified URL.
      * @param info
-     *         instance of {@link Map} into which values should be extracted.
+     *         instance of {@link Properties} into which values should be extracted.
      * @throws SQLException
      *         For failures to extract connection properties from {@code url} (URL decoding errors)
      */

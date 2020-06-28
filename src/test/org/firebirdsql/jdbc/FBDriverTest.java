@@ -34,10 +34,7 @@ import org.junit.rules.ExpectedException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
@@ -433,5 +430,83 @@ public class FBDriverTest {
             throw e.getCause();
         }
     }
+
+    @Test
+    public void testNormalizeProperties() throws Exception {
+        Properties props = new Properties();
+        props.put("socketBufferSize", "8192");
+        props.put("blobBufferSize", "16384");
+        props.put("TRANSACTION_READ_COMMITTED", "read_committed,no_rec_version,write,wait");
+        props.put("nonStandard1", "value1");
+        props.put("database", "xyz");
+        String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767"
+                + "&TRANSACTION_REPEATABLE_READ=concurrency,write,no_wait&columnLabelForName&soTimeout=1000"
+                + "&nonStandard2=value2";
+
+        Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
+
+        assertEquals("size", 8, mergedProps.size());
+        // NOTE: actual property name resulting from normalization should be considered an implementation detail
+        // This might change in a future version
+        assertEquals("isc_dpb_socket_buffer_size", "32767", mergedProps.get("isc_dpb_socket_buffer_size"));
+        assertEquals("isc_dpb_blob_buffer_size", "16384", mergedProps.get("isc_dpb_blob_buffer_size"));
+        assertEquals("TRANSACTION_READ_COMMITTED", "read_committed,no_rec_version,write,wait",
+                mergedProps.get("TRANSACTION_READ_COMMITTED"));
+        assertEquals("TRANSACTION_REPEATABLE_READ", "concurrency,write,no_wait",
+                mergedProps.get("TRANSACTION_REPEATABLE_READ"));
+        assertEquals("isc_dpb_column_label_for_name", "", mergedProps.get("isc_dpb_column_label_for_name"));
+        assertEquals("isc_dpb_so_timeout", "1000", mergedProps.get("isc_dpb_so_timeout"));
+        assertEquals("nonStandard1", "value1", mergedProps.get("nonStandard1"));
+        assertEquals("nonStandard2", "value2", mergedProps.get("nonStandard2"));
+        // NOTE: Currently removed during normalization, this might change in the future
+        assertFalse("database", mergedProps.containsKey("database"));
+    }
+
+    @Test
+    public void testNormalizeProperties_dpbShortAliasAndLongAlias_merged() throws Exception {
+        Properties props = new Properties();
+        props.put("isc_dpb_socket_buffer_size", "1024");
+        String url = "jdbc:firebirdsql://localhost/database?socket_buffer_size=32767";
+
+        Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
+
+        assertEquals("size", 1, mergedProps.size());
+        assertTrue("isc_dpb_socket_buffer_size", mergedProps.containsKey("isc_dpb_socket_buffer_size"));
+    }
+
+    @Test
+    public void testNormalizeProperties_twoAliases_merged() throws Exception {
+        Properties props = new Properties();
+        props.put("defaultHoldable", "");
+        String url = "jdbc:firebirdsql://localhost/database?defaultResultSetHoldable";
+
+        Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
+
+        assertEquals("size", 1, mergedProps.size());
+        assertTrue("isc_dpb_result_set_holdable", mergedProps.containsKey("isc_dpb_result_set_holdable"));
+    }
+
+    @Test
+    public void testNormalizeProperties_dpbShortAliasAndAlias_throwsException() throws Exception {
+        Properties props = new Properties();
+        props.put("isc_dpb_socket_buffer_size", "1024");
+        String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767";
+
+        expectedException.expect(SQLException.class);
+        
+        FBDriver.normalizeProperties(url, props);
+    }
+
+    @Test
+    public void testNormalizeProperties_dpbLongAliasAndAlias_throwsException() throws Exception {
+        Properties props = new Properties();
+        props.put("socket_buffer_size", "1024");
+        String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767";
+
+        expectedException.expect(SQLException.class);
+
+        FBDriver.normalizeProperties(url, props);
+    }
+
 }
 

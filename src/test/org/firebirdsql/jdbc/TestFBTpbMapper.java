@@ -269,15 +269,23 @@ public class TestFBTpbMapper {
         props.setProperty("not_a_transaction_isolation_level", "some_value");
         FBConnectionProperties connectionProps = new FBConnectionProperties();
 
+        assertNoTransactionPropsSet(connectionProps);
+
+        FBTpbMapper.processMapping(connectionProps, props);
+
+        assertProcessMappingResult(connectionProps);
+    }
+
+    private void assertNoTransactionPropsSet(FBConnectionProperties connectionProps) {
         assertNull("TRANSACTION_READ_COMMITTED should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED));
         assertNull("TRANSACTION_SERIALIZABLE should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_SERIALIZABLE));
         assertNull("TRANSACTION_REPEATABLE_READ should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
+    }
 
-        FBTpbMapper.processMapping(connectionProps, props);
-
+    private void assertProcessMappingResult(FBConnectionProperties connectionProps) {
         TransactionParameterBuffer tpbReadCommitted = connectionProps
                 .getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
         assertTrue("READ_COMMITTED must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_wait",
@@ -307,6 +315,23 @@ public class TestFBTpbMapper {
                         tpbSerializable.hasArgument(ISCConstants.isc_tpb_read) &&
                         tpbSerializable.hasArgument(ISCConstants.isc_tpb_wait)
         );
+    }
+
+    @Test
+    public void testProcessMappingToConnectionProperties_withMap() throws Exception {
+        final Map<String, String> props = new HashMap<>();
+        props.put(FBTpbMapper.TRANSACTION_READ_COMMITTED,
+                "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait");
+        props.put(FBTpbMapper.TRANSACTION_SERIALIZABLE, "isc_tpb_consistency,isc_tpb_read,isc_tpb_wait");
+        props.put(FBTpbMapper.TRANSACTION_REPEATABLE_READ, "isc_tpb_concurrency,isc_tpb_write,isc_tpb_nowait");
+        props.put("not_a_transaction_isolation_level", "some_value");
+        FBConnectionProperties connectionProps = new FBConnectionProperties();
+
+        assertNoTransactionPropsSet(connectionProps);
+
+        FBTpbMapper.processMapping(connectionProps, props);
+
+        assertProcessMappingResult(connectionProps);
     }
 
     @Test
