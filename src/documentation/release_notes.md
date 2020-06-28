@@ -245,7 +245,14 @@ Changes in Jaybird 3.0.10
 
 The following has been changed or fixed since Jaybird 3.0.9:
 
--  ...
+-   Added: A static utility method `FBDriver.normalizeProperties` which, given a
+    JDBC url and a `Properties` object, returns a `Map<String, String>`, returns
+    a map containing the merged properties normalized to common 
+    property name. ([JDBC-627](http://tracker.firebirdsql.org/browse/JDBC-627)) \
+    The current implementation normalizes known property names to the long-form
+    `isc_dpb` name, and removes the `database` property. These are both 
+    implementation details that might change in future versions. \
+    This feature was backported from Jaybird 4.0.1.
 
 ### Known issues in Jaybird 3.0.10
 

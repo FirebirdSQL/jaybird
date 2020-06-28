@@ -271,16 +271,13 @@ public class FBTpbMapper implements Serializable, Cloneable {
     }
 
     /**
-     * This method extracts TPB mapping information from the connection
-     * parameters and adds it to the connectionProperties. Two formats are supported:
-     * <ul>
-     * <li><code>info</code> contains <code>"tpb_mapping"</code> parameter
-     * pointing to a resource bundle with mapping information;
-     * <li><code>info</code> contains separate mappings for each of following
-     * transaction isolation levels: <code>"TRANSACTION_SERIALIZABLE"</code>,
-     * <code>"TRANSACTION_REPEATABLE_READ"</code> and
-     * <code>"TRANSACTION_READ_COMMITTED"</code>.
-     * </ul>
+     * This method extracts TPB mapping information from the connection parameters and adds it to the
+     * connectionProperties. The following format is supported:
+     * <p>
+     * {@code info} contains separate mappings for each of following transaction isolation levels:
+     * {@code "TRANSACTION_SERIALIZABLE"}, {@code "TRANSACTION_REPEATABLE_READ"} and
+     * {@code "TRANSACTION_READ_COMMITTED"}.
+     * </p>
      *
      * @param connectionProperties
      *         FirebirdConnectionProperties to set transaction state
@@ -288,11 +285,40 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         connection parameters passed into a driver.
      * @throws FBResourceException
      *         if specified mapping is incorrect.
+     * @see #processMapping(FirebirdConnectionProperties, Map)
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Properties info)
             throws FBResourceException {
         for (String isolationName : ISOLATION_LEVEL_NAMES) {
             String property = info.getProperty(isolationName);
+            if (property == null) continue;
+            connectionProperties.setTransactionParameters(
+                    getTransactionIsolationLevel(isolationName),
+                    processMapping(property));
+        }
+    }
+
+    /**
+     * This method extracts TPB mapping information from the connection parameters and adds it to the
+     * connectionProperties. The following format is supported:
+     * <p>
+     * {@code info} contains separate mappings for each of following transaction isolation levels:
+     * {@code "TRANSACTION_SERIALIZABLE"}, {@code "TRANSACTION_REPEATABLE_READ"} and
+     * {@code "TRANSACTION_READ_COMMITTED"}.
+     * </p>
+     *
+     * @param connectionProperties
+     *         FirebirdConnectionProperties to set transaction state
+     * @param info
+     *         connection parameters passed into a driver.
+     * @throws FBResourceException
+     *         if specified mapping is incorrect.
+     * @see #processMapping(FirebirdConnectionProperties, Properties)
+     */
+    public static void processMapping(FirebirdConnectionProperties connectionProperties, Map<String, String> info)
+            throws FBResourceException {
+        for (String isolationName : ISOLATION_LEVEL_NAMES) {
+            String property = info.get(isolationName);
             if (property == null) continue;
             connectionProperties.setTransactionParameters(
                     getTransactionIsolationLevel(isolationName),
