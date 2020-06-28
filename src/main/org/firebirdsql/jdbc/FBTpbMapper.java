@@ -311,12 +311,12 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         FirebirdConnectionProperties to set transaction state
      * @param info
      *         connection parameters passed into a driver.
-     * @throws SQLException
+     * @throws FBResourceException
      *         if specified mapping is incorrect.
      * @see #processMapping(FirebirdConnectionProperties, Properties)
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Map<String, String> info)
-            throws SQLException{
+            throws FBResourceException {
         for (String isolationName : ISOLATION_LEVEL_NAMES) {
             String property = info.get(isolationName);
             if (property == null) continue;
