@@ -4,6 +4,7 @@
 
 - Published: 2020-03-07
 - Implemented in: Jaybird 4
+- Updates: jdp-2019-03
 
 ## Type
 
