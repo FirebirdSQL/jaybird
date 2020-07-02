@@ -23,6 +23,8 @@ The following has been changed or fixed since Jaybird 4.0.0
     to the JNA `NativeLibrary` ([JDBC-620](http://tracker.firebirdsql.org/browse/JDBC-620))
 -   Fixed: When updating a row through an updatable result set, selected but
     not updated blob fields were set to `NULL` ([JDBC-623](http://tracker.firebirdsql.org/browse/JDBC-623))
+-   Added: Support for type `INT128` (reported as JDBC type `NUMERIC`) ([JDBC-624](http://tracker.firebirdsql.org/browse/JDBC-624) \
+    See also [Firebird 4 INT128 support](#firebird-4-int128-support).
 -   Added: A static utility method `FBDriver.normalizeProperties` which, given a
     JDBC url and a `Properties` object, returns a `Map<String, String>`, returns
     a map containing the merged properties normalized to common 
@@ -1101,6 +1103,19 @@ Decimal128 to a maximum precision of 38 backed by an Int128.
 
 Support for the old 'DEC_FIXED' format backed by a Decimal128 was removed in
 Jaybird 4.0.0-beta-2.
+
+Firebird 4 INT128 support
+-------------------------
+
+Since: Jaybird 4.0.1
+
+After Firebird 4 beta 2 (in build 4.0.0.2076), the Int128 type used to back the
+extended precision numerics was exposed as SQL type `INT128`. As JDBC does not
+provide this type, we map it to JDBC type `NUMERIC`, with a reported precision
+of 38 and a scale of 0.
+
+We think this mapping will offer the best support in tool and libraries. For
+further details, see [jdp-2020-08 Int128 support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-08-int128-support.md)
 
 Firebird 4 time zone support
 ----------------------------
