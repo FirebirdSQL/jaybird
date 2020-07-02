@@ -88,6 +88,7 @@ public class TestFBPreparedStatementMetaData {
         "  /* decfloat */ " +
         "  /* extended numerics */ " +
         "  /* time zone */ " +
+        "  /* int128 */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -100,9 +101,10 @@ public class TestFBPreparedStatementMetaData {
             "  /* decfloat */ " +
             "  /* extended numerics */ " +
             "  /* time zone */ " +
+            "  /* int128 */ " +
             ") " +
-            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? "
-                    + "/* boolean-param *//* decfloat-param *//* extended-num-param*//* time-zone-param*/)";
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? /* boolean-param */" +
+            "/* decfloat-param *//* extended-num-param *//* time-zone-param *//* int128-param */)";
     //@formatter:on
 
     private static FBManager fbManager;
@@ -143,13 +145,17 @@ public class TestFBPreparedStatementMetaData {
             createTable = createTable.replace("/* extended numerics */",
                     ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
-                    .replace("/* extended-num-param*/", ", ?, ?");
+                    .replace("/* extended-num-param */", ", ?, ?");
         }
         if (shouldTestTimeZoneSupport()) {
             createTable = createTable.replace("/* time zone */",
                     ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
             testQuery = testQuery.replace("/* time zone */", ", col_timetz, col_timestamptz")
-                    .replace("/* time-zone-param*/", ", ?, ?");
+                    .replace("/* time-zone-param */", ", ?, ?");
+        }
+        if (supportInfo.supportsInt128()) {
+            createTable = createTable.replace("/* int128 */", ", col_int128 INT128");
+            testQuery = testQuery.replace("/* int128 */", ", col_int128").replace("/* int128-param */", ", ?");
         }
         executeCreateTable(connection, createTable);
 
@@ -218,6 +224,9 @@ public class TestFBPreparedStatementMetaData {
         if (shouldTestTimeZoneSupport()) {
             testData.add(create(testData.size() + 1, "java.time.OffsetTime", parameterModeIn, JaybirdTypeCodes.TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, parameterNullable, false, "col_timetz"));
             testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", parameterModeIn, JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, parameterNullable, false, "col_timestamptz"));
+        }
+        if (supportInfo.supportsInt128()) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "INT128", 38, 0, parameterNullable, true, "col_int128"));
         }
 
         return testData;
@@ -309,17 +318,7 @@ public class TestFBPreparedStatementMetaData {
     }
 
     private static boolean shouldTestTimeZoneSupport() {
-        if (!getDefaultSupportInfo().supportsTimeZones()) {
-            return false;
-        } else {
-            try (Connection connection = getConnectionViaDriverManager()) {
-                DatabaseMetaData dbmd = connection.getMetaData();
-                int jdbcMajorVersion = dbmd.getJDBCMajorVersion();
-                return jdbcMajorVersion > 4 || (jdbcMajorVersion == 4 && dbmd.getJDBCMinorVersion() > 1);
-            } catch (SQLException e) {
-                return false;
-            }
-        }
+        return getDefaultSupportInfo().supportsTimeZones() && FBDatabaseMetaData.JDBC_MINOR_VERSION > 1;
     }
 
     /**

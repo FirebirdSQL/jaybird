@@ -1354,10 +1354,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
                 switch (dataType) {
                 case Types.DECIMAL:
-                case Types.NUMERIC:
+                case Types.NUMERIC: {
+                    short precision = rs.getShort("FIELD_PRECISION");
+                    if (precision == 0 && fieldType == int128_type) {
+                        precision = NUMERIC_INT128_PRECISION;
+                    }
                     valueBuilder
-                            .at(7).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(7).set(createInt(precision))
                             .at(9).set(createShort(-1 * fieldScale));
+                }
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -1854,10 +1859,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
                 switch (dataType) {
                 case Types.DECIMAL:
-                case Types.NUMERIC:
+                case Types.NUMERIC: {
+                    short precision = rs.getShort("FIELD_PRECISION");
+                    if (precision == 0 && fieldType == int128_type) {
+                        precision = NUMERIC_INT128_PRECISION;
+                    }
                     valueBuilder
-                            .at(6).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(6).set(createInt(precision))
                             .at(8).set(createInt(fieldScale * (-1)));
+                }
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -1974,11 +1984,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                         break;
                     case Types.NUMERIC:
                     case Types.DECIMAL:
-                        if (fieldScale == 0) {
+                        if (fieldScale == 0 && fieldType != int128_type) {
                             // Could be autoincrement by trigger, but we simply don't know
                             valueBuilder.at(22).set(EMPTY_STRING_BYTES);
                         } else {
-                            // Scaled NUMERIC/DECIMAL: definitely not autoincrement
+                            // Scaled NUMERIC/DECIMAL or INT128-based: definitely not autoincrement
                             valueBuilder.at(22).set(NO_BYTES);
                         }
                         break;
@@ -2751,6 +2761,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 getBytes("NUMERIC"), createInt(Types.NUMERIC), maxDecimalPrecision, null, null,
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
                 NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
+
+        // Handle INT128 as a JDBC type NUMERIC
+        if (firebirdSupportInfo.supportsInt128()) {
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("INT128"), createInt(Types.NUMERIC), createInt(NUMERIC_INT128_PRECISION), null, null, null,
+                    TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                    SHORT_ZERO, createInt(SQL_INT128), null, RADIX_TEN));
+        }
 
         //DECIMAL=3
         rows.add(RowValue.of(rowDescriptor,

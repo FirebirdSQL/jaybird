@@ -165,6 +165,14 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when the data type INT128 is supported
+     */
+    public boolean supportsInt128() {
+        // NOTE: Can result in problems for Firebird 4.0.0.2075 or earlier
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @return <code>true</code> when the COMMENT statement is supported
      */
     public boolean supportsComment() {

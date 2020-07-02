@@ -109,7 +109,8 @@ public final class JdbcTypeConverter {
                 case ISCConstants.SQL_D_FLOAT:
                     return Types.DOUBLE;
                 case ISCConstants.SQL_INT128:
-                    return Types.DECIMAL;
+                    // We map INT128 to JDBC type NUMERIC to simplify usage
+                    return Types.NUMERIC;
                 }
             }
         case ISCConstants.SQL_FLOAT:

@@ -293,8 +293,7 @@ public class TypeMetadata {
                 case d_float_type:
                     return "DOUBLE PRECISION";
                 case int128_type:
-                    // no equivalent primary type
-                    return "NUMERIC";
+                    return "INT128";
                 default:
                     throw new IllegalStateException(String.format(
                             "Incorrect derivation of type name in getDataTypeName(%d, %d, %d)",
