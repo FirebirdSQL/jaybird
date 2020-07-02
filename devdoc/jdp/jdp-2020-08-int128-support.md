@@ -15,7 +15,7 @@ Initially Firebird 4 introduced higher precision numerics (precision > 18)
 backed by a Decimal128 (precision = 34), this was later changed to an Int128
 (precision = 38, max 39 partial range). This meant that internally, Firebird had
 an Int128 type, but this was not exposed as a datatype on its own, only as
-`NUMERIC` (subtype 1) and `DECIMAL` (subtype 0).
+`NUMERIC` (subtype 1) and `DECIMAL` (subtype 2).
 
 This has recently changed by exposing the Int128 type as SQL type `INT128`
 (subtype 0, no scale). If Firebird hadn't defined `BIGINT` as Int64, `BIGINT`
