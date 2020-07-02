@@ -95,6 +95,7 @@ public class TestFBDatabaseMetaDataColumns {
             "    /* decfloat */ " +
             "    /* extended numerics */ " +
             "    /* time zone */ " +
+            "    /* int128 */ " +
             ")";
     //@formatter:on
 
@@ -157,6 +158,10 @@ public class TestFBDatabaseMetaDataColumns {
         if (supportInfo.supportsTimeZones()) {
             createTable = createTable.replace("/* time zone */",
                     ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
+        }
+        if (supportInfo.supportsInt128()) {
+            createTable = createTable.replace("/* int128 */",
+                    ", col_int128 INT128");
         }
 
         statements.add(createTable);
@@ -939,6 +944,20 @@ public class TestFBDatabaseMetaDataColumns {
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 46);
 
         validate(TEST_TABLE, "COL_TIMESTAMPTZ", validationRules);
+    }
+
+    @Test
+    public void testInt128Column() throws Exception {
+        assumeTrue("Test requires INT128 support",
+                supportInfoFor(con).supportsInt128());
+        Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
+        validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
+        validationRules.put(ColumnMetaData.TYPE_NAME, "INT128");
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 38);
+        validationRules.put(ColumnMetaData.DECIMAL_DIGITS, 0);
+        validationRules.put(ColumnMetaData.ORDINAL_POSITION, 47);
+
+        validate(TEST_TABLE, "COL_INT128", validationRules);
     }
     
     // TODO: Add more extensive tests of patterns

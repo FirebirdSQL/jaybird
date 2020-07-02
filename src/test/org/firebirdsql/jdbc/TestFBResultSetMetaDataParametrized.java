@@ -88,6 +88,7 @@ public class TestFBResultSetMetaDataParametrized {
         "  /* decfloat */ " +
         "  /* extended numerics */ " +
         "  /* time zone */ " +
+        "  /* int128 */ " +
         ")";
 
     public static final String TEST_QUERY =
@@ -100,6 +101,7 @@ public class TestFBResultSetMetaDataParametrized {
             "/* decfloat */ " +
             "/* extended numerics */ " +
             "/* time zone */ " +
+            "/* int128 */ " +
             "FROM test_p_metadata";
     //@formatter:on
 
@@ -145,6 +147,10 @@ public class TestFBResultSetMetaDataParametrized {
             createTable = createTable.replace("/* time zone */",
                     ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
             testQuery = testQuery.replace("/* time zone */", ", col_timetz, col_timestamptz");
+        }
+        if (supportInfo.supportsInt128()) {
+            createTable =createTable.replace("/* int128 */", ", col_int128 INT128");
+            testQuery = testQuery.replace("/* int128 */", ", col_int128");
         }
 
         DdlHelper.executeCreateTable(connection, createTable);
@@ -214,6 +220,9 @@ public class TestFBResultSetMetaDataParametrized {
         if (supportInfo.supportsTimeZones()) {
             testData.add(create(testData.size() + 1, "java.time.OffsetTime", 19, "COL_TIMETZ", "COL_TIMETZ", TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, TABLE_NAME, columnNullable, true, false));
             testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", 30, "COL_TIMESTAMPTZ", "COL_TIMESTAMPTZ", TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, TABLE_NAME, columnNullable, true, false));
+        }
+        if (supportInfo.supportsInt128()) {
+            testData.add(create(testData.size() + 1, "java.math.BigDecimal", 40, "COL_INT128", "COL_INT128", NUMERIC, "INT128", 38, 0, TABLE_NAME, columnNullable, true, true));
         }
 
         return testData;
