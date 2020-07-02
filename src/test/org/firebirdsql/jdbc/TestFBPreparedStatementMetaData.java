@@ -147,7 +147,7 @@ public class TestFBPreparedStatementMetaData {
             testQuery = testQuery.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
                     .replace("/* extended-num-param */", ", ?, ?");
         }
-        if (shouldTestTimeZoneSupport()) {
+        if (getDefaultSupportInfo().supportsTimeZones()) {
             createTable = createTable.replace("/* time zone */",
                     ", col_timetz TIME WITH TIME ZONE, col_timestamptz TIMESTAMP WITH TIME ZONE");
             testQuery = testQuery.replace("/* time zone */", ", col_timetz, col_timestamptz")
@@ -221,7 +221,7 @@ public class TestFBPreparedStatementMetaData {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "NUMERIC", 38, 20, parameterNullable, true, "col_numeric25_20"));
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, DECIMAL, "DECIMAL", 38, 5, parameterNullable, true, "col_decimal30_5"));
         }
-        if (shouldTestTimeZoneSupport()) {
+        if (getDefaultSupportInfo().supportsTimeZones()) {
             testData.add(create(testData.size() + 1, "java.time.OffsetTime", parameterModeIn, TIME_WITH_TIMEZONE, "TIME WITH TIME ZONE", 19, 0, parameterNullable, false, "col_timetz"));
             testData.add(create(testData.size() + 1, "java.time.OffsetDateTime", parameterModeIn, TIMESTAMP_WITH_TIMEZONE, "TIMESTAMP WITH TIME ZONE", 30, 0, parameterNullable, false, "col_timestamptz"));
         }
@@ -315,20 +315,6 @@ public class TestFBPreparedStatementMetaData {
         return new Object[] { index,
                 new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed),
                 descriptiveName };
-    }
-
-    private static boolean shouldTestTimeZoneSupport() {
-        if (!getDefaultSupportInfo().supportsTimeZones()) {
-            return false;
-        } else {
-            try (Connection connection = getConnectionViaDriverManager()) {
-                DatabaseMetaData dbmd = connection.getMetaData();
-                int jdbcMajorVersion = dbmd.getJDBCMajorVersion();
-                return jdbcMajorVersion > 4 || (jdbcMajorVersion == 4 && dbmd.getJDBCMinorVersion() > 1);
-            } catch (SQLException e) {
-                return false;
-            }
-        }
     }
 
     /**
