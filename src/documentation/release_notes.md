@@ -33,6 +33,7 @@ The following has been changed or fixed since Jaybird 4.0.0
     `isc_dpb` name, and removes the `database` property. These are both 
     implementation details that might change in future versions. \
     This feature is also backported to Jaybird 3.0.10.
+-   Fixed: Use of `isc_dpb_no_db_triggers` no longer logs a warning ([JDBC-628](http://tracker.firebirdsql.org/browse/JDBC-628))
 
 Jaybird 4.0.0
 -------------
