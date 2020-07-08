@@ -33,19 +33,30 @@ example, selecting `CURRENT_TIME` at 2020-06-02 20:58:00 in Europe/Berlin will
 result in an `OffsetTime` of '21:58:00+02:00', where the 'correct' value would
 be '20:58:00+01:00' as the time is derived at date 2020-01-01.
 
+A related problem is the derivation of `OffsetDateTime` for a value in a named
+zone. Given we 'add' the current date, the derivation either will preserve the
+offset and yield the 'wrong' time in DST, or we need to rebase the time to
+the current date using the named zone, and only then derive the `OffsetDateTime`.
+
 ## Decision
 
 Jaybird will switch from using the current date to using 2020-01-01 for
 conversion of `TIME WITH TIME ZONE` values with a named zone to
 `java.time.OffsetTime`.
 
-Given the questionable correctness of `CURRENT_TIME` (eg at 2020-06-02 20:58:00
-in Europe/Berlin, the time should be 20:58:00+02:00, but will be derived as
-20:58:00+01:00), we should also consider defaulting to, or at minimum supporting,
-derivation of an offset-based session time zone from a named zone. We defer that
-that decision to jdp-2020-07.
+Given the questionable correctness of `CURRENT_TIME` (eg at '2020-06-02 20:58:00'
+in Europe/Berlin, the time should be '20:58:00+02:00', but will be derived as
+'20:58:00+01:00'), we should also consider defaulting to, or at minimum
+supporting, derivation of an offset-based session time zone from a named zone.
+We defer that that decision to jdp-2020-07.
+
+For derivation of `OffsetDateTime` for named zones, the named zone should be
+preserved by rebasing the time on the current date before deriving
+the `OffsetDateTime`.
 
 ## Consequences
+
+### `OffsetTime` from `TIME WITH TIME ZONE`
 
 By switching to 2020-01-01 for derivation of `TIME WITH TIME ZONE` values with
 named zones, the derivation by Jaybird will be consistent with derivation by
@@ -72,4 +83,13 @@ try (var pstmt = connection.prepareStatement(
 ```
 
 Possible fixes for this will be considered in jdp-2020-07.
+
+### `OffsetDateTime` from `TIME WITH TIME ZONE`
+
+Deriving `OffsetDateTime` for a `TIME WITH TIME ZONE` value will first use 
+2020-01-01 to establish the time in the zone, then the time will be moved
+to the right date and then the `OffsetDateTime` is derived. For example, when
+the current date is 2020-06-02, from `20:58:00 Europe/Amsterdam` to
+`2020-01-01 20:58:00 Europe/Amsterdam` to `2020-06-02 20:58:00 Europe/Amsterdam`,
+and finally `2020-06-02 20:58:00+02:00`.
  
