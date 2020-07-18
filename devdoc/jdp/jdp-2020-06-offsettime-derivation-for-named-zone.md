@@ -86,10 +86,30 @@ Possible fixes for this will be considered in jdp-2020-07.
 
 ### `OffsetDateTime` from `TIME WITH TIME ZONE`
 
-Deriving `OffsetDateTime` for a `TIME WITH TIME ZONE` value will first use 
-2020-01-01 to establish the time in the zone, then the time will be moved
-to the right date and then the `OffsetDateTime` is derived. For example, when
-the current date is 2020-06-02, from `20:58:00 Europe/Amsterdam` to
+Deriving `OffsetDateTime` for a `TIME WITH TIME ZONE` value (with a named zone)
+will first use 2020-01-01 to establish the time in the zone, then the time will
+be moved to the right date and then the `OffsetDateTime` is derived. For example,
+when the current date is 2020-06-02, from `20:58:00 Europe/Amsterdam` to
 `2020-01-01 20:58:00 Europe/Amsterdam` to `2020-06-02 20:58:00 Europe/Amsterdam`,
 and finally `2020-06-02 20:58:00+02:00`.
- 
+
+This will make the result of `OffsetTime` and `OffsetDateTime` for the same
+value inconsistent during DST, and will disallow roundtripping values, but it
+matches what happens when casting a `TIME WITH TIME ZONE` to a `TIMESTAMP WITH
+TIME ZONE` and then obtaining the value as an `OffsetDateTime`. It will also
+allow a view on both interpretations of the value.
+
+### `OffsetTime` from `TIMESTAMP WITH TIME ZONE`
+
+The `OffsetTime` derived from a `TIMESTAMP WITH TIME ZONE` will simply obtain
+the `OffsetDateTime` and then call `getOffsetTime()`.
+
+This will make the values consistent for the same value obtained as an
+`OffsetDateTime`, but it is inconsistent with the cast behaviour of Firebird
+from `TIMESTAMP WITH TIME ZONE` to `TIME WITH TIME ZONE` and then obtaining the
+value as an `OffsetTime`.
+
+We are aware of the inconsistency with our reasoning in _`OffsetDateTime` from
+`TIME WITH TIME ZONE`_. In our opinion, having a value that is consistent both
+as `OffsetTime` and `OffsetDateTime` is more important here, because the
+presence of the date makes the value non-ambiguous.
