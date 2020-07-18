@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneId;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
@@ -270,21 +269,19 @@ public class TimeZoneDatatypeCoderTest {
     @Test
     public void decodeTimeTz_zone_network() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getDefaultTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeTimeTz(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
     public void decodeExTimeTz_zone_network() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getDefaultTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeExTimeTz(fromHexString(EXTIMETZ_ZONE_NETWORK_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
@@ -308,21 +305,19 @@ public class TimeZoneDatatypeCoderTest {
     @Test
     public void decodeTimeTz_zone_littleEndian() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getLittleEndianTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeTimeTz(fromHexString(TIMETZ_ZONE_LE_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
     public void decodeExTimeTz_zone_littleEndian() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getLittleEndianTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeExTimeTz(fromHexString(EXTIMETZ_ZONE_LE_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
@@ -346,21 +341,19 @@ public class TimeZoneDatatypeCoderTest {
     @Test
     public void decodeTimeTz_zone_bigEndian() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getBigEndianTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeTimeTz(fromHexString(TIMETZ_ZONE_BE_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
     public void decodeExTimeTz_zone_bigEndian() {
         TimeZoneDatatypeCoder timeZoneDatatypeCoder = getBigEndianTzCoder();
-        OffsetTime expectedOffsetTime = getExpectedOffsetTimeForZone();
 
         OffsetTime offsetTime = timeZoneDatatypeCoder.decodeExTimeTz(fromHexString(EXTIMETZ_ZONE_BE_HEX));
 
-        assertEquals(expectedOffsetTime, offsetTime);
+        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
     }
 
     @Test
@@ -496,15 +489,6 @@ public class TimeZoneDatatypeCoderTest {
         DatatypeCoder datatypeCoder = BigEndianDatatypeCoder
                 .forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
         return TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder);
-    }
-
-    private OffsetTime getExpectedOffsetTimeForZone() {
-        ZoneId amsterdamTZ = ZoneId.of("Europe/Amsterdam");
-        return TIMETZ_OFFSETTIME
-                .atDate(OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate())
-                .atZoneSameInstant(amsterdamTZ)
-                .toOffsetDateTime()
-                .toOffsetTime();
     }
 
 }
