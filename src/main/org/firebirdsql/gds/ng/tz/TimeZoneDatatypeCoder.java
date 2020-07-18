@@ -73,9 +73,23 @@ public class TimeZoneDatatypeCoder {
      * @return Suitable instance of {@code TimeZoneCodec}
      * @throws SQLException
      *         When {@code fieldDescriptor} is not a TIME/TIMESTAMP WITH TIME ZONE type field
+     * @see #getTimeZoneCodecFor(int)
      */
     public TimeZoneCodec getTimeZoneCodecFor(FieldDescriptor fieldDescriptor) throws SQLException {
-        switch (fieldDescriptor.getType() & ~1) {
+        return getTimeZoneCodecFor(fieldDescriptor.getType());
+    }
+
+    /**
+     * Obtains the {@link TimeZoneCodec} implementation for the field with the specified Firebird type.
+     *
+     * @param fieldType
+     *         Firebird type of the field
+     * @return Suitable instance of {@code TimeZoneCodec}
+     * @throws SQLException
+     *         When {@code fieldType} is not a TIME/TIMESTAMP WITH TIME ZONE type
+     */
+    TimeZoneCodec getTimeZoneCodecFor(int fieldType) throws SQLException {
+        switch (fieldType & ~1) {
         case SQL_TIMESTAMP_TZ:
         case SQL_TIME_TZ:
             return defaultTimeZoneCodec;
@@ -87,7 +101,7 @@ public class TimeZoneDatatypeCoder {
             return extendedTimeZoneCodec = new ExtendedTimeZoneCodec();
         default:
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
-                    .messageParameter(fieldDescriptor.getType())
+                    .messageParameter(fieldType)
                     .toFlatSQLException();
         }
     }
