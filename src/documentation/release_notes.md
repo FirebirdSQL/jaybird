@@ -34,6 +34,12 @@ The following has been changed or fixed since Jaybird 4.0.0
     implementation details that might change in future versions. \
     This feature is also backported to Jaybird 3.0.10.
 -   Fixed: Use of `isc_dpb_no_db_triggers` no longer logs a warning ([JDBC-628](http://tracker.firebirdsql.org/browse/JDBC-628))
+-   Incompatible change: While making changes to time zone support, the API of 
+    `org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder` was made almost entirely
+    private. This should not affect normal user code. \
+    Although we try to avoid these types of incompatible changes in point
+    releases, we explicitly allow them for the `org.firebirdsql.gds.ng` package
+    and sub-packages.
 
 Jaybird 4.0.0
 -------------
