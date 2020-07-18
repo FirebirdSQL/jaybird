@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-abstract class TimeZoneCodecAbstractTest {
+public abstract class TimeZoneCodecAbstractTest {
 
     private static final String TIMESTAMPTZ = "2019-03-09T07:45:51+01:00";
     private static final OffsetDateTime TIMESTAMPTZ_OFFSETDATETIME = OffsetDateTime.parse(TIMESTAMPTZ);
