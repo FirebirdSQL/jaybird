@@ -88,7 +88,7 @@ public class TimeZoneDatatypeCoder {
      * @throws SQLException
      *         When {@code fieldType} is not a TIME/TIMESTAMP WITH TIME ZONE type
      */
-    TimeZoneCodec getTimeZoneCodecFor(int fieldType) throws SQLException {
+    public TimeZoneCodec getTimeZoneCodecFor(int fieldType) throws SQLException {
         switch (fieldType & ~1) {
         case SQL_TIMESTAMP_TZ:
         case SQL_TIME_TZ:
@@ -106,12 +106,12 @@ public class TimeZoneDatatypeCoder {
         }
     }
 
-    public OffsetDateTime decodeTimestampTz(byte[] timestampTzBytes) {
+    private OffsetDateTime decodeTimestampTz(byte[] timestampTzBytes) {
         assert timestampTzBytes.length == 12 : "timestampTzBytes not length 12";
         return decodeTimestampTzImpl(timestampTzBytes);
     }
 
-    public OffsetDateTime decodeExTimestampTz(byte[] exTimestampTzBytes) {
+    private OffsetDateTime decodeExTimestampTz(byte[] exTimestampTzBytes) {
         assert exTimestampTzBytes.length == sizeOfExTimestampTz() : "exTimestampTzBytes wrong length";
         return decodeTimestampTzImpl(exTimestampTzBytes);
     }
@@ -131,11 +131,11 @@ public class TimeZoneDatatypeCoder {
         return OffsetDateTime.ofInstant(instant, zoneId);
     }
 
-    public byte[] encodeTimestampTz(OffsetDateTime offsetDateTime) {
+    private byte[] encodeTimestampTz(OffsetDateTime offsetDateTime) {
         return encodeTimestampTzImpl(offsetDateTime, 12);
     }
 
-    public byte[] encodeExTimestampTz(OffsetDateTime offsetDateTime) {
+    private byte[] encodeExTimestampTz(OffsetDateTime offsetDateTime) {
         return encodeTimestampTzImpl(offsetDateTime, sizeOfExTimestampTz());
     }
 
@@ -160,17 +160,17 @@ public class TimeZoneDatatypeCoder {
         return timestampTzBytes;
     }
 
-    public OffsetTime decodeTimeTz(byte[] timeTzBytes) {
+    private OffsetTime decodeTimeTz(byte[] timeTzBytes) {
         assert timeTzBytes.length == 8 : "timeTzBytes not length 8";
         return decodeTimeTzImpl(timeTzBytes);
     }
 
-    public OffsetTime decodeExTimeTz(byte[] exTimeTzBytes) {
+    private OffsetTime decodeExTimeTz(byte[] exTimeTzBytes) {
         assert exTimeTzBytes.length == sizeOfExTimeTz() : "exTimeTzBytes wrong length";
         return decodeTimeTzImpl(exTimeTzBytes);
     }
 
-    OffsetTime decodeTimeTzImpl(byte[] timeTzBytes) {
+    private OffsetTime decodeTimeTzImpl(byte[] timeTzBytes) {
         int encodedTime = datatypeCoder.decodeInt(timeTzBytes);
         int timeZoneId = datatypeCoder.decodeShort(timeTzBytes, 4) & 0xFFFF; // handle as unsigned short
         RawDateTimeStruct raw = new RawDateTimeStruct(0, false, encodedTime, true);
@@ -193,11 +193,11 @@ public class TimeZoneDatatypeCoder {
                 .toOffsetTime();
     }
 
-    public byte[] encodeTimeTz(OffsetTime offsetTime) {
+    private byte[] encodeTimeTz(OffsetTime offsetTime) {
         return encodeTimeTzImpl(offsetTime, 8);
     }
 
-    public byte[] encodeExTimeTz(OffsetTime offsetTime) {
+    private byte[] encodeExTimeTz(OffsetTime offsetTime) {
         return encodeTimeTzImpl(offsetTime, sizeOfExTimeTz());
     }
 
