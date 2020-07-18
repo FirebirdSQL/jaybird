@@ -46,6 +46,8 @@ public class TimeZoneDatatypeCoder {
     // Given implementation, the actual max should be 1 (maybe 2 if a combination of pure java and native is used)
     private static final int MAX_CACHED = 4;
     private static final Map<DatatypeCoder, TimeZoneDatatypeCoder> instanceCache = new ConcurrentHashMap<>(MAX_CACHED);
+    // Date used by Firebird for deciding UTC time of TIME WITH TIME ZONE types
+    private static final LocalDate TIME_TZ_BASE_DATE = LocalDate.of(2020, 1, 1);
     private final DatatypeCoder datatypeCoder;
     private final TimeZoneMapping timeZoneMapping = TimeZoneMapping.getInstance();
     // Always cache because this is the default mapping of the type
@@ -168,11 +170,10 @@ public class TimeZoneDatatypeCoder {
                     .withOffsetSameInstant((ZoneOffset) zoneId);
         }
 
-        // We need to base on a date to determine value, we use the current date; this will be inconsistent depending
-        // on the date, but this aligns closest with Firebird behaviour and SQL standard
+        // We need to base on a date to determine value, we use the 2020-01-01 date;
+        // this aligns closest with Firebird behaviour
 
-        LocalDate utcDate = OffsetDateTime.now(ZoneOffset.UTC).toLocalDate();
-        return ZonedDateTime.of(utcDate, utcTime, ZoneOffset.UTC)
+        return ZonedDateTime.of(TIME_TZ_BASE_DATE, utcTime, ZoneOffset.UTC)
                 .withZoneSameInstant(zoneId)
                 .toOffsetDateTime()
                 .toOffsetTime();

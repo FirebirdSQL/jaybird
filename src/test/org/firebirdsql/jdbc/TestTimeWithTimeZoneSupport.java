@@ -67,11 +67,7 @@ public class TestTimeWithTimeZoneSupport {
     };
 
     private static final OffsetTime VALUE_1 = OffsetTime.parse("13:25:32.1234+01:00");
-    private static final OffsetTime VALUE_2 = ZonedDateTime
-            .of(ZonedDateTime.now(ZoneId.of("Europe/Amsterdam")).toLocalDate(),
-                    LocalTime.parse("13:25:32.1235"), ZoneId.of("Europe/Amsterdam"))
-            .toOffsetDateTime()
-            .toOffsetTime();
+    private static final OffsetTime VALUE_2 =  OffsetTime.parse("13:25:32.1235+01:00");
     private static final OffsetTime VALUE_3 = OffsetTime.parse("23:59:59.9999+13:59");
     private static final Collection<String> BINDS = unmodifiableCollection(asList(null, "TIME ZONE TO EXTENDED"));
 
