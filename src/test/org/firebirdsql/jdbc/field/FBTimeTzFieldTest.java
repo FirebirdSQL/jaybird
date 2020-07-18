@@ -354,8 +354,11 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         setValueExpectations(fromHexString(TIMETZ_OFFSET_NETWORK_HEX));
     }
 
-    private void setOffsetTimeExpectations(OffsetTime offsetDateTime) {
-        setValueExpectations(TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder).encodeTimeTz(offsetDateTime));
+    private void setOffsetTimeExpectations(OffsetTime offsetTime) throws SQLException {
+        setValueExpectations(TimeZoneDatatypeCoder
+                .getInstanceFor(datatypeCoder)
+                .getTimeZoneCodecFor(fieldDescriptor)
+                .encodeOffsetTime(offsetTime));
     }
 
     private OffsetDateTime getExpectedNonNullOffsetDateTime() {

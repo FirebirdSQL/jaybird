@@ -126,7 +126,7 @@ public class FBTimestampTzFieldTest extends BaseJUnit4TestFBField<FBTimestampTzF
         toReturnNonNullOffsetDateTime();
 
         long expectedMillis = TIMESTAMPTZ_OFFSETDATETIME.toInstant().toEpochMilli();
-        
+
         assertEquals("Unexpected value for getTime()", new java.sql.Time(expectedMillis), field.getTime());
     }
 
@@ -404,11 +404,14 @@ public class FBTimestampTzFieldTest extends BaseJUnit4TestFBField<FBTimestampTzF
         setValueExpectations(fromHexString(TIMESTAMPTZ_OFFSET_NETWORK_HEX));
     }
 
-    private void setOffsetDateTimeExpectations(OffsetDateTime offsetDateTime) {
-        setValueExpectations(TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder).encodeTimestampTz(offsetDateTime));
+    private void setOffsetDateTimeExpectations(OffsetDateTime offsetDateTime) throws SQLException {
+        setValueExpectations(TimeZoneDatatypeCoder
+                .getInstanceFor(datatypeCoder)
+                .getTimeZoneCodecFor(fieldDescriptor)
+                .encodeOffsetDateTime(offsetDateTime));
     }
 
-    private void setOffsetTimeExpectations(OffsetTime offsetTime) {
+    private void setOffsetTimeExpectations(OffsetTime offsetTime) throws SQLException {
         ZoneOffset offset = offsetTime.getOffset();
         OffsetDateTime today = OffsetDateTime.now(offset);
         OffsetDateTime timeToday = OffsetDateTime
