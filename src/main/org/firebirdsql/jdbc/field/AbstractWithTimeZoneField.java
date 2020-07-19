@@ -47,13 +47,25 @@ abstract class AbstractWithTimeZoneField extends FBField {
                 .getTimeZoneCodecFor(fieldDescriptor);
     }
 
-    abstract OffsetDateTime getOffsetDateTime() throws SQLException;
+    final OffsetDateTime getOffsetDateTime() throws SQLException {
+        if (isNull()) return null;
 
-    abstract void setOffsetDateTime(OffsetDateTime offsetDateTime) throws SQLException;
+        return timeZoneCodec.decodeOffsetDateTime(getFieldData());
+    }
 
-    abstract OffsetTime getOffsetTime() throws SQLException;
+    final void setOffsetDateTime(OffsetDateTime offsetDateTime) throws SQLException {
+        setFieldData(getTimeZoneCodec().encodeOffsetDateTime(offsetDateTime));
+    }
 
-    abstract void setOffsetTime(OffsetTime offsetTime) throws SQLException;
+    final OffsetTime getOffsetTime() throws SQLException {
+        if (isNull()) return null;
+
+        return getTimeZoneCodec().decodeOffsetTime(getFieldData());
+    }
+
+    final void setOffsetTime(OffsetTime offsetTime) throws SQLException {
+        setFieldData(getTimeZoneCodec().encodeOffsetTime(offsetTime));
+    }
 
     @SuppressWarnings("unchecked")
     @Override

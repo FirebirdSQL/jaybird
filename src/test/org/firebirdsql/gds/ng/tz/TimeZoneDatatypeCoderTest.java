@@ -24,13 +24,12 @@ import org.junit.Test;
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.gds.ng.tz.TimeZoneCodecAbstractTest.getDefaultTzCoder;
-import static org.firebirdsql.gds.ng.tz.TimeZoneCodecAbstractTest.rowDescriptorBuilder;
+import static org.firebirdsql.gds.ng.tz.TimeZoneCodecAbstractTest.*;
 import static org.junit.Assert.fail;
 
 /**
- * Tests for {@link TimeZoneDatatypeCoder} that are not covered through {@link DefaultTimeZoneCodecTest}
- * and {@link ExtendedTimeZoneCodecTest}.
+ * Tests for {@link TimeZoneDatatypeCoder} that are not covered through {@link TimeZoneCodecStandardTimestampTzTest}
+ * and {@link TimeZoneCodecExtendedTimestampTzTest}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -44,7 +43,7 @@ public class TimeZoneDatatypeCoderTest {
             for (int type : new int[] { baseType, baseType | 1 }) {
                 FieldDescriptor descriptor = rowDescriptorBuilder().setType(type).toFieldDescriptor();
                 try {
-                    getDefaultTzCoder().getTimeZoneCodecFor(descriptor);
+                    getDefaultTzCoder(FIXED_AT_2019_03_09).getTimeZoneCodecFor(descriptor);
                     fail("Should have thrown SQLException for type " + type);
                 } catch (SQLException e) {
                     //ignore

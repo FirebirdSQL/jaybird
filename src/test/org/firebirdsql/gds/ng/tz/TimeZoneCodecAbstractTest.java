@@ -30,8 +30,7 @@ import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
+import java.time.*;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -43,273 +42,276 @@ import static org.junit.Assert.assertEquals;
  */
 abstract class TimeZoneCodecAbstractTest {
 
-    private static final String TIMESTAMPTZ = "2019-03-09T07:45:51+01:00";
-    private static final OffsetDateTime TIMESTAMPTZ_OFFSETDATETIME = OffsetDateTime.parse(TIMESTAMPTZ);
-    private static final String TIMETZ = "07:45:51+01:00";
-    private static final OffsetTime TIMETZ_OFFSETTIME = OffsetTime.parse(TIMETZ);
+    static final OffsetDateTime OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09 =
+            OffsetDateTime.parse("2019-03-09T07:45:51+01:00");
+    static final OffsetTime OFFSET_1_OFFSET_TIME = OffsetTime.parse("07:45:51+01:00");
+    static final OffsetDateTime OFFSET_1_OFFSET_DATE_TIME_AT_2019_07_01 =
+            OffsetDateTime.parse("2019-07-01T07:45:51+01:00");
+    static final OffsetDateTime OFFSET_2_OFFSET_DATE_TIME_AT_2019_07_01 =
+            OffsetDateTime.parse("2019-07-01T07:45:51+02:00");
+    static final OffsetTime OFFSET_2_OFFSET_TIME = OffsetTime.parse("07:45:51+02:00");
 
-    // Defined using offset
-    static final String TIMESTAMPTZ_OFFSET_NETWORK_HEX = "0000E4B70E83AAF0000005DB";
-    static final String TIMESTAMPTZ_OFFSET_LE_HEX = "B7E40000F0AA830EDB050000";
-    static final String TIMESTAMPTZ_OFFSET_BE_HEX = "0000E4B70E83AAF005DB0000";
-    static final String EXTIMESTAMPTZ_OFFSET_NETWORK_HEX = "0000E4B70E83AAF0000005DB0000003C";
-    static final String EXTIMESTAMPTZ_OFFSET_NETWORK_HEX_ENCODED = "0000E4B70E83AAF0000005DB00000000";
-    static final String EXTIMESTAMPTZ_OFFSET_LE_HEX = "B7E40000F0AA830EDB053C00";
-    static final String EXTIMESTAMPTZ_OFFSET_BE_HEX = "0000E4B70E83AAF005DB003C";
-    // Defined using Europe/Amsterdam
-    static final String TIMESTAMPTZ_ZONE_NETWORK_HEX = "0000E4B70E83AAF0FFFFFE49";
-    static final String TIMESTAMPTZ_ZONE_LE_HEX = "B7E40000F0AA830E49FE0000";
-    static final String TIMESTAMPTZ_ZONE_BE_HEX = "0000E4B70E83AAF0FE490000";
-    static final String EXTIMESTAMPTZ_ZONE_NETWORK_HEX = "0000E4B70E83AAF0FFFFFE490000003C";
-    static final String EXTIMESTAMPTZ_ZONE_LE_HEX = "B7E40000F0AA830E49FE3C00";
-    static final String EXTIMESTAMPTZ_ZONE_BE_HEX = "0000E4B70E83AAF0FE49003C";
-    // Defined using offset
-    static final String TIMETZ_OFFSET_NETWORK_HEX = "0E83AAF0000005DB";
-    static final String TIMETZ_OFFSET_LE_HEX = "F0AA830EDB050000";
-    static final String TIMETZ_OFFSET_BE_HEX = "0E83AAF005DB0000";
-    static final String EXTIMETZ_OFFSET_NETWORK_HEX = "0E83AAF0000005DB0000003C";
-    static final String EXTIMETZ_OFFSET_NETWORK_HEX_ENCODED = "0E83AAF0000005DB00000000";
-    static final String EXTIMETZ_OFFSET_LE_HEX = "F0AA830EDB053C00";
-    static final String EXTIMETZ_OFFSET_BE_HEX = "0E83AAF005DB003C";
-    // Defined using Europe/Amsterdam (note: offset is date-sensitive)
-    static final String TIMETZ_ZONE_NETWORK_HEX = "0E83AAF0FFFFFE49";
-    static final String TIMETZ_ZONE_LE_HEX = "F0AA830E49FE0000";
-    static final String TIMETZ_ZONE_BE_HEX = "0E83AAF0FE490000";
-    static final String EXTIMETZ_ZONE_NETWORK_HEX = "0E83AAF0FFFFFE490000003C";
-    static final String EXTIMETZ_ZONE_LE_HEX = "F0AA830E49FE3C00";
-    static final String EXTIMETZ_ZONE_BE_HEX = "0E83AAF0FE49003C";
+    static final Clock FIXED_AT_2019_03_09 = Clock.fixed(Instant.parse("2019-03-09T12:00:00Z"), ZoneOffset.UTC);
+    static final Clock FIXED_AT_2019_07_01 = Clock.fixed(Instant.parse("2019-07-01T12:00:00Z"), ZoneOffset.UTC);
 
-    private final int sqlTypeTimeTz;
-    private final int sqlTypeTimestampTz;
+    final int tzType;
 
-    TimeZoneCodecAbstractTest(int sqlTypeTimeTz, int sqlTypeTimestampTz) {
-        this.sqlTypeTimeTz = sqlTypeTimeTz;
-        this.sqlTypeTimestampTz = sqlTypeTimestampTz;
+    TimeZoneCodecAbstractTest(int tzType) {
+        this.tzType = tzType;
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_offset_network() throws Exception {
-        OffsetDateTime offsetDateTime = getNetworkCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzOffsetNetworkInput());
+    public final void decodeOffsetDateTime_offset_network_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getOffsetNetworkAt2019_03_09Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_zone_network() throws Exception {
-        OffsetDateTime offsetDateTime = getNetworkCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzZoneNetworkInput());
+    public final void decodeOffsetTime_offset_network_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getOffsetNetworkAt2019_03_09Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_offset_littleEndian() throws Exception {
-        OffsetDateTime offsetDateTime = getLittleEndianCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzOffsetLeInput());
+    public final void decodeOffsetDateTime_offset_network_at2019_07_01() throws Exception {
+        OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeOffsetDateTime(getOffsetNetworkAt2019_07_01Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(getOffsetExpectedOffsetDateTimeAt2019_07_01(), offsetDateTime);
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_zone_littleEndian() throws Exception {
-        OffsetDateTime offsetDateTime = getLittleEndianCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzZoneLeInput());
+    public final void decodeOffsetTime_offset_network_at2019_07_01() throws Exception {
+        OffsetTime offsetTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeOffsetTime(getOffsetNetworkAt2019_07_01Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(getOffsetExpectedOffsetTimeAt2019_07_01(), offsetTime);
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_offset_bigEndian() throws Exception {
-        OffsetDateTime offsetDateTime = getBigEndianCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzOffsetBeInput());
+    public final void decodeOffsetDateTime_zone_network_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getZoneNetworkAt2019_03_09Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timestampTzDecodeOffsetDateTime_zone_bigEndian() throws Exception {
-        OffsetDateTime offsetDateTime = getBigEndianCodec(sqlTypeTimestampTz)
-                .decodeOffsetDateTime(getTimestampTzZoneBeInput());
+    public final void decodeOffsetTime_zone_network_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getZoneNetworkAt2019_03_09Input());
 
-        assertEquals(TIMESTAMPTZ_OFFSETDATETIME, offsetDateTime);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public final void timestampTzEncodeOffsetDateTime_network() throws Exception {
-        byte[] encoded = getNetworkCodec(sqlTypeTimestampTz).encodeOffsetDateTime(TIMESTAMPTZ_OFFSETDATETIME);
+    public final void decodeOffsetDateTime_zone_network_at2019_07_01() throws Exception {
+        OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeOffsetDateTime(getZoneNetworkAt2019_07_01Input());
 
-        assertArrayEquals(getTimestampTzOffsetNetworkExpected(), encoded);
+        assertEquals(getZoneExpectedOffsetDateTimeAt2019_07_01(), offsetDateTime);
     }
 
     @Test
-    public final void timestampTzEncodeOffsetDateTime_littleEndian() throws Exception {
-        byte[] encoded = getLittleEndianCodec(sqlTypeTimestampTz).encodeOffsetDateTime(TIMESTAMPTZ_OFFSETDATETIME);
+    public final void decodeOffsetTime_zone_network_at2019_07_01() throws Exception {
+        OffsetTime offsetTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeOffsetTime(getZoneNetworkAt2019_07_01Input());
 
-        assertArrayEquals(getTimestampTzOffsetLeExpected(), encoded);
+        // Important this is the offset at 2020-01-01, not 2019-07-01!
+        assertEquals(getZoneExpectedOffsetTimeAt2019_07_01(), offsetTime);
     }
 
     @Test
-    public final void timestampTzEncodeOffsetDateTime_bigEndian() throws Exception {
-        byte[] encoded = getBigEndianCodec(sqlTypeTimestampTz).encodeOffsetDateTime(TIMESTAMPTZ_OFFSETDATETIME);
+    public final void decodeOffsetDateTime_offset_littleEndian_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getOffsetLeAt2019_03_09Input());
 
-        assertArrayEquals(getTimestampTzOffsetBeExpected(), encoded);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timeTzDecodeOffsetTime_offset_network() throws Exception {
-        OffsetTime offsetTime = getNetworkCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzOffsetNetworkInput());
+    public final void decodeOffsetTime_offset_littleEndian_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getOffsetLeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public final void timeTzDecodeOffsetTime_zone_network() throws Exception {
-        OffsetTime offsetTime = getNetworkCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzZoneNetworkInput());
+    public final void decodeOffsetDateTime_zone_littleEndian_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getZoneLeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timeTzDecodeOffsetTime_offset_littleEndian() throws Exception {
-        OffsetTime offsetTime = getLittleEndianCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzOffsetLeInput());
+    public final void decodeOffsetTime_zone_littleEndian_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getZoneLeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public void timeTzDecodeOffsetTime_zone_littleEndian() throws Exception {
-        OffsetTime offsetTime = getLittleEndianCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzZoneLeInput());
+    public final void decodeOffsetDateTime_offset_bigEndian_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getOffsetBeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timeTzDecodeOffsetTime_offset_bigEndian() throws Exception {
-        OffsetTime offsetTime = getBigEndianCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzOffsetBeInput());
+    public final void decodeOffsetTime_offset_bigEndian_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getOffsetBeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public final void timeTzDecodeOffsetTime_zone_bigEndian() throws Exception {
-        OffsetTime offsetTime = getBigEndianCodec(sqlTypeTimeTz).decodeOffsetTime(getTimeTzZoneBeInput());
+    public final void decodeOffsetDateTime_zone_bigEndian_at2019_03_09() throws Exception {
+        OffsetDateTime offsetDateTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetDateTime(getZoneBeAt2019_03_09Input());
 
-        assertEquals(TIMETZ_OFFSETTIME, offsetTime);
+        assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09, offsetDateTime);
     }
 
     @Test
-    public final void timeTzEncodeOffsetTime_network() throws Exception {
-        byte[] encoded = getNetworkCodec(sqlTypeTimeTz).encodeOffsetTime(TIMETZ_OFFSETTIME);
+    public final void decodeOffsetTime_zone_bigEndian_at2019_03_09() throws Exception {
+        OffsetTime offsetTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeOffsetTime(getZoneBeAt2019_03_09Input());
 
-        assertArrayEquals(getTimeTzOffsetNetworkExpected(), encoded);
+        assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
     }
 
     @Test
-    public final void timeTzEncodeOffsetTime_littleEndian() throws Exception {
-        byte[] encoded = getLittleEndianCodec(sqlTypeTimeTz).encodeOffsetTime(TIMETZ_OFFSETTIME);
+    public final void encodeOffsetDateTime_network_at2019_03_09() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
 
-        assertArrayEquals(getTimeTzOffsetLeExpected(), encoded);
+        assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), encoded);
     }
 
     @Test
-    public final void timeTzEncodeOffsetTime_bigEndian() throws Exception {
-        byte[] encoded = getBigEndianCodec(sqlTypeTimeTz).encodeOffsetTime(TIMETZ_OFFSETTIME);
+    public final void encodeOffsetTime_network_at2019_03_09() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
 
-        assertArrayEquals(getTimeTzOffsetBeExpected(), encoded);
+        assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetDateTime_network_at2019_07_01() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_07_01);
+
+        assertArrayEquals(getOffsetNetworkAt2019_07_01Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetTime_network_at2019_07_01() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
+
+        assertArrayEquals(getOffsetNetworkAt2019_07_01Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetDateTime_littleEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getOffsetLeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetTime_littleEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
+
+        assertArrayEquals(getOffsetLeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetDateTime_bigEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getOffsetBeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeOffsetTime_bigEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
+
+        assertArrayEquals(getOffsetBeAt2019_03_09Expected(), encoded);
     }
 
     @Test
     public void getTimeZoneCodec() throws Exception {
         // NOTE Only testing for default datatype coder, this is about testing selection of right type
-        for (int baseType : new int[] { sqlTypeTimestampTz, sqlTypeTimeTz }) {
-            for (int type : new int[] { baseType, baseType | 1 }) {
-                FieldDescriptor descriptor = rowDescriptorBuilder().setType(type).toFieldDescriptor();
-                TimeZoneDatatypeCoder.TimeZoneCodec codec = getDefaultTzCoder().getTimeZoneCodecFor(descriptor);
+        for (int type : new int[] { tzType, tzType | 1 }) {
+            FieldDescriptor descriptor = rowDescriptorBuilder().setType(type).toFieldDescriptor();
+            TimeZoneDatatypeCoder.TimeZoneCodec codec = getDefaultTzCoder(FIXED_AT_2019_03_09)
+                    .getTimeZoneCodecFor(descriptor);
 
-                assertEquals(TIMESTAMPTZ_OFFSETDATETIME,
-                        codec.decodeOffsetDateTime(getTimestampTzOffsetNetworkInput()));
-                assertEquals(TIMETZ_OFFSETTIME, codec.decodeOffsetTime(getTimeTzOffsetNetworkInput()));
-                assertArrayEquals(getTimestampTzOffsetNetworkExpected(),
-                        codec.encodeOffsetDateTime(TIMESTAMPTZ_OFFSETDATETIME));
-                assertArrayEquals(getTimeTzOffsetNetworkExpected(), codec.encodeOffsetTime(TIMETZ_OFFSETTIME));
-            }
+            assertEquals(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09,
+                    codec.decodeOffsetDateTime(getOffsetNetworkAt2019_03_09Input()));
+            assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(),
+                    codec.encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09));
+            assertEquals(OFFSET_1_OFFSET_TIME, codec.decodeOffsetTime(getOffsetNetworkAt2019_03_09Input()));
+            assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), codec.encodeOffsetTime(OFFSET_1_OFFSET_TIME));
         }
     }
 
-    abstract byte[] getTimestampTzOffsetNetworkInput();
+    abstract byte[] getOffsetNetworkAt2019_03_09Input();
+    abstract byte[] getOffsetNetworkAt2019_03_09Expected();
 
-    abstract byte[] getTimestampTzOffsetNetworkExpected();
+    abstract byte[] getOffsetNetworkAt2019_07_01Input();
+    abstract byte[] getOffsetNetworkAt2019_07_01Expected();
+    abstract OffsetDateTime getOffsetExpectedOffsetDateTimeAt2019_07_01();
+    abstract OffsetTime getOffsetExpectedOffsetTimeAt2019_07_01();
 
-    abstract byte[] getTimestampTzZoneNetworkInput();
+    abstract byte[] getZoneNetworkAt2019_03_09Input();
+    abstract byte[] getZoneNetworkAt2019_03_09Expected();
 
-    @SuppressWarnings("unused")
-    abstract byte[] getTimestampTzZoneNetworkExpected();
+    abstract byte[] getZoneNetworkAt2019_07_01Input();
+    abstract byte[] getZoneNetworkAt2019_07_01Expected();
+    abstract OffsetDateTime getZoneExpectedOffsetDateTimeAt2019_07_01();
+    abstract OffsetTime getZoneExpectedOffsetTimeAt2019_07_01();
 
-    abstract byte[] getTimestampTzOffsetLeInput();
+    abstract byte[] getOffsetLeAt2019_03_09Input();
+    abstract byte[] getOffsetLeAt2019_03_09Expected();
 
-    abstract byte[] getTimestampTzOffsetLeExpected();
+    abstract byte[] getZoneLeAt2019_03_09Input();
+    abstract byte[] getZoneLeAt2019_03_09Expected();
 
-    abstract byte[] getTimestampTzZoneLeInput();
+    abstract byte[] getOffsetBeAt2019_03_09Input();
+    abstract byte[] getOffsetBeAt2019_03_09Expected();
 
-    @SuppressWarnings("unused")
-    abstract byte[] getTimestampTzZoneLeExpected();
-
-    abstract byte[] getTimestampTzOffsetBeInput();
-
-    abstract byte[] getTimestampTzOffsetBeExpected();
-
-    abstract byte[] getTimestampTzZoneBeInput();
-
-    @SuppressWarnings("unused")
-    abstract byte[] getTimestampTzZoneBeExpected();
-
-    abstract byte[] getTimeTzOffsetNetworkInput();
-
-    abstract byte[] getTimeTzOffsetNetworkExpected();
-
-    abstract byte[] getTimeTzZoneNetworkInput();
-
-    @SuppressWarnings("unused")
-    abstract byte[] getTimeTzZoneNetworkExpected();
-
-    abstract byte[] getTimeTzOffsetLeInput();
-
-    abstract byte[] getTimeTzOffsetLeExpected();
-
-    abstract byte[] getTimeTzZoneLeInput();
-
-    @SuppressWarnings("unused")
-    abstract byte[] getTimeTzZoneLeExpected();
-
-    abstract byte[] getTimeTzOffsetBeInput();
-
-    abstract byte[] getTimeTzOffsetBeExpected();
-
-    abstract byte[] getTimeTzZoneBeInput();
-
-    @SuppressWarnings("unused")
-    abstract byte[] getTimeTzZoneBeExpected();
+    abstract byte [] getZoneBeAt2019_03_09Input();
+    abstract byte [] getZoneBeAt2019_03_09Expected();
 
     static RowDescriptorBuilder rowDescriptorBuilder() {
         return new RowDescriptorBuilder(1, getDefaultDataTypeCoder());
     }
 
-    final TimeZoneCodec getNetworkCodec(int type) throws SQLException {
-        return getDefaultTzCoder().getTimeZoneCodecFor(type);
+    final TimeZoneCodec getNetworkCodec(int type, Clock clock) throws SQLException {
+        return getDefaultTzCoder(clock).getTimeZoneCodecFor(type);
     }
 
-    final TimeZoneCodec getLittleEndianCodec(int type) throws SQLException {
-        return getLittleEndianTzCoder().getTimeZoneCodecFor(type);
+    final TimeZoneCodec getLittleEndianCodec(int type, Clock clock) throws SQLException {
+        return getLittleEndianTzCoder(clock).getTimeZoneCodecFor(type);
     }
 
-    final TimeZoneCodec getBigEndianCodec(int type) throws SQLException {
-        return getBigEndianTzCoder().getTimeZoneCodecFor(type);
-    }
-
-    static TimeZoneDatatypeCoder getDefaultTzCoder() {
-        DatatypeCoder datatypeCoder = getDefaultDataTypeCoder();
-        return TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder);
+    final TimeZoneCodec getBigEndianCodec(int type, Clock clock) throws SQLException {
+        return getBigEndianTzCoder(clock).getTimeZoneCodecFor(type);
     }
 
     static DefaultDatatypeCoder getDefaultDataTypeCoder() {
@@ -317,16 +319,21 @@ abstract class TimeZoneCodecAbstractTest {
                 .forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
     }
 
-    static TimeZoneDatatypeCoder getLittleEndianTzCoder() {
-        DatatypeCoder datatypeCoder = LittleEndianDatatypeCoder
-                .forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
-        return TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder);
+    static TimeZoneDatatypeCoder getDefaultTzCoder(Clock clock) {
+        DatatypeCoder datatypeCoder = getDefaultDataTypeCoder();
+        return new TimeZoneDatatypeCoder(datatypeCoder, clock);
     }
 
-    static TimeZoneDatatypeCoder getBigEndianTzCoder() {
+    static TimeZoneDatatypeCoder getLittleEndianTzCoder(Clock clock) {
+        DatatypeCoder datatypeCoder = LittleEndianDatatypeCoder
+                .forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
+        return new TimeZoneDatatypeCoder(datatypeCoder, clock);
+    }
+
+    static TimeZoneDatatypeCoder getBigEndianTzCoder(Clock clock) {
         DatatypeCoder datatypeCoder = BigEndianDatatypeCoder
                 .forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
-        return TimeZoneDatatypeCoder.getInstanceFor(datatypeCoder);
+        return new TimeZoneDatatypeCoder(datatypeCoder, clock);
     }
 
 }
