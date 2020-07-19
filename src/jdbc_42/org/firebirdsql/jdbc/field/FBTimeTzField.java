@@ -21,9 +21,6 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 
 /**
@@ -37,36 +34,6 @@ class FBTimeTzField extends AbstractWithTimeZoneField {
     FBTimeTzField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
-    }
-
-    @Override
-    OffsetTime getOffsetTime() throws SQLException {
-        if (isNull()) return null;
-
-        return getTimeZoneCodec().decodeOffsetTime(getFieldData());
-    }
-
-    @Override
-    void setOffsetTime(OffsetTime offsetTime) {
-        setFieldData(getTimeZoneCodec().encodeOffsetTime(offsetTime));
-    }
-
-    @Override
-    OffsetDateTime getOffsetDateTime() throws SQLException {
-        OffsetTime offsetTime = getOffsetTime();
-        if (offsetTime == null) {
-            return null;
-        }
-        // We need to base on a date to determine value, we use the current date; this will be inconsistent depending
-        // on the date, but this aligns closest with Firebird behaviour and SQL standard
-        ZoneOffset offset = offsetTime.getOffset();
-        OffsetDateTime today = OffsetDateTime.now(offset);
-        return OffsetDateTime.of(today.toLocalDate(), offsetTime.toLocalTime(), offset);
-    }
-
-    @Override
-    void setOffsetDateTime(OffsetDateTime offsetDateTime) {
-        setOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Override
