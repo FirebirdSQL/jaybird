@@ -28,10 +28,6 @@ abstract class TimeZoneCodecAbstractTimeTzTest extends TimeZoneCodecAbstractTest
     static final String EXTIMETZ_OFFSET_1_NETWORK_HEX_ENCODED = "0E83AAF0000005DB00000000";
     static final String EXTIMETZ_OFFSET_1_LE_HEX = "F0AA830EDB053C00";
     static final String EXTIMETZ_OFFSET_1_BE_HEX = "0E83AAF005DB003C";
-    // 07:45:51+02:00 defined using offset
-    static final String TIMETZ_OFFSET_2_NETWORK_HEX = "0C5E59F000000617";
-    static final String EXTIMETZ_OFFSET_2_NETWORK_HEX = "0000E6A90C5E59F00000061700000078";
-    static final String EXTIMETZ_OFFSET_2_NETWORK_HEX_ENCODED = "0000E6A90C5E59F00000061700000000";
     // 07:45:51 Europe/Amsterdam Defined using Europe/Amsterdam
     static final String TIMETZ_ZONE_NETWORK_HEX = "0E83AAF0FFFFFE49";
     static final String TIMETZ_ZONE_LE_HEX = "F0AA830E49FE0000";

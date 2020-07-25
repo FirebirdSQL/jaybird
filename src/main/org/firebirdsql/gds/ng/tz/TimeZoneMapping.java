@@ -63,7 +63,10 @@ public final class TimeZoneMapping {
      */
     private static final int MAX_CACHED_ZONE_OFFSETS = 24;
     /**
-     * Maximum number of named zones cached. If a 10th needs to be cached, we clear the cache and start afresh.
+     * Maximum number of named zones cached. If an 11th needs to be cached, we clear the cache and start afresh.
+     * <p>
+     * Applies to both {@code namedZoneCache} and {@code namedZoneIdCache}.
+     * </p>
      *
      * @see #cacheOffset(Integer, ZoneOffset)
      */
@@ -77,9 +80,6 @@ public final class TimeZoneMapping {
      * List of time zone names so that the index in the list corresponds to {@code 0xFFFF - RDB$TIME_ZONE_ID} (see
      * {@link #internalId(int)}).
      * <p>
-     * This list is only used to map from Firebird to Java, in reverse we will always use offset.
-     * </p>
-     * <p>
      * When updating the list, make sure to update {@code min_zone_id} in the properties file and the
      * {@code TimeZoneByNameMappingTest}. Also verify if all instances are mapped (or otherwise where necessary, update
      * names to equivalent names). See also file {@code firebird_time_zone_mapping.properties}.
@@ -88,6 +88,7 @@ public final class TimeZoneMapping {
     private final List<String> timeZoneNameById = loadTimeZoneNameById();
     private final Map<Integer, ZoneOffset> offsetCache = new ConcurrentHashMap<>(MAX_CACHED_ZONE_OFFSETS);
     private final Map<Integer, ZoneId> namedZoneCache = new ConcurrentHashMap<>(MAX_CACHED_NAMED_ZONES);
+    private final Map<ZoneId, Integer> namedZoneIdCache = new ConcurrentHashMap<>(MAX_CACHED_NAMED_ZONES);
 
     public static TimeZoneMapping getInstance() {
         return INSTANCE;
@@ -167,9 +168,45 @@ public final class TimeZoneMapping {
      * @param zoneOffset
      *         The zone offset
      * @return Firebird time zone id
+     * @see #toTimeZoneId(ZoneId)
      */
     public int toTimeZoneId(ZoneOffset zoneOffset) {
         return toTimeZoneId(zoneOffset.getTotalSeconds() / 60);
+    }
+
+    /**
+     * Returns the Firebird time zone id for a {@link java.time.ZoneId}.
+     * <p>
+     * This method handles both {@link ZoneOffset} and named regions.
+     * </p>
+     *
+     * @param zoneId
+     *         The zone id
+     * @return Firebird time zone id
+     * @since 4.0.1
+     */
+    public int toTimeZoneId(ZoneId zoneId) {
+        if (zoneId instanceof ZoneOffset) {
+            return toTimeZoneId((ZoneOffset) zoneId);
+        }
+        Integer firebirdId = namedZoneIdCache.get(zoneId);
+        if (firebirdId != null) {
+            return firebirdId;
+        }
+        String zoneIdName = zoneId.getId();
+        for (int internalId = 0; internalId < timeZoneNameById.size(); internalId++) {
+            String candidateName = timeZoneNameById.get(internalId);
+            if (Objects.equals(zoneIdName, candidateName)) {
+                firebirdId = timeZoneId(internalId);
+                break;
+            }
+        }
+        if (firebirdId == null) {
+            // fallback to offset encoded at UTC
+            firebirdId = OFFSET_UTC_ENCODED;
+        }
+        cacheNamedZoneId(zoneId, firebirdId);
+        return firebirdId;
     }
 
     /**
@@ -215,7 +252,7 @@ public final class TimeZoneMapping {
     }
 
     private void cacheOffset(final Integer key, final ZoneOffset offsetId) {
-        if (offsetCache.size() > MAX_CACHED_ZONE_OFFSETS) {
+        if (offsetCache.size() >= MAX_CACHED_ZONE_OFFSETS) {
             offsetCache.clear();
         }
         offsetCache.put(key, offsetId);
@@ -252,10 +289,17 @@ public final class TimeZoneMapping {
     }
 
     private void cacheNamedZone(final Integer key, final ZoneId zoneId) {
-        if (namedZoneCache.size() > MAX_CACHED_NAMED_ZONES) {
+        if (namedZoneCache.size() >= MAX_CACHED_NAMED_ZONES) {
             namedZoneCache.clear();
         }
         namedZoneCache.put(key, zoneId);
+    }
+
+    private void cacheNamedZoneId(final ZoneId key, final Integer firebirdId) {
+        if (namedZoneIdCache.size() >= MAX_CACHED_NAMED_ZONES) {
+            namedZoneIdCache.clear();
+        }
+        namedZoneIdCache.put(key, firebirdId);
     }
 
     private ZoneId defaultForOutOfRange(final int timeZoneId) {
@@ -331,7 +375,8 @@ public final class TimeZoneMapping {
      * Loads the time zone mapping resource as a {@link Properties} object.
      *
      * @return Properties object with the time zone mapping
-     * @throws IOException For issues loading the time zone mapping
+     * @throws IOException
+     *         For issues loading the time zone mapping
      */
     static Properties loadTimeZoneMapping() throws IOException {
         try (InputStream in = TimeZoneMapping.class.getResourceAsStream(FIREBIRD_TIME_ZONE_MAPPING_PROPERTIES)) {

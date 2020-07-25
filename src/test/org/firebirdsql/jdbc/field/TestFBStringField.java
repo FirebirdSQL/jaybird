@@ -36,6 +36,9 @@ import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import static org.junit.Assert.*;
@@ -738,6 +741,63 @@ public class TestFBStringField extends BaseJUnit4TestFBField<FBStringField, Stri
         setNullExpectations();
 
         field.setDecimal(null);
+    }
+
+    @Test
+    public void setObject_java_time_OffsetTime() throws SQLException {
+        String offsetTimeString = "20:58+02:00";
+        setStringExpectations(offsetTimeString, encoding);
+
+        OffsetTime offsetTime = OffsetTime.parse(offsetTimeString);
+
+        field.setObject(offsetTime);
+    }
+
+    @Test
+    public void getObject_java_time_OffsetTime() throws SQLException {
+        String offsetTimeString = "20:58+02:00";
+        OffsetTime expectedOffsetTime = OffsetTime.parse(offsetTimeString);
+        toReturnStringExpectations(offsetTimeString, encoding);
+
+        assertEquals(expectedOffsetTime, field.getObject(OffsetTime.class));
+    }
+
+    @Test
+    public void setObject_java_time_OffsetDateTime() throws SQLException {
+        String offsetDateTimeString = "2020-06-02T20:58+02:00";
+        setStringExpectations(offsetDateTimeString, encoding);
+
+        OffsetDateTime offsetDateTime = OffsetDateTime.parse(offsetDateTimeString);
+
+        field.setObject(offsetDateTime);
+    }
+
+    @Test
+    public void getObject_java_time_OffsetDateTime() throws SQLException {
+        String offsetDateTimeString = "2020-06-02T20:58+02:00";
+        OffsetDateTime expectedOffsetDateTime = OffsetDateTime.parse(offsetDateTimeString);
+        toReturnStringExpectations(offsetDateTimeString, encoding);
+
+        assertEquals(expectedOffsetDateTime, field.getObject(OffsetDateTime.class));
+    }
+
+    @Test
+    public void setObject_java_time_ZonedDateTime() throws SQLException {
+        String zonedDateTimeString = "2020-06-02T20:58+02:00[Europe/Amsterdam]";
+        setStringExpectations(zonedDateTimeString, encoding);
+
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(zonedDateTimeString);
+
+        field.setObject(zonedDateTime);
+    }
+
+    @Test
+    public void getObject_java_time_ZonedDateTime() throws SQLException {
+        String zonedDateTimeString = "2020-06-02T20:58+02:00[Europe/Amsterdam]";
+        ZonedDateTime expectedZonedDateTime = ZonedDateTime.parse(zonedDateTimeString);
+        toReturnStringExpectations(zonedDateTimeString, encoding);
+
+        assertEquals(expectedZonedDateTime, field.getObject(ZonedDateTime.class));
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import java.sql.*;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -64,8 +65,12 @@ public class TestTimestampWithTimeZoneSupport {
     };
 
     private static final OffsetDateTime VALUE_1 = OffsetDateTime.parse("2019-03-09T13:25:32.1234+01:00");
+    private static final ZonedDateTime VALUE_1_ZONED = ZonedDateTime.parse("2019-03-09T13:25:32.1234+01:00");
     private static final OffsetDateTime VALUE_2 = VALUE_1;
+    private static final ZonedDateTime VALUE_2_ZONED =
+            ZonedDateTime.parse("2019-03-09T13:25:32.1234+01:00[Europe/Amsterdam]");
     private static final OffsetDateTime VALUE_3 = OffsetDateTime.parse("2019-12-31T23:59:59.9999+13:59");
+    private static final ZonedDateTime VALUE_3_ZONED = ZonedDateTime.parse("2019-12-31T23:59:59.9999+13:59");
     private static final Collection<String> BINDS = unmodifiableCollection(asList(null, "TIME ZONE TO EXTENDED"));
 
     @Rule
@@ -97,6 +102,33 @@ public class TestTimestampWithTimeZoneSupport {
 
                 assertTrue("Expected row 3", rs.next());
                 assertEquals("Unexpected value row 3", VALUE_3, rs.getObject(2));
+
+                assertTrue("Expected row 4", rs.next());
+                assertNull("Unexpected value for row 4", rs.getObject(2));
+
+                assertFalse("Expected no more rows", rs.next());
+            }
+        }
+    }
+
+    @Test
+    public void testSimpleSelect_ZonedDateTime() throws Exception {
+        for (String dataTypeBind : BINDS) {
+            Properties props = getDefaultPropertiesForConnection();
+            if (dataTypeBind != null) {
+                props.setProperty("dataTypeBind", dataTypeBind);
+            }
+            try (Connection connection = DriverManager.getConnection(getUrl(), props);
+                 Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(SELECT + " order by id")) {
+                assertTrue("Expected row 1", rs.next());
+                assertEquals("Unexpected value row 1", VALUE_1_ZONED, rs.getObject(2, ZonedDateTime.class));
+
+                assertTrue("Expected row 2", rs.next());
+                assertEquals("Unexpected value row 2", VALUE_2_ZONED, rs.getObject(2, ZonedDateTime.class));
+
+                assertTrue("Expected row 3", rs.next());
+                assertEquals("Unexpected value row 3", VALUE_3_ZONED, rs.getObject(2, ZonedDateTime.class));
 
                 assertTrue("Expected row 4", rs.next());
                 assertNull("Unexpected value for row 4", rs.getObject(2));
@@ -168,6 +200,69 @@ public class TestTimestampWithTimeZoneSupport {
 
                         assertTrue("Expected row 3", rs.next());
                         assertNull(rs.getObject(2, OffsetDateTime.class));
+
+                        assertFalse("Expected no more rows", rs.next());
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testParameterizedInsert_ZonedDateTime() throws Exception {
+        for (String dataTypeBind : BINDS) {
+            Properties props = getDefaultPropertiesForConnection();
+            if (dataTypeBind != null) {
+                props.setProperty("dataTypeBind", dataTypeBind);
+            }
+            try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+                try (Statement stmt = connection.createStatement()) {
+                    stmt.execute("delete from withtimestamptz where id in (5, 6, 7, 8, 9)");
+                }
+                try (PreparedStatement pstmt = connection.prepareStatement(INSERT)) {
+                    ZonedDateTime value5Zoned = ZonedDateTime.parse("1901-11-21T12:34:56.7891+03:30");
+                    ZonedDateTime value6Zoned = ZonedDateTime.parse("2146-06-21T00:00:00-08:15");
+                    ZonedDateTime value8Zoned = ZonedDateTime.parse("2020-01-01T07:58:01+01:00[Europe/Amsterdam]");
+                    ZonedDateTime value9Zoned = ZonedDateTime.parse("2020-06-02T07:58:01+02:00[Europe/Amsterdam]");
+
+                    pstmt.setInt(1, 5);
+                    pstmt.setObject(2, value5Zoned);
+                    pstmt.addBatch();
+
+                    pstmt.setInt(1, 6);
+                    pstmt.setObject(2, value6Zoned);
+                    pstmt.addBatch();
+
+                    pstmt.setInt(1, 7);
+                    pstmt.setObject(2, null);
+                    pstmt.addBatch();
+
+                    pstmt.setInt(1, 8);
+                    pstmt.setObject(2, value8Zoned);
+                    pstmt.addBatch();
+
+                    pstmt.setInt(1, 9);
+                    pstmt.setObject(2, value9Zoned);
+                    pstmt.addBatch();
+
+                    pstmt.executeBatch();
+
+                    try (Statement stmt = connection.createStatement();
+                         ResultSet rs = stmt.executeQuery(SELECT + " where id > 4 order by id")) {
+                        assertTrue("Expected row 1", rs.next());
+                        assertEquals(value5Zoned, rs.getObject(2, ZonedDateTime.class));
+
+                        assertTrue("Expected row 2", rs.next());
+                        assertEquals(value6Zoned, rs.getObject(2, ZonedDateTime.class));
+
+                        assertTrue("Expected row 3", rs.next());
+                        assertNull(rs.getObject(2, OffsetDateTime.class));
+
+                        assertTrue("Expected row 4", rs.next());
+                        assertEquals(value8Zoned, rs.getObject(2, ZonedDateTime.class));
+
+                        assertTrue("Expected row 5", rs.next());
+                        assertEquals(value9Zoned, rs.getObject(2, ZonedDateTime.class));
 
                         assertFalse("Expected no more rows", rs.next());
                     }

@@ -34,17 +34,20 @@ import static org.junit.Assert.assertEquals;
 public class TimeZoneByNameMappingTest {
 
     @Rule
+    @SuppressWarnings("deprecation")
     public final ExpectedException expectedException = ExpectedException.none();
 
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
 
     private final int firebirdZoneId;
     private final String zoneName;
+    private final int resolvedFirebirdZoneId;
     private final String jtZoneId;
 
-    public TimeZoneByNameMappingTest(int firebirdZoneId, String zoneName, String jtZoneId) {
+    public TimeZoneByNameMappingTest(int firebirdZoneId, String zoneName, String jtZoneId, int resolvedFirebirdZoneId) {
         this.firebirdZoneId = firebirdZoneId;
         this.zoneName = zoneName;
+        this.resolvedFirebirdZoneId = resolvedFirebirdZoneId;
         this.jtZoneId = jtZoneId != null ? jtZoneId : zoneName;
     }
 
@@ -55,15 +58,24 @@ public class TimeZoneByNameMappingTest {
         assertEquals(zoneName + ": " + zoneId, jtZoneId, zoneId.getId());
     }
 
+    @Test
+    public void mapsJavaZoneIdToFirebirdId() {
+        ZoneId zoneId = ZoneId.of(jtZoneId);
+
+        int resolvedId = mapping.toTimeZoneId(zoneId);
+
+        assertEquals(jtZoneId + ": " + resolvedId, resolvedFirebirdZoneId, resolvedId);
+    }
+
     @Parameterized.Parameters(name = "{0} => {1})")
     public static Collection<Object[]> getTestCases() {
         return Arrays.asList(
                 testCase(65535, "GMT"),
-                testCase(65534, "ACT", "Australia/Darwin"),
-                testCase(65533, "AET", "Australia/Sydney"),
-                testCase(65532, "AGT", "America/Argentina/Buenos_Aires"),
-                testCase(65531, "ART", "Africa/Cairo"),
-                testCase(65530, "AST", "America/Anchorage"),
+                testCase(65534, "ACT", "Australia/Darwin", 65180),
+                testCase(65533, "AET", "Australia/Sydney", 65168),
+                testCase(65532, "AGT", "America/Argentina/Buenos_Aires", 65470),
+                testCase(65531, "ART", "Africa/Cairo", 65516),
+                testCase(65530, "AST", "America/Anchorage", 65474),
                 testCase(65529, "Africa/Abidjan"),
                 testCase(65528, "Africa/Accra"),
                 testCase(65527, "Africa/Addis_Ababa"),
@@ -430,21 +442,21 @@ public class TimeZoneByNameMappingTest {
                 testCase(65166, "Australia/Victoria"),
                 testCase(65165, "Australia/West"),
                 testCase(65164, "Australia/Yancowinna"),
-                testCase(65163, "BET", "America/Sao_Paulo"),
-                testCase(65162, "BST", "Asia/Dhaka"),
+                testCase(65163, "BET", "America/Sao_Paulo", 65332),
+                testCase(65162, "BST", "Asia/Dhaka", 65271),
                 testCase(65161, "Brazil/Acre"),
                 testCase(65160, "Brazil/DeNoronha"),
                 testCase(65159, "Brazil/East"),
                 testCase(65158, "Brazil/West"),
-                testCase(65157, "CAT", "Africa/Harare"),
+                testCase(65157, "CAT", "Africa/Harare", 65505),
                 testCase(65156, "CET"),
-                testCase(65155, "CNT", "America/St_Johns"),
-                testCase(65154, "CST", "America/Chicago"),
+                testCase(65155, "CNT", "America/St_Johns", 65327),
+                testCase(65154, "CST", "America/Chicago", 65436),
                 testCase(65153, "CST6CDT"),
-                testCase(65152, "CTT", "Asia/Shanghai"),
+                testCase(65152, "CTT", "Asia/Shanghai", 65221),
                 testCase(65151, "Canada/Atlantic"),
                 testCase(65150, "Canada/Central"),
-                testCase(65149, "America/Regina"), // was "Canada/East-Saskatchewan" (see also TimeZoneMapping)
+                testCase(65149, "America/Regina", "America/Regina", 65340), // was "Canada/East-Saskatchewan" (see also TimeZoneMapping)
                 testCase(65148, "Canada/Eastern"),
                 testCase(65147, "Canada/Mountain"),
                 testCase(65146, "Canada/Newfoundland"),
@@ -454,10 +466,10 @@ public class TimeZoneByNameMappingTest {
                 testCase(65142, "Chile/Continental"),
                 testCase(65141, "Chile/EasterIsland"),
                 testCase(65140, "Cuba"),
-                testCase(65139, "EAT", "Africa/Addis_Ababa"),
-                testCase(65138, "ECT", "Europe/Paris"),
+                testCase(65139, "EAT", "Africa/Addis_Ababa", 65527),
+                testCase(65138, "ECT", "Europe/Paris", 65061),
                 testCase(65137, "EET"),
-                testCase(65136, "EST", "-05:00"),
+                testCase(65136, "EST", "-05:00", 1139),
                 testCase(65135, "EST5EDT"),
                 testCase(65134, "Egypt"),
                 testCase(65133, "Eire"),
@@ -559,17 +571,17 @@ public class TimeZoneByNameMappingTest {
                 testCase(65037, "Europe/Zagreb"),
                 testCase(65036, "Europe/Zaporozhye"),
                 testCase(65035, "Europe/Zurich"),
-                testCase(65034, "GMT"),
+                testCase(65034, "GMT", "GMT", 65535), // was "Factory" (see also TimeZoneMapping)
                 testCase(65033, "GB"),
                 testCase(65032, "GB-Eire"),
-                testCase(65031, "GMT+0", "GMT"),
-                testCase(65030, "GMT-0", "GMT"),
+                testCase(65031, "GMT+0", "GMT", 65535),
+                testCase(65030, "GMT-0", "GMT", 65535),
                 testCase(65029, "GMT0"),
                 testCase(65028, "Greenwich"),
-                testCase(65027, "HST", "-10:00"),
+                testCase(65027, "HST", "-10:00", 839),
                 testCase(65026, "Hongkong"),
-                testCase(65025, "IET", "America/Indiana/Indianapolis"),
-                testCase(65024, "IST", "Asia/Kolkata"),
+                testCase(65025, "IET", "America/Indiana/Indianapolis", 65403),
+                testCase(65024, "IST", "Asia/Kolkata", 65248),
                 testCase(65023, "Iceland"),
                 testCase(65022, "Indian/Antananarivo"),
                 testCase(65021, "Indian/Chagos"),
@@ -584,28 +596,28 @@ public class TimeZoneByNameMappingTest {
                 testCase(65012, "Indian/Reunion"),
                 testCase(65011, "Iran"),
                 testCase(65010, "Israel"),
-                testCase(65009, "JST", "Asia/Tokyo"),
+                testCase(65009, "JST", "Asia/Tokyo", 65211),
                 testCase(65008, "Jamaica"),
                 testCase(65007, "Japan"),
                 testCase(65006, "Kwajalein"),
                 testCase(65005, "Libya"),
                 testCase(65004, "MET"),
-                testCase(65003, "MIT", "Pacific/Apia"),
-                testCase(65002, "MST", "-07:00"),
+                testCase(65003, "MIT", "Pacific/Apia", 64986),
+                testCase(65002, "MST", "-07:00", 1019),
                 testCase(65001, "MST7MDT"),
                 testCase(65000, "Mexico/BajaNorte"),
                 testCase(64999, "Mexico/BajaSur"),
                 testCase(64998, "Mexico/General"),
-                testCase(64997, "NET", "Asia/Yerevan"),
-                testCase(64996, "NST", "Pacific/Auckland"),
+                testCase(64997, "NET", "Asia/Yerevan", 65199),
+                testCase(64996, "NST", "Pacific/Auckland", 64985),
                 testCase(64995, "NZ"),
                 testCase(64994, "NZ-CHAT"),
                 testCase(64993, "Navajo"),
-                testCase(64992, "PLT", "Asia/Karachi"),
-                testCase(64991, "PNT", "America/Phoenix"),
+                testCase(64992, "PLT", "Asia/Karachi", 65253),
+                testCase(64991, "PNT", "America/Phoenix", 65350),
                 testCase(64990, "PRC"),
-                testCase(64989, "PRT", "America/Puerto_Rico"),
-                testCase(64988, "PST", "America/Los_Angeles"),
+                testCase(64989, "PRT", "America/Puerto_Rico", 65345),
+                testCase(64988, "PST", "America/Los_Angeles", 65383),
                 testCase(64987, "PST8PDT"),
                 testCase(64986, "Pacific/Apia"),
                 testCase(64985, "Pacific/Auckland"),
@@ -652,9 +664,9 @@ public class TimeZoneByNameMappingTest {
                 testCase(64944, "Pacific/Yap"),
                 testCase(64943, "Poland"),
                 testCase(64942, "Portugal"),
-                testCase(64941, "Asia/Taipei"),
+                testCase(64941, "Asia/Taipei", "Asia/Taipei", 65218), // was "ROC" (see also TimeZoneMapping)
                 testCase(64940, "ROK"),
-                testCase(64939, "SST", "Pacific/Guadalcanal"),
+                testCase(64939, "SST", "Pacific/Guadalcanal", 64973),
                 testCase(64938, "Singapore"),
                 testCase(64937, "SystemV/AST4"),
                 testCase(64936, "SystemV/AST4ADT"),
@@ -686,17 +698,17 @@ public class TimeZoneByNameMappingTest {
                 testCase(64910, "US/Samoa"),
                 testCase(64909, "UTC"),
                 testCase(64908, "Universal"),
-                testCase(64907, "VST", "Asia/Ho_Chi_Minh"),
+                testCase(64907, "VST", "Asia/Ho_Chi_Minh", 65263),
                 testCase(64906, "W-SU"),
                 testCase(64905, "WET"),
                 testCase(64904, "Zulu"),
-                testCase(64903, "America/Godthab"),
+                testCase(64903, "America/Godthab", "America/Godthab", 65414), // was America/Nuuk (see also TimeZoneMapping)
                 testCase(64902, "Asia/Qostanay")
         );
     }
 
     private static Object[] testCase(int zoneId, String zoneName) {
-        return testCase(zoneId, zoneName, null);
+        return testCase(zoneId, zoneName, null, zoneId);
     }
 
     /**
@@ -705,9 +717,10 @@ public class TimeZoneByNameMappingTest {
      * @param zoneId Firebird zone id
      * @param zoneName Firebird/ICU zone name
      * @param jtZoneId Expected id when mapped to {@link ZoneId}
+     * @param resolvedFirebirdId Expected Firebird zone id
      * @return Test case
      */
-    private static Object[] testCase(int zoneId, String zoneName, String jtZoneId) {
-        return new Object[] { zoneId, zoneName, jtZoneId };
+    private static Object[] testCase(int zoneId, String zoneName, String jtZoneId, int resolvedFirebirdId) {
+        return new Object[] { zoneId, zoneName, jtZoneId, resolvedFirebirdId };
     }
 }

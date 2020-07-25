@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.junit.Assert;
-
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 
@@ -79,12 +77,11 @@ public class TimeZoneCodecStandardTimeTzTest extends TimeZoneCodecAbstractTimeTz
 
     @Override
     byte[] getZoneNetworkAt2019_07_01Expected() {
-        return getOffsetNetworkAt2019_03_09Expected();
+        return getZoneNetworkAt2019_07_01Input();
     }
 
     @Override
     OffsetDateTime getZoneExpectedOffsetDateTimeAt2019_07_01() {
-        if (true) Assert.fail("Not correctly implemented yet");
         return OFFSET_2_OFFSET_DATE_TIME_AT_2019_07_01;
     }
 

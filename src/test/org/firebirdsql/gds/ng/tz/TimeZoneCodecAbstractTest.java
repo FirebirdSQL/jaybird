@@ -44,12 +44,20 @@ abstract class TimeZoneCodecAbstractTest {
 
     static final OffsetDateTime OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09 =
             OffsetDateTime.parse("2019-03-09T07:45:51+01:00");
+    static final ZonedDateTime OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09 =
+            ZonedDateTime.parse("2019-03-09T07:45:51+01:00");
     static final OffsetTime OFFSET_1_OFFSET_TIME = OffsetTime.parse("07:45:51+01:00");
     static final OffsetDateTime OFFSET_1_OFFSET_DATE_TIME_AT_2019_07_01 =
             OffsetDateTime.parse("2019-07-01T07:45:51+01:00");
+    static final ZonedDateTime OFFSET_1_ZONED_DATE_TIME_AT_2019_07_01 =
+            ZonedDateTime.parse("2019-07-01T07:45:51+01:00");
     static final OffsetDateTime OFFSET_2_OFFSET_DATE_TIME_AT_2019_07_01 =
             OffsetDateTime.parse("2019-07-01T07:45:51+02:00");
     static final OffsetTime OFFSET_2_OFFSET_TIME = OffsetTime.parse("07:45:51+02:00");
+    static final ZonedDateTime ZONE_ZONED_DATE_TIME_AT_2019_03_09 =
+            ZonedDateTime.parse("2019-03-09T07:45:51+01:00[Europe/Amsterdam]");
+    static final ZonedDateTime ZONE_ZONED_DATE_TIME_AT_2019_07_01 =
+            ZonedDateTime.parse("2019-07-01T07:45:51+02:00[Europe/Amsterdam]");
 
     static final Clock FIXED_AT_2019_03_09 = Clock.fixed(Instant.parse("2019-03-09T12:00:00Z"), ZoneOffset.UTC);
     static final Clock FIXED_AT_2019_07_01 = Clock.fixed(Instant.parse("2019-07-01T12:00:00Z"), ZoneOffset.UTC);
@@ -77,6 +85,14 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void decodeZonedDateTime_offset_network_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getOffsetNetworkAt2019_03_09Input());
+
+        assertEquals(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
+    }
+
+    @Test
     public final void decodeOffsetDateTime_offset_network_at2019_07_01() throws Exception {
         OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
                 .decodeOffsetDateTime(getOffsetNetworkAt2019_07_01Input());
@@ -93,6 +109,14 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void decodeZonedDateTime_offset_network_at2019_07_01() throws Exception {
+        ZonedDateTime zonedDateTimeDateTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeZonedDateTime(getOffsetNetworkAt2019_07_01Input());
+
+        assertEquals(OFFSET_1_ZONED_DATE_TIME_AT_2019_07_01, zonedDateTimeDateTime);
+    }
+
+    @Test
     public final void decodeOffsetDateTime_zone_network_at2019_03_09() throws Exception {
         OffsetDateTime offsetDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .decodeOffsetDateTime(getZoneNetworkAt2019_03_09Input());
@@ -106,6 +130,14 @@ abstract class TimeZoneCodecAbstractTest {
                 .decodeOffsetTime(getZoneNetworkAt2019_03_09Input());
 
         assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
+    }
+
+    @Test
+    public final void decodeZonedDateTime_zone_network_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getZoneNetworkAt2019_03_09Input());
+
+        assertEquals(ZONE_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
     }
 
     @Test
@@ -126,6 +158,14 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void decodeZonedDateTime_zone_network_at2019_07_01() throws Exception {
+        ZonedDateTime zonedDateTime = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .decodeZonedDateTime(getZoneNetworkAt2019_07_01Input());
+
+        assertEquals(ZONE_ZONED_DATE_TIME_AT_2019_07_01, zonedDateTime);
+    }
+
+    @Test
     public final void decodeOffsetDateTime_offset_littleEndian_at2019_03_09() throws Exception {
         OffsetDateTime offsetDateTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
                 .decodeOffsetDateTime(getOffsetLeAt2019_03_09Input());
@@ -139,6 +179,14 @@ abstract class TimeZoneCodecAbstractTest {
                 .decodeOffsetTime(getOffsetLeAt2019_03_09Input());
 
         assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
+    }
+
+    @Test
+    public final void decodeZonedDateTime_offset_littleEndian_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getOffsetLeAt2019_03_09Input());
+
+        assertEquals(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
     }
 
     @Test
@@ -158,6 +206,14 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void decodeZonedDateTime_zone_littleEndian_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getZoneLeAt2019_03_09Input());
+
+        assertEquals(ZONE_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
+    }
+
+    @Test
     public final void decodeOffsetDateTime_offset_bigEndian_at2019_03_09() throws Exception {
         OffsetDateTime offsetDateTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
                 .decodeOffsetDateTime(getOffsetBeAt2019_03_09Input());
@@ -171,6 +227,14 @@ abstract class TimeZoneCodecAbstractTest {
                 .decodeOffsetTime(getOffsetBeAt2019_03_09Input());
 
         assertEquals(OFFSET_1_OFFSET_TIME, offsetTime);
+    }
+
+    @Test
+    public final void decodeZonedDateTime_offset_bigEndian_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getOffsetBeAt2019_03_09Input());
+
+        assertEquals(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
     }
 
     @Test
@@ -190,6 +254,14 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void decodeZonedDateTime_zone_bigEndian_at2019_03_09() throws Exception {
+        ZonedDateTime zonedDateTime = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .decodeZonedDateTime(getZoneBeAt2019_03_09Input());
+
+        assertEquals(ZONE_ZONED_DATE_TIME_AT_2019_03_09, zonedDateTime);
+    }
+
+    @Test
     public final void encodeOffsetDateTime_network_at2019_03_09() throws Exception {
         byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
                 .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
@@ -203,6 +275,22 @@ abstract class TimeZoneCodecAbstractTest {
                 .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
 
         assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_offset_network_at2019_03_09() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getOffsetNetworkAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_zone_network_at2019_03_09() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(ZONE_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getZoneNetworkAt2019_03_09Expected(), encoded);
     }
 
     @Test
@@ -222,6 +310,22 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void encodeZonedDateTime_offset_network_at2019_07_01() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .encodeZonedDateTime(OFFSET_1_ZONED_DATE_TIME_AT_2019_07_01);
+
+        assertArrayEquals(getOffsetNetworkAt2019_07_01Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_zone_network_at2019_07_01() throws Exception {
+        byte[] encoded = getNetworkCodec(tzType, FIXED_AT_2019_07_01)
+                .encodeZonedDateTime(ZONE_ZONED_DATE_TIME_AT_2019_07_01);
+
+        assertArrayEquals(getZoneNetworkAt2019_07_01Expected(), encoded);
+    }
+
+    @Test
     public final void encodeOffsetDateTime_littleEndian_at2019_03_09() throws Exception {
         byte[] encoded = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
                 .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
@@ -238,6 +342,22 @@ abstract class TimeZoneCodecAbstractTest {
     }
 
     @Test
+    public final void encodeZonedDateTime_offset_littleEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getOffsetLeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_zone_littleEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getLittleEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(ZONE_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getZoneLeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
     public final void encodeOffsetDateTime_bigEndian_at2019_03_09() throws Exception {
         byte[] encoded = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
                 .encodeOffsetDateTime(OFFSET_1_OFFSET_DATE_TIME_AT_2019_03_09);
@@ -251,6 +371,22 @@ abstract class TimeZoneCodecAbstractTest {
                 .encodeOffsetTime(OFFSET_1_OFFSET_TIME);
 
         assertArrayEquals(getOffsetBeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_offset_bigEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(OFFSET_1_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getOffsetBeAt2019_03_09Expected(), encoded);
+    }
+
+    @Test
+    public final void encodeZonedDateTime_zone_bigEndian_at2019_03_09() throws Exception {
+        byte[] encoded = getBigEndianCodec(tzType, FIXED_AT_2019_03_09)
+                .encodeZonedDateTime(ZONE_ZONED_DATE_TIME_AT_2019_03_09);
+
+        assertArrayEquals(getZoneBeAt2019_03_09Expected(), encoded);
     }
 
     @Test
