@@ -1,4 +1,4 @@
-# jdp-2020-07 Offset conversion for named session zone
+# jdp-2020-07: Offset conversion for named session zone
 
 ## Status
 

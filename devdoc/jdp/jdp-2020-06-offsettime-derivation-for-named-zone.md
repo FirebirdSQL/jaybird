@@ -1,9 +1,9 @@
-# jdp-2020-06 OffsetTime derivation for named zone
+# jdp-2020-06: OffsetTime derivation for named zone
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 4.0.1, Jaybird 5
+- Published: 2020-07-25
+- Implemented in: Jaybird 4.0.1, Jaybird 5
 - Updates: jdp-2019-03
 
 ## Type

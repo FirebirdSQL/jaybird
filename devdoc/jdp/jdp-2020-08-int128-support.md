@@ -1,4 +1,4 @@
-# jdp-2020-08 Int128 support
+# jdp-2020-08: Int128 support
 
 ## Status
 

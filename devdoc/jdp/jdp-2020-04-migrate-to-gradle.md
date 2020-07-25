@@ -1,4 +1,4 @@
-# jdp-2020-04 Migrate to Gradle
+# jdp-2020-04: Migrate to Gradle
 
 ## Status
 
