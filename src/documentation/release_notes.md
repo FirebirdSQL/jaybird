@@ -40,6 +40,20 @@ The following has been changed or fixed since Jaybird 4.0.0
     Although we try to avoid these types of incompatible changes in point
     releases, we explicitly allow them for the `org.firebirdsql.gds.ng` package
     and sub-packages.
+-   Changed: conversions from `TIME WITH TIME ZONE` now use 2020-01-01 as base
+    date for named zones ([JDBC-629](http://tracker.firebirdsql.org/browse/JDBC-629)) \
+    There are some caveats with this conversion, especially between `OffsetTime`
+    and `OffsetDateTime` for named zones. For `OffsetTime`, we will always use
+    the offset as it was on 2020-01-01, while for `OffsetDateTime` we will first
+    rebase the time in the named zone to the current date, and then derive the
+    offset. \
+    See also [jdp-2020-06 OffsetTime derivation for named zone](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-06-offsettime-derivation-for-named-zone.md)
+-   New feature: Added support for `java.time.ZonedDateTime` for the `WITH TIME
+    ZONE` types ([JDBC-630](http://tracker.firebirdsql.org/browse/JDBC-630)) \
+    To preserve named zones, we have added support for getting and setting both
+    `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE` as a `ZonedDateTime`. \
+    For `TIME WITH TIME ZONE`, the returned value is rebased on the current
+    date.
 
 Jaybird 4.0.0
 -------------
@@ -1151,10 +1165,13 @@ explicit setters for these types. Use `setObject(index, value)`,
 `getObject(index/name, classType)`.
 
 Firebird 4 supports both offset and named time zones. Given the definition in
-JDBC, Jaybird only supports offset time zones. On retrieval of a value with a
+JDBC, Jaybird defaults to offset time zones. On retrieval of a value with a
 named zone, Jaybird will make a best effort to convert to the equivalent offset
 using Java's time zone information. If no mapping is available the time will be 
 returned at UTC (offset zero).
+
+Since Jaybird 4.0.1, it is also possible to get and set 
+`java.time.ZonedDateTime`, which preserves the named zone information.
 
 Jaybird 4 supports the following Java types on fields of time zone types (those
 marked with * are not defined in JDBC)
@@ -1163,25 +1180,34 @@ marked with * are not defined in JDBC)
 
 - `java.time.OffsetTime` (default for `getObject`)
   - On get, if the value is a named zone, it will derive the offset using the 
-  current date
+    base date 2020-01-01 (in 4.0.0 it used the current date). The offset can be
+    different from the offset of the `OffsetDateTime` for the same value.
 - `java.time.OffsetDateTime`
   - On get the current date is added
+    - For a named zone, the time in the zone is derived at 2020-01-01 and then
+      rebased to the current date. As a result, the offset can be different from
+      an `OffsetTime`.
   - On set the date information is removed
+- `java.time.ZonedDateTime` (\*)
+  - On get the time in the zone is derived at 2020-01-01 and then rebased to the
+    current date.
+  - On set, the time is rebased to 2020-01-01 and then the date information is
+    removed.
 - `java.lang.String`
   - On get applies `OffsetTime.toString()` (eg `13:25:13.1+01:00`)
   - On set tries the default parse format of either `OffsetTime` or 
-  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
-  and then sets as that type
+    `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+    and then sets as that type
 - `java.sql.Time` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
-  milliseconds and uses `new java.sql.Time(millis)`
+    milliseconds and uses `new java.sql.Time(millis)`
   - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
-  and then derives the offset time for the default JVM time zone
+    and then derives the offset time for the default JVM time zone
 - `java.sql.Timestamp` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
-  milliseconds and uses `new java.sql.Timestamp(millis)`
+    milliseconds and uses `new java.sql.Timestamp(millis)`
   - On set applies `toLocalDateTime()` and derives the offset time for the 
-  default JVM time zone
+    default JVM time zone
   
 `TIMESTAMP WITH TIME ZONE`:
 
@@ -1189,26 +1215,27 @@ marked with * are not defined in JDBC)
 - `java.time.OffsetTime` (\*)
   - On get, the date information is removed
   - On set, the current date is added
+- `java.time.ZonedDateTime` (\*)
 - `java.lang.String`
   - On get applies `OffsetDateTime.toString()` (eg `2019-03-10T13:25:13.1+01:00`)
   - On set tries the default parse format of either `OffsetTime` or 
-  `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
-  and then sets as that type
+    `OffsetDateTime` (eg `13:25:13.1+01:00` or `2019-03-10T13:25:13+01:00`)
+    and then sets as that type
 - `java.sql.Time` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
-  milliseconds and uses `new java.sql.Time(millis)`
+    milliseconds and uses `new java.sql.Time(millis)`
   - On set applies `toLocalTime()`, combines this with `LocalDate.now()`
-  and then derives the offset date time for the default JVM time zone
+    and then derives the offset date time for the default JVM time zone
 - `java.sql.Timestamp` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
-  milliseconds and uses `new java.sql.Timestamp(millis)`
+    milliseconds and uses `new java.sql.Timestamp(millis)`
   - On set applies `toLocalDateTime()` and derives the offset date time for the 
-  default JVM time zone
+    default JVM time zone
 - `java.sql.Date` (\*)
   - On get obtains `java.time.OffsetDateTime`, converts this to epoch 
-  milliseconds and uses `new java.sql.Date(millis)`
+    milliseconds and uses `new java.sql.Date(millis)`
   - On set applies `toLocalDate()` at start of day and derives the offset date 
-  time for the default JVM time zone
+    time for the default JVM time zone
   
 In addition, Firebird 4 has 'bind-only' data types `EXTENDED TIME/TIMESTAMP WITH
 TIME ZONE`. These data types can be set through the data type bind configuration
@@ -1220,7 +1247,13 @@ the normal `WITH TIME ZONE` types. That means the extra offset information is
 ignored and Jaybird will always use the Java time zone information to calculate
 the offset of a named zone, and if a zone is unknown in Java, Jaybird will
 fallback to UTC even when the actual offset is available in the 'extended' time
-zone type. See also [jdp-2020-01: Extended Time Zone Types Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-01-extended-time-zone-types-support.md). 
+zone type.
+
+See also:
+ 
+- [jdp-2020-01: Extended Time Zone Types Support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-01-extended-time-zone-types-support.md)
+- [jdp-2020-06: OffsetTime derivation for named zone](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-06-offsettime-derivation-for-named-zone.md)
+- [jdp-2020-09: Add ZonedDateTime support](https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-09-add-zoneddatetime-support.md) 
 
 #### Support for legacy JDBC date/time types ####
 
@@ -1242,10 +1275,6 @@ The types `java.time.LocalTime`, `java.time.LocalDateTime` and
 ambiguous. If you need to use these, then either apply the necessary conversions 
 yourself, enable legacy time zone bind, or define or cast your columns as `TIME` 
 or `TIMESTAMP`. 
-
-Jaybird also does not support non-standard extensions like `java.time.Instant`,
-or `java.time.ZonedDateTime`. If there is interest, we may add them in the 
-future.
 
 ### Time zone bind configuration ###
 
@@ -1385,6 +1414,21 @@ In addition to the standard-defined types, it also supports the type names
     this, either switch those types to a `WITH TIME ZONE` type, or set the 
     `sessionTimeZone` to `server` or to the actual time zone of the Firebird 
     server.
+    
+-   As `CURRENT_TIME` uses the session time zone, which usually is a named zone,
+    use in combination with `java.time.OffsetTime` can yield confusing results.
+    For example, if the current date and time is '2020-07-01T14:51:00 
+    Europe/Amsterdam', then retrieving `CURRENT_TIME` as an `OffsetTime` will
+    return the value '14:51:00+01:00', and not '14:51:00+02:00'. \
+    It is recommended to avoid `CURRENT_TIME` and use `CURRENT_TIMESTAMP`
+    instead.
+
+-   Overall, using `TIME WITH TIME ZONE` with named zones is rather fragile and
+    prone to interpretation errors. This is a result of how this is implemented
+    in Firebird: values are stored at UTC with their offset or named zones,
+    where derivation of the time in the named zone needs to use 2020-01-01 as
+    the date for the time zone rules to apply. \
+    We recommend avoiding `TIME WITH TIME ZONE` where possible.
     
 Firebird 4 statement timeout support
 ------------------------------------
