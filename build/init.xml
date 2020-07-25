@@ -241,6 +241,8 @@
             <fileset dir="${lib_test.dir}" includes="*.jar">
                 <exclude name="objenesis-2.6.jar" unless:set="jdbc.41"/>
                 <exclude name="objenesis-3.0.1.jar" if:set="jdbc.41"/>
+                <exclude name="cglib-3.2.9.jar" unless:set="jdbc.41"/>
+                <exclude name="cglib-3.3.0.jar" if:set="jdbc.41"/>
             </fileset>
         </path>
 
