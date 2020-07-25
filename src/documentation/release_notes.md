@@ -1274,7 +1274,10 @@ The types `java.time.LocalTime`, `java.time.LocalDateTime` and
 `java.time.LocalDate` are not supported. Supporting these types would be 
 ambiguous. If you need to use these, then either apply the necessary conversions 
 yourself, enable legacy time zone bind, or define or cast your columns as `TIME` 
-or `TIMESTAMP`. 
+or `TIMESTAMP`.
+
+Jaybird also does not support non-standard extensions like `java.time.Instant`.
+If there is interest, we may add them in the future. 
 
 ### Time zone bind configuration ###
 
