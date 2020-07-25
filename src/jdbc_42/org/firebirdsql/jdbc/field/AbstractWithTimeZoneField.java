@@ -26,8 +26,7 @@ import java.sql.SQLNonTransientException;
 import java.time.*;
 import java.util.Calendar;
 
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_DATE_TIME_CLASS_NAME;
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.OFFSET_TIME_CLASS_NAME;
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Superclass for {@link FBTimeTzField}, {@link FBTimestampTzField} to handle legacy date/time types and common behaviour.
@@ -60,11 +59,21 @@ abstract class AbstractWithTimeZoneField extends FBField {
     final OffsetTime getOffsetTime() throws SQLException {
         if (isNull()) return null;
 
-        return getTimeZoneCodec().decodeOffsetTime(getFieldData());
+        return timeZoneCodec.decodeOffsetTime(getFieldData());
     }
 
     final void setOffsetTime(OffsetTime offsetTime) throws SQLException {
-        setFieldData(getTimeZoneCodec().encodeOffsetTime(offsetTime));
+        setFieldData(timeZoneCodec.encodeOffsetTime(offsetTime));
+    }
+
+    final ZonedDateTime getZonedDateTime() throws SQLException {
+        if (isNull()) return null;
+
+        return timeZoneCodec.decodeZonedDateTime(getFieldData());
+    }
+
+    final void setZonedDateTime(ZonedDateTime zonedDateTime) throws SQLException {
+        setFieldData(timeZoneCodec.encodeZonedDateTime(zonedDateTime));
     }
 
     @SuppressWarnings("unchecked")
@@ -78,6 +87,8 @@ abstract class AbstractWithTimeZoneField extends FBField {
             return (T) getOffsetTime();
         case OFFSET_DATE_TIME_CLASS_NAME:
             return (T) getOffsetDateTime();
+        case ZONED_DATE_TIME_CLASS_NAME:
+            return (T) getZonedDateTime();
         }
         return super.getObject(type);
     }
@@ -93,6 +104,8 @@ abstract class AbstractWithTimeZoneField extends FBField {
             setOffsetTime((OffsetTime) value);
         } else if (value instanceof OffsetDateTime) {
             setOffsetDateTime((OffsetDateTime) value);
+        } else if (value instanceof ZonedDateTime) {
+            setZonedDateTime((ZonedDateTime) value);
         } else {
             super.setObject(value);
         }

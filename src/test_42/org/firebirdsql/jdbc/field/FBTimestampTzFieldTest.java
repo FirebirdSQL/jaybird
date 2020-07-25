@@ -36,9 +36,13 @@ import static org.junit.Assert.assertNull;
 public class FBTimestampTzFieldTest extends BaseJUnit4TestFBField<FBTimestampTzField, OffsetDateTime> {
 
     private static final String TIMESTAMPTZ = "2019-03-09T07:45:51+01:00";
+    private static final String TIMESTAMP_NAMED = TIMESTAMPTZ + "[Europe/Amsterdam]";
     private static final OffsetDateTime TIMESTAMPTZ_OFFSETDATETIME = OffsetDateTime.parse(TIMESTAMPTZ);
+    private static final ZonedDateTime TIMESTAMPTZ_NAMED_ZONEDDATETIME = ZonedDateTime.parse(TIMESTAMP_NAMED);
     // Defined using offset
     private static final String TIMESTAMPTZ_OFFSET_NETWORK_HEX = "0000E4B70E83AAF0000005DB";
+    // Defined using Europe/Amsterdam
+    private static final String TIMESTAMPTZ_ZONE_NETWORK_HEX = "0000E4B70E83AAF0FFFFFE49";
 
     @Before
     @Override
@@ -103,6 +107,28 @@ public class FBTimestampTzFieldTest extends BaseJUnit4TestFBField<FBTimestampTzF
         setOffsetTimeExpectations(offsetTime);
 
         field.setObject(offsetTime);
+    }
+
+    @Test
+    public void getObject_ZonedDateTime() throws SQLException {
+        toReturnNonNullNamedZonedDateTime();
+
+        assertEquals("Unexpected value for getObject(ZonedDateTime.class)",
+                TIMESTAMPTZ_NAMED_ZONEDDATETIME, field.getObject(ZonedDateTime.class));
+    }
+
+    @Test
+    public void getObjectNull_ZonedDateTime() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Unexpected value for getObject(ZonedDateTime.class)", field.getObject(ZonedDateTime.class));
+    }
+
+    @Test
+    public void setObject_ZonedDateTime() throws SQLException {
+        setNonNullNamedZonedDateTimeExpectations();
+
+        field.setObject(TIMESTAMPTZ_NAMED_ZONEDDATETIME);
     }
 
     @Test
@@ -400,8 +426,16 @@ public class FBTimestampTzFieldTest extends BaseJUnit4TestFBField<FBTimestampTzF
         toReturnValueExpectations(fromHexString(TIMESTAMPTZ_OFFSET_NETWORK_HEX));
     }
 
+    private void toReturnNonNullNamedZonedDateTime() {
+        toReturnValueExpectations(fromHexString(TIMESTAMPTZ_ZONE_NETWORK_HEX));
+    }
+
     private void setNonNullOffsetDateTimeExpectations() {
         setValueExpectations(fromHexString(TIMESTAMPTZ_OFFSET_NETWORK_HEX));
+    }
+
+    private void setNonNullNamedZonedDateTimeExpectations() {
+        setValueExpectations(fromHexString(TIMESTAMPTZ_ZONE_NETWORK_HEX));
     }
 
     private void setOffsetDateTimeExpectations(OffsetDateTime offsetDateTime) throws SQLException {

@@ -90,7 +90,9 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                 field.setString(object.toString());
                 return true;
             }
-        } else if (object instanceof OffsetTime || object instanceof OffsetDateTime) {
+        } else if (object instanceof OffsetTime
+                || object instanceof OffsetDateTime
+                || object instanceof ZonedDateTime) {
             switch (field.requiredType) {
             case Types.CHAR:
             case Types.VARCHAR:
@@ -163,6 +165,8 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                     return field.isNull() ? null : (T) OffsetTime.parse(field.getString().trim());
                 case OFFSET_DATE_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) OffsetDateTime.parse(field.getString().trim());
+                case ZONED_DATE_TIME_CLASS_NAME:
+                    return field.isNull() ? null : (T) ZonedDateTime.parse(field.getString().trim());
                 }
             } catch (DateTimeParseException e) {
                 throw new SQLException("Unable to convert value '" + field.getString() + "' to type " + type, e);

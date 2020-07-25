@@ -26,6 +26,7 @@ import org.junit.Test;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Calendar;
 
 import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
@@ -36,8 +37,12 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
 
     private static final String TIMETZ = "07:45:51+01:00";
     private static final OffsetTime TIMETZ_OFFSETTIME = OffsetTime.parse(TIMETZ);
+    private static final ZonedDateTime TIMETZ_NAMED_ZONEDDATETIME =
+            ZonedDateTime.parse("2020-01-01T" + TIMETZ + "[Europe/Amsterdam]");
     // Defined using offset
     private static final String TIMETZ_OFFSET_NETWORK_HEX = "0E83AAF0000005DB";
+    // Defined using Europe/Amsterdam
+    private static final String TIMETZ_ZONE_NETWORK_HEX = "0E83AAF0FFFFFE49";
 
     @Before
     @Override
@@ -102,6 +107,28 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         OffsetDateTime offsetDateTime = getExpectedNonNullOffsetDateTime();
 
         field.setObject(offsetDateTime);
+    }
+
+    @Test
+    public void getObject_ZonedDateTime() throws SQLException {
+        toReturnNonNullNamedZonedDateTime();
+
+        assertEquals("Unexpected value for getObject(ZonedDateTime.class)",
+                getTimeTzExpectedNamedZonedDateTime(), field.getObject(ZonedDateTime.class));
+    }
+
+    @Test
+    public void getObjectNull_ZonedDateTime() throws SQLException {
+        toReturnNullExpectations();
+
+        assertNull("Unexpected value for getObject(ZonedDateTime.class)", field.getObject(ZonedDateTime.class));
+    }
+
+    @Test
+    public void setObject_ZonedDateTime() throws SQLException {
+        setNonNullNamedZonedDateTimeExpectations();
+
+        field.setObject(getTimeTzExpectedNamedZonedDateTime());
     }
 
     @Test
@@ -350,8 +377,16 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         toReturnValueExpectations(fromHexString(TIMETZ_OFFSET_NETWORK_HEX));
     }
 
+    private void toReturnNonNullNamedZonedDateTime() {
+        toReturnValueExpectations(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
+    }
+
     private void setNonNullOffsetTimeExpectations() {
         setValueExpectations(fromHexString(TIMETZ_OFFSET_NETWORK_HEX));
+    }
+
+    private void setNonNullNamedZonedDateTimeExpectations() {
+        setValueExpectations(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
     }
 
     private void setOffsetTimeExpectations(OffsetTime offsetTime) throws SQLException {
@@ -366,4 +401,11 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         OffsetDateTime today = OffsetDateTime.now(offset);
         return OffsetDateTime.of(today.toLocalDate(), TIMETZ_OFFSETTIME.toLocalTime(), offset);
     }
+
+    private ZonedDateTime getTimeTzExpectedNamedZonedDateTime() {
+        ZoneId zoneId = TIMETZ_NAMED_ZONEDDATETIME.getZone();
+        LocalDate currentDateInZone = ZonedDateTime.now(zoneId).toLocalDate();
+        return TIMETZ_NAMED_ZONEDDATETIME.with(TemporalAdjusters.ofDateAdjuster(date -> currentDateInZone));
+    }
+
 }

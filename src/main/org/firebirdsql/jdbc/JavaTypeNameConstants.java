@@ -55,6 +55,7 @@ public final class JavaTypeNameConstants {
     public static final String CALENDAR_CLASS_NAME = "java.util.Calendar";
     public static final String LOCAL_DATE_TIME_CLASS_NAME = "java.time.LocalDateTime";
     public static final String OFFSET_DATE_TIME_CLASS_NAME = "java.time.OffsetDateTime";
+    public static final String ZONED_DATE_TIME_CLASS_NAME = "java.time.ZonedDateTime";
     public static final String TIME_CLASS_NAME = "java.sql.Time";
     public static final String LOCAL_TIME_CLASS_NAME = "java.time.LocalTime";
     public static final String OFFSET_TIME_CLASS_NAME = "java.time.OffsetTime";
