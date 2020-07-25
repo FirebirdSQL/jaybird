@@ -156,10 +156,14 @@ javadoc {
     options.windowTitle = "$project.capitalizedName API"
     options.docTitle = project.capitalizedName
     options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
-    if (JavaVersion.current().isJava9Compatible()) {
+    def currentJavaVersion = JavaVersion.current()
+    if (currentJavaVersion.isJava9Compatible()) {
         options.addBooleanOption('html5', true)
-        // Ensure search index works correctly
-        options.addBooleanOption('-no-module-directories', true)
+
+        if (currentJavaVersion.isJava11Compatible() && !currentJavaVersion.isCompatibleWith(JavaVersion.VERSION_13)) {
+            // Ensure search index works correctly
+            options.addBooleanOption('-no-module-directories', true)
+        }
     }
     options.addBooleanOption('Xdoclint:none', true)
     exclude 'org/firebirdsql/jdbc/oo/**'
