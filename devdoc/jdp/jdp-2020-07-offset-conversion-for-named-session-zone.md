@@ -3,7 +3,7 @@
 ## Status
 
 - Draft
-- Proposed for: Jaybird 4.0.1, Jaybird 5
+- Deferred indefinitely
 - Updates: jdp-2019-03
 
 ## Type
