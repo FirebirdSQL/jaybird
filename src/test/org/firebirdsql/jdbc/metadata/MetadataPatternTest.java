@@ -19,12 +19,12 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Test;
 
 import java.util.Arrays;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
@@ -89,7 +89,6 @@ public class MetadataPatternTest {
             description.appendText("containsPatternSpecialChars");
         }
 
-        @Factory
         public static ContainsPatternSpecialCharMatcher containsPatternSpecialCharMatcher() {
             return INSTANCE;
         }

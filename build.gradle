@@ -49,6 +49,12 @@ java {
     }
 }
 
+ext {
+    junit_jupiter = '5.6.2'
+    hamcrest = '2.2'
+    jmock = '2.12.0'
+}
+
 dependencies {
     implementation 'org.antlr:antlr4-runtime:4.7.2'
     nativeImplementation 'net.java.dev.jna:jna:5.5.0'
@@ -56,21 +62,23 @@ dependencies {
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
 
     // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
 
     // Support JUnit 4
-    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.6.1'
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:$junit_jupiter"
     testImplementation 'junit:junit:4.13'
 
-    testImplementation 'org.hamcrest:hamcrest-library:1.3'
+    testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
+    testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
+    testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
 
-    testImplementation 'org.jmock:jmock-junit4:2.9.0'
-    testImplementation 'org.jmock:jmock-legacy:2.9.0'
+    testImplementation "org.jmock:jmock-junit4:$jmock"
+    testImplementation "org.jmock:jmock-legacy:$jmock"
 
     testImplementation 'cglib:cglib:3.3.0'
-    testImplementation 'org.ow2.asm:asm:7.3.1'
-    testImplementation 'org.objenesis:objenesis:3.0.1'
+    testImplementation 'org.ow2.asm:asm:8.0.1'
+    testImplementation 'org.objenesis:objenesis:3.1'
 }
 
 sourceSets {
