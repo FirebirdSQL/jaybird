@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,26 +26,19 @@ import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.jca.FBConnectionRequestInfo;
-import org.firebirdsql.jca.FBLocalTransaction;
-import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.jaybird.xca.*;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
-import javax.resource.ResourceException;
 import java.lang.ref.WeakReference;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.GENERATED_KEYS_ENABLED;
-import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.IGNORE_PROCEDURE_TYPE;
-import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.USE_FIREBIRD_AUTOCOMMIT;
+import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.*;
 
 /**
  * The class <code>FBConnection</code> is a handle to a 
@@ -81,12 +74,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      
     // This set contains all allocated but not closed statements
     // It is used to close them before the connection is closed
-    protected final Set<Statement> activeStatements = Collections.synchronizedSet(new HashSet<Statement>());
+    protected final Set<Statement> activeStatements = Collections.synchronizedSet(new HashSet<>());
     
-    private int resultSetHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+    private int resultSetHoldability;
 
     private StoredProcedureMetaData storedProcedureMetaData;
-    private FBEscapedParser escapedParser;
     private GeneratedKeysSupport generatedKeysSupport;
 	 
     /**
@@ -270,15 +262,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            try {
-                if (getLocalTransaction().inTransaction()) {
-                    throw new FBSQLException("Cannot set transaction parameters when transaction is already started.");
-                }
-
-                mc.setTransactionParameters(tpb);
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+            if (getLocalTransaction().inTransaction()) {
+                // TODO More specific exception, jaybird error code
+                throw new FBSQLException("Cannot set transaction parameters when transaction is already started.");
             }
+
+            mc.setTransactionParameters(tpb);
         }
     }
 
@@ -327,24 +316,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public String nativeSQL(String sql) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            return getEscapedParser().parse(sql);
+            return FBEscapedParser.toNativeSql(sql);
         }
-    }
-    
-    /**
-     * Returns the FBEscapedParser instance for this connection.
-     * 
-     * @return Instance of FBEscapedParser
-     */
-    protected FBEscapedParser getEscapedParser() {
-        if (escapedParser == null) {
-            DatabaseParameterBuffer dpb = getDatabaseParameterBuffer();
-            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF)
-                    ? EscapeParserMode.USE_STANDARD_UDF
-                    : EscapeParserMode.USE_BUILT_IN;
-            escapedParser = new FBEscapedParser(mode);
-        }
-        return escapedParser;
     }
 
     @Override
@@ -520,15 +493,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public void setReadOnly(boolean readOnly) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            try {
-                if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment())
-                    throw new FBSQLException("Calling setReadOnly(boolean) method " +
-                            "is not allowed when transaction is already started.");
-
-                mc.setReadOnly(readOnly);
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+            if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment()) {
+                // TODO More specific exception, jaybird error code
+                throw new FBSQLException("Calling setReadOnly(boolean) method " +
+                        "is not allowed when transaction is already started.");
             }
+            mc.setReadOnly(readOnly);
         }
     }
 
@@ -566,16 +536,10 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public void setTransactionIsolation(int level) throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-
-            try {
-                if (!getAutoCommit() && !mc.isManagedEnvironment())
-                    txCoordinator.commit();
-
-                mc.setTransactionIsolation(level);
-
-            } catch (ResourceException re) {
-                throw new FBSQLException(re);
+            if (!getAutoCommit() && !mc.isManagedEnvironment()) {
+                txCoordinator.commit();
             }
+            mc.setTransactionIsolation(level);
         }
     }
 
@@ -583,11 +547,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     public int getTransactionIsolation() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            try {
-                return mc.getTransactionIsolation();
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
-            }
+            return mc.getTransactionIsolation();
         }
     }
 
@@ -659,10 +619,12 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         
         boolean notScrollable = resultSetType != ResultSet.TYPE_SCROLL_INSENSITIVE;
 
-        if (holdable && notScrollable) 
+        if (holdable && notScrollable) {
+            // TODO jaybird error code
             throw new FBDriverNotCapableException(
                     "Holdable cursors are supported only " +
                     "for scrollable insensitive result sets.");
+        }
     }
 
     @Override
@@ -827,12 +789,14 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     private Set<String> clientInfoPropNames = new HashSet<>();
-    
-    private final AtomicInteger savepointCounter = new AtomicInteger();
+
+    private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
+            AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");
+    private volatile int savepointCounter;
     private final List<FBSavepoint> savepoints = new ArrayList<>();
 
     private int getNextSavepointCounter() {
-        return savepointCounter.getAndIncrement();
+        return SAVEPOINT_COUNTER_UPDATE.getAndIncrement(this);
     }
 
     @Override
@@ -982,18 +946,15 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }    
 
-    //-------------------------------------------
-    //Borrowed from javax.resource.cci.Connection
-
     /**
      * Returns a FBLocalTransaction instance that enables a component to 
      * demarcate resource manager local transactions on this connection.
      */
-    public FirebirdLocalTransaction getLocalTransaction() {
+    public FBLocalTransaction getLocalTransaction() {
         synchronized (getSynchronizationObject()) {
-            if (localTransaction == null)
-                localTransaction = new FBLocalTransaction(mc, this);
-
+            if (localTransaction == null) {
+                localTransaction = mc.getLocalTransaction();
+            }
             return localTransaction;
         }
     }
@@ -1156,7 +1117,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                 return null;
 
         }
-    
+
     }
 
     @Override
@@ -1206,14 +1167,14 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             stmt.setString(1, name);
             stmt.setString(2, value);
     
-            ResultSet rs = stmt.executeQuery();
-            if (!rs.next())
-                throw new FBDriverConsistencyCheckException(
-                        "Expected result from RDB$SET_CONTEXT call");
-    
-            // needed, since the value is set on fetch!!!
-            rs.getInt(1);
-    
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new FBDriverConsistencyCheckException("Expected result from RDB$SET_CONTEXT call");
+                }
+
+                // needed, since the value is set on fetch!!!
+                rs.getInt(1);
+            }
         } catch (SQLException ex) {
             throw new SQLClientInfoException(null, ex);
         }

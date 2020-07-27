@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.ds;
 import java.sql.SQLException;
 
 import javax.naming.BinaryRefAddr;
+import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -317,21 +318,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setUseStreamBlobs(useStreamBlobs);
-        }
-    }
-
-    @Override
-    public boolean isUseStandardUdf() {
-        synchronized (lock) {
-            return connectionProperties.isUseStandardUdf();
-        }
-    }
-
-    @Override
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setUseStandardUdf(useStandardUdf);
         }
     }
 
@@ -702,10 +688,11 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
     
     protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
+        if (connectionProperties == null) {
+            throw new NullPointerException("null value not allowed for connectionProperties");
+        }
         synchronized (lock) {
-            if (connectionProperties == null) {
-                throw new NullPointerException("null value not allowed for connectionProperties");
-            }
+            checkNotStarted();
             this.connectionProperties = connectionProperties;
         }
     }
@@ -722,7 +709,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * @param ref Reference to update
      * @param instance Instance of this class to obtain values
      */
-    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) {
+    protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
         synchronized (instance.lock) {
             ref.add(new StringRefAddr(REF_DESCRIPTION, instance.getDescription()));
             ref.add(new StringRefAddr(REF_SERVER_NAME, instance.getServerName()));

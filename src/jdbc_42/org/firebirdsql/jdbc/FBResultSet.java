@@ -23,7 +23,6 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 
 import java.sql.SQLException;
-import java.sql.SQLType;
 import java.util.List;
 
 /**
@@ -59,47 +58,4 @@ public class FBResultSet extends AbstractResultSet {
         super(rowDescriptor, connection, rows, retrieveBlobs);
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird delegates to {@link #updateObject(int, Object, int)} and ignores the value of <code>targetSqlType</code>
-     * </p>
-     */
-    @Override
-    public void updateObject(int columnIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        updateObject(columnIndex, x, scaleOrLength);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object, int)} and ignores the value of <code>targetSqlType</code>
-     * </p>
-     */
-    @Override
-    public void updateObject(String columnLabel, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        updateObject(columnLabel, x, scaleOrLength);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird delegates to {@link #updateObject(int, Object)} and ignores the value of <code>targetSqlType</code>
-     * </p>
-     */
-    @Override
-    public void updateObject(int columnIndex, Object x, SQLType targetSqlType) throws SQLException {
-        updateObject(columnIndex, x);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Jaybird delegates to {@link #updateObject(String, Object)} and ignores the value of <code>targetSqlType</code>
-     * </p>
-     */
-    @Override
-    public void updateObject(String columnLabel, Object x, SQLType targetSqlType) throws SQLException {
-        updateObject(columnLabel, x);
-    }
 }

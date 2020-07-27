@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ISCConstants;
  * interface that allows GDS implementations remove the DPB extension parameters
  * that driver implementation uses for client-side configuration.
  */
+@SuppressWarnings("unused")
 public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffer {
 
     /*
@@ -44,7 +45,6 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     @Deprecated
     int PARANOIA_MODE                   = ISCConstants.isc_dpb_paranoia_mode;
     int TIMESTAMP_USES_LOCAL_TIMEZONE   = ISCConstants.isc_dpb_timestamp_uses_local_timezone;
-    int USE_STANDARD_UDF                = ISCConstants.isc_dpb_use_standard_udf;
     int LOCAL_ENCODING                  = ISCConstants.isc_dpb_local_encoding;
     @Deprecated
     int MAPPING_PATH                    = ISCConstants.isc_dpb_mapping_path;
@@ -62,36 +62,6 @@ public interface DatabaseParameterBufferExtension extends DatabaseParameterBuffe
     int GENERATED_KEYS_ENABLED          = ISCConstants.isc_dpb_generated_keys_enabled;
     int IGNORE_PROCEDURE_TYPE           = ISCConstants.isc_dpb_ignore_procedure_type;
     
-    /**
-     * List of the DPB extensions. This array was used to filter the parameters
-     * from the DPB before sending it to Firebird. Any new extension code MUST
-     * be listed here.
-     *
-     * @deprecated Will be removed in Jaybird 5 without formal replacement
-     */
-    @Deprecated
-    int[] EXTENSION_PARAMETERS = new int[] {
-        SOCKET_BUFFER_SIZE,
-        BLOB_BUFFER_SIZE, 
-        USE_STREAM_BLOBS,
-        PARANOIA_MODE,
-        TIMESTAMP_USES_LOCAL_TIMEZONE,
-        USE_STANDARD_UDF,
-        LOCAL_ENCODING,
-        MAPPING_PATH,
-        NO_RESULT_SET_TRACKING,
-        RESULT_SET_HOLDABLE,
-        FILENAME_CHARSET,
-        OCTETS_AS_BYTES,
-        SO_TIMEOUT,
-        COLUMN_LABEL_FOR_NAME,
-        USE_FIREBIRD_AUTOCOMMIT,
-        WIRE_CRYPT_LEVEL,
-        DB_CRYPT_CONFIG,
-        GENERATED_KEYS_ENABLED,
-        IGNORE_PROCEDURE_TYPE
-    };
-
     /**
      * Remove extension parameters in the newly created deep copy of this class.
      * 

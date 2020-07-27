@@ -1,0 +1,68 @@
+import org.apache.tools.ant.filters.*
+
+task buildFaq(type: Exec) {
+    group 'Documentation'
+    description 'Builds the FAQ'
+    workingDir sourceDocumentation
+    inputs.files(fileTree(sourceDocumentation) {
+        include 'faq*'
+    })
+    def outputFile = file("$buildDocs/faq.html")
+    outputs.file(outputFile)
+    commandLine project.'pandoc.app', '-s', '--self-contained',
+            '-f', 'markdown-smart',
+            '-t', 'html5',
+            '--toc',
+            '-N',
+            '--section-divs',
+            '--email-obfuscation=none',
+            '--css=faq.css',
+            '-o', "$outputFile",
+            'faq_metadata.yaml',
+            'faq.md'
+}
+
+task prepareReleaseNotes(type: Copy) {
+    from(sourceDocumentation) {
+        include 'release_notes*'
+        filter ReplaceTokens, tokens: [
+                'VERSION'          : project.'version.maven',
+                'VERSION_SIMPLE'   : project.'version.simple',
+                'VERSION_WO_TARGET': "${project.'version.simple'}${project.'version.tag'}".toString(),
+                'VERSION_TAG'      : project.'version.tag',
+                'VERSION_EXAMPLE'  : "${project.'version.simple'}.java8${project.'version.tag'}".toString()
+        ]
+    }
+    from(sourceDocumentation) {
+        include '**/*.png'
+    }
+    ext.processedSourceDir = file("$buildDir/tmp/releasenotes")
+    outputs.dir(processedSourceDir)
+    into processedSourceDir
+}
+
+task buildReleaseNotes(type: Exec) {
+    group 'Documentation'
+    description 'Builds the release notes'
+    dependsOn prepareReleaseNotes
+    workingDir prepareReleaseNotes.processedSourceDir
+    def outputFile = file("$buildDocs/release_notes.html")
+    outputs.file(outputFile)
+    commandLine project.'pandoc.app', '-s', '--self-contained',
+            '-f', 'markdown-smart',
+            '-t', 'html5',
+            '--toc',
+            '-N',
+            '--section-divs',
+            '--email-obfuscation=none',
+            '--css=release_notes.css',
+            '-o', "$outputFile",
+            'release_notes_metadata.yaml',
+            'release_notes.md'
+}
+
+task buildAllDocs {
+    group 'Documentation'
+    description 'Builds the FAQ and release notes'
+    dependsOn buildFaq, buildReleaseNotes
+}

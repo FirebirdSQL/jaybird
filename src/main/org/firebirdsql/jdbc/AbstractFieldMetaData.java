@@ -174,10 +174,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case Types.DATE:
             return SQL_DATE_CLASS_NAME;
 
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return OFFSET_TIME_CLASS_NAME;
 
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return OFFSET_DATE_TIME_CLASS_NAME;
 
         case Types.NUMERIC:
@@ -245,10 +245,12 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_DEC34:
             return "DECFLOAT";
         case ISCConstants.SQL_INT128:
-            if (sqlSubtype == SUBTYPE_NUMERIC) {
+            if (sqlSubtype == SUBTYPE_NUMERIC || (sqlSubtype == 0 && sqlScale < 0)) {
                 return "NUMERIC";
-            } else {
+            } else if (sqlSubtype == SUBTYPE_DECIMAL) {
                 return "DECIMAL";
+            } else {
+                return "INT128";
             }
         case ISCConstants.SQL_FLOAT:
             return "FLOAT";
@@ -263,8 +265,10 @@ public abstract class AbstractFieldMetaData implements Wrapper {
         case ISCConstants.SQL_TYPE_DATE:
             return "DATE";
         case ISCConstants.SQL_TIMESTAMP_TZ:
+        case ISCConstants.SQL_TIMESTAMP_TZ_EX:
             return "TIMESTAMP WITH TIME ZONE";
         case ISCConstants.SQL_TIME_TZ:
+        case ISCConstants.SQL_TIME_TZ_EX:
             return "TIME WITH TIME ZONE";
         case ISCConstants.SQL_BLOB:
             if (sqlSubtype < 0) {
@@ -370,9 +374,9 @@ public abstract class AbstractFieldMetaData implements Wrapper {
             return 8;
         case Types.TIMESTAMP:
             return 19;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return 30;
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return 19;
         case Types.BOOLEAN:
             return 1;

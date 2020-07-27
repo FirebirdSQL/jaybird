@@ -85,8 +85,4 @@ public abstract class Argument implements Parameter, Serializable {
      */
     public abstract int getLength();
 
-    @Override
-    public int hashCode() {
-        return type;
-    }
 }

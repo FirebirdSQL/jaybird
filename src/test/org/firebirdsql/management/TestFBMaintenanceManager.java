@@ -462,19 +462,6 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
         maintenanceManager.killUnavailableShadows();
     }
 
-    @SuppressWarnings("deprecation")
-    @Test
-    public void testListLimboTransactions() throws Exception {
-        final int COUNT_LIMBO = 5;
-        createLimboTransaction(COUNT_LIMBO);
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        maintenanceManager.setLogger(byteOut);
-        maintenanceManager.listLimboTransactions();
-
-        StringTokenizer limboTransactions = new StringTokenizer(byteOut.toString(), "\n");
-        assertEquals(COUNT_LIMBO, limboTransactions.countTokens());
-    }
-
     @Test
     public void testGetLimboTransactions() throws Exception {
         final int COUNT_LIMBO = 5;

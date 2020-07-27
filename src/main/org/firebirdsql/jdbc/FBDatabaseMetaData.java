@@ -29,7 +29,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
@@ -223,6 +223,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getDriverName() throws SQLException {
+        // Retain JCA in name for compatibility with tools that consult metadata and use this string
         return "Jaybird JCA/JDBC driver";
     }
 
@@ -513,8 +514,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.ROWID:
                 // As size of rowid is context dependent, we can't cast to it using the convert escape
                 return false;
-            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
-            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
                 return fromType != Types.ROWID && firebirdSupportInfo.supportsTimeZones();
             default:
                 return false;
@@ -526,9 +527,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIMESTAMP:
                 return true;
             case Types.TIME:
-            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+            case Types.TIME_WITH_TIMEZONE:
                 return false;
-            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
                 return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
@@ -555,8 +556,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 return true;
             case Types.DATE:
                 return false;
-            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
-            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
                 return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
@@ -582,8 +583,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             case Types.TIME:
             case Types.DATE:
                 return true;
-            case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
-            case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+            case Types.TIME_WITH_TIMEZONE:
+            case Types.TIMESTAMP_WITH_TIMEZONE:
                 return firebirdSupportInfo.supportsTimeZones();
             case Types.CHAR:
             case Types.VARCHAR:
@@ -633,7 +634,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             }
             return false;
 
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             if (firebirdSupportInfo.supportsTimeZones()) {
                 switch (toType) {
                 case Types.TIME:
@@ -641,8 +642,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     return true;
                 case Types.DATE:
                     return false;
-                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
-                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                case Types.TIME_WITH_TIMEZONE:
+                case Types.TIMESTAMP_WITH_TIMEZONE:
                     return true;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -664,14 +665,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
             return false;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             if (firebirdSupportInfo.supportsTimeZones()) {
                 switch (toType) {
                 case Types.TIME:
                 case Types.TIMESTAMP:
                 case Types.DATE:
-                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
-                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                case Types.TIME_WITH_TIMEZONE:
+                case Types.TIMESTAMP_WITH_TIMEZONE:
                     return true;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -706,7 +707,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         case Types.REF:
         case Types.DATALINK:
         case Types.SQLXML:
-        case JaybirdTypeCodes.REF_CURSOR:
+        case Types.REF_CURSOR:
         default:
             return false;
         }
@@ -1337,7 +1338,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                         .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
                         .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
                         // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
-                        // TODO: ResultSet columns should not be first according to JDBC 4.1 description
+                        // TODO: ResultSet columns should not be first according to JDBC 4.3 description
                         .at(4).set(columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT)
                         .at(5).set(createInt(dataType))
                         .at(6).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
@@ -1354,10 +1355,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
                 switch (dataType) {
                 case Types.DECIMAL:
-                case Types.NUMERIC:
+                case Types.NUMERIC: {
+                    short precision = rs.getShort("FIELD_PRECISION");
+                    if (precision == 0 && fieldType == int128_type) {
+                        precision = NUMERIC_INT128_PRECISION;
+                    }
                     valueBuilder
-                            .at(7).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(7).set(createInt(precision))
                             .at(9).set(createShort(-1 * fieldScale));
+                }
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -1413,10 +1419,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                     valueBuilder.at(7).set(TIMESTAMP_PRECISION);
                     break;
-                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case Types.TIME_WITH_TIMEZONE:
                     valueBuilder.at(7).set(TIME_WITH_TIMEZONE_PRECISION);
                     break;
-                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                case Types.TIMESTAMP_WITH_TIMEZONE:
                     valueBuilder.at(7).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
                     break;
                 case Types.BOOLEAN:
@@ -1762,7 +1768,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * Jaybird defines these additional columns:
      * <ol start="25">
-     * <li><b>JB_IS_IDENTITY</b> String  => Indicates whether this column is an identity column (<b>NOTE: Jaybird
+     * <li><b>JB_IS_IDENTITY</b> String  =&gt; Indicates whether this column is an identity column (<b>NOTE: Jaybird
      * specific column; retrieve by name!</b>).
      * There is a subtle difference with the meaning of {@code IS_AUTOINCREMENT}. This column indicates if the column
      * is a true identity column.
@@ -1771,7 +1777,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <li> NO            --- if the column is not an identity column</li>
      * </ul>
      * </li>
-     * <li><b>JB_IDENTITY_TYPE</b> String  => Type of identity column (<b>NOTE: Jaybird specific column; retrieve by
+     * <li><b>JB_IDENTITY_TYPE</b> String  =&gt; Type of identity column (<b>NOTE: Jaybird specific column; retrieve by
      * name!</b>)
      * <ul>
      * <li> ALWAYS        --- for a GENERATED ALWAYS AS IDENTITY column (not yet supported in Firebird 3!)</li>
@@ -1805,7 +1811,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(15).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
                 .at(16).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
                 .at(17).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
-                .at(18).simple(SQL_VARYING, OBJECT_NAME_LENGTH, getScopeCatalogColumnName(), "COLUMNINFO").addField()
+                .at(18).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_CATALOG", "COLUMNINFO").addField()
                 .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_SCHEMA", "COLUMNINFO").addField()
                 .at(20).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SCOPE_TABLE", "COLUMNINFO").addField()
                 .at(21).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "COLUMNINFO").addField()
@@ -1854,10 +1860,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
                 switch (dataType) {
                 case Types.DECIMAL:
-                case Types.NUMERIC:
+                case Types.NUMERIC: {
+                    short precision = rs.getShort("FIELD_PRECISION");
+                    if (precision == 0 && fieldType == int128_type) {
+                        precision = NUMERIC_INT128_PRECISION;
+                    }
                     valueBuilder
-                            .at(6).set(createInt(rs.getShort("FIELD_PRECISION")))
+                            .at(6).set(createInt(precision))
                             .at(8).set(createInt(fieldScale * (-1)));
+                }
                     break;
                 case Types.CHAR:
                 case Types.VARCHAR:
@@ -1913,10 +1924,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 case Types.TIMESTAMP:
                     valueBuilder.at(6).set(TIMESTAMP_PRECISION);
                     break;
-                case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+                case Types.TIMESTAMP_WITH_TIMEZONE:
                     valueBuilder.at(6).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
                     break;
-                case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+                case Types.TIME_WITH_TIMEZONE:
                     valueBuilder.at(6).set(TIME_WITH_TIMEZONE_PRECISION);
                     break;
                 case Types.BOOLEAN:
@@ -1974,11 +1985,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                         break;
                     case Types.NUMERIC:
                     case Types.DECIMAL:
-                        if (fieldScale == 0) {
+                        if (fieldScale == 0 && fieldType != int128_type) {
                             // Could be autoincrement by trigger, but we simply don't know
                             valueBuilder.at(22).set(EMPTY_STRING_BYTES);
                         } else {
-                            // Scaled NUMERIC/DECIMAL: definitely not autoincrement
+                            // Scaled NUMERIC/DECIMAL or INT128-based: definitely not autoincrement
                             valueBuilder.at(22).set(NO_BYTES);
                         }
                         break;
@@ -2004,26 +2015,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private boolean hasIdentityColumns() throws SQLException {
         return getOdsMajorVersion() >= 12;
-    }
-
-    /**
-     * Gets the name of the correct scope catalog column name based on the JDBC version for use in
-     * {@link #getColumns(String, String, String, String)}.
-     * <p>
-     * Rationale: in older versions of JDBC this column was misspelled as <code>"SCOPE_CATLOG"</code> instead of
-     * <code>"SCOPE_CATALOG"</code>. This was fixed in JDBC 4.1
-     * </p>
-     *
-     * @return The scope catalog name.
-     */
-    private String getScopeCatalogColumnName() {
-        final String scopeCatalog;
-        if (getJDBCMajorVersion() > 4 || getJDBCMajorVersion() == 4 && getJDBCMinorVersion() >= 1) {
-            scopeCatalog = "SCOPE_CATALOG";
-        } else {
-            scopeCatalog = "SCOPE_CATLOG";
-        }
-        return scopeCatalog;
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
@@ -2752,6 +2743,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 getBytes("precision,scale"), TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE,
                 NOTAUTOINC, null, SHORT_ZERO, maxDecimalScale, createInt(SQL_INT64), null, RADIX_TEN));
 
+        // Handle INT128 as a JDBC type NUMERIC
+        if (firebirdSupportInfo.supportsInt128()) {
+            rows.add(RowValue.of(rowDescriptor,
+                    getBytes("INT128"), createInt(Types.NUMERIC), createInt(NUMERIC_INT128_PRECISION), null, null, null,
+                    TYPE_NULLABLE, CASEINSENSITIVE, TYPE_SEARCHABLE, SIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO,
+                    SHORT_ZERO, createInt(SQL_INT128), null, RADIX_TEN));
+        }
+
         //DECIMAL=3
         rows.add(RowValue.of(rowDescriptor,
                 getBytes("DECIMAL"), createInt(Types.DECIMAL), maxDecimalPrecision, null, null,
@@ -2840,14 +2839,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         if (firebirdSupportInfo.supportsTimeZones()) {
             //TIME_WITH_TIMEZONE=2013
             rows.add(RowValue.of(rowDescriptor,
-                    getBytes("TIME WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIME_WITH_TIMEZONE),
+                    getBytes("TIME WITH TIME ZONE"), createInt(Types.TIME_WITH_TIMEZONE),
                     TIME_WITH_TIMEZONE_PRECISION, getBytes("time'"), getBytes("'"), null, TYPE_NULLABLE,
                     CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
                     createInt(SQL_TIME_TZ), null, RADIX_TEN));
 
             //TIMESTAMP_WITH_TIMEZONE=2014
             rows.add(RowValue.of(rowDescriptor,
-                    getBytes("TIMESTAMP WITH TIME ZONE"), createInt(JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE),
+                    getBytes("TIMESTAMP WITH TIME ZONE"), createInt(Types.TIMESTAMP_WITH_TIMEZONE),
                     TIMESTAMP_WITH_TIMEZONE_PRECISION, getBytes("timestamp'"), getBytes("'"), null, TYPE_NULLABLE,
                     CASEINSENSITIVE, TYPE_SEARCHABLE, UNSIGNED, FIXEDSCALE, NOTAUTOINC, null, SHORT_ZERO, SHORT_ZERO,
                     createInt(SQL_TIMESTAMP_TZ), null, RADIX_TEN));
@@ -3251,12 +3250,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * revisions of JDBC. We recommend to retrieve these columns by name. The following additional columns are
      * available:
      * <ol start="7">
-     * <li><b>JB_FUNCTION_SOURCE</b> String  => The source of the function (for Firebird 3+ PSQL functions only)).</li>
-     * <li><b>JB_FUNCTION_KIND</b> String => The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
+     * <li><b>JB_FUNCTION_SOURCE</b> String  =&gt; The source of the function (for Firebird 3+ PSQL functions only)).</li>
+     * <li><b>JB_FUNCTION_KIND</b> String =&gt; The kind of function, one of "UDF", "PSQL" (Firebird 3+) or
      * "UDR" (Firebird 3+)</li>
-     * <li><b>JB_MODULE_NAME</b> String => Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
-     * <li><b>JB_ENTRYPOINT</b> String => Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
-     * <li><b>JB_ENGINE_NAME</b> String => Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
+     * <li><b>JB_MODULE_NAME</b> String =&gt; Value of {@code RDB$MODULE_NAME} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENTRYPOINT</b> String =&gt; Value of {@code RDB$ENTRYPOINT} (is {@code null} for PSQL)</li>
+     * <li><b>JB_ENGINE_NAME</b> String =&gt; Value of {@code RDB$ENGINE_NAME} (is {@code null} for UDF and PSQL)</li>
      * </ol>
      * </p>
      * <p>
@@ -3290,59 +3289,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             throw new SQLException("Unable to unwrap to class " + iface.getName());
 
         return iface.cast(this);
-    }
-
-    /**
-     * Determine if there are no SQL wildcard characters ('%' or '_') in the given pattern.
-     *
-     * @param pattern
-     *         The pattern to be checked for wildcards
-     * @return <code>true</code> if there are no wildcards in the pattern,
-     * <code>false</code> otherwise
-     * @deprecated Will be removed in Jaybird 5
-     */
-    @Deprecated
-    public static boolean hasNoWildcards(String pattern) {
-        if (pattern == null) return true;
-
-        for (int pos = 0; pos < pattern.length(); pos++) {
-            char ch = pattern.charAt(pos);
-            if (ch == '_' || ch == '%') {
-                return false;
-            } else if (ch == '\\' && pos < pattern.length() - 1) {
-                char nextCh = pattern.charAt(pos + 1);
-                if (nextCh == '\\' || nextCh == '%' || nextCh == '_') {
-                    // We were an escape, skip next character
-                    pos += 1;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Strips all backslash-escapes from a string.
-     *
-     * @param pattern
-     *         The string to be stripped
-     * @return pattern with all backslash-escapes removed
-     * @deprecated Will be removed in Jaybird 5
-     */
-    @Deprecated
-    public static String stripEscape(String pattern) {
-        if (pattern == null) return null;
-        StringBuilder stripped = new StringBuilder(pattern.length());
-        for (int pos = 0; pos < pattern.length(); pos++) {
-            char ch = pattern.charAt(pos);
-            if (ch != '\\') {
-                stripped.append(ch);
-            } else if (pos < pattern.length() - 1 && pattern.charAt(pos + 1) == '\\') {
-                // We are an escape for a backslash, append backslash and skip next position
-                stripped.append('\\');
-                pos += 1;
-            }
-        }
-        return stripped.toString();
     }
 
     /**
@@ -3651,8 +3597,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try {
             String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation == null) {
-                // Assume minimum: JDBC 4.1
-                tempVersion = 1;
+                // Assume minimum: JDBC 4.2
+                tempVersion = 2;
             } else {
                 int javaVersionMajor;
                 try {
@@ -3663,17 +3609,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 if (javaVersionMajor >= 9) {
                     // JDK 9 or higher: JDBC 4.3
                     tempVersion = 3;
-                } else if ("1.8".compareTo(javaImplementation) <= 0) {
-                    // JDK 1.8 or higher: JDBC 4.2
-                    tempVersion = 2;
                 } else {
-                    // JDK 1.7 (or lower): JDBC 4.1
-                    tempVersion = 1;
+                    // JDK 1.8 or lower: JDBC 4.2
+                    tempVersion = 2;
                 }
             }
         } catch (RuntimeException ex) {
-            // default to 1 (JDBC 4.1) when privileged call fails
-            tempVersion = 1;
+            // default to 2 (JDBC 4.2) when privileged call fails
+            tempVersion = 2;
         }
         JDBC_MINOR_VERSION = tempVersion;
     }

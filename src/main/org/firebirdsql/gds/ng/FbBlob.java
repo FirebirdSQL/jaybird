@@ -68,12 +68,12 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
     void open() throws SQLException;
 
     /**
-     * @return <code>true</code> if this blob is currently open.
+     * @return {@code true} if this blob is currently open.
      */
     boolean isOpen();
 
     /**
-     * @return <code>true</code> if this blob has reached the end or has been closed, always <code>true</code> for an
+     * @return {@code true} if this blob has reached the end or has been closed, always {@code true} for an
      * open output blob.
      */
     boolean isEof();
@@ -103,7 +103,7 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
     void cancel() throws SQLException;
 
     /**
-     * @return <code>true</code> if this is an output blob (write only), <code>false</code> if this is an
+     * @return {@code true} if this is an output blob (write only), {@code false} if this is an
      * input blob (read only)
      */
     boolean isOutput();
@@ -111,7 +111,7 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
     /**
      * Get synchronization object.
      *
-     * @return object, cannot be <code>null</code>.
+     * @return object, cannot be {@code null}.
      */
     Object getSynchronizationObject();
 
@@ -120,13 +120,13 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
     /**
      * Gets a segment of blob data.
      * <p>
-     * When <code>sizeRequested</code> exceeds {@link #getMaximumSegmentSize()} it is silently reduced to the maximum
+     * When {@code sizeRequested} exceeds {@link #getMaximumSegmentSize()} it is silently reduced to the maximum
      * segment size.
      * </p>
      * TODO: Consider allowing this and have the implementation handle longer segments by sending multiple (batched?) requests.
      *
      * @param sizeRequested
-     *         Requested segment size (> 0).
+     *         Requested segment size (&gt; 0).
      * @return Retrieved segment (size may be less than requested)
      * @throws SQLException
      *         If this is an output blob, the blob is closed, the transaction is not active, or a database connection
@@ -140,7 +140,7 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * Implementation must handle segment length exceeding {@link #getMaximumSegmentSize()} by batching. TODO: reconsider and let caller handle that?
      * </p>
      * <p>
-     * Passing a section that is length 0 will throw an <code>SQLException</code>.
+     * Passing a section that is length 0 will throw an {@code SQLException}.
      * </p>
      *
      * @param segment
@@ -152,13 +152,13 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
     void putSegment(byte[] segment) throws SQLException;
 
     /**
-     * Performs a seek on a blob with the specified <code>seekMode</code> and <code>offset</code>.
+     * Performs a seek on a blob with the specified {@code seekMode} and {@code offset}.
      * <p>
      * Firebird only supports seek on stream blobs.
      * </p>
      *
      * @param offset
-     *         Offset of the seek, effect depends on value of <code>seekMode</code>
+     *         Offset of the seek, effect depends on value of {@code seekMode}
      * @param seekMode
      *         Value of {@link org.firebirdsql.gds.ng.FbBlob.SeekMode}
      * @throws SQLException
@@ -250,9 +250,9 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
          * <p>
          * Valid values are:
          * <ul>
-         * <li><code>0</code> - for {@link SeekMode#ABSOLUTE}</li>
-         * <li><code>1</code> - for {@link SeekMode#RELATIVE}</li>
-         * <li><code>2</code> - for {@link SeekMode#ABSOLUTE_FROM_END}</li>
+         * <li>{@code 0} - for {@link SeekMode#ABSOLUTE}</li>
+         * <li>{@code 1} - for {@link SeekMode#RELATIVE}</li>
+         * <li>{@code 2} - for {@link SeekMode#ABSOLUTE_FROM_END}</li>
          * </ul>
          * </p>
          *

@@ -429,18 +429,6 @@ public interface MaintenanceManager extends ServiceManager {
     // ----------- Transaction Management ----------------------------
 
     /**
-     * Retrieve the ID of each limbo transaction. The output of this method is
-     * written to the logger.
-     *
-     * @throws SQLException
-     *         if a database access error occurs
-     * @deprecated Use {@link #limboTransactionsAsList()} or
-     * {@link #getLimboTransactions()} instead; this method will be removed in Jaybird 5.
-     */
-    @Deprecated
-    void listLimboTransactions() throws SQLException;
-
-    /**
      * Retrieve the ID of each limbo transaction as a List of Long objects.
      *
      * @throws SQLException

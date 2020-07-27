@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.util.InternalApi;
+
 /**
  * Supports object conversions as specified by JDBC.
  * <p>
@@ -30,6 +32,7 @@ package org.firebirdsql.jdbc.field;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
+@InternalApi
 interface ObjectConverter {
 
     /**

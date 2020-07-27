@@ -21,15 +21,18 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.jna.embedded.FirebirdEmbeddedLookup;
+import org.firebirdsql.jna.embedded.spi.DisposableFirebirdEmbeddedLibrary;
+import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.nio.file.Path;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for establishing connection using the
@@ -61,7 +64,8 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
     @Override
     protected FbClientLibrary createClientLibrary() {
         final List<Throwable> throwables = new ArrayList<>();
-        for (String libraryName : LIBRARIES_TO_TRY) {
+        final List<String> librariesToTry = findLibrariesToTry();
+        for (String libraryName : librariesToTry) {
             try {
                 if (Platform.isWindows()) {
                     return Native.loadLibrary(libraryName, WinFbClientLibrary.class);
@@ -74,13 +78,46 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
                 // continue with next
             }
         }
-        assert throwables.size() == LIBRARIES_TO_TRY.size();
-        log.error("Could not load any of the libraries in " + LIBRARIES_TO_TRY + ":");
-        for (int idx = 0; idx < LIBRARIES_TO_TRY.size(); idx++) {
-            log.error("Loading " + LIBRARIES_TO_TRY.get(idx) + " failed", throwables.get(idx));
+        assert throwables.size() == librariesToTry.size();
+        log.error("Could not load any of the libraries in " + librariesToTry + ":");
+        for (int idx = 0; idx < librariesToTry.size(); idx++) {
+            log.error("Loading " + librariesToTry.get(idx) + " failed", throwables.get(idx));
         }
-        throw new NativeLibraryLoadException("Could not load any of " + LIBRARIES_TO_TRY + "; linking first exception",
+        throw new NativeLibraryLoadException("Could not load any of " + librariesToTry + "; linking first exception",
                 throwables.get(0));
+    }
+
+    private List<String> findLibrariesToTry() {
+        Optional<FirebirdEmbeddedLibrary> optionalFbEmbeddedInstance = FirebirdEmbeddedLookup.findFirebirdEmbedded();
+        if (optionalFbEmbeddedInstance.isPresent()) {
+            FirebirdEmbeddedLibrary firebirdEmbeddedLibrary = optionalFbEmbeddedInstance.get();
+            log.info("Found Firebird Embedded " + firebirdEmbeddedLibrary.getVersion() + " on classpath");
+            if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary) {
+                NativeResourceTracker.strongRegisterNativeResource(new FirebirdEmbeddedLibraryNativeResource(
+                        (DisposableFirebirdEmbeddedLibrary) firebirdEmbeddedLibrary));
+            }
+
+            Path entryPointPath = firebirdEmbeddedLibrary.getEntryPointPath().toAbsolutePath();
+            List<String> librariesToTry = new ArrayList<>(LIBRARIES_TO_TRY.size() + 1);
+            librariesToTry.add(entryPointPath.toString());
+            librariesToTry.addAll(LIBRARIES_TO_TRY);
+            return librariesToTry;
+        }
+        return LIBRARIES_TO_TRY;
+    }
+
+    private static class FirebirdEmbeddedLibraryNativeResource extends NativeResourceTracker.NativeResource {
+
+        private final DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary;
+
+        private FirebirdEmbeddedLibraryNativeResource(DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary) {
+            this.firebirdEmbeddedLibrary = requireNonNull(firebirdEmbeddedLibrary, "firebirdEmbeddedLibrary");
+        }
+
+        @Override
+        void dispose() {
+            firebirdEmbeddedLibrary.dispose();
+        }
     }
 
 }

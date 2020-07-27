@@ -6,15 +6,14 @@ Where do I get Jaybird?
 
 ### Maven ###
 
-#### Jaybird 4 ####
+<!-- TODO Hidden for now
+#### Jaybird 5 ####
 
-NOTE: Jaybird 4 is in beta. Use [Jaybird 3.0](#jaybird-3.0) for production.
-
-Jaybird 4 is available from Maven central:
+Jaybird 5 is in development and not yet available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.0.javaXX-beta-1` (where `XX` is `7`, `8` or `11`)
+Version: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
@@ -26,7 +25,41 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8-beta-1</version>
+    <version>4.0.0.java8</version>
+</dependency>
+~~~
+
+If you want to use Type 2 support (native, local or embedded), you need to 
+explicitly include JNA 5.5.0 as a dependency:
+
+~~~ {.xml}
+<dependency>
+    <groupId>net.java.dev.jna</groupId>
+    <artifactId>jna</artifactId>
+    <version>5.5.0</version>
+</dependency>
+~~~
+-->
+
+#### Jaybird 4 ####
+
+Jaybird 4 is available from Maven central:
+
+Groupid: `org.firebirdsql.jdbc`, \
+Artifactid: `jaybird`, \
+Version: `4.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
+
+For backwards compatibility, we also provide a Maven relocation artifact with
+artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
+recommend switching to the `jaybird` artifact.
+
+For example, for Java 8:
+
+~~~ {.xml}
+<dependency>
+    <groupId>org.firebirdsql.jdbc</groupId>
+    <artifactId>jaybird</artifactId>
+    <version>4.0.0.java8</version>
 </dependency>
 ~~~
 
@@ -38,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8-beta-1</version>
+    <version>4.0.0.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -55,13 +88,13 @@ dependency:
 ~~~
 
 If you want to use Type 2 support (native, local or embedded), you need to 
-explicitly include JNA 5.3.0 as a dependency:
+explicitly include JNA 5.5.0 as a dependency:
 
 ~~~ {.xml}
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.3.0</version>
+    <version>5.5.0</version>
 </dependency>
 ~~~
 
@@ -69,11 +102,13 @@ explicitly include JNA 5.3.0 as a dependency:
 <!-- For GitHub markdown compatibility -->
 <a name="jaybird-3.0"></a>
 
+Jaybird 3.0 is currently maintained, but we recommend upgrading to Jaybird 4.
+
 Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
-Version: `3.0.8`
+Version: `3.0.9`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -84,7 +119,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.8</version>
+    <version>3.0.9</version>
 </dependency>
 ~~~
 
@@ -96,7 +131,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.8</version>
+    <version>3.0.9</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -124,6 +159,8 @@ explicitly include JNA 4.4.0 as a dependency:
 ~~~
 
 #### Jaybird 2.2 ####
+
+Jaybird 2.2 is end-of-life. We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2 is available on maven, with a separate artifact
 for each supported Java version.
@@ -170,8 +207,8 @@ Each release is also tagged in the repository.
 How is Jaybird licensed?
 ------------------------
 
-Jaybird JCA/JDBC driver is distributed under the GNU Lesser General Public
-License (LGPL). Text of the license can be obtained from
+Jaybird JDBC driver is distributed under the GNU Lesser General Public License
+(LGPL). Text of the license can be obtained from
 [http://www.gnu.org/copyleft/lesser.html](http://www.gnu.org/copyleft/lesser.html).
 
 Using Jaybird (by importing Jaybird's public interfaces in your Java code), and
@@ -278,11 +315,11 @@ Where to get help
 *   On [Stack Overflow](https://stackoverflow.com/), please tag your questions
     with *jaybird* and *firebird*
     
-*   The [Firebird-Java group](http://groups.yahoo.com/group/Firebird-Java) and
-    corresponding mailing list firebird-java@yahoogroups.com
+*   The [Firebird-Java group](https://groups.google.com/d/forum/firebird-java) and
+    corresponding mailing list firebird-java@googlegroups.com
 
     You can subscribe to the mailing list by sending an email to
-    [firebird-java-subscribe@yahoogroups.com](mailto:firebird-java-subscribe@yahoogroups.com)
+    [firebird-java+subscribe@googlegroups.com](mailto:firebird-java+subscribe@googlegroups.com)
 
 *   Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
 
@@ -308,10 +345,10 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 Reporting Bugs
 --------------
 
-The developers follow the firebird-java@yahoogroups.com list. Join the list and
-post information about suspected bugs. List members may be able to help out to
-determine if it is an actual bug, provide a workaround and get you going again,
-whereas bug fixes might take awhile.
+The developers follow the [firebird-java Google Group](https://groups.google.com/d/forum/firebird-java).
+Join the list and post information about suspected bugs. List members may be
+able to help out to determine if it is an actual bug, provide a workaround and
+get you going again, whereas bug fixes might take a while.
 
 You can report bugs in the Firebird bug tracker, project
 ["Java Client (Jaybird)"](http://tracker.firebirdsql.org/browse/JDBC)
@@ -688,15 +725,11 @@ implemented as they are not supported by Firebird.
 Implemented features:
 
 * Most useful JDBC functionality ("useful" in the opinion of the developers).
-* Complete JCA API support: may be used directly in JCA-supporting application
-  servers.
-* XA transactions with true two phase commit when used as a JCA resource adapter
-  in a managed environment (with a `TransactionManager` and JCA deployment
-  support) as well as when used via `javax.sql.XADataSource` implementation.
+* XA transactions with true two phase commit when used via
+  `javax.sql.XADataSource` implementation.
 * `ObjectFactory` implementation for use in environments with JNDI but no
   `TransactionManager`.
 * `DataSource` implementations without pooling.
-* Driver implementation for use in legacy applications.
 * Complete access to all Firebird database parameter block and transaction
   parameter block settings.
 * JMX mbean for database management (so far just database create and drop).
@@ -775,10 +808,11 @@ not provide a connection pool**, but is intended to be used by a connection pool
 connection pool.
 
 If your application is built on a Java EE application server, we suggest you use
-the connection pooling provided by the application server. Either through the
-resource-adapter of the JCA implementation of Jaybird, or using the
-`java.sql.ConnectionPoolDataSource` implementation
-`org.firebirdsql.ds.FBConnectionPoolDataSource`.
+the connection pooling provided by the application server using the
+`javax.sql.ConnectionPoolDataSource` implementation
+`org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the 
+`javax.sql.XADataSource` implementation
+`org.firebirdsql.ds.FBXADataSource`.
 
 If you develop standalone applications, or you use an application server without
 connection pooling, we suggest you use third-party libraries like:

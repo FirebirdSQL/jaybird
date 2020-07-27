@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -49,12 +49,14 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
     }
 
     private final FbClientLibrary clientLibrary;
+    private final NativeLibrary nativeLibrary;
     private final Set<FbClientFeature> clientFeatures;
     private final InvocationHandler delegatedHandler;
 
-    private FbClientFeatureAccessHandler(FbClientLibrary clientLibrary, Set<FbClientFeature> clientFeatures,
-            InvocationHandler delegatedHandler) {
+    private FbClientFeatureAccessHandler(FbClientLibrary clientLibrary, NativeLibrary nativeLibrary,
+            Set<FbClientFeature> clientFeatures, InvocationHandler delegatedHandler) {
         this.clientLibrary = clientLibrary;
+        this.nativeLibrary = nativeLibrary;
         this.clientFeatures = clientFeatures;
         this.delegatedHandler = delegatedHandler;
     }
@@ -71,6 +73,10 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
         }
 
         return delegatedHandler.invoke(clientLibrary, method, inArgs);
+    }
+
+    NativeLibrary getNativeLibrary() {
+        return nativeLibrary;
     }
 
     /**
@@ -95,12 +101,13 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
         }
 
         Library.Handler originalHandler = (Library.Handler) ih;
-        Set<FbClientFeature> clientFeatures = determineClientFeatures(originalHandler);
+        NativeLibrary nativeLibrary = originalHandler.getNativeLibrary();
+        Set<FbClientFeature> clientFeatures = determineClientFeatures(nativeLibrary);
 
         InvocationHandler delegatedHandler = syncWrapIfNecessary(library, originalHandler);
 
         FbClientFeatureAccessHandler fbClientFeatureAccessHandler =
-                new FbClientFeatureAccessHandler(library, clientFeatures, delegatedHandler);
+                new FbClientFeatureAccessHandler(library, nativeLibrary, clientFeatures, delegatedHandler);
 
         Class<?> interfaceClass = originalHandler.getInterfaceClass();
         ClassLoader loader = interfaceClass.getClassLoader();
@@ -109,8 +116,7 @@ class FbClientFeatureAccessHandler implements InvocationHandler {
         return (FbClientLibrary) proxy;
     }
 
-    private static Set<FbClientFeature> determineClientFeatures(Library.Handler originalHandler) {
-        NativeLibrary nativeLibrary = originalHandler.getNativeLibrary();
+    private static Set<FbClientFeature> determineClientFeatures(NativeLibrary nativeLibrary) {
         EnumSet<FbClientFeature> features = EnumSet.allOf(FbClientFeature.class);
         for (FbClientFeature feature : FbClientFeature.values()) {
             for (String methodName : feature.methodNames()) {

@@ -180,7 +180,7 @@ public interface ISCConstants {
     @Deprecated
     int isc_dpb_paranoia_mode           = 132;
     int isc_dpb_timestamp_uses_local_timezone        = 133;
-    int isc_dpb_use_standard_udf        = 134;
+    // unused 134 (was isc_dpb_use_standard_udf)
     int isc_dpb_local_encoding          = 135;
     @Deprecated
     int isc_dpb_mapping_path            = 136;
@@ -2349,8 +2349,10 @@ public interface ISCConstants {
     int SQL_TYPE_TIME = 560;
     int SQL_TYPE_DATE = 570;
     int SQL_INT64     = 580;
+    int SQL_TIMESTAMP_TZ_EX = 32748;
+    int SQL_TIME_TZ_EX      = 32750;
     int SQL_INT128    = 32752;
-    int SQL_TIMESTAMP_TZ = 32754;
+    int SQL_TIMESTAMP_TZ    = 32754;
     int SQL_TIME_TZ   = 32756;
     // Replaced by SQL_INT128 in 4.0.0.1604
     @Deprecated

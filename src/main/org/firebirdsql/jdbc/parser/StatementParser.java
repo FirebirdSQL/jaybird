@@ -26,20 +26,6 @@ package org.firebirdsql.jdbc.parser;
  * @since 2.2
  */
 public interface StatementParser {
-    
-    /**
-     * Parses the provided SQL into a statement model
-     * <p>
-     * Implementation must call {@link #parseStatement(String)}.
-     * </p>
-     * 
-     * @param sql SQL query text to parse
-     * @return Statement model
-     * @throws StatementParser.ParseException For errors parsing the query
-     * @deprecated Use {@link #parseStatement(String)} instead; will be removed in Jaybird 5
-     */
-    @Deprecated
-    JaybirdStatementModel parseInsertStatement(String sql) throws ParseException;
 
     /**
      * Parses the provided SQL into a statement model

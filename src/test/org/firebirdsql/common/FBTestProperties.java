@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,15 +21,13 @@ package org.firebirdsql.common;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jca.InternalConnectionManager;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
-import javax.resource.spi.ConnectionManager;
 import java.io.File;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -51,7 +49,7 @@ public final class FBTestProperties {
         }
     }
     
-    private static ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
+    private static final ResourceBundle testDefaults = ResourceBundle.getBundle("unit_test_defaults");
 
     public static String getProperty(String property) {
         return getProperty(property, null);
@@ -199,23 +197,14 @@ public final class FBTestProperties {
     // FACTORY METHODS
     //
     // These methods should be used where possible so as to create the objects
-    // bound to the
-    // appropriate GDS implementation.
+    // bound to the appropriate GDS implementation.
 
     public static FbDatabaseFactory getFbDatabaseFactory() {
         return GDSFactory.getDatabaseFactoryForType(getGdsType());
     }
 
-    @SuppressWarnings("unused")
-    public static FBManagedConnectionFactory createFBManagedConnectionFactory() {
-        return new FBManagedConnectionFactory(getGdsType());
-    }
-
-    public static FBManagedConnectionFactory createFBManagedConnectionFactory(
-            @SuppressWarnings("UnusedParameters") ConnectionManager cm) {
-        FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(getGdsType());
-        mcf.setDefaultConnectionManager(new InternalConnectionManager());
-        return mcf;
+    public static FBManagedConnectionFactory createFBManagedConnectionFactory(boolean shared) {
+        return new FBManagedConnectionFactory(shared, getGdsType());
     }
 
     public static FBManager createFBManager() {

@@ -106,7 +106,8 @@ class FBCachedFetcher implements FBFetcher {
      */
     FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
             GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {
-        assert retrieveBlobs && rowDescriptor != null && gdsHelper != null || !retrieveBlobs : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
+        assert !retrieveBlobs || rowDescriptor != null && gdsHelper != null
+                : "Need non-null rowDescriptor and gdsHelper for retrieving blobs";
         this.rows = new ArrayList<>(rows);
         this.fetcherListener = fetcherListener;
         forwardOnly = false;

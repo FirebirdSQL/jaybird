@@ -63,6 +63,8 @@ public interface BlrConstants {
     int blr_int128 = 26;
     int blr_sql_time_tz = 28;
     int blr_timestamp_tz = 29;
+    int blr_ex_time_tz = 30;
+    int blr_ex_timestamp_tz = 31;
 
     // first sub parameter for blr_domain_name[2]
     int blr_domain_type_of = 0;

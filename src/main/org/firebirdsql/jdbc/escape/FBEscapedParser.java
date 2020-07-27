@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.jdbc.FBProcedureCall;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.text.BreakIterator;
@@ -27,13 +28,12 @@ import java.util.Deque;
 import java.util.regex.Pattern;
 
 /**
- * The class <code>FBEscapedParser</code> parses the SQL and converts escaped
- * syntax to native form.
+ * The class {@code FBEscapedParser} parses the SQL and converts escaped syntax to native form.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
  */
+@InternalApi
 public final class FBEscapedParser {
 
     /*
@@ -63,17 +63,8 @@ public final class FBEscapedParser {
 
     private static final String LIMIT_OFFSET_CLAUSE = " offset ";
 
-    private final EscapeParserMode mode;
-
-    /**
-     * Creates a parser for JDBC escaped strings.
-     *
-     * @param mode
-     *         One of {@link EscapeParserMode#USE_BUILT_IN} or
-     *         {@link EscapeParserMode#USE_STANDARD_UDF}
-     */
-    public FBEscapedParser(EscapeParserMode mode) {
-        this.mode = mode;
+    private FBEscapedParser() {
+        // No instances
     }
 
     /**
@@ -89,8 +80,19 @@ public final class FBEscapedParser {
      * @return <code>true</code> if the <code>sql</code> is suspected to contain
      * escaped syntax.
      */
-    private boolean checkForEscapes(String sql) {
+    private static boolean checkForEscapes(String sql) {
         return CHECK_ESCAPE_PATTERN.matcher(sql).find();
+    }
+
+    /**
+     * Converts escaped parts in the passed SQL to native representation.
+     *
+     * @param sql
+     *         to parse
+     * @return native form of the {@code sql}.
+     */
+    public static String toNativeSql(String sql) throws SQLException {
+        return parse(sql);
     }
 
     /**
@@ -100,7 +102,7 @@ public final class FBEscapedParser {
      *         to parse
      * @return native form of the <code>sql</code>.
      */
-    public String parse(final String sql) throws SQLException {
+    public static String parse(final String sql) throws SQLException {
         if (!checkForEscapes(sql)) return sql;
 
         ParserState state = ParserState.INITIAL_STATE;
@@ -185,7 +187,7 @@ public final class FBEscapedParser {
         }
     }
 
-    private void processEscaped(final String escaped, final StringBuilder keyword, final StringBuilder payload) {
+    private static void processEscaped(final String escaped, final StringBuilder keyword, final StringBuilder payload) {
         assert (keyword.length() == 0 && payload.length() == 0) : "StringBuilders keyword and payload should be empty";
 
         // Extract the keyword from the escaped syntax.
@@ -218,7 +220,7 @@ public final class FBEscapedParser {
      * @param escaped
      *         the part of escaped SQL between the '{' and '}'.
      */
-    private void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
+    private static void escapeToNative(final StringBuilder target, final String escaped) throws SQLException {
         final StringBuilder keyword = new StringBuilder();
         final StringBuilder payload = new StringBuilder(Math.max(16, escaped.length()));
 
@@ -271,7 +273,7 @@ public final class FBEscapedParser {
      * @param dateStr
      *         the date in the 'yyyy-mm-dd' format.
      */
-    private void toDateString(final StringBuilder target, final CharSequence dateStr) {
+    private static void toDateString(final StringBuilder target, final CharSequence dateStr) {
         // use shorthand date cast (using just the string will not work in all contexts)
         target.append("DATE ").append(dateStr);
     }
@@ -285,7 +287,7 @@ public final class FBEscapedParser {
      * @param timeStr
      *         the date in the 'hh:mm:ss' format.
      */
-    private void toTimeString(final StringBuilder target, final CharSequence timeStr) {
+    private static void toTimeString(final StringBuilder target, final CharSequence timeStr) {
         // use shorthand time cast (using just the string will not work in all contexts)
         target.append("TIME ").append(timeStr);
     }
@@ -299,7 +301,7 @@ public final class FBEscapedParser {
      * @param timestampStr
      *         the date in the 'yyyy-mm-dd hh:mm:ss' format.
      */
-    private void toTimestampString(final StringBuilder target, final CharSequence timestampStr) {
+    private static void toTimestampString(final StringBuilder target, final CharSequence timestampStr) {
         // use shorthand timestamp cast (using just the string will not work in all contexts)
         target.append("TIMESTAMP ").append(timestampStr);
     }
@@ -314,8 +316,8 @@ public final class FBEscapedParser {
      *         part of {call proc_name(...)} without curly braces and "call"
      *         word.
      */
-    private void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
-        FBEscapedCallParser tempParser = new FBEscapedCallParser(mode);
+    private static void convertProcedureCall(final StringBuilder target, final String procedureCall) throws SQLException {
+        FBEscapedCallParser tempParser = new FBEscapedCallParser();
         FBProcedureCall call = tempParser.parseCall(procedureCall);
         call.checkParameters();
         target.append(call.getSQL(false));
@@ -331,7 +333,7 @@ public final class FBEscapedParser {
      * @param outerJoin
      *         Outer join text
      */
-    private void convertOuterJoin(final StringBuilder target, final CharSequence outerJoin) {
+    private static void convertOuterJoin(final StringBuilder target, final CharSequence outerJoin) {
         target.append(outerJoin);
     }
 
@@ -342,7 +344,7 @@ public final class FBEscapedParser {
      * @param escapeString
      *         escape string to convert
      */
-    private void convertEscapeString(final StringBuilder target, final CharSequence escapeString) {
+    private static void convertEscapeString(final StringBuilder target, final CharSequence escapeString) {
         target.append("ESCAPE ").append(escapeString);
     }
 
@@ -364,7 +366,7 @@ public final class FBEscapedParser {
      * @param limitClause
      *         Limit clause
      */
-    private void convertLimitString(final StringBuilder target, final CharSequence limitClause)
+    private static void convertLimitString(final StringBuilder target, final CharSequence limitClause)
             throws FBSQLParseException {
         final String limitEscape = limitClause.toString().toLowerCase();
         final int offsetStart = limitEscape.indexOf(LIMIT_OFFSET_CLAUSE);
@@ -391,9 +393,9 @@ public final class FBEscapedParser {
      * @throws FBSQLParseException
      *         if something was wrong.
      */
-    private void convertEscapedFunction(final StringBuilder target, final CharSequence escapedFunction)
+    private static void convertEscapedFunction(final StringBuilder target, final CharSequence escapedFunction)
             throws FBSQLParseException {
-        final String templateResult = FBEscapedFunctionHelper.convertTemplate(escapedFunction.toString(), mode);
+        final String templateResult = FBEscapedFunctionHelper.convertTemplate(escapedFunction.toString());
         target.append(templateResult != null ? templateResult : escapedFunction);
     }
 
@@ -555,25 +557,5 @@ public final class FBEscapedParser {
          *         For incorrect character for current state during parsing
          */
         protected abstract ParserState nextState(char inputChar) throws FBSQLParseException;
-    }
-
-    public enum EscapeParserMode {
-        /**
-         * Use built-in functions if available.
-         * <p>
-         * This may still result in a UDF function being used if the UDF matches
-         * naming and arguments of the function (or function template)
-         * </p>
-         */
-        USE_BUILT_IN,
-        /**
-         * Attempt to use UDF if there is no explicit function template defined.
-         * <p>
-         * This may still result in a built-in function being used if there is
-         * an explicit function template, and/or if there is no UDF with the
-         * name, but there is a built-in with the same name and parameter order.
-         * </p>
-         */
-        USE_STANDARD_UDF
     }
 }

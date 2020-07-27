@@ -257,6 +257,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
                 break;
             case isc_dpb_process_id:
             case isc_dpb_process_name:
+            case isc_dpb_no_db_triggers:
             case isc_dpb_set_bind:
             case isc_dpb_decfloat_round:
             case isc_dpb_decfloat_traps:

@@ -49,7 +49,6 @@ public class RegexMatcher extends TypeSafeMatcher<String> {
         description.appendText("a string match regular expression ").appendValue(pattern);
     }
 
-    @Factory
     public static RegexMatcher matchesRegex(String regex) {
         return new RegexMatcher(regex);
     }

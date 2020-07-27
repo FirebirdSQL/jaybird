@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,38 +18,36 @@
  */
 package org.firebirdsql.ds;
 
-import java.io.PrintWriter;
-import java.sql.SQLException;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jaybird.xca.*;
+import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.jdbc.FBDataSource;
+import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
-import javax.resource.ResourceException;
-import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.ConnectionEventListener;
-import javax.resource.spi.ConnectionManager;
-import javax.resource.spi.ConnectionRequestInfo;
-import javax.resource.spi.ManagedConnectionFactory;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
-
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
-import org.firebirdsql.jdbc.FBConnection;
-import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FBSQLException;
+import java.io.Serializable;
+import java.sql.SQLException;
 
 /**
  * Bare-bones implementation of {@link javax.sql.XADataSource}.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
 public class FBXADataSource extends FBAbstractCommonDataSource implements XADataSource, Referenceable {
 
-    private volatile transient FBDataSource internalDs;
+    // TODO Implement in terms of FBManagedConnectionFactory
+
+    private static final Logger LOG = LoggerFactory.getLogger(FBXADataSource.class);
+
+    private volatile FBDataSource internalDs;
 
     public XAConnection getXAConnection() throws SQLException {
         return getXAConnection(getUser(), getPassword());
@@ -59,8 +57,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         if (internalDs == null) {
             initialize();
         }
-        FBConnection connection = (FBConnection) internalDs.getConnection(user,
-                password);
+        FBConnection connection = (FBConnection) internalDs.getConnection(user, password);
         return new FBXAConnection(connection);
     }
 
@@ -69,19 +66,15 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
             if (internalDs != null) {
                 return;
             }
-            try {
-                GDSType gdsType = GDSType.getType(getType());
-                if (gdsType == null) {
-                    gdsType = GDSFactory.getDefaultGDSType();
-                }
-                FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType,
-                        getConnectionProperties());
-                mcf.setDefaultConnectionManager(new XAConnectionManager());
-                internalDs = (FBDataSource) mcf.createConnectionFactory();
-                internalDs.setLogWriter(getLogWriter());
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
+            GDSType gdsType = GDSType.getType(getType());
+            if (gdsType == null) {
+                gdsType = GDSFactory.getDefaultGDSType();
             }
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType,
+                    getConnectionProperties());
+            mcf.setDefaultConnectionManager(new XAConnectionManager());
+            internalDs = (FBDataSource) mcf.createConnectionFactory();
+            internalDs.setLogWriter(getLogWriter());
         }
     }
 
@@ -91,83 +84,41 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
         }
     }
 
-    private static class XAConnectionManager implements ConnectionManager, ConnectionEventListener {
+    private static class XAConnectionManager implements XcaConnectionManager, XcaConnectionEventListener,
+            Serializable {
 
-        private static final long serialVersionUID = 2615167799315401379L;
+        private static final long serialVersionUID = 7926533334548378200L;
 
-        public Object allocateConnection(ManagedConnectionFactory mcf,
-                ConnectionRequestInfo cxRequestInfo) throws ResourceException {
-
-            FBManagedConnection mc = (FBManagedConnection) mcf.createManagedConnection(null, cxRequestInfo);
+        @Override
+        public FirebirdConnection allocateConnection(FBManagedConnectionFactory mcf,
+                FBConnectionRequestInfo cxRequestInfo) throws SQLException {
+            FBManagedConnection mc = mcf.createManagedConnection(cxRequestInfo);
             mc.setManagedEnvironment(true);
-            mc.setConnectionSharing(false);
             mc.addConnectionEventListener(this);
-            return mc.getConnection(null, cxRequestInfo);
+            return mc.getConnection();
         }
 
-        // javax.resource.spi.ConnectionEventListener implementation
-
-        /**
-         * <code>javax.resource.spi.ConnectionEventListener</code> callback for
-         * when a <code>ManagedConnection</code> is closed.
-         * 
-         * @param ce
-         *            contains information about the connection that has be
-         *            closed
-         */
-        public void connectionClosed(ConnectionEvent ce) {
-            PrintWriter externalLog = ((FBManagedConnection) ce.getSource()).getLogWriter();
+        @Override
+        public void connectionClosed(XcaConnectionEvent ce) {
             try {
-                ((FBManagedConnection) ce.getSource()).destroy(ce);
-            } catch (ResourceException e) {
-                if (externalLog != null)
-                    externalLog.println("Exception closing unmanaged connection: " + e);
+                ce.getSource().destroy(ce);
+            } catch (SQLException e) {
+                LOG.warn("Exception closing unmanaged connection", e);
             }
         }
 
-        /**
-         * <code>javax.resource.spi.ConnectionEventListener</code> callback for
-         * when a Local Transaction was rolled back within the context of a
-         * <code>ManagedConnection</code>.
-         * 
-         * @param ce
-         *            contains information about the connection
-         */
-        public void connectionErrorOccurred(ConnectionEvent ce) {
-            PrintWriter externalLog = ((FBManagedConnection) ce.getSource()).getLogWriter();
+        @Override
+        public void connectionErrorOccurred(XcaConnectionEvent ce) {
             try {
-                ((FBManagedConnection) ce.getSource()).destroy(ce);
-            } catch (ResourceException e) {
-                if (externalLog != null)
-                    externalLog.println("Exception closing unmanaged connection: " + e);
+                ce.getSource().destroy(ce);
+            } catch (SQLException e) {
+                LOG.warn("Exception closing unmanaged connection", e);
             }
-        }
-
-        // We are only supposed to be notified of local transactions that a
-        // Connection started.
-        // Not much we can do with this info...
-
-        /**
-         * Ignored event callback
-         */
-        public void localTransactionStarted(ConnectionEvent event) {
-        }
-
-        /**
-         * Ignored event callback
-         */
-        public void localTransactionCommitted(ConnectionEvent event) {
-        }
-
-        /**
-         * Ignored event callback
-         */
-        public void localTransactionRolledback(ConnectionEvent event) {
         }
     }
 
     public Reference getReference() throws NamingException {
-        Reference ref = new Reference(getClass().getName(), DataSourceFactory.class.getName(), null);
+        Reference ref = new Reference(FBXADataSource.class.getName(), DataSourceFactory.class.getName(), null);
 
         FBAbstractCommonDataSource.updateReference(ref, this);
 

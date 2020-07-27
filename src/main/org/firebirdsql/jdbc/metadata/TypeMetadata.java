@@ -139,9 +139,9 @@ public class TypeMetadata {
             return TIME_PRECISION;
         case Types.TIMESTAMP:
             return TIMESTAMP_PRECISION;
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return TIME_WITH_TIMEZONE_PRECISION;
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return TIMESTAMP_WITH_TIMEZONE_PRECISION;
         case JaybirdTypeCodes.DECFLOAT:
             switch (type) {
@@ -293,8 +293,7 @@ public class TypeMetadata {
                 case d_float_type:
                     return "DOUBLE PRECISION";
                 case int128_type:
-                    // no equivalent primary type
-                    return "NUMERIC";
+                    return "INT128";
                 default:
                     throw new IllegalStateException(String.format(
                             "Incorrect derivation of type name in getDataTypeName(%d, %d, %d)",
@@ -315,8 +314,10 @@ public class TypeMetadata {
         case date_type:
             return "DATE";
         case time_tz_type:
+        case ex_time_tz_type:
             return "TIME WITH TIME ZONE";
         case timestamp_tz_type:
+        case ex_timestamp_tz_type:
             return "TIMESTAMP WITH TIME ZONE";
         case blob_type:
             if (sqlSubType == BLOB_SUB_TYPE_BINARY) {

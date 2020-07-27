@@ -159,7 +159,7 @@ public class GDSFactory {
     private static void loadPlugin(String className, ClassLoader classLoader) {
         try {
             Class<?> clazz = classLoader.loadClass(className);
-            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.newInstance();
+            GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
             registerPlugin(plugin);
         } catch (Exception ex) {
             String message = "Can't register plugin " + className;

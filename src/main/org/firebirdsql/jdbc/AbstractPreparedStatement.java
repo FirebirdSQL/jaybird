@@ -264,6 +264,30 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         getField(parameterIndex).setObject(x);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #setObject(int, Object, int, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
+        setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber(), scaleOrLength);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #setObject(int, Object, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
+        setObject(parameterIndex, x, targetSqlType.getVendorTypeNumber());
+    }
+
     @Override
     public void setShort(int parameterIndex, short x) throws SQLException {
         getField(parameterIndex).setShort(x);
@@ -627,7 +651,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                     return results;
 
                 } catch (SQLException ex) {
-                    throw jdbcVersionSupport.createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
+                    throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
                             ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
                     if (generatedKeys) {
@@ -655,7 +679,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
 
         if (internalExecute(isExecuteProcedureStatement)) {
-            throw jdbcVersionSupport.createBatchUpdateException(
+            throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
                     SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
         }

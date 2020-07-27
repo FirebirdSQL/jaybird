@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.JDBCType;
 import java.sql.SQLException;
@@ -35,8 +36,8 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-@SuppressWarnings("Since15")
-public class JDBC42ObjectConverter implements ObjectConverter {
+@InternalApi
+class JDBC42ObjectConverter implements ObjectConverter {
 
     @Override
     public boolean setObject(final FBField field, final Object object) throws SQLException {
@@ -90,7 +91,9 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                 field.setString(object.toString());
                 return true;
             }
-        } else if (object instanceof OffsetTime || object instanceof OffsetDateTime) {
+        } else if (object instanceof OffsetTime
+                || object instanceof OffsetDateTime
+                || object instanceof ZonedDateTime) {
             switch (field.requiredType) {
             case Types.CHAR:
             case Types.VARCHAR:
@@ -163,6 +166,8 @@ public class JDBC42ObjectConverter implements ObjectConverter {
                     return field.isNull() ? null : (T) OffsetTime.parse(field.getString().trim());
                 case OFFSET_DATE_TIME_CLASS_NAME:
                     return field.isNull() ? null : (T) OffsetDateTime.parse(field.getString().trim());
+                case ZONED_DATE_TIME_CLASS_NAME:
+                    return field.isNull() ? null : (T) ZonedDateTime.parse(field.getString().trim());
                 }
             } catch (DateTimeParseException e) {
                 throw new SQLException("Unable to convert value '" + field.getString() + "' to type " + type, e);

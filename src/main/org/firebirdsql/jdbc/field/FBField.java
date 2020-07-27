@@ -160,16 +160,6 @@ public abstract class FBField {
     }
 
     /**
-     * @return <code>true</code> if the field is of type <code>type</code>.
-     * @deprecated This method will be removed in Jaybird 5, as a replacement use
-     * {@link JdbcTypeConverter#isJdbcType(FieldDescriptor, int)}
-     */
-    @Deprecated
-    public static boolean isType(FieldDescriptor field, int jdbcType) {
-        return JdbcTypeConverter.isJdbcType(field, jdbcType);
-    }
-
-    /**
      * This is a factory method that creates appropriate instance of the
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
@@ -210,9 +200,9 @@ public abstract class FBField {
             return new FBDateField(fieldDescriptor, dataProvider, jdbcType);
         case Types.TIMESTAMP:
             return new FBTimestampField(fieldDescriptor, dataProvider, jdbcType);
-        case JaybirdTypeCodes.TIMESTAMP_WITH_TIMEZONE:
+        case Types.TIMESTAMP_WITH_TIMEZONE:
             return new FBTimestampTzField(fieldDescriptor, dataProvider, jdbcType);
-        case JaybirdTypeCodes.TIME_WITH_TIMEZONE:
+        case Types.TIME_WITH_TIMEZONE:
             return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
         case Types.CHAR:
         case Types.VARCHAR:

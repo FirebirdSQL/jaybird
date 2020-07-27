@@ -18,9 +18,8 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
+import org.firebirdsql.util.InternalApi;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -29,6 +28,7 @@ import java.util.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@InternalApi
 public class FBEscapedFunctionHelper {
 
     /**
@@ -364,7 +364,7 @@ public class FBEscapedFunctionHelper {
      * @throws FBSQLParseException
      *         if escaped function call has incorrect syntax.
      */
-    public static String convertTemplate(final String functionCall, final EscapeParserMode mode) throws FBSQLParseException {
+    public static String convertTemplate(final String functionCall) throws FBSQLParseException {
         final String functionName = parseFunction(functionCall).toUpperCase();
         final String[] params = parseArguments(functionCall).toArray(new String[0]);
 
@@ -384,336 +384,32 @@ public class FBEscapedFunctionHelper {
             return firebirdTemplate.apply(params);
         }
 
-        if (mode == EscapeParserMode.USE_STANDARD_UDF) {
-            return convertUsingStandardUDF(functionName, params);
-        }
-
         return null;
     }
 
-    /*
-     * Functions below are conversion routines of the escaped function calls
-     * into the standard UDF library functions. The conversion function must
-     * have the name equal to the function name in the escaped syntax in the
-     * lower case and should take array of strings as parameter and it may throw
-     * the FBSQLParseException and must be declared as static and have public
-     * visibility. It should return a string of the converted function call.
-     */
-
-    // TODO Replace with PatternSQLFunction?
-
-    private static String convertUsingStandardUDF(String name, String[] params) throws FBSQLParseException {
-        try {
-            name = name.toLowerCase();
-            Method method = FBEscapedFunctionHelper.class.getMethod(name, new Class[] { String[].class });
-            return (String) method.invoke(null, new Object[] { params });
-        } catch (NoSuchMethodException ex) {
-            return null;
-        } catch (Exception ex) {
-            throw new FBSQLParseException("Error when converting function "
-                    + name + ". Error " + ex.getClass().getName() +
-                    " : " + ex.getMessage());
-        }
-    }
-
-    /*
-     * Mathematical functions
-     */
-
     /**
-     * Produce a function call for the <code>abs</code> UDF function.
-     * The syntax of the <code>abs</code> function is
-     * <code>{fn abs(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String abs(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function abs : " + params.length);
-
-        return "abs(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>acos</code> UDF function.
-     * The syntax of the <code>acos</code> function is
-     * <code>{fn acos(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String acos(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function acos : " + params.length);
-
-        return "acos(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>asin</code> UDF function.
-     * The syntax of the <code>asin</code> function is
-     * <code>{fn asin(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String asin(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function asin : " + params.length);
-
-        return "asin(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>atan</code> UDF function.
-     * The syntax of the <code>atan</code> function is
-     * <code>{fn atan(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String atan(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function atan : " + params.length);
-
-        return "atan(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>atan2</code> UDF function.
-     * The syntax of the <code>atan2</code> function is
-     * <code>{fn atan2(float1, float2)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String atan2(String[] params) throws FBSQLParseException {
-        if (params.length != 2)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function atan2 : " + params.length);
-
-        return "atan2(" + params[0] + ", " + params[1] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>ceiling</code> UDF function.
-     * The syntax of the <code>ceiling</code> function is
-     * <code>{fn ceiling(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String ceiling(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function ceiling : " + params.length);
-
-        return "ceiling(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>cos</code> UDF function.
-     * The syntax of the <code>cos</code> function is
-     * <code>{fn cos(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String cos(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function cos : " + params.length);
-
-        return "cos(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>cot</code> UDF function.
-     * The syntax of the <code>cot</code> function is
-     * <code>{fn cot(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String cot(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function cot : " + params.length);
-
-        return "cot(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>floor</code> UDF function.
-     * The syntax of the <code>floor</code> function is
-     * <code>{fn floor(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String floor(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function floor : " + params.length);
-
-        return "floor(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>log10</code> UDF function.
-     * The syntax of the <code>log10</code> function is
-     * <code>{fn log10(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String log10(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function log10 : " + params.length);
-
-        return "log10(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>mod</code> UDF function.
-     * The syntax of the <code>mod</code> function is
-     * <code>{fn mod(integer1, integer2)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String mod(String[] params) throws FBSQLParseException {
-        if (params.length != 2)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function mod : " + params.length);
-
-        return "mod(" + params[0] + ", " + params[1] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>pi</code> UDF function.
-     * The syntax of the <code>pi</code> function is <code>{fn pi()}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String pi(String[] params) throws FBSQLParseException {
-        if (params.length != 0)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function pi : " + params.length);
-
-        return "pi()";
-    }
-
-    /**
-     * Produce a function call for the <code>rand</code> UDF function.
-     * The syntax for the <code>rand</code> function is
-     * <code>{fn rand()}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String rand(String[] params) throws FBSQLParseException {
-        if (params.length != 0)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function rand : " + params.length);
-
-        return "rand()";
-    }
-
-    /**
-     * Produce a function call for the <code>sign</code> UDF function.
-     * The syntax for the <code>sign</code> function is
-     * <code>{fn sign(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String sign(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function sign : " + params.length);
-
-        return "sign(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>sin</code> UDF function.
-     * The syntax for the <code>sin</code> function is
-     * <code>{fn sin(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String sin(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function sin : " + params.length);
-
-        return "sin(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>sqrt</code> UDF function.
-     * The syntax for the <code>sqrt</code> function is
-     * <code>{fn sqrt(number)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String sqrt(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function sqrt : " + params.length);
-
-        return "sqrt(" + params[0] + ")";
-    }
-
-    /**
-     * Produce a function call for the <code>tan</tan> UDF function.
-     * The syntax for the <code>tan</code> function is
-     * <code>{fn tan(float)}</code>.
-     *
-     * @param params The parameters to be used in the call
-     * @throws FBSQLParseException if there is an error with the parameters
-     */
-    public static String tan(String[] params) throws FBSQLParseException {
-        if (params.length != 1)
-            throw new FBSQLParseException("Incorrect number of " +
-                    "parameters of function tan : " + params.length);
-
-        return "tan(" + params[0] + ")";
-    }
-
-    /**
-     * @return Set of JDBC numeric functions supported (as defined in appendix D.1 of JDBC 4.1)
+     * @return Set of JDBC numeric functions supported (as defined in appendix C.1 of JDBC 4.3)
      */
     public static Set<String> getSupportedNumericFunctions() {
         return SUPPORTED_NUMERIC_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC string functions supported (as defined in appendix D.2 of JDBC 4.1)
+     * @return Set of JDBC string functions supported (as defined in appendix C.2 of JDBC 4.3)
      */
     public static Set<String> getSupportedStringFunctions() {
         return SUPPORTED_STRING_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC time and date functions supported (as defined in appendix D.3 of JDBC 4.1)
+     * @return Set of JDBC time and date functions supported (as defined in appendix C.3 of JDBC 4.3)
      */
     public static Set<String> getSupportedTimeDateFunctions() {
         return SUPPORTED_TIME_DATE_FUNCTIONS;
     }
 
     /**
-     * @return Set of JDBC system functions supported (as defined in appendix D.4 of JDBC 4.1)
+     * @return Set of JDBC system functions supported (as defined in appendix C.4 of JDBC 4.3)
      */
     public static Set<String> getSupportedSystemFunctions() {
         return SUPPORTED_SYSTEM_FUNCTIONS;

@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.util.InternalApi;
+
 /**
  * Holder for the instance of {@link org.firebirdsql.jdbc.JdbcVersionSupport} to use.
  * <p>
@@ -27,6 +29,7 @@ package org.firebirdsql.jdbc;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@InternalApi
 public enum JdbcVersionSupportHolder {
 
     INSTANCE(new Jdbc42VersionSupport());

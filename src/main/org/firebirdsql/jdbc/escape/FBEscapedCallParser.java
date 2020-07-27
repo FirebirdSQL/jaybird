@@ -20,13 +20,14 @@ package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.jdbc.FBProcedureCall;
 import org.firebirdsql.jdbc.FBProcedureParam;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 
 /**
  * Parser for escaped procedure call.
  */
+@InternalApi
 public class FBEscapedCallParser {
 
     private static final int NORMAL_STATE = 1;
@@ -48,11 +49,6 @@ public class FBEscapedCallParser {
     private int openBraceCount;
 
     private FBProcedureCall procedureCall;
-    private FBEscapedParser escapedParser;
-
-    public FBEscapedCallParser(EscapeParserMode mode) {
-        this.escapedParser = new FBEscapedParser(mode);
-    }
 
     /**
      * Returns the current state.
@@ -143,7 +139,7 @@ public class FBEscapedCallParser {
         }
 
         // Exclude open and close curly brace (we are assuming they match)
-        if (startIndex < endIndex && sql.charAt(startIndex) == '{' && endIndex > 0 && sql.charAt(endIndex - 1) == '}') {
+        if (startIndex < endIndex && sql.charAt(startIndex) == '{' && sql.charAt(endIndex - 1) == '}') {
             startIndex++;
             endIndex--;
         }
@@ -398,6 +394,6 @@ public class FBEscapedCallParser {
      * @throws FBSQLParseException if parameter cannot be correctly parsed.
      */
     protected String processParam(String param) throws SQLException {
-        return escapedParser.parse(param);
+        return FBEscapedParser.toNativeSql(param);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,12 +20,12 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jca.FBResourceException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -76,8 +76,8 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testNewMappingFileDoesNotExist_throwsFBResourceException() throws Exception {
-        expectedException.expect(FBResourceException.class);
+    public void testNewMappingFileDoesNotExist_throwsSQLException() throws Exception {
+        expectedException.expect(SQLException.class);
 
         new FBTpbMapper(TEST_TPB_MAPPING + "does_not_exist", getClass().getClassLoader());
     }
@@ -110,10 +110,10 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testNewMapContainsInvalidName_throwsFBResourceException() throws Exception {
+    public void testNewMapContainsInvalidName_throwsSQLException() throws Exception {
         final Map<String, String> map = new HashMap<>();
         map.put("special", "isc_tpb_concurrency,isc_tpb_write,isc_tpb_wait,isc_tpb_lock_timeout=5");
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         new FBTpbMapper(map);
     }
@@ -137,17 +137,17 @@ public class TestFBTpbMapper {
     }
 
     @Test
-    public void testProcessMapping_TokenIsNotATpbArgument_throwsFBResourceException() throws Exception {
+    public void testProcessMapping_TokenIsNotATpbArgument_throwsSQLException() throws Exception {
         String testMapping = "not_a_tpb_argument";
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         FBTpbMapper.processMapping(testMapping);
     }
 
     @Test
-    public void testProcessMapping_ValueIsNotAnInteger_throwsFBResourceException() throws Exception {
+    public void testProcessMapping_ValueIsNotAnInteger_throwsSQLException() throws Exception {
         String testMapping = "isc_tpb_lock_timeout=x";
-        expectedException.expect(FBResourceException.class);
+        expectedException.expect(SQLException.class);
 
         FBTpbMapper.processMapping(testMapping);
     }
@@ -269,15 +269,23 @@ public class TestFBTpbMapper {
         props.setProperty("not_a_transaction_isolation_level", "some_value");
         FBConnectionProperties connectionProps = new FBConnectionProperties();
 
+        assertNoTransactionPropsSet(connectionProps);
+
+        FBTpbMapper.processMapping(connectionProps, props);
+
+        assertProcessMappingResult(connectionProps);
+    }
+
+    private void assertNoTransactionPropsSet(FBConnectionProperties connectionProps) {
         assertNull("TRANSACTION_READ_COMMITTED should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED));
         assertNull("TRANSACTION_SERIALIZABLE should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_SERIALIZABLE));
         assertNull("TRANSACTION_REPEATABLE_READ should not have a TPB before processing",
                 connectionProps.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
+    }
 
-        FBTpbMapper.processMapping(connectionProps, props);
-
+    private void assertProcessMappingResult(FBConnectionProperties connectionProps) {
         TransactionParameterBuffer tpbReadCommitted = connectionProps
                 .getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
         assertTrue("READ_COMMITTED must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_wait",
@@ -307,6 +315,23 @@ public class TestFBTpbMapper {
                         tpbSerializable.hasArgument(ISCConstants.isc_tpb_read) &&
                         tpbSerializable.hasArgument(ISCConstants.isc_tpb_wait)
         );
+    }
+
+    @Test
+    public void testProcessMappingToConnectionProperties_withMap() throws Exception {
+        final Map<String, String> props = new HashMap<>();
+        props.put(FBTpbMapper.TRANSACTION_READ_COMMITTED,
+                "isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait");
+        props.put(FBTpbMapper.TRANSACTION_SERIALIZABLE, "isc_tpb_consistency,isc_tpb_read,isc_tpb_wait");
+        props.put(FBTpbMapper.TRANSACTION_REPEATABLE_READ, "isc_tpb_concurrency,isc_tpb_write,isc_tpb_nowait");
+        props.put("not_a_transaction_isolation_level", "some_value");
+        FBConnectionProperties connectionProps = new FBConnectionProperties();
+
+        assertNoTransactionPropsSet(connectionProps);
+
+        FBTpbMapper.processMapping(connectionProps, props);
+
+        assertProcessMappingResult(connectionProps);
     }
 
     @Test

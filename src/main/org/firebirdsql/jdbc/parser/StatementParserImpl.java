@@ -33,12 +33,6 @@ import org.antlr.v4.runtime.RecognitionException;
 public class StatementParserImpl implements StatementParser {
 
     @Override
-    @Deprecated
-    public JaybirdStatementModel parseInsertStatement(String sql) throws ParseException {
-        return parseStatement(sql);
-    }
-
-    @Override
     public JaybirdStatementModel parseStatement(String sql) throws ParseException {
         try {
             CharStream stream = CharStreams.fromString(sql);

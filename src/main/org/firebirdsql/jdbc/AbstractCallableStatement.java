@@ -18,21 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
+import org.firebirdsql.jdbc.field.FBField;
+import org.firebirdsql.jdbc.field.TypeConversionException;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.util.*;
-
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
-import org.firebirdsql.jdbc.field.FBField;
-import org.firebirdsql.jdbc.field.TypeConversionException;
 
 /**
  * Abstract implementation of {@link java.sql.CallableStatement}.
@@ -63,14 +60,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     throws SQLException {
         super(c, rsType, rsConcurrency, rsHoldability, statementListener, blobListener);
 
-        DatabaseParameterBuffer dpb = c.getDatabaseParameterBuffer();
-
-        EscapeParserMode mode = EscapeParserMode.USE_BUILT_IN;
-
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF))
-            mode = EscapeParserMode.USE_STANDARD_UDF;
-
-        FBEscapedCallParser parser = new FBEscapedCallParser(mode);
+        FBEscapedCallParser parser = new FBEscapedCallParser();
 
         // here statement is parsed twice, once in c.nativeSQL(...)
         // and second time in parser.parseCall(...)... not nice, maybe
@@ -121,7 +111,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
                     success = true;
                     return results;
                 } catch (SQLException ex) {
-                    throw jdbcVersionSupport.createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
+                    throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
                             ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
                     clearBatch();
@@ -134,7 +124,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     
     private void executeSingleForBatch(List<Long> results) throws SQLException {
         if (internalExecute(!isSelectableProcedure())) {
-            throw jdbcVersionSupport.createBatchUpdateException(
+            throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
                     SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
         }
@@ -363,6 +353,42 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     @Override
     public void registerOutParameter(int parameterIndex, int sqlType, int scale) throws SQLException {
         registerOutParameter(parameterIndex, sqlType);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(int, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType) throws SQLException {
+        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(int, int, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType, int scale) throws SQLException {
+        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber(), scale);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(int, int, String)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType, String typeName) throws SQLException {
+        registerOutParameter(parameterIndex, sqlType.getVendorTypeNumber(), typeName);
     }
 
     @Override
@@ -851,6 +877,42 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     @Override
     public void registerOutParameter(String param1, int param2, String param3) throws SQLException {
         throw new FBDriverNotCapableException(SET_BY_STRING_NOT_SUPPORTED);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(String, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType) throws SQLException {
+        registerOutParameter(parameterName, sqlType.getVendorTypeNumber());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(String, int, int)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType, int scale) throws SQLException {
+        registerOutParameter(parameterName, sqlType.getVendorTypeNumber(), scale);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Implementation note: behaves as {@link #registerOutParameter(String, int, String)} called with
+     * {@link SQLType#getVendorTypeNumber()}.
+     * </p>
+     */
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType, String typeName) throws SQLException {
+        registerOutParameter(parameterName, sqlType.getVendorTypeNumber(), typeName);
     }
 
     @Override

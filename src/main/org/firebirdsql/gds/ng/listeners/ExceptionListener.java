@@ -29,7 +29,7 @@ import java.sql.SQLException;
 /**
  * Listener for notifications of SQL Exceptions that occurred in the object listened on.
  * <p>
- * The primary use case of this interface is to bridge the gap between the JCA managed connection or connection
+ * The primary use case of this interface is to bridge the gap between the XCA managed connection or connection
  * pools that need to detect fatal errors. In the implementation only the methods defined in the various {@code Fb*}
  * interfaces in {@code org.firebirdsql.gds.ng} are required to notify the listeners.
  * </p>

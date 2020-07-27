@@ -43,6 +43,9 @@ public final class FbMetadataConstants {
     public static final int NUMERIC_BIGINT_PRECISION = 18;
     public static final int NUMERIC_INTEGER_PRECISION = 9;
     public static final int NUMERIC_SMALLINT_PRECISION = 4;
+    // NOTE: We also use this for INT128, which is actually 39, but for compatibility with JDBC type NUMERIC and tools
+    // generating casts like NUMERIC(n) for what is actually an INT128, which would fail for 39, we use the same
+    // (max) precision we apply for the real NUMERIC with precision > 18.
     public static final int NUMERIC_INT128_PRECISION = 38;
     public static final int DECFLOAT_16_PRECISION = 16;
     public static final int DECFLOAT_34_PRECISION = 34;
@@ -79,6 +82,8 @@ public final class FbMetadataConstants {
     public static final int double_type = 27;
     public static final int time_tz_type = 28;
     public static final int timestamp_tz_type = 29;
+    public static final int ex_time_tz_type = 30;
+    public static final int ex_timestamp_tz_type = 31;
     public static final int timestamp_type = 35;
     public static final int varchar_type = 37;
     public static final int cstring_type = 40;

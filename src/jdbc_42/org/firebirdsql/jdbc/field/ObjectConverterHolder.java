@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
@@ -20,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.util.InternalApi;
+
 /**
  * Holder for the instance of {@link org.firebirdsql.jdbc.field.ObjectConverter} to use.
  * <p>
@@ -29,12 +29,13 @@ package org.firebirdsql.jdbc.field;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
+@InternalApi
 enum ObjectConverterHolder {
     INSTANCE(new JDBC42ObjectConverter());
 
     private final ObjectConverter objectConverter;
 
-    private ObjectConverterHolder(ObjectConverter objectConverter) {
+    ObjectConverterHolder(ObjectConverter objectConverter) {
         this.objectConverter = objectConverter;
     }
 

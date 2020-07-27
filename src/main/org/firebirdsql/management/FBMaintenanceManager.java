@@ -270,14 +270,6 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
 
     // ----------- Transaction Management ----------------------------
 
-    @Deprecated
-    public void listLimboTransactions() throws SQLException {
-        final PrintStream ps = new PrintStream(getLogger());
-        for (Long trId : limboTransactionsAsList()) {
-            ps.print(trId + "\n");
-        }
-    }
-
     public List<Long> limboTransactionsAsList() throws SQLException {
         // See also fbscvmgr.cpp method printInfo
         final OutputStream saveOut = getLogger();

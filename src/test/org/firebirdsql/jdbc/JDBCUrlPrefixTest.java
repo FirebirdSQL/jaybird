@@ -26,7 +26,7 @@ import org.firebirdsql.gds.impl.nativeoo.FbOOLocalGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;

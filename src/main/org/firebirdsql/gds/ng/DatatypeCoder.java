@@ -50,6 +50,14 @@ public interface DatatypeCoder {
     int FRACTIONS_PER_HOUR = 60 * FRACTIONS_PER_MINUTE;
 
     /**
+     * The size of an encoded short in this data type coder.
+     *
+     * @return The size of an encoded short (either {@code 2} or {@code 4} bytes)
+     * @since 4.0
+     */
+    int sizeOfShort();
+
+    /**
      * Encode a {@code short} value as a {@code byte} array.
      *
      * @param value The value to be encoded

@@ -20,7 +20,7 @@
  */
 package org.firebirdsql.jdbc.oo;
 
-import org.firebirdsql.jca.FBManagedConnection;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,14 +22,11 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jca.FBManagedConnectionFactory;
+import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.resource.Referenceable;
-import javax.resource.ResourceException;
+import javax.naming.*;
 import javax.sql.DataSource;
 import java.io.Serializable;
 import java.sql.Connection;
@@ -39,60 +36,79 @@ import java.sql.SQLException;
  * This is a simple implementation of {@link DataSource} interface. Connections
  * are physically opened in {@link DataSource#getConnection()} method and
  * physically closed in {@link Connection#close()} method.
- * 
+ * <p>
+ * If you need a standalone connection pool, consider using a connection pool implementation like HikariCP, c3p0 or
+ * DBCP.
+ * </p>
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
-public class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable, FirebirdConnectionProperties {
-    
+public class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable,
+        FirebirdConnectionProperties {
+
     private static final long serialVersionUID = 3156578540634970427L;
-    
-    protected FBManagedConnectionFactory mcf;
+    static final String REF_DESCRIPTION = "description";
+    static final String REF_MCF = "mcf";
+
+    protected final FBManagedConnectionFactory mcf;
     protected transient FBDataSource ds;
-    
-    protected Reference jndiReference;
+
     protected String description;
 
     /**
-     * Create instance of this class.
+     * Creates an instance using the default GDS type (PURE_JAVA).
      */
     public FBSimpleDataSource() {
         this(GDSFactory.getDefaultGDSType());
     }
 
     /**
-     * Create instance of this class.
+     * Creates an instance using the specified GDS type.
+     *
+     * @param type
+     *         GDS type
      */
     public FBSimpleDataSource(GDSType type) {
-        mcf = new FBManagedConnectionFactory(type);
+        mcf = new FBManagedConnectionFactory(false, type);
     }
-    
+
     /**
-     * Get buffer length for the BLOB fields. 
-     * 
+     * Creates an instance using an existing FBManagedConnectionFactory.
+     *
+     * @param mcf
+     *         Managed connection factory
+     * @see DataSourceFactory
+     */
+    FBSimpleDataSource(FBManagedConnectionFactory mcf) {
+        this.mcf = mcf;
+    }
+
+    /**
+     * Get buffer length for the BLOB fields.
+     *
      * @return length of BLOB buffer.
      */
     public Integer getBlobBufferLength() {
         return mcf.getBlobBufferSize();
     }
-    
+
     /**
-     * Set BLOB buffer length. This value influences the performance when 
+     * Set BLOB buffer length. This value influences the performance when
      * working with BLOB fields.
-     * 
-     * @param length new length of the BLOB buffer.
+     *
+     * @param length
+     *         new length of the BLOB buffer.
      */
     public void setBlobBufferLength(Integer length) {
         mcf.setBlobBufferSize(length);
     }
-    
+
     /**
-     * Get name of the database. 
-     * 
+     * Get name of the database.
+     *
      * @return database name, value is equal to the part of full JDBC URL without
      * the {@code jdbc:firebirdsql:} part.
-     * 
      * @deprecated use {@link #getDatabase} instead for the sake of naming
      * compatibility.
      */
@@ -100,15 +116,15 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public String getDatabaseName() {
         return getDatabase();
     }
-    
+
     /**
      * Set database name.
-     * 
-     * @param name connection URL without {@code "jdbc:firebirdsql:"}
-     * prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
-     * example).
-     * 
-     * @deprecated use {@link #setDatabase(String)} instead for the sake of 
+     *
+     * @param name
+     *         connection URL without {@code "jdbc:firebirdsql:"}
+     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
+     *         example).
+     * @deprecated use {@link #setDatabase(String)} instead for the sake of
      * naming compatibility.
      */
     @Deprecated
@@ -117,8 +133,8 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     /**
-     * Get name of the database. 
-     * 
+     * Get name of the database.
+     *
      * @return database name, value is equal to the part of full JDBC URL without
      * the {@code jdbc:firebirdsql:} part.
      */
@@ -128,20 +144,20 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     /**
      * Set database name.
-     * 
-     * @param name connection URL without {@code "jdbc:firebirdsql:"}
-     * prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
-     * example).
+     *
+     * @param name
+     *         connection URL without {@code "jdbc:firebirdsql:"}
+     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
+     *         example).
      */
     public void setDatabase(String name) {
         mcf.setDatabase(name);
     }
-    
+
     /**
      * Get user name that is used in {@link #getConnection()} method.
-     * 
+     *
      * @return default user name.
-     * 
      * @deprecated use {@link #getUserName()} instead for the sake of naming
      * compatibility.
      */
@@ -149,84 +165,85 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public String getUser() {
         return getUserName();
     }
-    
+
     /**
      * Set user name that will be used in {@link #getConnection()} method.
-     * 
-     * @param user default user name.
-     * 
-     * @deprecated use {@link #setUserName(String)} instead for the sake of
-     * naming compatibility.
+     *
+     * @param user
+     *         default user name.
+     * @deprecated use {@link #setUserName(String)} instead for the sake of naming compatibility.
      */
     @Deprecated
     public void setUser(String user) {
         setUserName(user);
     }
-    
+
     /**
      * Get user name that is used in {@link #getConnection()} method.
-     * 
+     *
      * @return default user name.
      */
     public String getUserName() {
         return mcf.getUserName();
     }
-    
+
     /**
      * Set user name that will be used in {@link #getConnection()} method.
-     * 
-     * @param userName default user name.
+     *
+     * @param userName
+     *         default user name.
      */
     public void setUserName(String userName) {
         mcf.setUserName(userName);
     }
-    
+
     /**
      * Get password used in {@link #getConnection()} method.
-     * 
-     * @return password corresponding to the user name returned by 
+     *
+     * @return password corresponding to the user name returned by
      * {@link #getUserName()}.
      */
     public String getPassword() {
         return mcf.getPassword();
     }
-    
+
     /**
      * Set password that will be used in the {@link #getConnection()} method.
-     * 
-     * @param password password corresponding to the user name set in 
-     * {@link #setUserName(String)}.
+     *
+     * @param password
+     *         password corresponding to the user name set in {@link #setUserName(String)}.
      */
     public void setPassword(String password) {
         mcf.setPassword(password);
     }
-    
+
     /**
      * Get encoding for connections produced by this data source.
-     * 
+     *
      * @return encoding for the connection.
      */
     public String getEncoding() {
         return mcf.getEncoding();
     }
-    
+
     /**
      * Set encoding for connections produced by this data source.
-     * 
-     * @param encoding encoding for the connection.
+     *
+     * @param encoding
+     *         encoding for the connection.
      */
     public void setEncoding(String encoding) {
         mcf.setEncoding(encoding);
     }
-    
+
     public String getTpbMapping() {
         return mcf.getTpbMapping();
     }
-    
+
     public void setTpbMapping(String tpbMapping) {
         mcf.setTpbMapping(tpbMapping);
     }
-    
+
     public int getBlobBufferSize() {
         return mcf.getBlobBufferSize();
     }
@@ -277,10 +294,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     public boolean isTimestampUsesLocalTimezone() {
         return mcf.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStandardUdf() {
-        return mcf.isUseStandardUdf();
     }
 
     public boolean isUseStreamBlobs() {
@@ -339,10 +352,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setType(type);
     }
 
-    public void setUseStandardUdf(boolean useStandardUdf) {
-        mcf.setUseStandardUdf(useStandardUdf);
-    }
-
     public void setUseStreamBlobs(boolean useStreamBlobs) {
         mcf.setUseStreamBlobs(useStreamBlobs);
     }
@@ -353,8 +362,8 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     public void setDefaultResultSetHoldable(boolean isHoldable) {
         mcf.setDefaultResultSetHoldable(isHoldable);
-    }    
-    
+    }
+
     public int getSoTimeout() {
         return mcf.getSoTimeout();
     }
@@ -362,11 +371,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setSoTimeout(int soTimeout) {
         mcf.setSoTimeout(soTimeout);
     }
-    
+
     public int getConnectTimeout() {
         return mcf.getConnectTimeout();
     }
-    
+
     public void setConnectTimeout(int connectTimeout) {
         mcf.setConnectTimeout(connectTimeout);
     }
@@ -461,36 +470,21 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setWireCompression(wireCompression);
     }
 
-    /*
-     * INTERFACES IMPLEMENTATION
-     */
-
-    /**
-     * Get previously set JNDI reference.
-     * 
-     * @return instance of {@link Reference} set previously.
-     * 
-     * @throws NamingException if something went wrong.
-     */
+    @Override
     public Reference getReference() throws NamingException {
-        return jndiReference;
-    }
-
-    /**
-     * Set JNDI reference for this data source.
-     * 
-     * @param reference reference to set.
-     */
-    public void setReference(Reference reference) {
-        jndiReference = reference;
+        Reference ref = new Reference(FBSimpleDataSource.class.getName(), DataSourceFactory.class.getName(), null);
+        ref.add(new StringRefAddr(REF_DESCRIPTION, getDescription()));
+        byte[] data = DataSourceFactory.serialize(mcf);
+        ref.add(new BinaryRefAddr(REF_MCF, data));
+        return ref;
     }
 
     /**
      * Get JDBC connection with default credentials.
-     * 
+     *
      * @return new JDBC connection.
-     * 
-     * @throws SQLException if something went wrong.
+     * @throws SQLException
+     *         if something went wrong.
      */
     public Connection getConnection() throws SQLException {
         return getDataSource().getConnection();
@@ -498,13 +492,14 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     /**
      * Get JDBC connection with the specified credentials.
-     * 
-     * @param username user name for the connection.
-     * @param password password for the connection.
-     * 
+     *
+     * @param username
+     *         user name for the connection.
+     * @param password
+     *         password for the connection.
      * @return new JDBC connection.
-     * 
-     * @throws SQLException if something went wrong.
+     * @throws SQLException
+     *         if something went wrong.
      */
     public Connection getConnection(String username, String password) throws SQLException {
         return getDataSource().getConnection(username, password);
@@ -529,62 +524,59 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     public void setLoginTimeout(int loginTimeout) throws SQLException {
         setConnectTimeout(loginTimeout);
     }
-    
+
     /**
      * Get description of this datasource.
-     * 
+     *
      * @return description of this datasource.
      */
     public String getDescription() {
         return description;
     }
-    
+
     /**
      * Set description of this datasource.
-     * 
-     * @param description description of this datasource.
+     *
+     * @param description
+     *         description of this datasource.
      */
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     /**
-     * Get underlying connection factory (in our case instance of 
-     * {@link FBDataSource} class) that will provide JDBC connections.
-     * 
+     * Get underlying connection factory (in our case instance of {@link FBDataSource} class) that will provide JDBC
+     * connections.
+     *
      * @return JDBC connection factory.
-     * 
-     * @throws SQLException if something went wrong.
+     * @throws SQLException
+     *         if something went wrong.
      */
     protected synchronized DataSource getDataSource() throws SQLException {
-        if (ds != null)
+        if (ds != null) {
             return ds;
-            
-        if (mcf.getDatabase() == null || "".equals(mcf.getDatabase().trim()))
-            throw new SQLException(
-                "Database was not specified. Cannot provide connections.");
-                
-        try {
-            ds = (FBDataSource)mcf.createConnectionFactory();
-            
-            return ds;
-        } catch(ResourceException rex) {
-            
-            throw new SQLException(rex.getMessage());
-            
         }
+
+        if (mcf.getDatabase() == null || "".equals(mcf.getDatabase().trim())) {
+            throw new SQLException("Database was not specified. Cannot provide connections.");
+        }
+
+        ds = (FBDataSource) mcf.createConnectionFactory();
+
+        return ds;
     }
-    
+
     // JDBC 4.0
-    
+
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        if (!isWrapperFor(iface))
+        if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + iface.getName());
-        
+        }
+
         return iface.cast(this);
     }
 }

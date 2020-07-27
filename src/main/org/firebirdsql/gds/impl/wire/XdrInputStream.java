@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JavaEE Connector - JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -34,9 +34,9 @@ import javax.crypto.CipherInputStream;
 import java.io.*;
 
 /**
- * <code>XdrInputStream</code> is an input stream for reading in data that
- * is in the XDR format. An <code>XdrInputStream</code> instance is wrapped
- * around an underlying <code>java.io.InputStream</code>.
+ * {@code XdrInputStream} is an input stream for reading in data that
+ * is in the XDR format. An {@code XdrInputStream} instance is wrapped
+ * around an underlying {@code java.io.InputStream}.
  * <p>
  * This class is not thread-safe.
  * </p>
@@ -53,9 +53,9 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     private boolean encrypted;
 
     /**
-     * Create a new instance of <code>XdrInputStream</code>.
+     * Create a new instance of {@code XdrInputStream}.
      *
-     * @param in The underlying <code>InputStream</code> to read from
+     * @param in The underlying {@code InputStream} to read from
      */
     public XdrInputStream(InputStream in) {
         super(new BufferedInputStream(in, DEFAULT_BUFFER_SIZE));
@@ -63,7 +63,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
 
     /**
      * Skips the padding after a buffer of the specified length. The number of bytes to skip is calculated as
-     * <code>(4 - length) & 3</code>.
+     * {@code (4 - length) & 3}.
      *
      * @param length
      *         Length of the previously read buffer
@@ -141,9 +141,9 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     }
 
     /**
-     * Read in a <code>String</code>.
+     * Read in a {@code String}.
      *
-     * @return The <code>String</code> that was read
+     * @return The {@code String} that was read
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
@@ -155,9 +155,9 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     private final byte[] readBuffer = new byte[8];
 
     /**
-     * Read in a <code>long</code>.
+     * Read in a {@code long}.
      *
-     * @return The <code>long</code> that was read
+     * @return The {@code long} that was read
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
@@ -174,9 +174,9 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     }
 
     /**
-     * Read in an <code>int</code>.
+     * Read in an {@code int}.
      *
-     * @return The <code>int</code> that was read
+     * @return The {@code int} that was read
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
@@ -191,9 +191,9 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     }
 
     /**
-     * Read in a <code>short</code>.
+     * Read in a {@code short}.
      *
-     * @return The <code>short</code> that was read
+     * @return The {@code short} that was read
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream
      */
@@ -207,11 +207,11 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
 
     /**
      * Read a given amount of data from the underlying input stream. The data
-     * that is read is stored in <code>b</code>, starting from offset
-     * <code>off</code>.
+     * that is read is stored in {@code b}, starting from offset
+     * {@code off}.
      *
      * @param b The byte buffer to hold the data that is read
-     * @param off The offset at which to start storing data in <code>b</code>
+     * @param off The offset at which to start storing data in {@code b}
      * @param len The number of bytes to be read
      * @throws IOException if an error occurs while reading from the
      *         underlying input stream

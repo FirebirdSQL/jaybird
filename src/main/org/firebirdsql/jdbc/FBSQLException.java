@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,12 +20,6 @@ package org.firebirdsql.jdbc;
 
 import java.sql.SQLException;
 
-import javax.resource.ResourceException;
-
-import org.firebirdsql.gds.GDSException;
-import org.firebirdsql.jca.FBResourceException;
-import org.firebirdsql.jca.FBXAException;
-
 public class FBSQLException extends SQLException {
 
     private static final long serialVersionUID = 8157410954186424083L;
@@ -33,15 +27,6 @@ public class FBSQLException extends SQLException {
     public FBSQLException(Exception ex) {
         this("Exception. " + ex.getMessage());
         initCause(ex);
-    }
-
-    public FBSQLException(GDSException ex) {
-        super(createGDSExceptionMessage(ex), defaultSQLStateIfNull(ex.getSQLState()), ex.getIntParam(), ex);
-    }
-
-    public FBSQLException(ResourceException ex) {
-        super(createResourceMessage(ex), defaultSQLStateIfNull(ex.getErrorCode()), getSqlErrorCode(ex), resolveCause(ex));
-        // try to unwrap wrapped GDS exception, in this case FBResourceException will never appear on the stack
     }
 
     public FBSQLException(String message) {
@@ -82,74 +67,6 @@ public class FBSQLException extends SQLException {
     @Deprecated
     public Exception getInternalException() {
         return (Exception) getCause();
-    }
-
-    /**
-     * Helper method to create message text for constructor accepting
-     * ResourceException ({@link #FBSQLException(ResourceException)})
-     *
-     * @param ex
-     *            ResourceException
-     * @return Exception message
-     */
-    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-    private static String createResourceMessage(ResourceException ex) {
-        Throwable cause = resolveCause(ex);
-        if (cause instanceof GDSException) {
-            return createGDSExceptionMessage((GDSException) cause);
-        }
-        return "Resource Exception. " + ex.getMessage();
-    }
-
-    /**
-     * Helper method to create message text for GDSException.
-     *
-     * @param ex
-     *            The GDSException
-     * @return Message text
-     */
-    private static String createGDSExceptionMessage(GDSException ex) {
-        return "GDS Exception. " + ex.getIntParam() + ". " + ex.getMessage();
-    }
-
-    /**
-     * Helper method to get the SQL vendor code (or in the case of Firebird: the
-     * isc errorcode).
-     *
-     * @param ex
-     *            ResourceException
-     * @return isc errorcode, or 0
-     */
-    private static int getSqlErrorCode(ResourceException ex) {
-        Throwable cause = resolveCause(ex);
-        if (cause instanceof GDSException) {
-            return ((GDSException) cause).getIntParam();
-        }
-        if (cause instanceof SQLException) {
-            return ((SQLException) cause).getErrorCode();
-        }
-        if (cause instanceof FBXAException) {
-            FBXAException fbXaException = (FBXAException) cause;
-            Throwable cause2 = fbXaException.getCause();
-            if (cause2 instanceof SQLException) {
-                return ((SQLException) cause2).getErrorCode();
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * @param ex
-     *            ResourceException
-     * @return Non-null exception linked to FBResourceException, or the original
-     *         (FB)ResourceException.
-     */
-    @SuppressWarnings("deprecation")
-    private static Throwable resolveCause(ResourceException ex) {
-        if (ex instanceof FBResourceException && ex.getLinkedException() != null) {
-            return ex.getLinkedException();
-        }
-        return ex;
     }
 
     /**

@@ -81,6 +81,8 @@ The status of the document. Possible values:
 - Replaced by: (jdp-reference)
 - Implemented in: (first Jaybird version that implements this)
 - Proposed for: (proposed Jaybird version to implement this) 
+- Deferred indefinitely : not implemented nor proposed for a version; likely
+the feature described will never be implemented
 
 The status section should also reference the JDP(s) it updates or replaces:
 

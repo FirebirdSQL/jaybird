@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import com.sun.jna.Library;
 import com.sun.jna.NativeLibrary;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.logging.Logger;
@@ -72,33 +71,43 @@ class FbClientResource extends NativeResourceTracker.NativeResource {
             return;
         }
         try {
-            owner.disposing(this, new Runnable() {
-                @Override
-                public void run() {
-                    library = null;
-
-                    if (isNativeResourceShutdownDisabled()) return;
-
-                    // only explicitly shutdown and dispose if native resource shutdown is not disabled
-                    Logger logger = LoggerFactory.getLogger(FbClientResource.class);
-                    try {
-                        if (logger.isDebugEnabled()) logger.debug("Calling fb_shutdown on " + local);
-                        local.fb_shutdown(0, 1);
-                    } finally {
-                        Library.Handler handler = (Library.Handler) Proxy.getInvocationHandler(local);
-                        NativeLibrary nativeLibrary = handler.getNativeLibrary();
-                        if (logger.isDebugEnabled()) logger.debug("Disposing JNA native library " + nativeLibrary);
-                        try {
-                            nativeLibrary.dispose();
-                        } catch (Throwable e) {
-                            logger.error("Error disposing of " + nativeLibrary, e);
-                        }
-                    }
-                }
-            });
+            disposeImpl();
         } catch (Throwable e) {
             LoggerFactory.getLogger(FbClientResource.class).error("Error disposing of " + local, e);
         }
+    }
+
+    // separate method to be able to test if this dispose doesn't result in errors
+    private void disposeImpl() {
+        final FbClientLibrary local = library;
+        if (local == null) {
+            return;
+        }
+        owner.disposing(this, new Runnable() {
+            @Override
+            public void run() {
+                library = null;
+
+                if (isNativeResourceShutdownDisabled()) return;
+
+                // only explicitly shutdown and dispose if native resource shutdown is not disabled
+                Logger logger = LoggerFactory.getLogger(FbClientResource.class);
+                try {
+                    if (logger.isDebugEnabled()) logger.debug("Calling fb_shutdown on " + local);
+                    local.fb_shutdown(0, 1);
+                } finally {
+                    FbClientFeatureAccessHandler handler =
+                            (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(local);
+                    NativeLibrary nativeLibrary = handler.getNativeLibrary();
+                    if (logger.isDebugEnabled()) logger.debug("Disposing JNA native library " + nativeLibrary);
+                    try {
+                        nativeLibrary.dispose();
+                    } catch (Throwable e) {
+                        logger.error("Error disposing of " + nativeLibrary, e);
+                    }
+                }
+            }
+        });
     }
 
 }

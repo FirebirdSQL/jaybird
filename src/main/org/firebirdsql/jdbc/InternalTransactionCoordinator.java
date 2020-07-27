@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,11 +20,10 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.StatementType;
-import org.firebirdsql.jca.FBManagedConnection;
-import org.firebirdsql.jca.FirebirdLocalTransaction;
+import org.firebirdsql.jaybird.xca.FBLocalTransaction;
+import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
-import javax.resource.ResourceException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -200,12 +199,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     public abstract static class AbstractTransactionCoordinator implements FBObjectListener.StatementListener,
             FBObjectListener.BlobListener {
-        protected final FirebirdLocalTransaction localTransaction;
+        protected final FBLocalTransaction localTransaction;
         protected final FBConnection connection;
 
         protected final Collection<FBStatement> statements = new HashSet<>();
 
-        protected AbstractTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
+        protected AbstractTransactionCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             this.localTransaction = localTransaction;
             this.connection = connection;
         }
@@ -253,37 +252,21 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
         }
 
         final void internalCommit() throws SQLException {
-            try {
-                if (localTransaction != null && localTransaction.inTransaction()) {
-                    localTransaction.commit();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+            if (localTransaction != null && localTransaction.inTransaction()) {
+                localTransaction.commit();
             }
         }
 
         final void internalRollback() throws SQLException {
-            try {
-                if (localTransaction != null && localTransaction.inTransaction()) {
-                    localTransaction.rollback();
-                }
-            } catch (ResourceException ex) {
-                throw new FBSQLException(ex);
+            if (localTransaction != null && localTransaction.inTransaction()) {
+                localTransaction.rollback();
             }
         }
 
         public void ensureTransaction() throws SQLException {
             configureFirebirdAutoCommit();
-
-            try {
-                if (!localTransaction.inTransaction()) {
-                    localTransaction.begin();
-                }
-            } catch (ResourceException ex) {
-                if (ex.getCause() instanceof SQLException) {
-                    throw (SQLException) ex.getCause();
-                }
-                throw new FBSQLException(ex);
+            if (!localTransaction.inTransaction()) {
+                localTransaction.begin();
             }
         }
 
@@ -314,8 +297,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     static class AutoCommitCoordinator extends AbstractTransactionCoordinator {
 
-        public AutoCommitCoordinator(FBConnection connection,
-                FirebirdLocalTransaction localTransaction) {
+        public AutoCommitCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
 
@@ -377,15 +359,14 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                 } else {
                     localTransaction.rollback();
                 }
-            } catch (ResourceException ex) {
-                SQLException sqlException = new FBSQLException(ex);
+            } catch (SQLException ex) {
                 try {
                     internalRollback();
                 } catch (SQLException ex2) {
-                    sqlException.setNextException(ex2);
+                    ex.setNextException(ex2);
                 }
 
-                throw sqlException;
+                throw ex;
             }
         }
 
@@ -411,16 +392,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void handleConnectionClose() throws SQLException {
-            try {
-                if (localTransaction.inTransaction()) {
-                    try {
-                        completeStatements(CompletionReason.COMMIT);
-                    } finally {
-                        internalCommit();
-                    }
+            if (localTransaction.inTransaction()) {
+                try {
+                    completeStatements(CompletionReason.COMMIT);
+                } finally {
+                    internalCommit();
                 }
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
             }
         }
 
@@ -432,7 +409,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     static class LocalTransactionCoordinator extends AbstractTransactionCoordinator {
 
-        public LocalTransactionCoordinator(FBConnection connection, FirebirdLocalTransaction localTransaction) {
+        public LocalTransactionCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
 
@@ -456,12 +433,8 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void handleConnectionClose() throws SQLException {
-            try {
-                if (localTransaction.inTransaction()) {
-                    rollback();
-                }
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
+            if (localTransaction.inTransaction()) {
+                rollback();
             }
         }
 
@@ -502,8 +475,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     static class FirebirdAutoCommitCoordinator extends LocalTransactionCoordinator {
 
-        public FirebirdAutoCommitCoordinator(FBConnection connection,
-                FirebirdLocalTransaction localTransaction) {
+        public FirebirdAutoCommitCoordinator(FBConnection connection, FBLocalTransaction localTransaction) {
             super(connection, localTransaction);
         }
 
@@ -558,15 +530,14 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
                     } else {
                         localTransaction.rollback();
                     }
-                } catch (ResourceException ex) {
-                    SQLException sqlException = new FBSQLException(ex);
+                } catch (SQLException ex) {
                     try {
                         internalRollback();
                     } catch (SQLException ex2) {
-                        sqlException.setNextException(ex2);
+                        ex.setNextException(ex2);
                     }
 
-                    throw sqlException;
+                    throw ex;
                 }
             }
         }
@@ -583,16 +554,12 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
         @Override
         void handleConnectionClose() throws SQLException {
-            try {
-                if (localTransaction.inTransaction()) {
-                    try {
-                        completeStatements(CompletionReason.COMMIT);
-                    } finally {
-                        internalCommit();
-                    }
+            if (localTransaction.inTransaction()) {
+                try {
+                    completeStatements(CompletionReason.COMMIT);
+                } finally {
+                    internalCommit();
                 }
-            } catch (ResourceException e) {
-                throw new FBSQLException(e);
             }
         }
 

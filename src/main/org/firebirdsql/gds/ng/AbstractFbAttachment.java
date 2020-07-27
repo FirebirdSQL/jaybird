@@ -29,7 +29,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,12 +38,12 @@ import static java.util.Objects.requireNonNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractFbAttachment<T extends AbstractConnection<? extends IAttachProperties, ? extends FbAttachment>>
+public abstract class AbstractFbAttachment<T extends AbstractConnection<? extends IAttachProperties<?>, ? extends FbAttachment>>
         implements FbAttachment {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbAttachment.class);
 
-    private final AtomicBoolean attached = new AtomicBoolean();
+    private volatile boolean attached;
     private final Object syncObject = new SyncObject();
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     protected final T connection;
@@ -105,12 +104,12 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
      * </p>
      */
     protected final void setAttached() {
-        attached.set(true);
+        attached = true;
     }
 
     @Override
     public boolean isAttached() {
-        return attached.get();
+        return attached;
     }
 
     /**
@@ -120,7 +119,7 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
      * </p>
      */
     protected final void setDetached() {
-        attached.set(false);
+        attached = false;
     }
 
     @Override

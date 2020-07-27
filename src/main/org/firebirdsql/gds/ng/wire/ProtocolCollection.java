@@ -117,7 +117,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
         for (String className : protocolClasses) {
             try {
                 Class<?> clazz = classLoader.loadClass(className);
-                ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.newInstance();
+                ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.getDeclaredConstructor().newInstance();
                 protocols.add(protocol);
             } catch (Exception e) {
                 String message =

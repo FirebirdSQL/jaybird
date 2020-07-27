@@ -21,6 +21,4 @@
 *.png           binary
 *.so            binary
 
-bin/ant         text    eol=lf
-bin/antRun      text    eol=lf
-bin/*.pl        text    eol=lf
+gradlew         text    eol=lf

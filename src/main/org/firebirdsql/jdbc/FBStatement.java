@@ -18,15 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
-import org.firebirdsql.jdbc.escape.FBEscapedParser.EscapeParserMode;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.*;
@@ -714,7 +711,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     success = true;
                     return responses;
                 } catch (SQLException e) {
-                    throw jdbcVersionSupport.createBatchUpdateException(e.getMessage(), e.getSQLState(),
+                    throw createBatchUpdateException(e.getMessage(), e.getSQLState(),
                             e.getErrorCode(), toLargeArray(responses), e);
                 } finally {
                     clearBatch();
@@ -728,12 +725,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private void executeSingleForBatch(List<Long> responses, String sql) throws SQLException {
         if (internalExecute(sql)) {
             // TODO SQL state?
-            throw jdbcVersionSupport.createBatchUpdateException(
+            throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
                     SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(responses), null);
         } else {
             responses.add(getLargeUpdateCount());
         }
+    }
+
+    protected final BatchUpdateException createBatchUpdateException(String reason, String SQLState, int vendorCode,
+            long[] updateCounts, Throwable cause) {
+        return new BatchUpdateException(reason, SQLState, vendorCode, updateCounts, cause);
     }
 
     /**
@@ -903,11 +905,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         if (connection != null) {
             return connection.nativeSQL(sql);
         } else {
-            DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-            EscapeParserMode mode = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STANDARD_UDF)
-                    ? EscapeParserMode.USE_STANDARD_UDF
-                    : EscapeParserMode.USE_BUILT_IN;
-            return new FBEscapedParser(mode).parse(sql);
+            return FBEscapedParser.toNativeSql(sql);
         }
     }
 
