@@ -10,7 +10,6 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.jdbc.FBBlob;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class IBatchImplTest extends AbstractBatchTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
 
     //@formatter:off
     protected String INSERT_QUERY_WITHOUT_BLOBS = "INSERT INTO test_p_metadata (" +

@@ -11,9 +11,9 @@ import java.sql.SQLException;
 public class IStatementimplTimeoutTest extends AbstractStatementTimeoutTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
 
-    private final AbstractNativeOODatabaseFactory factory =
+    private AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override

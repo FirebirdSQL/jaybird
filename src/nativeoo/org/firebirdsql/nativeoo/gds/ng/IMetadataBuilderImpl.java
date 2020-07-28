@@ -183,7 +183,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
 
     @Override
     public void addDecDecimal(int index, int size, int scale) throws SQLException {
-        metadataBuilder.setType(status, index, SQL_DEC_FIXED);
+        metadataBuilder.setType(status, index, SQL_INT128);
         metadataBuilder.setLength(status, index, size);
         metadataBuilder.setScale(status, index, scale);
         metadataBuilder.setSubType(status, index, SUBTYPE_DECIMAL);
@@ -191,7 +191,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
 
     @Override
     public void addDecNumeric(int index, int size, int scale) throws SQLException {
-        metadataBuilder.setType(status, index, SQL_DEC_FIXED);
+        metadataBuilder.setType(status, index, SQL_INT128);
         metadataBuilder.setLength(status, index, size);
         metadataBuilder.setScale(status, index, scale);
         metadataBuilder.setSubType(status, index, SUBTYPE_NUMERIC);

@@ -4,19 +4,18 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.GDSFactory;
+
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.GDSType;
+
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.gds.ng.jna.AbstractNativeDatabaseFactory;
+
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,14 +44,14 @@ public class IDatabaseImplTest {
     // TODO Assert in tests need to be checked (and more need to be added)
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+
+    private AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private static final String gdsType = "FBOONATIVE";
-
-    private AbstractNativeOODatabaseFactory factory;
 
     private final FbConnectionProperties connectionInfo;
     {
@@ -63,15 +62,7 @@ public class IDatabaseImplTest {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
-    }
 
-    @Before
-    public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-    }
-
-    public static FBManager createFBManager() {
-        return new FBManager(GDSType.getType(gdsType));
     }
 
     @Test

@@ -26,4 +26,25 @@ public class FbInterfaceException {
             status.setErrors2(vector.length, vector);
         }
     }
+
+    public static void setVersionError(FbInterface.IStatus status, String interfaceName,
+                                int currentVersion, int expectedVersion) {
+
+        try (CloseableMemory memory = new CloseableMemory(interfaceName.length() + 1)) {
+            memory.setString(0, interfaceName);
+            com.sun.jna.Pointer[] vector = new com.sun.jna.Pointer[]{
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_gds),
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_interface_version_too_old),
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_number),
+                    new com.sun.jna.Pointer(expectedVersion),
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_number),
+                    new com.sun.jna.Pointer(currentVersion),
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_cstring),
+                    new com.sun.jna.Pointer(memory.size()),
+                    memory,
+                    new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_end)
+            };
+            status.setErrors2(vector.length, vector);
+        }
+    }
 }

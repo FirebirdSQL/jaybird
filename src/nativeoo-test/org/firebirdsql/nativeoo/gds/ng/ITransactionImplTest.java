@@ -5,8 +5,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ng.AbstractTransactionTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
 
@@ -18,12 +16,9 @@ import java.sql.SQLException;
 public class ITransactionImplTest extends AbstractTransactionTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private final AbstractNativeOODatabaseFactory factory =
+    private AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override

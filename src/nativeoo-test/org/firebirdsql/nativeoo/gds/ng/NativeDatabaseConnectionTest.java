@@ -5,7 +5,6 @@ import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,12 +17,13 @@ import static org.junit.Assert.*;
 public class NativeDatabaseConnectionTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+
+    private AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
-
-    private AbstractNativeOODatabaseFactory factory;
 
     private final FbConnectionProperties connectionInfo;
     {
@@ -34,11 +34,6 @@ public class NativeDatabaseConnectionTest {
         connectionInfo.setPassword(DB_PASSWORD);
         connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
         connectionInfo.setEncoding("NONE");
-    }
-
-    @Before
-    public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     }
 
     @Test

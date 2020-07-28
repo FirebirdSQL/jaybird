@@ -105,7 +105,16 @@ public final class GdsTypeRule implements TestRule {
      */
     public static GdsTypeRule supportsNativeOnly() {
         return supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME, FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME,
+                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+    }
+
+    /**
+     * Creates an instance that supports only all (known) OO API native test types.
+     *
+     * @return Instance
+     */
+    public static GdsTypeRule supportsFBOONativeOnly() {
+        return supports(FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME,
                 FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME, FbOOLocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
     }
 

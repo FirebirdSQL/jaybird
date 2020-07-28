@@ -84,7 +84,7 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice']
+            srcDirs = ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice', 'src/nativeoo']
         }
         resources {
             srcDirs = ['src/resources']
@@ -92,7 +92,7 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['src/test', 'src/test_42', 'src/jna-test']
+            srcDirs = ['src/test', 'src/test_42', 'src/jna-test', 'src/nativeoo-test']
         }
         resources {
             srcDirs = ['src/test_resources']

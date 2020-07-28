@@ -21,15 +21,14 @@ package org.firebirdsql.nativeoo.gds.ng;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -46,12 +45,9 @@ import static org.junit.Assert.*;
 public class IStatementImplTest extends AbstractStatementTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private final AbstractNativeOODatabaseFactory factory =
+    private AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
@@ -272,5 +268,57 @@ public class IStatementImplTest extends AbstractStatementTest {
         statement.close();
 
         statement.getExecutionPlan();
+    }
+
+    @Test
+    public void setTimeout_nonZeroThenZero() throws Exception {
+        allocateStatement();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        statement.setTimeout(1);
+        assertEquals(1, statement.getTimeout());
+
+        statement.setTimeout(0);
+        assertEquals(0, statement.getTimeout());
+    }
+
+    @Test
+    public void setTimeout_max_long_allowed() throws Exception {
+        allocateStatement();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        statement.setTimeout(Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, statement.getTimeout());
+    }
+
+    @Test
+    public void setTimeout_negativeValue_throwsException() throws Exception {
+        allocateStatement();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        expectedException.expect(SQLNonTransientException.class);
+        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
+
+        statement.setTimeout(-1);
+    }
+
+    @Test
+    public void getTimeout_defaultZero() throws Exception {
+        allocateStatement();
+
+        statement.prepare(
+                "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
+                        "FROM RDB$DATABASE");
+
+        assertEquals(0, statement.getTimeout());
     }
 }

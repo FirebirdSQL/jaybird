@@ -7,10 +7,15 @@ import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
+
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.junit.*;
+
+import org.junit.After;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.sql.SQLException;
@@ -23,12 +28,15 @@ import static org.junit.Assert.assertTrue;
 public class IEventBlockImplTest extends FBJUnit4TestBase {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+
+    private AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private AbstractNativeOODatabaseFactory factory;
+
     //@formatter:off
     public static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
@@ -56,11 +64,6 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
     }
 
     private IDatabaseImpl db;
-
-    @Before
-    public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-    }
 
     @After
     public final void tearDown() throws Exception {

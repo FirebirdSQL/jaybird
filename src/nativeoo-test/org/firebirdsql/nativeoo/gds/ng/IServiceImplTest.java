@@ -4,12 +4,14 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+
 import org.firebirdsql.gds.impl.GDSServerVersion;
+
 import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
+
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,12 +38,15 @@ import static org.junit.Assume.assumeTrue;
 public class IServiceImplTest {
 
     @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+
+    private AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private AbstractNativeOODatabaseFactory factory;
+
 
     private final FbServiceProperties connectionInfo;
     {
@@ -50,11 +55,6 @@ public class IServiceImplTest {
         connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         connectionInfo.setUser(DB_USER);
         connectionInfo.setPassword(DB_PASSWORD);
-    }
-
-    @Before
-    public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     }
 
     @Test
