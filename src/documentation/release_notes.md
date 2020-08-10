@@ -306,6 +306,19 @@ As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now
 considered internal API as well. For normal data sources, look at the classes in
 the package `org.firebirdsql.ds`.
 
+Incompatible API changes
+------------------------
+
+The following incompatible API changes were made in Jaybird 5:
+
+-   Due to a large scale refactoring and unification of properties, 
+    `IAttachProperties.getWireCrypt` now returns a `String`. To get the value
+    as an instance of the `WireCrypt` enum, use the new method 
+    `IAttachProperties.getWireCryptAsEnum`.
+-   Same as the previous point, `ServiceManager.getWireCrypt` new returns
+    `String`. To get the value as an instance of the `WireCrypt` enum, use the
+    new method `ServiceManager.getWireCryptAsEnum`
+
 Removal of classes, packages and methods without deprecation
 ------------------------------------------------------------
 
@@ -411,7 +424,36 @@ implementation. The package `org.firebirdsql.jca` will be removed entirely.
 If you are currently using Jaybird as a JCA driver, please let us know on the 
 Firebird-Java mailing list. We may reconsider this decision and instead 
 restructure Jaybird so the dependency on JCA is only needed when Jaybird is used 
-as a JCA driver. 
+as a JCA driver.
+
+Breaking changes for Jaybird 6
+==============================
+
+With Jaybird 5 the following breaking changes will be introduced.
+
+Removal of deprecated classes, packages and methods
+---------------------------------------------------
+
+### Removal of deprecated methods ###
+
+The following methods have been removed in Jaybird 6:
+
+-   `FirebirdConnectionProperties.getNonStandardProperty(String)` and all its
+    implementations, use `BaseProperties.getProperty(String)`
+-   `FirebirdConnectionProperties.setNonStandardProperty(String,String)` and all
+    its implementations, use `BaseProperties.setProperty(String,String)`
+
+### Removal of deprecated classes ###
+
+The following classes have been removed in Jaybird 6:
+
+_none so far_
+    
+### Removal of deprecated constants ###
+
+The following constants have been removed in Jaybird 6:
+
+_none so far_ 
     
 Compatibility notes
 ===================

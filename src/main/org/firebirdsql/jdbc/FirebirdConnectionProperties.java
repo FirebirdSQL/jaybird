@@ -20,7 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 
 import java.sql.SQLException;
 
@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * interface corresponds to the Database Parameter Buffer, but also contains
  * properties to specify default transaction parameters.
  */
-public interface FirebirdConnectionProperties {
+public interface FirebirdConnectionProperties extends DatabaseConnectionProperties {
 
     /**
      * @return path to the database including the server name and the port,
@@ -69,44 +69,6 @@ public interface FirebirdConnectionProperties {
     void setBlobBufferSize(int bufferSize);
 
     /**
-     * @return Character set for the connection.
-     * @see #setCharSet(String)
-     */
-    String getCharSet();
-
-    /**
-     * @param charSet
-     *         Character set for the connection. Similar to
-     *         <code>encoding</code> property, but accepts Java names
-     *         instead of Firebird ones.
-     */
-    void setCharSet(String charSet);
-
-    /**
-     * @return Character encoding for the connection.
-     * @see #setEncoding(String)
-     */
-    String getEncoding();
-
-    /**
-     * @param encoding
-     *         Character encoding for the connection. See Firebird
-     *         documentation for more information.
-     */
-    void setEncoding(String encoding);
-
-    /**
-     * @return SQL role to use.
-     */
-    String getRoleName();
-
-    /**
-     * @param roleName
-     *         SQL role to use.
-     */
-    void setRoleName(String roleName);
-
-    /**
      * @return SQL dialect of the client.
      */
     String getSqlDialect();
@@ -131,17 +93,6 @@ public interface FirebirdConnectionProperties {
     void setUseStreamBlobs(boolean useStreamBlobs);
 
     /**
-     * @return socket buffer size in bytes, or -1 is not specified.
-     */
-    int getSocketBufferSize();
-
-    /**
-     * @param socketBufferSize
-     *         socket buffer size in bytes.
-     */
-    void setSocketBufferSize(int socketBufferSize);
-
-    /**
      * @return <code>true</code> if the Jaybird 1.0 handling of the calendar
      * in corresponding setters. This is also compatible with MySQL
      * calendar treatment.
@@ -158,25 +109,22 @@ public interface FirebirdConnectionProperties {
 
     /**
      * @return name of the user that will be used when connecting to the database.
+     * @deprecated Use {@link #getUser()} instead; will be retained indefinitely for compatibility
      */
-    String getUserName();
+    @Deprecated
+    default String getUserName() {
+        return getUser();
+    }
 
     /**
      * @param userName
      *         name of the user that will be used when connecting to the database.
+     * @deprecated Use {@link #setUser(String)}; will be retained indefinitely for compatibility
      */
-    void setUserName(String userName);
-
-    /**
-     * @return password corresponding to the specified user name.
-     */
-    String getPassword();
-
-    /**
-     * @param password
-     *         password corresponding to the specified user name.
-     */
-    void setPassword(String password);
+    @Deprecated
+    default void setUserName(String userName) {
+        setUser(userName);
+    }
 
     /**
      * @return number of cache buffers that should be allocated for this
@@ -200,8 +148,12 @@ public interface FirebirdConnectionProperties {
      * @param key
      *         name of the property to get.
      * @return value of the property.
+     * @deprecated Use {@link #getProperty(String)}; will be removed in Jaybird 6
      */
-    String getNonStandardProperty(String key);
+    @Deprecated
+    default String getNonStandardProperty(String key) {
+        return getProperty(key);
+    }
 
     /**
      * Set the property that does not have corresponding setter method.
@@ -210,8 +162,12 @@ public interface FirebirdConnectionProperties {
      *         name of the property to set.
      * @param value
      *         value of the property.
+     * @deprecated Use {@link #setProperty(String, String)}; will be removed in Jaybird 6
      */
-    void setNonStandardProperty(String key, String value);
+    @Deprecated
+    default void setNonStandardProperty(String key, String value) {
+        setProperty(key, value);
+    }
 
     /**
      * Set the property that does not have corresponding setter method.
@@ -344,36 +300,6 @@ public interface FirebirdConnectionProperties {
     void setDefaultResultSetHoldable(boolean isHoldable);
 
     /**
-     * Get the current Socket blocking timeout (SoTimeout).
-     *
-     * @return The socket blocking timeout in milliseconds (0 is 'infinite')
-     */
-    int getSoTimeout();
-
-    /**
-     * Set the Socket blocking timeout (SoTimeout).
-     *
-     * @param soTimeout
-     *         Timeout in milliseconds (0 is 'infinite')
-     */
-    void setSoTimeout(int soTimeout);
-
-    /**
-     * Get the current connect timeout.
-     *
-     * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
-     */
-    int getConnectTimeout();
-
-    /**
-     * Set the connect timeout.
-     *
-     * @param connectTimeout
-     *         Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)
-     */
-    void setConnectTimeout(int connectTimeout);
-
-    /**
      * Get whether to use Firebird autocommit (experimental).
      *
      * @return {@code true} use Firebird autocommit
@@ -387,64 +313,6 @@ public interface FirebirdConnectionProperties {
      *         {@code true} Use Firebird autocommit
      */
     void setUseFirebirdAutocommit(boolean useFirebirdAutocommit);
-
-    /**
-     * Get the wire encryption level value.
-     *
-     * @return Wire encryption level ({@code null} implies {@code DEFAULT})
-     * @since 4.0
-     */
-    String getWireCrypt();
-
-    /**
-     * Sets the wire encryption level.
-     * <p>
-     * Values are defined by {@link WireCrypt}, values are handled case insensitive.
-     * Invalid values are accepted, but will cause an error when a connection is established.
-     * </p>
-     *
-     * @param wireCrypt
-     *         Wire encryption level
-     * @since 4.0
-     */
-    void setWireCrypt(String wireCrypt);
-
-    /**
-     * Get the database encryption plugin configuration.
-     *
-     * @return Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    String getDbCryptConfig();
-
-    /**
-     * Sets the database encryption plugin configuration.
-     *
-     * @param dbCryptConfig
-     *         Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    void setDbCryptConfig(String dbCryptConfig);
-
-    /**
-     * Get the list of authentication plugins to try.
-     *
-     * @return comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    String getAuthPlugins();
-
-    /**
-     * Sets the authentication plugins to try.
-     * <p>
-     * Invalid names are skipped during authentication.
-     * </p>
-     *
-     * @param authPlugins
-     *         comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    void setAuthPlugins(String authPlugins);
 
     /**
      * Get the {@code generatedKeysEnabled} configuration.
@@ -530,29 +398,4 @@ public interface FirebirdConnectionProperties {
      */
     void setIgnoreProcedureType(boolean ignoreProcedureType);
 
-    /**
-     * Get if wire compression should be enabled.
-     * <p>
-     * Wire compression requires Firebird 3 or higher, and the server must have the zlib library. If compression cannot
-     * be negotiated, the connection will be made without wire compression.
-     * </p>
-     * <p>
-     * This property will be ignored for native connections. For native connections, the configuration in
-     * {@code firebird.conf} read by the client library will be used.
-     * </p>
-     *
-     * @return {@code true} wire compression enabled
-     * @since 4.0
-     */
-    boolean isWireCompression();
-
-    /**
-     * Sets if the connection should try to enable wire compression.
-     *
-     * @param wireCompression
-     *         {@code true} enable wire compression, {@code false} disable wire compression (the default)
-     * @see #isWireCompression()
-     * @since 4.0
-     */
-    void setWireCompression(boolean wireCompression);
 }

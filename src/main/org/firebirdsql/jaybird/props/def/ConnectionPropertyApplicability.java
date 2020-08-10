@@ -22,51 +22,29 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng;
+package org.firebirdsql.jaybird.props.def;
 
-import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+import java.util.Properties;
 
 /**
- * Connection properties for a Firebird service attachment.
+ * Applicability of a connection property (as in: where it can be used).
+ * <p>
+ * Although all properties can be set on all types of connection, the applicability gives a hint to Jaybird where the
+ * property is expected to be used. For example, properties defined for {@code SERVICE} only will not show up in
+ * {@link java.sql.Driver#getPropertyInfo(String, Properties)}.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
  */
-public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
-
-    String DEFAULT_SERVICE_NAME = "service_mgr";
+public enum ConnectionPropertyApplicability {
 
     /**
-     * Get the service name
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Service name
+     * Property applies to or can be used in a database connection.
      */
-    String getServiceName();
-
+    DATABASE,
     /**
-     * Set the service name.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if
-     * this method hasn't been called yet.
-     * </p>
-     *
-     * @param serviceName Service name
+     * Property applies to or can be used in a service connection.
      */
-    void setServiceName(String serviceName);
+    SERVICE,
 
-    /**
-     * @return An immutable version of this instance as an implementation of {@link IServiceProperties}
-     */
-    @Override
-    IServiceProperties asImmutable();
-
-    /**
-     * @return A new, mutable, instance as an implementation of {@link IServiceProperties} with all properties copied.
-     */
-    @Override
-    IServiceProperties asNewMutable();
 }

@@ -62,7 +62,7 @@ public class V10WireOperations extends AbstractWireOperations {
         processAttachCallback.processAttachResponse(response);
 
         // fbclient also ignores REQUIRED when connecting to FB 2.5 or lower, apply same
-        if (getAttachProperties().getWireCrypt() == WireCrypt.REQUIRED) {
+        if (getAttachProperties().getWireCryptAsEnum() == WireCrypt.REQUIRED) {
             String message = "wireCrypt=REQUIRED, but wire protocol version does not support encryption, "
                     + "encryption requirement dropped";
             log.warn(message);

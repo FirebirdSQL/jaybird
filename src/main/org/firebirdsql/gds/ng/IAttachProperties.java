@@ -24,13 +24,15 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.AttachmentProperties;
+
 /**
  * Common properties for database and service attach.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface IAttachProperties<T extends IAttachProperties> {
+public interface IAttachProperties<T extends IAttachProperties<T>> extends AttachmentProperties {
 
     int DEFAULT_PORT = 3050;
     String DEFAULT_SERVER_NAME = "localhost";
@@ -42,6 +44,9 @@ public interface IAttachProperties<T extends IAttachProperties> {
      * @return The name of the object to attach to (either a database or service name).
      */
     String getAttachObjectName();
+
+    // TODO Do serverName and portNumber belong in AttachmentProperties?
+    //  Considerations: this ties it too much to TCP/IP
 
     /**
      * Get the hostname or IP address of the Firebird server.
@@ -90,237 +95,21 @@ public interface IAttachProperties<T extends IAttachProperties> {
     void setPortNumber(int portNumber);
 
     /**
-     * @return Name of the user to authenticate to the server.
+     * @return The value of {@link #getWireCrypt()} as an instance of {@link WireCrypt}.
+     * @since 5
+     * @see #getWireCrypt()
      */
-    String getUser();
-
-    /**
-     * @param user
-     *         Name of the user to authenticate to the server.
-     */
-    void setUser(String user);
-
-    /**
-     * @return Password to authenticate to the server.
-     */
-    String getPassword();
-
-    /**
-     * @param password
-     *         Password to authenticate to the server.
-     */
-    void setPassword(String password);
-
-    /**
-     * @return SQL role to use.
-     */
-    String getRoleName();
-
-    /**
-     * @param roleName
-     *         SQL role to use.
-     */
-    void setRoleName(String roleName);
-
-    /**
-     * @return Java character set for the connection.
-     */
-    String getCharSet();
-
-    /**
-     * Set the Java character set for the connection.
-     * <p>
-     * Contrary to other parts of the codebase, the value of
-     * <code>encoding</code> should not be changed when <code>charSet</code> is
-     * set.
-     * </p>
-     *
-     * @param charSet
-     *         Character set for the connection. Similar to
-     *         <code>encoding</code> property, but accepts Java names instead
-     *         of Firebird ones.
-     * @see #setEncoding(String)
-     */
-    void setCharSet(String charSet);
-
-    /**
-     * @return Firebird character encoding for the connection.
-     */
-    String getEncoding();
-
-    /**
-     * Set the Firebird character set for the connection.
-     * <p>
-     * Contrary to other parts of the codebase, the value of
-     * <code>charSet</code> should not be changed when <code>encoding</code> is
-     * set.
-     * </p>
-     *
-     * @param encoding
-     *         Firebird character encoding for the connection. See Firebird
-     *         documentation for more information.
-     */
-    void setEncoding(String encoding);
-
-    /**
-     * Get the socket buffer size.
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SOCKET_BUFFER_SIZE} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return socket buffer size in bytes, or -1 if not specified.
-     */
-    int getSocketBufferSize();
-
-    /**
-     * Set the socket buffer size.
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SOCKET_BUFFER_SIZE} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param socketBufferSize
-     *         socket buffer size in bytes.
-     */
-    void setSocketBufferSize(int socketBufferSize);
-
-    /**
-     * Get the initial Socket blocking timeout (SoTimeout).
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SO_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return The initial socket blocking timeout in milliseconds (0 is
-     *         'infinite')
-     */
-    int getSoTimeout();
-
-    /**
-     * Set the initial Socket blocking timeout (SoTimeout).
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SO_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param soTimeout
-     *         Timeout in milliseconds (0 is 'infinite')
-     */
-    void setSoTimeout(int soTimeout);
-
-    /**
-     * Get the connect timeout in seconds.
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_CONNECT_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Connect timeout in seconds (0 is 'infinite', or better: OS
-     *         specific timeout)
-     */
-    int getConnectTimeout();
-
-    /**
-     * Set the connect timeout in seconds.
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_CONNECT_TIMEOUT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param connectTimeout
-     *         Connect timeout in seconds (0 is 'infinite', or better: OS
-     *         specific timeout)
-     */
-    void setConnectTimeout(int connectTimeout);
-
-    /**
-     * Get the wire encryption level.
-     * <p>
-     * NOTE: Implementer should take care to return {@link WireCrypt#DEFAULT} if
-     * the value hasn't been set yet.
-     * </p>
-     *
-     * @return Wire encryption level
-     * @since 4.0
-     */
-    WireCrypt getWireCrypt();
+    WireCrypt getWireCryptAsEnum();
 
     /**
      * Set the wire encryption level.
-     * <p>
-     * NOTE: Implementer should take care to use {@link WireCrypt#DEFAULT} if
-     * the value hasn't been set yet.
-     * </p>
      *
      * @param wireCrypt
      *         Wire encryption level ({@code null} not allowed)
      * @since 4.0
+     * @see #setWireCrypt(String)
      */
     void setWireCrypt(WireCrypt wireCrypt);
-
-    /**
-     * Get the database encryption plugin configuration.
-     *
-     * @return Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    String getDbCryptConfig();
-
-    /**
-     * Sets the database encryption plugin configuration.
-     *
-     * @param dbCryptConfig
-     *         Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    void setDbCryptConfig(String dbCryptConfig);
-
-    /**
-     * Get the list of authentication plugins to try.
-     *
-     * @return comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    String getAuthPlugins();
-
-    /**
-     * Sets the authentication plugins to try.
-     * <p>
-     * Invalid names are skipped during authentication.
-     * </p>
-     *
-     * @param authPlugins
-     *         comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    void setAuthPlugins(String authPlugins);
-
-    /**
-     * Get if wire compression should be enabled.
-     * <p>
-     * Wire compression requires Firebird 3 or higher, and the server must have the zlib library. If compression cannot
-     * be negotiated, the connection will be made without wire compression.
-     * </p>
-     * <p>
-     * This property will be ignored for native connections. For native connections, the configuration in
-     * {@code firebird.conf} read by the client library will be used.
-     * </p>
-     *
-     * @return {@code true} wire compression enabled
-     * @since 4.0
-     */
-    boolean isWireCompression();
-
-    /**
-     * Sets if the connection should try to enable wire compression.
-     *
-     * @param wireCompression
-     *         {@code true} enable wire compression, {@code false} disable wire compression (the default)
-     * @see #isWireCompression()
-     * @since 4.0
-     */
-    void setWireCompression(boolean wireCompression);
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}

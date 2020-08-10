@@ -212,10 +212,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getBuffersNumber();
     }
 
-    public String getCharSet() {
-        return connectionProperties.getCharSet();
-    }
-
     public String getDatabase() {
         return connectionProperties.getDatabase();
     }
@@ -232,26 +228,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getDefaultTransactionIsolation();
     }
 
-    public String getEncoding() {
-        return connectionProperties.getEncoding();
-    }
-
-    public String getNonStandardProperty(String key) {
-        return connectionProperties.getNonStandardProperty(key);
-    }
-
-    public String getPassword() {
-        return connectionProperties.getPassword();
-    }
-
-    public String getRoleName() {
-        return connectionProperties.getRoleName();
-    }
-
-    public int getSocketBufferSize() {
-        return connectionProperties.getSocketBufferSize();
-    }
-
     public String getSqlDialect() {
         return connectionProperties.getSqlDialect();
     }
@@ -266,10 +242,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     public String getType() {
         return connectionProperties.getType();
-    }
-
-    public String getUserName() {
-        return connectionProperties.getUserName();
     }
 
     public boolean isTimestampUsesLocalTimezone() {
@@ -289,6 +261,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setCharSet(String charSet) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         ensureCanModify(() -> connectionProperties.setCharSet(charSet));
     }
 
@@ -305,27 +278,18 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public void setEncoding(String encoding) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         ensureCanModify(() -> connectionProperties.setEncoding(encoding));
     }
 
+    @Deprecated
     public void setNonStandardProperty(String key, String value) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(key, value));
     }
 
     public void setNonStandardProperty(String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
-    }
-
-    public void setPassword(String password) {
-        ensureCanModify(() -> connectionProperties.setPassword(password));
-    }
-
-    public void setRoleName(String roleName) {
-        ensureCanModify(() -> connectionProperties.setRoleName(roleName));
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        ensureCanModify(() -> connectionProperties.setSocketBufferSize(socketBufferSize));
     }
 
     public void setSqlDialect(String sqlDialect) {
@@ -354,10 +318,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         });
     }
 
-    public void setUserName(String userName) {
-        ensureCanModify(() -> connectionProperties.setUserName(userName));
-    }
-
     public void setUseStreamBlobs(boolean useStreamBlobs) {
         ensureCanModify(() -> connectionProperties.setUseStreamBlobs(useStreamBlobs));
     }
@@ -379,22 +339,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         });
     }
 
-    public int getSoTimeout() {
-        return connectionProperties.getSoTimeout();
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        ensureCanModify(() -> connectionProperties.setSoTimeout(soTimeout));
-    }
-
-    public int getConnectTimeout() {
-        return connectionProperties.getConnectTimeout();
-    }
-
-    public void setConnectTimeout(int connectTimeout) {
-        ensureCanModify(() -> connectionProperties.setConnectTimeout(connectTimeout));
-    }
-
     @Override
     public boolean isUseFirebirdAutocommit() {
         return connectionProperties.isUseFirebirdAutocommit();
@@ -403,36 +347,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
         ensureCanModify(() -> connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit));
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return connectionProperties.getWireCrypt();
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        ensureCanModify(() -> connectionProperties.setWireCrypt(wireCrypt));
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return connectionProperties.getDbCryptConfig();
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        ensureCanModify(() -> connectionProperties.setDbCryptConfig(dbCryptConfig));
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return connectionProperties.getAuthPlugins();
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        ensureCanModify(() -> connectionProperties.setAuthPlugins(authPlugins));
     }
 
     @Override
@@ -476,13 +390,33 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     @Override
-    public boolean isWireCompression() {
-        return connectionProperties.isWireCompression();
+    public String getProperty(String name) {
+        return connectionProperties.getProperty(name);
     }
 
     @Override
-    public void setWireCompression(boolean wireCompression) {
-        ensureCanModify(() -> connectionProperties.setWireCompression(wireCompression));
+    public void setProperty(String name, String value) {
+        ensureCanModify(() -> connectionProperties.setProperty(name, value));
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        return connectionProperties.getIntProperty(name);
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        ensureCanModify(() -> connectionProperties.setIntProperty(name, value));
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return connectionProperties.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        ensureCanModify(() -> connectionProperties.setBooleanProperty(name, value));
     }
 
     @Override

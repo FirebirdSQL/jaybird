@@ -20,6 +20,12 @@ package org.firebirdsql.gds.ng;
 
 /**
  * Abstract immutable implementation of {@link org.firebirdsql.gds.ng.IAttachProperties}.
+ * <p>
+ * NOTE: This class relies on the default implementation provided in
+ * {@link org.firebirdsql.jaybird.props.AttachmentProperties}, so in itself, immutability is not guaranteed by this
+ * class: subclasses need to be {@code final} and guard against mutation (that is, they do not override setters, unless
+ * they call {@link #immutable()}(.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -62,7 +68,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
         socketBufferSize = src.getSocketBufferSize();
         soTimeout = src.getSoTimeout();
         connectTimeout = src.getConnectTimeout();
-        wireCrypt = src.getWireCrypt();
+        wireCrypt = WireCrypt.fromString(src.getWireCrypt());
         dbCryptConfig = src.getDbCryptConfig();
         authPlugins = src.getAuthPlugins();
         wireCompression = src.isWireCompression();
@@ -94,18 +100,8 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setUser(final String user) {
-        immutable();
-    }
-
-    @Override
     public String getPassword() {
         return password;
-    }
-
-    @Override
-    public void setPassword(final String password) {
-        immutable();
     }
 
     @Override
@@ -114,18 +110,8 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setRoleName(final String roleName) {
-        immutable();
-    }
-
-    @Override
     public String getCharSet() {
         return charSet;
-    }
-
-    @Override
-    public void setCharSet(final String charSet) {
-        immutable();
     }
 
     @Override
@@ -134,18 +120,8 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setEncoding(final String encoding) {
-        immutable();
-    }
-
-    @Override
     public int getSocketBufferSize() {
         return socketBufferSize;
-    }
-
-    @Override
-    public void setSocketBufferSize(final int socketBufferSize) {
-        immutable();
     }
 
     @Override
@@ -154,23 +130,13 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setSoTimeout(final int soTimeout) {
-        immutable();
-    }
-
-    @Override
     public int getConnectTimeout() {
         return connectTimeout;
     }
 
     @Override
-    public void setConnectTimeout(final int connectTimeout) {
-        immutable();
-    }
-
-    @Override
-    public WireCrypt getWireCrypt() {
-        return wireCrypt;
+    public String getWireCrypt() {
+        return wireCrypt != null ? wireCrypt.name() : null;
     }
 
     @Override
@@ -179,13 +145,13 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public String getDbCryptConfig() {
-        return dbCryptConfig;
+    public WireCrypt getWireCryptAsEnum() {
+        return wireCrypt;
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        immutable();
+    public String getDbCryptConfig() {
+        return dbCryptConfig;
     }
 
     @Override
@@ -194,17 +160,37 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
-        immutable();
-    }
-
-    @Override
     public boolean isWireCompression() {
         return wireCompression;
     }
 
     @Override
-    public void setWireCompression(boolean wireCompression) {
+    public final String getProperty(String name) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public final void setProperty(String name, String value) {
+        immutable();
+    }
+
+    @Override
+    public final Integer getIntProperty(String name) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public final void setIntProperty(String name, Integer value) {
+        immutable();
+    }
+
+    @Override
+    public final Boolean getBooleanProperty(String name) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public final void setBooleanProperty(String name, Boolean value) {
         immutable();
     }
 

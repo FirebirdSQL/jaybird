@@ -64,7 +64,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
             socketBufferSize = src.getSocketBufferSize();
             soTimeout = src.getSoTimeout();
             connectTimeout = src.getConnectTimeout();
-            wireCrypt = src.getWireCrypt();
+            wireCrypt = WireCrypt.fromString(src.getWireCrypt());
             dbCryptConfig = src.getDbCryptConfig();
             authPlugins = src.getAuthPlugins();
             wireCompression = src.isWireCompression();
@@ -188,14 +188,24 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     @Override
-    public WireCrypt getWireCrypt() {
-        return wireCrypt;
+    public String getWireCrypt() {
+        return wireCrypt != null ? wireCrypt.name() : null;
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        setWireCrypt(WireCrypt.fromString(wireCrypt));
     }
 
     @Override
     public void setWireCrypt(WireCrypt wireCrypt) {
         this.wireCrypt = requireNonNull(wireCrypt, "wireCrypt");
         dirtied();
+    }
+
+    @Override
+    public WireCrypt getWireCryptAsEnum() {
+        return wireCrypt;
     }
 
     @Override
@@ -229,6 +239,36 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     public void setWireCompression(boolean wireCompression) {
         this.wireCompression = wireCompression;
         dirtied();
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public String getProperty(String name) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        throw new AssertionError("not yet implemented");
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        throw new AssertionError("not yet implemented");
     }
 
     /**

@@ -76,7 +76,53 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
 
-    private int getIntProperty(String name) {
+    // TODO get/set(Xxx)Property needs to be implemented in a more type safeway; maybe delegating to FbConnectionProperties
+
+    @Override
+    public String getProperty(String name) {
+        // TODO: Does not properly fulfil the contract (re defaults)
+        return getStringProperty(name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        // TODO: Does not properly fulfil the contract (re defaults, maybe conversion)
+        setStringProperty(name, value);
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        // TODO: Does not properly fulfil the contract (re defaults, conversion)
+        return (Integer) properties.get(getCanonicalName(name));
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        // TODO: Does not properly fulfil the contract (re defaults, conversion)
+        if (value == null) {
+            properties.remove(getCanonicalName(name));
+        } else {
+            setIntPropertyInternal(name, value);
+        }
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        // TODO: Does not properly fulfil the contract (re defaults, conversion)
+        return getBooleanPropertyInternal(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        // TODO: Does not properly fulfil the contract (re defaults, conversion)
+        if (value == null) {
+            properties.remove(getCanonicalName(name));
+        } else {
+            setBooleanPropertyInternal(name, value);
+        }
+    }
+
+    private int getIntPropertyInternal(String name) {
         Integer value = (Integer) properties.get(getCanonicalName(name));
         return value != null ? value : 0;
     }
@@ -86,12 +132,12 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         return value != null ? value.toString() : null;
     }
 
-    private boolean getBooleanProperty(String name) {
+    private boolean getBooleanPropertyInternal(String name) {
         String canonicalName = getCanonicalName(name);
         return properties.containsKey(canonicalName) && (Boolean) properties.get(canonicalName);
     }
 
-    private void setIntProperty(String name, int value) {
+    private void setIntPropertyInternal(String name, int value) {
         properties.put(getCanonicalName(name), value);
     }
 
@@ -108,7 +154,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         properties.put(name, objValue);
     }
 
-    private void setBooleanProperty(String name, boolean value) {
+    private void setBooleanPropertyInternal(String name, boolean value) {
         String canonicalName = getCanonicalName(name);
         if (value) {
             properties.put(canonicalName, Boolean.TRUE);
@@ -175,21 +221,19 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public int getBlobBufferSize() {
-        return getIntProperty(BLOB_BUFFER_SIZE_PROPERTY);
+        return getIntPropertyInternal(BLOB_BUFFER_SIZE_PROPERTY);
     }
 
     public void setBlobBufferSize(int bufferSize) {
-        setIntProperty(BLOB_BUFFER_SIZE_PROPERTY, bufferSize);
+        setIntPropertyInternal(BLOB_BUFFER_SIZE_PROPERTY, bufferSize);
     }
 
-    public String getCharSet() {
-        return getStringProperty(LOCAL_ENCODING_PROPERTY);
-    }
-
+    @Override
     public void setCharSet(String charSet) {
         if (charSet == null) {
             return;
         }
+        // TODO This logic should be pushed down to connection logic if possible
 
         // Normalize the name of the encoding
         final EncodingDefinition encodingDefinition = EncodingFactory.getPlatformDefault()
@@ -209,14 +253,12 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
     }
 
-    public String getEncoding() {
-        return getStringProperty(ENCODING_PROPERTY);
-    }
-
+    @Override
     public void setEncoding(String encoding) {
         if (encoding == null) {
             return;
         }
+        // TODO This logic should be pushed down to connection logic if possible
         setStringProperty(ENCODING_PROPERTY, encoding);
 
         if (getStringProperty(LOCAL_ENCODING_PROPERTY) != null) {
@@ -227,16 +269,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
                 .getEncodingDefinitionByFirebirdName(encoding);
         if (encodingDefinition != null && !encodingDefinition.isInformationOnly()) {
             setStringProperty(LOCAL_ENCODING_PROPERTY, encodingDefinition.getJavaEncodingName());
-        }
-    }
-
-    public String getRoleName() {
-        return getStringProperty(ROLE_NAME_PROPERTY);
-    }
-
-    public void setRoleName(String roleName) {
-        if (roleName != null) {
-            setStringProperty(ROLE_NAME_PROPERTY, roleName);
         }
     }
 
@@ -251,57 +283,30 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public boolean isUseStreamBlobs() {
-        return getBooleanProperty(USE_STREAM_BLOBS_PROPERTY);
+        return getBooleanPropertyInternal(USE_STREAM_BLOBS_PROPERTY);
     }
 
     public void setUseStreamBlobs(boolean useStreamBlobs) {
-        setBooleanProperty(USE_STREAM_BLOBS_PROPERTY, useStreamBlobs);
-    }
-
-    public int getSocketBufferSize() {
-        return getIntProperty(SOCKET_BUFFER_SIZE_PROPERTY);
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        setIntProperty(SOCKET_BUFFER_SIZE_PROPERTY, socketBufferSize);
+        setBooleanPropertyInternal(USE_STREAM_BLOBS_PROPERTY, useStreamBlobs);
     }
 
     public boolean isTimestampUsesLocalTimezone() {
-        return getBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
+        return getBooleanPropertyInternal(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
     }
 
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        setBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY, timestampUsesLocalTimezone);
-    }
-
-    public String getUserName() {
-        return getStringProperty(USER_NAME_PROPERTY);
-    }
-
-    public void setUserName(String userName) {
-        setStringProperty(USER_NAME_PROPERTY, userName);
-    }
-
-    public String getPassword() {
-        return getStringProperty(PASSWORD_PROPERTY);
-    }
-
-    public void setPassword(String password) {
-        setStringProperty(PASSWORD_PROPERTY, password);
+        setBooleanPropertyInternal(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY, timestampUsesLocalTimezone);
     }
 
     public int getBuffersNumber() {
-        return getIntProperty(BUFFERS_NUMBER_PROPERTY);
+        return getIntPropertyInternal(BUFFERS_NUMBER_PROPERTY);
     }
 
     public void setBuffersNumber(int buffersNumber) {
-        setIntProperty(BUFFERS_NUMBER_PROPERTY, buffersNumber);
+        setIntPropertyInternal(BUFFERS_NUMBER_PROPERTY, buffersNumber);
     }
 
-    public String getNonStandardProperty(String key) {
-        return getStringProperty(key);
-    }
-
+    @Deprecated
     public void setNonStandardProperty(String key, String value) {
         if (ISOLATION_PROPERTY.equals(key) || DEFAULT_ISOLATION_PROPERTY.equals(key)) {
             setDefaultIsolation(value);
@@ -311,69 +316,21 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public boolean isDefaultResultSetHoldable() {
-        return getBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
+        return getBooleanPropertyInternal(DEFAULT_HOLDABLE_RS_PROPERTY);
     }
 
     public void setDefaultResultSetHoldable(boolean isHoldable) {
-        setBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY, isHoldable);
-    }
-
-    public int getSoTimeout() {
-        return getIntProperty(SO_TIMEOUT);
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        setIntProperty(SO_TIMEOUT, soTimeout);
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return getIntProperty(CONNECT_TIMEOUT);
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        setIntProperty(CONNECT_TIMEOUT, connectTimeout);
+        setBooleanPropertyInternal(DEFAULT_HOLDABLE_RS_PROPERTY, isHoldable);
     }
 
     @Override
     public boolean isUseFirebirdAutocommit() {
-        return getBooleanProperty(USE_FIREBIRD_AUTOCOMMIT);
+        return getBooleanPropertyInternal(USE_FIREBIRD_AUTOCOMMIT);
     }
 
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        setBooleanProperty(USE_FIREBIRD_AUTOCOMMIT, useFirebirdAutocommit);
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return getStringProperty(WIRE_CRYPT_LEVEL);
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        setStringProperty(WIRE_CRYPT_LEVEL, wireCrypt);
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return getStringProperty(DB_CRYPT_CONFIG);
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        setStringProperty(DB_CRYPT_CONFIG, dbCryptConfig);
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return getStringProperty(AUTH_PLUGINS);
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        setStringProperty(AUTH_PLUGINS, authPlugins);
+        setBooleanPropertyInternal(USE_FIREBIRD_AUTOCOMMIT, useFirebirdAutocommit);
     }
 
     @Override
@@ -408,22 +365,12 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     @Override
     public boolean isIgnoreProcedureType() {
-        return getBooleanProperty(IGNORE_PROCEDURE_TYPE);
+        return getBooleanPropertyInternal(IGNORE_PROCEDURE_TYPE);
     }
 
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        setBooleanProperty(IGNORE_PROCEDURE_TYPE, ignoreProcedureType);
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return getBooleanProperty(WIRE_COMPRESSION);
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        setBooleanProperty(WIRE_COMPRESSION, wireCompression);
+        setBooleanPropertyInternal(IGNORE_PROCEDURE_TYPE, ignoreProcedureType);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

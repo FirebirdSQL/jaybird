@@ -155,84 +155,13 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     /**
-     * Get user name that is used in {@link #getConnection()} method.
-     *
-     * @return default user name.
-     * @deprecated use {@link #getUserName()} instead for the sake of naming
-     * compatibility.
-     */
-    @Deprecated
-    public String getUser() {
-        return getUserName();
-    }
-
-    /**
-     * Set user name that will be used in {@link #getConnection()} method.
-     *
-     * @param user
-     *         default user name.
-     * @deprecated use {@link #setUserName(String)} instead for the sake of naming compatibility.
-     */
-    @Deprecated
-    public void setUser(String user) {
-        setUserName(user);
-    }
-
-    /**
-     * Get user name that is used in {@link #getConnection()} method.
-     *
-     * @return default user name.
-     */
-    public String getUserName() {
-        return mcf.getUserName();
-    }
-
-    /**
-     * Set user name that will be used in {@link #getConnection()} method.
-     *
-     * @param userName
-     *         default user name.
-     */
-    public void setUserName(String userName) {
-        mcf.setUserName(userName);
-    }
-
-    /**
-     * Get password used in {@link #getConnection()} method.
-     *
-     * @return password corresponding to the user name returned by
-     * {@link #getUserName()}.
-     */
-    public String getPassword() {
-        return mcf.getPassword();
-    }
-
-    /**
-     * Set password that will be used in the {@link #getConnection()} method.
-     *
-     * @param password
-     *         password corresponding to the user name set in {@link #setUserName(String)}.
-     */
-    public void setPassword(String password) {
-        mcf.setPassword(password);
-    }
-
-    /**
-     * Get encoding for connections produced by this data source.
-     *
-     * @return encoding for the connection.
-     */
-    public String getEncoding() {
-        return mcf.getEncoding();
-    }
-
-    /**
      * Set encoding for connections produced by this data source.
      *
      * @param encoding
      *         encoding for the connection.
      */
     public void setEncoding(String encoding) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         mcf.setEncoding(encoding);
     }
 
@@ -252,10 +181,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         return mcf.getBuffersNumber();
     }
 
-    public String getCharSet() {
-        return mcf.getCharSet();
-    }
-
     public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
         return mcf.getDatabaseParameterBuffer();
     }
@@ -266,18 +191,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     public int getDefaultTransactionIsolation() {
         return mcf.getDefaultTransactionIsolation();
-    }
-
-    public String getNonStandardProperty(String key) {
-        return mcf.getNonStandardProperty(key);
-    }
-
-    public String getRoleName() {
-        return mcf.getRoleName();
-    }
-
-    public int getSocketBufferSize() {
-        return mcf.getSocketBufferSize();
     }
 
     public String getSqlDialect() {
@@ -309,6 +222,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     public void setCharSet(String charSet) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         mcf.setCharSet(charSet);
     }
 
@@ -320,20 +234,14 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setDefaultTransactionIsolation(defaultIsolationLevel);
     }
 
+    @Deprecated
     public void setNonStandardProperty(String key, String value) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         mcf.setNonStandardProperty(key, value);
     }
 
     public void setNonStandardProperty(String propertyMapping) {
         mcf.setNonStandardProperty(propertyMapping);
-    }
-
-    public void setRoleName(String roleName) {
-        mcf.setRoleName(roleName);
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        mcf.setSocketBufferSize(socketBufferSize);
     }
 
     public void setSqlDialect(String sqlDialect) {
@@ -364,22 +272,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setDefaultResultSetHoldable(isHoldable);
     }
 
-    public int getSoTimeout() {
-        return mcf.getSoTimeout();
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        mcf.setSoTimeout(soTimeout);
-    }
-
-    public int getConnectTimeout() {
-        return mcf.getConnectTimeout();
-    }
-
-    public void setConnectTimeout(int connectTimeout) {
-        mcf.setConnectTimeout(connectTimeout);
-    }
-
     @Override
     public boolean isUseFirebirdAutocommit() {
         return mcf.isUseFirebirdAutocommit();
@@ -388,36 +280,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
         mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return mcf.getWireCrypt();
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        mcf.setWireCrypt(wireCrypt);
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return mcf.getDbCryptConfig();
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        mcf.setDbCryptConfig(dbCryptConfig);
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return mcf.getAuthPlugins();
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        mcf.setAuthPlugins(authPlugins);
     }
 
     @Override
@@ -461,13 +323,33 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     @Override
-    public boolean isWireCompression() {
-        return mcf.isWireCompression();
+    public String getProperty(String name) {
+        return mcf.getProperty(name);
     }
 
     @Override
-    public void setWireCompression(boolean wireCompression) {
-        mcf.setWireCompression(wireCompression);
+    public void setProperty(String name, String value) {
+        mcf.setProperty(name, value);
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        return mcf.getIntProperty(name);
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        mcf.setIntProperty(name, value);
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return mcf.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        mcf.setBooleanProperty(name, value);
     }
 
     @Override
