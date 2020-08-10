@@ -22,51 +22,13 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng;
-
-import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+package org.firebirdsql.jaybird.props;
 
 /**
- * Connection properties for a Firebird service attachment.
+ * Properties for database connections.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 5
  */
-public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
-
-    String DEFAULT_SERVICE_NAME = "service_mgr";
-
-    /**
-     * Get the service name
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Service name
-     */
-    String getServiceName();
-
-    /**
-     * Set the service name.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if
-     * this method hasn't been called yet.
-     * </p>
-     *
-     * @param serviceName Service name
-     */
-    void setServiceName(String serviceName);
-
-    /**
-     * @return An immutable version of this instance as an implementation of {@link IServiceProperties}
-     */
-    @Override
-    IServiceProperties asImmutable();
-
-    /**
-     * @return A new, mutable, instance as an implementation of {@link IServiceProperties} with all properties copied.
-     */
-    @Override
-    IServiceProperties asNewMutable();
+public interface DatabaseConnectionProperties extends AttachmentProperties {
 }

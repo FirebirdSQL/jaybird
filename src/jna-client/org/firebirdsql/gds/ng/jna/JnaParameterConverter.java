@@ -51,8 +51,8 @@ public class JnaParameterConverter extends AbstractParameterConverter<JnaDatabas
 
         Map<String, String> configMap = new HashMap<>();
 
-        if (props.getWireCrypt() != WireCrypt.DEFAULT) {
-            configMap.put("WireCrypt", props.getWireCrypt().name());
+        if (props.getWireCryptAsEnum() != WireCrypt.DEFAULT) {
+            configMap.put("WireCrypt", props.getWireCrypt());
         }
 
         String authPlugins = props.getAuthPlugins();

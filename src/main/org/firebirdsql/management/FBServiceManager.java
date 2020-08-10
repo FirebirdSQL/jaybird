@@ -159,8 +159,13 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public WireCrypt getWireCrypt() {
+    public String getWireCrypt() {
         return serviceProperties.getWireCrypt();
+    }
+
+    @Override
+    public WireCrypt getWireCryptAsEnum() {
+        return serviceProperties.getWireCryptAsEnum();
     }
 
     @Override
@@ -196,6 +201,36 @@ public class FBServiceManager implements ServiceManager {
     @Override
     public void setWireCompression(boolean wireCompression) {
         serviceProperties.setWireCompression(wireCompression);
+    }
+
+    @Override
+    public String getProperty(String name) {
+        return serviceProperties.getProperty(name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        serviceProperties.setProperty(name, value);
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        return serviceProperties.getIntProperty(name);
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        serviceProperties.setIntProperty(name, value);
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return serviceProperties.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        serviceProperties.setBooleanProperty(name, value);
     }
 
     /**

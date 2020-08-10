@@ -25,6 +25,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 
 /**
  * Connection properties for the Firebird connection.
@@ -35,7 +36,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface IConnectionProperties extends IAttachProperties<IConnectionProperties> {
+public interface IConnectionProperties extends IAttachProperties<IConnectionProperties>, DatabaseConnectionProperties {
 
     /**
      * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.

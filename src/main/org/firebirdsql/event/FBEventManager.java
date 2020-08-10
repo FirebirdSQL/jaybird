@@ -250,7 +250,7 @@ public class FBEventManager implements EventManager {
 
     @Override
     public WireCrypt getWireCrypt() {
-        return connectionProperties.getWireCrypt();
+        return connectionProperties.getWireCryptAsEnum();
     }
 
     @Override

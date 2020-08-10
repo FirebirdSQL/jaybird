@@ -43,6 +43,7 @@ import static org.junit.Assert.assertNull;
  */
 public class FbConnectionPropertiesTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -158,10 +159,12 @@ public class FbConnectionPropertiesTest {
 
     @Test
     public void testWireCrypt() {
-        assertEquals(WireCrypt.DEFAULT, info.getWireCrypt());
+        assertEquals(WireCrypt.DEFAULT.name(), info.getWireCrypt());
+        assertEquals(WireCrypt.DEFAULT, info.getWireCryptAsEnum());
         final WireCrypt wireCrypt = WireCrypt.DISABLED;
         info.setWireCrypt(wireCrypt);
-        assertEquals(wireCrypt, info.getWireCrypt());
+        assertEquals(wireCrypt.name(), info.getWireCrypt());
+        assertEquals(wireCrypt, info.getWireCryptAsEnum());
     }
 
     @Test
@@ -169,7 +172,7 @@ public class FbConnectionPropertiesTest {
         expectedException.expect(NullPointerException.class);
         expectedException.expectMessage("wireCrypt");
 
-        info.setWireCrypt(null);
+        info.setWireCrypt((WireCrypt) null);
     }
 
     @Test
@@ -225,7 +228,7 @@ public class FbConnectionPropertiesTest {
                 continue;
             }
             Class<?> parameterType = method.getParameterTypes()[0];
-            if (parameterType == int.class) {
+            if (parameterType == int.class || parameterType == Integer.class) {
                 Object value = intValue++;
                 method.invoke(info, value);
                 testValues.put(descriptor.getName(), value);
@@ -234,9 +237,14 @@ public class FbConnectionPropertiesTest {
                 method.invoke(info, value);
                 testValues.put(descriptor.getName(), value);
             } else if (parameterType == String.class) {
-                method.invoke(info, method.getName());
-                testValues.put(descriptor.getName(), method.getName());
-            } else if (parameterType == boolean.class) {
+                if ("wireCrypt".equals(descriptor.getName())) {
+                    method.invoke(info, WireCrypt.REQUIRED.name());
+                    testValues.put(descriptor.getName(), WireCrypt.REQUIRED.name());
+                } else {
+                    method.invoke(info, method.getName());
+                    testValues.put(descriptor.getName(), method.getName());
+                }
+            } else if (parameterType == boolean.class || parameterType == Boolean.class) {
                 method.invoke(info, true);
                 testValues.put(descriptor.getName(), true);
             } else if (parameterType == WireCrypt.class) {
@@ -250,7 +258,7 @@ public class FbConnectionPropertiesTest {
         IConnectionProperties immutable = info.asImmutable();
         BeanInfo immutableBean = Introspector.getBeanInfo(FbImmutableConnectionProperties.class, Object.class);
         for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
-            if (Arrays.asList("attachObjectName").contains(descriptor.getName())) {
+            if (Arrays.asList("attachObjectName", "wireCryptAsEnum").contains(descriptor.getName())) {
                 continue;
             }
             if ("extraDatabaseParameters".equals(descriptor.getName())) {

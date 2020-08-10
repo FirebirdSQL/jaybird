@@ -22,51 +22,34 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng;
-
-import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
+package org.firebirdsql.jaybird.props;
 
 /**
- * Connection properties for a Firebird service attachment.
+ * Property names and aliases used by Jaybird.
+ * <p>
+ * In defiance of normal style rules for Java, the constants defined in this class use the same name as their value
+ * (if syntactically valid).
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 5
  */
-public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
+public final class PropertyNames {
 
-    String DEFAULT_SERVICE_NAME = "service_mgr";
+    public static final String user = "user";
+    public static final String password = "password";
+    public static final String roleName = "roleName";
+    public static final String charSet = "charSet";
+    public static final String encoding = "encoding";
+    public static final String socketBufferSize = "socketBufferSize";
+    public static final String soTimeout = "soTimeout";
+    public static final String connectTimeout = "connectTimeout";
+    public static final String wireCrypt = "wireCrypt";
+    public static final String dbCryptConfig = "dbCryptConfig";
+    public static final String authPlugins = "authPlugins";
+    public static final String wireCompression = "wireCompression";
 
-    /**
-     * Get the service name
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Service name
-     */
-    String getServiceName();
-
-    /**
-     * Set the service name.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if
-     * this method hasn't been called yet.
-     * </p>
-     *
-     * @param serviceName Service name
-     */
-    void setServiceName(String serviceName);
-
-    /**
-     * @return An immutable version of this instance as an implementation of {@link IServiceProperties}
-     */
-    @Override
-    IServiceProperties asImmutable();
-
-    /**
-     * @return A new, mutable, instance as an implementation of {@link IServiceProperties} with all properties copied.
-     */
-    @Override
-    IServiceProperties asNewMutable();
+    private PropertyNames() {
+        throw new AssertionError("no instances");
+    }
 }

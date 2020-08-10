@@ -139,56 +139,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
-    public String getUser() {
-        synchronized (lock) {
-            return connectionProperties.getUserName();
-        }
-    }
-
-    public void setUser(String user) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setUserName(user);
-        }
-    }
-
-    @Override
-    public String getPassword() {
-        synchronized (lock) {
-            return connectionProperties.getPassword();
-        }
-    }
-
-    @Override
-    public void setPassword(String password) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setPassword(password);
-        }
-    }
-
-    @Override
-    public String getRoleName() {
-        synchronized (lock) {
-            return connectionProperties.getRoleName();
-        }
-    }
-
-    @Override
-    public void setRoleName(String roleName) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setRoleName(roleName);
-        }
-    }
-
-    @Override
-    public final String getCharSet() {
-        synchronized (lock) {
-            return connectionProperties.getCharSet();
-        }
-    }
-
     /**
      * @param charSet
      *            Character set for the connection. Similar to
@@ -197,16 +147,10 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      */
     @Override
     public final void setCharSet(String charSet) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setCharSet(charSet);
-        }
-    }
-
-    @Override
-    public final String getEncoding() {
-        synchronized (lock) {
-            return connectionProperties.getEncoding();
         }
     }
 
@@ -217,6 +161,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      */
     @Override
     public final void setEncoding(String encoding) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setEncoding(encoding);
@@ -245,21 +190,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         setConnectTimeout(seconds);
     }
 
-    @Override
-    public int getConnectTimeout() {
-        synchronized (lock) {
-            return connectionProperties.getConnectTimeout();
-        }
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setConnectTimeout(connectTimeout);
-        }
-    }
-    
     @Deprecated
     @Override
     public String getDatabase() {
@@ -322,21 +252,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
 
     @Override
-    public int getSocketBufferSize() {
-        synchronized (lock) {
-            return connectionProperties.getSocketBufferSize();
-        }
-    }
-
-    @Override
-    public void setSocketBufferSize(int socketBufferSize) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setSocketBufferSize(socketBufferSize);
-        }
-    }
-
-    @Override
     public boolean isTimestampUsesLocalTimezone() {
         synchronized (lock) {
             return connectionProperties.isTimestampUsesLocalTimezone();
@@ -349,18 +264,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             checkNotStarted();
             connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
         }
-    }
-
-    @Deprecated
-    @Override
-    public String getUserName() {
-        return getUser();
-    }
-
-    @Deprecated
-    @Override
-    public void setUserName(String userName) {
-        setUser(userName);
     }
 
     @Override
@@ -461,21 +364,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
 
     @Override
-    public int getSoTimeout() {
-        synchronized (lock) {
-            return connectionProperties.getSoTimeout();
-        }
-    }
-
-    @Override
-    public void setSoTimeout(int soTimeout) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setSoTimeout(soTimeout);
-        }
-    }
-
-    @Override
     public boolean isUseFirebirdAutocommit() {
         synchronized (lock) {
             return connectionProperties.isUseFirebirdAutocommit();
@@ -487,51 +375,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
-        }
-    }
-
-    @Override
-    public String getWireCrypt() {
-        synchronized (lock) {
-            return connectionProperties.getWireCrypt();
-        }
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setWireCrypt(wireCrypt);
-        }
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        synchronized (lock) {
-            return connectionProperties.getDbCryptConfig();
-        }
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDbCryptConfig(dbCryptConfig);
-        }
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        synchronized (lock) {
-            return connectionProperties.getAuthPlugins();
-        }
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setAuthPlugins(authPlugins);
         }
     }
 
@@ -595,21 +438,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
-    @Override
-    public boolean isWireCompression() {
-        synchronized (lock) {
-            return connectionProperties.isWireCompression();
-        }
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setWireCompression(wireCompression);
-        }
-    }
-
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties
@@ -620,7 +448,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * Whitespace characters on the beginning of the string and between key and
      * value are ignored. No escaping is possible: "\n" is backslash-en, not
      * a new line mark.
-     * @see #setNonStandardProperty(String, String)
+     * @see #setProperty(String, String)
      */
     @Override
     public final void setNonStandardProperty(String propertyMapping) {
@@ -629,34 +457,66 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setNonStandardProperty(propertyMapping);
         }
     }
-    
+
     /**
      * Method to set properties which are not exposed through JavaBeans-style setters.
-     * 
+     *
      * @param key Name of the property (see Jaybird releasenotes)
      * @param value Value of the property
      * @see #setNonStandardProperty(String)
      */
     @Override
+    @Deprecated
     public final void setNonStandardProperty(String key, String value) {
+        // TODO Remove when logic in FBConnectionProperties rewritten
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setNonStandardProperty(key, value);
         }
     }
     
-    /**
-     * Method to get the value of properties which are not exposed through JavaBeans-style setters.
-     * 
-     * @param key Name of the property (see Jaybird releasenotes)
-     * @return Value of the property
-     * @see #setNonStandardProperty(String)
-     * @see #setNonStandardProperty(String, String)
-     */
     @Override
-    public final String getNonStandardProperty(String key) {
+    public String getProperty(String name) {
         synchronized (lock) {
-            return connectionProperties.getNonStandardProperty(key);
+            return connectionProperties.getProperty(name);
+        }
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setProperty(name, value);
+        }
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        synchronized (lock) {
+            return connectionProperties.getIntProperty(name);
+        }
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setIntProperty(name, value);
+        }
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        synchronized (lock) {
+            return connectionProperties.getBooleanProperty(name);
+        }
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        synchronized (lock) {
+            checkNotStarted();
+            connectionProperties.setBooleanProperty(name, value);
         }
     }
 
