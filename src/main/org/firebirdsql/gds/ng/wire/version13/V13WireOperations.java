@@ -40,6 +40,7 @@ import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ExceptionHelper;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
@@ -207,13 +208,12 @@ public class V13WireOperations extends V11WireOperations {
 
         if (!initializedEncryption
                 && getAttachProperties().getWireCrypt() == WireCrypt.REQUIRED) {
-            SQLException exception = new FbExceptionBuilder()
-                    .nonTransientException(ISCConstants.isc_wirecrypt_incompatible)
-                    .toFlatSQLException();
+            FbExceptionBuilder exceptionBuilder = new FbExceptionBuilder()
+                    .nonTransientException(ISCConstants.isc_wirecrypt_incompatible);
             if (chainBuilder.hasException()) {
-                exception.setNextException(chainBuilder.getException());
+                exceptionBuilder.cause(chainBuilder.getException());
             }
-            throw exception;
+            throw exceptionBuilder.toFlatSQLException();
         }
 
         if (chainBuilder.hasException()) {
@@ -221,9 +221,13 @@ public class V13WireOperations extends V11WireOperations {
                     ? "Wire encryption established, but some plugins failed; see other loglines for details"
                     : "No wire encryption established because of errors");
             SQLException current = chainBuilder.getException();
-            do {
-                log.warn("Encryption plugin failed", current);
-            } while ((current = current.getNextException()) != null);
+            log.warn("Encryption plugin failed; see debug level for stacktraces:\n"
+                    + ExceptionHelper.collectAllMessages(current));
+            if (log.isDebugEnabled()) {
+                do {
+                    log.debug("Encryption plugin failed", current);
+                } while ((current = current.getNextException()) != null);
+            }
         }
     }
 
