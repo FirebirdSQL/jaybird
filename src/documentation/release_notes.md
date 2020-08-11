@@ -254,6 +254,8 @@ The following has been changed or fixed since Jaybird 3.0.9:
     implementation details that might change in future versions. \
     This feature was backported from Jaybird 4.0.1.
 -   Fixed: Use of `isc_dpb_no_db_triggers` no longer logs a warning ([JDBC-628](http://tracker.firebirdsql.org/browse/JDBC-628))
+-   Fixed: First letter of JDBC escape was case-sensitive ([JDBC-632](http://tracker.firebirdsql.org/browse/JDBC-632)) \
+    This was a regression compared to 2.2.x.
 
 ### Known issues in Jaybird 3.0.10
 

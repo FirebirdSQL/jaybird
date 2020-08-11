@@ -183,6 +183,16 @@ public class TestFBEscapedParser {
         String parseResult = parser.parse(input);
         assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
     }
+
+    @Test
+    public void testCallEscape_caseInsensitive() throws Exception {
+        final FBEscapedParser parser = new FBEscapedParser(EscapeParserMode.USE_BUILT_IN);
+        final String input = "{CALL FUNCTION(?,?)}";
+        final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?)";
+
+        String parseResult = parser.parse(input);
+        assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
+    }
     
     @Test
     public void testQuestionmarkCallEscape() throws Exception {

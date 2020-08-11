@@ -410,12 +410,19 @@ public final class FBEscapedParser {
                 switch (inputChar) {
                 case '?': // start of {?= call ...}
                 case 'c': // start of {call ...}
+                case 'C':
                 case 'd': // start of {d ...}
+                case 'D':
                 case 't': // start of {t ...} or {ts ...}
+                case 'T':
                 case 'e': // start of {escape ...}
+                case 'E':
                 case 'f': // start of {fn ...}
+                case 'F':
                 case 'o': // start of {oj ...}
+                case 'O':
                 case 'l': // start of {limit ...}
+                case 'L':
                     return NORMAL_STATE;
                 default:
                     throw new FBSQLParseException("Unexpected first character inside JDBC escape: " + inputChar);
