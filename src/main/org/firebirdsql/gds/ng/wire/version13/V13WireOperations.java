@@ -218,8 +218,8 @@ public class V13WireOperations extends V11WireOperations {
 
         if (chainBuilder.hasException()) {
             log.warn(initializedEncryption
-                    ? "No wire encryption established because of errors"
-                    : "Wire encryption established, but some plugins failed; see other loglines for details");
+                    ? "Wire encryption established, but some plugins failed; see other loglines for details"
+                    : "No wire encryption established because of errors");
             SQLException current = chainBuilder.getException();
             do {
                 log.warn("Encryption plugin failed", current);
