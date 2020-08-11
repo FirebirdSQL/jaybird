@@ -793,9 +793,6 @@ public class FBConnectionTest {
                 rs1.next();
 
                 connection2.setNetworkTimeout(executor, 50);
-                // Ensure setting timeout is complete
-                executor.shutdown();
-                executor.awaitTermination(500, TimeUnit.MILLISECONDS);
                 long start = 0;
                 try (Statement statement2 = connection2.createStatement();
                      ResultSet rs2 = statement2.executeQuery("select id, colval from locking with lock")) {
