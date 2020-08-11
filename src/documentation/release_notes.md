@@ -54,6 +54,11 @@ The following has been changed or fixed since Jaybird 4.0.0
     `TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE` as a `ZonedDateTime`. \
     For `TIME WITH TIME ZONE`, the returned value is rebased on the current
     date.
+-   Fixed: `Connection.setNetworkTimeout` incorrectly used the provided
+    `Executor` to set the timeout ([JDBC-631](tracker.firebirdsql.org/browse/JDBC-631))) \ 
+    This caused a race condition where the timeout was possibly applied too
+    late, and when `connection.close()` was immediately after, this could
+    trigger a `NullPointerException` that would bubble up into the executor.
 
 Jaybird 4.0.0
 -------------

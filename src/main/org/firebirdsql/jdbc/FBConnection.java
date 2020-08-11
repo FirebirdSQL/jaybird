@@ -37,7 +37,6 @@ import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import javax.resource.ResourceException;
-import java.lang.ref.WeakReference;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -1249,31 +1248,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                     .forException(JaybirdErrorCodes.jb_invalidTimeout)
                     .toFlatSQLException();
         }
-        checkValidity();
-
-        executor.execute(new SetNetworkTimeoutCommand(this, milliseconds));
-    }
-
-    private static class SetNetworkTimeoutCommand implements Runnable {
-
-        private final WeakReference<FBConnection> connectionReference;
-        private final int timeoutMillis;
-
-        SetNetworkTimeoutCommand(FBConnection connection, int timeoutMillis) {
-            connectionReference = new WeakReference<>(connection);
-            this.timeoutMillis = timeoutMillis;
-        }
-
-        @Override
-        public void run() {
-            FBConnection connection = connectionReference.get();
-            if (connection != null) {
-                try {
-                    connection.getFbDatabase().setNetworkTimeout(timeoutMillis);
-                } catch (SQLException e) {
-                    log.error("Exception during asynchronous handling of setNetworkTimeout", e);
-                }
-            }
+        synchronized (getSynchronizationObject()) {
+            checkValidity();
+            getFbDatabase().setNetworkTimeout(milliseconds);
         }
     }
 
