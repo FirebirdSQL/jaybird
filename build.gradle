@@ -53,6 +53,7 @@ ext {
     junit_jupiter = '5.6.2'
     hamcrest = '2.2'
     jmock = '2.12.0'
+    assertj = '3.16.1'
 }
 
 dependencies {
@@ -63,6 +64,7 @@ dependencies {
 
     // Use JUnit Jupiter API for testing.
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
 
     // Support JUnit 4
@@ -72,6 +74,7 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
+    testImplementation "org.assertj:assertj-core:$assertj"
 
     testImplementation "org.jmock:jmock-junit4:$jmock"
     testImplementation "org.jmock:jmock-legacy:$jmock"
