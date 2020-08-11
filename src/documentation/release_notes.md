@@ -9,7 +9,7 @@ Jaybird 4.0.2
 
 The following has been changed or fixed since Jaybird 4.0.1
 
--   Fixed: First letter of JDBC escape was case-sensitive ([JDBC-632](http://tracker.firebirdsql.org/browse/JDBC-632)). \
+-   Fixed: First letter of JDBC escape was case-sensitive ([JDBC-632](http://tracker.firebirdsql.org/browse/JDBC-632)) \
     This was a regression compared to 2.2.x. Fix was also backported to 3.0.10.
 
 Jaybird 4.0.1
