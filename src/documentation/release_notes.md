@@ -12,7 +12,7 @@ The following has been changed or fixed since Jaybird 4.0.0
 -   Fixed: Changes to the transaction configuration (transaction parameter
     buffer configuration) of one connection are no longer propagated to other
     connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
-    This change introduce a binary incompatibility as method 
+    This change introduces a binary incompatibility as method 
     `setTransactionParameters(int, TransactionParameterBuffer)` in
     `FBManagedConnection` can now throw `ResourceException` where previously it
     did not. Under the assumption that most users of Jaybird are not directly
@@ -57,7 +57,7 @@ The following has been changed or fixed since Jaybird 4.0.0
 -   Fixed: `Connection.setNetworkTimeout` incorrectly used the provided
     `Executor` to set the timeout ([JDBC-631](tracker.firebirdsql.org/browse/JDBC-631))) \ 
     This caused a race condition where the timeout was possibly applied too
-    late, and when `connection.close()` was immediately after, this could
+    late, and when `connection.close()` was called immediately after, this could
     trigger a `NullPointerException` that would bubble up into the executor.
 
 Jaybird 4.0.0
