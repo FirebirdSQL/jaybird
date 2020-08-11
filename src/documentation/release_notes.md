@@ -26,9 +26,8 @@ The following has been changed or fixed since Jaybird 4.0.0
 -   Added: Support for type `INT128` (reported as JDBC type `NUMERIC`) ([JDBC-624](http://tracker.firebirdsql.org/browse/JDBC-624) \
     See also [Firebird 4 INT128 support](#firebird-4-int128-support).
 -   Added: A static utility method `FBDriver.normalizeProperties` which, given a
-    JDBC url and a `Properties` object, returns a `Map<String, String>`, returns
-    a map containing the merged properties normalized to common 
-    property name. ([JDBC-627](http://tracker.firebirdsql.org/browse/JDBC-627)) \
+    JDBC url and a `Properties` object, returns a `Map<String, String>`
+    containing the merged properties normalized to common property name. ([JDBC-627](http://tracker.firebirdsql.org/browse/JDBC-627)) \
     The current implementation normalizes known property names to the long-form
     `isc_dpb` name, and removes the `database` property. These are both 
     implementation details that might change in future versions. \
@@ -251,7 +250,7 @@ be sent to the Firebird-java mailing list or reported on the issue tracker
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.5, and
+Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.6, and
 a recent Firebird 4 snapshot build, but should also support other Firebird
 versions from 2.5 and up.
 
@@ -271,9 +270,9 @@ protocol. The compression is disabled by default.
 
 At the time of release of Jaybird 4, Firebird 4 was still in testing. As a
 result, support for Firebird 4 is tentative. There can be incompatibilities with
-features or changes after Firebird version 4.0.0.1803. Once Firebird 4 is
-released, incompatibilities or otherwise breaking changes will be addressed in
-a point release of Jaybird 4.
+features or changes after Firebird version 4.0.0.1803 (Jaybird 4.0.0) or 
+4.0.0.2143 (Jaybird 4.0.1). Once Firebird 4 is released, incompatibilities or
+otherwise breaking changes will be addressed in a point release of Jaybird 4.
 
 Jaybird 4 supports the protocol improvements of Firebird 4 for statement
 timeouts, but does not implement the new batch protocol.
