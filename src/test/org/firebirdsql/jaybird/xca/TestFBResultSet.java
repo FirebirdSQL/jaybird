@@ -234,9 +234,6 @@ public class TestFBResultSet extends TestXABase {
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
             FBLocalTransaction t = c.getLocalTransaction();
-            t.begin();
-            executeCreateTable(c, "DROP TABLE T1");
-            t.commit();
             Exception ex = null;
             t.begin();
             try {
