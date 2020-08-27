@@ -277,6 +277,14 @@ public abstract class FBField {
         // default behaviour is to do nothing.
     }
 
+    /**
+     * We need close or not? (Only optimization trick).
+     * @return
+     */
+    public boolean isNeedClose() {
+        return false;
+    }
+
     /*
      * All these methods simply throw an exception when invoked. All subclasses
      * should implement relevant methods with conversions.

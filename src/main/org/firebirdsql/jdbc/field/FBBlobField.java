@@ -68,6 +68,11 @@ class FBBlobField extends FBField implements FBFlushableField {
         }
     }
 
+    @Override
+    public boolean isNeedClose() {
+        return true; // optimization
+    }
+
     protected FirebirdBlob getBlobInternal() {
         if (blob != null) return blob;
         final byte[] bytes = getFieldData();
