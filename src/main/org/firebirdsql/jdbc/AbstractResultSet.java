@@ -345,15 +345,17 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
         wasNullValid = false;
 
+        // if there are no fields to close, then nothing to do
+        if (closeableFields.isEmpty())
+            return;
+
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         // close current fields, so that resources are freed.
-        if (closeableFields.size() > 0) {
-            for (final FBCloseableField field : closeableFields) {
-                try {
-                    field.close();
-                } catch (SQLException ex) {
-                    chain.append(ex);
-                }
+        for (final FBCloseableField field : closeableFields) {
+            try {
+                field.close();
+            } catch (SQLException ex) {
+                chain.append(ex);
             }
         }
 
