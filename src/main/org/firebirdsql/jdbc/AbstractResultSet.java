@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
@@ -33,6 +34,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +75,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     private SQLWarning firstWarning;
 
     private final FBField[] fields;
+    private final List<FBCloseableField> closeableFields = new ArrayList<>();
     private final Map<String, Integer> colNames;
 
     private final String cursorName;
@@ -128,7 +131,6 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                         .toFlatSQLException(SQLWarning.class));
                 rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
-
             cached = cached
                     || rsType != ResultSet.TYPE_FORWARD_ONLY
                     || metaDataQuery;
@@ -277,7 +279,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
                 }
             };
 
-            fields[i] = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
+            final FBField field = FBField.createField(rowDescriptor.getFieldDescriptor(i), dataProvider, gdsHelper, cached);
+
+            if (field instanceof FBCloseableField) {
+                closeableFields.add((FBCloseableField) field);
+            }
+
+            fields[i] = field;
         }
     }
 
@@ -337,9 +345,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
         // TODO See if we can apply completion reason logic (eg no need to close blob on commit)
         wasNullValid = false;
 
+        // if there are no fields to close, then nothing to do
+        if (closeableFields.isEmpty())
+            return;
+
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
         // close current fields, so that resources are freed.
-        for (FBField field : fields) {
+        for (final FBCloseableField field : closeableFields) {
             try {
                 field.close();
             } catch (SQLException ex) {

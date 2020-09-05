@@ -266,17 +266,6 @@ public abstract class FBField {
         return fieldDescriptor.getOriginalTableName();
     }
 
-    /**
-     * Close this field. This method tells field implementation to release all
-     * resources allocated when field methods were called.
-     * 
-     * @throws SQLException
-     *             if field cannot be closed.
-     */
-    public void close() throws SQLException {
-        // default behaviour is to do nothing.
-    }
-
     /*
      * All these methods simply throw an exception when invoked. All subclasses
      * should implement relevant methods with conversions.

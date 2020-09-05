@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-class FBBlobField extends FBField implements FBFlushableField {
+class FBBlobField extends FBField implements FBCloseableField, FBFlushableField {
 
     protected FirebirdBlob blob;
     private boolean blobExplicitNull;
