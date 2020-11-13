@@ -65,6 +65,11 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
                     return ArgumentType.IntSpb;
                 }
             }
+
+            @Override
+            public ArgumentType getSingleArgumentType(int tag) {
+                return ArgumentType.SingleTpb;
+            }
         };
 
         private final int spbVersion;

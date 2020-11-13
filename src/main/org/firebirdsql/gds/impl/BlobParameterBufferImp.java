@@ -66,5 +66,10 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements BlobP
         public final ArgumentType getIntegerArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
         }
+
+        @Override
+        public final ArgumentType getSingleArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
     }
 }

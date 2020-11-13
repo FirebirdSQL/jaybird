@@ -29,16 +29,24 @@ import java.io.OutputStream;
  */
 public final class SingleItem extends Argument {
 
-    public SingleItem(int item) {
+    private final ArgumentType argumentType;
+
+    public SingleItem(int item, ArgumentType argumentType) {
         super(item);
+        if (argumentType != ArgumentType.Wide && argumentType != ArgumentType.TraditionalDpb
+                && argumentType != ArgumentType.SingleTpb) {
+            throw new IllegalArgumentException("Invalid argument type: " + argumentType);
+        }
+        this.argumentType = argumentType;
     }
 
     public void writeTo(OutputStream outputStream) throws IOException {
         outputStream.write(getType());
+        argumentType.writeLength(0, outputStream);
     }
 
     public int getLength() {
-        return 1;
+        return 1 + argumentType.getLengthSize();
     }
 
     @Override

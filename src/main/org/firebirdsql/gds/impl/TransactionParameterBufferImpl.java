@@ -53,28 +53,33 @@ public final class TransactionParameterBufferImpl extends ParameterBufferBase im
         }
 
         @Override
-        public int getType() {
+        public final int getType() {
             return tpbVersion;
         }
 
         @Override
-        public void addPreamble(ParameterBuffer parameterBuffer) {
+        public final void addPreamble(ParameterBuffer parameterBuffer) {
             // Do nothing
         }
 
         @Override
-        public ArgumentType getStringArgumentType(int tag) {
+        public final ArgumentType getStringArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
         }
 
         @Override
-        public ArgumentType getByteArrayArgumentType(int tag) {
+        public final ArgumentType getByteArrayArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
         }
 
         @Override
-        public ArgumentType getIntegerArgumentType(int tag) {
+        public final ArgumentType getIntegerArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public final ArgumentType getSingleArgumentType(int tag) {
+            return ArgumentType.SingleTpb;
         }
     }
 }

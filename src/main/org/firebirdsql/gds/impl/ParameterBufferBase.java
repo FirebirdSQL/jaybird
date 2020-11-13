@@ -109,7 +109,7 @@ public abstract class ParameterBufferBase implements ParameterBuffer, Serializab
 
     @Override
     public final void addArgument(int argumentType) {
-        getArgumentsList().add(new SingleItem(argumentType));
+        getArgumentsList().add(new SingleItem(argumentType, parameterBufferMetaData.getSingleArgumentType(argumentType)));
     }
 
     @Override
