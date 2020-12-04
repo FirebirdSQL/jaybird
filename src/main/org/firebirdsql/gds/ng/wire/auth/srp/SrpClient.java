@@ -81,7 +81,10 @@ public final class SrpClient {
     }
 
     private static byte[] toBigByteArray(BigInteger n) {
-        byte[] b = n.toByteArray();
+        return stripLeadingZeroes(n.toByteArray());
+    }
+
+    private static byte[] stripLeadingZeroes(byte[] b) {
         if (b[0] != 0) {
             return b;
         }
@@ -200,7 +203,7 @@ public final class SrpClient {
         final BigInteger n2 = fromBigByteArray(sha1(toBigByteArray(g)));
         final byte[] M = clientProofHash(
                 toBigByteArray(n1.modPow(n2, N)),
-                sha1(user.getBytes(StandardCharsets.UTF_8)),
+                stripLeadingZeroes(sha1(user.getBytes(StandardCharsets.UTF_8))),
                 salt,
                 toBigByteArray(publicKey),
                 toBigByteArray(serverPublicKey),
