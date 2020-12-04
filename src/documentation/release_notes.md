@@ -256,6 +256,7 @@ The following has been changed or fixed since Jaybird 3.0.9:
 -   Fixed: Use of `isc_dpb_no_db_triggers` no longer logs a warning ([JDBC-628](http://tracker.firebirdsql.org/browse/JDBC-628))
 -   Fixed: First letter of JDBC escape was case-sensitive ([JDBC-632](http://tracker.firebirdsql.org/browse/JDBC-632)) \
     This was a regression compared to 2.2.x.
+-   Fixed: Some usernames cannot authenticate using SRP ([JDBC-635](http://tracker.firebirdsql.org/browse/JDBC-635))
 
 ### Known issues in Jaybird 3.0.10
 

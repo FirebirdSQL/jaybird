@@ -437,5 +437,27 @@ public class TestFBDriver {
         FBDriver.normalizeProperties(url, props);
     }
 
+    /**
+     * Test Srp authentication with an account (DAVIDS) that produces a hash with leading zero.
+     * <p>
+     * See <a href="http://tracker.firebirdsql.org/browse/JDBC-635">JDBC-635</a>.
+     * </p>
+     */
+    @Test
+    public void testProblematicUserAccount_DAVIDS() throws Exception {
+        String username = "DAVIDS";
+        String password = "aaa123";
+        databaseUserRule.createUser(username, password, "Srp");
+
+        Properties connectionProperties = getDefaultPropertiesForConnection();
+        connectionProperties.setProperty("user", username);
+        connectionProperties.setProperty("password", password);
+        connectionProperties.setProperty("authPlugins", "Srp256");
+
+        try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties)) {
+            assertTrue(connection.isValid(1000));
+        }
+    }
+
 }
 
