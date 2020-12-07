@@ -373,11 +373,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     void addServerKeys(byte[] serverKeys) throws SQLException {
         final ClumpletReader newKeys = new ClumpletReader(ClumpletReader.Kind.UnTagged, serverKeys);
         for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext()) {
-            if (newKeys.getClumpTag() == TAG_KNOWN_PLUGINS) {
+            int currentTag = newKeys.getClumpTag();
+            if (currentTag == TAG_KNOWN_PLUGINS || currentTag == TAG_PLUGIN_SPECIFIC) {
                 continue;
             }
 
-            int currentTag = newKeys.getClumpTag();
             if (currentTag != TAG_KEY_TYPE) {
                 throw new SQLException("Unexpected tag type: " + currentTag);
             }
