@@ -419,6 +419,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 
                 String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
                 knownServerKeys.add(new KnownServerKey(keyType, keyPlugins));
+                break;
             }
             default:
                 log.debug("Ignored unexpected tag type: " + currentTag);
