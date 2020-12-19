@@ -437,7 +437,6 @@ public final class ClientAuthBlock {
         return Collections.unmodifiableMap(pluginMapping);
     }
 
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static List<AuthenticationPluginSpi> getAvailableAuthenticationPluginSpis() {
         try {
             ServiceLoader<AuthenticationPluginSpi> pluginLoader =
@@ -445,13 +444,22 @@ public final class ClientAuthBlock {
             List<AuthenticationPluginSpi> pluginList = new ArrayList<>();
             // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
             Iterator<AuthenticationPluginSpi> pluginIterator = pluginLoader.iterator();
-            while (pluginIterator.hasNext()) {
+            int retry = 0;
+            while (retry < 2) {
                 try {
-                    AuthenticationPluginSpi plugin = pluginIterator.next();
-                    pluginList.add(plugin);
-                } catch (Exception | ServiceConfigurationError e) {
-                    log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
-                    log.debug("Failed to load plugin with exception", e);
+                    while (pluginIterator.hasNext()) {
+                        try {
+                            AuthenticationPluginSpi plugin = pluginIterator.next();
+                            pluginList.add(plugin);
+                        } catch (Exception | ServiceConfigurationError e) {
+                            log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
+                            log.debug("Failed to load plugin with exception", e);
+                        }
+                    }
+                    break;
+                } catch (ServiceConfigurationError e) {
+                    log.error("Error finding next AuthenticationPluginSpi", e);
+                    retry++;
                 }
             }
 
@@ -461,8 +469,7 @@ public final class ClientAuthBlock {
                 log.warn("No authentication plugins loaded through service loader, falling back to default list");
             }
         } catch (Exception e) {
-            String message =
-                    "Unable to load authentication plugins through ServiceLoader, using fallback list";
+            String message = "Unable to load authentication plugins through ServiceLoader, using fallback list";
             log.warn(message + ": " + e + "; see debug level for stacktrace");
             log.debug(message, e);
         }
