@@ -113,17 +113,25 @@ public class GDSFactory {
      * @param classLoader
      *         instance of {@link ClassLoader}.
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
         ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
         // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
-        while (pluginIterator.hasNext()) {
+        int retry = 0;
+        while (retry < 2) {
             try {
-                GDSFactoryPlugin plugin = pluginIterator.next();
-                registerPlugin(plugin);
-            } catch (Exception | ServiceConfigurationError e) {
-                log.error("Can't register plugin (skipping): " + e.getMessage(), e);
+                while (pluginIterator.hasNext()) {
+                    try {
+                        GDSFactoryPlugin plugin = pluginIterator.next();
+                        registerPlugin(plugin);
+                    } catch (Exception | ServiceConfigurationError e) {
+                        log.error("Can't register plugin (skipping): " + e.getMessage(), e);
+                    }
+                }
+                break;
+            } catch (ServiceConfigurationError e) {
+                log.error("Error finding next GDSFactoryPlugin", e);
+                retry++;
             }
         }
     }

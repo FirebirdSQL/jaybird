@@ -257,6 +257,8 @@ The following has been changed or fixed since Jaybird 3.0.9:
 -   Fixed: First letter of JDBC escape was case-sensitive ([JDBC-632](http://tracker.firebirdsql.org/browse/JDBC-632)) \
     This was a regression compared to 2.2.x.
 -   Fixed: Some usernames cannot authenticate using SRP ([JDBC-635](http://tracker.firebirdsql.org/browse/JDBC-635))
+-   Fixed: `ServiceConfigurationError` while loading plugins could prevent
+    Jaybird from loading ([JDBC-636](http://tracker.firebirdsql.org/browse/JDBC-636))
 
 ### Known issues in Jaybird 3.0.10
 

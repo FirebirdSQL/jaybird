@@ -49,15 +49,21 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                     ServiceLoader.load(ProtocolDescriptor.class, classLoader);
             // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
             Iterator<ProtocolDescriptor> descriptorIterator = descriptors.iterator();
-            //noinspection WhileLoopReplaceableByForEach
-            while (descriptorIterator.hasNext()) {
+            int retry = 0;
+            while (retry < 2) {
                 try {
-                    ProtocolDescriptor protocol = descriptorIterator.next();
-                    if (!supportedProtocols.contains(protocol)) {
-                        supportedProtocols.add(protocol);
+                    while (descriptorIterator.hasNext()) {
+                        try {
+                            ProtocolDescriptor protocol = descriptorIterator.next();
+                            supportedProtocols.add(protocol);
+                        } catch (Exception | ServiceConfigurationError e) {
+                            log.error("Could not load protocol descriptor (skipping): " + e.getMessage(), e);
+                        }
                     }
-                } catch (Exception | ServiceConfigurationError e) {
-                    log.error("Could not load protocol descriptor (skipping): " + e.getMessage(), e);
+                    break;
+                } catch (ServiceConfigurationError e) {
+                    log.error("Error finding next ProtocolDescriptor", e);
+                    retry++;
                 }
             }
         }
