@@ -58,12 +58,12 @@ Upload according to above link (only works for releases, not for snapshots)
 Step 3b (alternative; useful for snapshots)
 Sign and deploy jar-files (replace paths, url and repositoryId as necessary; example deploys to snapshot repository)
 Java 7:
-mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.0.java7-SNAPSHOT.pom -Dfile=jaybird-4.0.0.java7-SNAPSHOT.jar -Dsources=jaybird-4.0.0.java7-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.0.java7-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.2.java7-SNAPSHOT.pom -Dfile=jaybird-4.0.2.java7-SNAPSHOT.jar -Dsources=jaybird-4.0.2.java7-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.2.java7-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
 Java 8:
-mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.0.java8-SNAPSHOT.pom -Dfile=jaybird-4.0.0.java8-SNAPSHOT.jar -Dsources=jaybird-4.0.0.java8-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.0.java8-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
-mvn gpg:sign-and-deploy-file -DpomFile=jaybird-jdk18-4.0.0.java7-SNAPSHOT.pom -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.2.java8-SNAPSHOT.pom -Dfile=jaybird-4.0.2.java8-SNAPSHOT.jar -Dsources=jaybird-4.0.2.java8-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.2.java8-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=jaybird-jdk18-4.0.2.java8-SNAPSHOT.pom -Dfile=jaybird-jdk18-4.0.2.java8-SNAPSHOT.pom -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
 Java 11:
-mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.0.java11-SNAPSHOT.pom -Dfile=jaybird-4.0.0.java11-SNAPSHOT.jar -Dsources=jaybird-4.0.0.java11-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.0.java11-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
+mvn gpg:sign-and-deploy-file -DpomFile=jaybird-4.0.2.java11-SNAPSHOT.pom -Dfile=jaybird-4.0.2.java11-SNAPSHOT.jar -Dsources=jaybird-4.0.2.java11-SNAPSHOT-sources.jar -Djavadoc=jaybird-4.0.2.java11-SNAPSHOT-javadoc.jar -Durl=https://oss.sonatype.org/content/repositories/snapshots -DrepositoryId=sonatype-nexus-snapshots
 
 NOTE: When deploying a snapshot, signing is optional
 
