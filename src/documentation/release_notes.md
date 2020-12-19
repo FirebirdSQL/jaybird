@@ -13,6 +13,9 @@ The following has been changed or fixed since Jaybird 4.0.1
     This was a regression compared to 2.2.x. Fix was also backported to 3.0.10.
 -   Fixed: Some usernames cannot authenticate using SRP ([JDBC-635](http://tracker.firebirdsql.org/browse/JDBC-635)) \
     Fix was also backported to 3.0.10.
+-   Fixed: `ServiceConfigurationError` while loading plugins could prevent
+    Jaybird from loading ([JDBC-636](http://tracker.firebirdsql.org/browse/JDBC-636)) \
+    Fix was also backported to 3.0.10.
 
 Jaybird 4.0.1
 -------------

@@ -333,7 +333,7 @@ public final class EncodingFactory implements IEncodingFactory {
         return (T) coder;
     }
 
-    @SuppressWarnings({ "unchecked", "JavaReflectionMemberAccess" })
+    @SuppressWarnings("unchecked")
     protected static <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass,
             IEncodingFactory encodingFactory) {
         // Avoid reflection if we can:
@@ -369,21 +369,29 @@ public final class EncodingFactory implements IEncodingFactory {
      *
      * @see EncodingSet
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static NavigableSet<EncodingSet> loadEncodingSets() {
         final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
         // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
         // Load the encoding sets and populate the TreeMap
-        while (encodingSetIterator.hasNext()) {
+        int retry = 0;
+        while (retry < 2) {
             try {
-                final EncodingSet encodingSet = encodingSetIterator.next();
-                encodingSets.add(encodingSet);
-            } catch (Exception | ServiceConfigurationError e) {
-                String message = "Could not load encoding set (skipping)";
-                log.error(message + ": " + e + "; see debug level for stacktrace");
-                log.debug(message, e);
+                while (encodingSetIterator.hasNext()) {
+                    try {
+                        EncodingSet encodingSet = encodingSetIterator.next();
+                        encodingSets.add(encodingSet);
+                    } catch (Exception | ServiceConfigurationError e) {
+                        String message = "Could not load encoding set (skipping)";
+                        log.error(message + ": " + e + "; see debug level for stacktrace");
+                        log.debug(message, e);
+                    }
+                }
+                break;
+            } catch (ServiceConfigurationError e) {
+                log.error("Error finding next EncodingSet", e);
+                retry++;
             }
         }
         return encodingSets;

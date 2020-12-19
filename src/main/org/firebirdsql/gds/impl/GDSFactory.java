@@ -42,7 +42,7 @@ import java.util.Map.Entry;
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
 
     /**
      * Class for string comparison in the descendant order. This effectively
@@ -115,19 +115,27 @@ public class GDSFactory {
      * @param classLoader
      *         instance of {@link ClassLoader}.
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
         ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
         // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
-        while (pluginIterator.hasNext()) {
+        int retry = 0;
+        while (retry < 2) {
             try {
-                GDSFactoryPlugin plugin = pluginIterator.next();
-                registerPlugin(plugin);
-            } catch (Exception | ServiceConfigurationError e) {
-                String message = "Can't register plugin (skipping)";
-                log.error(message + ": " + e + "; see debug level for stacktrace");
-                log.debug(message, e);
+                while (pluginIterator.hasNext()) {
+                    try {
+                        GDSFactoryPlugin plugin = pluginIterator.next();
+                        registerPlugin(plugin);
+                    } catch (Exception | ServiceConfigurationError e) {
+                        String message = "Can't register plugin (skipping)";
+                        log.error(message + ": " + e + "; see debug level for stacktrace");
+                        log.debug(message, e);
+                    }
+                }
+                break;
+            } catch (ServiceConfigurationError e) {
+                log.error("Error finding next GDSFactoryPlugin", e);
+                retry++;
             }
         }
     }
