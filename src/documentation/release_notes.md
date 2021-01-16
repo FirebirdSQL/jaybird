@@ -19,7 +19,7 @@ Known issues
 Support
 =======
 
-If you need support with Jaybird, join the [Firebird-Java Google Group](https://groups.google.com/d/forum/firebird-java)
+If you need support with Jaybird, join the [Firebird-Java Google Group](https://groups.google.com/g/firebird-java)
 and mailing list. You can subscribe by sending an email to [firebird-java+subscribe@googlegroups.com](mailto:firebird-java+subscribe@googlegroups.com).
 
 Looking for professional support of Jaybird? Jaybird is now part of the [Tidelift subscription](https://tidelift.com/subscription/pkg/maven-org-firebirdsql-jdbc-jaybird?utm_source=maven-org-firebirdsql-jdbc-jaybird&utm_medium=referral&utm_campaign=docs).
