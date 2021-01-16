@@ -256,10 +256,16 @@
             <javaversion exactly="1.7"/>
         </condition>
         <condition property="javadoc.additionalparam" value="-Xdoclint:none">
-            <javaversion exactly="1.8"/>
+            <or>
+                <javaversion exactly="1.8"/>
+                <javaversion atleast="13"/>
+            </or>
         </condition>
         <condition property="javadoc.additionalparam" value="-Xdoclint:none --no-module-directories">
-            <javaversion atleast="9"/>
+            <and>
+                <javaversion atleast="9"/>
+                <not><javaversion atleast="13"/></not>
+            </and>
         </condition>
 
     </target>
