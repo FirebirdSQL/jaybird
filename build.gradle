@@ -7,7 +7,7 @@ import org.apache.tools.ant.filters.*
   - -PbuildProfile=java8 or
     not specified or unknown value : Java 8  (supported)
   - -PbuildProfile=java11          : Java 11 (supported)
-  - -PbuildProfile=java14          : Java 14 (for compatibility testing only)
+  - -PbuildProfile=java15          : Java 15 (for compatibility testing only)
 
   Uploading archives:
 
