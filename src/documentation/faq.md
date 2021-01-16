@@ -25,7 +25,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8</version>
+    <version>4.0.1.java8</version>
 </dependency>
 ~~~
 
@@ -47,7 +47,7 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.2.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
@@ -59,7 +59,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8</version>
+    <version>4.0.2.java8</version>
 </dependency>
 ~~~
 
@@ -71,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.0.java8</version>
+    <version>4.0.2.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -108,7 +108,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
-Version: `3.0.8`
+Version: `3.0.10`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -119,7 +119,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.8</version>
+    <version>3.0.10</version>
 </dependency>
 ~~~
 
@@ -131,7 +131,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.8</version>
+    <version>3.0.10</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -162,7 +162,7 @@ explicitly include JNA 4.4.0 as a dependency:
 
 Jaybird 2.2 is end-of-life. We recommend upgrading to Jaybird 4.
 
-Jaybird 2.2 is available on maven, with a separate artifact
+Jaybird 2.2 is available on Maven, with a separate artifact
 for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
@@ -232,7 +232,7 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 4 supports Java 7, 8, 11 and 13. Support for Java 9 and higher is 
+Jaybird 4 supports Java 7, 8, 11 and 15. Support for Java 9 and higher is 
 limited to the latest LTS and current latest release, but in practice Jaybird
 should work on all Java 9+ versions.
 
@@ -269,10 +269,10 @@ Jaybird 4 supports Firebird version 2.5 and higher, and introduces support for
 Firebird 4 types `DECLOAT`, extended precision of `NUMERIC` and `DECIMAL`, and 
 time zone types (`TIME WITH TIME ZONE` and `TIMESTAMP WITH TIME ZONE`).
 
-Jaybird 3.0 supports Firebird versions 2.0 and higher. Support for Firebird 4 is
+Jaybird 3 supports Firebird versions 2.0 and higher. Support for Firebird 4 is
 limited to the Firebird 3 feature set.
 
-Jaybird 3.0 is the last version to support Firebird 2.0 and 2.1. Future versions
+Jaybird 3 is the last version to support Firebird 2.0 and 2.1. Future versions
 of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
@@ -298,7 +298,7 @@ Where to get more information on Jaybird
 Apart from this FAQ, you can get additional information from:
 
 * [Jaybird wiki](https://github.com/FirebirdSQL/jaybird/wiki/)
-* [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html)
+* [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html) (HTML, [PDF version](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf))
 (covers Jaybird 2.2 and higher, work in progress)
 * [Jaybird 2.1 JDBC driver - Java Programmers Manual](https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
 * [Firebird Website: Development, JDBC Driver](https://www.firebirdsql.org/en/devel-jdbc-driver/)
@@ -315,7 +315,7 @@ Where to get help
 *   On [Stack Overflow](https://stackoverflow.com/), please tag your questions
     with *jaybird* and *firebird*
     
-*   The [Firebird-Java group](https://groups.google.com/d/forum/firebird-java) and
+*   The [Firebird-Java group](https://groups.google.com/g/firebird-java) and
     corresponding mailing list firebird-java@googlegroups.com
 
     You can subscribe to the mailing list by sending an email to
@@ -345,7 +345,7 @@ There are several ways you can contribute to Jaybird or Firebird in general:
 Reporting Bugs
 --------------
 
-The developers follow the [firebird-java Google Group](https://groups.google.com/d/forum/firebird-java).
+The developers follow the [firebird-java Google Group](https://groups.google.com/g/firebird-java).
 Join the list and post information about suspected bugs. List members may be
 able to help out to determine if it is an actual bug, provide a workaround and
 get you going again, whereas bug fixes might take a while.
@@ -445,9 +445,10 @@ Jaybird 4 and higher also support:
     jdbc:firebirdsql:embedded:<database>
 
 Similar to the Firebird client library, however `fbembed.dll` on Windows and
-`libfbembed.so` on Linux are used. Requires correctly installed and configured
-Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native
-library, or - for Jaybird 3.0 - the JNA jar file.
+`libfbembed.so` on Linux are used, falling back to `fbclient.dll`/`libfbclient.so`
+under the assumption it provides Embedded functionality. Requires correctly
+installed and configured Firebird embedded library and - for Jaybird 2.2 or
+earlier - the Jaybird native  library, or - for Jaybird 3.0 - the JNA jar file.
 
 Jaybird 4 and higher also support:
 
@@ -466,8 +467,8 @@ Jaybird provides two connection properties to specify the connection character s
 
 -   `encoding` with a Firebird character set name (alias: `lc_ctype`)
 
-    The Firebird character set name - with the exception of `NONE` must map to
-    an equivalent Java character set.
+    The Firebird character set name - except `NONE` - must map to an equivalent
+    Java character set.
 
 For most applications, use only one of these two properties.
 
@@ -499,7 +500,7 @@ the database is used from different locales.
 
 When used as a connection character set, Jaybird handles `NONE` as follows:
 
-#### Jaybird 3.0 {#none-jaybird3}
+#### Jaybird 3.0 and higher {#none-jaybird3}
 <!-- For GitHub markdown compatibility -->
 <a href="none-jaybird3"></a>
 
@@ -540,7 +541,7 @@ was the default behavior in Jaybird 3.0.0 and 3.0.1).
 
 ### How can I solve the error "Connection rejected: No connection character set specified"
 
-If no character set has been set, Jaybird 3.0 will reject the connection with 
+If no character set has been set, Jaybird 3 will reject the connection with 
 an `SQLNonTransientConnectionException` with message 
 _"Connection rejected: No connection character set specified (property lc_ctype,
 encoding, charSet or localEncoding). Please specify a connection character set 
@@ -586,11 +587,11 @@ How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0
 Firebird 3.0.2 adds support for "TCP Loopback Fast Path" (`SIO_LOOPBACK_FAST_PATH` 
 socket option). This is available in Windows 8 / Windows Server 2012 and higher.
 This feature enables performance optimizations when connecting through 
-localhost (127.0.01 / ::1). It requires support on both client and server side.
+localhost (127.0.0.1 / ::1). It requires support on both client and server side.
 
 Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, 
 it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` 
-with value `true` (eg specify `-Djdk.net.useFastTcpLoopback=true` in your Java 
+with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java 
 commandline).
   
 Unfortunately, Java only has an 'all-or-nothing' support for the "TCP Loopback 
@@ -635,9 +636,9 @@ specified connection property `wireCrypt=required` while Firebird is set to
 In general this error means that Jaybird requested a connection with properties 
 not supported by Firebird. It can have other causes than described below.
 
-#### Cause: user name or password is null ####
+#### Cause: username or password is null ####
 
-With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving user name 
+With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving username 
 or password null will lead to Jaybird not trying any authentication plugin, and
 as a result, Firebird will reject the connection.
 
@@ -674,7 +675,7 @@ Enable `Legacy_Auth` (in `firebird.conf`) by adding this value to the property
 `AuthServer`, for example: `AuthServer = Srp, Legacy_Auth`.
 
 With Jaybird 4 and higher this can also mean that none of the default 
-authentication plugins or those specified using connection property 
+authentication plugins, or those specified using connection property 
 `authPlugins`, are listed in the `AuthServer` setting. Either revise the
 Firebird configuration, or explicitly configure connection property `authPlugins`
 with authentication plugins that are configured in Firebird.
@@ -817,8 +818,8 @@ the connection pooling provided by the application server using the
 If you develop standalone applications, or you use an application server without
 connection pooling, we suggest you use third-party libraries like:
 
-* [HikariCP](http://brettwooldridge.github.io/HikariCP/)
-* [c3p0](http://www.mchange.com/projects/c3p0/)
+* [HikariCP](https://github.com/brettwooldridge/HikariCP)
+* [c3p0](https://www.mchange.com/projects/c3p0/)
 * [Apache DBCP](http://commons.apache.org/proper/commons-dbcp/)
 
 Compatibility notes
