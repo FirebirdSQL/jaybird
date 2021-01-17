@@ -445,6 +445,7 @@ public class TestFBDriver {
      */
     @Test
     public void testProblematicUserAccount_DAVIDS() throws Exception {
+        assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
         String username = "DAVIDS";
         String password = "aaa123";
         databaseUserRule.createUser(username, password, "Srp");
