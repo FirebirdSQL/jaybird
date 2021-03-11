@@ -29,6 +29,7 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.jna.JnaStatement;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.After;
@@ -37,25 +38,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLNonTransientException;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.*;
 
 /**
  * Generic tests for FbStatement.
@@ -145,7 +139,7 @@ public abstract class AbstractStatementTest {
 
     @Before
     public final void setUp() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
+        try (Connection con = getConnectionViaDriverManager()) {
             DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE);
             DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE);
             DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
@@ -264,7 +258,7 @@ public abstract class AbstractStatementTest {
         RowValue rowValue = RowValue.of(
                 coder.encodeShort(3),  // smallint = 3 (id of UNICODE_FSS)
                 coder.encodeShort(1)); // smallint = 1 (single byte character sets)
-        
+
         statement.execute(rowValue);
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
@@ -488,7 +482,7 @@ public abstract class AbstractStatementTest {
         RowValue rowValue = RowValue.of(
                 db.getDatatypeCoder().encodeInt(4096),
                 db.getEncoding().encodeToCharset("test"));
-        
+
         statement.execute(rowValue);
 
         assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
@@ -780,7 +774,7 @@ public abstract class AbstractStatementTest {
         String tableName = generateIdentifier('A', 63);
         String column1 = generateIdentifier('B', 63);
         String column2 = generateIdentifier('C', 63);
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
+        try (Connection con = getConnectionViaDriverManager()) {
             DdlHelper.executeCreateTable(con,
                     "create table " + tableName + " (" + column1 + " varchar(10) character set UTF8, " + column2 + " varchar(20) character set UTF8)");
         }
@@ -848,6 +842,38 @@ public abstract class AbstractStatementTest {
         allocateStatement();
 
         assertEquals(0, statement.getTimeout());
+    }
+
+    @Test
+    public void testVerifyUnprepare() throws Exception {
+        assumeTrue("Test requires support for statement unprepare", supportInfoFor(db).supportsStatementUnprepare());
+
+        allocateStatement();
+        String statementText = "SELECT * FROM RDB$DATABASE";
+        statement.prepare(statementText);
+
+        try (Connection connection = getConnectionViaDriverManager();
+             PreparedStatement pstmt = connection.prepareStatement(
+                     "select count(*) from mon$statements "
+                             + "where mon$attachment_id <> current_connection and mon$sql_text = ?")) {
+            pstmt.setString(1, statementText);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                assertTrue("Expected a row", rs.next());
+                assertEquals("Expected prepared statement", 1, rs.getInt(1));
+            }
+
+            statement.unprepare();
+
+            if (statement instanceof JnaStatement) {
+                // force free packet to be sent (fbclient delays sending free packet until other network operation)
+                db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_end }, 10);
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                assertTrue("Expected a row", rs.next());
+                assertEquals("Expected no prepared statement", 0, rs.getInt(1));
+            }
+        }
     }
 
     private FbTransaction getTransaction() throws SQLException {

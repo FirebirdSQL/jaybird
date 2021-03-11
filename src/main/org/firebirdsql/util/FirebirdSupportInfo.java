@@ -562,6 +562,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports statement unprepare ({@code DSQL_unprepare})
+     */
+    public boolean supportsStatementUnprepare() {
+        return isVersionEqualOrAbove(2, 5);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance
