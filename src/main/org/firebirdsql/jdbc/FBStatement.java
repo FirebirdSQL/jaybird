@@ -36,7 +36,7 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
  * Implementation of {@link Statement}.
- * 
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -55,7 +55,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected final FBObjectListener.StatementListener statementListener;
 
     protected FbStatement fbStatement;
-    
+
     //The normally retrieved result set. (no autocommit, not a cached rs).
     private FBResultSet currentRs;
 
@@ -76,7 +76,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
     protected final List<RowValue> specialResult = new LinkedList<>();
 
-    protected int maxRows;	 
+    protected int maxRows;
     protected int fetchSize;
     private int maxFieldSize;
     private String cursorName;
@@ -85,7 +85,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private final int rsType;
     private final int rsHoldability;
     private int fetchDirection = ResultSet.FETCH_FORWARD;
-    
+
     private final FBObjectListener.ResultSetListener resultSetListener = new RSListener();
     protected final FBConnection connection;
 
@@ -93,18 +93,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      * Listener for the result sets.
      */
     private class RSListener implements FBObjectListener.ResultSetListener {
-        
+
         /**
          * Notify that result set was closed. This method cleans the result
          * set reference, so that call to {@link #close()} method will not cause
          * exception.
-         * 
+         *
          * @param rs result set that was closed.
          */
         @Override
         public void resultSetClosed(ResultSet rs) throws SQLException {
             currentRs = null;
-            
+
             // notify listener that statement is completed.
             notifyStatementCompleted();
             if (closeOnCompletion) {
@@ -114,20 +114,20 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
         @Override
         public void allRowsFetched(ResultSet rs) throws SQLException {
-            
-            /* 
+
+            /*
              * According to the JDBC 3.0 specification (p.62) the result set
-             * is closed in the autocommit mode if one of the following occurs: 
-             * 
+             * is closed in the autocommit mode if one of the following occurs:
+             *
              * - all of the rows have been retrieved
              * - the associated Statement object is re-executed
              * - another Statement object is executed on the same connection
              */
-            
+
             // according to the specification we close the result set and 
             // generate the "resultSetClosed" event, that in turn generates
             // the "statementCompleted" event
-            
+
             if (connection != null && connection.getAutoCommit())
                 rs.close();
         }
@@ -146,24 +146,24 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected FBStatement(GDSHelper c, int rsType, int rsConcurrency, int rsHoldability, FBObjectListener.StatementListener statementListener) throws SQLException {
         this.gdsHelper = c;
         syncObject = c.getSynchronizationObject();
-        
+
         this.rsConcurrency = rsConcurrency;
         this.rsType = rsType;
         this.rsHoldability = rsHoldability;
-        
+
         this.statementListener = statementListener;
-        
+
         // TODO Find out if connection is actually ever null, because some parts of the code expect it not to be null
         this.connection = statementListener != null ? statementListener.getConnection() : null;
-        
+
         closed = false;
     }
-    
+
     String getCursorName() {
         return cursorName;
     }
 
-    private static Set<StatementState> INVALID_STATEMENT_STATES = EnumSet.of(
+    private static final Set<StatementState> INVALID_STATEMENT_STATES = EnumSet.of(
             StatementState.ERROR, StatementState.CLOSING, StatementState.CLOSED);
 
     @Override
@@ -185,16 +185,16 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             super.finalize();
         }
     }
-    
+
     public void completeStatement() throws SQLException {
         completeStatement(CompletionReason.OTHER);
     }
-    
+
     public void completeStatement(CompletionReason reason) throws SQLException {
         if (currentRs != null && (reason != CompletionReason.COMMIT || currentRs.getHoldability() == ResultSet.CLOSE_CURSORS_AT_COMMIT)) {
             closeResultSet(false, reason);
         }
-        
+
         if (!completed)
             notifyStatementCompleted();
     }
@@ -217,7 +217,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected void notifyStatementStarted() throws SQLException {
         notifyStatementStarted(true);
     }
-    
+
     protected void notifyStatementStarted(boolean closeResultSet) throws SQLException {
         if (closeResultSet)
             closeResultSet(false);
@@ -234,7 +234,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected void notifyStatementCompleted() throws SQLException {
         notifyStatementCompleted(true);
     }
-    
+
     protected void notifyStatementCompleted(boolean success) throws SQLException {
         completed = true;
         statementListener.statementCompleted(this, success);
@@ -330,12 +330,12 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public void close() throws  SQLException {
         close(true);
     }
-    
+
     void close(boolean ignoreAlreadyClosed) throws SQLException {
-        if (isClosed()) { 
+        if (isClosed()) {
             if (ignoreAlreadyClosed)
                 return;
-            
+
             throw new FBSQLException("This statement is already closed.");
         }
 
@@ -350,8 +350,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     }
                 } finally {
                     fbStatement = null;
+                    batchList = null;
                 }
-            } 
+            }
         }
 
         closed = true;
@@ -611,7 +612,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
         boolean closeResultSet = mode == Statement.CLOSE_ALL_RESULTS
                 || mode == Statement.CLOSE_CURRENT_RESULT;
-        
+
         if (currentStatementResult == StatementResult.RESULT_SET && closeResultSet) {
             closeResultSet(true);
         }
@@ -677,11 +678,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     @Override
     public void addBatch(String sql) throws  SQLException {
+        checkValidity();
         batchList.add(sql);
     }
 
     @Override
     public void clearBatch() throws SQLException {
+        checkValidity();
         batchList.clear();
     }
 
@@ -740,10 +743,10 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     /**
      * Convert collection of {@link Long} update counts into array of int.
-     * 
+     *
      * @param updateCounts
      *            collection of integer elements.
-     * 
+     *
      * @return array of int.
      */
     protected int[] toArray(Collection<Long> updateCounts) {
@@ -784,7 +787,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     void closeResultSet(boolean notifyListener, CompletionReason completionReason) throws SQLException {
         boolean wasCompleted = completed;
-        
+
         try {
             if (currentRs != null) {
                 try {
@@ -800,7 +803,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 statementListener.statementCompleted(this);
         }
     }
-    
+
     public void forgetResultSet() { //yuck should be package
         // TODO Use case unclear, find out if this needs to be added to fbStatement somehow
         currentRs = null;
@@ -832,7 +835,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface))
             throw new SQLException("Unable to unwrap to class " + iface.getName());
-        
+
         return iface.cast(this);
     }
 
@@ -845,17 +848,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     public boolean isCloseOnCompletion() {
         return closeOnCompletion;
     }
-     
+
     /**
      * This method checks if supplied statement is executing procedure or
-     * it is generic statement. This check is needed to handle correctly 
+     * it is generic statement. This check is needed to handle correctly
      * parameters that are returned from non-selectable procedures.
-     * 
+     *
      * @param sql SQL statement to check
-     * 
+     *
      * @return <code>true</code> if supplied statement is EXECUTE PROCEDURE
      * type of statement.
-     * 
+     *
      * @throws SQLException if translating statement into native code failed.
      */
     protected boolean isExecuteProcedureStatement(String sql) throws SQLException {
@@ -937,11 +940,11 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     @Override
     public String getLastExecutionPlan() throws SQLException {
         checkValidity();
-        
+
         if (fbStatement == null) {
             throw new FBSQLException("No statement was executed, plan cannot be obtained.");
         }
-        
+
         return getExecutionPlan();
     }
 
@@ -973,7 +976,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     /**
      * Check if this statement is valid. This method should be invoked before
      * executing any action which requires a valid connection.
-     * 
+     *
      * @throws SQLException if this Statement has been closed and cannot be used anymore.
      */
     protected void checkValidity() throws SQLException {
