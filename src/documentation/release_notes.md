@@ -1,8 +1,26 @@
 Jaybird 4.0.x changelog
 =======================
 
-Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4). For known
-issues, consult [Known Issues](#known-issues).
+Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4).
+For known issues, consult [Known Issues](#known-issues).
+
+Jaybird 4.0.3
+-------------
+
+The following has been changed or fixed since Jaybird 4.0.3
+
+-   Changed: Closing a statement will now be sent to the server immediately ([JDBC-638](http://tracker.firebirdsql.org/browse/JDBC-638)) \
+    For the v11 protocol and up (Firebird 2.1 or higher), Jaybird applied an
+    optimization copied from Firebird to not flush 'free' packets that are used
+    to close a cursor or close a statement. The packet will then be sent at a
+    later time when something else is sent to the server. \  
+    Unfortunately, this has the side effect that if the statement close is the
+    last thing to happen in a long time (e.g. the connection is idle, or
+    returned to a pool), then the statement may retain locks on metadata objects
+    longer than necessary, which can prevent DDL from succeeding. \
+    This change only affects Jaybird's implementation of the Firebird wire
+    protocol; connections with the 'native' protocol will still delay sending
+    the 'free' packet.
 
 Jaybird 4.0.2
 -------------

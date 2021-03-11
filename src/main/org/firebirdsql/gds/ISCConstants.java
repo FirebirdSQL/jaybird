@@ -40,8 +40,9 @@ public interface ISCConstants {
     int SQL_DIALECT_V6             = 3;
     int SQL_DIALECT_CURRENT        = SQL_DIALECT_V6;
 
-    int DSQL_close   =  1;
-    int DSQL_drop    =  2;
+    int DSQL_close     = 1;
+    int DSQL_drop      = 2;
+    int DSQL_unprepare = 4;
 
     /************************/
     /* Blob seek parameters */
