@@ -85,8 +85,11 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
     }
 
     public void addBatch() throws SQLException {
-        procedureCall.checkParameters();
-        batchList.add(procedureCall.clone());
+        checkValidity();
+        synchronized (getSynchronizationObject()) {
+            procedureCall.checkParameters();
+            batchList.add(procedureCall.clone());
+        }
     }
 
     @Override

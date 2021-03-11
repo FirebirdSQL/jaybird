@@ -679,13 +679,17 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     @Override
     public void addBatch(String sql) throws  SQLException {
         checkValidity();
-        batchList.add(sql);
+        synchronized (getSynchronizationObject()) {
+            batchList.add(sql);
+        }
     }
 
     @Override
     public void clearBatch() throws SQLException {
         checkValidity();
-        batchList.clear();
+        synchronized (getSynchronizationObject()) {
+            batchList.clear();
+        }
     }
 
     @Override

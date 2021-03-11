@@ -195,6 +195,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
         }
     }
 
+    @Override
+    void close(boolean ignoreAlreadyClosed) throws SQLException {
+        batchList = null;
+        super.close(ignoreAlreadyClosed);
+    }
+
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
         return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
@@ -596,28 +602,34 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
     }
 
     // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds RowValue: separate?
-    protected final List<Object> batchList = new ArrayList<>();
+    protected List<Object> batchList = new ArrayList<>();
 
     @Override
     public void addBatch() throws SQLException {
         checkValidity();
         checkAllParametersSet();
 
-        final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
-        for (int i = 0; i < batchedValues.getCount(); i++) {
-            FBField field = getField(i + 1);
-            if (field instanceof FBFlushableField) {
-                batchedValues.setCachedObject(i, ((FBFlushableField) field).getCachedObject());
+        synchronized (getSynchronizationObject()) {
+            final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
+            for (int i = 0; i < batchedValues.getCount(); i++) {
+                FBField field = getField(i + 1);
+                if (field instanceof FBFlushableField) {
+                    batchedValues.setCachedObject(i, ((FBFlushableField) field).getCachedObject());
+                }
             }
-        }
 
-        batchList.add(batchedValues);
+            batchList.add(batchedValues);
+        }
     }
 
     @Override
     public void clearBatch() throws SQLException {
-        // TODO Find open streams and close them?
-        batchList.clear();
+        checkValidity();
+
+        synchronized (getSynchronizationObject()) {
+            // TODO Find open streams and close them?
+            batchList.clear();
+        }
     }
 
     @Override
