@@ -37,7 +37,7 @@ public enum FbClientFeature {
     STATEMENT_TIMEOUT("fb_dsql_set_timeout");
 
     // If a feature depends on multiple methods, consider changing this to a list or set
-    private String featureMethod;
+    private final String featureMethod;
 
     FbClientFeature(String featureMethod) {
         this.featureMethod = featureMethod;
