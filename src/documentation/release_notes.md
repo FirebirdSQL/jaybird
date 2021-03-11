@@ -240,6 +240,28 @@ on <http://tracker.firebirdsql.org/brows/JDBC>.
 Jaybird 3.0.x changelog
 =======================
 
+Changes in Jaybird 3.0.11
+-------------------------
+
+The following has been changed or fixed since Jaybird 3.0.10:
+
+-   Changed: Closing a statement will now be sent to the server immediately ([JDBC-638](http://tracker.firebirdsql.org/browse/JDBC-638)) \
+    For the v11 protocol and up (Firebird 2.1 or higher), Jaybird applied an
+    optimization copied from Firebird to not flush 'free' packets that are used
+    to close a cursor or close a statement. The packet will then be sent at a
+    later time when something else is sent to the server. \  
+    Unfortunately, this has the side effect that if the statement close is the
+    last thing to happen in a long time (e.g. the connection is idle, or
+    returned to a pool), then the statement may retain locks on metadata objects
+    longer than necessary, which can prevent DDL from succeeding. \
+    This change only affects Jaybird's implementation of the Firebird wire
+    protocol; connections with the 'native' protocol will still delay sending
+    the 'free' packet.
+
+### Known issues in Jaybird 3.0.11
+
+See [Known Issues]
+
 Changes in Jaybird 3.0.10
 -------------------------
 
@@ -259,10 +281,6 @@ The following has been changed or fixed since Jaybird 3.0.9:
 -   Fixed: Some usernames cannot authenticate using SRP ([JDBC-635](http://tracker.firebirdsql.org/browse/JDBC-635))
 -   Fixed: `ServiceConfigurationError` while loading plugins could prevent
     Jaybird from loading ([JDBC-636](http://tracker.firebirdsql.org/browse/JDBC-636))
-
-### Known issues in Jaybird 3.0.10
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.9
 ------------------------

@@ -106,7 +106,15 @@ public class V11Statement extends V10Statement {
         synchronized (getSynchronizationObject()) {
             try {
                 doFreePacket(option);
-                // intentionally no flush
+                /*
+                 Don't flush close of cursor, only flush drop or unprepare of statement.
+                 This balances network efficiencies with preventing statements
+                 retaining locks on metadata objects too long
+                */
+                if (option != ISCConstants.DSQL_close) {
+                    getXdrOut().flush();
+                }
+                // process response later
                 getDatabase().enqueueDeferredAction(new DeferredAction() {
                     @Override
                     public void processResponse(Response response) {
