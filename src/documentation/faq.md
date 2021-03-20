@@ -47,7 +47,7 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.2.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.3.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
@@ -59,7 +59,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.2.java8</version>
+    <version>4.0.3.java8</version>
 </dependency>
 ~~~
 
@@ -71,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.2.java8</version>
+    <version>4.0.3.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -108,7 +108,7 @@ Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
 Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
-Version: `3.0.10`
+Version: `3.0.11`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -119,7 +119,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.10</version>
+    <version>3.0.11</version>
 </dependency>
 ~~~
 
@@ -131,7 +131,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.10</version>
+    <version>3.0.11</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
