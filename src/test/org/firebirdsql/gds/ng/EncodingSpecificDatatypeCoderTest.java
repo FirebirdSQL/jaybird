@@ -23,8 +23,8 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
+import org.jmock.imposters.ByteBuddyClassImposteriser;
 import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class EncodingSpecificDatatypeCoderTest {
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
     }
 
     @Mock private EncodingDefinition encodingDefinition;

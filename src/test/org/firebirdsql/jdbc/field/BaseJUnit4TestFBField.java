@@ -32,9 +32,9 @@ import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBRowId;
 import org.jmock.Expectations;
+import org.jmock.imposters.ByteBuddyClassImposteriser;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +97,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
 
     @Before
     public void setUp() throws Exception {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
         fieldData = context.mock(FieldDataProvider.class);
         rowDescriptorBuilder
                 .setFieldName(ALIAS_VALUE)

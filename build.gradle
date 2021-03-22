@@ -50,10 +50,9 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.6.2'
+    junit_jupiter = '5.7.1'
     hamcrest = '2.2'
-    jmock = '2.12.0'
-    assertj = '3.16.1'
+    assertj = '3.19.0'
 }
 
 dependencies {
@@ -69,19 +68,20 @@ dependencies {
 
     // Support JUnit 4
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:$junit_jupiter"
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.2'
 
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.assertj:assertj-core:$assertj"
 
-    testImplementation "org.jmock:jmock-junit4:$jmock"
-    testImplementation "org.jmock:jmock-legacy:$jmock"
+    testImplementation("org.jmock:jmock-junit4:2.12.0") {
+        exclude group: 'org.jmock', module: 'jmock-legacy'
+    }
+    testImplementation 'net.bytebuddy:byte-buddy:1.10.22'
 
-    testImplementation 'cglib:cglib:3.3.0'
-    testImplementation 'org.ow2.asm:asm:8.0.1'
-    testImplementation 'org.objenesis:objenesis:3.1'
+    testImplementation 'org.ow2.asm:asm:9.1'
+    testImplementation 'org.objenesis:objenesis:3.2'
 }
 
 sourceSets {
