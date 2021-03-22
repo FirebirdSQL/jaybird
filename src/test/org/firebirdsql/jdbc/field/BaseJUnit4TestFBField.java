@@ -31,10 +31,10 @@ import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.jdbc.FBClob;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.FBRowId;
+import org.firebirdsql.util.ClassImposteriserAccess;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +42,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -97,7 +98,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
 
     @Before
     public void setUp() throws Exception {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ClassImposteriserAccess.INSTANCE);
         fieldData = context.mock(FieldDataProvider.class);
         rowDescriptorBuilder
                 .setFieldName(ALIAS_VALUE)
@@ -253,7 +254,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     @Test
     public void setCharacterStreamNonNull() throws Exception {
         expectedException.expect(TypeConversionException.class);
-        field.setCharacterStream(context.mock(Reader.class), 100);
+        field.setCharacterStream(new StringReader("test"), 100);
     }
 
     @Test

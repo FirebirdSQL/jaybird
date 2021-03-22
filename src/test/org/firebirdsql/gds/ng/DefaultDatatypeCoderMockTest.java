@@ -20,18 +20,15 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.util.ClassImposteriserAccess;
 import org.jmock.Expectations;
 import org.jmock.auto.Mock;
 import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -42,7 +39,7 @@ public class DefaultDatatypeCoderMockTest {
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ClassImposteriserAccess.INSTANCE);
     }
 
     @Mock
@@ -74,8 +71,8 @@ public class DefaultDatatypeCoderMockTest {
 
     @Test
     public void createWriterDelegatesToEncoding() {
-        final OutputStream outputStream = context.mock(OutputStream.class);
-        final Writer writer = context.mock(Writer.class);
+        final OutputStream outputStream = new ByteArrayOutputStream();
+        final Writer writer = new StringWriter();
 
         context.checking(new Expectations() {{
             oneOf(encoding).createWriter(outputStream); will(returnValue(writer));
@@ -102,8 +99,8 @@ public class DefaultDatatypeCoderMockTest {
 
     @Test
     public void createReaderDelegatesToEncoding() {
-        final InputStream inputStream = context.mock(InputStream.class);
-        final Reader reader = context.mock(Reader.class);
+        final InputStream inputStream = new ByteArrayInputStream(new byte[0]);
+        final Reader reader = new StringReader("test");
 
         context.checking(new Expectations() {{
             oneOf(encoding).createReader(inputStream); will(returnValue(reader));

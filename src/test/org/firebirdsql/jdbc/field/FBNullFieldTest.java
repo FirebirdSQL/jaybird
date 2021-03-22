@@ -18,8 +18,10 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -30,10 +32,10 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
+import org.firebirdsql.util.ClassImposteriserAccess;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +54,7 @@ public class FBNullFieldTest {
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ClassImposteriserAccess.INSTANCE);
         context.setThreadingPolicy(new Synchroniser());
     }
 
@@ -95,7 +97,7 @@ public class FBNullFieldTest {
     @Test
     public void setBinaryStreanNonNull() throws SQLException {
         setNonNullExpectations();
-        InputStream in = context.mock(InputStream.class);
+        InputStream in = new ByteArrayInputStream(new byte[0]);
         // TODO Read and/or close expectation?
         
         field.setBinaryStream(in, 15);
@@ -139,7 +141,7 @@ public class FBNullFieldTest {
     @Test
     public void setCharacterStreamNonNull() throws SQLException {
         setNonNullExpectations();
-        Reader in = context.mock(Reader.class);
+        Reader in = new StringReader("test");
         // TODO Read and/or close expectation?
         
         field.setCharacterStream(in, 15);
