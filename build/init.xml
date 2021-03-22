@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="init">
+<project name="init" xmlns:if="ant:if" xmlns:unless="ant:unless">
     <target name="init">
         <echo message="Java version: ${ant.java.version}"/>
         <echo message="Ant version: ${ant.version}"/>
@@ -229,7 +229,16 @@
             <pathelement location="${lib.dir}/junit.jar"/>
             <pathelement location="${module.thirdparty}/fscontext.jar"/>
             <pathelement location="${module.thirdparty}/providerutil.jar"/>
-            <fileset dir="${lib_test.dir}" includes="*.jar"/>
+            <fileset dir="${lib_test.dir}" includes="*.jar">
+                <!-- test dependencies for Java 7 -->
+                <exclude name="objenesis-2.6.jar" unless:set="jdbc.41"/>
+                <exclude name="cglib-3.2.9.jar" unless:set="jdbc.41"/>
+                <exclude name="jmock-legacy-2.10.0-RC3.jar" unless:set="jdbc.41"/>
+                <!-- test dependencies for Java 8 and higher -->
+                <exclude name="objenesis-3.0.1.jar" if:set="jdbc.41"/>
+                <exclude name="jmock-imposters-2.10.0-RC3.jar" if:set="jdbc.41"/>
+                <exclude name="byte-buddy-1.10.22.jar" if:set="jdbc.41"/>
+            </fileset>
         </path>
 
         <!--
