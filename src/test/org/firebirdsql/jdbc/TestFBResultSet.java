@@ -637,18 +637,25 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                     assertEquals(counter, rs.getInt(1));
                     assertEquals("newString" + counter, rs.getString(2));
 
-                    assertEquals(null, rs.getString(3));
+                    assertNull(rs.getString(3));
                     rs.updateString(3, "str" + counter);
 
-                    assertEquals(null, rs.getString(4));
+                    assertNull(rs.getString(4));
                     rs.updateString(4, "str" + counter);
 
                     // check whether row can be updated
                     rs.updateRow();
 
+                    // visibility of updates without refresh
+                    assertEquals(counter, rs.getInt(1));
+                    assertEquals("newString" + counter, rs.getString(2));
+                    assertEquals("str" + counter, rs.getString(3));
+                    assertEquals("str" + counter, rs.getString(4));
+
                     // check whether row can be refreshed
                     rs.refreshRow();
 
+                    // visibility of updates after refresh
                     assertEquals(counter, rs.getInt(1));
                     assertEquals("newString" + counter, rs.getString(2));
                     assertEquals("str" + counter, rs.getString(3));
@@ -657,7 +664,7 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                     counter++;
                 }
 
-                assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
+                assertEquals("Should process " + recordCount + " rows.", counter, recordCount);
 
                 // check the insertRow() feature
                 rs.moveToInsertRow();
@@ -749,9 +756,16 @@ public class TestFBResultSet extends FBJUnit4TestBase {
                     // check whether row can be updated
                     rs.updateRow();
 
+                    // visibility of updates without refresh
+                    assertEquals(counter, rs.getInt(2));
+                    assertEquals("newString" + counter, rs.getString(3));
+                    assertEquals("str" + counter, rs.getString(4));
+                    assertEquals("str" + counter, rs.getString(5));
+
                     // check whether row can be refreshed
                     rs.refreshRow();
 
+                    // visibility of updates after refresh
                     assertEquals(counter, rs.getInt(2));
                     assertEquals("newString" + counter, rs.getString(3));
                     assertEquals("str" + counter, rs.getString(4));

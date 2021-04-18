@@ -4,10 +4,21 @@ Jaybird 4.0.x changelog
 Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4).
 For known issues, consult [Known Issues](#known-issues).
 
-Jaybird 4.0.3
+Jaybird 4.0.4
 -------------
 
 The following has been changed or fixed since Jaybird 4.0.3
+
+-   Fixed: `ResultSet.updateRow()` sets fields to `null` in result set only ([jaybird#37](https://github.com/FirebirdSQL/jaybird/issues/37)) \
+    The `updateRow()` method did not correctly update local data of the result
+    set. As a result, calling `getXXX` for that row after the update would
+    return `null` for the updated rows. The update was correctly persisted to
+    the database.
+
+Jaybird 4.0.3
+-------------
+
+The following has been changed or fixed since Jaybird 4.0.2
 
 -   Changed: Closing a statement will now be sent to the server immediately ([JDBC-638](http://tracker.firebirdsql.org/browse/JDBC-638)) \
     For the v11 protocol and up (Firebird 2.1 or higher), Jaybird applied an

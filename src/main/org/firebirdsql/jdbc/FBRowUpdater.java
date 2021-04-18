@@ -561,13 +561,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
             }
         }
 
+        RowValue source = statementType == INSERT_STATEMENT_TYPE ? insertRow : oldRow;
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             if (parameterMask[i] == PARAMETER_UNUSED && statementType != INSERT_STATEMENT_TYPE) {
                 continue;
             } else if (!updatedFlags[i] && statementType == INSERT_STATEMENT_TYPE) {
                 continue;
             }
-            RowValue source = statementType == INSERT_STATEMENT_TYPE ? insertRow : oldRow;
             params.add(source.getFieldData(i));
         }
 
@@ -591,13 +591,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     @Override
     public RowValue getNewRow() {
-        RowValue newRow = rowDescriptor.createDefaultFieldValues();
+        RowValue newRowCopy = rowDescriptor.createDefaultFieldValues();
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             RowValue source = updatedFlags[i] ? newRow : oldRow;
             byte[] fieldData = source.getFieldData(i);
-            newRow.setFieldData(i, fieldData != null ? fieldData.clone() : null);
+            newRowCopy.setFieldData(i, fieldData != null ? fieldData.clone() : null);
         }
-        return newRow;
+        return newRowCopy;
     }
 
     @Override
