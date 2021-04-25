@@ -287,7 +287,7 @@ Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
-<http://tracker.firebirdsql.org/browse/JDBC>.
+<https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Supported Firebird versions
 ---------------------------
@@ -495,14 +495,14 @@ Gotchas
 -------
 
 If you find a problem while upgrading, or other bugs: please report it 
-on <http://tracker.firebirdsql.org/browse/JDBC>.
+on <https://github.com/FirebirdSQL/jaybird/issues/>.
 
 For known issues, consult [Known Issues](#known-issues).
 
 What's new in Jaybird 4
 =======================
 
-For a full list of changes, see [Firebird tracker for Jaybird 4](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10441).
+For a full list of changes, see [Firebird tracker for Jaybird 4](https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+4%22).
 
 Changes in artifact and library names
 -------------------------------------

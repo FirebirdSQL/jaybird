@@ -9,7 +9,7 @@ https://issues.sonatype.org/browse/OSSRH-3069
 You will also need a PGP/GPG key to sign the artifacts
 
 Additional information:
-http://tracker.firebirdsql.org/browse/JDBC-241
+https://github.com/FirebirdSQL/jaybird/issues/290
 http://maven.apache.org/guides/mini/guide-central-repository-upload.html
 https://docs.sonatype.org/display/Repository/Central+Sync+Requirements
 https://docs.sonatype.org/display/Repository/Choosing+your+Coordinates
