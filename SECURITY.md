@@ -12,8 +12,8 @@ The following versions of Jaybird are actively maintained and supported.
 
 ## Reporting a Vulnerability
 
-Security vulnerabilities can be reported at http://tracker.firebirdsql.org/browse/JDBC,
-make sure to set _Security Level_ to _Managers_. 
+Security vulnerabilities can be reported at https://github.com/FirebirdSQL/jaybird/issues,
+or privately to jaybird (at) lawinegevaar (dot) nl. 
 
 The Jaybird team will send a response indicating the next steps in handling your report. 
 After the initial reply to your report, the team will keep you informed of the progress 

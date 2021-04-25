@@ -350,8 +350,8 @@ Join the list and post information about suspected bugs. List members may be
 able to help out to determine if it is an actual bug, provide a workaround and
 get you going again, whereas bug fixes might take a while.
 
-You can report bugs in the Firebird bug tracker, project
-["Java Client (Jaybird)"](http://tracker.firebirdsql.org/browse/JDBC)
+You can report bugs in the Firebird bug tracker, 
+<https://github.com/FirebirdSQL/jaybird/issues/>.
 
 When reporting bugs, please provide a minimal, but complete reproduction,
 including databases and sourcecode to reproduce the problem. Patches to fix bugs

@@ -8,12 +8,12 @@ Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
 For security vulnerabilities, see [Security Policy](https://github.com/FirebirdSQL/jaybird/security/policy).
 
-For bugs or improvement, go to our [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC).
+For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/).
 
 ## Resources
 
 - [Downloads](https://www.firebirdsql.org/en/jdbc-driver/)
-- [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC)
+- [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/)
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
 - [FAQ](src/documentation/faq.md)
 - [Release notes](src/documentation/release_notes.md)

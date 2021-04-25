@@ -39,7 +39,7 @@ About this version
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
-<http://tracker.firebirdsql.org/browse/JDBC>.
+<https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Supported Firebird versions
 ---------------------------
@@ -193,14 +193,14 @@ Gotcha's
 --------
 
 If you find a problem while upgrading, or other bugs: please report it 
-on <http://tracker.firebirdsql.org/browse/JDBC>.
+on <https://github.com/FirebirdSQL/jaybird/issues/>.
 
 For known issues, consult [Known Issues](#known-issues).
 
 What's new in Jaybird 5
 =======================
 
-For a full list of changes, see [Firebird tracker for Jaybird 5](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10441).
+For a full list of changes, see [Firebird tracker for Jaybird 5](https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+5%22).
 
 Java support
 ------------
