@@ -35,7 +35,7 @@ import java.sql.SQLException;
  * Primary reason for existence of this class is to support version dependent functionality in Jaybird or
  * version dependent tests in the Jaybird test suite, so feature checks are only added when they are necessary for
  * Jaybird or the test suite. That said: if you miss feature checks, don't hesitate to create an issue in
- * the <a href="http://tracker.firebirdsql.org/browse/JDBC">Jaybird tracker</a>.
+ * the <a href="https://github.com/FirebirdSQL/jaybird/issues/">Jaybird tracker</a>.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>

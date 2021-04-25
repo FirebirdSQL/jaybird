@@ -165,8 +165,8 @@
 	</scm>
 
 	<issueManagement>
-		<system>JIRA Tracker</system>
-		<url>http://tracker.firebirdsql.org/browse/JDBC</url>
+		<system>GitHub</system>
+		<url>https://github.com/FirebirdSQL/jaybird/issues/</url>
 	</issueManagement>
 
 	<dependencies>

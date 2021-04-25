@@ -29,7 +29,7 @@ Although Jaybird 3 is still maintained, we recommend updating to Jaybird 4.
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
 be sent to the Firebird-java mailing list or reported on the issue tracker
-<http://tracker.firebirdsql.org/browse/JDBC>.
+<https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Support
 =======
@@ -578,7 +578,7 @@ The following has been changed or fixed since Jaybird 3.0.0-beta-1
 What's new in Jaybird 3.0
 =========================
 
-For a full list of changes, see [Firebird tracker for Jaybird 3.0.0](http://tracker.firebirdsql.org/secure/ReleaseNote.jspa?projectId=10002&styleName=Text&version=10440).
+For a full list of changes, see [Firebird tracker for Jaybird 3.0.0](https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+3.0.0%22).
 
 Java support
 ------------
