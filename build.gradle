@@ -53,6 +53,7 @@ ext {
     junit_jupiter = '5.7.1'
     hamcrest = '2.2'
     assertj = '3.19.0'
+    jmock = '2.12.0'
 }
 
 dependencies {
@@ -75,9 +76,10 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.assertj:assertj-core:$assertj"
 
-    testImplementation("org.jmock:jmock-junit4:2.12.0") {
+    testImplementation("org.jmock:jmock-junit4:$jmock") {
         exclude group: 'org.jmock', module: 'jmock-legacy'
     }
+    testImplementation("org.jmock:jmock-imposters:$jmock")
     testImplementation 'net.bytebuddy:byte-buddy:1.10.22'
 
     testImplementation 'org.ow2.asm:asm:9.1'
