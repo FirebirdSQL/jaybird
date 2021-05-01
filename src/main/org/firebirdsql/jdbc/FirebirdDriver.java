@@ -53,6 +53,7 @@ public interface FirebirdDriver extends Driver {
      *         if an error happened while connecting to the database.
      * @deprecated
      */
+    @Deprecated
     FirebirdConnection connect(FirebirdConnectionProperties properties)
             throws SQLException;
 }

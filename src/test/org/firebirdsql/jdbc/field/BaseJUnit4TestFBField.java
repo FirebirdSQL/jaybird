@@ -42,6 +42,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -253,7 +254,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     @Test
     public void setCharacterStreamNonNull() throws Exception {
         expectedException.expect(TypeConversionException.class);
-        field.setCharacterStream(context.mock(Reader.class), 100);
+        field.setCharacterStream(new StringReader("test"), 100);
     }
 
     @Test

@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -139,7 +140,7 @@ public class FBNullFieldTest {
     @Test
     public void setCharacterStreamNonNull() throws SQLException {
         setNonNullExpectations();
-        Reader in = context.mock(Reader.class);
+        Reader in = new StringReader("test");
         // TODO Read and/or close expectation?
         
         field.setCharacterStream(in, 15);

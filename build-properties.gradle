@@ -21,11 +21,11 @@ ext.'build.id' = buildTime.format('yyyyMMddHHmm')
 ext.YEAR = buildTime.format("yyyy")
 
 // Build profile (Java version specific)
-if (findProperty('buildProfile') == 'java15') {
-    println 'Build profile: Java 15'
-    ext.'maven.jdkversion' = 'java15'
-    sourceCompatibility = JavaVersion.VERSION_15
-    targetCompatibility = JavaVersion.VERSION_15
+if (findProperty('buildProfile') == 'java16') {
+    println 'Build profile: Java 16'
+    ext.'maven.jdkversion' = 'java16'
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
     ext.'specification.version' = 4.3
 } else if (findProperty('buildProfile') == 'java11') {
     println 'Build profile: Java 11'
