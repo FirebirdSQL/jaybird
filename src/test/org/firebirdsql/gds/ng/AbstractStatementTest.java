@@ -855,7 +855,7 @@ public abstract class AbstractStatementTest {
         try (Connection connection = getConnectionViaDriverManager();
              PreparedStatement pstmt = connection.prepareStatement(
                      "select count(*) from mon$statements "
-                             + "where mon$attachment_id <> current_connection and mon$sql_text = ?")) {
+                             + "where mon$attachment_id <> current_connection and mon$sql_text = cast(? as varchar(50))")) {
             pstmt.setString(1, statementText);
             try (ResultSet rs = pstmt.executeQuery()) {
                 assertTrue("Expected a row", rs.next());
