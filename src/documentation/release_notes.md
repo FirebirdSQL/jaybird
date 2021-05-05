@@ -252,6 +252,8 @@ Other fixes and changes
     connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
     Backported to Jaybird 3.0.9 and 4.0.1.
 -   Changed: build migrated from Ant to Gradle ([JDBC-420](http://tracker.firebirdsql.org/browse/JDBC-420))
+-   Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow
+    disabling force write on database creation ([jaybird#671](https://github.com/FirebirdSQL/jaybird/issues/671))
 
 Removal of deprecated classes and packages
 ------------------------------------------

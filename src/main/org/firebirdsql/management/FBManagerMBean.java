@@ -232,6 +232,26 @@ public interface FBManagerMBean extends AutoCloseable {
     String getDefaultCharacterSet();
 
     /**
+     * Control force write behaviour of the created database.
+     * <p>
+     * Only use this method if you know what you're doing, and if you can live with data loss and database corruption.
+     * In general it is advisable to use the Firebird default ({@code null} for this method).
+     * </p>
+     *
+     * @param forceWrite
+     *         {@code null} - default behaviour (force write enabled after database creation and initialization),
+     *         {@code true} - enable force write at database creation,
+     *         {@code false} - disable force write
+     */
+    void setForceWrite(Boolean forceWrite);
+
+    /**
+     * @return The forced writes configuration
+     * @see #setForceWrite(Boolean)
+     */
+    Boolean getForceWrite();
+
+    /**
      * Get if the database will be created when calling {@link #start()}.
      *
      * @return {@code true} when the database will be created on start, {@code false} otherwise.

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -56,6 +57,7 @@ public class FBManager implements FBManagerMBean {
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
     private String defaultCharacterSet;
+    private Boolean forceWrite;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
@@ -223,6 +225,16 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
+    public void setForceWrite(Boolean forceWrite) {
+        this.forceWrite = forceWrite;
+    }
+
+    @Override
+    public Boolean getForceWrite() {
+        return forceWrite;
+    }
+
+    @Override
     public boolean isCreateOnStart() {
         return createOnStart;
     }
@@ -279,14 +291,17 @@ public class FBManager implements FBManagerMBean {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
             connectionProperties.setConnectionDialect((short) dialect);
+            DatabaseParameterBuffer extraDatabaseParameters = connectionProperties.getExtraDatabaseParameters();
             if (getPageSize() != -1) {
-                connectionProperties.getExtraDatabaseParameters()
-                        .addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
+                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
             }
             if (getDefaultCharacterSet() != null) {
-                connectionProperties.getExtraDatabaseParameters()
-                        .addArgument(ISCConstants.isc_dpb_set_db_charset, getDefaultCharacterSet());
+                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_set_db_charset, getDefaultCharacterSet());
             }
+            if (forceWrite != null) {
+                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_force_write, forceWrite ? 1 : 0);
+            }
+
             try (FbDatabase db = dbFactory.connect(connectionProperties)) {
                 db.createDatabase();
             }

@@ -216,4 +216,45 @@ public class FBManagerTest {
             }
         }
     }
+
+    @Test
+    public void testCreate_forceWrite_null() throws Exception {
+        checkForceWrite(null, 1);
+    }
+
+    @Test
+    public void testCreate_forceWrite_true() throws Exception {
+        checkForceWrite(true, 1);
+    }
+
+    @Test
+    public void testCreate_forceWrite_false() throws Exception {
+        checkForceWrite(false, 0);
+    }
+
+    private void checkForceWrite(Boolean forceWrite, int expectedValue) throws Exception {
+        try (FBManager m = createFBManager()) {
+            m.setServer(DB_SERVER_URL);
+            m.setPort(DB_SERVER_PORT);
+            m.start();
+
+            // Adding .fdb suffix to prevent conflicts with other tests if drop fails
+            final String databasePath = getDatabasePath() + ".fdb";
+            try {
+                m.setForceWrite(forceWrite);
+                m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
+
+                try (Connection connection = DriverManager.getConnection(getUrl() + ".fdb",
+                        getDefaultPropertiesForConnection());
+                     Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery("select MON$FORCED_WRITES from mon$database")) {
+
+                    assertTrue("expected a row", rs.next());
+                    assertEquals("Unexpected default character set", expectedValue, rs.getInt(1));
+                }
+            } finally {
+                m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
+            }
+        }
+    }
 }
