@@ -14,7 +14,7 @@ Known issues
     IPv4 address instead of the host name in the connection string, or to use a
     Firebird 2.5 or earlier `fbclient.dll`.
     
-    This is caused by [CORE-4658](http://tracker.firebirdsql.org/browse/CORE-4658)
+    This is caused by [firebird#4971](https://github.com/FirebirdSQL/firebird/issues/4971)
 
 Support
 =======
@@ -249,9 +249,9 @@ Other fixes and changes
 
 -   Fixed: changes to the transaction configuration (transaction parameter
     buffer configuration) of one connection are no longer propagated to other
-    connections with the same connection properties ([JDBC-386](http://tracker.firebirdsql.org/browse/JDBC-386)) \
+    connections with the same connection properties ([jaybird#428](https://github.com/FirebirdSQL/jaybird/issues/428)) \
     Backported to Jaybird 3.0.9 and 4.0.1.
--   Changed: build migrated from Ant to Gradle ([JDBC-420](http://tracker.firebirdsql.org/browse/JDBC-420))
+-   Changed: build migrated from Ant to Gradle ([jaybird#461](https://github.com/FirebirdSQL/jaybird/issues/461))
 -   Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow
     disabling force write on database creation ([jaybird#671](https://github.com/FirebirdSQL/jaybird/issues/671))
 
