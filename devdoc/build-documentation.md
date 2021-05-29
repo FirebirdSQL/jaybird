@@ -43,11 +43,10 @@ Don't forget to execute this when switching between Java versions
 
 ### Documentation
 
-To build documentation (FAQ and release notes), use the `buildAllDocs` task or
-`buildFaq` and `buildReleaseNotes`:
+To build documentation (FAQ and release notes), use the `asciidoctor` task:
 
 ```
-./gradlew buildAllDocs
+./gradlew asciidoctor
 ```
 
 ### Publishing to Maven
