@@ -18,35 +18,26 @@
  */
 package org.firebirdsql.common.rules;
 
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.management.FBManager;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.rules.ExternalResource;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-
 /**
- * JUnit rule that creates and deletes a database.
+ * JUnit 4 rule that creates and deletes a database.
+ * <p>
+ * For JUnit 5, see the extension {@link org.firebirdsql.common.extension.UsesDatabaseExtension}.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public final class UsesDatabase extends ExternalResource {
 
-    private final boolean initialCreate;
-    private FBManager fbManager = null;
-    private final List<String> initStatements = new ArrayList<>();
-    private final List<String> databasesToDrop = new ArrayList<>();
+    private final UsesDatabaseExtension usesDatabaseExtension;
 
-    private UsesDatabase(boolean initialCreate) {
-        // No outside instantiation
-        this.initialCreate = initialCreate;
+    private UsesDatabase(UsesDatabaseExtension usesDatabaseExtension) {
+        this.usesDatabaseExtension = usesDatabaseExtension;
     }
 
     /**
@@ -54,31 +45,11 @@ public final class UsesDatabase extends ExternalResource {
      */
     @Override
     protected void before() throws Exception {
-        fbManager = createFBManager();
-        if (initialCreate) createDefaultDatabase();
+        usesDatabaseExtension.beforeEach(null);
     }
 
     public void createDefaultDatabase() throws Exception {
-        addDatabase(getDatabasePath());
-        defaultDatabaseSetUp(fbManager);
-        executeInitStatements();
-    }
-
-    private void executeInitStatements() throws SQLException {
-        if (initStatements.isEmpty()) return;
-
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
-            connection.setAutoCommit(false);
-            for (String initStatement : initStatements) {
-                if ("COMMIT WORK".equalsIgnoreCase(initStatement)) {
-                    connection.commit();
-                    continue;
-                }
-                stmt.execute(initStatement);
-            }
-            connection.commit();
-        }
+        usesDatabaseExtension.createDefaultDatabase();
     }
 
     /**
@@ -86,24 +57,7 @@ public final class UsesDatabase extends ExternalResource {
      */
     @Override
     protected void after() {
-        try {
-            for (String databasePath : databasesToDrop) {
-                try {
-                    fbManager.dropDatabase(databasePath, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception ex){
-            ex.printStackTrace();
-        } finally {
-            try {
-                fbManager.stop();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            fbManager = null;
-        }
+        usesDatabaseExtension.afterEach(null);
     }
 
     /**
@@ -115,10 +69,8 @@ public final class UsesDatabase extends ExternalResource {
      * @param databasePath Database path
      */
     public void addDatabase(String databasePath) {
-        databasesToDrop.add(databasePath);
+        usesDatabaseExtension.addDatabase(databasePath);
     }
-
-    // TODO Consider implementing a way to have a non-standard initialization (eg as in TestResultSetDialect1)
 
     /**
      * Creates a rule to initialize (and drop) a test database with the default configuration.
@@ -126,7 +78,7 @@ public final class UsesDatabase extends ExternalResource {
      * @return a UsesDatabase rule
      */
     public static UsesDatabase usesDatabase() {
-        return new UsesDatabase(true);
+        return new UsesDatabase(UsesDatabaseExtension.usesDatabase());
     }
 
     /**
@@ -145,7 +97,7 @@ public final class UsesDatabase extends ExternalResource {
      * @since 4.0
      */
     public static UsesDatabase usesDatabase(String... initializationStatements) {
-        return usesDatabase(Arrays.asList(initializationStatements));
+        return new UsesDatabase(UsesDatabaseExtension.usesDatabase(initializationStatements));
     }
 
     /**
@@ -164,9 +116,7 @@ public final class UsesDatabase extends ExternalResource {
      * @since 4.0
      */
     public static UsesDatabase usesDatabase(List<String> initializationStatements) {
-        UsesDatabase rule = new UsesDatabase(true);
-        rule.initStatements.addAll(initializationStatements);
-        return rule;
+        return new UsesDatabase(UsesDatabaseExtension.usesDatabase(initializationStatements));
     }
 
     /**
@@ -178,6 +128,6 @@ public final class UsesDatabase extends ExternalResource {
      * @return a UsesDatabase rule
      */
     public static UsesDatabase noDatabase() {
-        return new UsesDatabase(false);
+        return new UsesDatabase(UsesDatabaseExtension.noDatabase());
     }
 }

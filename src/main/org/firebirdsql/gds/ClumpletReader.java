@@ -247,6 +247,7 @@ public class ClumpletReader {
                 case isc_spb_nbk_file:
                 case isc_spb_nbk_direct:
                 case isc_spb_dbname:
+                case isc_spb_nbk_guid:
                     return ClumpletType.StringSpb;
                 case isc_spb_nbk_level:
                 case isc_spb_options:

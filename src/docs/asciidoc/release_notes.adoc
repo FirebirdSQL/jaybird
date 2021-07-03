@@ -248,6 +248,12 @@ See also <<compatibility-changes,Compatibility changes>> for details.
 * Fixed: changes to the transaction configuration (transaction parameter buffer configuration) of one connection are no longer propagated to other connections with the same connection properties (https://github.com/FirebirdSQL/jaybird/issues/428[jaybird#428]) \ Backported to Jaybird 3.0.9 and 4.0.1.
 * Changed: build migrated from Ant to Gradle (https://github.com/FirebirdSQL/jaybird/issues/461[jaybird#461])
 * Improvement: add `setForceWrite`/`getForceWrite` to `FBManager` to allow disabling force write on database creation (https://github.com/FirebirdSQL/jaybird/issues/671[jaybird#671])
+* New feature: Support for NBackup GUID-based backup and in-place restore (https://github.com/FirebirdSQL/jaybird/issues/672[jaybird#672])
++
+The `org.firebirdsql.management.NBackupManager` interface has two new methods: `setBackupGuid(String)` expecting the brace-enclosed GUID of a previous backup to use as the starting point for this backup, and `setInPlaceRestore(boolean)` to enable (or disable) in-place restore.
+These options require Firebird 4.0 or higher.
++
+This feature was also backported to Jaybird 4.0.4.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
