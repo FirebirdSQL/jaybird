@@ -282,7 +282,10 @@ public interface ISCConstants {
     int isc_spb_nbk_level  = 5;
     int isc_spb_nbk_file   = 6;
     int isc_spb_nbk_direct = 7;
+    int isc_spb_nbk_guid   = 8;
     int isc_spb_nbk_no_triggers = 0x01;
+    int isc_spb_nbk_inplace     = 0x02;
+    int isc_spb_nbk_sequence    = 0x04;
 
     /*****************************
      * Service action items      *

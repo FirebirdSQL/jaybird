@@ -14,6 +14,13 @@ The following has been changed or fixed since Jaybird 4.0.3
     set. As a result, calling `getXXX` for that row after the update would
     return `null` for the updated rows. The update was correctly persisted to
     the database.
+-   New feature: Support for NBackup GUID-based backup and in-place restore ([jaybird#672](https://github.com/FirebirdSQL/jaybird/issues/672)) \
+    The `org.firebirdsql.management.NBackupManager` interface has two new 
+    methods: `setBackupGuid(String)` expecting the brace-enclosed GUID of a
+    previous backup to use as the starting point for this backup, and 
+    `setInPlaceRestore(boolean)` to enable (or disable) in-place restore. These
+    options require Firebird 4.0 or higher. \
+    This feature was backported from Jaybird 5.
 
 Jaybird 4.0.3
 -------------

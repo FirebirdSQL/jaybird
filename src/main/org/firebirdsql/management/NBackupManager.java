@@ -31,11 +31,15 @@ import java.sql.SQLException;
  * via the Firebird Services API.
  *
  * @author <a href="mailto:tsteinmaurer@users.sourceforge.net">Thomas Steinmaurer</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public interface NBackupManager extends ServiceManager {
 
     /**
      * Sets the location of the backup file.
+     * <p>
+     * Warning: this method behaves identical to {@link #addBackupFile(String)}.
+     * </p>
      *
      * @param backupFile
      *         the location of the backup file.
@@ -43,9 +47,13 @@ public interface NBackupManager extends ServiceManager {
     void setBackupFile(String backupFile);
 
     /**
-     * Add the file to the backup of the specified size. Firebird allows
-     * splitting the backup into multiple files, limiting the size of the backup
-     * file. This can be useful for example for creating a backup on CD or DVD.
+     * Add additional backup files.
+     * <p>
+     * Specifying multiple backup files is only valid for restore, for backup only the first file is used.
+     * </p>
+     * <p>
+     * Use {@link #clearBackupFiles()} to clear earlier backup files.
+     * </p>
      *
      * @param backupFile
      *         the location of the backup file.
@@ -99,10 +107,32 @@ public interface NBackupManager extends ServiceManager {
     void setBackupLevel(int level);
 
     /**
-     * Sets the backup option no database triggers when connecting
-     * at backup.
+     * Sets the backup GUID (Firebird 4 and higher only).
+     * <p>
+     * The backup GUID is the GUID of a previous backup of the (source) database. This is used by Firebird to backup
+     * the pages modified since that backup.
+     * </p>
+     * <p>
+     * This setting is mutually exclusive with {@link #setBackupLevel(int)}, but this is only checked server-side.
+     * </p>
      *
-     * @param noDBTriggers
+     * @param guid A GUID string of a previous backup, enclosed in braces.
+     * @since 4.0.4
+     */
+    void setBackupGuid(String guid);
+
+    /**
+     * Sets the option no database triggers when connecting at backup or in-place restore.
+     *
+     * @param noDBTriggers {@code true} disable db triggers during backup or in-place restore.
      */
     void setNoDBTriggers(boolean noDBTriggers);
+
+    /**
+     * Enables in-place restore.
+     *
+     * @param inPlaceRestore {@code true} to enable in-place restore
+     * @since 4.0.4
+     */
+    void setInPlaceRestore(boolean inPlaceRestore);
 }
