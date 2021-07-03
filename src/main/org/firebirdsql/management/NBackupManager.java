@@ -92,11 +92,30 @@ public interface NBackupManager extends ServiceManager {
 
     /**
      * Perform the restore operation.
+     * <p>
+     * Set {@link #setPreserveSequence(boolean)} to preserve the original database GUID and replication sequence.
+     * </p>
      *
      * @throws SQLException
      *         if a database error occurs during the restore
      */
     void restoreDatabase() throws SQLException;
+
+    /**
+     * Perform the nbackup fixup operation.
+     * <p>
+     * A fixup will switch the database backup to 'normal' state without merging the delta, so this is a potentially
+     * destructive action. The normal use-case of this option is to unlock a copy of a database file where the source
+     * database file was locked with {@code nbackup -L} or {@code ALTER DATABASE BEGIN BACKUP}.
+     * </p>
+     * <p>
+     * Set {@link #setPreserveSequence(boolean)} to preserve the original database GUID and replication sequence.
+     * </p>
+     *
+     * @throws SQLException
+     *         if a database error occurs during the fixup
+     */
+    void fixupDatabase() throws SQLException;
 
     /**
      * Sets the backup level (0 = full, 1..n = incremental)
@@ -116,7 +135,8 @@ public interface NBackupManager extends ServiceManager {
      * This setting is mutually exclusive with {@link #setBackupLevel(int)}, but this is only checked server-side.
      * </p>
      *
-     * @param guid A GUID string of a previous backup, enclosed in braces.
+     * @param guid
+     *         A GUID string of a previous backup, enclosed in braces.
      * @since 4.0.4
      */
     void setBackupGuid(String guid);
@@ -124,15 +144,28 @@ public interface NBackupManager extends ServiceManager {
     /**
      * Sets the option no database triggers when connecting at backup or in-place restore.
      *
-     * @param noDBTriggers {@code true} disable db triggers during backup or in-place restore.
+     * @param noDBTriggers
+     *         {@code true} disable db triggers during backup or in-place restore.
      */
     void setNoDBTriggers(boolean noDBTriggers);
 
     /**
      * Enables in-place restore.
      *
-     * @param inPlaceRestore {@code true} to enable in-place restore
+     * @param inPlaceRestore
+     *         {@code true} to enable in-place restore
      * @since 4.0.4
      */
     void setInPlaceRestore(boolean inPlaceRestore);
+
+    /**
+     * Enables preserve sequence (for fixup or restore).
+     * <p>
+     * This preserves the existing GUID and replication sequence of the original database (they are reset otherwise).
+     * </p>
+     *
+     * @param preserveSequence
+     *         {@code true} to enable preserve sequence
+     */
+    void setPreserveSequence(boolean preserveSequence);
 }

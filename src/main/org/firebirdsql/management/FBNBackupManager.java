@@ -42,6 +42,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private String backupGuid;
     private boolean noDBTriggers;
     private boolean inPlaceRestore;
+    private boolean preserveSequence;
 
     /**
      * Create a new instance of {@code FBNBackupManager} based on the default GDSType.
@@ -156,6 +157,24 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         return restoreSPB;
     }
 
+    @Override
+    public void fixupDatabase() throws SQLException {
+        try (FbService service = attachServiceManager()) {
+            executeServicesOperation(service, getFixupSRB(service));
+        }
+    }
+
+    private ServiceRequestBuffer getFixupSRB(FbService service) {
+        ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
+        restoreSPB.addArgument(isc_action_svc_nfix);
+        restoreSPB.addArgument(isc_spb_dbname, getDatabase());
+        int options = getOptions();
+        if (options != 0) {
+            restoreSPB.addArgument(isc_spb_options, options);
+        }
+        return restoreSPB;
+    }
+
     private int getOptions() {
         int options = 0;
         if (noDBTriggers) {
@@ -163,6 +182,9 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         }
         if (inPlaceRestore) {
             options |= isc_spb_nbk_inplace;
+        }
+        if (preserveSequence) {
+            options |= isc_spb_nbk_sequence;
         }
         return options;
     }
@@ -185,6 +207,11 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     @Override
     public void setInPlaceRestore(boolean inPlaceRestore) {
         this.inPlaceRestore = inPlaceRestore;
+    }
+
+    @Override
+    public void setPreserveSequence(boolean preserveSequence) {
+        this.preserveSequence = preserveSequence;
     }
 
 }

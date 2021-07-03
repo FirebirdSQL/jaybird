@@ -319,6 +319,7 @@ public interface ISCConstants {
     // Firebird 3
     int isc_action_svc_display_user_adm = 29; // Displays user(s) from security database with admin info
     int isc_action_svc_validate         = 30; // Starts database online validation
+    int isc_action_svc_nfix             = 31; // Fixup database after file system copy
 
     /*****************************************
      * Parameters for isc_action_svc_trace   *

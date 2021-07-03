@@ -26,6 +26,7 @@ import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
+import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.io.File;
@@ -119,6 +120,19 @@ public final class FBTestProperties {
         }
 
         return returnValue;
+    }
+
+    /**
+     * Configures the host, port, user and password of a service manager using the default properties.
+     *
+     * @param serviceManager Service manager to configure
+     */
+    public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
+        serviceManager.setHost(DB_SERVER_URL);
+        serviceManager.setPort(DB_SERVER_PORT);
+        serviceManager.setUser(DB_USER);
+        serviceManager.setPassword(DB_PASSWORD);
+        return serviceManager;
     }
 
     /**

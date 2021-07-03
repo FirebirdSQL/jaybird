@@ -254,6 +254,14 @@ public class ClumpletReader {
                     return ClumpletType.IntSpb;
                 }
                 throw invalidStructure("unknown parameter for nbackup");
+            case isc_action_svc_nfix:
+                switch (tag) {
+                case isc_spb_dbname:
+                    return ClumpletType.StringSpb;
+                case isc_spb_options:
+                    return ClumpletType.IntSpb;
+                }
+                throw invalidStructure("unknown parameter for nbackup");
             case isc_action_svc_trace_start:
             case isc_action_svc_trace_stop:
             case isc_action_svc_trace_suspend:

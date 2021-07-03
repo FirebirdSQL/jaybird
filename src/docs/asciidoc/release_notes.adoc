@@ -254,6 +254,10 @@ The `org.firebirdsql.management.NBackupManager` interface has two new methods: `
 These options require Firebird 4.0 or higher.
 +
 This feature was also backported to Jaybird 4.0.4.
+* New feature: Support for NBackup fixup and preserve sequence (https://github.com/FirebirdSQL/jaybird/issues/673[jaybird#673])
++
+The `org.firebirdsql.management.NBackupManager` interface has two new methods: `fixupDatabase()` to "`fixup`" a database (switch back to 'normal' state without merging the delta file), and `setPreserveSequence(boolean)` to preserve the current database GUID and replication sequence on fixup or restore.
+These options require Firebird 4.0 or higher.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
