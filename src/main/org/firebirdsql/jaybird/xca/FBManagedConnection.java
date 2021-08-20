@@ -30,7 +30,7 @@ import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
-import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -120,7 +120,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
             notifyWarning(new SQLWarning(warningMessage));
         }
 
-        if (connectionProperties.getConnectTimeout() == AttachmentProperties.TIMEOUT_NOT_SET
+        if (connectionProperties.getConnectTimeout() == PropertyConstants.TIMEOUT_NOT_SET
                 && DriverManager.getLoginTimeout() > 0) {
             connectionProperties.setConnectTimeout(DriverManager.getLoginTimeout());
         }

@@ -25,6 +25,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 
 /**
  * Common properties for database and service attach.
@@ -36,9 +37,9 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
 
     int DEFAULT_PORT = 3050;
     String DEFAULT_SERVER_NAME = "localhost";
-    int DEFAULT_SOCKET_BUFFER_SIZE = AttachmentProperties.BUFFER_SIZE_NOT_SET;
-    int DEFAULT_SO_TIMEOUT = AttachmentProperties.TIMEOUT_NOT_SET;
-    int DEFAULT_CONNECT_TIMEOUT = AttachmentProperties.TIMEOUT_NOT_SET;
+    int DEFAULT_SOCKET_BUFFER_SIZE = PropertyConstants.BUFFER_SIZE_NOT_SET;
+    int DEFAULT_SO_TIMEOUT = PropertyConstants.TIMEOUT_NOT_SET;
+    int DEFAULT_CONNECT_TIMEOUT = PropertyConstants.TIMEOUT_NOT_SET;
 
     /**
      * @return The name of the object to attach to (either a database or service name).

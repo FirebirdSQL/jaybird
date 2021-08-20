@@ -38,17 +38,6 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPR
 public interface AttachmentProperties extends BaseProperties {
 
     /**
-     * Value returned by the various getXXXTimeout methods to indicate that no value was explicitly set (and the
-     * property has no explicit default).
-     */
-    int TIMEOUT_NOT_SET = -1;
-    /**
-     * Value returned by the various getXXXBufferSize methods to indicate that no value was explicitly set (and the
-     * property has no explicit default).
-     */
-    int BUFFER_SIZE_NOT_SET = -1;
-
-    /**
      * @return Name of the user to authenticate to the server.
      */
     default String getUser() {
@@ -190,10 +179,10 @@ public interface AttachmentProperties extends BaseProperties {
     /**
      * Get the socket buffer size.
      *
-     * @return socket buffer size in bytes, or {@link #BUFFER_SIZE_NOT_SET} if not set
+     * @return socket buffer size in bytes, or {@code -1} if not set
      */
     default int getSocketBufferSize() {
-        return getIntProperty(PropertyNames.socketBufferSize, BUFFER_SIZE_NOT_SET);
+        return getIntProperty(PropertyNames.socketBufferSize, PropertyConstants.BUFFER_SIZE_NOT_SET);
     }
 
     /**
@@ -209,11 +198,10 @@ public interface AttachmentProperties extends BaseProperties {
     /**
      * Get the initial Socket blocking timeout (SoTimeout).
      *
-     * @return The initial socket blocking timeout in milliseconds (0 is 'infinite'), or {@link #TIMEOUT_NOT_SET} if
-     * not set
+     * @return The initial socket blocking timeout in milliseconds (0 is 'infinite'), or {@code -1} if not set
      */
     default int getSoTimeout() {
-        return getIntProperty(PropertyNames.soTimeout, TIMEOUT_NOT_SET);
+        return getIntProperty(PropertyNames.soTimeout, PropertyConstants.TIMEOUT_NOT_SET);
     }
 
     /**
@@ -229,11 +217,10 @@ public interface AttachmentProperties extends BaseProperties {
     /**
      * Get the connect timeout in seconds.
      *
-     * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout), or {@link #TIMEOUT_NOT_SET}
-     * if not set
+     * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout), or {@code -1} if not set
      */
     default int getConnectTimeout() {
-        return getIntProperty(PropertyNames.connectTimeout, TIMEOUT_NOT_SET);
+        return getIntProperty(PropertyNames.connectTimeout, PropertyConstants.TIMEOUT_NOT_SET);
     }
 
     /**

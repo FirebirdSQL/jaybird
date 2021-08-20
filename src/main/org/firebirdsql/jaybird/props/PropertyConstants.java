@@ -48,6 +48,9 @@ public final class PropertyConstants {
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_TIMESTAMP_USES_LOCAL = false;
 
+    public static final int TIMEOUT_NOT_SET = -1;
+    public static final int BUFFER_SIZE_NOT_SET = -1;
+
     public static final String SESSION_TIME_ZONE_SERVER = "server";
 
     public static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
