@@ -30,6 +30,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.logging.Logger;
@@ -59,8 +60,8 @@ public class FBEventManager implements EventManager {
     private final IConnectionProperties connectionProperties;
     private final EventManagerBehaviour eventManagerBehaviour;
     private volatile boolean connected = false;
-    private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<String, Set<EventListener>>());
-    private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<String, GdsEventHandler>());
+    private final Map<String, Set<EventListener>> listenerMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, GdsEventHandler> handlerMap = Collections.synchronizedMap(new HashMap<>());
     private final BlockingQueue<DatabaseEvent> eventQueue = new LinkedBlockingQueue<>();
     private EventDispatcher eventDispatcher;
     private Thread dispatchThread;
@@ -198,24 +199,28 @@ public class FBEventManager implements EventManager {
         return connected;
     }
 
+    // Methods from AttachmentProperties which were previously explicitly implemented, are redirecting to the
+    // interface default method so they cen be introspected as JavaBean properties. Methods from AttachmentProperties
+    // which were not defined in this class in Jaybird 4 or earlier are not redirected
+
     @Override
     public void setUser(String user) {
-        connectionProperties.setUser(user);
+        EventManager.super.setUser(user);
     }
 
     @Override
     public String getUser() {
-        return connectionProperties.getUser();
+        return EventManager.super.getUser();
     }
 
     @Override
     public void setPassword(String password) {
-        connectionProperties.setPassword(password);
+        EventManager.super.setPassword(password);
     }
 
     @Override
     public String getPassword() {
-        return connectionProperties.getPassword();
+        return EventManager.super.getPassword();
     }
 
     @Override
@@ -249,7 +254,7 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public WireCrypt getWireCrypt() {
+    public WireCrypt getWireCryptAsEnum() {
         return connectionProperties.getWireCryptAsEnum();
     }
 
@@ -259,23 +264,33 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
+    public String getWireCrypt() {
+        return EventManager.super.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        EventManager.super.setWireCrypt(wireCrypt);
+    }
+
+    @Override
     public String getDbCryptConfig() {
-        return connectionProperties.getDbCryptConfig();
+        return EventManager.super.getDbCryptConfig();
     }
 
     @Override
     public void setDbCryptConfig(String dbCryptConfig) {
-        connectionProperties.setDbCryptConfig(dbCryptConfig);
+        EventManager.super.setDbCryptConfig(dbCryptConfig);
     }
 
     @Override
     public String getAuthPlugins() {
-        return connectionProperties.getAuthPlugins();
+        return EventManager.super.getAuthPlugins();
     }
 
     @Override
     public void setAuthPlugins(String authPlugins) {
-        connectionProperties.setAuthPlugins(authPlugins);
+        EventManager.super.setAuthPlugins(authPlugins);
     }
 
     @Override
@@ -298,7 +313,7 @@ public class FBEventManager implements EventManager {
         synchronized (listenerMap) {
             if (!listenerMap.containsKey(eventName)) {
                 registerListener(eventName);
-                listenerMap.put(eventName, new HashSet<EventListener>());
+                listenerMap.put(eventName, new HashSet<>());
             }
             Set<EventListener> listenerSet = listenerMap.get(eventName);
             listenerSet.add(listener);
@@ -356,6 +371,41 @@ public class FBEventManager implements EventManager {
         } finally {
             handlerMap.remove(eventName);
         }
+    }
+
+    @Override
+    public String getProperty(String name) {
+        return connectionProperties.getProperty(name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        connectionProperties.setProperty(name, value);
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        return connectionProperties.getIntProperty(name);
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        connectionProperties.setIntProperty(name, value);
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return connectionProperties.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        connectionProperties.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return connectionProperties.connectionPropertyValues();
     }
 
     private interface EventManagerBehaviour {

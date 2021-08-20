@@ -353,6 +353,8 @@ there is no direct replacement.
 The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
 * `FBConnectionRequestInfo.deepCopy()` (internal API);
 if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
+* `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
+replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
 
 ==== Removal of classes without deprecation
 

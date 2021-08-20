@@ -25,6 +25,7 @@
 package org.firebirdsql.event;
 
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
 
 import java.sql.SQLException;
 
@@ -34,7 +35,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public interface EventManager extends AutoCloseable {
+public interface EventManager extends AttachmentProperties, AutoCloseable {
 
     /**
      * Make a connection with a database to listen for events.
@@ -75,32 +76,6 @@ public interface EventManager extends AutoCloseable {
      * @see #disconnect()
      */
     boolean isConnected();
-
-    /**
-     * Sets the username for the connection to the database .
-     *
-     * @param user
-     *         for the connection to the database.
-     */
-    void setUser(String user);
-
-    /**
-     * @return the username for the connection to the database.
-     */
-    String getUser();
-
-    /**
-     * Sets the password for the connection to the database.
-     *
-     * @param password
-     *         for the connection to the database.
-     */
-    void setPassword(String password);
-
-    /**
-     * @return the password for the connection to the database.
-     */
-    String getPassword();
 
     /**
      * Sets the database path for the connection to the database.
@@ -147,7 +122,7 @@ public interface EventManager extends AutoCloseable {
      * @return Wire encryption level
      * @since 3.0.4
      */
-    WireCrypt getWireCrypt();
+    WireCrypt getWireCryptAsEnum();
 
     /**
      * Set the wire encryption level.
@@ -157,43 +132,6 @@ public interface EventManager extends AutoCloseable {
      * @since 3.0.4
      */
     void setWireCrypt(WireCrypt wireCrypt);
-
-    /**
-     * Get the database encryption plugin configuration.
-     *
-     * @return Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    String getDbCryptConfig();
-
-    /**
-     * Sets the database encryption plugin configuration.
-     *
-     * @param dbCryptConfig
-     *         Database encryption plugin configuration, meaning plugin specific
-     * @since 3.0.4
-     */
-    void setDbCryptConfig(String dbCryptConfig);
-
-    /**
-     * Get the list of authentication plugins to try.
-     *
-     * @return comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    String getAuthPlugins();
-
-    /**
-     * Sets the authentication plugins to try.
-     * <p>
-     * Invalid names are skipped during authentication.
-     * </p>
-     *
-     * @param authPlugins
-     *         comma-separated list of authentication plugins, or {@code null} for driver default
-     * @since 4.0
-     */
-    void setAuthPlugins(String authPlugins);
 
     /**
      * Get the poll timeout in milliseconds of the async thread to check whether it was stopped or not.

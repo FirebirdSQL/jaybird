@@ -83,7 +83,7 @@ public class FBServiceManager implements ServiceManager {
     }
 
     // NOTE: we're redirecting the default implementations of the interface here to ensure the
-    //  data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+    //  service manager can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
     public void setCharSet(String charSet) {
