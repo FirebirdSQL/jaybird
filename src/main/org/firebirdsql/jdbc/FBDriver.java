@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
+import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -34,6 +35,7 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.net.URLDecoder;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -89,7 +91,7 @@ public class FBDriver implements FirebirdDriver {
             return null;
         }
 
-        final Map<String, String> normalizedInfo = normalizeProperties(url, info);
+        final Map<String, String> mergedProperties = mergeProperties(url, info);
         try {
             int qMarkIndex = url.indexOf('?');
             if (qMarkIndex != -1) {
@@ -100,17 +102,24 @@ public class FBDriver implements FirebirdDriver {
             String databaseURL = GDSFactory.getDatabasePath(type, url);
 
             mcf.setDatabase(databaseURL);
-            for (Map.Entry<String, String> entry : normalizedInfo.entrySet()) {
-                mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
+            for (Map.Entry<String, String> entry : mergedProperties.entrySet()) {
+                // TODO Can we do this differently (or just allow the database property to be set this way)?
+                if (FBConnectionProperties.DATABASE_PROPERTY.equals(entry.getKey())) continue;
+                try {
+                    // TODO See if we can switch to mcf.setProperty instead
+                    mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
+                } catch (InvalidPropertyValueException e) {
+                    throw e.asSQLException();
+                }
             }
 
-            FBTpbMapper.processMapping(mcf, normalizedInfo);
+            FBTpbMapper.processMapping(mcf, mergedProperties);
 
             mcf = mcf.canonicalize();
 
             FBDataSource dataSource = createDataSource(mcf);
 
-            return dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
+            return dataSource.getConnection(mcf.getUser(), mcf.getPassword());
 
         } catch (GDSException e) {
             throw new FBSQLException(e);
@@ -154,7 +163,7 @@ public class FBDriver implements FirebirdDriver {
         if (type == null) {
             type = GDSFactory.getDefaultGDSType();
         }
-        
+
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type, (FBConnectionProperties) properties)
                 .canonicalize();
         FBDataSource dataSource = createDataSource(mcf);
@@ -211,14 +220,17 @@ public class FBDriver implements FirebirdDriver {
      * Merges the properties from the JDBC URL and properties object, normalizes them to a standard name.
      * <p>
      * If a property with the exact same name is present in both, the property specified in the JDBC url takes
-     * precedence. Short and long form {@code isc_dpb} properties will be merged if both are present, as will two
-     * different (non-{@code isc_dpb}) aliases, but precedence is undefined. If a property is specified in the (short
-     * or long) {@code isc_dpb} form <b>and</b> as an alias, then an exception is thrown.
+     * precedence. Occurrence of multiple (distinct) aliases for the same property result in a {@link SQLException}.
      * </p>
      * <p>
      * The property name that is the result of normalization, is implementation specific behaviour, and might change in
      * a future version of Jaybird. When present, the (normalized) property `"database"` will be excluded, this also
      * might change in the future.
+     * </p>
+     * <p>
+     * The behaviour of this method does not necessarily match the behaviour of Jaybird when processing properties
+     * during {@link #connect(String, Properties)}, as this method performs additional processing that is skipped during
+     * connect.
      * </p>
      *
      * @param jdbcUrl
@@ -233,7 +245,7 @@ public class FBDriver implements FirebirdDriver {
      */
     public static Map<String, String> normalizeProperties(String jdbcUrl, Properties connectionProperties)
             throws SQLException {
-        Properties mergedProperties = mergeProperties(jdbcUrl, connectionProperties);
+        Map<String, String> mergedProperties = mergeProperties(jdbcUrl, connectionProperties);
         return FBDriverPropertyManager.normalize(mergedProperties);
     }
 
@@ -252,11 +264,12 @@ public class FBDriver implements FirebirdDriver {
      * @throws SQLException
      *         For failures to extract connection properties from {@code jdbcUrl} (URL decoding errors)
      */
-    private static Properties mergeProperties(String jdbcUrl, Properties connectionProperties) throws SQLException {
-        Properties mergedProperties = new Properties();
+    private static Map<String, String> mergeProperties(String jdbcUrl, Properties connectionProperties)
+            throws SQLException {
+        Map<String, String> mergedProperties = new HashMap<>();
         if (connectionProperties != null) {
             for (String propertyName : connectionProperties.stringPropertyNames()) {
-                mergedProperties.setProperty(propertyName, connectionProperties.getProperty(propertyName));
+                mergedProperties.put(propertyName, connectionProperties.getProperty(propertyName));
             }
         }
 
@@ -271,11 +284,11 @@ public class FBDriver implements FirebirdDriver {
      * @param url
      *         specified URL.
      * @param info
-     *         instance of {@link Properties} into which values should be extracted.
+     *         map into which values should be extracted.
      * @throws SQLException
      *         For failures to extract connection properties from {@code url} (URL decoding errors)
      */
-    private static void convertUrlParams(String url, Properties info) throws SQLException {
+    private static void convertUrlParams(String url, Map<String, String> info) throws SQLException {
         if (url == null) {
             return;
         }
@@ -294,9 +307,9 @@ public class FBDriver implements FirebirdDriver {
             if (iIs > -1) {
                 String property = urlDecode(propertyString.substring(0, iIs), url);
                 String value = urlDecode(propertyString.substring(iIs + 1), url);
-                info.setProperty(property, value);
+                info.put(property, value);
             } else {
-                info.setProperty(urlDecode(propertyString, url), "");
+                info.put(urlDecode(propertyString, url), "");
             }
         }
     }

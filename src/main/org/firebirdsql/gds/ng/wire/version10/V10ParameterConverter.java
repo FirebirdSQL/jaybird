@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -40,9 +40,9 @@ public class V10ParameterConverter extends AbstractParameterConverter<WireDataba
     private static final String LEGACY_PASSWORD_SALT = "9z";
 
     @Override
-    protected void populateAuthenticationProperties(final AbstractConnection connection,
+    protected void populateAuthenticationProperties(final AbstractConnection<?, ?> connection,
             final ConnectionParameterBuffer pb) throws SQLException {
-        IAttachProperties props = connection.getAttachProperties();
+        IAttachProperties<?> props = connection.getAttachProperties();
         ParameterTagMapping tagMapping = pb.getTagMapping();
         if (props.getUser() != null) {
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());

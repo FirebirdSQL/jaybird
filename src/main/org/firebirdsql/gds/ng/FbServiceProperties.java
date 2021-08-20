@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -17,6 +17,8 @@
  * All rights reserved.
  */
 package org.firebirdsql.gds.ng;
+
+import java.util.Objects;
 
 /**
  * Mutable implementation of {@link IServiceProperties}.
@@ -81,6 +83,24 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
     @Override
     public IServiceProperties asNewMutable() {
         return new FbServiceProperties(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FbServiceProperties)) return false;
+        if (!super.equals(o)) return false;
+
+        FbServiceProperties that = (FbServiceProperties) o;
+
+        return Objects.equals(serviceName, that.serviceName);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
+        return result;
     }
 
     @Override

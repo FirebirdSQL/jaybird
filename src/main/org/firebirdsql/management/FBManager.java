@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
@@ -290,16 +289,15 @@ public class FBManager implements FBManagerMBean {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
-            connectionProperties.setConnectionDialect((short) dialect);
-            DatabaseParameterBuffer extraDatabaseParameters = connectionProperties.getExtraDatabaseParameters();
+            connectionProperties.setSqlDialect(dialect);
             if (getPageSize() != -1) {
-                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
+                connectionProperties.setIntProperty("page_size", getPageSize());
             }
             if (getDefaultCharacterSet() != null) {
-                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_set_db_charset, getDefaultCharacterSet());
+                connectionProperties.setProperty("set_db_charset", getDefaultCharacterSet());
             }
             if (forceWrite != null) {
-                extraDatabaseParameters.addArgument(ISCConstants.isc_dpb_force_write, forceWrite ? 1 : 0);
+                connectionProperties.setBooleanProperty("force_write", forceWrite);
             }
 
             try (FbDatabase db = dbFactory.connect(connectionProperties)) {

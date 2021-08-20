@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,20 +16,19 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jaybird.xca;
+
+import org.firebirdsql.gds.TransactionParameterBuffer;
 
 import java.io.Serializable;
 
-import org.firebirdsql.gds.TransactionParameterBuffer;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 
 /**
  * The <code>FBTpb</code> class represents the Firebird Transaction Parameter
  * Block (TPB), which contains Firebird-specific information about transaction
  * isolation.
- * 
- * Created: Wed Jun 19 10:12:22 2002
- * 
+ *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  */
 
@@ -40,21 +39,21 @@ public class FBTpb implements Serializable {
     /**
      * Create a new Transaction Parameters Block instance based around a
      * <code>FBTpbMapper</code>.
-     * 
-     * @param transactionParams instance of {@link TransactionParameterBuffer}
-     * representing transaction parameters.
+     *
+     * @param transactionParams
+     *         instance of {@link TransactionParameterBuffer} representing transaction parameters.
      */
     public FBTpb(TransactionParameterBuffer transactionParams) {
         this.transactionParams = transactionParams;
     }
 
     public boolean equals(Object other) {
-        if (other == this) 
-            return true; 
-        
-        if (!(other instanceof FBTpb)) 
+        if (other == this)
+            return true;
+
+        if (!(other instanceof FBTpb))
             return false;
-        
+
         return transactionParams.equals(((FBTpb) other).transactionParams);
     }
 
@@ -64,33 +63,30 @@ public class FBTpb implements Serializable {
 
     /**
      * Set the read-only flag on this TPB.
-     * 
+     *
      * @param readOnly
-     *            If <code>true</code>, this TPB will be set to read-only,
-     *            otherwise it will be be read-write
+     *         If <code>true</code>, this TPB will be set to read-only, otherwise it will be read-write
      */
     public void setReadOnly(boolean readOnly) {
-        
-        transactionParams.removeArgument(TransactionParameterBuffer.READ);
-        transactionParams.removeArgument(TransactionParameterBuffer.WRITE);
-        
-        transactionParams.addArgument(readOnly ? TransactionParameterBuffer.READ
-                : TransactionParameterBuffer.WRITE);
+        transactionParams.removeArgument(isc_tpb_read);
+        transactionParams.removeArgument(isc_tpb_write);
+
+        transactionParams.addArgument(readOnly ? isc_tpb_read : isc_tpb_write);
     }
 
     /**
      * Determine whether this TPB is set to read-only.
-     * 
+     *
      * @return <code>true</code> if this TPB is read-only, otherwise false
      */
     public boolean isReadOnly() {
-        return transactionParams.hasArgument(TransactionParameterBuffer.READ);
+        return transactionParams.hasArgument(isc_tpb_read);
     }
-    
+
     public TransactionParameterBuffer getTransactionParameterBuffer() {
         return transactionParams;
     }
-    
+
     public void setTransactionParameterBuffer(TransactionParameterBuffer tpb) {
         this.transactionParams = tpb;
     }

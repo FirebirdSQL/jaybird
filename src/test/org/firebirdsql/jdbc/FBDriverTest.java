@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -40,6 +40,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
@@ -71,7 +72,7 @@ public class FBDriverTest {
     @Test
     public void testConnect() throws Exception {
         Driver driver = DriverManager.getDriver(getUrl());
-        try (Connection connection = driver.connect(getUrl(), getDefaultPropertiesForConnection())){
+        try (Connection connection = driver.connect(getUrl(), getDefaultPropertiesForConnection())) {
             assertNotNull("Connection is null", connection);
         }
     }
@@ -250,10 +251,10 @@ public class FBDriverTest {
                     fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
             assertEquals(4, tpb.size());
-            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
-            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
-            assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
-            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(isc_tpb_read_committed));
+            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(isc_tpb_no_rec_version));
+            assertTrue("expected isc_tpb_write", tpb.hasArgument(isc_tpb_write));
+            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(isc_tpb_nowait));
         }
     }
 
@@ -268,10 +269,10 @@ public class FBDriverTest {
                     fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
             assertEquals(4, tpb.size());
-            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(ISCConstants.isc_tpb_read_committed));
-            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(ISCConstants.isc_tpb_no_rec_version));
-            assertTrue("expected isc_tpb_write", tpb.hasArgument(ISCConstants.isc_tpb_write));
-            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(ISCConstants.isc_tpb_nowait));
+            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(isc_tpb_read_committed));
+            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(isc_tpb_no_rec_version));
+            assertTrue("expected isc_tpb_write", tpb.hasArgument(isc_tpb_write));
+            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(isc_tpb_nowait));
         }
     }
 
@@ -387,36 +388,36 @@ public class FBDriverTest {
     public void testUrlEncodedPropertiesDecode()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Using reflection to access internal implementation
-        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Properties.class);
+        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Map.class);
         convertUrlParams.setAccessible(true);
 
         String url = "jdbc:firebird://localhost/database?key=value&key+semicolon=value%3bsemicolon"
                 + "&key+percent=value%25percent&key+plus=value%2Bplus&key+ampersand=value%26ampersand"
                 + "&key+equals_unescaped=value=equals&key+equals_escaped=value%3Dequals"
                 + "&key+euro=value%e2%82%aceuro&key space=value space";
-        Properties props = new Properties();
+        Map<String, String> props = new HashMap<>();
 
         convertUrlParams.invoke(null, url, props);
 
-        assertEquals("key", "value", props.getProperty("key"));
-        assertEquals("key semicolon", "value;semicolon", props.getProperty("key semicolon"));
-        assertEquals("key percent", "value%percent", props.getProperty("key percent"));
-        assertEquals("key plus", "value+plus", props.getProperty("key plus"));
-        assertEquals("key ampersand", "value&ampersand", props.getProperty("key ampersand"));
-        assertEquals("key equals_unescaped", "value=equals", props.getProperty("key equals_unescaped"));
-        assertEquals("key equals_escaped", "value=equals", props.getProperty("key equals_escaped"));
-        assertEquals("key euro", "value\u20aceuro", props.getProperty("key euro"));
-        assertEquals("key space", "value space", props.getProperty("key space"));
+        assertEquals("key", "value", props.get("key"));
+        assertEquals("key semicolon", "value;semicolon", props.get("key semicolon"));
+        assertEquals("key percent", "value%percent", props.get("key percent"));
+        assertEquals("key plus", "value+plus", props.get("key plus"));
+        assertEquals("key ampersand", "value&ampersand", props.get("key ampersand"));
+        assertEquals("key equals_unescaped", "value=equals", props.get("key equals_unescaped"));
+        assertEquals("key equals_escaped", "value=equals", props.get("key equals_escaped"));
+        assertEquals("key euro", "value\u20aceuro", props.get("key euro"));
+        assertEquals("key space", "value space", props.get("key space"));
     }
 
     @Test
     public void testUrlEncodedPropertiesDecode_illegalEscape() throws Throwable {
         // Using reflection to access internal implementation
-        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Properties.class);
+        Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Map.class);
         convertUrlParams.setAccessible(true);
 
         String url = "jdbc:firebird://localhost/database?key+invalid_escape=value%xyinvalid";
-        Properties props = new Properties();
+        Map<String, String> props = new HashMap<>();
 
         expectedException.expect(SQLNonTransientConnectionException.class);
         expectedException.expect(allOf(
@@ -434,12 +435,12 @@ public class FBDriverTest {
     @Test
     public void testNormalizeProperties() throws Exception {
         Properties props = new Properties();
-        props.put("socketBufferSize", "8192");
-        props.put("blobBufferSize", "16384");
+        props.put("socket_buffer_size", "8192");
+        props.put("blob_buffer_size", "16384");
         props.put("TRANSACTION_READ_COMMITTED", "read_committed,no_rec_version,write,wait");
         props.put("nonStandard1", "value1");
         props.put("database", "xyz");
-        String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767"
+        String url = "jdbc:firebirdsql://localhost/database?socket_buffer_size=32767"
                 + "&TRANSACTION_REPEATABLE_READ=concurrency,write,no_wait&columnLabelForName&soTimeout=1000"
                 + "&nonStandard2=value2";
 
@@ -448,14 +449,14 @@ public class FBDriverTest {
         assertEquals("size", 8, mergedProps.size());
         // NOTE: actual property name resulting from normalization should be considered an implementation detail
         // This might change in a future version
-        assertEquals("isc_dpb_socket_buffer_size", "32767", mergedProps.get("isc_dpb_socket_buffer_size"));
-        assertEquals("isc_dpb_blob_buffer_size", "16384", mergedProps.get("isc_dpb_blob_buffer_size"));
+        assertEquals("socketBufferSize", "32767", mergedProps.get("socketBufferSize"));
+        assertEquals("blobBufferSize", "16384", mergedProps.get("blobBufferSize"));
         assertEquals("TRANSACTION_READ_COMMITTED", "read_committed,no_rec_version,write,wait",
                 mergedProps.get("TRANSACTION_READ_COMMITTED"));
         assertEquals("TRANSACTION_REPEATABLE_READ", "concurrency,write,no_wait",
                 mergedProps.get("TRANSACTION_REPEATABLE_READ"));
-        assertEquals("isc_dpb_column_label_for_name", "", mergedProps.get("isc_dpb_column_label_for_name"));
-        assertEquals("isc_dpb_so_timeout", "1000", mergedProps.get("isc_dpb_so_timeout"));
+        assertEquals("columnLabelForName", "", mergedProps.get("columnLabelForName"));
+        assertEquals("soTimeout", "1000", mergedProps.get("soTimeout"));
         assertEquals("nonStandard1", "value1", mergedProps.get("nonStandard1"));
         assertEquals("nonStandard2", "value2", mergedProps.get("nonStandard2"));
         // NOTE: Currently removed during normalization, this might change in the future
@@ -465,40 +466,17 @@ public class FBDriverTest {
     @Test
     public void testNormalizeProperties_dpbShortAliasAndLongAlias_merged() throws Exception {
         Properties props = new Properties();
-        props.put("isc_dpb_socket_buffer_size", "1024");
+        props.put("socket_buffer_size", "1024");
         String url = "jdbc:firebirdsql://localhost/database?socket_buffer_size=32767";
 
         Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
 
         assertEquals("size", 1, mergedProps.size());
-        assertTrue("isc_dpb_socket_buffer_size", mergedProps.containsKey("isc_dpb_socket_buffer_size"));
+        assertTrue("socketBufferSize", mergedProps.containsKey("socketBufferSize"));
     }
 
     @Test
-    public void testNormalizeProperties_twoAliases_merged() throws Exception {
-        Properties props = new Properties();
-        props.put("defaultHoldable", "");
-        String url = "jdbc:firebirdsql://localhost/database?defaultResultSetHoldable";
-
-        Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
-
-        assertEquals("size", 1, mergedProps.size());
-        assertTrue("isc_dpb_result_set_holdable", mergedProps.containsKey("isc_dpb_result_set_holdable"));
-    }
-
-    @Test
-    public void testNormalizeProperties_dpbShortAliasAndAlias_throwsException() throws Exception {
-        Properties props = new Properties();
-        props.put("isc_dpb_socket_buffer_size", "1024");
-        String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767";
-
-        expectedException.expect(SQLException.class);
-        
-        FBDriver.normalizeProperties(url, props);
-    }
-
-    @Test
-    public void testNormalizeProperties_dpbLongAliasAndAlias_throwsException() throws Exception {
+    public void testNormalizeProperties_multipleAliases_throwsException() throws Exception {
         Properties props = new Properties();
         props.put("socket_buffer_size", "1024");
         String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767";

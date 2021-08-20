@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -99,7 +100,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Create a new instance of <code>FBBackupManagerBase</code> based on a given GDSType.
      *
      * @param gdsType
-     *        type must be PURE_JAVA, EMBEDDED, or NATIVE
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBBackupManagerBase(String gdsType) {
         super(gdsType);
@@ -109,7 +110,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Create a new instance of <code>FBBackupManagerBase</code> based on a given GDSType.
      *
      * @param gdsType
-     *        type must be PURE_JAVA, EMBEDDED, or NATIVE
+     *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
     public FBBackupManagerBase(GDSType gdsType) {
         super(gdsType);
@@ -150,22 +151,22 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Creates and returns the "backup" service request buffer for the Service Manager.
      *
      * @param service
-     *        Service handle
+     *         Service handle
      * @param options
-     *        The isc_spb_bkp_* parameters options to be used
+     *         The isc_spb_bkp_* parameters options to be used
      * @return the "backup" service request buffer for the Service Manager.
      */
     protected ServiceRequestBuffer getBackupSRB(FbService service, int options) throws SQLException {
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_backup);
-        backupSPB.addArgument(isc_spb_dbname, getDatabase());
+        backupSPB.addArgument(SpbItems.isc_spb_dbname, getDatabase());
         addBackupsToBackupRequestBuffer(service, backupSPB);
 
         if (verboseBackup()) {
-            backupSPB.addArgument(isc_spb_verbose);
+            backupSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
-        backupSPB.addArgument(isc_spb_options, options);
+        backupSPB.addArgument(SpbItems.isc_spb_options, options);
 
         return backupSPB;
     }
@@ -178,7 +179,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Set whether the operations of this {@code BackupManager} will result in verbose logging to the configured logger.
      *
      * @param verbose
-     *        If <code>true</code>, operations will be logged verbosely, otherwise they will not be logged verbosely
+     *         If <code>true</code>, operations will be logged verbosely, otherwise they will not be logged verbosely
      */
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
@@ -188,7 +189,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Set the default number of pages to be buffered (cached) by default in a restored database.
      *
      * @param bufferCount
-     *        The page-buffer size to be used, a positive value
+     *         The page-buffer size to be used, a positive value
      */
     public void setRestorePageBufferCount(int bufferCount) {
         if (bufferCount < 0) {
@@ -205,7 +206,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * </p>
      *
      * @param pageSize
-     *        The page size to be used in a restored database, see {@link PageSizeConstants}
+     *         The page size to be used in a restored database, see {@link PageSizeConstants}
      * @see PageSizeConstants
      */
     public void setRestorePageSize(int pageSize) {
@@ -217,8 +218,8 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * by default.
      *
      * @param replace
-     *        If <code>true</code>, the restore operation will attempt to create a new database, otherwise
-     *        the restore operation will overwrite an existing database
+     *         If <code>true</code>, the restore operation will attempt to create a new database, otherwise the restore
+     *         operation will overwrite an existing database
      */
     public void setRestoreReplace(boolean replace) {
         this.restoreReplace = replace;
@@ -228,7 +229,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Set the read-only attribute on a restored database.
      *
      * @param readOnly
-     *        If <code>true</code>, a restored database will be read-only, otherwise it will be read-write.
+     *         If <code>true</code>, a restored database will be read-only, otherwise it will be read-write.
      */
     public void setRestoreReadOnly(boolean readOnly) {
         this.restoreReadOnly = readOnly;
@@ -238,9 +239,9 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Creates and returns the "backup" service request buffer for the Service Manager.
      *
      * @param service
-     *        Service handle
+     *         Service handle
      * @param options
-     *        The options to be used for the backup operation
+     *         The options to be used for the backup operation
      * @return the "backup" service request buffer for the Service Manager.
      */
     protected ServiceRequestBuffer getRestoreSRB(FbService service, int options) {
@@ -248,10 +249,10 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         restoreSPB.addArgument(isc_action_svc_restore);
 
         // restore files with sizes except the last one
-        for (Iterator<PathSizeStruct> iter = restorePaths.iterator(); iter.hasNext();) {
+        for (Iterator<PathSizeStruct> iter = restorePaths.iterator(); iter.hasNext(); ) {
             PathSizeStruct pathSize = iter.next();
 
-            restoreSPB.addArgument(isc_spb_dbname, pathSize.getPath());
+            restoreSPB.addArgument(SpbItems.isc_spb_dbname, pathSize.getPath());
 
             if (iter.hasNext() && pathSize.getSize() != -1) {
                 restoreSPB.addArgument(isc_spb_res_length, pathSize.getSize());
@@ -274,7 +275,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
                         : isc_spb_res_am_readwrite));
 
         if (verbose) {
-            restoreSPB.addArgument(isc_spb_verbose);
+            restoreSPB.addArgument(SpbItems.isc_spb_verbose);
         }
 
         if ((options & RESTORE_CREATE) != RESTORE_CREATE
@@ -284,7 +285,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
                     : RESTORE_CREATE;
         }
 
-        restoreSPB.addArgument(isc_spb_options, options);
+        restoreSPB.addArgument(SpbItems.isc_spb_options, options);
 
         return restoreSPB;
     }
@@ -293,7 +294,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * Adds the backup source for the backup opration, depending on the manager used
      *
      * @param backupSPB
-     *        The buffer to be used during the backup operation
+     *         The buffer to be used during the backup operation
      */
     protected abstract void addBackupsToBackupRequestBuffer(FbService service, ServiceRequestBuffer backupSPB)
             throws SQLException;

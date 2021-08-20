@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,6 +18,15 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import static java.util.Collections.unmodifiableMap;
+
 /**
  * Abstract immutable implementation of {@link org.firebirdsql.gds.ng.IAttachProperties}.
  * <p>
@@ -34,18 +43,7 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     private final String serverName;
     private final int portNumber;
-    private final String user;
-    private final String password;
-    private final String roleName;
-    private final String charSet;
-    private final String encoding;
-    private final int socketBufferSize;
-    private final int soTimeout;
-    private final int connectTimeout;
-    private final WireCrypt wireCrypt;
-    private final String dbCryptConfig;
-    private final String authPlugins;
-    private final boolean wireCompression;
+    private final Map<ConnectionProperty, Object> propValues;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -60,18 +58,9 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     protected AbstractImmutableAttachProperties(IAttachProperties<T> src) {
         serverName = src.getServerName();
         portNumber = src.getPortNumber();
-        user = src.getUser();
-        password = src.getPassword();
-        roleName = src.getRoleName();
-        charSet = src.getCharSet();
-        encoding = src.getEncoding();
-        socketBufferSize = src.getSocketBufferSize();
-        soTimeout = src.getSoTimeout();
-        connectTimeout = src.getConnectTimeout();
-        wireCrypt = WireCrypt.fromString(src.getWireCrypt());
-        dbCryptConfig = src.getDbCryptConfig();
-        authPlugins = src.getAuthPlugins();
-        wireCompression = src.isWireCompression();
+        propValues = src instanceof AbstractImmutableAttachProperties
+                ? ((AbstractImmutableAttachProperties<T>) src).propValues
+                : unmodifiableMap(new HashMap<>(src.connectionPropertyValues()));
     }
 
     @Override
@@ -95,78 +84,19 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public String getUser() {
-        return user;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getRoleName() {
-        return roleName;
-    }
-
-    @Override
-    public String getCharSet() {
-        return charSet;
-    }
-
-    @Override
-    public String getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public int getSocketBufferSize() {
-        return socketBufferSize;
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return soTimeout;
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return wireCrypt != null ? wireCrypt.name() : null;
-    }
-
-    @Override
     public void setWireCrypt(final WireCrypt wireCrypt) {
         immutable();
     }
 
     @Override
     public WireCrypt getWireCryptAsEnum() {
-        return wireCrypt;
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return dbCryptConfig;
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return authPlugins;
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return wireCompression;
+        return WireCrypt.fromString(getWireCrypt());
     }
 
     @Override
     public final String getProperty(String name) {
-        throw new AssertionError("not yet implemented");
+        ConnectionProperty property = property(name);
+        return property.type().asString(propValues.get(property));
     }
 
     @Override
@@ -176,7 +106,8 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public final Integer getIntProperty(String name) {
-        throw new AssertionError("not yet implemented");
+        ConnectionProperty property = property(name);
+        return property.type().asInteger(propValues.get(property));
     }
 
     @Override
@@ -186,12 +117,57 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
     @Override
     public final Boolean getBooleanProperty(String name) {
-        throw new AssertionError("not yet implemented");
+        ConnectionProperty property = property(name);
+        return property.type().asBoolean(propValues.get(property));
     }
 
     @Override
     public final void setBooleanProperty(String name, Boolean value) {
         immutable();
+    }
+
+    /**
+     * Returns the property of the specified name.
+     * <p>
+     * When the property is not a known property, an unknown variant is returned.
+     * </p>
+     *
+     * @param name
+     *         Property name
+     * @return A connection property instance, never {@code null}
+     */
+    protected final ConnectionProperty property(String name) {
+        return ConnectionPropertyRegistry.getInstance().getOrUnknown(name);
+    }
+
+    @Override
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return propValues;
+    }
+
+    @Override
+    public final boolean isImmutable() {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractImmutableAttachProperties)) return false;
+
+        AbstractImmutableAttachProperties<?> that = (AbstractImmutableAttachProperties<?>) o;
+
+        return portNumber == that.portNumber
+                && Objects.equals(serverName, that.serverName)
+                && propValues.equals(that.propValues);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = serverName != null ? serverName.hashCode() : 0;
+        result = 31 * result + portNumber;
+        result = 31 * result + propValues.hashCode();
+        return result;
     }
 
     /**

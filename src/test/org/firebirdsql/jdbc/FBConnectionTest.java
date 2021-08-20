@@ -23,6 +23,7 @@ import org.firebirdsql.common.rules.DatabaseUserRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
@@ -33,6 +34,7 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +53,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.anyOf;
@@ -128,10 +131,10 @@ public class FBConnectionTest {
                 conB.setTransactionParameters(
                         Connection.TRANSACTION_READ_COMMITTED,
                         new int[] {
-                                FirebirdConnection.TPB_READ_COMMITTED,
-                                FirebirdConnection.TPB_REC_VERSION,
-                                FirebirdConnection.TPB_WRITE,
-                                FirebirdConnection.TPB_NOWAIT
+                                isc_tpb_read_committed,
+                                isc_tpb_rec_version,
+                                isc_tpb_write,
+                                isc_tpb_nowait
                         });
                 conB.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
@@ -215,9 +218,9 @@ public class FBConnectionTest {
 
             TransactionParameterBuffer tpb = connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
-            if (tpb.hasArgument(TransactionParameterBuffer.WAIT)) {
-                tpb.removeArgument(TransactionParameterBuffer.WAIT);
-                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+            if (tpb.hasArgument(isc_tpb_wait)) {
+                tpb.removeArgument(isc_tpb_wait);
+                tpb.addArgument(isc_tpb_nowait);
             }
 
             connection.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
@@ -229,12 +232,12 @@ public class FBConnectionTest {
                 anotherConnection.setAutoCommit(false);
                 TransactionParameterBuffer anotherTpb = anotherConnection.createTransactionParameterBuffer();
 
-                anotherTpb.addArgument(TransactionParameterBuffer.CONSISTENCY);
-                anotherTpb.addArgument(TransactionParameterBuffer.WRITE);
-                anotherTpb.addArgument(TransactionParameterBuffer.NOWAIT);
+                anotherTpb.addArgument(isc_tpb_consistency);
+                anotherTpb.addArgument(isc_tpb_write);
+                anotherTpb.addArgument(isc_tpb_nowait);
 
-                anotherTpb.addArgument(TransactionParameterBuffer.LOCK_WRITE, "TEST_LOCK");
-                anotherTpb.addArgument(TransactionParameterBuffer.PROTECTED);
+                anotherTpb.addArgument(isc_tpb_lock_write, "TEST_LOCK");
+                anotherTpb.addArgument(isc_tpb_protected);
 
                 anotherConnection.setTransactionParameters(anotherTpb);
 
@@ -465,12 +468,12 @@ public class FBConnectionTest {
         assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
         final Properties props = getDefaultPropertiesForConnection();
         final String processName = "Test process name";
-        props.setProperty("processName", processName);
+        props.setProperty(PropertyNames.processName, processName);
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PROCESS from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")){
+                     "select MON$REMOTE_PROCESS from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
             assertTrue(resultSet.next());
             assertEquals(processName, resultSet.getString(1));
         }
@@ -482,12 +485,12 @@ public class FBConnectionTest {
         assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
         final Properties props = getDefaultPropertiesForConnection();
         final int processId = 5843;
-        props.setProperty("processId", String.valueOf(processId));
+        props.setProperty(PropertyNames.processId, String.valueOf(processId));
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")){
+                     "select MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
             assertTrue(resultSet.next());
             assertEquals(processId, resultSet.getInt(1));
         }
@@ -499,18 +502,18 @@ public class FBConnectionTest {
         assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
         final Properties props = getDefaultPropertiesForConnection();
         final String processNameThroughConnection = "Process name in connection property";
-        props.setProperty("processName", processNameThroughConnection);
+        props.setProperty(PropertyNames.processName, processNameThroughConnection);
         final int processIdThroughConnection = 513;
-        props.setProperty("processId", String.valueOf(processIdThroughConnection));
+        props.setProperty(PropertyNames.processId, String.valueOf(processIdThroughConnection));
         final String processNameThroughSystemProp = "Process name in system property";
         final int processIdThroughSystemProp = 132;
-        System.setProperty("org.firebirdsql.jdbc.processName", processNameThroughSystemProp);
-        System.setProperty("org.firebirdsql.jdbc.pid", String.valueOf(processIdThroughSystemProp));
+        System.setProperty(JaybirdSystemProperties.PROCESS_NAME_PROP, processNameThroughSystemProp);
+        System.setProperty(JaybirdSystemProperties.PROCESS_ID_PROP, String.valueOf(processIdThroughSystemProp));
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
-                     "select MON$REMOTE_PROCESS, MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")){
+                     "select MON$REMOTE_PROCESS, MON$REMOTE_PID from MON$ATTACHMENTS where MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
             assertTrue(resultSet.next());
             assertEquals(processNameThroughConnection, resultSet.getString(1));
             assertEquals(processIdThroughConnection, resultSet.getInt(2));
@@ -524,7 +527,7 @@ public class FBConnectionTest {
     public void testConnectionsViaDriverManagerAreDistinct() throws Exception {
         try (Connection connection1 = getConnectionViaDriverManager();
              Connection connection2 = getConnectionViaDriverManager()) {
-             assertNotSame(connection1, connection2);
+            assertNotSame(connection1, connection2);
 
             connection1.close();
             assertTrue(connection1.isClosed());
@@ -896,9 +899,9 @@ public class FBConnectionTest {
                     con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ);
 
             TransactionParameterBufferImpl newParameters = new TransactionParameterBufferImpl();
-            newParameters.addArgument(TransactionParameterBuffer.CONSISTENCY);
-            newParameters.addArgument(TransactionParameterBuffer.READ);
-            newParameters.addArgument(TransactionParameterBuffer.NOWAIT);
+            newParameters.addArgument(isc_tpb_consistency);
+            newParameters.addArgument(isc_tpb_read);
+            newParameters.addArgument(isc_tpb_nowait);
 
             con1.setTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ, newParameters);
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -30,8 +30,10 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
+import org.hamcrest.MatcherAssert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +47,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -88,7 +90,7 @@ public class TestJnaDatabase {
             db.attach();
 
             assertTrue("Expected isAttached() to return true", db.isAttached());
-            assertThat("Expected non-zero connection handle", db.getHandle(), not(equalTo(0)));
+            MatcherAssert.assertThat("Expected non-zero connection handle", db.getHandle(), not(equalTo(0)));
             assertNotNull("Expected version string to be not null", db.getServerVersion());
             assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
         } finally {
@@ -115,7 +117,7 @@ public class TestJnaDatabase {
     }
 
     @Test
-     public void basicStatusVectorProcessing_wrongLogin() throws Exception {
+    public void basicStatusVectorProcessing_wrongLogin() throws Exception {
         assumeThat("Embedded on windows does not use authentication",
                 FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         // set invalid password
@@ -164,15 +166,14 @@ public class TestJnaDatabase {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        connectionInfo.getExtraDatabaseParameters()
-                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+        connectionInfo.setSqlDialect(3);
         JnaDatabase db = factory.connect(connectionInfo);
         File dbFile = new File(connectionInfo.getDatabaseName());
         try {
             db.createDatabase();
             assertTrue("Database should be attached after create", db.isAttached());
             assertTrue("Expected database file to exist (NOTE: only works on localhost)",
-                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost") );
+                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"));
 
             db.dropDatabase();
             assertFalse("Database should be detached after drop", db.isAttached());
@@ -268,8 +269,8 @@ public class TestJnaDatabase {
     public void testCancelOperation_abortSupported() throws Exception {
         // TODO Investigate why this doesn't work.
         assumeThat("Test doesn't work with local or embedded protocol",
-                FBTestProperties.GDS_TYPE, not(
-                        isOneOf(LocalGDSFactoryPlugin.LOCAL_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+                FBTestProperties.GDS_TYPE,
+                not(oneOf(LocalGDSFactoryPlugin.LOCAL_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
 
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
@@ -308,10 +309,10 @@ public class TestJnaDatabase {
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
         return db.startTransaction(tpb);
     }
 

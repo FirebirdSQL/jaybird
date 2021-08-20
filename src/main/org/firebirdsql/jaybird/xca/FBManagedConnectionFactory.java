@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -28,6 +27,7 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -204,20 +204,8 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return shared;
     }
 
-    public int getBlobBufferSize() {
-        return connectionProperties.getBlobBufferSize();
-    }
-
-    public int getBuffersNumber() {
-        return connectionProperties.getBuffersNumber();
-    }
-
     public String getDatabase() {
         return connectionProperties.getDatabase();
-    }
-
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return connectionProperties.getDatabaseParameterBuffer();
     }
 
     public String getDefaultIsolation() {
@@ -226,10 +214,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     public int getDefaultTransactionIsolation() {
         return connectionProperties.getDefaultTransactionIsolation();
-    }
-
-    public String getSqlDialect() {
-        return connectionProperties.getSqlDialect();
     }
 
     public String getTpbMapping() {
@@ -244,27 +228,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getType();
     }
 
-    public boolean isTimestampUsesLocalTimezone() {
-        return connectionProperties.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return connectionProperties.isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        ensureCanModify(() -> connectionProperties.setBlobBufferSize(bufferSize));
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        ensureCanModify(() -> connectionProperties.setBuffersNumber(buffersNumber));
-    }
-
-    public void setCharSet(String charSet) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        ensureCanModify(() -> connectionProperties.setCharSet(charSet));
-    }
-
     public void setDatabase(String database) {
         ensureCanModify(() -> connectionProperties.setDatabase(database));
     }
@@ -277,11 +240,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         ensureCanModify(() -> connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel));
     }
 
-    public void setEncoding(String encoding) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        ensureCanModify(() -> connectionProperties.setEncoding(encoding));
-    }
-
     @Deprecated
     public void setNonStandardProperty(String key, String value) {
         // TODO Remove when logic in FBConnectionProperties rewritten
@@ -290,14 +248,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     public void setNonStandardProperty(String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        ensureCanModify(() -> connectionProperties.setSqlDialect(sqlDialect));
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        ensureCanModify(() -> connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone));
     }
 
     public void setTpbMapping(String tpbMapping) {
@@ -318,18 +268,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         });
     }
 
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        ensureCanModify(() -> connectionProperties.setUseStreamBlobs(useStreamBlobs));
-    }
-
-    public boolean isDefaultResultSetHoldable() {
-        return connectionProperties.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        ensureCanModify(() -> connectionProperties.setDefaultResultSetHoldable(isHoldable));
-    }
-
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
         ensureCanModify(() -> {
             // Ensures that instances with different connection managers do not resolve to the same connection manager
@@ -337,56 +275,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
                     DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
             this.defaultCm = defaultCm;
         });
-    }
-
-    @Override
-    public boolean isUseFirebirdAutocommit() {
-        return connectionProperties.isUseFirebirdAutocommit();
-    }
-
-    @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        ensureCanModify(() -> connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit));
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return connectionProperties.getGeneratedKeysEnabled();
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        ensureCanModify(() -> connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled));
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return connectionProperties.getDataTypeBind();
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        ensureCanModify(() -> connectionProperties.setDataTypeBind(dataTypeBind));
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return connectionProperties.getSessionTimeZone();
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        ensureCanModify(() -> connectionProperties.setSessionTimeZone(sessionTimeZone));
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return connectionProperties.isIgnoreProcedureType();
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        ensureCanModify(() -> connectionProperties.setIgnoreProcedureType(ignoreProcedureType));
     }
 
     @Override
@@ -420,6 +308,11 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return connectionProperties.connectionPropertyValues();
+    }
+
+    @Override
     public int hashCode() {
         if (hashCode != 0) {
             return hashCode;
@@ -450,7 +343,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() throws SQLException {
-        return new FBConnectionRequestInfo(getDatabaseParameterBuffer().deepCopy());
+        return new FBConnectionRequestInfo(connectionProperties.asIConnectionProperties().asNewMutable());
     }
 
     public FBTpb getDefaultTpb() throws SQLException {

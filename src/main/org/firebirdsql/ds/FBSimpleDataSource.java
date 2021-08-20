@@ -18,10 +18,10 @@
  */
 package org.firebirdsql.ds;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
 import org.firebirdsql.jdbc.FirebirdConnectionProperties;
@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
@@ -88,9 +89,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * Get buffer length for the BLOB fields.
      *
      * @return length of BLOB buffer.
+     * @deprecated Use {@link #getBlobBufferSize()}; will be removed in Jaybird 6
      */
+    @Deprecated
     public Integer getBlobBufferLength() {
-        return mcf.getBlobBufferSize();
+        return getBlobBufferSize();
     }
 
     /**
@@ -99,9 +102,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      *
      * @param length
      *         new length of the BLOB buffer.
+     * @deprecated Use {@link #setBlobBufferSize(int)}; will be removed in Jaybird 6
      */
+    @Deprecated
     public void setBlobBufferLength(Integer length) {
-        mcf.setBlobBufferSize(length);
+        setBlobBufferSize(length);
     }
 
     /**
@@ -154,35 +159,12 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setDatabase(name);
     }
 
-    /**
-     * Set encoding for connections produced by this data source.
-     *
-     * @param encoding
-     *         encoding for the connection.
-     */
-    public void setEncoding(String encoding) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        mcf.setEncoding(encoding);
-    }
-
     public String getTpbMapping() {
         return mcf.getTpbMapping();
     }
 
     public void setTpbMapping(String tpbMapping) {
         mcf.setTpbMapping(tpbMapping);
-    }
-
-    public int getBlobBufferSize() {
-        return mcf.getBlobBufferSize();
-    }
-
-    public int getBuffersNumber() {
-        return mcf.getBuffersNumber();
-    }
-
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return mcf.getDatabaseParameterBuffer();
     }
 
     public String getDefaultIsolation() {
@@ -193,10 +175,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         return mcf.getDefaultTransactionIsolation();
     }
 
-    public String getSqlDialect() {
-        return mcf.getSqlDialect();
-    }
-
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return mcf.getTransactionParameters(isolation);
     }
@@ -205,33 +183,297 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         return mcf.getType();
     }
 
-    public boolean isTimestampUsesLocalTimezone() {
-        return mcf.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return mcf.isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        mcf.setBlobBufferSize(bufferSize);
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        mcf.setBuffersNumber(buffersNumber);
-    }
-
-    public void setCharSet(String charSet) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        mcf.setCharSet(charSet);
-    }
-
     public void setDefaultIsolation(String isolation) {
         mcf.setDefaultIsolation(isolation);
     }
 
     public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
         mcf.setDefaultTransactionIsolation(defaultIsolationLevel);
+    }
+
+    // For the remaining properties, we redirect to the default implementations of the interface here to ensure the
+    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+
+    @Override
+    public String getUser() {
+        return FirebirdConnectionProperties.super.getUser();
+    }
+
+    @Override
+    public void setUser(String user) {
+        FirebirdConnectionProperties.super.setUser(user);
+    }
+
+    @Override
+    public String getPassword() {
+        return FirebirdConnectionProperties.super.getPassword();
+    }
+
+    @Override
+    public void setPassword(String password) {
+        FirebirdConnectionProperties.super.setPassword(password);
+    }
+
+    @Override
+    public String getRoleName() {
+        return FirebirdConnectionProperties.super.getRoleName();
+    }
+
+    @Override
+    public void setRoleName(String roleName) {
+        FirebirdConnectionProperties.super.setRoleName(roleName);
+    }
+
+    @Override
+    public String getCharSet() {
+        return FirebirdConnectionProperties.super.getCharSet();
+    }
+
+    @Override
+    public void setCharSet(String charSet) {
+        FirebirdConnectionProperties.super.setCharSet(charSet);
+    }
+
+    @Override
+    public String getEncoding() {
+        return FirebirdConnectionProperties.super.getEncoding();
+    }
+
+    @Override
+    public void setEncoding(String encoding) {
+        FirebirdConnectionProperties.super.setEncoding(encoding);
+    }
+
+    @Override
+    public Integer getProcessId() {
+        return FirebirdConnectionProperties.super.getProcessId();
+    }
+
+    @Override
+    public void setProcessId(Integer processId) {
+        FirebirdConnectionProperties.super.setProcessId(processId);
+    }
+
+    @Override
+    public String getProcessName() {
+        return FirebirdConnectionProperties.super.getProcessName();
+    }
+
+    @Override
+    public void setProcessName(String processName) {
+        FirebirdConnectionProperties.super.setProcessName(processName);
+    }
+
+    @Override
+    public int getSocketBufferSize() {
+        return FirebirdConnectionProperties.super.getSocketBufferSize();
+    }
+
+    @Override
+    public void setSocketBufferSize(int socketBufferSize) {
+        FirebirdConnectionProperties.super.setSocketBufferSize(socketBufferSize);
+    }
+
+    @Override
+    public int getSoTimeout() {
+        return FirebirdConnectionProperties.super.getSoTimeout();
+    }
+
+    @Override
+    public void setSoTimeout(int soTimeout) {
+        FirebirdConnectionProperties.super.setSoTimeout(soTimeout);
+    }
+
+    @Override
+    public int getConnectTimeout() {
+        return FirebirdConnectionProperties.super.getConnectTimeout();
+    }
+
+    @Override
+    public void setConnectTimeout(int connectTimeout) {
+        FirebirdConnectionProperties.super.setConnectTimeout(connectTimeout);
+    }
+
+    @Override
+    public String getWireCrypt() {
+        return FirebirdConnectionProperties.super.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        FirebirdConnectionProperties.super.setWireCrypt(wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return FirebirdConnectionProperties.super.getDbCryptConfig();
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        FirebirdConnectionProperties.super.setDbCryptConfig(dbCryptConfig);
+    }
+
+    @Override
+    public String getAuthPlugins() {
+        return FirebirdConnectionProperties.super.getAuthPlugins();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        FirebirdConnectionProperties.super.setAuthPlugins(authPlugins);
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return FirebirdConnectionProperties.super.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        FirebirdConnectionProperties.super.setWireCompression(wireCompression);
+    }
+
+    @Override
+    public int getSqlDialect() {
+        return FirebirdConnectionProperties.super.getSqlDialect();
+    }
+
+    @Override
+    public void setSqlDialect(int sqlDialect) {
+        FirebirdConnectionProperties.super.setSqlDialect(sqlDialect);
+    }
+
+    @Override
+    public int getPageCacheSize() {
+        return FirebirdConnectionProperties.super.getPageCacheSize();
+    }
+
+    @Override
+    public void setPageCacheSize(int pageCacheSize) {
+        FirebirdConnectionProperties.super.setPageCacheSize(pageCacheSize);
+    }
+
+    @Override
+    public String getDataTypeBind() {
+        return FirebirdConnectionProperties.super.getDataTypeBind();
+    }
+
+    @Override
+    public void setDataTypeBind(String dataTypeBind) {
+        FirebirdConnectionProperties.super.setDataTypeBind(dataTypeBind);
+    }
+
+    @Override
+    public String getSessionTimeZone() {
+        return FirebirdConnectionProperties.super.getSessionTimeZone();
+    }
+
+    @Override
+    public void setSessionTimeZone(String sessionTimeZone) {
+        FirebirdConnectionProperties.super.setSessionTimeZone(sessionTimeZone);
+    }
+
+    @Override
+    public int getBlobBufferSize() {
+        return FirebirdConnectionProperties.super.getBlobBufferSize();
+    }
+
+    @Override
+    public void setBlobBufferSize(int blobBufferSize) {
+        FirebirdConnectionProperties.super.setBlobBufferSize(blobBufferSize);
+    }
+
+    @Override
+    public boolean isUseStreamBlobs() {
+        return FirebirdConnectionProperties.super.isUseStreamBlobs();
+    }
+
+    @Override
+    public void setUseStreamBlobs(boolean useStreamBlobs) {
+        FirebirdConnectionProperties.super.setUseStreamBlobs(useStreamBlobs);
+    }
+
+    @Override
+    public boolean isDefaultResultSetHoldable() {
+        return FirebirdConnectionProperties.super.isDefaultResultSetHoldable();
+    }
+
+    @Override
+    public void setDefaultResultSetHoldable(boolean defaultResultSetHoldable) {
+        FirebirdConnectionProperties.super.setDefaultResultSetHoldable(defaultResultSetHoldable);
+    }
+
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return FirebirdConnectionProperties.super.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        FirebirdConnectionProperties.super.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
+    @Override
+    public boolean isColumnLabelForName() {
+        return FirebirdConnectionProperties.super.isColumnLabelForName();
+    }
+
+    @Override
+    public void setColumnLabelForName(boolean columnLabelForName) {
+        FirebirdConnectionProperties.super.setColumnLabelForName(columnLabelForName);
+    }
+
+    @Override
+    public String getGeneratedKeysEnabled() {
+        return FirebirdConnectionProperties.super.getGeneratedKeysEnabled();
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        FirebirdConnectionProperties.super.setGeneratedKeysEnabled(generatedKeysEnabled);
+    }
+
+    @Override
+    public boolean isIgnoreProcedureType() {
+        return FirebirdConnectionProperties.super.isIgnoreProcedureType();
+    }
+
+    @Override
+    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
+        FirebirdConnectionProperties.super.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
+    @Override
+    public String getDecfloatRound() {
+        return FirebirdConnectionProperties.super.getDecfloatRound();
+    }
+
+    @Override
+    public void setDecfloatRound(String decfloatRound) {
+        FirebirdConnectionProperties.super.setDecfloatRound(decfloatRound);
+    }
+
+    @Override
+    public String getDecfloatTraps() {
+        return FirebirdConnectionProperties.super.getDecfloatTraps();
+    }
+
+    @Override
+    public void setDecfloatTraps(String decfloatTraps) {
+        FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
+    }
+
+    @Deprecated
+    @Override
+    public boolean isTimestampUsesLocalTimezone() {
+        return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
+    }
+
+    @Deprecated
+    @Override
+    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
+        FirebirdConnectionProperties.super.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
     }
 
     @Deprecated
@@ -244,82 +486,12 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setNonStandardProperty(propertyMapping);
     }
 
-    public void setSqlDialect(String sqlDialect) {
-        mcf.setSqlDialect(sqlDialect);
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        mcf.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-    }
-
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
         mcf.setTransactionParameters(isolation, tpb);
     }
 
     public void setType(String type) {
         mcf.setType(type);
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        mcf.setUseStreamBlobs(useStreamBlobs);
-    }
-
-    public boolean isDefaultResultSetHoldable() {
-        return mcf.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        mcf.setDefaultResultSetHoldable(isHoldable);
-    }
-
-    @Override
-    public boolean isUseFirebirdAutocommit() {
-        return mcf.isUseFirebirdAutocommit();
-    }
-
-    @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return mcf.getGeneratedKeysEnabled();
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        mcf.setGeneratedKeysEnabled(generatedKeysEnabled);
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return mcf.getDataTypeBind();
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        mcf.setDataTypeBind(dataTypeBind);
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return mcf.getSessionTimeZone();
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        mcf.setSessionTimeZone(sessionTimeZone);
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return mcf.isIgnoreProcedureType();
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        mcf.setIgnoreProcedureType(ignoreProcedureType);
     }
 
     @Override
@@ -350,6 +522,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setBooleanProperty(String name, Boolean value) {
         mcf.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return mcf.connectionPropertyValues();
     }
 
     @Override

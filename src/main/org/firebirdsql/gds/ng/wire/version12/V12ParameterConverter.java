@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,8 +20,9 @@ package org.firebirdsql.gds.ng.wire.version12;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
 import org.firebirdsql.gds.ServiceParameterBuffer;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
@@ -43,7 +44,7 @@ public class V12ParameterConverter extends V11ParameterConverter {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         DatabaseParameterBuffer dpb =
                 new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1, stringEncoding);
-        dpb.addArgument(ISCConstants.isc_dpb_utf8_filename);
+        dpb.addArgument(DpbItems.isc_dpb_utf8_filename);
         return dpb;
     }
 
@@ -51,7 +52,7 @@ public class V12ParameterConverter extends V11ParameterConverter {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         ServiceParameterBuffer spb = new ServiceParameterBufferImp(
                 ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2_ATTACH, stringEncoding);
-        spb.addArgument(ISCConstants.isc_spb_utf8_filename);
+        spb.addArgument(SpbItems.isc_spb_utf8_filename);
         return spb;
     }
 }

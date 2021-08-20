@@ -25,6 +25,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -131,7 +132,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
 
         try (FbService service = attachServiceManager()) {
             ServiceRequestBuffer srb = createStatsSRB(service, isc_spb_sts_table);
-            srb.addArgument(isc_spb_command_line, commandLine.toString());
+            srb.addArgument(SpbItems.isc_spb_command_line, commandLine.toString());
             executeServicesOperation(service, srb);
         }
     }

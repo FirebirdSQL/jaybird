@@ -25,9 +25,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 
 import java.sql.Blob;
 import java.sql.Connection;
@@ -40,18 +40,27 @@ import java.sql.SQLException;
  */
 public interface FirebirdConnection extends Connection {
 
-    int TPB_READ_COMMITTED = ISCConstants.isc_tpb_read_committed;
-    int TPB_CONCURRENCY = ISCConstants.isc_tpb_concurrency;
-    int TPB_CONSISTENCY = ISCConstants.isc_tpb_consistency;
+    @Deprecated
+    int TPB_READ_COMMITTED = TpbItems.isc_tpb_read_committed;
+    @Deprecated
+    int TPB_CONCURRENCY = TpbItems.isc_tpb_concurrency;
+    @Deprecated
+    int TPB_CONSISTENCY = TpbItems.isc_tpb_consistency;
 
-    int TPB_READ = ISCConstants.isc_tpb_read;
-    int TPB_WRITE = ISCConstants.isc_tpb_write;
+    @Deprecated
+    int TPB_READ = TpbItems.isc_tpb_read;
+    @Deprecated
+    int TPB_WRITE = TpbItems.isc_tpb_write;
 
-    int TPB_WAIT = ISCConstants.isc_tpb_wait;
-    int TPB_NOWAIT = ISCConstants.isc_tpb_nowait;
+    @Deprecated
+    int TPB_WAIT = TpbItems.isc_tpb_wait;
+    @Deprecated
+    int TPB_NOWAIT = TpbItems.isc_tpb_nowait;
 
-    int TPB_REC_VERSION = ISCConstants.isc_tpb_rec_version;
-    int TPB_NO_REC_VERSION = ISCConstants.isc_tpb_no_rec_version;
+    @Deprecated
+    int TPB_REC_VERSION = TpbItems.isc_tpb_rec_version;
+    @Deprecated
+    int TPB_NO_REC_VERSION = TpbItems.isc_tpb_no_rec_version;
 
     /**
      * {@inheritDoc}

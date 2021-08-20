@@ -39,8 +39,7 @@ public interface IServiceProperties extends IAttachProperties<IServiceProperties
     /**
      * Get the service name
      * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if
-     * value hasn't been set yet.
+     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if value hasn't been set yet.
      * </p>
      *
      * @return Service name
@@ -50,8 +49,8 @@ public interface IServiceProperties extends IAttachProperties<IServiceProperties
     /**
      * Set the service name.
      * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if
-     * this method hasn't been called yet.
+     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if this method hasn't been called
+     * yet.
      * </p>
      *
      * @param serviceName Service name

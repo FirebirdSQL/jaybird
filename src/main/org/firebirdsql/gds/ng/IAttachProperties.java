@@ -36,9 +36,9 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
 
     int DEFAULT_PORT = 3050;
     String DEFAULT_SERVER_NAME = "localhost";
-    int DEFAULT_SOCKET_BUFFER_SIZE = -1;
-    int DEFAULT_SO_TIMEOUT = -1;
-    int DEFAULT_CONNECT_TIMEOUT = -1;
+    int DEFAULT_SOCKET_BUFFER_SIZE = AttachmentProperties.BUFFER_SIZE_NOT_SET;
+    int DEFAULT_SO_TIMEOUT = AttachmentProperties.TIMEOUT_NOT_SET;
+    int DEFAULT_CONNECT_TIMEOUT = AttachmentProperties.TIMEOUT_NOT_SET;
 
     /**
      * @return The name of the object to attach to (either a database or service name).
@@ -121,4 +121,9 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
      */
     T asNewMutable();
 
+    /**
+     * @return {@code true} if this is an immutable implementation, {@code false} if mutable
+     * @since 5
+     */
+    boolean isImmutable();
 }

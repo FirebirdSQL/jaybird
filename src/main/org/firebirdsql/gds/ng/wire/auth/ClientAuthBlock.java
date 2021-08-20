@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGINS;
 
 /**
  * Manages client authentication with multiple pluginProviders.
@@ -52,7 +53,6 @@ public final class ClientAuthBlock {
     private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
-    private static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
     private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
 
     private final IAttachProperties<?> attachProperties;

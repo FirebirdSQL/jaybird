@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,6 +18,14 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -30,18 +38,7 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
 
     private String serverName = IAttachProperties.DEFAULT_SERVER_NAME;
     private int portNumber = IAttachProperties.DEFAULT_PORT;
-    private String user;
-    private String password;
-    private String roleName;
-    private String charSet;
-    private String encoding;
-    private int socketBufferSize = IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE;
-    private int soTimeout = IAttachProperties.DEFAULT_SO_TIMEOUT;
-    private int connectTimeout = IAttachProperties.DEFAULT_CONNECT_TIMEOUT;
-    private WireCrypt wireCrypt = WireCrypt.DEFAULT;
-    private String dbCryptConfig;
-    private String authPlugins;
-    private boolean wireCompression;
+    private final Map<ConnectionProperty, Object> propertyValues;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -53,21 +50,11 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      *         Source to copy from
      */
     protected AbstractAttachProperties(IAttachProperties<T> src) {
+        this();
         if (src != null) {
             serverName = src.getServerName();
             portNumber = src.getPortNumber();
-            user = src.getUser();
-            password = src.getPassword();
-            roleName = src.getRoleName();
-            charSet = src.getCharSet();
-            encoding = src.getEncoding();
-            socketBufferSize = src.getSocketBufferSize();
-            soTimeout = src.getSoTimeout();
-            connectTimeout = src.getConnectTimeout();
-            wireCrypt = WireCrypt.fromString(src.getWireCrypt());
-            dbCryptConfig = src.getDbCryptConfig();
-            authPlugins = src.getAuthPlugins();
-            wireCompression = src.isWireCompression();
+            propertyValues.putAll(src.connectionPropertyValues());
         }
     }
 
@@ -75,6 +62,14 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      * Default constructor for AbstractAttachProperties
      */
     protected AbstractAttachProperties() {
+        propertyValues = new HashMap<>();
+    }
+
+    // For internal use, to provide serialization support in FbConnectionProperties
+    AbstractAttachProperties(String serverName, int portNumber, HashMap<ConnectionProperty, Object> propertyValues) {
+        this.serverName = serverName;
+        this.portNumber = portNumber;
+        this.propertyValues = propertyValues;
     }
 
     @Override
@@ -100,175 +95,102 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     @Override
-    public String getUser() {
-        return user;
-    }
-
-    @Override
-    public void setUser(String user) {
-        this.user = user;
-        dirtied();
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public void setPassword(String password) {
-        this.password = password;
-        dirtied();
-    }
-
-    @Override
-    public String getRoleName() {
-        return roleName;
-    }
-
-    @Override
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-        dirtied();
-    }
-
-    @Override
-    public String getCharSet() {
-        return charSet;
-    }
-
-    @Override
-    public void setCharSet(String charSet) {
-        this.charSet = charSet;
-        dirtied();
-    }
-
-    @Override
-    public String getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-        dirtied();
-    }
-
-    @Override
-    public int getSocketBufferSize() {
-        return socketBufferSize;
-    }
-
-    @Override
-    public void setSocketBufferSize(int socketBufferSize) {
-        this.socketBufferSize = socketBufferSize;
-        dirtied();
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return soTimeout;
-    }
-
-    @Override
-    public void setSoTimeout(int soTimeout) {
-        this.soTimeout = soTimeout;
-        dirtied();
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
-        dirtied();
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return wireCrypt != null ? wireCrypt.name() : null;
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        setWireCrypt(WireCrypt.fromString(wireCrypt));
-    }
-
-    @Override
     public void setWireCrypt(WireCrypt wireCrypt) {
-        this.wireCrypt = requireNonNull(wireCrypt, "wireCrypt");
-        dirtied();
+        setWireCrypt(requireNonNull(wireCrypt, "wireCrypt").name());
     }
 
     @Override
     public WireCrypt getWireCryptAsEnum() {
-        return wireCrypt;
+        return WireCrypt.fromString(getWireCrypt());
     }
 
     @Override
-    public String getDbCryptConfig() {
-        return dbCryptConfig;
+    public final void setProperty(String name, String value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        this.dbCryptConfig = dbCryptConfig;
+    public final String getProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asString(propertyValues.get(property));
+    }
+
+    @Override
+    public final void setIntProperty(String name, Integer value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
+    }
+
+    @Override
+    public final Integer getIntProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asInteger(propertyValues.get(property));
+    }
+
+    @Override
+    public final void setBooleanProperty(String name, Boolean value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
+    }
+
+    @Override
+    public final Boolean getBooleanProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asBoolean(propertyValues.get(property));
+    }
+
+    private void setProperty(ConnectionProperty property, Object value) {
+        if (value != null) {
+            propertyValues.put(property, property.validate(value));
+        } else {
+            propertyValues.remove(property);
+        }
         dirtied();
     }
 
-    @Override
-    public String getAuthPlugins() {
-        return authPlugins;
+    /**
+     * Returns the property of the specified name.
+     * <p>
+     * When the property is not a known property, an unknown variant is returned.
+     * </p>
+     *
+     * @param name
+     *         Property name
+     * @return A connection property instance, never {@code null}
+     */
+    protected final ConnectionProperty property(String name) {
+        return ConnectionPropertyRegistry.getInstance().getOrUnknown(name);
     }
 
     @Override
-    public void setAuthPlugins(String authPlugins) {
-        this.authPlugins = authPlugins;
-        dirtied();
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return unmodifiableMap(propertyValues);
     }
 
     @Override
-    public boolean isWireCompression() {
-        return wireCompression;
+    public final boolean isImmutable() {
+        return false;
     }
 
     @Override
-    public void setWireCompression(boolean wireCompression) {
-        this.wireCompression = wireCompression;
-        dirtied();
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractAttachProperties)) return false;
+
+        AbstractAttachProperties<?> that = (AbstractAttachProperties<?>) o;
+
+        return portNumber == that.portNumber
+                && Objects.equals(serverName, that.serverName)
+                && propertyValues.equals(that.propertyValues);
     }
 
     @Override
-    public void setProperty(String name, String value) {
-        throw new AssertionError("not yet implemented");
-    }
-
-    @Override
-    public String getProperty(String name) {
-        throw new AssertionError("not yet implemented");
-    }
-
-    @Override
-    public void setIntProperty(String name, Integer value) {
-        throw new AssertionError("not yet implemented");
-    }
-
-    @Override
-    public Integer getIntProperty(String name) {
-        throw new AssertionError("not yet implemented");
-    }
-
-    @Override
-    public void setBooleanProperty(String name, Boolean value) {
-        throw new AssertionError("not yet implemented");
-    }
-
-    @Override
-    public Boolean getBooleanProperty(String name) {
-        throw new AssertionError("not yet implemented");
+    public int hashCode() {
+        int result = serverName != null ? serverName.hashCode() : 0;
+        result = 31 * result + portNumber;
+        result = 31 * result + propertyValues.hashCode();
+        return result;
     }
 
     /**

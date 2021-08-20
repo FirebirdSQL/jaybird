@@ -13,7 +13,9 @@
 The API of Jaybird provides connection properties at several levels:
 
 1. For `DriverManager` with connection properties in the JDBC url and 
-   `Properties` object
+   `Properties` object (defined through `isc_dpb_types.properties`, 
+   `driver_property_info.properties` and values in `ISCConstants` prefixed with
+   `isc_dpb_`)
 2. Through implementations of `org.firebirdsql.jdbc.FirebirdConnectionProperties`:
    - `org.firebirdsql.ds.FBAbstractCommonDataSource`
    - `org.firebirdsql.ds.FBConnectionPoolDataSource`
@@ -59,10 +61,10 @@ The current situation has a number of problems:
    default of true unless the default is made explicit at the edge instead of
    in the core.
    
-Ideally, properties should be specified once (eg in a definition shared both by
-`FirebirdConnectionProperties` and `IConnectionProperties` (and siblings)),
-though defining twice may be necessary (that is, for properties in JDBC URL and
-`Properties`). Although possibly some form of reflection might allow for a
+Ideally, properties should be specified once (e.g. in a definition shared both 
+by `FirebirdConnectionProperties` and `IConnectionProperties` (and siblings)),
+though defining twice may be necessary (that is, also for properties in JDBC 
+URL/`Properties`). Although possibly some form of reflection might allow for a
 single definition.
 
 The interface definition for these properties should - as much as possible -
@@ -79,8 +81,222 @@ JDBC API, than for the GDS-ng API).
 
 ## Decision
 
-TODO: First we experiment
+### New interfaces for properties
 
-## Consequence
+We introduce a number of new interfaces that specify the connection properties.
+These interfaces will provide a default implementation of each setter,
+delegating to a common setter. This allows a single definition of the
+properties, where handling setting and getting properties is implemented using
+generic configuration setters and getters.
 
-TODO: First we experiment
+The new interfaces are:
+
+-   `org.firebirdsql.jaybird.props.BaseProperties` - generic configuration 
+    setters and getters
+-   `org.firebirdsql.jaybird.props.AttachmentProperties` - common configuration
+    shared by both database and service attachments, extends `BaseProperties`
+-   `org.firebirdsql.jaybird.props.DatabaseConnectionProperties` - configuration
+    for database connections extends `AttachmentProperties`
+-   `org.firebirdsql.jaybird.props.ServiceConnectionProperties` - configuration
+    for service connections, extends `AttachmentProperties`
+
+These new interfaces will be extended by the existing interfaces:
+`FirebirdConnectionProperties` and `IConnectionProperties` will extend 
+`DatabaseConnectionProperties`, while `ServiceManager` and `IServiceProperties`
+will extend `ServiceConnectionProperties`.
+
+The generic configuration setters and getters will support setting `String`,
+`Integer` and `Boolean`, which allows for removing the value of a primitive.
+The specific property setters and getters will - in general - use `String`,
+`int` and `boolean`, applying either a default value, or a sensible 'not set'
+sentinel value.
+
+In general, properties on the existing interfaces will be moved to the new
+interfaces, except properties that are highly specific for that interface (as an
+example `FirebirdConnectionProperties.setType`). In some cases, existing aliases
+or similar properties will be retained on the old interface, delegating to the
+new interface. On a property-by-property basis, we will decide on deprecation
+and - optional - removal.
+
+It may be necessary to change the types of some properties. We accept these 
+incompatible type changes as a necessity to move forward.
+
+Although some properties are only relevant for JDBC connections, and not for
+GDS-ng connections, we will move those to `DatabaseConnectionProperties` as well.
+Having a single place to define properties simplifies the API and removes the
+need to decide where a property 'really belongs'.
+
+### Defining string connection properties and mapping to DPB/SPB
+
+The string connection properties (for `DriverManager`) will be defined using
+code using the normal `ConnectionProperty` builder and all its available
+properties.
+
+Doing this in code gives more flexibility compared to more declarative options
+like using annotations or configuration files.
+
+### Allowing extra properties to be defined by plugins
+
+Plugins may need additional connection properties, for example a third party
+encryption plugin may need extra configuration properties. To support this, a
+Service Provider Interface (SPI), `org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi`
+is added.
+
+The SPI can contribute connection properties, as long as they don't try to map
+names or aliases, op DPB/SPB items that are already defined. Jaybird will report
+back if a property was not registered. This callback can be used by the
+plugin to detect issues with duplicate properties and - for example - disable
+itself.
+
+This allows plugins to explicitly configure the type and things like default
+values. It can also be helpful for introspection tools to report on all
+available properties.
+
+### Handling of 'undefined' DPB/SPB items
+
+Firebird provides a lot of DPB and SPB items, where Jaybird only supports a
+subset of these properties. To provide access to DPB and SPB items not
+explicitly defined in Jaybird or by a plugin, Jaybird will scan `DpbItems` and 
+`SpbItems` for items prefixed with `isc_dpb_` and `isc_spb_` to define those as
+string properties with as name the constant name without prefix, and as 
+alias(es) the constant names with prefix.
+
+This should be considered a last-ditch effort; preferably all properties should
+be defined explicitly (though this does not make sense for all properties).
+
+### Handling of 'unknown' properties
+
+Use of undefined property names will be allowed: they will be added to the
+configuration and can be retrieved by name, their type is string.
+
+### Deprecation of some properties
+
+The following properties are deprecated and will be removed in Jaybird 6:
+
+- `timestampUsesLocalTimezone`: inverts time zone offset when using
+  `getTime`/`getTimestamp` with a `Calendar`. The semantics of this property are
+  unclear, and might be better addressed by doing appropriate conversions in
+  user code with use of `LocalDateTime` and `LocalDate`.
+
+### Rejected design decisions
+
+1. Keep JDBC connection properties only on `FirebirdConnectionProperties` (or on
+   a new interface, eg `JdbcProperties`).
+    
+   Pro: does not pollute the API for GDS-ng with properties not used by GDS-ng.
+
+   Con: higher complexity of API, does not allow for potential future removal
+   of intermediate interfaces, and in some areas, access to
+   an implementation of `IConnectionProperties` might be available, but not 
+   `FirebirdConnectionProperties`.
+    
+2. Defining the string connection properties using annotations on the
+   interfaces (`AttachmentProperties`, etc.).
+    
+   Although this looked promising initially as it kept definitions in a single
+   place, it added an extra layer of complexity (processing the annotations).
+   It also made some ideas for validation/transformation of properties more 
+   complex to realise due to limitations of values available to annotations.
+   However, right now those ideas do get used, so maybe this needs to be 
+   evaluated again at a later time.
+
+3. Including defaults in the connection property definition.
+
+   We explored this option, but decided that having the defaults in the
+   interface, and explicitly populated in `FbConnectionProperties` for 
+   properties where the interface route wasn't sufficient, resulted in lower
+   overhead (in terms of either having to pre-populate connection properties
+   with defaults, or providing a mechanism to obtain the default).
+
+   The downside is that extensions that contribute additional properties will
+   need to track their own defaults, and cannot contribute non-standard DPB/SPB
+   items with a default value.
+    
+### Open questions
+
+The following questions came up while implementing, but are not addressed:
+
+- How to handle transaction configuration?
+
+  Handled different for JDBC url compared to `FirebirdConnectionProperties`.
+  Might need to remain 'as-is' for now.
+    
+- Is it possible to eliminate `FirebirdConnectionProperties` entirely? Do we
+  want to take that incompatibility without deprecation?
+
+  Removal hindered by presence of `database` property. This may first require 
+  unification of database coordinates in some form.
+
+- Is it possible to eliminate `FBConnectionProperties` entirely? See also
+  previous point.
+
+- Include properties like `FirebirdConnectionProperties.setType` in  
+  the `AttachmentProperties`?
+
+  This could allow for different forms of protocol selection, but might 
+  not mesh with some expectations of the existing implementation.
+
+- Is it possible to eliminate `IAttachProperties`, `IConnectionProperties` and
+  `IServiceProperties` interfaces?
+
+  Removal hindered by presence of `serverName`, `portNumber` and 
+  `databaseName`/`serviceName` properties, and methods for mutable/immutable
+  copying. This may first require unification of database coordinates in some 
+  form.
+
+- Remove or rename methods accept `WireCrypt` enum?
+
+  Current results in unbalanced getter/setter pairs (i.e. 
+  `String getWireCrypt`/`setWireCryp(String)` vs
+  `WireCrypt getWireCryptAsEnum()`/`setWireCrypt(WireCrypt)`)
+
+## Consequences
+
+The hierarchies of connection property interfaces have been unified as much as
+possible. Some properties in interfaces have been deprecated (e.g.
+`buffersNumber`), in favour of a better name in the common interface, see
+release notes.
+
+Where possible, implementations of the interface have removed their
+implementations of the getter/setter pairs, instead using the default
+implementation provided by the interfaces. In some cases (data sources and
+management API), we have deviated from that, and had to implement the default
+methods, delegating to the interface default method, to ensure that the
+getter/setter pairs can be introspected as JavaBeans.
+
+There is now a service loader mechanism, 
+`org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi` for
+applications or plugins to contribute connection properties. This includes
+contributing Firebird DPB/SPB items that Jaybird doesn't know about.
+
+Constants for connection property names in `FBConnectionProperties` have been
+deprecated for removal (replacement is 
+`org.firebirdsql.jaybird.props.PropertyNames`).
+
+Various mutable implementations of connection properties have been reimplemented
+to delegate to an instance of `FbConnectionProperties`.
+
+Setting `encoding` will no longer populate `charSet`, or vice versa. This
+applies to the various data sources and `FBManagedConnectionFactory`. The
+interaction between `encoding` and `charSet` is now only evaluated when
+connecting and is not reflected in the connection properties.
+
+Resources `driver_property_info.properties` and `isc_dpb_types.properties` no
+longer exist.
+
+Information returned by `FBDriver.getPropertyInfo(String, Properties)` will no
+longer have description populated (we consider this of low value, so we got rid
+of this duplication of information).
+
+Jaybird-specific connection properties no longer have an `isc_dpb_*` constant in
+`ISCConstants`. For purposes of code organization, Firebird-specific constants 
+in `ISCConstants` that are prefixed with `isc_dpb_*`, `isc_spb_*` that are 
+connection properties, and `isc_tpb_*`, have been deprecated for removal, with
+their new home in `org.firebirdsql.jaybird.fb.constants.DpbItems`, `SpbItems`
+and `TpbItems`.
+
+Various repeated definitions of the DPB, SPB and TPB items have been deprecated,
+for example in `DatabaseParameterBuffer`, `ServiceParameterBuffer`,  
+`TransactionParameterBuffer` and `FirebirdConnection`.
+
+The interface `DatabaseParameterBufferExtension` has been removed.

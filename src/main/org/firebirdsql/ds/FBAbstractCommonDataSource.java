@@ -18,22 +18,22 @@
  */
 package org.firebirdsql.ds;
 
-import java.sql.SQLException;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jdbc.FBConnectionProperties;
+import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.naming.BinaryRefAddr;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * Abstract class for properties and behaviour common to DataSources,
  * XADataSources and ConnectionPoolDataSources
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
@@ -44,7 +44,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     protected static final String REF_SERVER_NAME = "serverName";
     protected static final String REF_DESCRIPTION = "description";
     protected static final String REF_PROPERTIES = "properties";
-    
+
     private String description;
     private String serverName;
     private int portNumber;
@@ -58,9 +58,9 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * Implementations should throw IllegalStateException when the DataSource is
      * already in use and modifying properties is not allowed.
      * </p>
-     * 
+     *
      * @throws IllegalStateException
-     *             When the DataSource is already in use
+     *         When the DataSource is already in use
      */
     protected abstract void checkNotStarted() throws IllegalStateException;
 
@@ -112,9 +112,9 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      * The databaseName is the filepath or alias of the database only, so it
      * should not include serverName and portNumber.
      * </p>
-     * 
+     *
      * @param databaseName
-     *            Database name (filepath or alias)
+     *         Database name (filepath or alias)
      */
     public final void setDatabaseName(String databaseName) {
         synchronized (lock) {
@@ -136,35 +136,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setType(type);
-        }
-    }
-
-    /**
-     * @param charSet
-     *            Character set for the connection. Similar to
-     *            <code>encoding</code> property, but accepts Java names instead
-     *            of Firebird ones.
-     */
-    @Override
-    public final void setCharSet(String charSet) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setCharSet(charSet);
-        }
-    }
-
-    /**
-     * @param encoding
-     *            Firebird name of the character encoding for the connection.
-     *            See Firebird documentation for more information.
-     */
-    @Override
-    public final void setEncoding(String encoding) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setEncoding(encoding);
         }
     }
 
@@ -193,7 +164,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     @Deprecated
     @Override
     public String getDatabase() {
-        synchronized(lock) {
+        synchronized (lock) {
             return connectionProperties.getDatabase();
         }
     }
@@ -201,90 +172,9 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     @Deprecated
     @Override
     public void setDatabase(String database) {
-        synchronized(lock) {
+        synchronized (lock) {
             checkNotStarted();
             connectionProperties.setDatabase(database);
-        }
-    }
-
-    @Override
-    public int getBlobBufferSize() {
-        synchronized (lock) {
-            return connectionProperties.getBlobBufferSize();
-        }
-    }
-
-    @Override
-    public void setBlobBufferSize(int bufferSize) {
-        synchronized (lock) {
-            connectionProperties.setBlobBufferSize(bufferSize);
-        }
-    }
-
-    @Override
-    public String getSqlDialect() {
-        synchronized (lock) {
-            return connectionProperties.getSqlDialect();
-        }
-    }
-
-    @Override
-    public void setSqlDialect(String sqlDialect) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setSqlDialect(sqlDialect);
-        }
-    }
-
-    @Override
-    public boolean isUseStreamBlobs() {
-        synchronized (lock) {
-            return connectionProperties.isUseStreamBlobs();
-        }
-    }
-
-    @Override
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setUseStreamBlobs(useStreamBlobs);
-        }
-    }
-
-    @Override
-    public boolean isTimestampUsesLocalTimezone() {
-        synchronized (lock) {
-            return connectionProperties.isTimestampUsesLocalTimezone();
-        }
-    }
-
-    @Override
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-        }
-    }
-
-    @Override
-    public int getBuffersNumber() {
-        synchronized (lock) {
-            return connectionProperties.getBuffersNumber();
-        }
-    }
-
-    @Override
-    public void setBuffersNumber(int buffersNumber) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setBuffersNumber(buffersNumber);
-        }
-    }
-
-    @Override
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        synchronized (lock) {
-            return connectionProperties.getDatabaseParameterBuffer();
         }
     }
 
@@ -348,106 +238,300 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
+    // For the remaining properties, we're redirecting the default implementations of the interface here to ensure the
+    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+
     @Override
-    public boolean isDefaultResultSetHoldable() {
-        synchronized (lock) {
-            return connectionProperties.isDefaultResultSetHoldable();
-        }
+    public String getUser() {
+        return FirebirdConnectionProperties.super.getUser();
     }
 
     @Override
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDefaultResultSetHoldable(isHoldable);
-        }
+    public void setUser(String user) {
+        FirebirdConnectionProperties.super.setUser(user);
     }
 
     @Override
-    public boolean isUseFirebirdAutocommit() {
-        synchronized (lock) {
-            return connectionProperties.isUseFirebirdAutocommit();
-        }
+    public String getPassword() {
+        return FirebirdConnectionProperties.super.getPassword();
     }
 
     @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit);
-        }
+    public void setPassword(String password) {
+        FirebirdConnectionProperties.super.setPassword(password);
     }
 
     @Override
-    public String getGeneratedKeysEnabled() {
-        synchronized (lock) {
-            return connectionProperties.getGeneratedKeysEnabled();
-        }
+    public String getRoleName() {
+        return FirebirdConnectionProperties.super.getRoleName();
     }
 
     @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled);
-        }
+    public void setRoleName(String roleName) {
+        FirebirdConnectionProperties.super.setRoleName(roleName);
+    }
+
+    @Override
+    public String getCharSet() {
+        return FirebirdConnectionProperties.super.getCharSet();
+    }
+
+    @Override
+    public void setCharSet(String charSet) {
+        FirebirdConnectionProperties.super.setCharSet(charSet);
+    }
+
+    @Override
+    public String getEncoding() {
+        return FirebirdConnectionProperties.super.getEncoding();
+    }
+
+    @Override
+    public void setEncoding(String encoding) {
+        FirebirdConnectionProperties.super.setEncoding(encoding);
+    }
+
+    @Override
+    public Integer getProcessId() {
+        return FirebirdConnectionProperties.super.getProcessId();
+    }
+
+    @Override
+    public void setProcessId(Integer processId) {
+        FirebirdConnectionProperties.super.setProcessId(processId);
+    }
+
+    @Override
+    public String getProcessName() {
+        return FirebirdConnectionProperties.super.getProcessName();
+    }
+
+    @Override
+    public void setProcessName(String processName) {
+        FirebirdConnectionProperties.super.setProcessName(processName);
+    }
+
+    @Override
+    public int getSocketBufferSize() {
+        return FirebirdConnectionProperties.super.getSocketBufferSize();
+    }
+
+    @Override
+    public void setSocketBufferSize(int socketBufferSize) {
+        FirebirdConnectionProperties.super.setSocketBufferSize(socketBufferSize);
+    }
+
+    @Override
+    public int getSoTimeout() {
+        return FirebirdConnectionProperties.super.getSoTimeout();
+    }
+
+    @Override
+    public void setSoTimeout(int soTimeout) {
+        FirebirdConnectionProperties.super.setSoTimeout(soTimeout);
+    }
+
+    @Override
+    public int getConnectTimeout() {
+        return FirebirdConnectionProperties.super.getConnectTimeout();
+    }
+
+    @Override
+    public void setConnectTimeout(int connectTimeout) {
+        FirebirdConnectionProperties.super.setConnectTimeout(connectTimeout);
+    }
+
+    @Override
+    public String getWireCrypt() {
+        return FirebirdConnectionProperties.super.getWireCrypt();
+    }
+
+    @Override
+    public void setWireCrypt(String wireCrypt) {
+        FirebirdConnectionProperties.super.setWireCrypt(wireCrypt);
+    }
+
+    @Override
+    public String getDbCryptConfig() {
+        return FirebirdConnectionProperties.super.getDbCryptConfig();
+    }
+
+    @Override
+    public void setDbCryptConfig(String dbCryptConfig) {
+        FirebirdConnectionProperties.super.setDbCryptConfig(dbCryptConfig);
+    }
+
+    @Override
+    public String getAuthPlugins() {
+        return FirebirdConnectionProperties.super.getAuthPlugins();
+    }
+
+    @Override
+    public void setAuthPlugins(String authPlugins) {
+        FirebirdConnectionProperties.super.setAuthPlugins(authPlugins);
+    }
+
+    @Override
+    public boolean isWireCompression() {
+        return FirebirdConnectionProperties.super.isWireCompression();
+    }
+
+    @Override
+    public void setWireCompression(boolean wireCompression) {
+        FirebirdConnectionProperties.super.setWireCompression(wireCompression);
+    }
+
+    @Override
+    public int getSqlDialect() {
+        return FirebirdConnectionProperties.super.getSqlDialect();
+    }
+
+    @Override
+    public void setSqlDialect(int sqlDialect) {
+        FirebirdConnectionProperties.super.setSqlDialect(sqlDialect);
+    }
+
+    @Override
+    public int getPageCacheSize() {
+        return FirebirdConnectionProperties.super.getPageCacheSize();
+    }
+
+    @Override
+    public void setPageCacheSize(int pageCacheSize) {
+        FirebirdConnectionProperties.super.setPageCacheSize(pageCacheSize);
     }
 
     @Override
     public String getDataTypeBind() {
-        synchronized (lock) {
-            return connectionProperties.getDataTypeBind();
-        }
+        return FirebirdConnectionProperties.super.getDataTypeBind();
     }
 
     @Override
     public void setDataTypeBind(String dataTypeBind) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDataTypeBind(dataTypeBind);
-        }
+        FirebirdConnectionProperties.super.setDataTypeBind(dataTypeBind);
     }
 
     @Override
     public String getSessionTimeZone() {
-        synchronized (lock) {
-            return connectionProperties.getSessionTimeZone();
-        }
+        return FirebirdConnectionProperties.super.getSessionTimeZone();
     }
 
     @Override
     public void setSessionTimeZone(String sessionTimeZone) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setSessionTimeZone(sessionTimeZone);
-        }
+        FirebirdConnectionProperties.super.setSessionTimeZone(sessionTimeZone);
+    }
+
+    @Override
+    public int getBlobBufferSize() {
+        return FirebirdConnectionProperties.super.getBlobBufferSize();
+    }
+
+    @Override
+    public void setBlobBufferSize(int blobBufferSize) {
+        FirebirdConnectionProperties.super.setBlobBufferSize(blobBufferSize);
+    }
+
+    @Override
+    public boolean isUseStreamBlobs() {
+        return FirebirdConnectionProperties.super.isUseStreamBlobs();
+    }
+
+    @Override
+    public void setUseStreamBlobs(boolean useStreamBlobs) {
+        FirebirdConnectionProperties.super.setUseStreamBlobs(useStreamBlobs);
+    }
+
+    @Override
+    public boolean isDefaultResultSetHoldable() {
+        return FirebirdConnectionProperties.super.isDefaultResultSetHoldable();
+    }
+
+    @Override
+    public void setDefaultResultSetHoldable(boolean defaultResultSetHoldable) {
+        FirebirdConnectionProperties.super.setDefaultResultSetHoldable(defaultResultSetHoldable);
+    }
+
+    @Override
+    public boolean isUseFirebirdAutocommit() {
+        return FirebirdConnectionProperties.super.isUseFirebirdAutocommit();
+    }
+
+    @Override
+    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
+        FirebirdConnectionProperties.super.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    }
+
+    @Override
+    public boolean isColumnLabelForName() {
+        return FirebirdConnectionProperties.super.isColumnLabelForName();
+    }
+
+    @Override
+    public void setColumnLabelForName(boolean columnLabelForName) {
+        FirebirdConnectionProperties.super.setColumnLabelForName(columnLabelForName);
+    }
+
+    @Override
+    public String getGeneratedKeysEnabled() {
+        return FirebirdConnectionProperties.super.getGeneratedKeysEnabled();
+    }
+
+    @Override
+    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
+        FirebirdConnectionProperties.super.setGeneratedKeysEnabled(generatedKeysEnabled);
     }
 
     @Override
     public boolean isIgnoreProcedureType() {
-        synchronized (lock) {
-            return connectionProperties.isIgnoreProcedureType();
-        }
+        return FirebirdConnectionProperties.super.isIgnoreProcedureType();
     }
 
     @Override
     public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setIgnoreProcedureType(ignoreProcedureType);
-        }
+        FirebirdConnectionProperties.super.setIgnoreProcedureType(ignoreProcedureType);
+    }
+
+    @Override
+    public String getDecfloatRound() {
+        return FirebirdConnectionProperties.super.getDecfloatRound();
+    }
+
+    @Override
+    public void setDecfloatRound(String decfloatRound) {
+        FirebirdConnectionProperties.super.setDecfloatRound(decfloatRound);
+    }
+
+    @Override
+    public String getDecfloatTraps() {
+        return FirebirdConnectionProperties.super.getDecfloatTraps();
+    }
+
+    @Override
+    public void setDecfloatTraps(String decfloatTraps) {
+        FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
+    }
+
+    @Deprecated
+    @Override
+    public boolean isTimestampUsesLocalTimezone() {
+        return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
+    }
+
+    @Deprecated
+    @Override
+    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
+        FirebirdConnectionProperties.super.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
     }
 
     /**
      * Method that allows setting non-standard property in the form "key=value"
      * form. This method is needed by some containers to specify properties
      * in the configuration.
-     * 
-     * @param propertyMapping mapping between property name (key) and its value.
-     * Name and value are separated with "=", ":" or whitespace character. 
-     * Whitespace characters on the beginning of the string and between key and
-     * value are ignored. No escaping is possible: "\n" is backslash-en, not
-     * a new line mark.
+     *
+     * @param propertyMapping
+     *         mapping between property name (key) and its value. Name and value are separated with "=", ":" or
+     *         whitespace character. Whitespace characters on the beginning of the string and between key and value are
+     *         ignored. No escaping is possible: "\n" is backslash-en, not a new line mark.
      * @see #setProperty(String, String)
      */
     @Override
@@ -461,8 +545,10 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     /**
      * Method to set properties which are not exposed through JavaBeans-style setters.
      *
-     * @param key Name of the property (see Jaybird releasenotes)
-     * @param value Value of the property
+     * @param key
+     *         Name of the property (see Jaybird releasenotes)
+     * @param value
+     *         Value of the property
      * @see #setNonStandardProperty(String)
      */
     @Override
@@ -474,7 +560,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setNonStandardProperty(key, value);
         }
     }
-    
+
     @Override
     public String getProperty(String name) {
         synchronized (lock) {
@@ -520,6 +606,13 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        synchronized (lock) {
+            return connectionProperties.connectionPropertyValues();
+        }
+    }
+
     /**
      * Sets the database property of connectionProperties.
      */
@@ -546,7 +639,7 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             }
         }
     }
-    
+
     protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
         if (connectionProperties == null) {
             throw new NullPointerException("null value not allowed for connectionProperties");
@@ -556,18 +649,20 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             this.connectionProperties = connectionProperties;
         }
     }
-    
+
     protected final FBConnectionProperties getConnectionProperties() {
         synchronized (lock) {
             return connectionProperties;
         }
     }
-    
+
     /**
      * Updates the supplied reference with RefAddr properties relevant to this class.
-     * 
-     * @param ref Reference to update
-     * @param instance Instance of this class to obtain values
+     *
+     * @param ref
+     *         Reference to update
+     * @param instance
+     *         Instance of this class to obtain values
      */
     protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
         synchronized (instance.lock) {

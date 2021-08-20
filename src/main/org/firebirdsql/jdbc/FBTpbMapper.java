@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
@@ -28,6 +27,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 
 /**
  * This class is provides mapping capabilities between standard JDBC
@@ -156,20 +157,20 @@ public class FBTpbMapper implements Serializable, Cloneable {
         // TODO Should use isc_tpb_mapping.properties
 
         TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
-        serializableTpb.addArgument(ISCConstants.isc_tpb_write);
-        serializableTpb.addArgument(ISCConstants.isc_tpb_wait);
-        serializableTpb.addArgument(ISCConstants.isc_tpb_consistency);
+        serializableTpb.addArgument(isc_tpb_write);
+        serializableTpb.addArgument(isc_tpb_wait);
+        serializableTpb.addArgument(isc_tpb_consistency);
 
         TransactionParameterBuffer repeatableReadTpb = new TransactionParameterBufferImpl();
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_write);
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_wait);
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_concurrency);
+        repeatableReadTpb.addArgument(isc_tpb_write);
+        repeatableReadTpb.addArgument(isc_tpb_wait);
+        repeatableReadTpb.addArgument(isc_tpb_concurrency);
 
         TransactionParameterBuffer readCommittedTpb = new TransactionParameterBufferImpl();
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_write);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_wait);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_rec_version);
+        readCommittedTpb.addArgument(isc_tpb_write);
+        readCommittedTpb.addArgument(isc_tpb_wait);
+        readCommittedTpb.addArgument(isc_tpb_read_committed);
+        readCommittedTpb.addArgument(isc_tpb_rec_version);
 
         mapping.put(Connection.TRANSACTION_SERIALIZABLE, serializableTpb);
         mapping.put(Connection.TRANSACTION_REPEATABLE_READ, repeatableReadTpb);
@@ -316,7 +317,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @see #processMapping(FirebirdConnectionProperties, Properties)
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Map<String, String> info)
-            throws SQLException{
+            throws SQLException {
         for (String isolationName : ISOLATION_LEVEL_NAMES) {
             String property = info.get(isolationName);
             if (property == null) continue;

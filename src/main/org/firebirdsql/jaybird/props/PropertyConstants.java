@@ -1,0 +1,58 @@
+/*
+ * Firebird Open Source JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
+package org.firebirdsql.jaybird.props;
+
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.util.InternalApi;
+
+/**
+ * Property constants.
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 5
+ */
+@InternalApi
+public final class PropertyConstants {
+
+    // Duplicates the names of the WireCrypt enum values
+    public static final String WIRE_CRYPT_DEFAULT = "DEFAULT";
+    public static final String WIRE_CRYPT_REQUIRED = "REQUIRED";
+    public static final String WIRE_CRYPT_ENABLED = "ENABLED";
+    public static final String WIRE_CRYPT_DISABLED = "DISABLED";
+
+    public static final int DEFAULT_DIALECT = ISCConstants.SQL_DIALECT_V6;
+
+    static final boolean DEFAULT_STREAM_BLOBS = false;
+    static final boolean DEFAULT_RESULT_SET_HOLDABLE = false;
+    static final boolean DEFAULT_COLUMN_LABEL_FOR_NAME = false;
+    static final boolean DEFAULT_USE_FIREBIRD_AUTO_COMMIT = false;
+    static final boolean DEFAULT_IGNORE_PROCEDURE_TYPE = false;
+    static final boolean DEFAULT_WIRE_COMPRESSION = false;
+    static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
+    public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
+    static final boolean DEFAULT_TIMESTAMP_USES_LOCAL = false;
+
+    public static final String SESSION_TIME_ZONE_SERVER = "server";
+
+    public static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
+
+    private PropertyConstants() {
+        throw new AssertionError("no instances");
+    }
+}

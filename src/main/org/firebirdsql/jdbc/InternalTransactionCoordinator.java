@@ -27,7 +27,7 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import java.sql.SQLException;
 import java.util.*;
 
-import static org.firebirdsql.gds.ISCConstants.isc_tpb_autocommit;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_autocommit;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.

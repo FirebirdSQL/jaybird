@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -34,6 +34,7 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
@@ -89,7 +90,7 @@ import static org.junit.Assert.assertTrue;
  * This test runs with the embedded mode ngds gds implementation, although the primary problem of producing
  * unbackupable database when using streamed blobs is as far as my testing shows common too type2 and type4
  * modes too.
-  */
+ */
 public class TestJaybirdBlobBackupProblem {
 
     @ClassRule
@@ -234,15 +235,15 @@ public class TestJaybirdBlobBackupProblem {
         final ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }
 
     private FbService attachToServiceManager() throws SQLException {
-        FbService service =  dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(createServiceProperties());
         service.attach();
 
         assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());

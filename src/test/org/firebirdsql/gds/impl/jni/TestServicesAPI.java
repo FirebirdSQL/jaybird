@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,17 +19,19 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.GDSFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbService;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
+import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.GDSFactory;
-import org.firebirdsql.gds.impl.GDSType;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -92,7 +94,7 @@ public class TestServicesAPI {
 
     @Test
     public void testServicesManagerAttachAndDetach() throws SQLException {
-        FbService service =  dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(createServiceProperties());
 
         assertFalse("Handle should be unattached when created.", service.isAttached());
 
@@ -140,9 +142,9 @@ public class TestServicesAPI {
         final ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_restore);
 
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_options, ISCConstants.isc_spb_res_create);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_options, ISCConstants.isc_spb_res_create);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
@@ -199,15 +201,15 @@ public class TestServicesAPI {
         ServiceRequestBuffer serviceRequestBuffer = service.createServiceRequestBuffer();
         serviceRequestBuffer.addArgument(ISCConstants.isc_action_svc_backup);
 
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_verbose);
-        serviceRequestBuffer.addArgument(ISCConstants.isc_spb_dbname, mAbsoluteDatabasePath);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_verbose);
+        serviceRequestBuffer.addArgument(SpbItems.isc_spb_dbname, mAbsoluteDatabasePath);
         serviceRequestBuffer.addArgument(ISCConstants.isc_spb_bkp_file, mAbsoluteBackupPath);
 
         service.startServiceAction(serviceRequestBuffer);
     }
 
     private FbService attachToServiceManager() throws SQLException {
-        FbService service =  dbFactory.serviceConnect(createServiceProperties());
+        FbService service = dbFactory.serviceConnect(createServiceProperties());
         service.attach();
 
         assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());

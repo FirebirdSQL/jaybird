@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.junit.Assert.*;
 
 /**
@@ -50,28 +50,28 @@ public class TestFBTpbMapper {
 
         assertTrue("READ_COMMITTED must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_nowait",
                 tpbValue.size() == 4 &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_read_committed) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_nowait)
+                        tpbValue.hasArgument(isc_tpb_read_committed) &&
+                        tpbValue.hasArgument(isc_tpb_no_rec_version) &&
+                        tpbValue.hasArgument(isc_tpb_write) &&
+                        tpbValue.hasArgument(isc_tpb_nowait)
         );
 
         tpbValue = mapper.getMapping(Connection.TRANSACTION_REPEATABLE_READ);
 
         assertTrue("REPEATABLE_READ must be isc_tpb_consistency+isc_tpb_write+isc_tpb_wait",
                 tpbValue.size() == 3 &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_consistency) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
+                        tpbValue.hasArgument(isc_tpb_consistency) &&
+                        tpbValue.hasArgument(isc_tpb_write) &&
+                        tpbValue.hasArgument(isc_tpb_wait)
         );
 
         tpbValue = mapper.getMapping(Connection.TRANSACTION_SERIALIZABLE);
 
         assertTrue("SERIALIZABLE must be isc_tpb_concurrency+isc_tpb_write+isc_tpb_wait",
                 tpbValue.size() == 3 &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_concurrency) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_wait)
+                        tpbValue.hasArgument(isc_tpb_concurrency) &&
+                        tpbValue.hasArgument(isc_tpb_write) &&
+                        tpbValue.hasArgument(isc_tpb_wait)
         );
     }
 
@@ -91,16 +91,15 @@ public class TestFBTpbMapper {
 
         FBTpbMapper mapper = new FBTpbMapper(map);
 
-
         // Check if matches specified
         TransactionParameterBuffer tpbValue = mapper.getMapping(Connection.TRANSACTION_REPEATABLE_READ);
         assertTrue("REPEATABLE_READ must be isc_tpb_concurrency+isc_tpb_write+isc_tpb_wait+isc_tpb_lock_timeout=5",
                 tpbValue.size() == 4 &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_concurrency) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_wait) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_lock_timeout) &&
-                        tpbValue.getArgumentAsInt(ISCConstants.isc_tpb_lock_timeout) == 5
+                        tpbValue.hasArgument(isc_tpb_concurrency) &&
+                        tpbValue.hasArgument(isc_tpb_write) &&
+                        tpbValue.hasArgument(isc_tpb_wait) &&
+                        tpbValue.hasArgument(isc_tpb_lock_timeout) &&
+                        tpbValue.getArgumentAsInt(isc_tpb_lock_timeout) == 5
         );
         // Check other isolation levels match default:
         assertEquals(defaultMapper.getMapping(Connection.TRANSACTION_SERIALIZABLE),
@@ -127,12 +126,12 @@ public class TestFBTpbMapper {
 
         assertTrue("must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_wait,5",
                 tpbValue.size() == 5 &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_read_committed) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_wait) &&
-                        tpbValue.hasArgument(ISCConstants.isc_tpb_lock_timeout) &&
-                        tpbValue.getArgumentAsInt(ISCConstants.isc_tpb_lock_timeout) == 5
+                        tpbValue.hasArgument(isc_tpb_read_committed) &&
+                        tpbValue.hasArgument(isc_tpb_no_rec_version) &&
+                        tpbValue.hasArgument(isc_tpb_write) &&
+                        tpbValue.hasArgument(isc_tpb_wait) &&
+                        tpbValue.hasArgument(isc_tpb_lock_timeout) &&
+                        tpbValue.getArgumentAsInt(isc_tpb_lock_timeout) == 5
         );
     }
 
@@ -290,10 +289,10 @@ public class TestFBTpbMapper {
                 .getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
         assertTrue("READ_COMMITTED must be isc_tpb_read_committed+isc_tpb_no_rec_version+isc_tpb_write+isc_tpb_wait",
                 tpbReadCommitted.size() == 4 &&
-                        tpbReadCommitted.hasArgument(ISCConstants.isc_tpb_read_committed) &&
-                        tpbReadCommitted.hasArgument(ISCConstants.isc_tpb_no_rec_version) &&
-                        tpbReadCommitted.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbReadCommitted.hasArgument(ISCConstants.isc_tpb_wait)
+                        tpbReadCommitted.hasArgument(isc_tpb_read_committed) &&
+                        tpbReadCommitted.hasArgument(isc_tpb_no_rec_version) &&
+                        tpbReadCommitted.hasArgument(isc_tpb_write) &&
+                        tpbReadCommitted.hasArgument(isc_tpb_wait)
         );
 
         TransactionParameterBuffer tpbRepeatableRead = connectionProps
@@ -301,9 +300,9 @@ public class TestFBTpbMapper {
 
         assertTrue("REPEATABLE_READ must be isc_tpb_consistency+isc_tpb_write+isc_tpb_nowait",
                 tpbRepeatableRead.size() == 3 &&
-                        tpbRepeatableRead.hasArgument(ISCConstants.isc_tpb_concurrency) &&
-                        tpbRepeatableRead.hasArgument(ISCConstants.isc_tpb_write) &&
-                        tpbRepeatableRead.hasArgument(ISCConstants.isc_tpb_nowait)
+                        tpbRepeatableRead.hasArgument(isc_tpb_concurrency) &&
+                        tpbRepeatableRead.hasArgument(isc_tpb_write) &&
+                        tpbRepeatableRead.hasArgument(isc_tpb_nowait)
         );
 
         TransactionParameterBuffer tpbSerializable = connectionProps
@@ -311,9 +310,9 @@ public class TestFBTpbMapper {
 
         assertTrue("SERIALIZABLE must be isc_tpb_concurrency+isc_tpb_read+isc_tpb_wait",
                 tpbSerializable.size() == 3 &&
-                        tpbSerializable.hasArgument(ISCConstants.isc_tpb_consistency) &&
-                        tpbSerializable.hasArgument(ISCConstants.isc_tpb_read) &&
-                        tpbSerializable.hasArgument(ISCConstants.isc_tpb_wait)
+                        tpbSerializable.hasArgument(isc_tpb_consistency) &&
+                        tpbSerializable.hasArgument(isc_tpb_read) &&
+                        tpbSerializable.hasArgument(isc_tpb_wait)
         );
     }
 

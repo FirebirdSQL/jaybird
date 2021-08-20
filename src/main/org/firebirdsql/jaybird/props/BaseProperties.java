@@ -24,6 +24,10 @@
  */
 package org.firebirdsql.jaybird.props;
 
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+
+import java.util.Map;
+
 /**
  * Base of the properties hierarchy; provides common API for setting properties by name.
  *
@@ -44,6 +48,18 @@ public interface BaseProperties {
      * @return Value of the property, or {@code null} when not set or not a known property
      */
     String getProperty(String name);
+
+    /**
+     * Retrieves a string property value by name, with a default if it's {@code null}.
+     *
+     * @param name
+     *         Property name (not {@code null} or empty)
+     * @return Value of the property, or {@code defaultIfNull} when not set or not a known property
+     */
+    default String getProperty(String name, String defaultIfNull) {
+        String value = getProperty(name);
+        return value != null ? value : defaultIfNull;
+    }
 
     /**
      * Sets a property by name.
@@ -159,4 +175,16 @@ public interface BaseProperties {
      *         If the specified property is an {@code int} property
      */
     void setBooleanProperty(String name, Boolean value);
+
+    /**
+     * An unmodifiable view on the connection properties held by this BaseProperties implementation.
+     * <p>
+     * Be aware, implementations can have additional properties that are not mapped from {@code ConnectionProperty}.
+     * Such properties will need to be retrieved in an implementation-specific manner.
+     * </p>
+     *
+     * @return An unmodifiable view on the property values held in this properties instance
+     */
+    Map<ConnectionProperty, Object> connectionPropertyValues();
+
 }

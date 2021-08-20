@@ -24,14 +24,16 @@
  */
 package org.firebirdsql.jaybird.props.def;
 
-import org.firebirdsql.jaybird.props.internal.ConnectionPropertyDefinition;
+import org.firebirdsql.jaybird.props.DpbType;
+import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
 import org.firebirdsql.util.InternalApi;
+import org.firebirdsql.util.StringUtils;
 
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.firebirdsql.util.StringUtils.trimToNull;
 
 /**
@@ -45,13 +47,6 @@ import static org.firebirdsql.util.StringUtils.trimToNull;
  */
 public final class ConnectionProperty {
 
-    private static final Set<ConnectionPropertyApplicability> DEFAULT_APPLICABILITY =
-            unmodifiableSet(EnumSet.allOf(ConnectionPropertyApplicability.class));
-    private static final Set<ConnectionPropertyApplicability> DATABASE_ONLY_APPLICABILITY =
-            unmodifiableSet(EnumSet.of(ConnectionPropertyApplicability.DATABASE));
-    private static final Set<ConnectionPropertyApplicability> SERVICE_ONLY_APPLICABILITY =
-            unmodifiableSet(EnumSet.of(ConnectionPropertyApplicability.SERVICE));
-
     public static final int NO_DPB_ITEM = -1;
     public static final int NO_SPB_ITEM = -1;
 
@@ -59,77 +54,52 @@ public final class ConnectionProperty {
     private final List<String> aliases;
     private final ConnectionPropertyType type;
     private final List<String> choices;
-    private final Object defaultValue;
-    private final Set<ConnectionPropertyApplicability> applicability;
-    private final String description;
+    private final DpbType pbType;
     private final int dpbItem;
     private final int spbItem;
+    // TODO Add dpbMappingFunction like in r2dbc-firebird?
+    /*
+     NOTE: We currently do not provide an option to set a custom validator as there didn't seem to be suitable
+     use cases, except maybe encoding and charset, which might result in too much inflexibility, and maybe
+     generatedKeysEnabled, but we currently specify behaviour for invalid inputs, i.e. ignore).
+     
+     If a suitable use case does come up, it can always be added, but for now, we choose simplicity.
+    */
 
     /**
      * Creates a connection property instance.
      *
-     * @param name
-     *         Primary name; cannot be {@code null)
-     * @param aliases
-     *         List of aliases (secondary names); can be {@code null}
-     * @param type
-     *         Datatype of values of this property; cannot be {@code null}. For DPB/SPB items the type must match the
-     *         type expected by Firebird
-     * @param choices
-     *         list of possible values for this property (case-insensitive); can be {@code null}. When non-empty the
-     *         implementation may reject other non-{@code null} values
-     * @param defaultValue
-     *         default value (must be convertible to {@code type}); {@code null} means no default
-     * @param applicability
-     *         applicability of this property; {@code null} implies {@code DATABASE} and {@code SERVICE}, while empty
-     *         implies no applicability
-     * @param description
-     *         Description of the property (can be displayed to users of Jaybird)
-     * @param dpbItem
-     *         The DPB item for this property; set to {@link #NO_DPB_ITEM} if not associated with a DPB item
-     * @param spbItem
-     *         The SPB item for this property; set to {@link #NO_SPB_ITEM} if not associated with a SPB item
+     * @param builder
+     *         Builder with values to populate this instance
      */
-    private ConnectionProperty(String name, List<String> aliases, ConnectionPropertyType type,
-            List<String> choices, Object defaultValue, List<ConnectionPropertyApplicability> applicability,
-            String description, int dpbItem, int spbItem) {
-        this.name = requireNonNull(trimToNull(name), "name");
-        this.aliases = aliases == null || aliases.isEmpty() ? emptyList() : unmodifiableList(new ArrayList<>(aliases));
-        this.type = requireNonNull(type, "type");
-        this.choices = choices == null || choices.isEmpty() ? emptyList() : unmodifiableList(new ArrayList<>(choices));
-        this.defaultValue = defaultValue;
-        this.applicability = toConnectionPropertyApplicabilitySet(applicability);
-        this.description = description == null || description.isEmpty() ? null : description;
-        this.dpbItem = dpbItem;
-        this.spbItem = spbItem;
+    private ConnectionProperty(Builder builder) {
+        name = requireNonNull(trimToNull(builder.name), "name");
+        aliases = normalizeValues(builder.aliases);
+        type = requireNonNull(builder.type, "type");
+        choices = normalizeValues(builder.choices);
+        pbType = requireNonNull(builder.pbType, "pbType");
+        dpbItem = builder.dpbItem;
+        spbItem = builder.spbItem;
+
+        if (dpbItem != NO_DPB_ITEM || spbItem != NO_SPB_ITEM) {
+            if (pbType == DpbType.NONE) {
+                throw new IllegalArgumentException(
+                        "dpbType set to NONE while dpbItem is set to " + dpbItem + " and spbItem to " + spbItem);
+            }
+        } else if (pbType != DpbType.NONE) {
+            throw new IllegalArgumentException("dpbType set to " + pbType + " while dpbItem and spbItem not set");
+        }
     }
 
-    /**
-     * Creates a connection property instance from an {@link ConnectionPropertyDefinition} annotation.
-     * <p>
-     * This method is for internal use in Jaybird only. TODO: Move elsewhere?
-     * </p>
-     *
-     * @param propDef
-     *         property definition annotation
-     * @return Connection property instance
-     */
-    @InternalApi
-    public static ConnectionProperty fromAnnotation(ConnectionPropertyDefinition propDef) {
-        ConnectionPropertyType type = propDef.type();
-        String defaultValueFromAnnotation = propDef.defaultValue();
-        String defaultValue = !"".equals(defaultValueFromAnnotation) ? defaultValueFromAnnotation : null;
-        return builder()
-                .name(propDef.name())
-                .aliases(asList(propDef.aliases()))
-                .type(type)
-                .choices(asList(propDef.choices()))
-                .defaultValue(defaultValue)
-                .applicability(asList(propDef.applicability()))
-                .description(propDef.description())
-                .dpbItem(propDef.dpbItem())
-                .spbItem(propDef.spbItem())
-                .build();
+    // Copy constructor, primarily for testing
+    private ConnectionProperty(ConnectionProperty other) {
+        name = other.name;
+        aliases = other.aliases;
+        type = other.type;
+        choices = other.choices;
+        pbType = other.pbType;
+        dpbItem = other.dpbItem;
+        spbItem = other.spbItem;
     }
 
     /**
@@ -137,45 +107,46 @@ public final class ConnectionProperty {
      *
      * @return builder
      */
-    public static ConnectionPropertyBuilder builder() {
-        return new ConnectionPropertyBuilder();
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(String name) {
+        return builder().name(name);
     }
 
     /**
      * Creates an <em>unknown</em> connection property.
      * <p>
      * An <em>unknown</em> connection property was either not defined but used, or can be used for lookups (given the
-     * definition of equals and hashcode). An unknown connection property always applies type
-     * {@link ConnectionPropertyType#STRING} and applies to database and service.
-     * </p>
+     * definition of equals and hashcode). An unknown connection property returned by this method always applies type
+     * {@link ConnectionPropertyType#STRING}</p>
      *
      * @param name
      *         Property name
-     * @return And unknown property with the specified name
+     * @return An unknown property with the specified name
      */
     public static ConnectionProperty unknown(String name) {
-        return builder()
-                .name(name)
-                .type(ConnectionPropertyType.STRING)
-                .build();
+        return builder().name(name).build();
     }
 
     /**
      * @return name of the property
      */
-    public String getName() {
+    public String name() {
         return name;
     }
 
     /**
-     * Optional aliases for this property.
+     * Optional aliases (secondary names) for this property.
      * <p>
      * Aliases are alternative names for the property, either for backwards compatibility or for ease of use.
      * </p>
      *
      * @return aliases for this property, empty means no aliases
+     * @see #name()
      */
-    public List<String> getAliases() {
+    public List<String> aliases() {
         return aliases;
     }
 
@@ -184,104 +155,101 @@ public final class ConnectionProperty {
      *
      * @return type of the property
      */
-    public ConnectionPropertyType getType() {
+    public ConnectionPropertyType type() {
         return type;
     }
 
     /**
      * Possible values for this property.
-     * <p>
-     * This is for documentation purposes only (eg for {@link java.sql.DriverPropertyInfo}).
-     * </p>
      *
      * @return possible values for this property, or empty when unrestricted
      */
-    public List<String> getChoices() {
+    public List<String> choices() {
         return choices;
     }
 
     /**
-     * Default value of this property.
+     * Validates {@code value} for this property.
      *
-     * @return default value, null means no default
+     * @param value
+     *         value to validate
+     * @return {@code value} when validation passed
+     * @throws IllegalArgumentException
+     *         When {@code value} is not a valid value for this property
      */
-    public Object getDefaultValue() {
-        return defaultValue;
+    public <T> T validate(T value) {
+        defaultValidate(value);
+        return value;
+    }
+
+    private void defaultValidate(Object value) {
+        if (value == null || choices.isEmpty()) {
+            return;
+        }
+
+        String valueString = requireNonNull(type.asString(value), "value as string");
+        if (choices.stream().noneMatch(valueString::equalsIgnoreCase)) {
+            throw InvalidPropertyValueException.invalidProperty(name(), valueString, "valid values are " + choices());
+        }
     }
 
     /**
-     * Applicability of this property.
-     * <p>
-     * NOTE: This is considered informational; setting {@code SERVICE}-only property on a database connection is
-     * allowed (it will just - likely - not do anything).
-     * </p>
+     * Type of the value when sent in the database (or service attach) parameter buffer.
      *
-     * @return applicability of this property
+     * @return type for the parameter buffer
      */
-    public Set<ConnectionPropertyApplicability> getApplicability() {
-        return applicability;
-    }
-
-    /**
-     * @return {@code true} if this is a database connection property
-     */
-    public boolean isDatabaseConnectionProperty() {
-        return applicability.contains(ConnectionPropertyApplicability.DATABASE);
-    }
-
-    /**
-     * @return {@code true} if this is a service connection property
-     */
-    public boolean isServiceConnectionProperty() {
-        return applicability.contains(ConnectionPropertyApplicability.SERVICE);
-    }
-
-    /**
-     * Description of this property.
-     *
-     * @return description of this property, can be {@code null}
-     */
-    public String getDescription() {
-        return description;
+    public DpbType pbType() {
+        return pbType;
     }
 
     /**
      * Database parameter buffer (DPB) item associated with this property.
      *
      * @return database parameter buffer item, or {@link #NO_DPB_ITEM} if no item is associated
+     * @see #hasDpbItem()
      */
-    public int getDpbItem() {
+    public int dpbItem() {
         return dpbItem;
+    }
+
+    /**
+     * @return {@code true} if this property has a DPB item
+     * @see #dpbItem()
+     */
+    public boolean hasDpbItem() {
+        return dpbItem != NO_DPB_ITEM;
     }
 
     /**
      * Service parameter buffer (SPB) item associated with this property.
      *
      * @return service parameter buffer item, or {@link #NO_SPB_ITEM} if no item is associated
+     * @see #hasSpbItem()
      */
-    public int getSpbItem() {
+    public int spbItem() {
         return spbItem;
+    }
+
+    /**
+     * @return {@code true} if this property has an SPB item
+     * @see #spbItem()
+     */
+    public boolean hasSpbItem() {
+        return spbItem != NO_SPB_ITEM;
     }
 
     @Override
     public String toString() {
-        return "ConnectionProperty{" +
-                "name='" + name + '\'' +
-                ", aliases=" + aliases +
-                ", type=" + type +
-                ", choices=" + choices +
-                ", defaultValue=" + defaultValue +
-                ", applicability=" + applicability +
-                ", description='" + description + '\'' +
-                ", dpbItem=" + dpbItem +
-                ", spbItem=" + spbItem +
-                '}';
+        return name;
     }
 
     /**
      * {@inheritDoc}
      * <p>
      * Equality (and hash code) only considers the {@code name}.
+     * </p>
+     * <p>
+     * Use {@link #isIdenticalTo(ConnectionProperty)} for checking full equality.
      * </p>
      */
     @Override
@@ -322,187 +290,149 @@ public final class ConnectionProperty {
                 && aliases.equals(other.aliases)
                 && type == other.type
                 && choices.equals(other.choices)
-                && Objects.equals(defaultValue, other.defaultValue)
-                && Objects.equals(description, other.description)
+                && pbType == other.pbType
                 && dpbItem == other.dpbItem
                 && spbItem == other.spbItem;
     }
 
-    private static Set<ConnectionPropertyApplicability> toConnectionPropertyApplicabilitySet(
-            List<ConnectionPropertyApplicability> applicability) {
-        if (applicability == null) {
-            return DEFAULT_APPLICABILITY;
+    /**
+     * Normalizes values by trimming whitespace, removing {@code null}, empty or blank values.
+     *
+     * @param values
+     *         Aliases to normalize (can be {@code null})
+     * @return immutable list with zero or more values; never {@code null}
+     */
+    private static List<String> normalizeValues(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return emptyList();
         }
-        boolean hasDatabase = false;
-        boolean hasService = false;
-        for (ConnectionPropertyApplicability currentApplicability : applicability) {
-            if (currentApplicability == ConnectionPropertyApplicability.DATABASE) {
-                hasDatabase = true;
-            } else if (currentApplicability == ConnectionPropertyApplicability.SERVICE) {
-                hasService = true;
-            }
-        }
-        if (hasDatabase) {
-            if (hasService) {
-                return DEFAULT_APPLICABILITY;
-            }
-            return DATABASE_ONLY_APPLICABILITY;
-        } else if (hasService) {
-            return SERVICE_ONLY_APPLICABILITY;
-        }
-        return emptySet();
+        List<String> normalizedValues = values.stream()
+                .map(StringUtils::trimToNull)
+                .filter(Objects::nonNull)
+                .collect(toList());
+        return normalizedValues.isEmpty() ? emptyList() : unmodifiableList(normalizedValues);
     }
 
-    public static final class ConnectionPropertyBuilder {
+    public static final class Builder {
 
         private String name;
         private List<String> aliases;
-        private ConnectionPropertyType type;
+        private ConnectionPropertyType type = ConnectionPropertyType.STRING;
         private List<String> choices;
-        private String defaultValue;
-        private List<ConnectionPropertyApplicability> applicability;
-        private String description;
+        private DpbType pbType = DpbType.NONE;
         private int dpbItem = NO_DPB_ITEM;
         private int spbItem = NO_SPB_ITEM;
 
         public ConnectionProperty build() {
-            return new ConnectionProperty(name, aliases, requireNonNull(type, "type"), choices,
-                    type.toType(defaultValue), applicability, description, dpbItem, spbItem);
+            return new ConnectionProperty(this);
         }
 
         /**
-         * Primary name of the property; required
+         * Primary name of the property; required.
          */
-        public ConnectionPropertyBuilder name(String name) {
+        public Builder name(String name) {
             this.name = name;
             return this;
         }
 
         /**
-         * Aliases or secondary names of the property; optional
+         * Aliases or secondary names of the property; optional.
          */
-        public ConnectionPropertyBuilder aliases(Collection<String> aliases) {
+        public Builder aliases(Collection<String> aliases) {
             this.aliases = aliases != null ? new ArrayList<>(aliases) : null;
             return this;
         }
 
-        public ConnectionPropertyBuilder addAlias(String alias) {
-            addAlias0(alias);
-            return this;
+        /**
+         * Aliases or secondary names of the property; optional.
+         */
+        public Builder aliases(String... aliases) {
+            return aliases(aliases != null ? Arrays.asList(aliases) : null);
         }
 
-        private void addAlias0(String alias) {
-            if (aliases == null) {
-                aliases = new ArrayList<>();
-            }
+        /**
+         * Alias or secondary name of the property; optional.
+         */
+        public Builder aliases(String alias) {
+            aliases = new ArrayList<>(1);
             aliases.add(alias);
+            return this;
         }
 
-        public ConnectionPropertyBuilder addAliases(String... aliases) {
-            if (aliases != null) {
-                for (String alias : aliases) {
-                    addAlias0(alias);
-                }
+        /**
+         * Type of the property; required; defaults to {@link ConnectionPropertyType#STRING}.
+         */
+        public Builder type(ConnectionPropertyType type) {
+            this.type = type;
+            // NOTE: Only changing when pbType is not NONE, because that means it was explicitly forced to NONE
+            if ((dpbItem != NO_DPB_ITEM || spbItem != NO_SPB_ITEM) && pbType != DpbType.NONE) {
+                pbType = type.getDefaultParameterType();
             }
             return this;
         }
 
         /**
-         * Type of the property; required
+         * Possible values of the property (case-insensitive); optional.
          */
-        public ConnectionPropertyBuilder type(ConnectionPropertyType type) {
-            this.type = type;
-            return this;
-        }
-
-        /**
-         * Possible values of the property (case insensitive); optional
-         */
-        public ConnectionPropertyBuilder choices(Collection<String> choices) {
+        public Builder choices(Collection<String> choices) {
             this.choices = choices != null ? new ArrayList<>(choices) : null;
             return this;
         }
 
-        public ConnectionPropertyBuilder addChoice(String choice) {
-            addChoice0(choice);
-            return this;
+        /**
+         * Possible values of the property (case-insensitive); optional.
+         */
+        public Builder choices(String... choices) {
+            return choices(choices != null ? Arrays.asList(choices) : null);
         }
 
-        private void addChoice0(String choice) {
-            if (choices == null) {
-                choices = new ArrayList<>();
-            }
-            choices.add(choice);
-        }
-
-        public ConnectionPropertyBuilder addChoices(String... choices) {
-            if (choices != null) {
-                for (String choice : choices) {
-                    addChoice0(choice);
+        /**
+         * Type of database (or service attach) parameter buffer; defaults to {@link #NO_DPB_ITEM}
+         */
+        public Builder pbType(DpbType pbType) {
+            if (pbType == DpbType.NONE) {
+                if (dpbItem != NO_DPB_ITEM) {
+                    throw new IllegalArgumentException(
+                            "Not allowed to set pbType NONE when dpbItem is set to " + dpbItem);
                 }
-            }
-            return this;
-        }
-
-        /**
-         * Default value of the property; must be convertible to {@code type} on build. {@code null} means no default.
-         */
-        public ConnectionPropertyBuilder defaultValue(String defaultValue) {
-            this.defaultValue = defaultValue;
-            return this;
-        }
-
-        /**
-         * Applicability of the property. {@code null} applies default ({@code DATABASE} and {@code SERVICE}), while
-         * empty implies no applicability.
-         */
-        public ConnectionPropertyBuilder applicability(Collection<ConnectionPropertyApplicability> applicability) {
-            this.applicability = applicability != null ? new ArrayList<>(applicability) : null;
-            return this;
-        }
-
-        public ConnectionPropertyBuilder addApplicability(ConnectionPropertyApplicability applicability) {
-            addApplicability0(applicability);
-            return this;
-        }
-
-        private void addApplicability0(ConnectionPropertyApplicability applicability) {
-            if (this.applicability == null) {
-                this.applicability = new ArrayList<>();
-            }
-            this.applicability.add(applicability);
-        }
-
-        public ConnectionPropertyBuilder addApplicability(ConnectionPropertyApplicability... applicability) {
-            if (applicability != null) {
-                for (ConnectionPropertyApplicability currentApplicability : applicability) {
-                    addApplicability0(currentApplicability);
+                if (spbItem != NO_SPB_ITEM) {
+                    throw new IllegalArgumentException(
+                            "Not allowed to set pbType NONE when spbItem is set to " + spbItem);
                 }
+            } else if (dpbItem == NO_DPB_ITEM && spbItem == NO_SPB_ITEM) {
+                throw new IllegalArgumentException("Usage error, set pbType after setting dpbItem or spbItem");
             }
+            this.pbType = pbType;
             return this;
         }
 
         /**
-         * Description (for users of Jaybird) of the property; optional but recommended
+         * DPB item associated with the property; optional; defaults to {@link #NO_DPB_ITEM}.
          */
-        public ConnectionPropertyBuilder description(String description) {
-            this.description = description;
-            return this;
-        }
-
-        /**
-         * DPB item associated with the property; don't set or use {@link #NO_DPB_ITEM} if no DPB item.
-         */
-        public ConnectionPropertyBuilder dpbItem(int dpbItem) {
+        public Builder dpbItem(int dpbItem) {
             this.dpbItem = dpbItem;
+            if (dpbItem == NO_DPB_ITEM) {
+                if (spbItem == NO_SPB_ITEM) {
+                    pbType = DpbType.NONE;
+                }
+            } else if (pbType == DpbType.NONE) {
+                pbType = type.getDefaultParameterType();
+            }
             return this;
         }
 
         /**
-         * SPB item associated with the property; don't set or use {@link #NO_SPB_ITEM} if no SPB item.
+         * SPB item associated with the property; optional; defaults to {@link #NO_SPB_ITEM}.
          */
-        public ConnectionPropertyBuilder spbItem(int spbItem) {
+        public Builder spbItem(int spbItem) {
             this.spbItem = spbItem;
+            if (spbItem == NO_SPB_ITEM) {
+                if (dpbItem == NO_DPB_ITEM) {
+                    pbType = DpbType.NONE;
+                }
+            } else if (pbType == DpbType.NONE) {
+                pbType = type.getDefaultParameterType();
+            }
             return this;
         }
 

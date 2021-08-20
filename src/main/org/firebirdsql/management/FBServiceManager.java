@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,12 +23,18 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.Map;
 
-import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.ISCConstants.isc_info_end;
+import static org.firebirdsql.gds.ISCConstants.isc_info_svc_to_eof;
+import static org.firebirdsql.gds.ISCConstants.isc_info_truncated;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
@@ -76,14 +82,17 @@ public class FBServiceManager implements ServiceManager {
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
     }
 
+    // NOTE: we're redirecting the default implementations of the interface here to ensure the
+    //  data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+
     @Override
     public void setCharSet(String charSet) {
-        serviceProperties.setCharSet(charSet);
+        ServiceManager.super.setCharSet(charSet);
     }
 
     @Override
     public String getCharSet() {
-        return serviceProperties.getCharSet();
+        return ServiceManager.super.getCharSet();
     }
 
     /**
@@ -93,7 +102,7 @@ public class FBServiceManager implements ServiceManager {
      *         name of the user.
      */
     public void setUser(String user) {
-        serviceProperties.setUser(user);
+        ServiceManager.super.setUser(user);
     }
 
     /**
@@ -102,7 +111,7 @@ public class FBServiceManager implements ServiceManager {
      * @return name of the user that performs the operation.
      */
     public String getUser() {
-        return serviceProperties.getUser();
+        return ServiceManager.super.getUser();
     }
 
     /**
@@ -110,14 +119,14 @@ public class FBServiceManager implements ServiceManager {
      *         The password to set.
      */
     public void setPassword(String password) {
-        serviceProperties.setPassword(password);
+        ServiceManager.super.setPassword(password);
     }
 
     /**
      * @return Returns the password.
      */
     public String getPassword() {
-        return serviceProperties.getPassword();
+        return ServiceManager.super.getPassword();
     }
 
     public void setDatabase(String database) {
@@ -160,7 +169,7 @@ public class FBServiceManager implements ServiceManager {
 
     @Override
     public String getWireCrypt() {
-        return serviceProperties.getWireCrypt();
+        return ServiceManager.super.getWireCrypt();
     }
 
     @Override
@@ -175,32 +184,32 @@ public class FBServiceManager implements ServiceManager {
 
     @Override
     public String getDbCryptConfig() {
-        return serviceProperties.getDbCryptConfig();
+        return ServiceManager.super.getDbCryptConfig();
     }
 
     @Override
     public void setDbCryptConfig(String dbCryptConfig) {
-        serviceProperties.setDbCryptConfig(dbCryptConfig);
+        ServiceManager.super.setDbCryptConfig(dbCryptConfig);
     }
 
     @Override
     public String getAuthPlugins() {
-        return serviceProperties.getDbCryptConfig();
+        return ServiceManager.super.getDbCryptConfig();
     }
 
     @Override
     public void setAuthPlugins(String authPlugins) {
-        serviceProperties.setAuthPlugins(authPlugins);
+        ServiceManager.super.setAuthPlugins(authPlugins);
     }
 
     @Override
     public boolean isWireCompression() {
-        return serviceProperties.isWireCompression();
+        return ServiceManager.super.isWireCompression();
     }
 
     @Override
     public void setWireCompression(boolean wireCompression) {
-        serviceProperties.setWireCompression(wireCompression);
+        ServiceManager.super.setWireCompression(wireCompression);
     }
 
     @Override
@@ -231,6 +240,11 @@ public class FBServiceManager implements ServiceManager {
     @Override
     public void setBooleanProperty(String name, Boolean value) {
         serviceProperties.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return serviceProperties.connectionPropertyValues();
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-
-import java.sql.SQLException;
 
 /**
  * Connection properties for the Firebird connection. Main part of this
@@ -58,56 +55,6 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
     void setType(String type);
 
     /**
-     * @return BLOB buffer size in bytes.
-     */
-    int getBlobBufferSize();
-
-    /**
-     * @param bufferSize
-     *         size of the BLOB buffer in bytes.
-     */
-    void setBlobBufferSize(int bufferSize);
-
-    /**
-     * @return SQL dialect of the client.
-     */
-    String getSqlDialect();
-
-    /**
-     * @param sqlDialect
-     *         SQL dialect of the client.
-     */
-    void setSqlDialect(String sqlDialect);
-
-    /**
-     * @return <code>true</code> if stream blobs should be created, otherwise
-     * <code>false</code>.
-     */
-    boolean isUseStreamBlobs();
-
-    /**
-     * @param useStreamBlobs
-     *         <code>true</code> if stream blobs should be created,
-     *         otherwise <code>false</code>.
-     */
-    void setUseStreamBlobs(boolean useStreamBlobs);
-
-    /**
-     * @return <code>true</code> if the Jaybird 1.0 handling of the calendar
-     * in corresponding setters. This is also compatible with MySQL
-     * calendar treatment.
-     */
-    boolean isTimestampUsesLocalTimezone();
-
-    /**
-     * @param timestampUsesLocalTimezone
-     *         <code>true</code> if the Jaybird 1.0 handling of the
-     *         calendar in corresponding setters. This is also compatible
-     *         with MySQL calendar treatment.
-     */
-    void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone);
-
-    /**
      * @return name of the user that will be used when connecting to the database.
      * @deprecated Use {@link #getUser()} instead; will be retained indefinitely for compatibility
      */
@@ -130,16 +77,24 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      * @return number of cache buffers that should be allocated for this
      * connection, should be specified for ClassicServer instances,
      * SuperServer has a server-wide configuration parameter.
+     * @deprecated Use {@link #getPageCacheSize()}; will be removed in Jaybird 6
      */
-    int getBuffersNumber();
+    @Deprecated
+    default int getBuffersNumber() {
+        return getPageCacheSize();
+    }
 
     /**
      * @param buffersNumber
      *         number of cache buffers that should be allocated for this
      *         connection, should be specified for ClassicServer instances,
      *         SuperServer has a server-wide configuration parameter.
+     * @deprecated Use {@link #setPageCacheSize(int)}; will be removed in Jaybird 6
      */
-    void setBuffersNumber(int buffersNumber);
+    @Deprecated
+    default void setBuffersNumber(int buffersNumber) {
+        setPageCacheSize(buffersNumber);
+    }
 
     /**
      * Get the property that does not have corresponding getter method by its
@@ -173,21 +128,10 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      * Set the property that does not have corresponding setter method.
      *
      * @param propertyMapping
-     *         parameter value in the ?propertyName[=propertyValue]? form,
-     *         this allows setting non-standard parameters using
-     *         configuration files.
+     *         parameter value in the {@code propertyName[=propertyValue]} form, this allows setting non-standard
+     *         parameters using configuration files.
      */
     void setNonStandardProperty(String propertyMapping);
-
-    /**
-     * Get the database parameter buffer corresponding to the current connection
-     * request information.
-     *
-     * @return instance of {@link DatabaseParameterBuffer}.
-     * @throws SQLException
-     *         if database parameter buffer cannot be created.
-     */
-    DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException;
 
     /**
      * Get the used TPB mapping.
@@ -283,119 +227,5 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
      *         transaction parameters.
      */
     void setTransactionParameters(int isolation, TransactionParameterBuffer tpb);
-
-    /**
-     * Get the default ResultSet holdability.
-     *
-     * @return <code>true</code> when ResultSets are holdable by default, <code>false</code> not holdable.
-     */
-    boolean isDefaultResultSetHoldable();
-
-    /**
-     * Sets the default ResultSet holdability.
-     *
-     * @param isHoldable
-     *         <code>true</code> when ResultSets are holdable by default, <code>false</code> not holdable.
-     */
-    void setDefaultResultSetHoldable(boolean isHoldable);
-
-    /**
-     * Get whether to use Firebird autocommit (experimental).
-     *
-     * @return {@code true} use Firebird autocommit
-     */
-    boolean isUseFirebirdAutocommit();
-
-    /**
-     * Set whether to use Firebird autocommit (experimental).
-     *
-     * @param useFirebirdAutocommit
-     *         {@code true} Use Firebird autocommit
-     */
-    void setUseFirebirdAutocommit(boolean useFirebirdAutocommit);
-
-    /**
-     * Get the {@code generatedKeysEnabled} configuration.
-     *
-     * @return configuration value for {@code generatedKeysEnabled}, or {@code null} for driver default
-     * @since 4.0
-     */
-    String getGeneratedKeysEnabled();
-
-    /**
-     * Sets the {@code generatedKeysEnabled} configuration.
-     *
-     * @param generatedKeysEnabled
-     *         Generated keys support configuration: {@code default} (or null/empty), {@code disabled}, {@code ignored},
-     *         or a list of statement types to enable (possible values: {@code insert}, {@code update}, {@code delete},
-     *         {@code update_or_insert}, {@code merge})
-     */
-    void setGeneratedKeysEnabled(String generatedKeysEnabled);
-
-    /**
-     * Get the {@code dataTypeBind} configuration.
-     *
-     * @return configuration value for {@code dataTypeBind}, or {@code null} for driver default
-     * @since 4.0
-     */
-    String getDataTypeBind();
-
-    /**
-     * Sets the {@code dataTypeBind} configuration.
-     * <p>
-     * If the value is explicitly set to a non-null value and the connected server is Firebird 4 or higher, this will
-     * configure the data type binding with the specified values using {@code isc_dpb_set_bind}, which is equivalent to
-     * executing {@code SET BIND} statements with the values.
-     * </p>
-     * <p>
-     * See also Firebird documentation for {@code SET BIND}.
-     * </p>
-     *
-     * @param dataTypeBind
-     *         Firebird 4+ data type bind configuration, a semicolon-separated list of {@code <from-type> TO <to-type>}
-     * @since 4.0
-     */
-    void setDataTypeBind(String dataTypeBind);
-
-    /**
-     * Get the {@code sessionTimeZone}.
-     *
-     * @return value for {@code sessionTimeZone}, or {@code null} for driver default (JVM default time zone)
-     * @since 4.0
-     */
-    String getSessionTimeZone();
-
-    /**
-     * Sets the {@code sessionTimeZone}.
-     *
-     * @param sessionTimeZone
-     *         Firebird 4+ session time zone name (we strongly suggest to use Java compatible names only),
-     *         use {@code "server"} to use server default time zone (note: conversion will use JVM default time zone)
-     * @since 4.0
-     */
-    void setSessionTimeZone(String sessionTimeZone);
-
-    /**
-     * Get the value for {@code ignoreProcedureType}.
-     *
-     * @return value for {@code ignoreProcedureType}
-     * @since 3.0.6
-     */
-    boolean isIgnoreProcedureType();
-
-    /**
-     * Sets the value {@code ignoreProcedureType}.
-     * <p>
-     * When set to true, the {@link java.sql.CallableStatement} implementation in Jaybird will ignore metadata
-     * information about the stored procedure type and default to using {@code EXECUTE PROCEDURE}, unless the type is
-     * explicitly set using {@link FirebirdCallableStatement#setSelectableProcedure(boolean)}. This can be useful in
-     * situations where a stored procedure is selectable, but tooling or code expects an executable stored procedure.
-     * </p>
-     *
-     * @param ignoreProcedureType
-     *         {@code true} Ignore procedure type
-     * @since 3.0.6
-     */
-    void setIgnoreProcedureType(boolean ignoreProcedureType);
 
 }

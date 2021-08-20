@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,7 +22,6 @@ import com.sun.jna.Platform;
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
@@ -38,6 +37,7 @@ import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
 import java.util.Set;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -111,9 +111,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void attach() throws SQLException {
         try {
-            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                    .toDatabaseParameterBuffer(connection))
-                    .removeExtensionParams();
+            final DatabaseParameterBuffer dpb = PARAMETER_CONVERTER.toDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, false);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -172,9 +170,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     public void createDatabase() throws SQLException {
         try {
-            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                    .toDatabaseParameterBuffer(connection))
-                    .removeExtensionParams();
+            final DatabaseParameterBuffer dpb = PARAMETER_CONVERTER.toDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, true);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -342,8 +338,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                             .toFlatSQLException();
                 } else if (!(transaction instanceof JnaTransaction)) {
                     // TODO SQLState and/or Firebird specific error
-                    throw new SQLNonTransientException(
-                            String.format("Invalid transaction handle type: %s, expected: %s",
+                    throw new SQLNonTransientException(format("Invalid transaction handle type: %s, expected: %s",
                             transaction.getClass(), JnaTransaction.class));
                 }
                 checkTransactionActive(transaction);
@@ -399,7 +394,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     protected JnaEventHandle validateEventHandle(EventHandle eventHandle) throws SQLException {
         if (!(eventHandle instanceof JnaEventHandle)) {
             // TODO SQLState and/or Firebird specific error
-            throw new SQLNonTransientException(String.format("Invalid event handle type: %s, expected: %s",
+            throw new SQLNonTransientException(format("Invalid event handle type: %s, expected: %s",
                     eventHandle.getClass(), JnaEventHandle.class));
         }
         JnaEventHandle jnaEventHandle = (JnaEventHandle) eventHandle;

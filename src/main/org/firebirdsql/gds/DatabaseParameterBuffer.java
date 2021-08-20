@@ -1,30 +1,30 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.gds;
+
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
 
 /**
  * Instance of this interface represents a Database Parameter Buffer from the
@@ -38,82 +38,157 @@ package org.firebirdsql.gds;
 public interface DatabaseParameterBuffer extends ConnectionParameterBuffer {
 
     //@formatter:off
-    int CDD_PATHNAME            = ISCConstants.isc_dpb_cdd_pathname;
-    int ALLOCATION              = ISCConstants.isc_dpb_allocation;
-    int JOURNAL                 = ISCConstants.isc_dpb_journal;
-    int PAGE_SIZE               = ISCConstants.isc_dpb_page_size;
-    int NUM_BUFFERS             = ISCConstants.isc_dpb_num_buffers;
-    int BUFFER_LENGTH           = ISCConstants.isc_dpb_buffer_length;
-    int DEBUG                   = ISCConstants.isc_dpb_debug;
-    int GARBAGE_COLLECT         = ISCConstants.isc_dpb_garbage_collect;
-    int VERIFY                  = ISCConstants.isc_dpb_verify;
-    int SWEEP                   = ISCConstants.isc_dpb_sweep;
-    int ENABLE_JOURNAL          = ISCConstants.isc_dpb_enable_journal;
-    int DISABLE_JOURNAL         = ISCConstants.isc_dpb_disable_journal;
-    int DBKEY_SCOPE             = ISCConstants.isc_dpb_dbkey_scope;
-    int NUMBER_OF_USERS         = ISCConstants.isc_dpb_number_of_users;
-    int TRACE                   = ISCConstants.isc_dpb_trace;
-    int NO_GARBAGE_COLLECT      = ISCConstants.isc_dpb_no_garbage_collect;
-    int DAMAGED                 = ISCConstants.isc_dpb_damaged;
-    int LICENSE                 = ISCConstants.isc_dpb_license;
-    int SYS_USER_NAME           = ISCConstants.isc_dpb_sys_user_name;
-    int ENCRYPT_KEY             = ISCConstants.isc_dpb_encrypt_key;
-    int ACTIVATE_SHADOW         = ISCConstants.isc_dpb_activate_shadow;
-    int SWEEP_INTERVAL          = ISCConstants.isc_dpb_sweep_interval;
-    int DELETE_SHADOW           = ISCConstants.isc_dpb_delete_shadow;
-    int FORCE_WRITE             = ISCConstants.isc_dpb_force_write;
-    int BEGIN_LOG               = ISCConstants.isc_dpb_begin_log;
-    int QUIT_LOG                = ISCConstants.isc_dpb_quit_log;
-    int NO_RESERVE              = ISCConstants.isc_dpb_no_reserve;
-    int USER_NAME               = ISCConstants.isc_dpb_user_name;
-    int USER                    = ISCConstants.isc_dpb_user; // alias to isc_dpb_user_name
-    int PASSWORD                = ISCConstants.isc_dpb_password;
-    int PASSWORD_ENC            = ISCConstants.isc_dpb_password_enc;
-    int SYS_USER_NAME_ENC       = ISCConstants.isc_dpb_sys_user_name_enc;
-    int INTERP                  = ISCConstants.isc_dpb_interp;
-    int ONLINE_DUMP             = ISCConstants.isc_dpb_online_dump;
-    int OLD_FILE_SIZE           = ISCConstants.isc_dpb_old_file_size;
-    int OLD_NUM_FILES           = ISCConstants.isc_dpb_old_num_files;
-    int OLD_FILE                = ISCConstants.isc_dpb_old_file;
-    int OLD_START_PAGE          = ISCConstants.isc_dpb_old_start_page;
-    int OLD_START_SEQNO         = ISCConstants.isc_dpb_old_start_seqno;
-    int OLD_START_FILE          = ISCConstants.isc_dpb_old_start_file;
-    int DROP_WALFILE            = ISCConstants.isc_dpb_drop_walfile;
-    int OLD_DUMP_ID             = ISCConstants.isc_dpb_old_dump_id;
-    int WAL_BACKUP_DIR          = ISCConstants.isc_dpb_wal_backup_dir;
-    int WAL_CHKPTLEN            = ISCConstants.isc_dpb_wal_chkptlen;
-    int WAL_NUMBUFS             = ISCConstants.isc_dpb_wal_numbufs;
-    int WAL_BUFSIZE             = ISCConstants.isc_dpb_wal_bufsize;
-    int WAL_GRP_CMT_WAIT        = ISCConstants.isc_dpb_wal_grp_cmt_wait;
-    int LC_MESSAGES             = ISCConstants.isc_dpb_lc_messages;
-    int LC_CTYPE                = ISCConstants.isc_dpb_lc_ctype;
-    int CACHE_MANAGER           = ISCConstants.isc_dpb_cache_manager;
-    int SHUTDOWN                = ISCConstants.isc_dpb_shutdown;
-    int ONLINE                  = ISCConstants.isc_dpb_online;
-    int SHUTDOWN_DELAY          = ISCConstants.isc_dpb_shutdown_delay;
-    int RESERVED                = ISCConstants.isc_dpb_reserved;
-    int OVERWRITE               = ISCConstants.isc_dpb_overwrite;
-    int SEC_ATTACH              = ISCConstants.isc_dpb_sec_attach;
-    int DISABLE_WAL             = ISCConstants.isc_dpb_disable_wal;
-    int CONNECT_TIMEOUT         = ISCConstants.isc_dpb_connect_timeout;
-    int DUMMY_PACKET_INTERVAL   = ISCConstants.isc_dpb_dummy_packet_interval;
-    int GBAK_ATTACH             = ISCConstants.isc_dpb_gbak_attach;
-    int SQL_ROLE_NAME           = ISCConstants.isc_dpb_sql_role_name;
-    int SET_PAGE_BUFFERS        = ISCConstants.isc_dpb_set_page_buffers;
-    int WORKING_DIRECTORY       = ISCConstants.isc_dpb_working_directory;
-    int SQL_DIALECT             = ISCConstants.isc_dpb_sql_dialect;
-    int SET_DB_READONLY         = ISCConstants.isc_dpb_set_db_readonly;
-    int SET_DB_SQL_DIALECT      = ISCConstants.isc_dpb_set_db_sql_dialect;
-    int GFIX_ATTACH             = ISCConstants.isc_dpb_gfix_attach;
-    int GSTAT_ATTACH            = ISCConstants.isc_dpb_gstat_attach;
-    int SET_DB_CHARSET          = ISCConstants.isc_dpb_set_db_charset;
+    @Deprecated
+    int CDD_PATHNAME            = DpbItems.isc_dpb_cdd_pathname;
+    @Deprecated
+    int ALLOCATION              = DpbItems.isc_dpb_allocation;
+    @Deprecated
+    int JOURNAL                 = DpbItems.isc_dpb_journal;
+    @Deprecated
+    int PAGE_SIZE               = DpbItems.isc_dpb_page_size;
+    @Deprecated
+    int NUM_BUFFERS             = DpbItems.isc_dpb_num_buffers;
+    @Deprecated
+    int BUFFER_LENGTH           = DpbItems.isc_dpb_buffer_length;
+    @Deprecated
+    int DEBUG                   = DpbItems.isc_dpb_debug;
+    @Deprecated
+    int GARBAGE_COLLECT         = DpbItems.isc_dpb_garbage_collect;
+    @Deprecated
+    int VERIFY                  = DpbItems.isc_dpb_verify;
+    @Deprecated
+    int SWEEP                   = DpbItems.isc_dpb_sweep;
+    @Deprecated
+    int ENABLE_JOURNAL          = DpbItems.isc_dpb_enable_journal;
+    @Deprecated
+    int DISABLE_JOURNAL         = DpbItems.isc_dpb_disable_journal;
+    @Deprecated
+    int DBKEY_SCOPE             = DpbItems.isc_dpb_dbkey_scope;
+    @Deprecated
+    int NUMBER_OF_USERS         = DpbItems.isc_dpb_number_of_users;
+    @Deprecated
+    int TRACE                   = DpbItems.isc_dpb_trace;
+    @Deprecated
+    int NO_GARBAGE_COLLECT      = DpbItems.isc_dpb_no_garbage_collect;
+    @Deprecated
+    int DAMAGED                 = DpbItems.isc_dpb_damaged;
+    @Deprecated
+    int LICENSE                 = DpbItems.isc_dpb_license;
+    @Deprecated
+    int SYS_USER_NAME           = DpbItems.isc_dpb_sys_user_name;
+    @Deprecated
+    int ENCRYPT_KEY             = DpbItems.isc_dpb_encrypt_key;
+    @Deprecated
+    int ACTIVATE_SHADOW         = DpbItems.isc_dpb_activate_shadow;
+    @Deprecated
+    int SWEEP_INTERVAL          = DpbItems.isc_dpb_sweep_interval;
+    @Deprecated
+    int DELETE_SHADOW           = DpbItems.isc_dpb_delete_shadow;
+    @Deprecated
+    int FORCE_WRITE             = DpbItems.isc_dpb_force_write;
+    @Deprecated
+    int BEGIN_LOG               = DpbItems.isc_dpb_begin_log;
+    @Deprecated
+    int QUIT_LOG                = DpbItems.isc_dpb_quit_log;
+    @Deprecated
+    int NO_RESERVE              = DpbItems.isc_dpb_no_reserve;
+    @Deprecated
+    int USER_NAME               = DpbItems.isc_dpb_user_name;
+    @Deprecated
+    int USER                    = DpbItems.isc_dpb_user; // alias to isc_dpb_user_name
+    @Deprecated
+    int PASSWORD                = DpbItems.isc_dpb_password;
+    @Deprecated
+    int PASSWORD_ENC            = DpbItems.isc_dpb_password_enc;
+    @Deprecated
+    int SYS_USER_NAME_ENC       = DpbItems.isc_dpb_sys_user_name_enc;
+    @Deprecated
+    int INTERP                  = DpbItems.isc_dpb_interp;
+    @Deprecated
+    int ONLINE_DUMP             = DpbItems.isc_dpb_online_dump;
+    @Deprecated
+    int OLD_FILE_SIZE           = DpbItems.isc_dpb_old_file_size;
+    @Deprecated
+    int OLD_NUM_FILES           = DpbItems.isc_dpb_old_num_files;
+    @Deprecated
+    int OLD_FILE                = DpbItems.isc_dpb_old_file;
+    @Deprecated
+    int OLD_START_PAGE          = DpbItems.isc_dpb_old_start_page;
+    @Deprecated
+    int OLD_START_SEQNO         = DpbItems.isc_dpb_old_start_seqno;
+    @Deprecated
+    int OLD_START_FILE          = DpbItems.isc_dpb_old_start_file;
+    @Deprecated
+    int DROP_WALFILE            = DpbItems.isc_dpb_drop_walfile;
+    @Deprecated
+    int OLD_DUMP_ID             = DpbItems.isc_dpb_old_dump_id;
+    @Deprecated
+    int WAL_BACKUP_DIR          = DpbItems.isc_dpb_wal_backup_dir;
+    @Deprecated
+    int WAL_CHKPTLEN            = DpbItems.isc_dpb_wal_chkptlen;
+    @Deprecated
+    int WAL_NUMBUFS             = DpbItems.isc_dpb_wal_numbufs;
+    @Deprecated
+    int WAL_BUFSIZE             = DpbItems.isc_dpb_wal_bufsize;
+    @Deprecated
+    int WAL_GRP_CMT_WAIT        = DpbItems.isc_dpb_wal_grp_cmt_wait;
+    @Deprecated
+    int LC_MESSAGES             = DpbItems.isc_dpb_lc_messages;
+    @Deprecated
+    int LC_CTYPE                = DpbItems.isc_dpb_lc_ctype;
+    @Deprecated
+    int CACHE_MANAGER           = DpbItems.isc_dpb_cache_manager;
+    @Deprecated
+    int SHUTDOWN                = DpbItems.isc_dpb_shutdown;
+    @Deprecated
+    int ONLINE                  = DpbItems.isc_dpb_online;
+    @Deprecated
+    int SHUTDOWN_DELAY          = DpbItems.isc_dpb_shutdown_delay;
+    @Deprecated
+    int RESERVED                = DpbItems.isc_dpb_reserved;
+    @Deprecated
+    int OVERWRITE               = DpbItems.isc_dpb_overwrite;
+    @Deprecated
+    int SEC_ATTACH              = DpbItems.isc_dpb_sec_attach;
+    @Deprecated
+    int DISABLE_WAL             = DpbItems.isc_dpb_disable_wal;
+    @Deprecated
+    int CONNECT_TIMEOUT         = DpbItems.isc_dpb_connect_timeout;
+    @Deprecated
+    int DUMMY_PACKET_INTERVAL   = DpbItems.isc_dpb_dummy_packet_interval;
+    @Deprecated
+    int GBAK_ATTACH             = DpbItems.isc_dpb_gbak_attach;
+    @Deprecated
+    int SQL_ROLE_NAME           = DpbItems.isc_dpb_sql_role_name;
+    @Deprecated
+    int SET_PAGE_BUFFERS        = DpbItems.isc_dpb_set_page_buffers;
+    @Deprecated
+    int WORKING_DIRECTORY       = DpbItems.isc_dpb_working_directory;
+    @Deprecated
+    int SQL_DIALECT             = DpbItems.isc_dpb_sql_dialect;
+    @Deprecated
+    int SET_DB_READONLY         = DpbItems.isc_dpb_set_db_readonly;
+    @Deprecated
+    int SET_DB_SQL_DIALECT      = DpbItems.isc_dpb_set_db_sql_dialect;
+    @Deprecated
+    int GFIX_ATTACH             = DpbItems.isc_dpb_gfix_attach;
+    @Deprecated
+    int GSTAT_ATTACH            = DpbItems.isc_dpb_gstat_attach;
+    @Deprecated
+    int SET_DB_CHARSET          = DpbItems.isc_dpb_set_db_charset;
 
-    int GSEC_ATTACH             = ISCConstants.isc_dpb_gsec_attach;
-    int ADDRESS_PATH            = ISCConstants.isc_dpb_address_path;
-    int PROCESS_ID              = ISCConstants.isc_dpb_process_id;
-    int NO_DB_TRIGGERS          = ISCConstants.isc_dpb_no_db_triggers;
-    int TRUSTED_AUTH            = ISCConstants.isc_dpb_trusted_auth;
-    int PROCESS_NAME            = ISCConstants.isc_dpb_process_name;
+    @Deprecated
+    int GSEC_ATTACH             = DpbItems.isc_dpb_gsec_attach;
+    @Deprecated
+    int ADDRESS_PATH            = DpbItems.isc_dpb_address_path;
+    @Deprecated
+    int PROCESS_ID              = DpbItems.isc_dpb_process_id;
+    @Deprecated
+    int NO_DB_TRIGGERS          = DpbItems.isc_dpb_no_db_triggers;
+    @Deprecated
+    int TRUSTED_AUTH            = DpbItems.isc_dpb_trusted_auth;
+    @Deprecated
+    int PROCESS_NAME            = DpbItems.isc_dpb_process_name;
     //@formatter:on
 
     /**

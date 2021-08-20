@@ -258,6 +258,7 @@ This feature was also backported to Jaybird 4.0.4.
 +
 The `org.firebirdsql.management.NBackupManager` interface has two new methods: `fixupDatabase()` to "`fixup`" a database (switch back to 'normal' state without merging the delta file), and `setPreserveSequence(boolean)` to preserve the current database GUID and replication sequence on fixup or restore.
 These options require Firebird 4.0 or higher.
+* Improvement: The `charSet` connection property now also has an alias `charset` (URL property, not as get/set pair).
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -299,6 +300,25 @@ Contact us on the firebird-java mailing list if you're interested in such a solu
 As a result of this change, `org.firebirdsql.jdbc.FBDataSource` is now considered internal API as well.
 For normal data sources, look at the classes in the package `org.firebirdsql.ds`.
 
+[#changes-connection-props]
+=== Changes to connection properties
+
+The handling of connection properties was refactored significantly to remove a lot of code duplication and other forms of repetition.
+As a result of this, a number of incompatibilities arise:
+
+. Jaybird specific connection properties no longer have an alias of the form `isc_dpb_<name>`.
+Only shorter aliases (camel-case and underscored) are still supported.
+For example `isc_dpb_use_stream_blobs` no longer exists, but `use_stream_blobs` and `useStreamBlobs` do.
++
+This does not apply to Firebird connection properties, which still support the `isc_dpb_` prefix.
+. The Jaybird specific connection properties no longer have a constant `isc_dpb_<name>` in `org.firebirdsql.gds.ISCConstants`.
+. Previously a `FBSQLException` was thrown if multiple aliases of the same property where used through `DriverManager`.
+This is now silently allowed, and the last property 'wins', however the ordering of properties is not deterministic.
++
+The behaviour of `FBDriver.normalizeProperties` no longer matches with the behaviour of connecting through `DriverManager` as that still throws the exception.
+. `FBDriver.normalizeProperties` normalizes to a different property name than previous versions, the shorter camel-case name, instead of the longer, underscored `isc_dpb_` alias.
+For example, `charSet` instead of `isc_dpb_local_encoding`.
+
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
 
@@ -308,6 +328,39 @@ For normal data sources, look at the classes in the package `org.firebirdsql.ds`
 The following methods have been removed in Jaybird 5:
 
 * `JdbcVersionSupport.createBatchUpdateException`, the `JdbcVersionSupport` interface is an internal API of Jaybird, but was previously not marked as such.
+* `FirebirdConnectionProperties.getDatabaseParameterBuffer()`;
+there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor.
+* `FBConnection.getDatabaseParameterBuffer()`;
+there is no direct replacement, though `FBConnection.connectionProperties()` can be considered its successor.
+* `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
+There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
+* `IConnectionProperties.getExtraDatabaseParameters`;
+there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor for read-only access.
+* `FbConnectionProperties.fromDpb(DatabaseParameterBuffer)`;
+there is no replacement.
+* `ParameterBufferHelper.getDpbKey(String)`
+* `ParameterBufferHelper.getDpbParameterType(String)`;
+there is no replacement.
+* `ParameterBufferHelper.getDpbMap()`;
+there is no replacement.
+* `ParameterBufferHelper.parseDpbString(String, Object)`;
+there is no replacement.
+This method was deprecated, but not for removal.
+* `ParameterBufferHelper.parseDpbString(String, String)`;
+there is no replacement.
+* `AbstractParameterConverter.populateNonStandardProperties`;
+there is no direct replacement.
+The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
+* `FBConnectionRequestInfo.deepCopy()` (internal API);
+if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
+
+==== Removal of classes without deprecation
+
+The following classes have been removed in Jaybird 5:
+
+* `ParameterBufferHelper.DpbParameterType`
+* `ParameterBufferHelper.DpbValueType`
+* `DatabaseParameterBufferExtension`
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
@@ -316,6 +369,11 @@ The following constants have been removed in Jaybird 5:
 
 * `TIME_WITH_TIMEZONE` and `TIMESTAMP_WITH_TIMEZONE` from `org.firebirdsql.jdbc.JaybirdTypeCodes`.
 Use the constants with the same name from `java.sql.Types`.
+* `ParameterBufferHelper.DPB_PREFIX`
+* `ISCConstants`
+** `isc_dpb_{asterisk}` of Jaybird-specific connection properties, Firebird-specific connection properties have been deprecated for removal in Jaybird 6.
+** `jaybirdMinIscDpbValue`
+** `jaybirdMaxIscDpbValue`
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods
@@ -391,6 +449,48 @@ The package `org.firebirdsql.jca` will be removed entirely.
 
 If you are currently using Jaybird as a JCA driver, please let us know on the  Firebird-Java mailing list.
 We may reconsider this decision and instead  restructure Jaybird so the dependency on JCA is only needed when Jaybird is used  as a JCA driver.
+
+[#breaking-changes-for-jaybird-6]
+=== Breaking changes for Jaybird 6
+
+With Jaybird 6 the following breaking changes will be introduced.
+
+[#removal-of-deprecated-classes-packages-and-methods-6]
+==== Removal of deprecated classes, packages and methods
+
+[#removal-of-deprecated-methods-6]
+===== Removal of deprecated methods
+
+The following methods will be removed in Jaybird 6:
+
+* `FirebirdConnectionProperties.getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`.
+* `FirebirdConnectionProperties.setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`.
+* `short FirebirdConnectionProperties.getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`.
+* `IConnectionProperties.setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`.
+* `FirebirdConnectionProperties.getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`.
+* `FirebirdConnectionProperties.setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`.
+* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
+
+Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
+
+[#removal-of-deprecated-classes-6]
+===== Removal of deprecated classes
+
+[#removal-of-deprecated-constants-6]
+==== Removal of deprecated constants
+
+The following constants have been deprecated and will be removed in Jaybird 6:
+
+* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.DpbItems`.
+* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.TpbItems`.
+* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.SpbItems`.
+* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.DpbItems`.
+* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.TpbItems`.
+* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.param.SpbItems`.
+* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.param.TpbItems`.
+* Most constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be
+removed without replacement.
 
 [#compatibility-notes]
 == Compatibility notes

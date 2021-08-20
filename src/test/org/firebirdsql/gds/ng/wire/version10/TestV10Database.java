@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -203,8 +203,7 @@ public class TestV10Database {
     @Test
     public void testBasicCreateAndDrop() throws Exception {
         IConnectionProperties connectionProperties = getConnectionInfo();
-        connectionProperties.getExtraDatabaseParameters()
-                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+        connectionProperties.setSqlDialect(3);
 
         File dbFile = new File(connectionProperties.getAttachObjectName());
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionProperties,

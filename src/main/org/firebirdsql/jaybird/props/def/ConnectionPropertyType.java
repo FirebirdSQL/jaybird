@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.jaybird.props.def;
 
+import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.util.InternalApi;
 
 /**
@@ -34,7 +35,7 @@ import org.firebirdsql.util.InternalApi;
  */
 public enum ConnectionPropertyType {
 
-    STRING {
+    STRING(DpbType.STRING) {
         @Override
         public String toType(String stringValue) {
             return stringValue;
@@ -60,7 +61,7 @@ public enum ConnectionPropertyType {
             return (Boolean) BOOLEAN.toType((String) value);
         }
     },
-    INT {
+    INT(DpbType.INT) {
         @Override
         public Integer toType(String stringValue) {
             return stringValue != null ? Integer.valueOf(stringValue) : null;
@@ -73,7 +74,7 @@ public enum ConnectionPropertyType {
 
         @Override
         public Integer toType(Boolean booleanValue) {
-            throw new IllegalArgumentException("Cannot convert boolean to integer");
+            return booleanValue != null ? (booleanValue ? 1 : 0) : null;
         }
 
         @Override
@@ -86,47 +87,29 @@ public enum ConnectionPropertyType {
             return (Boolean) BOOLEAN.toType((Integer) value);
         }
     },
-    /**
-     * Byte type.
-     * <p>
-     * Does exactly the same as INT. Exists to identify values that need to be handled as byte dpb instead of int dpb.
-     * </p>
-     */
-    BYTE {
-        @Override
-        public Integer toType(String stringValue) {
-            return (Integer) INT.toType(stringValue);
-        }
-
-        @Override
-        public Integer toType(Integer intValue) {
-            return (Integer) INT.toType(intValue);
-        }
-
-        @Override
-        public Integer toType(Boolean booleanValue) {
-            return (Integer) INT.toType(booleanValue);
-        }
-
-        @Override
-        public Integer asInteger(Object value) {
-            return INT.asInteger(value);
-        }
-
-        @Override
-        public Boolean asBoolean(Object value) {
-            return INT.asBoolean(value);
-        }
-    },
-    BOOLEAN {
+    BOOLEAN(DpbType.SINGLE) {
         @Override
         public Boolean toType(String stringValue) {
-            return stringValue != null ? Boolean.valueOf(stringValue) : null;
+            if (stringValue == null) {
+                return null;
+            } else if (stringValue.isEmpty()) {
+                // For backwards compatibility, empty string means true
+                return Boolean.TRUE;
+            } else {
+                return Boolean.valueOf(stringValue);
+            }
         }
 
         @Override
         public Boolean toType(Integer intValue) {
-            throw new IllegalArgumentException("Cannot convert integer to boolean");
+            if (intValue == null) {
+                return null;
+            } else if (intValue == 0) {
+                return false;
+            } else if (intValue == 1) {
+                return true;
+            }
+            throw new IllegalArgumentException("Cannot convert integer other than null, 0 or 1 to boolean");
         }
 
         @Override
@@ -144,6 +127,16 @@ public enum ConnectionPropertyType {
             return (Boolean) value;
         }
     };
+
+    private final DpbType defaultDpbType;
+
+    ConnectionPropertyType(DpbType defaultDpbType) {
+        this.defaultDpbType = defaultDpbType;
+    }
+
+    public final DpbType getDefaultParameterType() {
+        return defaultDpbType;
+    }
 
     /**
      * Convert a string to a value of this property type.

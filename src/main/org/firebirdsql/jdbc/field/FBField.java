@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,11 +19,10 @@
 package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.extern.decimal.*;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.*;
 
@@ -40,7 +39,7 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Describe class <code>FBField</code> here.
- * 
+ *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -69,7 +68,7 @@ public abstract class FBField {
     static final String BLOB_CONVERSION_ERROR = "Error converting to Firebird BLOB object";
     static final String CLOB_CONVERSION_ERROR = "Error converting to Firebird CLOB object";
     static final String ROWID_CONVERSION_ERROR = "Error converting to Firebird RowId object";
-    
+
     static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported.";
     static final String SQL_ARRAY_NOT_SUPPORTED = "Types.ARRAY: " + FBField.SQL_TYPE_NOT_SUPPORTED;
 
@@ -151,9 +150,9 @@ public abstract class FBField {
 
     /**
      * Set the required type for {@link #getObject()} conversion.
-     * 
+     *
      * @param requiredType
-     *            required type, one of the {@link java.sql.Types} constants.
+     *         required type, one of the {@link java.sql.Types} constants.
      */
     public void setRequiredType(int requiredType) {
         this.requiredType = requiredType;
@@ -164,7 +163,8 @@ public abstract class FBField {
      * <code>FBField</code> class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
-    public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, GDSHelper gdsHelper, boolean cached) throws SQLException {
+    public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
+            GDSHelper gdsHelper, boolean cached) throws SQLException {
         final FBField result = FBField.createField(fieldDescriptor, dataProvider, cached);
         result.setConnection(gdsHelper);
         return result;
@@ -716,7 +716,8 @@ public abstract class FBField {
      * </p>
      *
      * @return The value as decimal
-     * @throws SQLException For database access errors, or values that cannot be converted.
+     * @throws SQLException
+     *         For database access errors, or values that cannot be converted.
      */
     public Decimal<?> getDecimal() throws SQLException {
         BigDecimal bdValue = getBigDecimal();
@@ -746,7 +747,8 @@ public abstract class FBField {
      * The default for this method is implemented in terms of {@link #setBigDecimal(BigDecimal)}.
      * </p>
      *
-     * @param decimal Value to set
+     * @param decimal
+     *         Value to set
      * @throws SQLException
      */
     public void setDecimal(Decimal<?> decimal) throws SQLException {
@@ -757,10 +759,11 @@ public abstract class FBField {
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected boolean isInvertTimeZone() {
         if (gdsHelper == null) return false;
 
-        final DatabaseParameterBuffer dpb = gdsHelper.getDatabaseParameterBuffer();
-        return dpb.hasArgument(DatabaseParameterBufferExtension.TIMESTAMP_USES_LOCAL_TIMEZONE);
+        final IConnectionProperties props = gdsHelper.getConnectionProperties();
+        return props.isTimestampUsesLocalTimezone();
     }
 }

@@ -36,9 +36,12 @@ package org.firebirdsql.jaybird.props;
  */
 public final class PropertyNames {
 
+    // attachment
     public static final String user = "user";
     public static final String password = "password";
     public static final String roleName = "roleName";
+    public static final String processId = "processId";
+    public static final String processName = "processName";
     public static final String charSet = "charSet";
     public static final String encoding = "encoding";
     public static final String socketBufferSize = "socketBufferSize";
@@ -48,6 +51,27 @@ public final class PropertyNames {
     public static final String dbCryptConfig = "dbCryptConfig";
     public static final String authPlugins = "authPlugins";
     public static final String wireCompression = "wireCompression";
+
+    // database connection
+    public static final String sqlDialect = "sqlDialect";
+    public static final String blobBufferSize = "blobBufferSize";
+    public static final String useStreamBlobs = "useStreamBlobs";
+    public static final String pageCacheSize = "pageCacheSize";
+    public static final String defaultResultSetHoldable = "defaultResultSetHoldable";
+    public static final String useFirebirdAutocommit = "useFirebirdAutocommit";
+    public static final String generatedKeysEnabled = "generatedKeysEnabled";
+    public static final String dataTypeBind = "dataTypeBind";
+    public static final String sessionTimeZone = "sessionTimeZone";
+    public static final String ignoreProcedureType = "ignoreProcedureType";
+    public static final String columnLabelForName = "columnLabelForName";
+    public static final String decfloatRound = "decfloatRound";
+    public static final String decfloatTraps = "decfloatTraps";
+
+    /**
+     * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
+     */
+    @Deprecated
+    public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
 
     private PropertyNames() {
         throw new AssertionError("no instances");
