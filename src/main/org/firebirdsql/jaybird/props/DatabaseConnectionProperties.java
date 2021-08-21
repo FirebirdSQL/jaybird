@@ -26,8 +26,6 @@ package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.jdbc.FirebirdCallableStatement;
 
-import static org.firebirdsql.jaybird.props.PropertyConstants.*;
-
 /**
  * Properties for database connections.
  *
@@ -40,7 +38,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return SQL dialect of the client connection
      */
     default int getSqlDialect() {
-        return getIntProperty(PropertyNames.sqlDialect, DEFAULT_DIALECT);
+        return getIntProperty(PropertyNames.sqlDialect, PropertyConstants.DEFAULT_DIALECT);
     }
 
     /**
@@ -142,7 +140,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return BLOB buffer size in bytes.
      */
     default int getBlobBufferSize() {
-        return getIntProperty(PropertyNames.blobBufferSize, DEFAULT_BLOB_BUFFER_SIZE);
+        return getIntProperty(PropertyNames.blobBufferSize, PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE);
     }
 
     /**
@@ -157,7 +155,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @return {@code true} if stream blobs should be created, otherwise {@code false}.
      */
     default boolean isUseStreamBlobs() {
-        return getBooleanProperty(PropertyNames.useStreamBlobs, DEFAULT_STREAM_BLOBS);
+        return getBooleanProperty(PropertyNames.useStreamBlobs, PropertyConstants.DEFAULT_STREAM_BLOBS);
     }
 
     /**
@@ -175,7 +173,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * {@code false} (default), ResultSets are {@link java.sql.ResultSet#CLOSE_CURSORS_AT_COMMIT}
      */
     default boolean isDefaultResultSetHoldable() {
-        return getBooleanProperty(PropertyNames.defaultResultSetHoldable, DEFAULT_RESULT_SET_HOLDABLE);
+        return getBooleanProperty(PropertyNames.defaultResultSetHoldable, PropertyConstants.DEFAULT_RESULT_SET_HOLDABLE);
     }
 
     /**
@@ -196,7 +194,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @since 2.2.9
      */
     default boolean isUseFirebirdAutocommit() {
-        return getBooleanProperty(PropertyNames.useFirebirdAutocommit, DEFAULT_USE_FIREBIRD_AUTO_COMMIT);
+        return getBooleanProperty(PropertyNames.useFirebirdAutocommit, PropertyConstants.DEFAULT_USE_FIREBIRD_AUTO_COMMIT);
     }
 
     /**
@@ -219,7 +217,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @since 2.2.1
      */
     default boolean isColumnLabelForName() {
-        return getBooleanProperty(PropertyNames.columnLabelForName, DEFAULT_COLUMN_LABEL_FOR_NAME);
+        return getBooleanProperty(PropertyNames.columnLabelForName, PropertyConstants.DEFAULT_COLUMN_LABEL_FOR_NAME);
     }
 
     /**
@@ -269,7 +267,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * @since 3.0.6
      */
     default boolean isIgnoreProcedureType() {
-        return getBooleanProperty(PropertyNames.ignoreProcedureType, DEFAULT_IGNORE_PROCEDURE_TYPE);
+        return getBooleanProperty(PropertyNames.ignoreProcedureType, PropertyConstants.DEFAULT_IGNORE_PROCEDURE_TYPE);
     }
 
     /**
@@ -328,6 +326,35 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
+     * Get the used TPB mapping.
+     *
+     * @return path to the TPB mapping
+     * @see #setTpbMapping(String)
+     */
+    default String getTpbMapping() {
+        return getProperty(PropertyNames.tpbMapping);
+    }
+
+    /**
+     * Set path to the properties file with the TPB mapping. The path begins with the protocol specification followed
+     * by the path to the resource. A special protocol {@code "res:"} should be used to specify resource in the
+     * classpath.
+     * <p/>
+     * For compatibility reasons, if no protocol is specified, classpath is used by default.
+     * <p/>
+     * Properties file contains a mapping between the transaction isolation level (name of the constant in the
+     * {@link java.sql.Connection} interface and a comma-separated list of TPB parameters.
+     *
+     * @param tpbMapping
+     *         path to the properties file
+     * @throws IllegalStateException
+     *         May be thrown when the mapping has already been initialized (not all implementations do this)
+     */
+    default void setTpbMapping(String tpbMapping) {
+        setProperty(PropertyNames.tpbMapping, tpbMapping);
+    }
+
+    /**
      * @return {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
      * compatible with MySQL calendar treatment.
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
@@ -335,7 +362,8 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     default boolean isTimestampUsesLocalTimezone() {
-        return getBooleanProperty(PropertyNames.timestampUsesLocalTimezone, DEFAULT_TIMESTAMP_USES_LOCAL);
+        return getBooleanProperty(
+                PropertyNames.timestampUsesLocalTimezone, PropertyConstants.DEFAULT_TIMESTAMP_USES_LOCAL);
     }
 
     /**

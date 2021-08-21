@@ -319,6 +319,24 @@ The behaviour of `FBDriver.normalizeProperties` no longer matches with the behav
 . `FBDriver.normalizeProperties` normalizes to a different property name than previous versions, the shorter camel-case name, instead of the longer, underscored `isc_dpb_` alias.
 For example, `charSet` instead of `isc_dpb_local_encoding`.
 
+[#changes-set-non-standard-string]
+==== Changes to setNonStandardString(String)
+
+The `FirebirdConnectionProperties.setNonStandardString(String)` (implemented by a number of data sources) is documented as accepting strings with the format `propertyName[=propertyValue]`.
+However, the actual implementation was far more lenient, allowing odd values like `"++ =:propertyName :==: propertyValue++"` and `"propertyName propertyValue"`.
+
+This has been rectified, and now we split on the first '```=```', everything before the '```=```' -- or the entire string if there is no '```=```' -- is the property name, and everything after -- or an empty string if there is no '```=```' -- is the property value.
+Leading and trailing whitespace is trimmed from the property name and value.
+
+This has the effect that previously valid options will now configure a different property or -- for a limited number of cases -- throw an `IllegalArgumentException`.
+Some examples:
+
+* `"a:=b"` used to set name `"a"` with value `"b"`, but now sets name `"a:"` with value `"b"`.
+* `"a b"` used to do the same, but now sets name `"a b"` with value empty string.
+* `"=a=b"` used to set the same, but now throws an `IllegalArgumentException.
+
+These cases need to be replaced with `"a=b"`.
+
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
 
@@ -483,6 +501,9 @@ Changes to the `FirebirdConnectionProperties` interface affect the data source i
 
 The following constants have been deprecated and will be removed in Jaybird 6:
 
+* All public String constants in `FBDriver`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be
+removed without replacement.
 * `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.DpbItems`.
 * `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.TpbItems`.
 * `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.param.SpbItems`.

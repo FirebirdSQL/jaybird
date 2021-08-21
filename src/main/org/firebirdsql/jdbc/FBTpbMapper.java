@@ -251,6 +251,12 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         if resource cannot be loaded or contains incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
+        // TODO The documentation of DatabaseConnectionProperties.setTpbMapping suggests more functionality than
+        //  actually available
+        // Make sure the documented 'res:' protocol works
+        if (mappingResource.startsWith("res:")) {
+            mappingResource = mappingResource.substring(4);
+        }
         try {
             ResourceBundle res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
 

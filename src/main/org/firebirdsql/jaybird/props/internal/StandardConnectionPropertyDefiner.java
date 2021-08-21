@@ -87,6 +87,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                         .dpbItem(isc_dpb_decfloat_round),
                 builder(decfloatTraps).aliases("decfloat_traps", "isc_dpb_decfloat_traps")
                         .dpbItem(isc_dpb_decfloat_traps),
+                builder(tpbMapping).aliases("tpb_mapping"),
                 // TODO Property should be considered deprecated, remove in Jaybird 6 or later
                 builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 

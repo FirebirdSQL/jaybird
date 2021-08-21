@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -37,8 +38,12 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public static final String DATABASE_PROPERTY = "database";
     public static final String TYPE_PROPERTY = "type";
+    // isolation name
     public static final String ISOLATION_PROPERTY = "isolation";
+    // isolation name
     public static final String DEFAULT_ISOLATION_PROPERTY = "defaultIsolation";
+    // isolation int value
+    private static final String DEFAULT_TRANSACTION_ISOLATION_PROPERTY = "defaultTransactionIsolation";
 
     @Deprecated
     public static final String BLOB_BUFFER_SIZE_PROPERTY = PropertyNames.blobBufferSize;
@@ -99,12 +104,13 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Deprecated
     public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
+    private static final int DEFAULT_TRANSACTION_ISOLATION_VALUE = Connection.TRANSACTION_READ_COMMITTED;
+
     private IConnectionProperties properties = new FbConnectionProperties();
     private String type;
     private String database;
 
-    private String tpbMapping;
-    private int defaultTransactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
+    private int defaultTransactionIsolation = DEFAULT_TRANSACTION_ISOLATION_VALUE;
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
 
@@ -112,32 +118,65 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     @Override
     public String getProperty(String name) {
-        if (DATABASE_PROPERTY.equals(name)) {
+        // TODO Can we integrate this in normal property handling?
+        switch (name) {
+        case DATABASE_PROPERTY:
             return getDatabase();
-        } else if (TYPE_PROPERTY.equals(name)) {
+        case TYPE_PROPERTY:
             return getType();
+        case ISOLATION_PROPERTY:
+        case DEFAULT_ISOLATION_PROPERTY:
+            return getDefaultIsolation();
+        case DEFAULT_TRANSACTION_ISOLATION_PROPERTY:
+            return String.valueOf(getDefaultTransactionIsolation());
+        default:
+            return properties.getProperty(name);
         }
-        return properties.getProperty(name);
     }
 
     @Override
     public void setProperty(String name, String value) {
-        if (DATABASE_PROPERTY.equals(name)) {
+        // TODO Can we integrate this in normal property handling?
+        switch (name) {
+        case DATABASE_PROPERTY:
             setDatabase(value);
-        } else if (TYPE_PROPERTY.equals(name)) {
+            break;
+        case TYPE_PROPERTY:
             setType(value);
+            break;
+        case ISOLATION_PROPERTY:
+        case DEFAULT_ISOLATION_PROPERTY:
+            setDefaultIsolation(value);
+            break;
+        case DEFAULT_TRANSACTION_ISOLATION_PROPERTY:
+            setDefaultTransactionIsolation(
+                    value != null
+                            ? (Integer) ConnectionPropertyType.INT.toType(value)
+                            : DEFAULT_TRANSACTION_ISOLATION_VALUE);
+            break;
+        default:
+            properties.setProperty(name, value);
+            break;
         }
-        properties.setProperty(name, value);
     }
 
     @Override
     public Integer getIntProperty(String name) {
+        // TODO Can we integrate this in normal property handling?
+        if (DEFAULT_TRANSACTION_ISOLATION_PROPERTY.equals(name)) {
+            return getDefaultTransactionIsolation();
+        }
         return properties.getIntProperty(name);
     }
 
     @Override
     public void setIntProperty(String name, Integer value) {
-        properties.setIntProperty(name, value);
+        // TODO Can we integrate this in normal property handling?
+        if (DEFAULT_TRANSACTION_ISOLATION_PROPERTY.equals(name)) {
+            setDefaultTransactionIsolation(value != null ? value : DEFAULT_TRANSACTION_ISOLATION_VALUE);
+        } else {
+            properties.setIntProperty(name, value);
+        }
     }
 
     @Override
@@ -173,7 +212,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         boolean result = this.properties.equals(that.properties);
         result &= Objects.equals(this.type, that.type);
         result &= Objects.equals(this.database, that.database);
-        result &= Objects.equals(this.tpbMapping, that.tpbMapping);
         result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
         result &= this.customMapping.equals(that.customMapping);
         // If one or both are null we are identical (see also JDBC-249)
@@ -212,52 +250,32 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         this.type = type;
     }
 
-    @Deprecated
-    public void setNonStandardProperty(String key, String value) {
-        if (ISOLATION_PROPERTY.equals(key) || DEFAULT_ISOLATION_PROPERTY.equals(key)) {
-            setDefaultIsolation(value);
-        } else {
-            setProperty(key, value);
-        }
-    }
-
+    @Override
     public void setNonStandardProperty(String propertyMapping) {
-        char[] chars = propertyMapping.toCharArray();
-        StringBuilder key = new StringBuilder();
-        StringBuilder value = new StringBuilder();
-
-        boolean keyProcessed = false;
-        for (char ch : chars) {
-            boolean isSeparator = Character.isWhitespace(ch) || ch == '=' || ch == ':';
-
-            // if no key was processed, ignore white spaces
-            if (key.length() == 0 && isSeparator)
-                continue;
-
-            if (!keyProcessed && !isSeparator) {
-                key.append(ch);
-            } else if (!keyProcessed) {
-                keyProcessed = true;
-            } else if (value.length() != 0 || !isSeparator) {
-                value.append(ch);
-            }
+        String key;
+        String value;
+        int equalsIndex = propertyMapping.indexOf('=');
+        if (equalsIndex == -1) {
+            key = propertyMapping.trim();
+            value = "";
+        } else {
+            key = propertyMapping.substring(0, equalsIndex).trim();
+            value = propertyMapping.substring(equalsIndex + 1).trim();
         }
-
-        String keyStr = key.toString().trim();
-        String valueStr = value.length() > 0 ? value.toString().trim() : null;
-
-        setNonStandardProperty(keyStr, valueStr);
+        if (key.length() > 0) {
+            setProperty(key, value);
+        } else {
+            throw new IllegalArgumentException("Invalid non-standard property. "
+                    + "Expected format: propertyName[=propertyValue], was: '" +propertyMapping + "'");
+        }
     }
 
-    public String getTpbMapping() {
-        return tpbMapping;
-    }
-
+    @Override
     public void setTpbMapping(String tpbMapping) {
         if (mapper != null) {
             throw new IllegalStateException("Properties are already initialized.");
         }
-        this.tpbMapping = tpbMapping;
+        FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
     }
 
     public int getDefaultTransactionIsolation() {
@@ -301,6 +319,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return mapper;
         }
 
+        String tpbMapping = getTpbMapping();
         if (tpbMapping == null) {
             mapper = FBTpbMapper.getDefaultMapper();
         } else {

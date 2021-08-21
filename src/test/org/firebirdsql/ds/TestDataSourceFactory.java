@@ -151,11 +151,12 @@ public class TestDataSourceFactory {
      * </ol>
      * </p>
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
-        originalDS.setNonStandardProperty("buffersNumber=127"); // note number of buffers is apparently byte, so using higher values can give weird results
+        originalDS.setNonStandardProperty("buffersNumber=127");
         originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
         originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
@@ -180,11 +181,12 @@ public class TestDataSourceFactory {
      * </ol>
      * </p>
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testBuildFBXADataSource_nonStandardProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
-        originalDS.setNonStandardProperty("buffersNumber=127"); // note number of buffers is apparently byte, so using higher values can give weird results
+        originalDS.setNonStandardProperty("buffersNumber=127");
         originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
         originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
@@ -203,14 +205,14 @@ public class TestDataSourceFactory {
         originalDS.setType(TYPE);
         final String database = String.format("//%s:%d/%s", SERVER_NAME, PORT_NUMBER, DATABASE_NAME);
         originalDS.setDatabase(database);
-        originalDS.setUserName(USER);
+        originalDS.setUser(USER);
         originalDS.setPassword(PASSWORD);
         originalDS.setEncoding(ENCODING);
         originalDS.setLoginTimeout(LOGIN_TIMEOUT);
         originalDS.setRoleName(ROLE_NAME);
-        originalDS.setNonStandardProperty("buffersNumber=127"); // note number of buffers is apparently byte, so using higher values can give weird results
-        originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
-        originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
+        originalDS.setNonStandardProperty("buffersNumber=127");
+        originalDS.setIntProperty("defaultTransactionIsolation", Connection.TRANSACTION_SERIALIZABLE);
+        originalDS.setProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
 
         assertEquals("Unexpected factory name", DataSourceFactory.class.getName(), ref.getFactoryClassName());
@@ -222,13 +224,14 @@ public class TestDataSourceFactory {
         assertEquals(DESCRIPTION, newDS.getDescription());
         assertEquals(TYPE, newDS.getType());
         assertEquals(database, newDS.getDatabase());
-        assertEquals(USER, newDS.getUserName());
+        assertEquals(USER, newDS.getUser());
         assertEquals(PASSWORD, newDS.getPassword());
         assertEquals(ENCODING, newDS.getEncoding());
         assertEquals(LOGIN_TIMEOUT, newDS.getLoginTimeout());
         assertEquals(ROLE_NAME, newDS.getRoleName());
-        assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
-        assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
-        assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
+        assertEquals(Integer.valueOf(127), newDS.getIntProperty("buffersNumber"));
+        assertEquals(Integer.valueOf(Connection.TRANSACTION_SERIALIZABLE),
+                newDS.getIntProperty("defaultTransactionIsolation"));
+        assertEquals("madeUpValue", newDS.getProperty("madeUpProperty"));
     }
 }

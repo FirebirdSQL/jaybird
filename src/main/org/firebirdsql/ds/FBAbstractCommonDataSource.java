@@ -180,17 +180,12 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
 
     @Override
     public String getTpbMapping() {
-        synchronized (lock) {
-            return connectionProperties.getTpbMapping();
-        }
+        return FirebirdConnectionProperties.super.getTpbMapping();
     }
 
     @Override
     public void setTpbMapping(String tpbMapping) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setTpbMapping(tpbMapping);
-        }
+        FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
     }
 
     @Override
@@ -539,25 +534,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         synchronized (lock) {
             checkNotStarted();
             connectionProperties.setNonStandardProperty(propertyMapping);
-        }
-    }
-
-    /**
-     * Method to set properties which are not exposed through JavaBeans-style setters.
-     *
-     * @param key
-     *         Name of the property (see Jaybird releasenotes)
-     * @param value
-     *         Value of the property
-     * @see #setNonStandardProperty(String)
-     */
-    @Override
-    @Deprecated
-    public final void setNonStandardProperty(String key, String value) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setNonStandardProperty(key, value);
         }
     }
 

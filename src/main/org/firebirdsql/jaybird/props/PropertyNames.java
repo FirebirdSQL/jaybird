@@ -66,6 +66,7 @@ public final class PropertyNames {
     public static final String columnLabelForName = "columnLabelForName";
     public static final String decfloatRound = "decfloatRound";
     public static final String decfloatTraps = "decfloatTraps";
+    public static final String tpbMapping = "tpbMapping";
 
     /**
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)

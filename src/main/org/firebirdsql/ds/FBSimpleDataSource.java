@@ -160,11 +160,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     }
 
     public String getTpbMapping() {
-        return mcf.getTpbMapping();
+        return FirebirdConnectionProperties.super.getTpbMapping();
     }
 
     public void setTpbMapping(String tpbMapping) {
-        mcf.setTpbMapping(tpbMapping);
+        FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
     }
 
     public String getDefaultIsolation() {
@@ -474,12 +474,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
     @Override
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
         FirebirdConnectionProperties.super.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-    }
-
-    @Deprecated
-    public void setNonStandardProperty(String key, String value) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        mcf.setNonStandardProperty(key, value);
     }
 
     public void setNonStandardProperty(String propertyMapping) {

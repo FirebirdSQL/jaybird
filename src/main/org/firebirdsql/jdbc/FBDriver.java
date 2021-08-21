@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -49,14 +50,30 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class FBDriver implements FirebirdDriver {
 
-    private final static Logger log;
+    private static final Logger log;
 
-    public static final String CHARSET = "charSet";
-    public static final String USER = "user";
+    @Deprecated
+    public static final String CHARSET = PropertyNames.charSet;
+    @Deprecated
+    public static final String USER = PropertyNames.user;
+    /**
+     * @deprecated Use {@link PropertyNames#user}
+     */
+    @Deprecated
     public static final String USER_NAME = "user_name";
-    public static final String PASSWORD = "password";
-    public static final String DATABASE = "database";
+    @Deprecated
+    public static final String PASSWORD = PropertyNames.password;
+    @Deprecated
+    public static final String DATABASE = FBConnectionProperties.DATABASE_PROPERTY;
+    /**
+     * @deprecated Use {@link PropertyNames#blobBufferSize}
+     */
+    @Deprecated
     public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
+    /**
+     * @deprecated Use {@link PropertyNames#tpbMapping}
+     */
+    @Deprecated
     public static final String TPB_MAPPING = "tpb_mapping";
 
     private static final String URL_CHARSET = "UTF-8";
@@ -106,8 +123,7 @@ public class FBDriver implements FirebirdDriver {
                 // TODO Can we do this differently (or just allow the database property to be set this way)?
                 if (FBConnectionProperties.DATABASE_PROPERTY.equals(entry.getKey())) continue;
                 try {
-                    // TODO See if we can switch to mcf.setProperty instead
-                    mcf.setNonStandardProperty(entry.getKey(), entry.getValue());
+                    mcf.setProperty(entry.getKey(), entry.getValue());
                 } catch (InvalidPropertyValueException e) {
                     throw e.asSQLException();
                 }

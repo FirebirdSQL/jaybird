@@ -134,32 +134,6 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
     void setNonStandardProperty(String propertyMapping);
 
     /**
-     * Get the used TPB mapping.
-     *
-     * @return path to the TPB mapping.
-     * @see #setTpbMapping(String)
-     */
-    String getTpbMapping();
-
-    /**
-     * Set path to the properties file with the TPB mapping. The path begins
-     * with the protocol specification followed by the path to the resource. A
-     * special protocol <code>"res:"</code> should be used to specify resource
-     * in the classpath.
-     * <p/>
-     * For the compatibility reasons, if no protocol is specified, classpath is
-     * used by default.
-     * <p/>
-     * Properties file contains a mapping between the transaction isolation
-     * level (name of the constant in the {@link java.sql.Connection} interface
-     * and a comma-separated list of TPB parameters.
-     *
-     * @param tpbMapping
-     *         path to the properties file.
-     */
-    void setTpbMapping(String tpbMapping);
-
-    /**
      * Get the default transaction isolation level. This is the transaction
      * isolation level for the newly created connections.
      *

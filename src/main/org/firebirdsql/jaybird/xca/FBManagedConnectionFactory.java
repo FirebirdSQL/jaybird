@@ -216,10 +216,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getDefaultTransactionIsolation();
     }
 
-    public String getTpbMapping() {
-        return connectionProperties.getTpbMapping();
-    }
-
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return connectionProperties.getTransactionParameters(isolation);
     }
@@ -240,18 +236,8 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         ensureCanModify(() -> connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel));
     }
 
-    @Deprecated
-    public void setNonStandardProperty(String key, String value) {
-        // TODO Remove when logic in FBConnectionProperties rewritten
-        ensureCanModify(() -> connectionProperties.setNonStandardProperty(key, value));
-    }
-
     public void setNonStandardProperty(String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        ensureCanModify(() -> connectionProperties.setTpbMapping(tpbMapping));
     }
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
@@ -271,8 +257,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
         ensureCanModify(() -> {
             // Ensures that instances with different connection managers do not resolve to the same connection manager
-            connectionProperties.setNonStandardProperty(
-                    DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
+            connectionProperties.setProperty(DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
             this.defaultCm = defaultCm;
         });
     }
