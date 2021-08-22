@@ -25,6 +25,7 @@
 package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
+import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 import org.firebirdsql.util.InternalApi;
 
 /**
@@ -125,6 +126,46 @@ public enum ConnectionPropertyType {
         @Override
         public Boolean asBoolean(Object value) {
             return (Boolean) value;
+        }
+    },
+    /**
+     * Maps between transaction isolation level names and JDBC transaction isolation level codes.
+     * For internal use only.
+     */
+    @InternalApi
+    TRANSACTION_ISOLATION(DpbType.NONE) {
+        @Override
+        public Object toType(String stringValue) {
+            if (stringValue == null) return null;
+            return TransactionNameMapping.toIsolationLevel(stringValue);
+        }
+
+        @Override
+        public Object toType(Integer intValue) {
+            return intValue;
+        }
+
+        @Override
+        public Object toType(Boolean booleanValue) {
+            if (booleanValue == null) return null;
+            throw new IllegalArgumentException("Cannot convert Boolean to transaction isolation");
+        }
+
+        @Override
+        public String asString(Object value) {
+            if (value == null) return null;
+            return TransactionNameMapping.toIsolationLevelName((int) value, true);
+        }
+
+        @Override
+        public Integer asInteger(Object value) {
+            return (Integer) value;
+        }
+
+        @Override
+        public Boolean asBoolean(Object value) {
+            if (value == null) return null;
+            throw new IllegalArgumentException("Cannot convert transaction isolation to Boolean");
         }
     };
 

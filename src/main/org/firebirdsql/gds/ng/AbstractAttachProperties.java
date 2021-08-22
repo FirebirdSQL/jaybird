@@ -20,6 +20,8 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.InternalApi;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,9 +38,22 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
+    private static final PropertyUpdateListener NULL_LISTENER = new PropertyUpdateListener() {
+        @Override
+        public void beforeUpdate(ConnectionProperty connectionProperty, Object newValue) {
+            // do nothing
+        }
+
+        @Override
+        public void afterUpdate(ConnectionProperty connectionProperty, Object newValue) {
+            // do nothing
+        }
+    };
+
     private String serverName = IAttachProperties.DEFAULT_SERVER_NAME;
     private int portNumber = IAttachProperties.DEFAULT_PORT;
     private final Map<ConnectionProperty, Object> propertyValues;
+    private PropertyUpdateListener propertyUpdateListener = NULL_LISTENER;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -141,12 +156,36 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     private void setProperty(ConnectionProperty property, Object value) {
+        if (value == null) {
+            value = resolveStoredDefaultValue(property);
+        }
+        // Exceptions thrown from the listener will prevent update from property
+        propertyUpdateListener.beforeUpdate(property, value);
         if (value != null) {
             propertyValues.put(property, property.validate(value));
         } else {
             propertyValues.remove(property);
         }
         dirtied();
+        try {
+            propertyUpdateListener.afterUpdate(property, value);
+        } catch (Exception e) {
+            LoggerFactory.getLogger(this.getClass())
+                    .warn("Ignored exception calling propertyUpdateListener.afterUpdate", e);
+        }
+    }
+
+    /**
+     * Resolve the default value for the specified connection property.
+     * <p>
+     * This method is only used for properties that must have a stored default value to function correctly.
+     * </p>
+     *
+     * @param property Connection property
+     * @return Default value to apply (usually {@code null})
+     */
+    protected Object resolveStoredDefaultValue(ConnectionProperty property) {
+        return null;
     }
 
     /**
@@ -173,6 +212,26 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
         return false;
     }
 
+    /**
+     * Registers an update listener that is notified when a connection property is modified.
+     * <p>
+     * This method is only for internal use within Jaybird.
+     * </p>
+     *
+     * @param listener Listener to register or {@code null} to unregister
+     * @throws IllegalStateException When a property update listener was already registered
+     */
+    @InternalApi
+    public void registerPropertyUpdateListener(PropertyUpdateListener listener) {
+        if (listener == null) {
+            propertyUpdateListener = NULL_LISTENER;
+        } else if (propertyUpdateListener == NULL_LISTENER) {
+            propertyUpdateListener = listener;
+        } else {
+            throw new IllegalStateException("A listener is already registered");
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -197,4 +256,16 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      * Called by setters if they have been called.
      */
     protected abstract void dirtied();
+
+    /**
+     * Property update listener. This interface is only for internal use within Jaybird.
+     */
+    @InternalApi
+    public interface PropertyUpdateListener {
+
+        void beforeUpdate(ConnectionProperty connectionProperty, Object newValue);
+
+        void afterUpdate(ConnectionProperty connectionProperty, Object newValue);
+
+    }
 }

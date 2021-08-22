@@ -66,7 +66,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
      * Default constructor for FbConnectionProperties
      */
     public FbConnectionProperties() {
-        setSessionTimeZone(TimeZone.getDefault().getID());
+        setSessionTimeZone(defaultTimeZone());
         setSqlDialect(PropertyConstants.DEFAULT_DIALECT);
     }
 
@@ -94,12 +94,6 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        setProperty(PropertyNames.sessionTimeZone,
-                sessionTimeZone != null ? sessionTimeZone : TimeZone.getDefault().getID());
-    }
-
-    @Override
     public IConnectionProperties asImmutable() {
         if (immutableConnectionPropertiesCache == null) {
             immutableConnectionPropertiesCache = new FbImmutableConnectionProperties(this);
@@ -110,6 +104,22 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public IConnectionProperties asNewMutable() {
         return new FbConnectionProperties(this);
+    }
+
+    @Override
+    protected Object resolveStoredDefaultValue(ConnectionProperty property) {
+        switch (property.name()) {
+        case PropertyNames.sessionTimeZone:
+            return defaultTimeZone();
+        case PropertyNames.sqlDialect:
+            return PropertyConstants.DEFAULT_DIALECT;
+        default:
+            return super.resolveStoredDefaultValue(property);
+        }
+    }
+
+    private static String defaultTimeZone() {
+        return TimeZone.getDefault().getID();
     }
 
     @Override

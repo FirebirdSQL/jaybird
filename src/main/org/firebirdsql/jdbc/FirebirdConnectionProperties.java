@@ -134,52 +134,6 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
     void setNonStandardProperty(String propertyMapping);
 
     /**
-     * Get the default transaction isolation level. This is the transaction
-     * isolation level for the newly created connections.
-     *
-     * @return default transaction isolation level.
-     */
-    int getDefaultTransactionIsolation();
-
-    /**
-     * Set the default transaction isolation level.
-     *
-     * @param defaultIsolationLevel
-     *         default transaction isolation level.
-     */
-    void setDefaultTransactionIsolation(int defaultIsolationLevel);
-
-    /**
-     * Get the default transaction isolation level as string. This method is
-     * complementary to the {@link #getDefaultTransactionIsolation()}, however
-     * it takes a string as parameter instead of a numeric constant.
-     *
-     * @return default transaction isolation as string.
-     * @see #setDefaultIsolation(String)
-     */
-    String getDefaultIsolation();
-
-    /**
-     * Set the default transaction isolation level as string. This method is
-     * complementary to the {@link #setDefaultTransactionIsolation(int)},
-     * however it takes a string as parameter instead of a numeric constant.
-     * <p/>
-     * Following strings are allowed:
-     * <ul>
-     * <li><code>"TRANSACTION_READ_COMMITTED"</code> for a READ COMMITTED
-     * isolation level.
-     * <li><code>"TRANSACTION_REPEATABLE_READ"</code> for a REPEATABLE READ
-     * isolation level.
-     * <li><code>"TRANSACTION_SERIALIZABLE"</code> for a SERIALIZABLE
-     * isolation level.
-     * </ul>
-     *
-     * @param isolation
-     *         string constant representing a default isolation level.
-     */
-    void setDefaultIsolation(String isolation);
-
-    /**
      * Get the transaction parameter buffer corresponding to the current
      * connection request information.
      *

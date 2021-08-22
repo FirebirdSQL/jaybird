@@ -26,7 +26,6 @@ package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
-import org.firebirdsql.util.InternalApi;
 import org.firebirdsql.util.StringUtils;
 
 import java.util.*;
@@ -89,17 +88,6 @@ public final class ConnectionProperty {
         } else if (pbType != DpbType.NONE) {
             throw new IllegalArgumentException("dpbType set to " + pbType + " while dpbItem and spbItem not set");
         }
-    }
-
-    // Copy constructor, primarily for testing
-    private ConnectionProperty(ConnectionProperty other) {
-        name = other.name;
-        aliases = other.aliases;
-        type = other.type;
-        choices = other.choices;
-        pbType = other.pbType;
-        dpbItem = other.dpbItem;
-        spbItem = other.spbItem;
     }
 
     /**

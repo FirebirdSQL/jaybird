@@ -85,6 +85,9 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         this.mcf = mcf;
     }
 
+    // For a lot of properties, we redirect to the default implementations of the interface to ensure the
+    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+
     /**
      * Get buffer length for the BLOB fields.
      *
@@ -127,7 +130,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      *
      * @param name
      *         connection URL without {@code "jdbc:firebirdsql:"}
-     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
+     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"} for
      *         example).
      * @deprecated use {@link #setDatabase(String)} instead for the sake of
      * naming compatibility.
@@ -159,20 +162,14 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         mcf.setDatabase(name);
     }
 
+    @Override
     public String getTpbMapping() {
         return FirebirdConnectionProperties.super.getTpbMapping();
     }
 
+    @Override
     public void setTpbMapping(String tpbMapping) {
         FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
-    }
-
-    public String getDefaultIsolation() {
-        return mcf.getDefaultIsolation();
-    }
-
-    public int getDefaultTransactionIsolation() {
-        return mcf.getDefaultTransactionIsolation();
     }
 
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
@@ -183,16 +180,25 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         return mcf.getType();
     }
 
+    @Override
+    public String getDefaultIsolation() {
+        return FirebirdConnectionProperties.super.getDefaultIsolation();
+    }
+
+    @Override
     public void setDefaultIsolation(String isolation) {
-        mcf.setDefaultIsolation(isolation);
+        FirebirdConnectionProperties.super.setDefaultIsolation(isolation);
     }
 
+    @Override
+    public int getDefaultTransactionIsolation() {
+        return FirebirdConnectionProperties.super.getDefaultTransactionIsolation();
+    }
+
+    @Override
     public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        mcf.setDefaultTransactionIsolation(defaultIsolationLevel);
+        FirebirdConnectionProperties.super.setDefaultTransactionIsolation(defaultIsolationLevel);
     }
-
-    // For the remaining properties, we redirect to the default implementations of the interface here to ensure the
-    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
     public String getUser() {

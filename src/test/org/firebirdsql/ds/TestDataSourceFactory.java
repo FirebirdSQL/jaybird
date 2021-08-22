@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -157,14 +158,16 @@ public class TestDataSourceFactory {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
-        originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
+        originalDS.setNonStandardProperty("defaultTransactionIsolation",
+                Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
         originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
         
         FBConnectionPoolDataSource newDS = (FBConnectionPoolDataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);
-        assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
-        assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
-        assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
+        assertEquals("127", newDS.getProperty("buffersNumber"));
+        assertEquals(TransactionNameMapping.TRANSACTION_SERIALIZABLE, newDS.getProperty("defaultTransactionIsolation"));
+        assertEquals(Connection.TRANSACTION_SERIALIZABLE, newDS.getIntProperty("defaultTransactionIsolation", -1));
+        assertEquals("madeUpValue", newDS.getProperty("madeUpProperty"));
         assertNull(newDS.getDescription());
     }
     
@@ -187,14 +190,16 @@ public class TestDataSourceFactory {
         final FBXADataSource originalDS = new FBXADataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
-        originalDS.setNonStandardProperty("defaultTransactionIsolation", Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
+        originalDS.setNonStandardProperty("defaultTransactionIsolation",
+                Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
         originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
         
         FBXADataSource newDS = (FBXADataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);
-        assertEquals("127", newDS.getNonStandardProperty("buffersNumber"));
-        assertEquals(Integer.toString(Connection.TRANSACTION_SERIALIZABLE), newDS.getNonStandardProperty("defaultTransactionIsolation"));
-        assertEquals("madeUpValue", newDS.getNonStandardProperty("madeUpProperty"));
+        assertEquals("127", newDS.getProperty("buffersNumber"));
+        assertEquals(TransactionNameMapping.TRANSACTION_SERIALIZABLE, newDS.getProperty("defaultTransactionIsolation"));
+        assertEquals(Connection.TRANSACTION_SERIALIZABLE, newDS.getIntProperty("defaultTransactionIsolation", -1));
+        assertEquals("madeUpValue", newDS.getProperty("madeUpProperty"));
         assertNull(newDS.getDescription());
     }
 

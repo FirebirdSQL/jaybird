@@ -19,14 +19,13 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.AbstractAttachProperties;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
-import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,12 +37,16 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public static final String DATABASE_PROPERTY = "database";
     public static final String TYPE_PROPERTY = "type";
-    // isolation name
+    /**
+     * @deprecated Use {@link PropertyNames#defaultIsolation}
+     */
+    @Deprecated
     public static final String ISOLATION_PROPERTY = "isolation";
-    // isolation name
+    /**
+     * @deprecated Use {@link PropertyNames#defaultIsolation}
+     */
+    @Deprecated
     public static final String DEFAULT_ISOLATION_PROPERTY = "defaultIsolation";
-    // isolation int value
-    private static final String DEFAULT_TRANSACTION_ISOLATION_PROPERTY = "defaultTransactionIsolation";
 
     @Deprecated
     public static final String BLOB_BUFFER_SIZE_PROPERTY = PropertyNames.blobBufferSize;
@@ -104,15 +107,17 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Deprecated
     public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
-    private static final int DEFAULT_TRANSACTION_ISOLATION_VALUE = Connection.TRANSACTION_READ_COMMITTED;
-
-    private IConnectionProperties properties = new FbConnectionProperties();
+    private FbConnectionProperties properties;
     private String type;
     private String database;
 
-    private int defaultTransactionIsolation = DEFAULT_TRANSACTION_ISOLATION_VALUE;
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
+
+    public FBConnectionProperties() {
+        properties = new FbConnectionProperties();
+        properties.registerPropertyUpdateListener(createPropertyUpdateListener());
+    }
 
     // TODO See if other properties can also be moved to FbConnectionProperties
 
@@ -124,11 +129,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return getDatabase();
         case TYPE_PROPERTY:
             return getType();
-        case ISOLATION_PROPERTY:
-        case DEFAULT_ISOLATION_PROPERTY:
-            return getDefaultIsolation();
-        case DEFAULT_TRANSACTION_ISOLATION_PROPERTY:
-            return String.valueOf(getDefaultTransactionIsolation());
         default:
             return properties.getProperty(name);
         }
@@ -144,16 +144,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         case TYPE_PROPERTY:
             setType(value);
             break;
-        case ISOLATION_PROPERTY:
-        case DEFAULT_ISOLATION_PROPERTY:
-            setDefaultIsolation(value);
-            break;
-        case DEFAULT_TRANSACTION_ISOLATION_PROPERTY:
-            setDefaultTransactionIsolation(
-                    value != null
-                            ? (Integer) ConnectionPropertyType.INT.toType(value)
-                            : DEFAULT_TRANSACTION_ISOLATION_VALUE);
-            break;
         default:
             properties.setProperty(name, value);
             break;
@@ -162,21 +152,12 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     @Override
     public Integer getIntProperty(String name) {
-        // TODO Can we integrate this in normal property handling?
-        if (DEFAULT_TRANSACTION_ISOLATION_PROPERTY.equals(name)) {
-            return getDefaultTransactionIsolation();
-        }
         return properties.getIntProperty(name);
     }
 
     @Override
     public void setIntProperty(String name, Integer value) {
-        // TODO Can we integrate this in normal property handling?
-        if (DEFAULT_TRANSACTION_ISOLATION_PROPERTY.equals(name)) {
-            setDefaultTransactionIsolation(value != null ? value : DEFAULT_TRANSACTION_ISOLATION_VALUE);
-        } else {
-            properties.setIntProperty(name, value);
-        }
+        properties.setIntProperty(name, value);
     }
 
     @Override
@@ -212,7 +193,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         boolean result = this.properties.equals(that.properties);
         result &= Objects.equals(this.type, that.type);
         result &= Objects.equals(this.database, that.database);
-        result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
         result &= this.customMapping.equals(that.customMapping);
         // If one or both are null we are identical (see also JDBC-249)
         result &= (this.mapper == null || that.mapper == null) || this.mapper.equals(that.mapper);
@@ -224,7 +204,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         try {
             FBConnectionProperties clone = (FBConnectionProperties) super.clone();
 
-            clone.properties = properties.asNewMutable();
+            clone.properties = (FbConnectionProperties) properties.asNewMutable();
+            clone.properties.registerPropertyUpdateListener(clone.createPropertyUpdateListener());
             clone.customMapping = new HashMap<>(customMapping);
             clone.mapper = mapper != null ? (FBTpbMapper) mapper.clone() : null;
 
@@ -266,38 +247,8 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             setProperty(key, value);
         } else {
             throw new IllegalArgumentException("Invalid non-standard property. "
-                    + "Expected format: propertyName[=propertyValue], was: '" +propertyMapping + "'");
+                    + "Expected format: propertyName[=propertyValue], was: '" + propertyMapping + "'");
         }
-    }
-
-    @Override
-    public void setTpbMapping(String tpbMapping) {
-        if (mapper != null) {
-            throw new IllegalStateException("Properties are already initialized.");
-        }
-        FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
-    }
-
-    public int getDefaultTransactionIsolation() {
-        if (mapper != null) {
-            return mapper.getDefaultTransactionIsolation();
-        }
-        return defaultTransactionIsolation;
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        defaultTransactionIsolation = defaultIsolationLevel;
-        if (mapper != null) {
-            mapper.setDefaultTransactionIsolation(defaultIsolationLevel);
-        }
-    }
-
-    public String getDefaultIsolation() {
-        return FBTpbMapper.getTransactionIsolationName(getDefaultTransactionIsolation());
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        setDefaultTransactionIsolation(FBTpbMapper.getTransactionIsolationLevel(isolation));
     }
 
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
@@ -326,14 +277,9 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             mapper = new FBTpbMapper(tpbMapping, getClass().getClassLoader());
         }
 
-        mapper.setDefaultTransactionIsolation(defaultTransactionIsolation);
+        mapper.setDefaultTransactionIsolation(getDefaultTransactionIsolation());
 
-        for (Map.Entry<Integer, TransactionParameterBuffer> entry : customMapping.entrySet()) {
-            Integer isolation = entry.getKey();
-            TransactionParameterBuffer tpb = entry.getValue();
-
-            mapper.setMapping(isolation, tpb);
-        }
+        customMapping.forEach(mapper::setMapping);
 
         return mapper;
     }
@@ -344,6 +290,24 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
      */
     public IConnectionProperties asIConnectionProperties() {
         return properties;
+    }
+
+    private AbstractAttachProperties.PropertyUpdateListener createPropertyUpdateListener() {
+        return new AbstractAttachProperties.PropertyUpdateListener() {
+            @Override
+            public void beforeUpdate(ConnectionProperty connectionProperty, Object newValue) {
+                if (PropertyNames.tpbMapping.equals(connectionProperty.name()) && mapper != null) {
+                    throw new IllegalStateException("Cannot update tpbMapping, properties are already initialized.");
+                }
+            }
+
+            @Override
+            public void afterUpdate(ConnectionProperty connectionProperty, Object newValue) {
+                if (PropertyNames.defaultIsolation.equals(connectionProperty.name()) && mapper != null) {
+                    mapper.setDefaultTransactionIsolation(getDefaultTransactionIsolation());
+                }
+            }
+        };
     }
 
 }

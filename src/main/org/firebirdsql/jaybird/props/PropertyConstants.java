@@ -19,7 +19,10 @@
 package org.firebirdsql.jaybird.props;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 import org.firebirdsql.util.InternalApi;
+
+import java.sql.Connection;
 
 /**
  * Property constants.
@@ -47,6 +50,9 @@ public final class PropertyConstants {
     static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_TIMESTAMP_USES_LOCAL = false;
+
+    public static final int DEFAULT_TRANSACTION_ISOLATION_VALUE = Connection.TRANSACTION_READ_COMMITTED;
+    public static final String DEFAULT_TRANSACTION_ISOLATION_NAME = TransactionNameMapping.TRANSACTION_READ_COMMITTED;
 
     public static final int TIMEOUT_NOT_SET = -1;
     public static final int BUFFER_SIZE_NOT_SET = -1;

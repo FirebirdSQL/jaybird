@@ -64,6 +64,9 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      */
     protected abstract void checkNotStarted() throws IllegalStateException;
 
+    // For a lot of properties, we redirect to the default implementations of the interface to ensure the
+    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
+
     public String getDescription() {
         return description;
     }
@@ -190,32 +193,22 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
 
     @Override
     public int getDefaultTransactionIsolation() {
-        synchronized (lock) {
-            return connectionProperties.getDefaultTransactionIsolation();
-        }
+        return FirebirdConnectionProperties.super.getDefaultTransactionIsolation();
     }
 
     @Override
     public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel);
-        }
+        FirebirdConnectionProperties.super.setDefaultTransactionIsolation(defaultIsolationLevel);
     }
 
     @Override
     public String getDefaultIsolation() {
-        synchronized (lock) {
-            return connectionProperties.getDefaultIsolation();
-        }
+        return FirebirdConnectionProperties.super.getDefaultIsolation();
     }
 
     @Override
     public void setDefaultIsolation(String isolation) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDefaultIsolation(isolation);
-        }
+        FirebirdConnectionProperties.super.setDefaultIsolation(isolation);
     }
 
     @Override
@@ -232,9 +225,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             connectionProperties.setTransactionParameters(isolation, tpb);
         }
     }
-
-    // For the remaining properties, we're redirecting the default implementations of the interface here to ensure the
-    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
     public String getUser() {
@@ -506,12 +496,14 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public boolean isTimestampUsesLocalTimezone() {
         return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {

@@ -19,11 +19,14 @@
 package org.firebirdsql.jaybird.props.def;
 
 import org.firebirdsql.jaybird.props.DpbType;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.sql.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -33,9 +36,10 @@ class ConnectionPropertyTypeTest {
 
     @ParameterizedTest
     @CsvSource({
-            "STRING  , STRING",
-            "INT     , INT",
-            "BOOLEAN , SINGLE",
+            "STRING , STRING",
+            "INT    , INT",
+            "BOOLEAN, SINGLE",
+            "TRANSACTION_ISOLATION, NONE"
     })
     void defaultParameterType(ConnectionPropertyType connectionPropertyType, DpbType expectedDefaultParameterType) {
         assertThat(connectionPropertyType.getDefaultParameterType()).isEqualTo(expectedDefaultParameterType);
@@ -237,4 +241,81 @@ class ConnectionPropertyTypeTest {
         assertThat(ConnectionPropertyType.BOOLEAN.asBoolean(value)).isSameAs(value);
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "                            ,",
+            "TRANSACTION_NONE            , 0",
+            "0                           , 0",
+            "TRANSACTION_READ_UNCOMMITTED, 1",
+            "1                           , 1",
+            "TRANSACTION_READ_COMMITTED  , 2",
+            "2                           , 2",
+            "TRANSACTION_REPEATABLE_READ , 4",
+            "4                           , 4",
+            "TRANSACTION_SERIALIZABLE    , 8",
+            "8                           , 8"
+    })
+    void testTRANSACTION_ISOLATION_toType_string(String value, Integer expectedValue) {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.toType(value)).isEqualTo(expectedValue);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "0, 0",
+            "1, 1",
+            "2, 2",
+            "4, 4",
+            "8, 8",
+            // unsupported isolation level value, mapped nonetheless
+            "3, 3"
+    })
+    void testTRANSACTION_ISOLATION_toType_Integer(Integer value, Integer expectedValue) {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.toType(value)).isEqualTo(expectedValue);
+    }
+
+    @Test
+    void testTRANSACTION_ISOLATION_toType_Boolean_nullAllowed() {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.toType((Boolean) null)).isNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testTRANSACTION_ISOLATION_toType_Boolean_notAllowed(boolean value) {
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> ConnectionPropertyType.TRANSACTION_ISOLATION.toType(value));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            " ,",
+            "0, TRANSACTION_NONE",
+            "1, TRANSACTION_READ_UNCOMMITTED",
+            "2, TRANSACTION_READ_COMMITTED",
+            "4, TRANSACTION_REPEATABLE_READ",
+            "8, TRANSACTION_SERIALIZABLE",
+            // unsupported isolation level, mapped nonetheless
+            "3, 3"
+    })
+    void testTRANSACTION_ISOLATION_asString(Integer value, String expectedValue) {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.asString(value)).isEqualTo(expectedValue);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { Connection.TRANSACTION_NONE, Connection.TRANSACTION_READ_UNCOMMITTED,
+            Connection.TRANSACTION_READ_COMMITTED, Connection.TRANSACTION_REPEATABLE_READ,
+            Connection.TRANSACTION_SERIALIZABLE, 3 })
+    void testTRANSACTION_ISOLATION_asInteger(Integer value) {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.asInteger(value)).isEqualTo(value);
+    }
+    
+    @Test
+    void testTRANSACTION_ISOLATION_asBoolean_nullAllowed() {
+        assertThat(ConnectionPropertyType.TRANSACTION_ISOLATION.asBoolean(null)).isNull();
+    }
+    
+    @Test
+    void testTRANSACTION_ISOLATION_asBoolean_nonNullNotAllowed() {
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> ConnectionPropertyType.TRANSACTION_ISOLATION.asBoolean(1));
+    }
 }

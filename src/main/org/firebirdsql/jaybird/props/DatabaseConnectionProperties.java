@@ -355,6 +355,58 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
     }
 
     /**
+     * Get the default transaction isolation level. This is the transaction isolation level for the newly created
+     * connections.
+     *
+     * @return default transaction isolation level.
+     */
+    default int getDefaultTransactionIsolation() {
+        return getIntProperty(PropertyNames.defaultIsolation, PropertyConstants.DEFAULT_TRANSACTION_ISOLATION_VALUE);
+    }
+
+    /**
+     * Set the default transaction isolation level.
+     *
+     * @param defaultIsolationLevel
+     *         default transaction isolation level.
+     */
+    default void setDefaultTransactionIsolation(int defaultIsolationLevel) {
+        setIntProperty(PropertyNames.defaultIsolation, defaultIsolationLevel);
+    }
+
+    /**
+     * Get the default transaction isolation level as string. This method is complementary to
+     * {@link #getDefaultTransactionIsolation()}, however it returns a string name instead of a numeric constant.
+     *
+     * @return default transaction isolation as string.
+     * @see #setDefaultIsolation(String)
+     */
+    default String getDefaultIsolation() {
+        return getProperty(PropertyNames.defaultIsolation, PropertyConstants.DEFAULT_TRANSACTION_ISOLATION_NAME);
+    }
+
+    /**
+     * Set the default transaction isolation level as string. This method is complementary to
+     * {@link #setDefaultTransactionIsolation(int)}, however it takes a string as parameter instead of a numeric
+     * constant.
+     * <p>
+     * Following strings are allowed:
+     * <ul>
+     * <li>{@code "TRANSACTION_READ_COMMITTED"} for a READ COMMITTED isolation level.
+     * <li>{@code "TRANSACTION_REPEATABLE_READ"} for a REPEATABLE READ isolation level.
+     * <li>{@code "TRANSACTION_SERIALIZABLE"} for a SERIALIZABLE isolation level.
+     * <li>Integer string values matching the isolation levels</li>
+     * </ul>
+     * </p>
+     *
+     * @param isolation
+     *         string constant representing a default isolation level.
+     */
+    default void setDefaultIsolation(String isolation) {
+        setProperty(PropertyNames.defaultIsolation, isolation);
+    }
+
+    /**
      * @return {@code true} if the Jaybird 1.0 handling of the calendar in corresponding setters. This is also
      * compatible with MySQL calendar treatment.
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)

@@ -42,6 +42,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -114,7 +115,7 @@ public class TestFBXADataSource {
         Connection con = pc.getConnection();
 
         assertTrue("Autocommit should be true", con.getAutoCommit());
-        assertTrue("Read-only should be false", !con.isReadOnly());
+        assertFalse("Read-only should be false", con.isReadOnly());
         assertEquals("Tx isolation level should be read committed.",
                 Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation());
 
@@ -294,17 +295,18 @@ public class TestFBXADataSource {
     public void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
         
-        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+        assertEquals("someValue", ds.getProperty("someProperty"));
     }
     
     /**
      * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String, String)} is retrievable.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testSetNonStandardProperty_twoParam() {
         ds.setNonStandardProperty("someProperty", "someValue");
         
-        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+        assertEquals("someValue", ds.getProperty("someProperty"));
     }
 
     @Test

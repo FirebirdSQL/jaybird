@@ -374,6 +374,11 @@ if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnect
 * `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
 
+The following methods had their visibility reduced:
+
+* `FBTpbMapper.getDefaultTransactionIsolation()` to default access.
+* `FBTpbMapper.setDefaultTransactionIsolation(int)` to default access.
+
 ==== Removal of classes without deprecation
 
 The following classes have been removed in Jaybird 5:

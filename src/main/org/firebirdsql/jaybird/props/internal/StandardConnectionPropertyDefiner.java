@@ -30,6 +30,12 @@ import static org.firebirdsql.jaybird.props.PropertyNames.*;
 import static org.firebirdsql.jaybird.props.def.ConnectionProperty.builder;
 import static org.firebirdsql.jaybird.props.def.ConnectionPropertyType.BOOLEAN;
 import static org.firebirdsql.jaybird.props.def.ConnectionPropertyType.INT;
+import static org.firebirdsql.jaybird.props.def.ConnectionPropertyType.TRANSACTION_ISOLATION;
+import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRANSACTION_NONE;
+import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRANSACTION_READ_COMMITTED;
+import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRANSACTION_READ_UNCOMMITTED;
+import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRANSACTION_REPEATABLE_READ;
+import static org.firebirdsql.jaybird.props.internal.TransactionNameMapping.TRANSACTION_SERIALIZABLE;
 
 /**
  * Connection property definer for the standard connection properties of Jaybird.
@@ -88,6 +94,10 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder(decfloatTraps).aliases("decfloat_traps", "isc_dpb_decfloat_traps")
                         .dpbItem(isc_dpb_decfloat_traps),
                 builder(tpbMapping).aliases("tpb_mapping"),
+                builder(defaultIsolation).type(TRANSACTION_ISOLATION)
+                        .aliases("isolation", "defaultTransactionIsolation")
+                        .choices(TRANSACTION_NONE, TRANSACTION_READ_UNCOMMITTED, TRANSACTION_READ_COMMITTED,
+                                TRANSACTION_REPEATABLE_READ, TRANSACTION_SERIALIZABLE),
                 // TODO Property should be considered deprecated, remove in Jaybird 6 or later
                 builder("timestampUsesLocalTimezone").type(BOOLEAN).aliases("timestamp_uses_local_timezone"),
 

@@ -208,14 +208,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getDatabase();
     }
 
-    public String getDefaultIsolation() {
-        return connectionProperties.getDefaultIsolation();
-    }
-
-    public int getDefaultTransactionIsolation() {
-        return connectionProperties.getDefaultTransactionIsolation();
-    }
-
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return connectionProperties.getTransactionParameters(isolation);
     }
@@ -226,14 +218,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     public void setDatabase(String database) {
         ensureCanModify(() -> connectionProperties.setDatabase(database));
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        ensureCanModify(() -> connectionProperties.setDefaultIsolation(isolation));
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        ensureCanModify(() -> connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel));
     }
 
     public void setNonStandardProperty(String propertyMapping) {

@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 class FBConnectionPropertiesTest {
 
@@ -62,7 +62,7 @@ class FBConnectionPropertiesTest {
     void testSetNonStandardProperty_invalidFormats() {
         FBConnectionProperties props = new FBConnectionProperties();
 
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> props.setNonStandardProperty("=a=b"));
     }
 

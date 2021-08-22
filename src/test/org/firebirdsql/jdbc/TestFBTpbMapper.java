@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -194,7 +195,7 @@ class TestFBTpbMapper {
 
     @Test
     void testGetTransactionIsolationName_throwsIllegalArgumentExceptionForUnsupportedValue() {
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> FBTpbMapper.getTransactionIsolationName(-1));
     }
 
@@ -212,9 +213,10 @@ class TestFBTpbMapper {
                 FBTpbMapper.getTransactionIsolationLevel(FBTpbMapper.TRANSACTION_SERIALIZABLE));
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     void testGetTransactionIsolationLevel_throwsIllegalArgumentExceptionForUnsupportedValue() {
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> FBTpbMapper.getTransactionIsolationLevel("asdf"));
     }
 
@@ -232,7 +234,7 @@ class TestFBTpbMapper {
     void testGetMappingForNONE_throwsIllegalArgumentException() {
         final FBTpbMapper defaultMapper = FBTpbMapper.getDefaultMapper();
 
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> defaultMapper.getMapping(Connection.TRANSACTION_NONE));
     }
 
@@ -240,7 +242,7 @@ class TestFBTpbMapper {
     void testGetMappingForUnsupportedValue_throwsIllegalArgumentException() {
         final FBTpbMapper defaultMapper = FBTpbMapper.getDefaultMapper();
 
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> defaultMapper.getMapping(-1));
+        assertThatIllegalArgumentException().isThrownBy(() -> defaultMapper.getMapping(-1));
     }
 
     @Test
@@ -338,7 +340,7 @@ class TestFBTpbMapper {
         TransactionParameterBuffer newTpb =
                 FBTpbMapper.processMapping("isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait");
 
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> mapper.setMapping(Connection.TRANSACTION_READ_UNCOMMITTED, newTpb));
     }
 
@@ -348,7 +350,7 @@ class TestFBTpbMapper {
         TransactionParameterBuffer newTpb =
                 FBTpbMapper.processMapping("isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_wait");
 
-        assertThatExceptionOfType(IllegalArgumentException.class)
+        assertThatIllegalArgumentException()
                 .isThrownBy(() -> mapper.setMapping(Connection.TRANSACTION_NONE, newTpb));
     }
 
