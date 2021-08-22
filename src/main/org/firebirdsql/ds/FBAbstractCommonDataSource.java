@@ -21,23 +21,20 @@ package org.firebirdsql.ds;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBConnectionProperties;
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.naming.BinaryRefAddr;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import java.sql.SQLException;
 import java.util.Map;
 
 /**
- * Abstract class for properties and behaviour common to DataSources,
- * XADataSources and ConnectionPoolDataSources
+ * Abstract class for properties and behaviour common to DataSources, XADataSources and ConnectionPoolDataSources
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public abstract class FBAbstractCommonDataSource extends RootCommonDataSource implements FirebirdConnectionProperties {
+public abstract class FBAbstractCommonDataSource extends AbstractConnectionPropertiesDataSource {
 
     protected static final String REF_DATABASE_NAME = "databaseName";
     protected static final String REF_PORT_NUMBER = "portNumber";
@@ -63,9 +60,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
      *         When the DataSource is already in use
      */
     protected abstract void checkNotStarted() throws IllegalStateException;
-
-    // For a lot of properties, we redirect to the default implementations of the interface to ensure the
-    // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     public String getDescription() {
         return description;
@@ -127,38 +121,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
         }
     }
 
-    @Override
-    public final String getType() {
-        return FirebirdConnectionProperties.super.getType();
-    }
-
-    @Override
-    public final void setType(String type) {
-        FirebirdConnectionProperties.super.setType(type);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This property is an alias for the connectTimeout property.
-     * </p>
-     */
-    @Override
-    public int getLoginTimeout() throws SQLException {
-        return getConnectTimeout();
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This property is an alias for the connectTimeout property.
-     * </p>
-     */
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
-        setConnectTimeout(seconds);
-    }
-
     @Deprecated
     @Override
     public String getDatabase() {
@@ -177,36 +139,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
     }
 
     @Override
-    public String getTpbMapping() {
-        return FirebirdConnectionProperties.super.getTpbMapping();
-    }
-
-    @Override
-    public void setTpbMapping(String tpbMapping) {
-        FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
-    }
-
-    @Override
-    public int getDefaultTransactionIsolation() {
-        return FirebirdConnectionProperties.super.getDefaultTransactionIsolation();
-    }
-
-    @Override
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        FirebirdConnectionProperties.super.setDefaultTransactionIsolation(defaultIsolationLevel);
-    }
-
-    @Override
-    public String getDefaultIsolation() {
-        return FirebirdConnectionProperties.super.getDefaultIsolation();
-    }
-
-    @Override
-    public void setDefaultIsolation(String isolation) {
-        FirebirdConnectionProperties.super.setDefaultIsolation(isolation);
-    }
-
-    @Override
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         synchronized (lock) {
             return connectionProperties.getTransactionParameters(isolation);
@@ -219,290 +151,6 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
             checkNotStarted();
             connectionProperties.setTransactionParameters(isolation, tpb);
         }
-    }
-
-    @Override
-    public String getUser() {
-        return FirebirdConnectionProperties.super.getUser();
-    }
-
-    @Override
-    public void setUser(String user) {
-        FirebirdConnectionProperties.super.setUser(user);
-    }
-
-    @Override
-    public String getPassword() {
-        return FirebirdConnectionProperties.super.getPassword();
-    }
-
-    @Override
-    public void setPassword(String password) {
-        FirebirdConnectionProperties.super.setPassword(password);
-    }
-
-    @Override
-    public String getRoleName() {
-        return FirebirdConnectionProperties.super.getRoleName();
-    }
-
-    @Override
-    public void setRoleName(String roleName) {
-        FirebirdConnectionProperties.super.setRoleName(roleName);
-    }
-
-    @Override
-    public String getCharSet() {
-        return FirebirdConnectionProperties.super.getCharSet();
-    }
-
-    @Override
-    public void setCharSet(String charSet) {
-        FirebirdConnectionProperties.super.setCharSet(charSet);
-    }
-
-    @Override
-    public String getEncoding() {
-        return FirebirdConnectionProperties.super.getEncoding();
-    }
-
-    @Override
-    public void setEncoding(String encoding) {
-        FirebirdConnectionProperties.super.setEncoding(encoding);
-    }
-
-    @Override
-    public Integer getProcessId() {
-        return FirebirdConnectionProperties.super.getProcessId();
-    }
-
-    @Override
-    public void setProcessId(Integer processId) {
-        FirebirdConnectionProperties.super.setProcessId(processId);
-    }
-
-    @Override
-    public String getProcessName() {
-        return FirebirdConnectionProperties.super.getProcessName();
-    }
-
-    @Override
-    public void setProcessName(String processName) {
-        FirebirdConnectionProperties.super.setProcessName(processName);
-    }
-
-    @Override
-    public int getSocketBufferSize() {
-        return FirebirdConnectionProperties.super.getSocketBufferSize();
-    }
-
-    @Override
-    public void setSocketBufferSize(int socketBufferSize) {
-        FirebirdConnectionProperties.super.setSocketBufferSize(socketBufferSize);
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return FirebirdConnectionProperties.super.getSoTimeout();
-    }
-
-    @Override
-    public void setSoTimeout(int soTimeout) {
-        FirebirdConnectionProperties.super.setSoTimeout(soTimeout);
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return FirebirdConnectionProperties.super.getConnectTimeout();
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        FirebirdConnectionProperties.super.setConnectTimeout(connectTimeout);
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return FirebirdConnectionProperties.super.getWireCrypt();
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        FirebirdConnectionProperties.super.setWireCrypt(wireCrypt);
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return FirebirdConnectionProperties.super.getDbCryptConfig();
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        FirebirdConnectionProperties.super.setDbCryptConfig(dbCryptConfig);
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return FirebirdConnectionProperties.super.getAuthPlugins();
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        FirebirdConnectionProperties.super.setAuthPlugins(authPlugins);
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return FirebirdConnectionProperties.super.isWireCompression();
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        FirebirdConnectionProperties.super.setWireCompression(wireCompression);
-    }
-
-    @Override
-    public int getSqlDialect() {
-        return FirebirdConnectionProperties.super.getSqlDialect();
-    }
-
-    @Override
-    public void setSqlDialect(int sqlDialect) {
-        FirebirdConnectionProperties.super.setSqlDialect(sqlDialect);
-    }
-
-    @Override
-    public int getPageCacheSize() {
-        return FirebirdConnectionProperties.super.getPageCacheSize();
-    }
-
-    @Override
-    public void setPageCacheSize(int pageCacheSize) {
-        FirebirdConnectionProperties.super.setPageCacheSize(pageCacheSize);
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return FirebirdConnectionProperties.super.getDataTypeBind();
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        FirebirdConnectionProperties.super.setDataTypeBind(dataTypeBind);
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return FirebirdConnectionProperties.super.getSessionTimeZone();
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        FirebirdConnectionProperties.super.setSessionTimeZone(sessionTimeZone);
-    }
-
-    @Override
-    public int getBlobBufferSize() {
-        return FirebirdConnectionProperties.super.getBlobBufferSize();
-    }
-
-    @Override
-    public void setBlobBufferSize(int blobBufferSize) {
-        FirebirdConnectionProperties.super.setBlobBufferSize(blobBufferSize);
-    }
-
-    @Override
-    public boolean isUseStreamBlobs() {
-        return FirebirdConnectionProperties.super.isUseStreamBlobs();
-    }
-
-    @Override
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        FirebirdConnectionProperties.super.setUseStreamBlobs(useStreamBlobs);
-    }
-
-    @Override
-    public boolean isDefaultResultSetHoldable() {
-        return FirebirdConnectionProperties.super.isDefaultResultSetHoldable();
-    }
-
-    @Override
-    public void setDefaultResultSetHoldable(boolean defaultResultSetHoldable) {
-        FirebirdConnectionProperties.super.setDefaultResultSetHoldable(defaultResultSetHoldable);
-    }
-
-    @Override
-    public boolean isUseFirebirdAutocommit() {
-        return FirebirdConnectionProperties.super.isUseFirebirdAutocommit();
-    }
-
-    @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        FirebirdConnectionProperties.super.setUseFirebirdAutocommit(useFirebirdAutocommit);
-    }
-
-    @Override
-    public boolean isColumnLabelForName() {
-        return FirebirdConnectionProperties.super.isColumnLabelForName();
-    }
-
-    @Override
-    public void setColumnLabelForName(boolean columnLabelForName) {
-        FirebirdConnectionProperties.super.setColumnLabelForName(columnLabelForName);
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return FirebirdConnectionProperties.super.getGeneratedKeysEnabled();
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        FirebirdConnectionProperties.super.setGeneratedKeysEnabled(generatedKeysEnabled);
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return FirebirdConnectionProperties.super.isIgnoreProcedureType();
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        FirebirdConnectionProperties.super.setIgnoreProcedureType(ignoreProcedureType);
-    }
-
-    @Override
-    public String getDecfloatRound() {
-        return FirebirdConnectionProperties.super.getDecfloatRound();
-    }
-
-    @Override
-    public void setDecfloatRound(String decfloatRound) {
-        FirebirdConnectionProperties.super.setDecfloatRound(decfloatRound);
-    }
-
-    @Override
-    public String getDecfloatTraps() {
-        return FirebirdConnectionProperties.super.getDecfloatTraps();
-    }
-
-    @Override
-    public void setDecfloatTraps(String decfloatTraps) {
-        FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public boolean isTimestampUsesLocalTimezone() {
-        return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        FirebirdConnectionProperties.super.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
     }
 
     /**

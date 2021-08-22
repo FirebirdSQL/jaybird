@@ -37,7 +37,7 @@ public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
     public void testJavaCharSetIsDefaultCharSet() {
         FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
         ds.setCharSet(System.getProperty("file.encoding"));
@@ -55,7 +55,7 @@ public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
         FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
 
@@ -73,7 +73,7 @@ public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
         assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
         FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
 
@@ -91,7 +91,7 @@ public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
     public void canChangeConfigAfterConnectionCreation() throws Exception {
         FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
 
@@ -111,7 +111,7 @@ public class FBSimpleDataSourceTest extends FBJUnit4TestBase {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory();
         FBSimpleDataSource ds = new FBSimpleDataSource(mcf);
         ds.setDatabase(FBTestProperties.DB_DATASOURCE_URL);
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.getGdsType().toString());
 
