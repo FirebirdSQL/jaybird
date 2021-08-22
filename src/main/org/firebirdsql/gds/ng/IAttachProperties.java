@@ -27,6 +27,8 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Common properties for database and service attach.
  *
@@ -100,17 +102,21 @@ public interface IAttachProperties<T extends IAttachProperties<T>> extends Attac
      * @since 5
      * @see #getWireCrypt()
      */
-    WireCrypt getWireCryptAsEnum();
+    default WireCrypt getWireCryptAsEnum() {
+        return WireCrypt.fromString(getWireCrypt());
+    }
 
     /**
      * Set the wire encryption level.
      *
      * @param wireCrypt
      *         Wire encryption level ({@code null} not allowed)
-     * @since 4.0
+     * @since 5
      * @see #setWireCrypt(String)
      */
-    void setWireCrypt(WireCrypt wireCrypt);
+    default void setWireCryptAsEnum(WireCrypt wireCrypt) {
+        setWireCrypt(requireNonNull(wireCrypt, "wireCrypt").name());
+    }
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IAttachProperties}

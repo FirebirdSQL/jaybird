@@ -84,16 +84,6 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
     }
 
     @Override
-    public void setWireCrypt(final WireCrypt wireCrypt) {
-        immutable();
-    }
-
-    @Override
-    public WireCrypt getWireCryptAsEnum() {
-        return WireCrypt.fromString(getWireCrypt());
-    }
-
-    @Override
     public final String getProperty(String name) {
         ConnectionProperty property = property(name);
         return property.type().asString(propValues.get(property));

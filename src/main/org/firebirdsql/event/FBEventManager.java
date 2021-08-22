@@ -266,8 +266,8 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public void setWireCrypt(WireCrypt wireCrypt) {
-        connectionProperties.setWireCrypt(wireCrypt);
+    public void setWireCryptAsEnum(WireCrypt wireCrypt) {
+        connectionProperties.setWireCryptAsEnum(wireCrypt);
     }
 
     @Override

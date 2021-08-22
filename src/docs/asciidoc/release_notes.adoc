@@ -373,6 +373,8 @@ The new way of adding non-standard properties is setting the appropriate propert
 if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
 * `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
+* `setWireCrypt(WireCrypt)` in `ServiceManager`, `EventManager` and `IAttachProperties`;
+replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
 
 The following methods had their visibility reduced:
 

@@ -156,7 +156,7 @@ class FbConnectionPropertiesTest {
         assertEquals(WireCrypt.DEFAULT.name(), info.getWireCrypt());
         assertEquals(WireCrypt.DEFAULT, info.getWireCryptAsEnum());
         final WireCrypt wireCrypt = WireCrypt.DISABLED;
-        info.setWireCrypt(wireCrypt);
+        info.setWireCryptAsEnum(wireCrypt);
         assertEquals(wireCrypt.name(), info.getWireCrypt());
         assertEquals(wireCrypt, info.getWireCryptAsEnum());
     }
@@ -164,7 +164,7 @@ class FbConnectionPropertiesTest {
     @Test
     void testWireCryptNullPointerExceptionOnNull() {
         assertThatExceptionOfType(NullPointerException.class)
-                .isThrownBy(() -> info.setWireCrypt((WireCrypt) null))
+                .isThrownBy(() -> info.setWireCryptAsEnum(null))
                 .withMessage("wireCrypt");
     }
 
@@ -188,7 +188,7 @@ class FbConnectionPropertiesTest {
     void testConnectionPropertyValues() {
         info.setSqlDialect(2);
         info.setConnectTimeout(15);
-        info.setWireCrypt(WireCrypt.REQUIRED);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
         info.setDbCryptConfig("XYZcrypt");
         info.setAuthPlugins("XXXauth");
 
@@ -212,7 +212,7 @@ class FbConnectionPropertiesTest {
         info.setPortNumber(1203);
         info.setSqlDialect(2);
         info.setConnectTimeout(15);
-        info.setWireCrypt(WireCrypt.REQUIRED);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
         info.setDbCryptConfig("XYZcrypt");
         info.setAuthPlugins("XXXauth");
 
@@ -230,7 +230,7 @@ class FbConnectionPropertiesTest {
         info.setPortNumber(1203);
         info.setSqlDialect(2);
         info.setConnectTimeout(15);
-        info.setWireCrypt(WireCrypt.REQUIRED);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
         info.setDbCryptConfig("XYZcrypt");
         info.setAuthPlugins("XXXauth");
 

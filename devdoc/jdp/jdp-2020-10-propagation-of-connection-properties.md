@@ -244,12 +244,6 @@ The following questions came up while implementing, but are not addressed:
   copying. This may first require unification of database coordinates in some 
   form.
 
-- Remove or rename methods accept `WireCrypt` enum?
-
-  Current results in unbalanced getter/setter pairs (i.e. 
-  `String getWireCrypt`/`setWireCryp(String)` vs
-  `WireCrypt getWireCryptAsEnum()`/`setWireCrypt(WireCrypt)`)
-
 ## Consequences
 
 The hierarchies of connection property interfaces have been unified as much as

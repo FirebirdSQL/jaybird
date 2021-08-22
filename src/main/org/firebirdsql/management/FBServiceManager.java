@@ -185,8 +185,8 @@ public class FBServiceManager implements ServiceManager {
     }
 
     @Override
-    public void setWireCrypt(WireCrypt wireCrypt) {
-        serviceProperties.setWireCrypt(wireCrypt);
+    public void setWireCryptAsEnum(WireCrypt wireCrypt) {
+        serviceProperties.setWireCryptAsEnum(wireCrypt);
     }
 
     @Override

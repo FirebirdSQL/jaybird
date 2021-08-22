@@ -97,9 +97,9 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * Set the wire encryption level.
      *
      * @param wireCrypt Wire encryption level ({@code null} not allowed)
-     * @since 4.0
+     * @since 5
      */
-    void setWireCrypt(WireCrypt wireCrypt);
+    void setWireCryptAsEnum(WireCrypt wireCrypt);
 
     /**
      * Returns the logger for the connection to the service manager.

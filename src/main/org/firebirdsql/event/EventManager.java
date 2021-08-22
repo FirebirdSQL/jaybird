@@ -120,7 +120,7 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      * Get the wire encryption level.
      *
      * @return Wire encryption level
-     * @since 3.0.4
+     * @since 5
      */
     WireCrypt getWireCryptAsEnum();
 
@@ -129,9 +129,9 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      *
      * @param wireCrypt
      *         Wire encryption level ({@code null} not allowed)
-     * @since 3.0.4
+     * @since 5
      */
-    void setWireCrypt(WireCrypt wireCrypt);
+    void setWireCryptAsEnum(WireCrypt wireCrypt);
 
     /**
      * Get the poll timeout in milliseconds of the async thread to check whether it was stopped or not.

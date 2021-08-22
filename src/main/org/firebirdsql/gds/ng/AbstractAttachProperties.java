@@ -110,16 +110,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     @Override
-    public void setWireCrypt(WireCrypt wireCrypt) {
-        setWireCrypt(requireNonNull(wireCrypt, "wireCrypt").name());
-    }
-
-    @Override
-    public WireCrypt getWireCryptAsEnum() {
-        return WireCrypt.fromString(getWireCrypt());
-    }
-
-    @Override
     public final void setProperty(String name, String value) {
         ConnectionProperty property = property(name);
         setProperty(property, property.type().toType(value));
