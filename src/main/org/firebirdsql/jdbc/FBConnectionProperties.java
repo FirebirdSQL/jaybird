@@ -36,6 +36,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     private static final long serialVersionUID = 611228437520889118L;
 
     public static final String DATABASE_PROPERTY = "database";
+    @Deprecated
     public static final String TYPE_PROPERTY = "type";
     /**
      * @deprecated Use {@link PropertyNames#defaultIsolation}
@@ -108,7 +109,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
     private FbConnectionProperties properties;
-    private String type;
     private String database;
 
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
@@ -124,29 +124,19 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     @Override
     public String getProperty(String name) {
         // TODO Can we integrate this in normal property handling?
-        switch (name) {
-        case DATABASE_PROPERTY:
+        if (DATABASE_PROPERTY.equals(name)) {
             return getDatabase();
-        case TYPE_PROPERTY:
-            return getType();
-        default:
-            return properties.getProperty(name);
         }
+        return properties.getProperty(name);
     }
 
     @Override
     public void setProperty(String name, String value) {
         // TODO Can we integrate this in normal property handling?
-        switch (name) {
-        case DATABASE_PROPERTY:
+        if (DATABASE_PROPERTY.equals(name)) {
             setDatabase(value);
-            break;
-        case TYPE_PROPERTY:
-            setType(value);
-            break;
-        default:
+        } else {
             properties.setProperty(name, value);
-            break;
         }
     }
 
@@ -176,7 +166,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public int hashCode() {
-        return Objects.hash(type, database);
+        return Objects.hash(getType(), database);
     }
 
     public boolean equals(Object obj) {
@@ -191,7 +181,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         FBConnectionProperties that = (FBConnectionProperties) obj;
 
         boolean result = this.properties.equals(that.properties);
-        result &= Objects.equals(this.type, that.type);
         result &= Objects.equals(this.database, that.database);
         result &= this.customMapping.equals(that.customMapping);
         // If one or both are null we are identical (see also JDBC-249)
@@ -221,14 +210,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     public void setDatabase(String database) {
         this.database = database;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     @Override

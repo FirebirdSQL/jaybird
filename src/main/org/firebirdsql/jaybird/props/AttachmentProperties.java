@@ -38,6 +38,24 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPR
 public interface AttachmentProperties extends BaseProperties {
 
     /**
+     * @return type of the connection, for example, "PURE_JAVA", "LOCAL", "EMBEDDED", depends on the GDS implementations
+     * installed in the system.
+     */
+    default String getType() {
+        return getProperty(PropertyNames.type);
+    }
+
+    /**
+     * @param type
+     *         type of the connection, for example, "PURE_JAVA", "LOCAL", "EMBEDDED", depends on the GDS implementations
+     *         installed in the system.
+     * @throws IllegalStateException may be thrown when type cannot or can no longer be changed
+     */
+    default void setType(String type) {
+        setProperty(PropertyNames.type, type);
+    }
+
+    /**
      * @return Name of the user to authenticate to the server.
      */
     default String getUser() {

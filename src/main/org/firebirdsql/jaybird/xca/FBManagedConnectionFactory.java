@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.LoggerFactory;
@@ -212,10 +213,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return connectionProperties.getTransactionParameters(isolation);
     }
 
-    public String getType() {
-        return connectionProperties.getType();
-    }
-
     public void setDatabase(String database) {
         ensureCanModify(() -> connectionProperties.setDatabase(database));
     }
@@ -226,16 +223,6 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
         ensureCanModify(() -> connectionProperties.setTransactionParameters(isolation, tpb));
-    }
-
-    public void setType(String type) {
-        ensureCanModify(() -> {
-            if (gdsType != null) {
-                throw new IllegalStateException("Cannot change GDS type at runtime.");
-            }
-
-            connectionProperties.setType(type);
-        });
     }
 
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
@@ -253,7 +240,12 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
 
     @Override
     public void setProperty(String name, String value) {
-        ensureCanModify(() -> connectionProperties.setProperty(name, value));
+        ensureCanModify(() -> {
+            if (PropertyNames.type.equals(name) && gdsType != null) {
+                throw new IllegalStateException("Cannot change GDS type at runtime.");
+            }
+            connectionProperties.setProperty(name, value);
+        });
     }
 
     @Override

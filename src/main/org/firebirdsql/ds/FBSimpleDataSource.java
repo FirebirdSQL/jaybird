@@ -172,12 +172,24 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         FirebirdConnectionProperties.super.setTpbMapping(tpbMapping);
     }
 
+    @Override
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return mcf.getTransactionParameters(isolation);
     }
 
+    @Override
+    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
+        mcf.setTransactionParameters(isolation, tpb);
+    }
+
+    @Override
     public String getType() {
-        return mcf.getType();
+        return FirebirdConnectionProperties.super.getType();
+    }
+
+    @Override
+    public void setType(String type) {
+        FirebirdConnectionProperties.super.setType(type);
     }
 
     @Override
@@ -470,12 +482,14 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
         FirebirdConnectionProperties.super.setDecfloatTraps(decfloatTraps);
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public boolean isTimestampUsesLocalTimezone() {
         return FirebirdConnectionProperties.super.isTimestampUsesLocalTimezone();
     }
 
+    @SuppressWarnings("deprecation")
     @Deprecated
     @Override
     public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
@@ -484,14 +498,6 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     public void setNonStandardProperty(String propertyMapping) {
         mcf.setNonStandardProperty(propertyMapping);
-    }
-
-    public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        mcf.setTransactionParameters(isolation, tpb);
-    }
-
-    public void setType(String type) {
-        mcf.setType(type);
     }
 
     @Override

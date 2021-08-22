@@ -37,6 +37,7 @@ package org.firebirdsql.jaybird.props;
 public final class PropertyNames {
 
     // attachment
+    public static final String type = "type";
     public static final String user = "user";
     public static final String password = "password";
     public static final String roleName = "roleName";

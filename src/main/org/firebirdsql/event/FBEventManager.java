@@ -30,6 +30,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -76,6 +77,7 @@ public class FBEventManager implements EventManager {
         this.gdsType = gdsType;
         connectionProperties = new FbConnectionProperties();
         eventManagerBehaviour = new DefaultEventManagerBehaviour();
+        connectionProperties.setType(gdsType.toString());
     }
 
     /**
@@ -128,6 +130,11 @@ public class FBEventManager implements EventManager {
      */
     public static EventManager createFor(Connection connection) throws SQLException {
         return new FBEventManager(connection);
+    }
+
+    @Override
+    public final void setType(String type) {
+        throw new IllegalStateException("Type must be specified on construction");
     }
 
     @Override
@@ -380,6 +387,10 @@ public class FBEventManager implements EventManager {
 
     @Override
     public void setProperty(String name, String value) {
+        if (PropertyNames.type.equals(name)) {
+            // Triggers exception
+            setType(value);
+        }
         connectionProperties.setProperty(name, value);
     }
 

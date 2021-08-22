@@ -23,6 +23,7 @@ import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
 import java.io.IOException;
@@ -79,7 +80,13 @@ public class FBServiceManager implements ServiceManager {
      *         The GDS implementation type to use
      */
     public FBServiceManager(GDSType gdsType) {
+        serviceProperties.setType(gdsType.toString());
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
+    }
+
+    @Override
+    public final void setType(String type) {
+        throw new IllegalStateException("Type must be specified on construction");
     }
 
     // NOTE: we're redirecting the default implementations of the interface here to ensure the
@@ -219,6 +226,10 @@ public class FBServiceManager implements ServiceManager {
 
     @Override
     public void setProperty(String name, String value) {
+        if (PropertyNames.type.equals(name)) {
+            // Triggers exception
+            setType(value);
+        }
         serviceProperties.setProperty(name, value);
     }
 

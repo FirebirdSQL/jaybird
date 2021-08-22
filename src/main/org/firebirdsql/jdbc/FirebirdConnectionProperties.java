@@ -42,19 +42,6 @@ public interface FirebirdConnectionProperties extends DatabaseConnectionProperti
     void setDatabase(String database);
 
     /**
-     * @return type of the connection, for example, "PURE_JAVA", "LOCAL",
-     * "EMBEDDED", depends on the GDS implementations installed in the system.
-     */
-    String getType();
-
-    /**
-     * @param type
-     *         type of the connection, for example, "PURE_JAVA", "LOCAL",
-     *         "EMBEDDED", depends on the GDS implementations installed in the system.
-     */
-    void setType(String type);
-
-    /**
      * @return name of the user that will be used when connecting to the database.
      * @deprecated Use {@link #getUser()} instead; will be retained indefinitely for compatibility
      */

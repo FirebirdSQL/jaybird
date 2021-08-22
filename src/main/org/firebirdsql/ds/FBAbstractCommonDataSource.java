@@ -129,17 +129,12 @@ public abstract class FBAbstractCommonDataSource extends RootCommonDataSource im
 
     @Override
     public final String getType() {
-        synchronized (lock) {
-            return connectionProperties.getType();
-        }
+        return FirebirdConnectionProperties.super.getType();
     }
 
     @Override
     public final void setType(String type) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setType(type);
-        }
+        FirebirdConnectionProperties.super.setType(type);
     }
 
     /**
