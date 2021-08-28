@@ -3,6 +3,7 @@
 ## Status
 
 - Draft
+- Proposed for: Jaybird 5
 
 ## Type
 
