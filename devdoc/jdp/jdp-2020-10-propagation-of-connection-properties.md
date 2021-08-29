@@ -226,16 +226,10 @@ The following questions came up while implementing, but are not addressed:
   want to take that incompatibility without deprecation?
 
   Removal hindered by presence of `database` property. This may first require 
-  unification of database coordinates in some form.
+  unification of database coordinates in some form. See [jdp-2021-01](jdp-2021-01-unified-database-coordinates.md).
 
 - Is it possible to eliminate `FBConnectionProperties` entirely? See also
   previous point.
-
-- Include properties like `FirebirdConnectionProperties.setType` in  
-  the `AttachmentProperties`?
-
-  This could allow for different forms of protocol selection, but might 
-  not mesh with some expectations of the existing implementation.
 
 - Is it possible to eliminate `IAttachProperties`, `IConnectionProperties` and
   `IServiceProperties` interfaces?
@@ -243,7 +237,7 @@ The following questions came up while implementing, but are not addressed:
   Removal hindered by presence of `serverName`, `portNumber` and 
   `databaseName`/`serviceName` properties, and methods for mutable/immutable
   copying. This may first require unification of database coordinates in some 
-  form.
+  form, see [jdp-2021-01](jdp-2021-01-unified-database-coordinates.md).
 
 ## Consequences
 
