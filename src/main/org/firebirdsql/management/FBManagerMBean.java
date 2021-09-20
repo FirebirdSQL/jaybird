@@ -149,7 +149,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * Set the GDS plugin type to use.
      *
      * @param type
-     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED}, {@code LOCAL})
+     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED})
      */
     void setType(String type);
 

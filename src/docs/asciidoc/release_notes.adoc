@@ -349,6 +349,18 @@ We recommend not to specify `serverName`, `portNumber` and `databaseName` as exp
 The behaviour defined in this section is the result of unification and simplification of connection property handling across JDBC URLs, data sources and internals of Jaybird.
 ====
 
+[#local-protocol-removed]
+=== Removal of LOCAL protocol implementation
+
+The LOCAL protocol implementation (`LocalGDSFactoryPlugin`) has been removed.
+For backwards compatibility, the type-name `LOCAL` and the JDBC URL prefixes `jdbc:firebird:local:` and `jdbc:firebirdsql:local:` have been mapped to the NATIVE protocol implementation.
+This type name and these JDBC protocol prefixes should be considered deprecated and may be removed in a future Jaybird version.
+
+The LOCAL protocol implementation was never really a local protocol, but -- depending on `fbclient` version, its `firebird.conf` and platform -- could also establish a TCP/IP, WNET or embedded connection to the database.
+
+Establishing a local IPC connection to a database is only possible on Windows, using a Firebird 3.0 or higher `fbclient` with the `databaseName` `xnet://C:\path\to\db.fdb` or JDBC URL `jdbc:firebird:native:xnet//C:\path\to\db.fdb`.
+For earlier versions of `fbclient`, the recommended URL is `jdbc:firebird:native:C:\path\to\db.fdb`, but this will not necessarily use a local IPC connection.
+
 [#potentially-breaking-changes]
 === Potentially breaking changes
 

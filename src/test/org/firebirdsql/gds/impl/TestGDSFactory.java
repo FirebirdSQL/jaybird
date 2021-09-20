@@ -38,6 +38,6 @@ public class TestGDSFactory {
         assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:native://localhost/mydb")));
         assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:native:localhost:mydb")));
         assertEquals("EMBEDDED", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:embedded:mydb")));
-        assertEquals("LOCAL", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:local:mydb")));
+        assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:local:mydb")));
     }
 }

@@ -19,7 +19,6 @@
 package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
@@ -42,8 +41,8 @@ public class GdsTypeMatchers {
 
     private static final List<String> PURE_JAVA_TYPES = Collections.unmodifiableList(
             Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME));
-    private static final List<String> OTHER_NATIVE_TYPES = Collections.unmodifiableList(
-            Arrays.asList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, LocalGDSFactoryPlugin.LOCAL_TYPE_NAME));
+    private static final List<String> OTHER_NATIVE_TYPES =
+            Collections.singletonList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     /**
      * @return Matcher for pure java types

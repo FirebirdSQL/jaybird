@@ -28,9 +28,12 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
 
-    private static final String[] TYPE_ALIASES = new String[] { "TYPE2" };
+    // NOTE Alias LOCAL is deprecated, as are the *:local: JDBC protocols. They may be removed in Jaybird 6 or later
+    private static final String[] TYPE_ALIASES = new String[] { "TYPE2", "LOCAL" };
     private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:native:", "jdbc:firebird:native:"
+            "jdbc:firebirdsql:native:", "jdbc:firebird:native:",
+            // For backwards compatibility
+            "jdbc:firebirdsql:local:", "jdbc:firebird:local:"
     };
 
     @Override

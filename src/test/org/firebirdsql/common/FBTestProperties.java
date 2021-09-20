@@ -99,7 +99,7 @@ public final class FBTestProperties {
      */
     public static String getdbpath(String name) {
         final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "LOCAL".equalsIgnoreCase(gdsType)) {
+        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
             return new File(DB_PATH, name).getAbsolutePath();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
@@ -177,7 +177,6 @@ public final class FBTestProperties {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
 
         // TODO Replace with an external definition/way to add additional types for third party plugins?
@@ -198,7 +197,7 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE) || "LOCAL".equalsIgnoreCase(GDS_TYPE)) {
+        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
         } else {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;

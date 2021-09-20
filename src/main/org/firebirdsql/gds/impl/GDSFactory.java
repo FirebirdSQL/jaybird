@@ -155,7 +155,6 @@ public class GDSFactory {
         String[] pluginClasses = new String[] {
                 "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin"
         };

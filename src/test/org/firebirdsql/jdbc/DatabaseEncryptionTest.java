@@ -245,8 +245,7 @@ public class DatabaseEncryptionTest {
    }
 
     private static String getUrlWithoutProtocol(String dbPath) {
-        final String gdsType = FBTestProperties.GDS_TYPE;
-        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "LOCAL".equalsIgnoreCase(gdsType)) {
+        if ("EMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE)) {
             return dbPath;
         } else {
             return FBTestProperties.DB_SERVER_URL + "/" + FBTestProperties.DB_SERVER_PORT + ":" + dbPath;

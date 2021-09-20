@@ -25,7 +25,6 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
@@ -268,9 +267,9 @@ public class TestJnaDatabase {
     @Test
     public void testCancelOperation_abortSupported() throws Exception {
         // TODO Investigate why this doesn't work.
-        assumeThat("Test doesn't work with local or embedded protocol",
+        assumeThat("Test doesn't work with embedded protocol",
                 FBTestProperties.GDS_TYPE,
-                not(oneOf(LocalGDSFactoryPlugin.LOCAL_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+                not(oneOf(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
 
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);

@@ -22,7 +22,6 @@ package org.firebirdsql.common.rules;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
@@ -103,8 +102,7 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule supportsNativeOnly() {
-        return supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+        return supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
     }
 
     /**
@@ -113,7 +111,6 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule excludesNativeOnly() {
-        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
-                LocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
     }
 }
