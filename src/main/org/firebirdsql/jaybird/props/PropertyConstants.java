@@ -33,6 +33,10 @@ import java.sql.Connection;
 @InternalApi
 public final class PropertyConstants {
 
+    public static final String DEFAULT_SERVER_NAME = "localhost";
+    public static final int DEFAULT_PORT = 3050;
+    public static final String DEFAULT_SERVICE_NAME = "service_mgr";
+
     // Duplicates the names of the WireCrypt enum values
     public static final String WIRE_CRYPT_DEFAULT = "DEFAULT";
     public static final String WIRE_CRYPT_REQUIRED = "REQUIRED";

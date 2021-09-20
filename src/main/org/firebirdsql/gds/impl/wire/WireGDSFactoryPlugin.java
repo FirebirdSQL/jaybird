@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.impl.wire;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 
@@ -56,29 +55,6 @@ public class WireGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     @Override
     public String getDefaultProtocol() {
         return DEFAULT_PROTOCOL;
-    }
-
-    @Override
-    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
-        if (server == null) {
-            throw new GDSException("Server name/address is required for pure Java implementation.");
-        }
-
-        if (path == null) {
-            throw new GDSException("Database name/path is required.");
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("//");
-        sb.append(server);
-        if (port != null) {
-            sb.append(':').append(port.intValue());
-        }
-
-        sb.append('/').append(path);
-
-        return sb.toString();
     }
 
     @Override

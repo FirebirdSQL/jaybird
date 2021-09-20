@@ -209,7 +209,7 @@ public class TestDataSourceFactory {
         originalDS.setDescription(DESCRIPTION);
         originalDS.setType(TYPE);
         final String database = String.format("//%s:%d/%s", SERVER_NAME, PORT_NUMBER, DATABASE_NAME);
-        originalDS.setDatabase(database);
+        originalDS.setDatabaseName(database);
         originalDS.setUser(USER);
         originalDS.setPassword(PASSWORD);
         originalDS.setEncoding(ENCODING);
@@ -228,7 +228,7 @@ public class TestDataSourceFactory {
 
         assertEquals(DESCRIPTION, newDS.getDescription());
         assertEquals(TYPE, newDS.getType());
-        assertEquals(database, newDS.getDatabase());
+        assertEquals(database, newDS.getDatabaseName());
         assertEquals(USER, newDS.getUser());
         assertEquals(PASSWORD, newDS.getPassword());
         assertEquals(ENCODING, newDS.getEncoding());

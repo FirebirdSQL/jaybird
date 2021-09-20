@@ -26,6 +26,7 @@ package org.firebirdsql.management;
 
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.WireCrypt;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 
 import java.io.OutputStream;
@@ -59,22 +60,31 @@ public interface ServiceManager extends ServiceConnectionProperties {
      * Returns the host for the connection to the service manager.
      *
      * @return the host for the connection to the service manager.
+     * @deprecated Use {@link #getServerName()}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     String getHost();
 
     /**
      * Sets the host for the connection to the service manager.
+     * <p>
+     * See {@link AttachmentProperties#setServerName(String)} for details.
+     * </p>
      *
      * @param host
      *         for the connection to the service manager.
+     * @deprecated Use {@link #setServerName(String)}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     void setHost(String host);
 
     /**
      * Returns the port for the connection to the service manager.
      *
      * @return the port for the connection to the service manager.
+     * @deprecated Use {@link #getPortNumber()}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     int getPort();
 
     /**
@@ -82,7 +92,9 @@ public interface ServiceManager extends ServiceConnectionProperties {
      *
      * @param port
      *         for the connection to the service manager.
+     * @deprecated Use {@link #setPortNumber(int)}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     void setPort(int port);
 
     /**

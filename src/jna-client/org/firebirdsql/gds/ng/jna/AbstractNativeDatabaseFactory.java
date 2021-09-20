@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
@@ -39,7 +37,6 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.registerNativeRes
  */
 public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(AbstractNativeDatabaseFactory.class);
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private FbClientResource resource;
 

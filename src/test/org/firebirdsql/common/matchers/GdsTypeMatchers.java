@@ -30,7 +30,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.in;
 
 /**
  * Matchers for checking GDS types (eg for type specific assumptions).
@@ -48,7 +49,7 @@ public class GdsTypeMatchers {
      * @return Matcher for pure java types
      */
     public static Matcher<String> isPureJavaType() {
-        return isIn(PURE_JAVA_TYPES);
+        return is(in(PURE_JAVA_TYPES));
     }
 
     /**
@@ -62,7 +63,7 @@ public class GdsTypeMatchers {
      * @return Matcher for native types (excluding embedded)
      */
     public static Matcher<String> isOtherNativeType() {
-        return isIn(OTHER_NATIVE_TYPES);
+        return is(in(OTHER_NATIVE_TYPES));
     }
 
 }

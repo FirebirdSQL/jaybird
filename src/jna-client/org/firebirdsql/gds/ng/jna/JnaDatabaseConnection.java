@@ -18,9 +18,11 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.impl.DbAttachInfo;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
@@ -60,6 +62,20 @@ public class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, 
     public JnaDatabaseConnection(FbClientLibrary clientLibrary, IConnectionProperties connectionProperties,
             IEncodingFactory encodingFactory) throws SQLException {
         super(clientLibrary, connectionProperties, encodingFactory);
+    }
+
+    @Override
+    protected String createAttachUrl(DbAttachInfo dbAttachInfo, IConnectionProperties connectionProperties)
+            throws SQLException {
+        if (!dbAttachInfo.hasAttachObjectName()) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    // Using original attach object name as that may well be non-null even if it is null in dbAttachInfo
+                    .messageParameter(connectionProperties.getAttachObjectName())
+                    .messageParameter("null or empty database name in connection string")
+                    .toFlatSQLException();
+        }
+        return toAttachUrl(dbAttachInfo);
     }
 
     /**

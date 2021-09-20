@@ -45,17 +45,6 @@ public interface IConnectionProperties extends IAttachProperties<IConnectionProp
     int DEFAULT_BUFFERS_NUMBER = PropertyConstants.DEFAULT_PAGE_CACHE_SIZE;
 
     /**
-     * @return Name or alias of the database
-     */
-    String getDatabaseName();
-
-    /**
-     * @param databaseName
-     *         Name or alias of the database
-     */
-    void setDatabaseName(String databaseName);
-
-    /**
      * Get the dialect of the client connection
      * <p>
      * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_DIALECT} if

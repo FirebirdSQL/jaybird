@@ -118,10 +118,9 @@ public class FBDriver implements FirebirdDriver {
             FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type);
             String databaseURL = GDSFactory.getDatabasePath(type, url);
 
-            mcf.setDatabase(databaseURL);
+            // NOTE: occurrence of an explicit connection property may override this
+            mcf.setDatabaseName(databaseURL);
             for (Map.Entry<String, String> entry : mergedProperties.entrySet()) {
-                // TODO Can we do this differently (or just allow the database property to be set this way)?
-                if (FBConnectionProperties.DATABASE_PROPERTY.equals(entry.getKey())) continue;
                 try {
                     mcf.setProperty(entry.getKey(), entry.getValue());
                 } catch (InvalidPropertyValueException e) {
@@ -183,7 +182,7 @@ public class FBDriver implements FirebirdDriver {
         FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(type, (FBConnectionProperties) properties)
                 .canonicalize();
         FBDataSource dataSource = createDataSource(mcf);
-        return (FirebirdConnection) dataSource.getConnection(mcf.getUserName(), mcf.getPassword());
+        return (FirebirdConnection) dataSource.getConnection(mcf.getUser(), mcf.getPassword());
     }
 
     @Override

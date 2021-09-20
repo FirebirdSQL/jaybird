@@ -11,13 +11,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
@@ -51,8 +49,8 @@ public class TestFBMaintenanceManager extends FBJUnit4TestBase {
     public void setUp() throws Exception {
         maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            maintenanceManager.setHost(DB_SERVER_URL);
-            maintenanceManager.setPort(DB_SERVER_PORT);
+            maintenanceManager.setServerName(DB_SERVER_URL);
+            maintenanceManager.setPortNumber(DB_SERVER_PORT);
         }
 
         maintenanceManager.setUser(DB_USER);

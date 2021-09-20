@@ -108,56 +108,6 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         setBlobBufferSize(length);
     }
 
-    /**
-     * Get name of the database.
-     *
-     * @return database name, value is equal to the part of full JDBC URL without
-     * the {@code jdbc:firebirdsql:} part.
-     * @deprecated use {@link #getDatabase} instead for the sake of naming
-     * compatibility.
-     */
-    @Deprecated
-    public String getDatabaseName() {
-        return getDatabase();
-    }
-
-    /**
-     * Set database name.
-     *
-     * @param name
-     *         connection URL without {@code "jdbc:firebirdsql:"}
-     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"} for
-     *         example).
-     * @deprecated use {@link #setDatabase(String)} instead for the sake of
-     * naming compatibility.
-     */
-    @Deprecated
-    public void setDatabaseName(String name) {
-        setDatabase(name);
-    }
-
-    /**
-     * Get name of the database.
-     *
-     * @return database name, value is equal to the part of full JDBC URL without
-     * the {@code jdbc:firebirdsql:} part.
-     */
-    public String getDatabase() {
-        return mcf.getDatabase();
-    }
-
-    /**
-     * Set database name.
-     *
-     * @param name
-     *         connection URL without {@code "jdbc:firebirdsql:"}
-     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
-     *         example).
-     */
-    public void setDatabase(String name) {
-        mcf.setDatabase(name);
-    }
-
     @Override
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return mcf.getTransactionParameters(isolation);
@@ -277,7 +227,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
             return ds;
         }
 
-        if (mcf.getDatabase() == null || "".equals(mcf.getDatabase().trim())) {
+        if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
             throw new SQLException("Database was not specified. Cannot provide connections.");
         }
 

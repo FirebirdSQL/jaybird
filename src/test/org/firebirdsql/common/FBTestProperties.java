@@ -128,8 +128,8 @@ public final class FBTestProperties {
      * @param serviceManager Service manager to configure
      */
     public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
-        serviceManager.setHost(DB_SERVER_URL);
-        serviceManager.setPort(DB_SERVER_PORT);
+        serviceManager.setServerName(DB_SERVER_URL);
+        serviceManager.setPortNumber(DB_SERVER_PORT);
         serviceManager.setUser(DB_USER);
         serviceManager.setPassword(DB_PASSWORD);
         return serviceManager;
@@ -159,8 +159,8 @@ public final class FBTestProperties {
                 if (gdsType == GDSType.getType("PURE_JAVA")
                         || gdsType == GDSType.getType("NATIVE")
                         || gdsType == GDSType.getType("OOREMOTE") ) {
-                    fbServiceManager.setHost(DB_SERVER_URL);
-                    fbServiceManager.setPort(DB_SERVER_PORT);
+                    fbServiceManager.setServerName(DB_SERVER_URL);
+                    fbServiceManager.setPortNumber(DB_SERVER_PORT);
                 }
                 fbServiceManager.setUser(FBTestProperties.DB_USER);
                 fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);

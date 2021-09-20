@@ -30,8 +30,6 @@ import java.util.Objects;
 public final class FbImmutableServiceProperties extends AbstractImmutableAttachProperties<IServiceProperties>
         implements IServiceProperties {
 
-    private final String serviceName;
-
     /**
      * Copy constructor for FbServiceProperties.
      * <p>
@@ -43,22 +41,6 @@ public final class FbImmutableServiceProperties extends AbstractImmutableAttachP
      */
     public FbImmutableServiceProperties(IServiceProperties src) {
         super(src);
-        serviceName = src.getServiceName();
-    }
-
-    @Override
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    @Override
-    public void setServiceName(String serviceName) {
-        immutable();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getServiceName();
     }
 
     @Override
@@ -76,17 +58,7 @@ public final class FbImmutableServiceProperties extends AbstractImmutableAttachP
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FbImmutableServiceProperties)) return false;
-        if (!super.equals(o)) return false;
-
-        FbImmutableServiceProperties that = (FbImmutableServiceProperties) o;
-
-        return Objects.equals(serviceName, that.serviceName);
+        return super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
-        return result;
-    }
 }

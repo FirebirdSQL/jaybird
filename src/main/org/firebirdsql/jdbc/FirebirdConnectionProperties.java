@@ -29,17 +29,23 @@ import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 public interface FirebirdConnectionProperties extends DatabaseConnectionProperties {
 
     /**
-     * @return path to the database including the server name and the port,
-     * if needed.
+     * @return path to the database including the server name and the port, if needed.
+     * @deprecated Use {@link #getDatabaseName()}; will be removed in Jaybird 6 or later
      */
-    String getDatabase();
+    @Deprecated
+    default String getDatabase() {
+        return getDatabaseName();
+    }
 
     /**
      * @param database
-     *         path to the database including the server name and the
-     *         port, if needed.
+     *         path to the database including the server name and the port, if needed.
+     * @deprecated Use {@link #setDatabaseName(String)}; will be removed in Jaybird 6 or later
      */
-    void setDatabase(String database);
+    @Deprecated
+    default void setDatabase(String database) {
+        setDatabaseName(database);
+    }
 
     /**
      * @return name of the user that will be used when connecting to the database.

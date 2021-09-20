@@ -23,6 +23,7 @@ import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.VaxEncoding;
+import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
@@ -72,6 +73,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     // Micro-optimization: we usually expect at most 1 (Firebird 3), and usually 0 (Firebird 2.5 and earlier)
     private final List<KnownServerKey> knownServerKeys = new ArrayList<>(1);
+    private final DbAttachInfo dbAttachInfo;
     private ClientAuthBlock clientAuthBlock;
     private Socket socket;
     private ProtocolCollection protocols;
@@ -128,7 +130,22 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         super(attachProperties, encodingFactory);
         this.protocols = protocols;
         clientAuthBlock = new ClientAuthBlock(this.attachProperties);
+        dbAttachInfo = toDbAttachInfo(attachProperties);
     }
+
+    public final String getServerName() {
+        return dbAttachInfo.getServerName();
+    }
+
+    public final int getPortNumber() {
+        return dbAttachInfo.getPortNumber();
+    }
+
+    public final String getAttachObjectName() {
+        return dbAttachInfo.getAttachObjectName();
+    }
+
+    protected abstract DbAttachInfo toDbAttachInfo(T attachProperties) throws SQLException;
 
     public final boolean isConnected() {
         return !(socket == null || socket.isClosed());

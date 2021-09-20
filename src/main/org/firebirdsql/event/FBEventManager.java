@@ -231,33 +231,69 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    public void setDatabase(String database) {
-        connectionProperties.setDatabaseName(database);
+    public String getServerName() {
+        return EventManager.super.getServerName();
     }
 
     @Override
-    public String getDatabase() {
+    public void setServerName(String serverName) {
+        EventManager.super.setServerName(serverName);
+    }
+
+    @Override
+    public int getPortNumber() {
+        return EventManager.super.getPortNumber();
+    }
+
+    @Override
+    public void setPortNumber(int portNumber) {
+        EventManager.super.setPortNumber(portNumber);
+    }
+
+    @Override
+    public String getDatabaseName() {
         return connectionProperties.getDatabaseName();
     }
 
     @Override
+    public void setDatabaseName(String databaseName) {
+        connectionProperties.setDatabaseName(databaseName);
+    }
+
+    @Override
+    @Deprecated
+    public void setDatabase(String database) {
+        setDatabaseName(database);
+    }
+
+    @Override
+    @Deprecated
+    public String getDatabase() {
+        return getDatabaseName();
+    }
+
+    @Override
+    @Deprecated
     public String getHost() {
-        return connectionProperties.getServerName();
+        return getServerName();
     }
 
     @Override
+    @Deprecated
     public void setHost(String host) {
-        connectionProperties.setServerName(host);
+        setServerName(host);
     }
 
     @Override
+    @Deprecated
     public int getPort() {
-        return connectionProperties.getPortNumber();
+        return getPortNumber();
     }
 
     @Override
+    @Deprecated
     public void setPort(int port) {
-        connectionProperties.setPortNumber(port);
+        setPortNumber(port);
     }
 
     @Override

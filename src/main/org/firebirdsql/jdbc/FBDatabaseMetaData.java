@@ -169,8 +169,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public String getURL() throws SQLException {
         // TODO Think of a less complex way to obtain the url or just return null?
-        GDSType gdsType = ((FBManagedConnectionFactory) connection.mc.getManagedConnectionFactory()).getGDSType();
-        return GDSFactory.getJdbcUrl(gdsType, connection.mc.getDatabase());
+        GDSType gdsType = connection.mc.getManagedConnectionFactory().getGDSType();
+        return GDSFactory.getJdbcUrl(gdsType, gdsHelper.getConnectionProperties());
     }
 
     @Override

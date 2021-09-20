@@ -23,7 +23,6 @@ import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.Collections.unmodifiableMap;
 
@@ -41,8 +40,6 @@ import static java.util.Collections.unmodifiableMap;
  */
 public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
-    private final String serverName;
-    private final int portNumber;
     private final Map<ConnectionProperty, Object> propValues;
 
     /**
@@ -56,31 +53,9 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
      *         Source to copy from
      */
     protected AbstractImmutableAttachProperties(IAttachProperties<T> src) {
-        serverName = src.getServerName();
-        portNumber = src.getPortNumber();
         propValues = src instanceof AbstractImmutableAttachProperties
                 ? ((AbstractImmutableAttachProperties<T>) src).propValues
                 : unmodifiableMap(new HashMap<>(src.connectionPropertyValues()));
-    }
-
-    @Override
-    public String getServerName() {
-        return serverName;
-    }
-
-    @Override
-    public void setServerName(final String serverName) {
-        immutable();
-    }
-
-    @Override
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    @Override
-    public void setPortNumber(final int portNumber) {
-        immutable();
     }
 
     @Override
@@ -147,17 +122,12 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
 
         AbstractImmutableAttachProperties<?> that = (AbstractImmutableAttachProperties<?>) o;
 
-        return portNumber == that.portNumber
-                && Objects.equals(serverName, that.serverName)
-                && propValues.equals(that.propValues);
+        return propValues.equals(that.propValues);
     }
 
     @Override
     public int hashCode() {
-        int result = serverName != null ? serverName.hashCode() : 0;
-        result = 31 * result + portNumber;
-        result = 31 * result + propValues.hashCode();
-        return result;
+        return propValues.hashCode();
     }
 
     /**

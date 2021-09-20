@@ -128,8 +128,8 @@ public class DatabaseEncryptionTest {
     @Test
     public void testFBSimpleDataSource() throws Exception {
         final FBSimpleDataSource ds = new FBSimpleDataSource();
-        ds.setDatabase(getUrlWithoutProtocol(CRYPTTEST_DB));
-        ds.setUserName(FBTestProperties.DB_USER);
+        ds.setDatabaseName(getUrlWithoutProtocol(CRYPTTEST_DB));
+        ds.setUser(FBTestProperties.DB_USER);
         ds.setPassword(FBTestProperties.DB_PASSWORD);
         ds.setType(FBTestProperties.GDS_TYPE);
         ds.setDbCryptConfig("base64:" + BASE64_ENCRYPTION_KEY);
@@ -192,8 +192,8 @@ public class DatabaseEncryptionTest {
     public void testServiceManagerConnection_gstatException() throws Exception {
         FBStatisticsManager statManager = new FBStatisticsManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            statManager.setHost(DB_SERVER_URL);
-            statManager.setPort(DB_SERVER_PORT);
+            statManager.setServerName(DB_SERVER_URL);
+            statManager.setPortNumber(DB_SERVER_PORT);
         }
         statManager.setUser(DB_USER);
         statManager.setPassword(DB_PASSWORD);
@@ -214,8 +214,8 @@ public class DatabaseEncryptionTest {
     public void testDatabaseValidation() throws Exception {
         FBMaintenanceManager maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            maintenanceManager.setHost(DB_SERVER_URL);
-            maintenanceManager.setPort(DB_SERVER_PORT);
+            maintenanceManager.setServerName(DB_SERVER_URL);
+            maintenanceManager.setPortNumber(DB_SERVER_PORT);
         }
         maintenanceManager.setUser(DB_USER);
         maintenanceManager.setPassword(DB_PASSWORD);

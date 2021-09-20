@@ -125,19 +125,6 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
             connectionProperties.setConnectTimeout(DriverManager.getLoginTimeout());
         }
 
-        // TODO Move this logic to the GDSType or database factory?
-        // TODO Revise and fix logic/confusion with database vs databaseName+serverName+portNumber
-        final String gdsTypeName = mcf.getGDSType().toString();
-        if (!(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME.equals(gdsTypeName)
-                || LocalGDSFactoryPlugin.LOCAL_TYPE_NAME.equals(gdsTypeName))) {
-            final DbAttachInfo dbAttachInfo = DbAttachInfo.parseConnectString(mcf.getDatabase());
-            connectionProperties.setServerName(dbAttachInfo.getServer());
-            connectionProperties.setPortNumber(dbAttachInfo.getPort());
-            connectionProperties.setDatabaseName(dbAttachInfo.getFileName());
-        } else {
-            connectionProperties.setDatabaseName(mcf.getDatabase());
-        }
-
         database = mcf.getDatabaseFactory().connect(connectionProperties);
         database.addDatabaseListener(new MCDatabaseListener());
         database.addExceptionListener(this);
@@ -183,8 +170,15 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         return gdsHelper;
     }
 
+    /**
+     * Returns the {@code databaseName} property as configured on the {@code ManagedConnectionFactory}.
+     * 
+     * @return database name
+     * @deprecated Will be removed in Jaybird 6; there is no direction replacement
+     */
+    @Deprecated
     public String getDatabase() {
-        return mcf.getDatabase();
+        return mcf.getDatabaseName();
     }
 
     public boolean isManagedEnvironment() {

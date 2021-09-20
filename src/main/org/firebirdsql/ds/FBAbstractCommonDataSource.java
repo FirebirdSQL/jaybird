@@ -36,16 +36,10 @@ import java.util.Map;
  */
 public abstract class FBAbstractCommonDataSource extends AbstractConnectionPropertiesDataSource {
 
-    protected static final String REF_DATABASE_NAME = "databaseName";
-    protected static final String REF_PORT_NUMBER = "portNumber";
-    protected static final String REF_SERVER_NAME = "serverName";
     protected static final String REF_DESCRIPTION = "description";
     protected static final String REF_PROPERTIES = "properties";
 
     private String description;
-    private String serverName;
-    private int portNumber;
-    private String databaseName;
     protected final Object lock = new Object();
     private FBConnectionProperties connectionProperties = new FBConnectionProperties();
 
@@ -67,75 +61,6 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public final String getServerName() {
-        synchronized (lock) {
-            return serverName;
-        }
-    }
-
-    public final void setServerName(String serverName) {
-        synchronized (lock) {
-            checkNotStarted();
-            this.serverName = serverName;
-            setDatabase();
-        }
-    }
-
-    public final int getPortNumber() {
-        synchronized (lock) {
-            return portNumber;
-        }
-    }
-
-    public final void setPortNumber(int portNumber) {
-        synchronized (lock) {
-            checkNotStarted();
-            this.portNumber = portNumber;
-            setDatabase();
-        }
-    }
-
-    public final String getDatabaseName() {
-        synchronized (lock) {
-            return databaseName;
-        }
-    }
-
-    /**
-     * Sets the databaseName of this datasource.
-     * <p>
-     * The databaseName is the filepath or alias of the database only, so it
-     * should not include serverName and portNumber.
-     * </p>
-     *
-     * @param databaseName
-     *         Database name (filepath or alias)
-     */
-    public final void setDatabaseName(String databaseName) {
-        synchronized (lock) {
-            checkNotStarted();
-            this.databaseName = databaseName;
-            setDatabase();
-        }
-    }
-
-    @Deprecated
-    @Override
-    public String getDatabase() {
-        synchronized (lock) {
-            return connectionProperties.getDatabase();
-        }
-    }
-
-    @Deprecated
-    @Override
-    public void setDatabase(String database) {
-        synchronized (lock) {
-            checkNotStarted();
-            connectionProperties.setDatabase(database);
-        }
     }
 
     @Override
@@ -224,33 +149,6 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
         }
     }
 
-    /**
-     * Sets the database property of connectionProperties.
-     */
-    protected final void setDatabase() {
-        synchronized (lock) {
-            // to getDatabasePath of the relevant GDSFactoryPlugin
-            StringBuilder sb = new StringBuilder();
-            if (serverName != null && serverName.length() > 0) {
-                sb.append("//").append(serverName);
-                if (portNumber > 0) {
-                    sb.append(':').append(portNumber);
-                }
-                sb.append('/');
-            }
-
-            if (databaseName != null) {
-                sb.append(databaseName);
-            }
-
-            if (sb.length() > 0) {
-                connectionProperties.setDatabase(sb.toString());
-            } else {
-                connectionProperties.setDatabase(null);
-            }
-        }
-    }
-
     protected final void setConnectionProperties(FBConnectionProperties connectionProperties) {
         if (connectionProperties == null) {
             throw new NullPointerException("null value not allowed for connectionProperties");
@@ -278,11 +176,6 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
         synchronized (instance.lock) {
             ref.add(new StringRefAddr(REF_DESCRIPTION, instance.getDescription()));
-            ref.add(new StringRefAddr(REF_SERVER_NAME, instance.getServerName()));
-            if (instance.getPortNumber() != 0) {
-                ref.add(new StringRefAddr(REF_PORT_NUMBER, Integer.toString(instance.getPortNumber())));
-            }
-            ref.add(new StringRefAddr(REF_DATABASE_NAME, instance.getDatabaseName()));
             byte[] data = DataSourceFactory.serialize(instance.connectionProperties);
             ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
         }

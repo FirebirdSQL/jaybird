@@ -53,7 +53,7 @@ class FbConnectionPropertiesTest {
 
     @Test
     void testServerName() {
-        assertEquals("localhost", info.getServerName());
+        assertNull(info.getServerName());
         final String serverName = "testServerName";
         info.setServerName(serverName);
         assertEquals(serverName, info.getServerName());
@@ -61,7 +61,7 @@ class FbConnectionPropertiesTest {
 
     @Test
     void testPortNumber() {
-        assertEquals(IAttachProperties.DEFAULT_PORT, info.getPortNumber());
+        assertEquals(PropertyConstants.DEFAULT_PORT, info.getPortNumber());
         final int portNumber = 1234;
         info.setPortNumber(portNumber);
         assertEquals(portNumber, info.getPortNumber());

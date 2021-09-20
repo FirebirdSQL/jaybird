@@ -81,6 +81,7 @@ public class V10CommonConnectionInfo {
 
     public final WireDatabaseConnection getDummyDatabaseConnection() throws SQLException {
         FbConnectionProperties connectionInfo = new FbConnectionProperties();
+        connectionInfo.setDatabaseName("dummydb");
         connectionInfo.setEncoding("NONE");
         return new WireDatabaseConnection(connectionInfo);
     }

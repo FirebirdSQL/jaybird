@@ -26,6 +26,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.AttachmentProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 
 import static java.util.Objects.requireNonNull;
 
@@ -37,65 +38,31 @@ import static java.util.Objects.requireNonNull;
  */
 public interface IAttachProperties<T extends IAttachProperties<T>> extends AttachmentProperties {
 
-    int DEFAULT_PORT = 3050;
-    String DEFAULT_SERVER_NAME = "localhost";
     int DEFAULT_SOCKET_BUFFER_SIZE = PropertyConstants.BUFFER_SIZE_NOT_SET;
     int DEFAULT_SO_TIMEOUT = PropertyConstants.TIMEOUT_NOT_SET;
     int DEFAULT_CONNECT_TIMEOUT = PropertyConstants.TIMEOUT_NOT_SET;
 
     /**
      * @return The name of the object to attach to (either a database or service name).
+     * @see #setAttachObjectName(String) 
      */
-    String getAttachObjectName();
-
-    // TODO Do serverName and portNumber belong in AttachmentProperties?
-    //  Considerations: this ties it too much to TCP/IP
-
-    /**
-     * Get the hostname or IP address of the Firebird server.
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVER_NAME}
-     * if value hasn't been set yet.
-     * </p>
-     *
-     * @return Hostname or IP address of the server
-     */
-    String getServerName();
+    default String getAttachObjectName() {
+        return getProperty(PropertyNames.attachObjectName);
+    }
 
     /**
-     * Set the hostname or IP address of the Firebird server.
+     * Sets the attach object name.
      * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_SERVER_NAME} if
-     * value hasn't been set yet.
+     * For more information, see
+     * {@link org.firebirdsql.jaybird.props.DatabaseConnectionProperties#setDatabaseName(String)}
+     * and {@link org.firebirdsql.jaybird.props.ServiceConnectionProperties#setServiceName(String)}.
      * </p>
      *
-     * @param serverName
-     *         Hostname or IP address of the server
+     * @param attachObjectName Database attach object name
      */
-    void setServerName(String serverName);
-
-    /**
-     * Get the portnumber of the server.
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_PORT} if
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @return Portnumber of the server
-     */
-    int getPortNumber();
-
-    /**
-     * Set the port number of the server.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_PORT} if
-     * this method hasn't been called yet.
-     * </p>
-     *
-     * @param portNumber
-     *         Port number of the server
-     */
-    void setPortNumber(int portNumber);
+    default void setAttachObjectName(String attachObjectName) {
+        setProperty(PropertyNames.attachObjectName, attachObjectName);
+    }
 
     /**
      * @return The value of {@link #getWireCrypt()} as an instance of {@link WireCrypt}.

@@ -57,7 +57,7 @@ public abstract class TestXABase extends FBJUnit4TestBase {
      */
     public FBManagedConnectionFactory initMcf(boolean shared) {
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
-        mcf.setDatabase(DB_DATASOURCE_URL);
+        mcf.setDatabaseName(DB_DATASOURCE_URL);
         mcf.setUser(DB_USER);
         mcf.setPassword(DB_PASSWORD);
         mcf.setEncoding(DB_LC_CTYPE);

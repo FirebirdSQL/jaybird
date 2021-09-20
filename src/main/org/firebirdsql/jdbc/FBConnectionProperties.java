@@ -109,7 +109,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
     private FbConnectionProperties properties;
-    private String database;
 
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
@@ -119,25 +118,14 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         properties.registerPropertyUpdateListener(createPropertyUpdateListener());
     }
 
-    // TODO See if other properties can also be moved to FbConnectionProperties
-
     @Override
     public String getProperty(String name) {
-        // TODO Can we integrate this in normal property handling?
-        if (DATABASE_PROPERTY.equals(name)) {
-            return getDatabase();
-        }
         return properties.getProperty(name);
     }
 
     @Override
     public void setProperty(String name, String value) {
-        // TODO Can we integrate this in normal property handling?
-        if (DATABASE_PROPERTY.equals(name)) {
-            setDatabase(value);
-        } else {
-            properties.setProperty(name, value);
-        }
+        properties.setProperty(name, value);
     }
 
     @Override
@@ -166,7 +154,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
     }
 
     public int hashCode() {
-        return Objects.hash(getType(), database);
+        return Objects.hash(getType(), getServerName(), getPortNumber(), getDatabaseName());
     }
 
     public boolean equals(Object obj) {
@@ -180,13 +168,10 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
         FBConnectionProperties that = (FBConnectionProperties) obj;
 
-        boolean result = this.properties.equals(that.properties);
-        result &= Objects.equals(this.database, that.database);
-        result &= this.customMapping.equals(that.customMapping);
-        // If one or both are null we are identical (see also JDBC-249)
-        result &= (this.mapper == null || that.mapper == null) || this.mapper.equals(that.mapper);
-
-        return result;
+        return this.properties.equals(that.properties)
+                && this.customMapping.equals(that.customMapping)
+                // If one or both are null we are identical (see also JDBC-249)
+                && (this.mapper == null || that.mapper == null || this.mapper.equals(that.mapper));
     }
 
     public Object clone() {
@@ -202,14 +187,6 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         } catch (CloneNotSupportedException ex) {
             throw new Error("Assertion failure: clone not supported"); // Can't happen
         }
-    }
-
-    public String getDatabase() {
-        return database;
-    }
-
-    public void setDatabase(String database) {
-        this.database = database;
     }
 
     @Override

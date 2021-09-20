@@ -222,7 +222,7 @@ Jaybird 5 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version  
 Most of the JDBC 4.3 features have been implemented (in as far  as they are supported by Firebird).
 
 You can use the Java 8 driver under Java 9 and higher.
-For Java 11 or higher we  recommend to use the Java 11 driver, though its sources are identical to the  Java 8 driver.
+For Java 11 or higher we recommend to use the Java 11 driver, though its sources are identical to the  Java 8 driver.
 
 Given the limited support period for Java 9 and higher versions, we limit  support on those versions to the most recent LTS version and the latest release.
 Currently that means we support Java 7, 8, 11 and 13.
@@ -234,6 +234,120 @@ This guarantees a stable module name for Jaybird, and  allows for future modular
 === Firebird support
 
 Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
+
+[#unify-db-address]
+=== Unification of database and service addressing
+
+The properties used to configure the 'address' (or 'coordinates') of a database or service have been unified and standardized.
+
+Connections to a database are identified by a triplet of properties (`serverName`, `portNumber`, `databaseName`), and to a service with a triplet of properties (`serverName`, `portNumber`, `serviceName`).
+
+The `databaseName`/`serviceName` property serves a dual purpose: if `serverName` is `null`, its value is handled as a connection URL which may or may not contain a server name and port number, otherwise it is only the database path or alias or service name.
+The syntax of `databaseName` as a connection URL is the same as the JDBC URL syntax, but without the `++jdbc:firebird[sql][:sub-protocol]:++` prefix and without connection properties.
+The exact supported syntax of connection URLs and their interpretation is determined by the protocol implementation (`type`).
+
+When `serverName` is `null`, the `portNumber` will be ignored unless the protocol requires a hostname, and `databaseName` doesn't contain one.
+In that situation `serverName` is assumed to be `localhost` and `portNumber` is used.
+
+Some examples that all identify the same database:
+
+* `(serverName = "localhost", portNumber = 3050, databaseName = "/path/to/db.fdb")`
+* `(serverName = null, portNumber = 3050, databaseName = "//localhost//path/to/db.fdb")`
+* `(serverName = null, portNumber = 3050, databaseName = "localhost:/path/to/db.fdb")`
+* `(serverName = null, portNumber = 3050, databaseName = "///path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, databaseName = "/path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+
+Some examples that all identify the same service:
+
+* `(serverName = "localhost", portNumber = 3050, serviceName = "service_mgr")`
+* `(serverName = "localhost", portNumber = 3050, serviceName = null)`
+* `(serverName = null, portNumber = 3050, serviceName = "//localhost")`
+* `(serverName = null, portNumber = 3050, serviceName = "//localhost/")`
+* `(serverName = null, portNumber = 3050, serviceName = "//localhost/service_mgr")`
+* `(serverName = null, portNumber = 3050, serviceName = "///service_mgr")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, serviceName = "//")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, serviceName = "service_mgr")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, serviceName = null)`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+
+These changes apply to `FBConnectionPoolDataSource`, `FBSimpleDataSource`, `FBXADataSource`, `FirebirdConnectionProperties` implementations`, `ServiceManager` implementations, `EventManager` implementations, and -- with some caveats -- JDBC URLs.
+
+The property `database` that existed on some of these interfaces and classes is now an alias for `databaseName` and deprecated for removal in Jaybird 6.
+The exception is `database` in `ServiceManager`.
+This property is still *only* a database path or alias and serves -- for some `ServiceManager` implementations -- as the database the service operation applies to (e.g. backup, restore).
+
+The property `host` that existed on some of these interfaces and classes is now an alias for `serverName` and deprecated for removal in Jaybird 6.
+The same goes for `port` which is now an alias for `portNumber`.
+
+[#jdbc-url-syntax]
+=== Changes to JDBC URL syntax
+
+As a result of <<#unify-db-address>> and URL parser changes, JDBC URLs now allow:
+
+. More lenient syntax
+. NATIVE (and EMBEDDED) now supports new Firebird 3.0+ URL formats
+. Specification of part or entire database address through connection properties
+
+[#jdbc-url-syntax-lenient]
+==== More lenient syntax
+
+The syntax of JDBC URLs is now more lenient.
+
+* In the standard syntax (starting with "```++jdbc:firebird[sql][:sub-protocol]://++```"), specifying server name and port number are now optional, but server name must be specified if a port number is specified.
+For example, `jdbc:firebird:////path/to/db.fdb` or `jdbc:firebird:///C:\path\to\db.fdb` is now allowed and connects to localhost port 3050, database `/path/to/db.fdb` or `C:\path\to\db.fdb`.
+* For PURE_JAVA, localhost and port 3050 are used as defaults, for other protocol implementations the behaviour will vary.
+For example, for NATIVE it will depend on the version of `fbclient` and the configured providers in its `firebird.conf`.
+* For PURE_JAVA, in the legacy syntax, server name and port number are now optional as well.
+For example, `jdbc:firebird:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `/path/to/db.fdb`.
+* JDBC URLs that only contain a Windows path will no longer interpret the driver letter as a server name.
+For example, `jdbc:firebird:C:\path\to\db.fdb` and `jdbc:firebird:C:/path/to/db.fdb` is now allowed and connects to localhost port 3050, database `C:\path\to\db.fdb` or `C:/path/to/db.fdb`.
++
+In theory, this results in a minor backwards incompatibility for URLs with the legacy syntax using single character server names.
+The solution is to use the standard syntax (with "```//```").
+* If the database address is specified through connection properties (see also below), the URL can consist only of the JDBC URL prefix.
+For example, `jdbc:firebird:` is now a legal URL, if at least `databaseName` is specified as a connection property in the `Properties` object passed to `DriverManager.getConnection(String, Properties)`.
+
+[#jdbc-url-syntax-native-fb3]
+==== NATIVE (and EMBEDDED) now supports new Firebird 3.0+ URL formats
+
+The NATIVE protocol implementation (and technically the EMBEDDED protocol as well), now support the Firebird 3.0 and higher URL formats.
+The reason is that for the NATIVE protocol, Jaybird now only parses standard syntax URLs (those that start with "```//```"), and passes all other values to `fbclient` without further interpretation or parsing.
+
+Some examples that are now valid (assuming a Firebird 3.0 or higher `fbclient` is used):
+
+* `jdbc:firebird:native:inet://myserver//path/to/db.fdb`
+* `jdbc:firebird:native:inet4://myserver//path/to/db.fdb` -- Use IPv4 only
+* `jdbc:firebird:native:inet6://myserver//path/to/db.fdb` -- Use IPv6 only
+* `jdbc:firebird:native:xnet://C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://myserver/C:\path\to\db.fdb` -- Windows only
+* `jdbc:firebird:native:wnet://myserver:fb_db/C:\path\to\db.fdb` -- Windows only
+
+[#jdbc-url-syntax-props]
+==== Specification of part or entire database address through connection properties
+
+The JDBC URL after the protocol prefix up to the '```?```' or -- if no properties are defined in the URL -- the end of the URL defines the `databaseName` property.
+It is now possible to specify some or all of the address of the database (`serverName`, `portNumber`, `databaseName`) through connection properties.
+When `databaseName` is also specified as a connection property, it overwrites the value derived from the URL itself.
+When `serverName` is specified as a connection property, the `databaseName` value (derived from the URL or explicitly set) will be used as the database path or alias.
+When `portNumber` is specified as a connection property, it will only be used when `serverName` is specified, or if `databaseName` doesn't seem to contain a server name and the protocol implementation falls back to localhost.
+
+Some examples:
+
+* `jdbc:firebird:?serverName=localhost&portNumber=3050&databaseName=/path/to/db.fdb`
+* `jdbc:firebird:` with `Properties` with `"serverName" = "localhost"`, `"portNumber" = "3050"`, `"databaseName" = "/path/to/db.fdb"`, and user and password as required
+* `jdbc:firebird:/path/to/db.fdb?serverName=localhost&portNumber=3050`
+* `jdbc:firebird:?databaseName=//localhost//path/to/db.fdb`
+* `jdbc:firebird://localhost//path/to/db.fdb?serverName=myserver` -- this will attempt to connect to database `//localhost//path/to/db.fdb` on server `myserver` (which will likely fail)
+* `jdbc:firebird://localhost//path/to/db.fdb?databaseName=//myserver//path/to/other.fdb` -- this will connect as if you had used `jdbc:firebird://myserver//path/to/other.fdb`
+
+[CAUTION]
+====
+*Just because you can do this, doesn't mean you should!*
+
+We recommend not to specify `serverName`, `portNumber` and `databaseName` as explicit connection properties when using `DriverManager`, but instead only use the URL itself to define the address of the database.
+
+The behaviour defined in this section is the result of unification and simplification of connection property handling across JDBC URLs, data sources and internals of Jaybird.
+====
 
 [#potentially-breaking-changes]
 === Potentially breaking changes
@@ -375,6 +489,9 @@ if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnect
 replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
 * `setWireCrypt(WireCrypt)` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
+* `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
+handling of database coordinates is now considered internal to the connection implementation.
+There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also jdp-2021-01).
 
 The following methods had their visibility reduced:
 
@@ -388,6 +505,8 @@ The following classes have been removed in Jaybird 5:
 * `ParameterBufferHelper.DpbParameterType`
 * `ParameterBufferHelper.DpbValueType`
 * `DatabaseParameterBufferExtension`
+* `IAttachProperties.DEFAULT_PORT`
+* `IAttachProperties.DEFAULT_SERVER_NAME`
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
@@ -490,6 +609,8 @@ With Jaybird 6 the following breaking changes will be introduced.
 
 The following methods will be removed in Jaybird 6:
 
+* `FirebirdConnectionProperties.getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
+* `FirebirdConnectionProperties.setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
 * `FirebirdConnectionProperties.getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`.
 * `FirebirdConnectionProperties.setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`.
 * `short FirebirdConnectionProperties.getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`.
@@ -497,6 +618,10 @@ The following methods will be removed in Jaybird 6:
 * `FirebirdConnectionProperties.getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`.
 * `FirebirdConnectionProperties.setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`.
 * `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
+* `EventManager.get/setHost`, use `get/setServerName`
+* `EventManager.get/setPort`, use `get/setPortNumber`
+* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
+* `ManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
 
 Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
 

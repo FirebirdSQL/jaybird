@@ -205,16 +205,8 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return shared;
     }
 
-    public String getDatabase() {
-        return connectionProperties.getDatabase();
-    }
-
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return connectionProperties.getTransactionParameters(isolation);
-    }
-
-    public void setDatabase(String database) {
-        ensureCanModify(() -> connectionProperties.setDatabase(database));
     }
 
     public void setNonStandardProperty(String propertyMapping) {

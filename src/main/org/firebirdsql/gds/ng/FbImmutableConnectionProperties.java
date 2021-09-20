@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import java.util.Objects;
-
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionProperties}.
  *
@@ -29,8 +27,6 @@ import java.util.Objects;
  */
 public final class FbImmutableConnectionProperties extends AbstractImmutableAttachProperties<IConnectionProperties>
         implements IConnectionProperties {
-
-    private final String databaseName;
 
     /**
      * Copy constructor for FbConnectionProperties.
@@ -44,22 +40,6 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
      */
     public FbImmutableConnectionProperties(IConnectionProperties src) {
         super(src);
-        databaseName = src.getDatabaseName();
-    }
-
-    @Override
-    public String getDatabaseName() {
-        return databaseName;
-    }
-
-    @Override
-    public void setDatabaseName(final String databaseName) {
-        immutable();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getDatabaseName();
     }
 
     @Override
@@ -77,17 +57,7 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FbImmutableConnectionProperties)) return false;
-        if (!super.equals(o)) return false;
-
-        FbImmutableConnectionProperties that = (FbImmutableConnectionProperties) o;
-
-        return Objects.equals(databaseName, that.databaseName);
+        return super.equals(o);
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (databaseName != null ? databaseName.hashCode() : 0);
-        return result;
-    }
 }

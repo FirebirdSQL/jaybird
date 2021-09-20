@@ -79,15 +79,15 @@ public class TestFBEventManager {
     private void setupDefaultEventManager() throws SQLException {
         eventManager = new FBEventManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
-            eventManager.setHost(DB_SERVER_URL);
+            eventManager.setServerName(DB_SERVER_URL);
         }
         eventManager.setUser(DB_USER);
         eventManager.setPassword(DB_PASSWORD);
-        eventManager.setPort(DB_SERVER_PORT);
+        eventManager.setPortNumber(DB_SERVER_PORT);
         
         // have to resolve relative path to the absolute one
         File tempFile = new File(getDatabasePath());
-        eventManager.setDatabase(tempFile.getAbsolutePath());
+        eventManager.setDatabaseName(tempFile.getAbsolutePath());
         
         eventManager.connect();
     }
@@ -312,7 +312,7 @@ public class TestFBEventManager {
             }
 
             try {
-                eventManager.setHost("abc");
+                eventManager.setServerName("abc");
                 fail("should not allow setHost");
             } catch (UnsupportedOperationException e) {
                 // expected

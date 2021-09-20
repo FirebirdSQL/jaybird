@@ -26,6 +26,7 @@ package org.firebirdsql.event;
 
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 
 import java.sql.SQLException;
 
@@ -78,34 +79,69 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
     boolean isConnected();
 
     /**
-     * Sets the database path for the connection to the database.
+     * Get the database name.
+     * <p>
+     * See {@link DatabaseConnectionProperties#getDatabaseName()} for details.
+     * </p>
+     *
+     * @return database name
+     * @since 5
+     */
+    String getDatabaseName();
+
+    /**
+     * Set the database name.
+     * <p>
+     * See {@link DatabaseConnectionProperties#setDatabaseName(String)} for details.
+     * </p>
+     *
+     * @param databaseName database name
+     * @since 5
+     */
+    void setDatabaseName(String databaseName);
+
+    /**
+     * Sets the database path or url for the connection to the database.
      *
      * @param database
-     *         path for the connection to the database.
+     *         path or url for the connection to the database.
+     * @deprecated Use {@link #setDatabaseName(String)}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     void setDatabase(String database);
 
     /**
-     * @return the database path for the connection to the database.
+     * @return the database path or url for the connection to the database.
+     * @deprecated Use {@link #getDatabaseName()}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     String getDatabase();
 
     /**
      * @return the host for the connection to the database.
+     * @deprecated Use {@link #getServerName()}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     String getHost();
 
     /**
      * Sets the host for the connection to the database.
+     * <p>
+     * See {@link AttachmentProperties#setServerName(String)} for details.
+     * </p>
      *
      * @param host
      *         for the connection to the database.
+     * @deprecated Use {@link #setServerName(String)}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     void setHost(String host);
 
     /**
      * @return the port for the connection to the database.
+     * @deprecated Use {@link #getPortNumber()}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     int getPort();
 
     /**
@@ -113,7 +149,9 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      *
      * @param port
      *         for the connection to the database.
+     * @deprecated Use {@link #setPortNumber(int)}; will be removed in Jaybird 6 or later
      */
+    @Deprecated
     void setPort(int port);
 
     /**

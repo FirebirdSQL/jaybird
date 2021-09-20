@@ -38,6 +38,57 @@ import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_WIRE_COMPR
 public interface AttachmentProperties extends BaseProperties {
 
     /**
+     * Get the hostname or IP address of the Firebird server.
+     *
+     * @return Hostname or IP address of the server
+     * @see #setServerName(String)
+     */
+    default String getServerName() {
+        return getProperty(PropertyNames.serverName);
+    }
+
+    /**
+     * Set the hostname or IP address of the Firebird server.
+     * <p>
+     * When set to {@code null} (the default), the {@code databaseName} or {@code serviceName} is used as the full
+     * identification of the database host, port and database path/alias. Protocol implementations, for example
+     * {@code PURE_JAVA}, may default to {@code localhost} when this property is {@code null}, but
+     * {@code databaseName}/{@code serviceName} does not (seem to) contain a host name.
+     * </p>
+     *
+     * @param serverName
+     *         Hostname or IP address of the server
+     */
+    default void setServerName(String serverName) {
+        setProperty(PropertyNames.serverName, serverName);
+    }
+
+    /**
+     * Get the port number of the server.
+     *
+     * @return Port number of the server
+     * @see #setPortNumber(int)
+     */
+    default int getPortNumber() {
+        return getIntProperty(PropertyNames.portNumber, PropertyConstants.DEFAULT_PORT);
+    }
+
+    /**
+     * Set the port number of the server.
+     * <p>
+     * Defaults to {@code 3050}. This property value will be ignored if {@code serverName} is {@code null}, unless the
+     * protocol implementation needs a hostname, but cannot find a hostname in {@code databaseName}/{@code serviceName}.
+     * </p>
+     *
+     * @param portNumber
+     *         Port number of the server
+     * @see #setServerName(String)
+     */
+    default void setPortNumber(int portNumber) {
+        setIntProperty(PropertyNames.portNumber, portNumber);
+    }
+
+    /**
      * @return type of the connection, for example, "PURE_JAVA", "LOCAL", "EMBEDDED", depends on the GDS implementations
      * installed in the system.
      */
@@ -49,7 +100,8 @@ public interface AttachmentProperties extends BaseProperties {
      * @param type
      *         type of the connection, for example, "PURE_JAVA", "LOCAL", "EMBEDDED", depends on the GDS implementations
      *         installed in the system.
-     * @throws IllegalStateException may be thrown when type cannot or can no longer be changed
+     * @throws IllegalStateException
+     *         may be thrown when type cannot or can no longer be changed
      */
     default void setType(String type) {
         setProperty(PropertyNames.type, type);

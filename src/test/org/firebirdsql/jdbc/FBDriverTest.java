@@ -42,7 +42,12 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -208,7 +213,7 @@ public class FBDriverTest {
             try (ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1")) {
                 assertTrue("Should have at least one row", rs.next());
                 assertEquals("Value should be 1.", 1, rs.getInt(1));
-                assertTrue("Should have only one row.", !rs.next());
+                assertFalse("Should have only one row.", rs.next());
             }
         }
     }
@@ -225,7 +230,7 @@ public class FBDriverTest {
     }
 
     /**
-     * Connection url parsing itself is tested in {@link org.firebirdsql.gds.impl.TestDbAttachInfo}.
+     * Connection url parsing itself is tested in {@code DbAttachInfoTest}.
      */
     @Test
     public void testInvalidConnectionUrl() throws Exception {
@@ -446,7 +451,7 @@ public class FBDriverTest {
 
         Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
 
-        assertEquals("size", 8, mergedProps.size());
+        assertEquals("size", 9, mergedProps.size());
         // NOTE: actual property name resulting from normalization should be considered an implementation detail
         // This might change in a future version
         assertEquals("socketBufferSize", "32767", mergedProps.get("socketBufferSize"));
@@ -459,8 +464,7 @@ public class FBDriverTest {
         assertEquals("soTimeout", "1000", mergedProps.get("soTimeout"));
         assertEquals("nonStandard1", "value1", mergedProps.get("nonStandard1"));
         assertEquals("nonStandard2", "value2", mergedProps.get("nonStandard2"));
-        // NOTE: Currently removed during normalization, this might change in the future
-        assertFalse("database", mergedProps.containsKey("database"));
+        assertEquals("attachObjectName (database)", "xyz", mergedProps.get("attachObjectName"));
     }
 
     @Test

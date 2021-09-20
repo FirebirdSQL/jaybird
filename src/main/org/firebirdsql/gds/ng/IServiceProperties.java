@@ -24,6 +24,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
 
 /**
@@ -34,28 +35,8 @@ import org.firebirdsql.jaybird.props.ServiceConnectionProperties;
  */
 public interface IServiceProperties extends IAttachProperties<IServiceProperties>, ServiceConnectionProperties {
 
-    String DEFAULT_SERVICE_NAME = "service_mgr";
-
-    /**
-     * Get the service name
-     * <p>
-     * NOTE: Implementer should take care to return {@link #DEFAULT_SERVICE_NAME} if value hasn't been set yet.
-     * </p>
-     *
-     * @return Service name
-     */
-    String getServiceName();
-
-    /**
-     * Set the service name.
-     * <p>
-     * NOTE: Implementer should take care to use the {@link #DEFAULT_SERVICE_NAME} if this method hasn't been called
-     * yet.
-     * </p>
-     *
-     * @param serviceName Service name
-     */
-    void setServiceName(String serviceName);
+    @Deprecated
+    String DEFAULT_SERVICE_NAME = PropertyConstants.DEFAULT_SERVICE_NAME;
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IServiceProperties}

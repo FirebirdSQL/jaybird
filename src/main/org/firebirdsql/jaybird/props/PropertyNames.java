@@ -37,6 +37,13 @@ package org.firebirdsql.jaybird.props;
 public final class PropertyNames {
 
     // attachment
+    public static final String serverName = "serverName";
+    public static final String portNumber = "portNumber";
+    public static final String attachObjectName = "attachObjectName";
+    // NOTE: alias for attachObjectName
+    public static final String databaseName = "databaseName";
+    // NOTE: alias for attachObjectName
+    public static final String serviceName = "serviceName";
     public static final String type = "type";
     public static final String user = "user";
     public static final String password = "password";

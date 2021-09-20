@@ -28,7 +28,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TimeZone;
 
 /**
@@ -40,8 +39,6 @@ import java.util.TimeZone;
  */
 public final class FbConnectionProperties extends AbstractAttachProperties<IConnectionProperties>
         implements IConnectionProperties, Serializable {
-
-    private String databaseName;
 
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 
@@ -57,9 +54,6 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
      */
     public FbConnectionProperties(IConnectionProperties src) {
         super(src);
-        if (src != null) {
-            databaseName = src.getDatabaseName();
-        }
     }
 
     /**
@@ -71,26 +65,8 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     // For internal use, to provide serialization support
-    private FbConnectionProperties(String serverName, int portNumber, String databaseName,
-            HashMap<ConnectionProperty, Object> propValues) {
-        super(serverName, portNumber, propValues);
-        this.databaseName = databaseName;
-    }
-
-    @Override
-    public String getDatabaseName() {
-        return databaseName;
-    }
-
-    @Override
-    public void setDatabaseName(String databaseName) {
-        this.databaseName = databaseName;
-        dirtied();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getDatabaseName();
+    private FbConnectionProperties(HashMap<ConnectionProperty, Object> propValues) {
+        super(propValues);
     }
 
     @Override
@@ -126,18 +102,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        FbConnectionProperties that = (FbConnectionProperties) o;
-
-        return Objects.equals(databaseName, that.databaseName);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (databaseName != null ? databaseName.hashCode() : 0);
-        return result;
+        return super.equals(o);
     }
 
     @Override
@@ -157,15 +122,9 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
 
         private static final long serialVersionUID = 1L;
 
-        private final String serverName;
-        private final int portNumber;
-        private final String databaseName;
         private final Map<String, Serializable> propValues;
 
         private SerializationProxy(FbConnectionProperties fbConnectionProperties) {
-            serverName = fbConnectionProperties.getServerName();
-            portNumber = fbConnectionProperties.getPortNumber();
-            databaseName = fbConnectionProperties.databaseName;
             Map<ConnectionProperty, Object> srcProps = fbConnectionProperties.connectionPropertyValues();
             propValues = new HashMap<>(srcProps.size());
             srcProps.forEach((k, v) -> propValues.put(k.name(), (Serializable) v));
@@ -176,7 +135,7 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
             ConnectionPropertyRegistry propertyRegistry = ConnectionPropertyRegistry.getInstance();
             propValues.forEach((k, v) -> targetProps.put(propertyRegistry.getOrUnknown(k), v));
 
-            return new FbConnectionProperties(serverName, portNumber, databaseName, targetProps);
+            return new FbConnectionProperties(targetProps);
         }
 
     }

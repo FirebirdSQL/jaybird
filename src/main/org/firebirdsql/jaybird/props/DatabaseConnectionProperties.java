@@ -35,6 +35,64 @@ import org.firebirdsql.jdbc.FirebirdCallableStatement;
 public interface DatabaseConnectionProperties extends AttachmentProperties {
 
     /**
+     * Gets the database of the connection.
+     *
+     * @return database name
+     * @see #setDatabaseName(String) 
+     */
+    default String getDatabaseName() {
+        return getProperty(PropertyNames.databaseName);
+    }
+
+    /**
+     * Sets the database of the connection
+     * <p>
+     * When {@code serverName} is {@code null}, the value is taken as the URL of the database, and exact
+     * interpretation depends on the protocol implementation ({@code type}). Basically, the URL would be the JDBC URL,
+     * but without the {@code jdbc:firebird[sql]:[subprotocol:]} prefix and without connection properties. Examples:
+     * </p>
+     * <ul>
+     * <li>//localhost/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * transformed to the next example)</li>
+     * <li>localhost:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
+     * <li>//localhost:3051/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * transformed to the next example)</li>
+     * <li>localhost/3051:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
+     * <li>/path/to/your.fdb &mdash; NATIVE, EMBEDDED, PURE_JAVA, OOREMOTE (PURE_JAVA and OOREMOTE will use localhost
+     * as {@code serverName}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
+     * <li>C:\path\to\your.fdb &mdash; NATIVE, EMBEDDED (protocols like PURE_JAVA may attempt to connect to a server
+     * called {@code C}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
+     * <li>C:/path/to/your.fdb &mdash; NATIVE, EMBEDDED (protocols like PURE_JAVA may attempt to connect to a server
+     * called {@code C}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
+     * <li>xnet://employee &mdash; NATIVE (EMBEDDED will behave as NATIVE, protocols like PURE_JAVA may
+     * attempt to connect to a server called {@code xnet})</li>
+     * <li>other Firebird {@code fbclient} connection URLs &mdash; NATIVE (EMBEDDED will behave as NATIVE, protocols
+     * like PURE_JAVA may interpret the protocol name as a host name</li>
+     * <li>Custom {@code type} implementations may support other URL formats</li>
+     * </ul>
+     * <p>
+     * Some protocols, for example PURE_JAVA, when {@code serverName} is not set, but {@code databaseName} doesn't seem
+     * to contain a host name, may default to attempting to connect to localhost with {@code databaseName} as the
+     * database path or alias.
+     * </p>
+     * <p>
+     * When {@code serverName} is set, the value is taken as the database path or alias. Examples:
+     * </p>
+     * <ul>
+     * <li>employee</li>
+     * <li>/path/to/your.fdb</li>
+     * <li>C:\path\to\your.fdb</li>
+     * <li>C:/path/to/your.fdb</li>
+     * <li>relative/path/to/your.fdb &mdash; not recommended</li>
+     * </ul>
+     *
+     * @param databaseName database name
+     */
+    default void setDatabaseName(String databaseName) {
+        setProperty(PropertyNames.databaseName, databaseName);
+    }
+
+    /**
      * @return SQL dialect of the client connection
      */
     default int getSqlDialect() {

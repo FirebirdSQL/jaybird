@@ -35,6 +35,48 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     // data source can be introspected as a JavaBean (default methods are not returned by the introspector)
 
     @Override
+    public String getServerName() {
+        return FirebirdConnectionProperties.super.getServerName();
+    }
+
+    @Override
+    public void setServerName(String serverName) {
+        FirebirdConnectionProperties.super.setServerName(serverName);
+    }
+
+    @Override
+    public int getPortNumber() {
+        return FirebirdConnectionProperties.super.getPortNumber();
+    }
+
+    @Override
+    public void setPortNumber(int portNumber) {
+        FirebirdConnectionProperties.super.setPortNumber(portNumber);
+    }
+
+    @Override
+    public String getDatabaseName() {
+        return FirebirdConnectionProperties.super.getDatabaseName();
+    }
+
+    @Override
+    public void setDatabaseName(String databaseName) {
+        FirebirdConnectionProperties.super.setDatabaseName(databaseName);
+    }
+
+    @Deprecated
+    @Override
+    public String getDatabase() {
+        return FirebirdConnectionProperties.super.getDatabase();
+    }
+
+    @Deprecated
+    @Override
+    public void setDatabase(String database) {
+        FirebirdConnectionProperties.super.setDatabase(database);
+    }
+
+    @Override
     public String getType() {
         return FirebirdConnectionProperties.super.getType();
     }

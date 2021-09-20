@@ -82,18 +82,6 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
      */
     public abstract C identify() throws SQLException;
 
-    public final String getServerName() {
-        return attachProperties.getServerName();
-    }
-
-    public final int getPortNumber() {
-        return attachProperties.getPortNumber();
-    }
-
-    public final String getAttachObjectName() {
-        return attachProperties.getAttachObjectName();
-    }
-
     /**
      * @return An immutable copy of the current attach properties.
      */

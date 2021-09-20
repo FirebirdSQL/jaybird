@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
-import static org.firebirdsql.jdbc.FBConnectionProperties.DATABASE_PROPERTY;
 
 /**
  * Manager of the DPB properties.
@@ -58,10 +57,6 @@ class FBDriverPropertyManager {
             String propValue = props.get(propName);
             result.put(primaryName, propValue);
         }
-
-        // database has special meaning and should not be set through properties
-        result.keySet().removeAll(singletonList(DATABASE_PROPERTY));
-
         return result;
     }
 

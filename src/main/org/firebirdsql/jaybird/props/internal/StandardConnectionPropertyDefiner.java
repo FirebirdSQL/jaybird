@@ -49,6 +49,9 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
     public Stream<ConnectionProperty> defineProperties() {
         return Stream.of(
                 // Attachment properties (shared by database and service)
+                builder(serverName).aliases("host"),
+                builder(portNumber).type(INT).aliases("port"),
+                builder(attachObjectName).aliases(databaseName, serviceName, "database"),
                 builder(type),
                 // NOTE: Intentionally not mapped to DPB/SPB item, that is handled during authentication
                 builder(user).aliases("userName", "user_name", "isc_dpb_user_name"),

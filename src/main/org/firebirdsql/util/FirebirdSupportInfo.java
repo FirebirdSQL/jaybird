@@ -596,6 +596,10 @@ public final class FirebirdSupportInfo {
         return isVersionEqualOrAbove(4, 0);
     }
 
+    public boolean isWindows() {
+        return serverVersion.getPlatform().equals("WI");
+    }
+
     /**
      * @param serverVersion
      *         Server version

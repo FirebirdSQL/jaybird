@@ -32,43 +32,47 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     private static final String[] JDBC_PROTOCOLS = new String[] {
             "jdbc:firebirdsql:native:", "jdbc:firebird:native:"
     };
-    
+
+    @Override
     public String getPluginName() {
         return "JNA-based GDS implementation.";
     }
 
+    @Override
     public String getTypeName() {
         return NATIVE_TYPE_NAME;
     }
 
+    @Override
     public String[] getTypeAliases() {
         return Arrays.copyOf(TYPE_ALIASES, TYPE_ALIASES.length);
     }
 
+    @Override
     public String[] getSupportedProtocols() {
         return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
+    @Override
     public String getDatabasePath(String server, Integer port, String path) throws GDSException{
-        if (server == null) {
-            throw new GDSException("Server name/address is required for native implementation.");
-        }
         if (path == null) {
             throw new GDSException("Database name/path is required.");
         }
+
+        if (server == null) {
+            return path;
+        }
         
         StringBuilder sb = new StringBuilder();
-        
         sb.append(server);
         if (port != null) {
             sb.append('/').append(port.intValue());
         }
-        
         sb.append(':').append(path);
         
         return sb.toString();
     }
-    
+
     @Override
     public FbClientDatabaseFactory getDatabaseFactory() {
         return FbClientDatabaseFactory.getInstance();

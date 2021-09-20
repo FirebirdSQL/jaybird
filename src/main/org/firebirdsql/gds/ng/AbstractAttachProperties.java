@@ -25,10 +25,8 @@ import org.firebirdsql.util.InternalApi;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract mutable implementation of {@link IAttachProperties}.
@@ -50,8 +48,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
         }
     };
 
-    private String serverName = IAttachProperties.DEFAULT_SERVER_NAME;
-    private int portNumber = IAttachProperties.DEFAULT_PORT;
     private final Map<ConnectionProperty, Object> propertyValues;
     private PropertyUpdateListener propertyUpdateListener = NULL_LISTENER;
 
@@ -67,8 +63,6 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     protected AbstractAttachProperties(IAttachProperties<T> src) {
         this();
         if (src != null) {
-            serverName = src.getServerName();
-            portNumber = src.getPortNumber();
             propertyValues.putAll(src.connectionPropertyValues());
         }
     }
@@ -81,32 +75,8 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
     }
 
     // For internal use, to provide serialization support in FbConnectionProperties
-    AbstractAttachProperties(String serverName, int portNumber, HashMap<ConnectionProperty, Object> propertyValues) {
-        this.serverName = serverName;
-        this.portNumber = portNumber;
+    AbstractAttachProperties(HashMap<ConnectionProperty, Object> propertyValues) {
         this.propertyValues = propertyValues;
-    }
-
-    @Override
-    public String getServerName() {
-        return serverName;
-    }
-
-    @Override
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
-        dirtied();
-    }
-
-    @Override
-    public int getPortNumber() {
-        return portNumber;
-    }
-
-    @Override
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
-        dirtied();
     }
 
     @Override
@@ -229,17 +199,12 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
 
         AbstractAttachProperties<?> that = (AbstractAttachProperties<?>) o;
 
-        return portNumber == that.portNumber
-                && Objects.equals(serverName, that.serverName)
-                && propertyValues.equals(that.propertyValues);
+        return propertyValues.equals(that.propertyValues);
     }
 
     @Override
     public int hashCode() {
-        int result = serverName != null ? serverName.hashCode() : 0;
-        result = 31 * result + portNumber;
-        result = 31 * result + propertyValues.hashCode();
-        return result;
+        return propertyValues.hashCode();
     }
 
     /**

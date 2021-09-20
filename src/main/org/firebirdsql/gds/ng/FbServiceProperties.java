@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import java.util.Objects;
-
 /**
  * Mutable implementation of {@link IServiceProperties}.
  *
@@ -29,8 +27,6 @@ import java.util.Objects;
  */
 public final class FbServiceProperties extends AbstractAttachProperties<IServiceProperties>
         implements IServiceProperties {
-
-    private String serviceName = IServiceProperties.DEFAULT_SERVICE_NAME;
 
     private FbImmutableServiceProperties immutableServicePropertiesCache;
 
@@ -45,31 +41,12 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
      */
     public FbServiceProperties(IServiceProperties src) {
         super(src);
-        if (src != null) {
-            serviceName = src.getServiceName();
-        }
     }
 
     /**
      * Default constructor for FbServiceProperties
      */
     public FbServiceProperties() {
-    }
-
-    @Override
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    @Override
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        dirtied();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getServiceName();
     }
 
     @Override
@@ -89,18 +66,7 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof FbServiceProperties)) return false;
-        if (!super.equals(o)) return false;
-
-        FbServiceProperties that = (FbServiceProperties) o;
-
-        return Objects.equals(serviceName, that.serviceName);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
-        return result;
+        return super.equals(o);
     }
 
     @Override
