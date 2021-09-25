@@ -606,9 +606,6 @@ The following constants have been removed in Jaybird 5:
 
 * All `SQL_STATE_*` constants in `FBSQLParseException`.
 Use equivalent constants in `org.firebirdsql.jdbc.SQLStateConstants`.
-* `DatabaseParameterBufferExtension.EXTENSION_PARAMETERS` has been removed.
-There is no official replacement as this should be considered an implementation detail.
-It is possible that `DatabaseParameterBufferExtension` will be removed entirely.
 
 [#removal-of-udf-support-for-jdbc-escapes]
 === Removal of UDF support for JDBC escapes
@@ -622,33 +619,6 @@ As a result, the following methods, constants, properties and others are no long
 * Constants `FBConnectionProperties.USE_STANDARD_UDF_PROPERTY`,  `DatabaseParameterBufferExtension.USE_STANDARD_UDF`, `ISCConstants.isc_dpb_use_standard_udf`
 * Enum `EscapeParserMode` and its usages in `FBEscapedCallParser` and `FBEscapedParser`
 * Public classes in package are now marked as internal-api
-
-[#breaking-changes-for-jaybird-5]
-=== Breaking changes for Jaybird 5
-
-// TODO Move relevant parts to Compatibility changes once actually removed
-
-With Jaybird 5 the following breaking changes will be introduced.
-
-[#dropping-support-for-java-8-tentative]
-==== Dropping support for Java 8 (tentative)
-
-Jaybird 5 may drop support for Java 8, depending on the actual release time line.
-
-This decision is not final yet.
-
-[#dropping-jca-support]
-==== Dropping JCA support
-
-Jaybird is currently built around a JCA (Java Connector Architecture)  implementation.
-As such, it is both a JDBC driver and a JCA driver.
-The current structure requires a dependency on JCA for non-JCA usage.
-
-We will remove support for JCA entirely in Jaybird 5 to simplify the  implementation.
-The package `org.firebirdsql.jca` will be removed entirely.
-
-If you are currently using Jaybird as a JCA driver, please let us know on the  Firebird-Java mailing list.
-We may reconsider this decision and instead  restructure Jaybird so the dependency on JCA is only needed when Jaybird is used  as a JCA driver.
 
 [#breaking-changes-for-jaybird-6]
 === Breaking changes for Jaybird 6
