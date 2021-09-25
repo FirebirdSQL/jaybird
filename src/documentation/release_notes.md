@@ -23,6 +23,7 @@ The following has been changed or fixed since Jaybird 4.0.3
     This feature was backported from Jaybird 5.
 -   Fixed: Logic error could lead to incorrect logging of _"Specified statement
     was not created by this connection"_ ([jaybird#674](https://github.com/FirebirdSQL/jaybird/issues/674))
+-   Changed: Updated Firebird 4.0 reserved words based on 4.0.0.2496 ([jaybird#597](https://github.com/FirebirdSQL/jaybird/issues/597))
 
 Jaybird 4.0.3
 -------------
