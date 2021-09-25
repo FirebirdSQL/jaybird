@@ -60,7 +60,7 @@ Feedback can be sent to the Firebird-java mailing list or reported on the issue 
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.5, and a recent Firebird 4 snapshot build, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.7, and 4.0.0, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -71,7 +71,12 @@ Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we will limit support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 11 and Java 13.
+Currently, that means we support Java 11 and Java 17.
+
+[NOTE]
+====
+Support for Java 11 will likely be dropped for Java 17 or whatever the Java LTS is at the time of Jaybird 5 release.
+====
 
 Jaybird 5 provides libraries for Java 8 and Java 11.
 The Java 8 builds have the same source and all JDBC 4.3 related functionality and can be used on Java 9 and higher as well.
@@ -110,7 +115,9 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 
 Jaybird {version_wo_target} is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`,\ Artifactid: `jaybird`,\ Version: `{version_simple}.javaXX{version_tag}` (where `XX` is `8` or `11`).
+Groupid: `org.firebirdsql.jdbc`, +
+Artifactid: `jaybird`, +
+Version: `{version_simple}.javaXX{version_tag}` (where `XX` is `8` or `11`).
 
 For ease of transition to the new artifact naming, we also provide a Maven relocation artifact with artifact id `jaybird-jdkXX` (with `XX` is `18`).
 However, we recommend switching to the `jaybird` artifact id.
@@ -149,10 +156,7 @@ See also <<type-2-native-and-embedded-driver,Type 2 (native) and embedded driver
 
 You can download the latest versions from https://www.firebirdsql.org/en/jdbc-driver/
 
-At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`) and `connector-api-1.5.jar`.
-You can also use  `jaybird-full-{version_simple}.javaXX{version_tag}.jar` which includes the connector-api files.
-
-If you deploy your application to a Java EE application server, then you must  use `jaybird-{version_simple}.javaXX{version_tag}.jar` (not `-full`!), and *not* include `connector-api-1.5.jar` as this dependency will be provided by your application server.
+At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`).
 
 For `getGeneratedKeys` support you will need to include  `antlr-runtime-4.7.2.jar` on your classpath.
 
@@ -190,7 +194,7 @@ For more detailed instructions, see also the information on Maven in <<getting-j
 If you manage your dependencies manually, you need to do the following:
 
 . Replace the Jaybird 4 library with the Jaybird 5 version
- ** `jaybird-3.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
+ ** `jaybird-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
  ** `jaybird-full-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar`, the `jaybird-full` library no longer exists
 . Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
 
@@ -224,22 +228,27 @@ Depending on the actual release timeline of Jaybird 5, Java 8 support might be d
 [#java-9-and-higher]
 ==== Java 9 and higher
 
-Jaybird 5 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version  of the driver.
+Jaybird 5 supports Java 9 and higher (JDBC 4.3) with the Java 8 and 11 version of the driver.
 Most of the JDBC 4.3 features have been implemented (in as far  as they are supported by Firebird).
 
 You can use the Java 8 driver under Java 9 and higher.
-For Java 11 or higher we recommend to use the Java 11 driver, though its sources are identical to the  Java 8 driver.
+For Java 11 or higher we recommend using the Java 11 driver, though its sources are identical to the Java 8 driver.
 
-Given the limited support period for Java 9 and higher versions, we limit  support on those versions to the most recent LTS version and the latest release.
-Currently that means we support Java 7, 8, 11 and 13.
+Given the limited support period for Java 9 and higher versions, we limit support on those versions to the most recent LTS version and the latest release.
+Currently, that means we support Java 8, 11 and 17.
 
-For compatibility with Java 9 modules, Jaybird defines the automatic module name  `org.firebirdsql.jaybird`.
-This guarantees a stable module name for Jaybird, and  allows for future modularization of Jaybird.
+[NOTE]
+====
+Support for Java 11 will likely be dropped for Java 17 or whatever the Java LTS is at the time of Jaybird 5 release.
+====
+
+For compatibility with Java 9 modules, Jaybird defines the automatic module name `org.firebirdsql.jaybird`.
+This guarantees a stable module name for Jaybird, and allows for future modularization of Jaybird.
 
 [#firebird-support]
 === Firebird support
 
-Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported.
+Firebird versions 2.5, 3.0 and 4.0 are supported.
 
 [#properties-changed]
 ==== Changes to properties

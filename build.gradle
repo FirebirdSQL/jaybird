@@ -8,7 +8,7 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
   - -PbuildProfile=java8 or
     not specified or unknown value : Java 8  (supported)
   - -PbuildProfile=java11          : Java 11 (supported)
-  - -PbuildProfile=java15          : Java 15 (for compatibility testing only)
+  - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
 
   Uploading archives:
 
