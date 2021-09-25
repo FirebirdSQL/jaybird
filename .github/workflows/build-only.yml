@@ -12,7 +12,7 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
       - name: Build with Ant
-        run: ./build.sh dist
+        run: ./build.sh jars
       - name: build artifact
         uses: actions/upload-artifact@v2
         with:
