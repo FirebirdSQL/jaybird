@@ -35,6 +35,7 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
     private static final long serialVersionUID = 611228437520889118L;
 
+    @Deprecated
     public static final String DATABASE_PROPERTY = "database";
     @Deprecated
     public static final String TYPE_PROPERTY = "type";
