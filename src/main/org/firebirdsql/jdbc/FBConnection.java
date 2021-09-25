@@ -150,7 +150,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      */
     void notifyStatementClosed(FBStatement stmt) {
         if (!activeStatements.remove(stmt)) {
-            if (stmt instanceof FBPreparedStatement && ((FBPreparedStatement) stmt).isInitialized()) {
+            if (stmt instanceof FBPreparedStatement && !((FBPreparedStatement) stmt).isInitialized()) {
                 // Close was likely triggered by finalizer of a prepared statement that failed on prepare in
                 // the constructor: Do not log warning
                 return;

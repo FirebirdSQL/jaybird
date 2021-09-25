@@ -21,6 +21,8 @@ The following has been changed or fixed since Jaybird 4.0.3
     `setInPlaceRestore(boolean)` to enable (or disable) in-place restore. These
     options require Firebird 4.0 or higher. \
     This feature was backported from Jaybird 5.
+-   Fixed: Logic error could lead to incorrect logging of _"Specified statement
+    was not created by this connection"_ ([jaybird#674](https://github.com/FirebirdSQL/jaybird/issues/674))
 
 Jaybird 4.0.3
 -------------
