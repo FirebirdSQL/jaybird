@@ -18,43 +18,39 @@
  */
 package org.firebirdsql.util;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link ByteArrayHelper}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class ByteArrayHelperTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class ByteArrayHelperTest {
 
     @Test
-    public void toHexStringEmptyArray() {
+    void toHexStringEmptyArray() {
         assertEquals("", ByteArrayHelper.toHexString(new byte[0]));
     }
 
     @Test
-    public void toHexString_0x00() {
+    void toHexString_0x00() {
         assertEquals("00", ByteArrayHelper.toHexString(new byte[] { 0x00 }));
     }
 
     @Test
-    public void toHexString_0x01ff83a3() {
+    void toHexString_0x01ff83a3() {
         assertEquals("01FF83A3", ByteArrayHelper.toHexString(new byte[] { 0x01, (byte) 0xff, (byte) 0x83, (byte) 0xa3 }));
     }
 
     @Test
-    public void toHexString_allValues() {
+    void toHexString_allValues() {
         byte[] content = new byte[256];
         for (int idx = 0; idx < 256; idx++) {
             content[idx] = (byte) idx;
@@ -69,20 +65,19 @@ public class ByteArrayHelperTest {
     }
 
     @Test
-    public void toHexString_null_throwsNullPointerException() {
-        expectedException.expect(NullPointerException.class);
-
-        ByteArrayHelper.toHexString(null);
+    void toHexString_null_throwsNullPointerException() {
+        assertThatNullPointerException()
+                .isThrownBy(() -> ByteArrayHelper.toHexString(null));
     }
 
     @Test
-    public void fromHexString_0x01ff83a3() {
-        assertArrayEquals("01FF83A3", new byte[] { 0x01, (byte) 0xff, (byte) 0x83, (byte) 0xa3 },
-                ByteArrayHelper.fromHexString("01FF83A3"));
+    void fromHexString_0x01ff83a3() {
+        assertArrayEquals(new byte[] { 0x01, (byte) 0xff, (byte) 0x83, (byte) 0xa3 },
+                ByteArrayHelper.fromHexString("01FF83A3"), "01FF83A3");
     }
 
     @Test
-    public void fromHexString_allValues() {
+    void fromHexString_allValues() {
         byte[] content = new byte[256];
         for (int idx = 0; idx < 256; idx++) {
             content[idx] = (byte) idx;
@@ -94,22 +89,37 @@ public class ByteArrayHelperTest {
     }
 
     @Test
-    public void fromBase64String_properlyPadded() {
+    void fromBase64String_properlyPadded() {
         final String base64 = "ZWFzdXJlLg==";
         final byte[] expectedValue = "easure.".getBytes(StandardCharsets.US_ASCII);
 
-        assertArrayEquals("base64 decoding", expectedValue, ByteArrayHelper.fromBase64String(base64));
+        assertArrayEquals(expectedValue, ByteArrayHelper.fromBase64String(base64), "base64 decoding");
     }
 
     /**
      * We expect unpadded base64 (which should have been padded) to work
      */
     @Test
-    public void fromBase64String_notCorrectlyPadded() {
+    void fromBase64String_notCorrectlyPadded() {
         final String base64 = "ZWFzdXJlLg";
         final byte[] expectedValue = "easure.".getBytes(StandardCharsets.US_ASCII);
 
-        assertArrayEquals("base64 decoding", expectedValue, ByteArrayHelper.fromBase64String(base64));
+        assertArrayEquals(expectedValue, ByteArrayHelper.fromBase64String(base64), "base64 decoding");
+    }
+
+    @Test
+    void indexOf_emptyArray() {
+        assertEquals(-1, ByteArrayHelper.indexOf(new byte[0], (byte) 1));
+    }
+
+    @Test
+    void indexOf_notInArray() {
+        assertEquals(-1, ByteArrayHelper.indexOf(new byte[] { 2, 3, 4, 5, 6 }, (byte) 1));
+    }
+
+    @Test
+    void indexOf_inArray() {
+        assertEquals(1, ByteArrayHelper.indexOf(new byte[] { 2, 1, 3, 4, 1 }, (byte) 1));
     }
 
 }

@@ -24,8 +24,6 @@
  */
 package org.firebirdsql.gds.ng.wire.crypt;
 
-import org.firebirdsql.gds.ng.wire.WireConnection;
-
 /**
  * Service provider interface for wire encryption plugins.
  * <p>
@@ -43,10 +41,11 @@ public interface EncryptionPluginSpi {
     EncryptionIdentifier getEncryptionIdentifier();
 
     /**
-     * Creates the encryption plugin for the provided connection.
+     * Creates the encryption plugin for the provided crypt session config.
      *
-     * @param connection Connection
+     * @param cryptSessionConfig
+     *         Crypt session config
      * @return Encryption plugin
      */
-    EncryptionPlugin createEncryptionPlugin(WireConnection<?, ?> connection);
+    EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig);
 }

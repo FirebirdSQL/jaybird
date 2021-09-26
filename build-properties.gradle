@@ -27,21 +27,20 @@ if (findProperty('buildProfile') == 'java17') {
     sourceCompatibility = JavaVersion.VERSION_16
     targetCompatibility = JavaVersion.VERSION_16
     ext.'specification.version' = 4.3
-} else if (findProperty('buildProfile') == 'java11') {
-    println 'Build profile: Java 11'
-    ext.'maven.jdkversion' = 'java11'
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-    ext.'specification.version' = 4.3
-} else {
-    // Default to Java 8
+} else if (findProperty('buildProfile') == 'java8') {
     println 'Build profile: Java 8'
-    // To allow other parts to query as well
     ext.buildProfile = 'java8'
     ext.'maven.jdkversion' = 'java8'
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
     ext.'specification.version' = 4.2
+} else {
+    // Default to Java 11
+    println 'Build profile: Java 11'
+    ext.'maven.jdkversion' = 'java11'
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    ext.'specification.version' = 4.3
 }
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()

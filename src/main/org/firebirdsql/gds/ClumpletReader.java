@@ -425,6 +425,19 @@ public class ClumpletReader {
         return false;
     }
 
+    /**
+     * Finds the next {@code tag} in the reader, skipping tags to find it.
+     * <p>
+     * If {@code tag} is not found, the original position of this reader is retained.
+     * </p>
+     *
+     * @param tag
+     *         Tag to find
+     * @return {@code true} if {@code tag} was found and this reader is positioned to read it, {@code false} otherwise
+     * @throws SQLException
+     *         For errors positioning
+     * @see #directNext(int)
+     */
     public boolean next(int tag) throws SQLException {
         if (!isEof()) {
             final int markPosition = position;
@@ -435,6 +448,33 @@ public class ClumpletReader {
                 if (tag == getClumpTag()) {
                     return true;
                 }
+            }
+            position = markPosition;
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the next tag in this reader is {@code tag}.
+     * <p>
+     * If the next tag is not {@code tag}, the original position of this reader is retained.
+     * </p>
+     *
+     * @param tag
+     *         Tag to find
+     * @return {@code true} if the next tag is {@code tag} and this reader is positioned to read it, {@code false}
+     * otherwise
+     * @throws SQLException
+     *         For errors positioning
+     * @see #next(int)
+     * @since 5
+     */
+    public boolean directNext(int tag) throws SQLException {
+        if (!isEof()) {
+            final int markPosition = position;
+            moveNext();
+            if (!isEof() && tag == getClumpTag()) {
+                return true;
             }
             position = markPosition;
         }

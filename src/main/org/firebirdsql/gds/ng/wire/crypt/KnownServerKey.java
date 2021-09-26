@@ -20,10 +20,14 @@ package org.firebirdsql.gds.ng.wire.crypt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -38,21 +42,60 @@ public final class KnownServerKey {
 
     private final String keyType;
     private final List<String> plugins;
+    private final Map<String, byte[]> specificData;
 
-    public KnownServerKey(String keyType, List<String> plugins) {
+    private KnownServerKey(String keyType, List<String> plugins, Map<String, byte[]> specificData) {
         this.keyType = requireNonNull(keyType, "keyType");
-        this.plugins = Collections.unmodifiableList(new ArrayList<>(requireNonNull(plugins, "plugins")));
+        this.plugins = unmodifiableList(new ArrayList<>(requireNonNull(plugins, "plugins")));
+        this.specificData = specificData == null || specificData.isEmpty()
+                ? emptyMap()
+                : unmodifiableMap(specificData);
     }
 
-    public KnownServerKey(String keyType, String plugins) {
-        this(keyType, Arrays.asList(CRYPT_PLUGIN_LIST_SPLIT.split(plugins)));
+    public KnownServerKey(String keyType, String plugins, Map<String, byte[]> specificData) {
+        this(keyType, Arrays.asList(CRYPT_PLUGIN_LIST_SPLIT.split(plugins)), specificData);
     }
 
-    public List<EncryptionIdentifier> getIdentifiers() {
-        List<EncryptionIdentifier> identifiers = new ArrayList<>(plugins.size());
+    public List<PluginSpecificData> getPluginSpecificData() {
+        List<PluginSpecificData> pluginSpecificData = new ArrayList<>(plugins.size());
         for (String plugin : plugins) {
-            identifiers.add(new EncryptionIdentifier(keyType, plugin));
+            EncryptionIdentifier identifier = new EncryptionIdentifier(keyType, plugin);
+            pluginSpecificData.add(new PluginSpecificData(identifier, specificData.get(plugin)));
         }
-        return identifiers;
+        return pluginSpecificData;
+    }
+
+    public void clear() {
+        specificData.values().stream()
+                .filter(Objects::nonNull)
+                .forEach(b -> Arrays.fill(b, (byte) 0));
+    }
+
+    /**
+     * Class to hold plugin specific data.
+     *
+     * @since 5
+     */
+    public static final class PluginSpecificData {
+
+        private final EncryptionIdentifier encryptionIdentifier;
+        private byte[] specificData;
+
+        private PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
+            this.encryptionIdentifier = requireNonNull(encryptionIdentifier, "encryptionIdentifier");
+            this.specificData = specificData;
+        }
+
+        public EncryptionIdentifier getEncryptionIdentifier() {
+            return encryptionIdentifier;
+        }
+
+        /**
+         * @return plugin specific data (can be {@code null})
+         */
+        public byte[] getSpecificData() {
+            return specificData;
+        }
+
     }
 }

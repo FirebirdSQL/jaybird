@@ -250,6 +250,14 @@ This guarantees a stable module name for Jaybird, and allows for future modulari
 
 Firebird versions 2.5, 3.0 and 4.0 are supported.
 
+[#wirecrypt-chacha]
+=== ChaCha wire protocol encryption support
+
+The Firebird wire protocol encryption plugin `ChaCha` -- introduced in Firebird 4.0 -- is now supported by the PURE_JAVA and OOREMOTE protocol implementations.
+Support is only available on Java 11 and higher using a Jaybird built for Java 11 or higher.
+
+The implementation relies on the `ChaCha20` cipher introduced by https://openjdk.java.net/jeps/329[JEP 329^].
+
 [#properties-changed]
 ==== Changes to properties
 

@@ -5,9 +5,9 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
   Gradle build script for Jaybird - Firebird JDBC driver.
 
   Define target Java version:
-  - -PbuildProfile=java8 or
-    not specified or unknown value : Java 8  (supported)
-  - -PbuildProfile=java11          : Java 11 (supported)
+  - -PbuildProfile=java8           : Java 8  (supported)
+  - -PbuildProfile=java11or
+    not specified or unknown value : Java 11 (supported)
   - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
 
   Uploading archives:
@@ -95,7 +95,9 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice']
+            srcDirs = findProperty('buildProfile') == 'java8'
+                    ? ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice']
+                    : ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
         }
         resources {
             srcDirs = ['src/resources']
@@ -204,6 +206,7 @@ javadoc {
 }
 
 test {
+    println "Running tests for type ${project.'test.gds_type'}"
     // Use junit platform for unit tests
     useJUnitPlatform()
 
@@ -216,13 +219,13 @@ test {
             'test.db.port': project.'test.db.port',
             'test.db.lc_ctype': project.'test.db.lc_ctype',
             'test.gds_type': project.'test.gds_type',
-            'test.use_firebird_autocommit': project.'test.use_firebird_autocommit',
-            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'true'
+            'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
+            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false'
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'
     } else if (project.'test.gds_type' == 'NATIVE' || project.'test.gds_type' == 'EMBEDDED') {
-        println "Running test type ${project.'test.gds.type'} without explicit native library path. " +
+        println "Running test type ${project.'test.gds_type'} without explicit native library path. " +
                 "Specify property 'test.jna.library.path' to point to a Firebird client location (NATIVE) or " +
                 "Firebird install (EMBEDDED)."
     }

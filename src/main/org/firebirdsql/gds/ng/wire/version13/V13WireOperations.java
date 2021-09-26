@@ -33,11 +33,12 @@ import org.firebirdsql.gds.ng.wire.FbWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
-import org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi;
+import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.gds.ng.wire.version11.V11WireOperations;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -46,10 +47,14 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
+import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
 /**
@@ -59,7 +64,26 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 public class V13WireOperations extends V11WireOperations {
 
     private static final Logger log = LoggerFactory.getLogger(V13WireOperations.class);
-    private static final EncryptionPluginSpi ARC4_ENCRYPTION_PLUGIN_SPI = new Arc4EncryptionPluginSpi();
+    private static final String ARC4_PLUGIN_SPI_CLASS_NAME =
+            "org.firebirdsql.gds.ng.wire.crypt.arc4.Arc4EncryptionPluginSpi";
+    public static final String CHA_CHA_PLUGIN_SPI_CLASS_NAME =
+            "org.firebirdsql.gds.ng.wire.crypt.chacha.ChaChaEncryptionPluginSpi";
+    private static final Map<EncryptionIdentifier, EncryptionPluginSpi> SUPPORTED_ENCRYPTION_PLUGINS;
+    static {
+        Map<EncryptionIdentifier, EncryptionPluginSpi> tempMap = new HashMap<>();
+        for (String spiName : Arrays.asList(ARC4_PLUGIN_SPI_CLASS_NAME, CHA_CHA_PLUGIN_SPI_CLASS_NAME)) {
+            try {
+                Class<?> spiClass = Class.forName(spiName);
+                EncryptionPluginSpi encryptionPluginSpi =
+                        (EncryptionPluginSpi) spiClass.getDeclaredConstructor().newInstance();
+                tempMap.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
+            } catch (Exception e) {
+                log.info("Could not load EncryptionPluginSpi: " + spiName + "; see debug for details");
+                log.debug("Could not load EncryptionPluginSpi: " + spiName, e);
+            }
+        }
+        SUPPORTED_ENCRYPTION_PLUGINS = tempMap.isEmpty() ? emptyMap() : unmodifiableMap(tempMap);
+    }
 
     public V13WireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
@@ -176,34 +200,44 @@ public class V13WireOperations extends V11WireOperations {
         throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toFlatSQLException();
     }
 
+    private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
+            throws SQLException {
+        ClientAuthBlock clientAuthBlock = getClientAuthBlock();
+        if (!clientAuthBlock.supportsEncryption() || !encryptionIdentifier.isTypeSymmetric()) {
+            throw new FbExceptionBuilder().nonTransientException(jb_cryptNoCryptKeyAvailable)
+                    .messageParameter(encryptionIdentifier.toString())
+                    .toFlatSQLException();
+        }
+        return CryptSessionConfig.symmetric(encryptionIdentifier, clientAuthBlock.getSessionKey(), specificData);
+    }
+
     private void tryKnownServerKeys() throws IOException, SQLException {
         boolean initializedEncryption = false;
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
 
-        // TODO Define separately and make configurable
-        Map<EncryptionIdentifier, EncryptionPluginSpi> supportedEncryptionPlugins = new HashMap<>();
-        supportedEncryptionPlugins.put(ARC4_ENCRYPTION_PLUGIN_SPI.getEncryptionIdentifier(), ARC4_ENCRYPTION_PLUGIN_SPI);
-
-        for (EncryptionIdentifier encryptionIdentifier : getEncryptionIdentifiers()) {
-            EncryptionPluginSpi currentEncryptionSpi =
-                    supportedEncryptionPlugins.get(encryptionIdentifier);
+        for (KnownServerKey.PluginSpecificData pluginSpecificData : getPluginSpecificData()) {
+            EncryptionIdentifier encryptionIdentifier = pluginSpecificData.getEncryptionIdentifier();
+            EncryptionPluginSpi currentEncryptionSpi = SUPPORTED_ENCRYPTION_PLUGINS.get(encryptionIdentifier);
             if (currentEncryptionSpi == null) {
                 continue;
             }
+            try (CryptSessionConfig cryptSessionConfig =
+                         getCryptSessionConfig(encryptionIdentifier, pluginSpecificData.getSpecificData())) {
+                EncryptionPlugin encryptionPlugin = currentEncryptionSpi.createEncryptionPlugin(cryptSessionConfig);
+                EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
+                if (encryptionInitInfo.isSuccess()) {
+                    enableEncryption(encryptionInitInfo);
 
-            EncryptionPlugin encryptionPlugin =
-                    currentEncryptionSpi.createEncryptionPlugin(getConnection());
-            EncryptionInitInfo encryptionInitInfo = encryptionPlugin.initializeEncryption();
-            if (encryptionInitInfo.isSuccess()) {
-                enableEncryption(encryptionInitInfo);
+                    clearServerKeys();
 
-                clearServerKeys();
-
-                initializedEncryption = true;
-                log.debug("Wire encryption established with " + encryptionIdentifier);
-                break;
-            } else {
-                chainBuilder.append(encryptionInitInfo.getException());
+                    initializedEncryption = true;
+                    log.debug("Wire encryption established with " + encryptionIdentifier);
+                    break;
+                } else {
+                    chainBuilder.append(encryptionInitInfo.getException());
+                }
+            } catch (SQLException e) {
+                chainBuilder.append(e);
             }
         }
 
@@ -218,12 +252,14 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         if (chainBuilder.hasException()) {
-            log.warn(initializedEncryption
-                    ? "Wire encryption established, but some plugins failed; see other loglines for details"
-                    : "No wire encryption established because of errors");
             SQLException current = chainBuilder.getException();
-            log.warn("Encryption plugin failed; see debug level for stacktraces:\n"
-                    + ExceptionHelper.collectAllMessages(current));
+            if (log.isWarnEnabled()) {
+                log.warn(initializedEncryption
+                        ? "Wire encryption established, but some plugins failed; see other loglines for details"
+                        : "No wire encryption established because of errors");
+                log.warn("Encryption plugin failed; see debug level for stacktraces:\n"
+                        + ExceptionHelper.collectAllMessages(current));
+            }
             if (log.isDebugEnabled()) {
                 do {
                     log.debug("Encryption plugin failed", current);

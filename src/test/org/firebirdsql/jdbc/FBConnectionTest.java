@@ -32,8 +32,10 @@ import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
 import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
+import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.junit.Rule;
@@ -42,6 +44,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
@@ -53,6 +56,9 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
+import static org.firebirdsql.gds.ISCConstants.isc_info_end;
+import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
@@ -722,6 +728,37 @@ public class FBConnectionTest {
         //noinspection EmptyTryBlock
         try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
             // Using try-with-resources just in case connection is created
+        }
+    }
+
+    @Test
+    public void expectedWireCryptPluginApplied() throws Exception {
+        assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
+        assumeTrue("Test for Firebird versions with wire encryption support",
+                getDefaultSupportInfo().supportsWireEncryption());
+        assumeTrue("Requires fb_info_wire_crypt support", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        String expectedCryptPlugin = System.getProperty("java.specification.version").equals("1.8")
+                || Version.JAYBIRD_DISPLAY_VERSION.endsWith(".java8") ? "Arc4" : "ChaCha";
+
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("wireCrypt", "REQUIRED");
+
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            FbDatabase fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
+            InfoProcessor<String> getPluginName = info -> {
+                if (info.length == 0 || (info[0] & 0xFF) != fb_info_wire_crypt) {
+                    throw new SQLException("Response buffer for service information request is empty");
+                }
+                int dataLength = iscVaxInteger2(info, 1);
+                if (dataLength == 0) {
+                    return null;
+                }
+                return new String(info, 3, dataLength, StandardCharsets.US_ASCII);
+            };
+            String cryptPlugin = fbDatabase.getDatabaseInfo(
+                    new byte[] { (byte) fb_info_wire_crypt, isc_info_end }, 11, getPluginName);
+
+            assertEquals(expectedCryptPlugin, cryptPlugin);
         }
     }
 

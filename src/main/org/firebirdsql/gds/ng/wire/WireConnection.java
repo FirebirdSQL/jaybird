@@ -33,10 +33,10 @@ import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
-import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -48,8 +48,11 @@ import java.security.PrivilegedAction;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -419,8 +422,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             int currentTag = newKeys.getClumpTag();
             switch (currentTag) {
             case TAG_KNOWN_PLUGINS:
+                // Nothing to do (yet)
+                break;
             case TAG_PLUGIN_SPECIFIC:
-                // Nothing to do (yet) 
+                // Nothing to do (yet)
+                log.debug("Possible implementation problem, found TAG_PLUGIN_SPECIFIC without TAG_KEY_TYPE");
                 break;
             case TAG_KEY_TYPE: {
                 String keyType = newKeys.getString(StandardCharsets.US_ASCII);
@@ -433,9 +439,23 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 if (currentTag != TAG_KEY_PLUGINS) {
                     throw new SQLException("Unexpected tag type: " + currentTag);
                 }
-                
                 String keyPlugins = newKeys.getString(StandardCharsets.US_ASCII);
-                knownServerKeys.add(new KnownServerKey(keyType, keyPlugins));
+
+                Map<String, byte[]> pluginSpecificData = null;
+                while (newKeys.directNext(TAG_PLUGIN_SPECIFIC)) {
+                    byte[] data = newKeys.getBytes();
+                    int sepIdx = ByteArrayHelper.indexOf(data, (byte) 0);
+                    if (sepIdx > 0) {
+                        String plugin = new String(data, 0, sepIdx, StandardCharsets.US_ASCII);
+                        byte[] specificData = Arrays.copyOfRange(data, sepIdx + 1, data.length);
+                        if (pluginSpecificData == null) {
+                            pluginSpecificData = new HashMap<>();
+                        }
+                        pluginSpecificData.put(plugin, specificData);
+                    }
+                }
+
+                knownServerKeys.add(new KnownServerKey(keyType, keyPlugins, pluginSpecificData));
                 break;
             }
             default:
@@ -446,14 +466,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     }
 
     void clearServerKeys() {
+        knownServerKeys.forEach(KnownServerKey::clear);
         knownServerKeys.clear();
     }
 
     private AbstractWireOperations getDefaultWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
-        return (AbstractWireOperations) protocolDescriptor
-                .createWireOperations(this, null, this);
+        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null, this);
     }
 
     /**
@@ -578,14 +598,14 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         xdrOut.writeDirect(data);
     }
 
-    final List<EncryptionIdentifier> getEncryptionIdentifiers() {
+    final List<KnownServerKey.PluginSpecificData> getPluginSpecificData() {
         if (knownServerKeys.isEmpty()) {
             return Collections.emptyList();
         }
-        List<EncryptionIdentifier> encryptionIdentifiers = new ArrayList<>();
+        List<KnownServerKey.PluginSpecificData> pluginSpecificData = new ArrayList<>();
         for (KnownServerKey knownServerKey : knownServerKeys) {
-            encryptionIdentifiers.addAll(knownServerKey.getIdentifiers());
+            pluginSpecificData.addAll(knownServerKey.getPluginSpecificData());
         }
-        return encryptionIdentifiers;
+        return pluginSpecificData;
     }
 }

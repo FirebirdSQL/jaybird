@@ -36,6 +36,8 @@ import static java.util.Objects.requireNonNull;
  */
 public final class EncryptionIdentifier {
 
+    public static final String TYPE_SYMMETRIC = "Symmetric";
+
     private final String type;
     private final String pluginName;
     private final int hashCode;
@@ -68,6 +70,10 @@ public final class EncryptionIdentifier {
      */
     public String getPluginName() {
         return pluginName;
+    }
+
+    public boolean isTypeSymmetric() {
+        return TYPE_SYMMETRIC.equals(type);
     }
 
     @Override

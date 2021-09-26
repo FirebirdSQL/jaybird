@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.crypt.arc4;
+package org.firebirdsql.gds.ng.wire.crypt.chacha;
 
 import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
@@ -24,22 +24,22 @@ import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
 
 /**
- * ARC4 encryption plugin provider.
+ * ChaCha (ChaCha-20) encryption plugin provider
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
+ * @since 5
  */
-public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
+public class ChaChaEncryptionPluginSpi implements EncryptionPluginSpi {
 
-    static final EncryptionIdentifier ARC4_ID = new EncryptionIdentifier("Symmetric", "Arc4");
+    static final EncryptionIdentifier CHA_CHA_ID = new EncryptionIdentifier("Symmetric", "ChaCha");
 
     @Override
     public EncryptionIdentifier getEncryptionIdentifier() {
-        return ARC4_ID;
+        return CHA_CHA_ID;
     }
 
     @Override
     public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
-        return new Arc4EncryptionPlugin(cryptSessionConfig);
+        return new ChaChaEncryptionPlugin(cryptSessionConfig);
     }
 }

@@ -839,6 +839,19 @@ public interface ISCConstants {
     int fb_info_crypt_state = 134;
     int fb_info_statement_timeout_db = 135;
     int fb_info_statement_timeout_att = 136;
+    int fb_info_protocol_version = 137;
+    int fb_info_crypt_plugin = 138;
+    int fb_info_creation_timestamp_tz = 139;
+    int fb_info_wire_crypt = 140;
+    // Return list of features supported by provider of current connection
+    int fb_info_features = 141;
+    int fb_info_next_attachment = 142;
+    int fb_info_next_statement = 143;
+    int fb_info_db_guid = 144;
+    int fb_info_db_file_id = 145;
+    int fb_info_replica_mode = 146;
+    int fb_info_username = 147;
+    int fb_info_sqlrole = 148;
 
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;

@@ -105,4 +105,21 @@ public final class ByteArrayHelper {
         return BASE_64_DECODER.decodeBase64(base64);
     }
 
+    /**
+     * Returns the index of the first occurrence of {@code b} in {@code array}.
+     *
+     * @param array
+     *         Array to search
+     * @param b
+     *         byte to find
+     * @return the index of the first occurrence of {@code b}, or {@code -1} if {@code b} is not in the array
+     * @since 5
+     */
+    public static int indexOf(byte[] array, byte b) {
+        for (int idx = 0; idx < array.length; idx++) {
+            if (array[idx] == b) return idx;
+        }
+        return -1;
+    }
+
 }
