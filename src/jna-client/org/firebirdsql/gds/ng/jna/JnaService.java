@@ -168,7 +168,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
      * @throws SQLException
      *         For errors reading or writing database information.
      */
-    protected void afterAttachActions() throws SQLException {
+    private void afterAttachActions() throws SQLException {
         getServiceInfo(null, getDescribeServiceRequestBuffer(), 1024, getServiceInformationProcessor());
     }
 
