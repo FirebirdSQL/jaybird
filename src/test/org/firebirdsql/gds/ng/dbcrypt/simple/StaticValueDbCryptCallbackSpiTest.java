@@ -50,6 +50,16 @@ public class StaticValueDbCryptCallbackSpiTest {
     }
 
     @Test
+    public void fixedResponseWithBase64urlConfig() {
+        final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()
+                .createDbCryptCallback("base64url:PDw_Pz8-Pg==");
+
+        DbCryptData dbCryptData = dbCryptCallback.handleCallback(DbCryptData.EMPTY_DATA);
+
+        assertArrayEquals("<<???>>".getBytes(StandardCharsets.US_ASCII), dbCryptData.getPluginData());
+    }
+
+    @Test
     public void fixedResponseWithStringConfig() {
         final String dbCryptConfig = "abc\u02a5\u0b2c\u1d38\u213b";
         final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()

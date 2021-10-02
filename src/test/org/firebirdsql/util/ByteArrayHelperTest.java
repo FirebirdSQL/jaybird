@@ -108,6 +108,25 @@ class ByteArrayHelperTest {
     }
 
     @Test
+    void fromBase64urlString_properlyPadded() {
+        final String base64 = "PDw_Pz8-Pg==";
+        final byte[] expectedValue = "<<???>>".getBytes(StandardCharsets.US_ASCII);
+
+        assertArrayEquals(expectedValue, ByteArrayHelper.fromBase64urlString(base64), "base64url decoding");
+    }
+
+    /**
+     * We expect unpadded base64url (which should have been padded) to work
+     */
+    @Test
+    void fromBase64urlString_notCorrectlyPadded() {
+        final String base64 = "PDw_Pz8-Pg";
+        final byte[] expectedValue = "<<???>>".getBytes(StandardCharsets.US_ASCII);
+
+        assertArrayEquals(expectedValue, ByteArrayHelper.fromBase64urlString(base64), "base64url decoding");
+    }
+
+    @Test
     void indexOf_emptyArray() {
         assertEquals(-1, ByteArrayHelper.indexOf(new byte[0], (byte) 1));
     }

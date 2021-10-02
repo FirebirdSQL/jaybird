@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.util;
 
+import java.util.Base64;
+
 /**
  * Helper methods for byte arrays.
  *
@@ -25,8 +27,6 @@ package org.firebirdsql.util;
  * @since 3.0
  */
 public final class ByteArrayHelper {
-
-    private static final Base64Decoder BASE_64_DECODER = new Base64DecoderImpl();
 
     //@formatter:off
     private static final char[] BYTE_2_HEX=(
@@ -102,7 +102,22 @@ public final class ByteArrayHelper {
      * @return byte array after decoding
      */
     public static byte[] fromBase64String(String base64) {
-        return BASE_64_DECODER.decodeBase64(base64);
+        return Base64.getDecoder().decode(base64);
+    }
+
+    /**
+     * Decodes a base64url encoded string to a byte array.
+     * <p>
+     * Base64url applies the &quot;URL and Filename safe&quot; Base 64 Alphabet.
+     * </p>
+     *
+     * @param base64url
+     *         Base64url encoded data
+     * @return byte array after decoding
+     * @since 5
+     */
+    public static byte[] fromBase64urlString(String base64url) {
+        return Base64.getUrlDecoder().decode(base64url);
     }
 
     /**

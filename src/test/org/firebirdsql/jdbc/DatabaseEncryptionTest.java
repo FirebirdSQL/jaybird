@@ -115,7 +115,33 @@ public class DatabaseEncryptionTest {
 
     @Test
     public void testEncryptedDatabaseConnection_base64ValueInURL() throws Exception {
-        String url = FBTestProperties.getUrl(CRYPTTEST_DB) + "?dbCryptConfig=" + "base64:" + BASE64_ENCRYPTION_KEY;
+        String url = FBTestProperties.getUrl(CRYPTTEST_DB) + "?dbCryptConfig=base64:" + BASE64_ENCRYPTION_KEY;
+        System.out.println(url);
+        try (Connection connection = DriverManager.getConnection(url, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("select * from rdb$database")) {
+            assertTrue(rs.next());
+            System.out.println(rs.getObject(1));
+        }
+    }
+
+    @Test
+    public void testEncryptedDatabaseConnection_base64urlValue() throws Exception {
+        String url = FBTestProperties.getUrl(CRYPTTEST_DB);
+        System.out.println(url);
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty("dbCryptConfig", "base64url:" + BASE64_ENCRYPTION_KEY);
+        try (Connection connection = DriverManager.getConnection(url, props);
+             Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("select * from rdb$database")) {
+            assertTrue(rs.next());
+            System.out.println(rs.getObject(1));
+        }
+    }
+
+    @Test
+    public void testEncryptedDatabaseConnection_base64urlValueInURL() throws Exception {
+        String url = FBTestProperties.getUrl(CRYPTTEST_DB) + "?dbCryptConfig=base64url:" + BASE64_ENCRYPTION_KEY;
         System.out.println(url);
         try (Connection connection = DriverManager.getConnection(url, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
              Statement stmt = connection.createStatement();

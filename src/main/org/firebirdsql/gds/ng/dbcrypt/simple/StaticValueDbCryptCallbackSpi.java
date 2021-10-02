@@ -43,6 +43,8 @@ public final class StaticValueDbCryptCallbackSpi implements DbCryptCallbackSpi {
     static final String NAME = "StaticValue";
     private static final String BASE64_PREFIX = "base64:";
     private static final int BASE64_PREFIX_LENGTH = 7;
+    private static final String BASE64URL_PREFIX = "base64url:";
+    private static final int BASE64URL_PREFIX_LENGTH = 10;
 
     @Override
     public String getDbCryptCallbackName() {
@@ -58,6 +60,8 @@ public final class StaticValueDbCryptCallbackSpi implements DbCryptCallbackSpi {
         final byte[] staticValue;
         if (dbCryptConfig.startsWith(BASE64_PREFIX)) {
             staticValue = ByteArrayHelper.fromBase64String(dbCryptConfig.substring(BASE64_PREFIX_LENGTH));
+        } else if (dbCryptConfig.startsWith(BASE64URL_PREFIX)) {
+            staticValue = ByteArrayHelper.fromBase64urlString(dbCryptConfig.substring(BASE64URL_PREFIX_LENGTH));
         } else {
             staticValue = dbCryptConfig.getBytes(StandardCharsets.UTF_8);
         }

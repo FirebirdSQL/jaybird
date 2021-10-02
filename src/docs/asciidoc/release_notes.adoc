@@ -434,6 +434,7 @@ This feature was also backported to Jaybird 4.0.4.
 The `org.firebirdsql.management.NBackupManager` interface has two new methods: `fixupDatabase()` to "`fixup`" a database (switch back to 'normal' state without merging the delta file), and `setPreserveSequence(boolean)` to preserve the current database GUID and replication sequence on fixup or restore.
 These options require Firebird 4.0 or higher.
 * Improvement: The `charSet` connection property now also has an alias `charset` (URL property, not as get/set pair).
+* Improvement: The `dbCryptConfig` connection property now supports _base64url_ (the "`URL and Filename safe`" Base 64 Alphabet) with the `base64url:` prefix (https://github.com/FirebirdSQL/jaybird/issues/677[jaybird#677])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -569,6 +570,7 @@ The following classes have been removed in Jaybird 5:
 * `DatabaseParameterBufferExtension`
 * `IAttachProperties.DEFAULT_PORT`
 * `IAttachProperties.DEFAULT_SERVER_NAME`
+* `Base64Decoder` and `Base64DecoderImpl`, these classes were internal API, but not marked as such.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
