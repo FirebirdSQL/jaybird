@@ -9,7 +9,9 @@ Jaybird 4.0.5
 
 The following has been changed or fixed since Jaybird 4.0.5
 
-...
+-   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
+    includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
+    This could lead to service requests not completing successfully.
 
 Jaybird 4.0.4
 -------------
