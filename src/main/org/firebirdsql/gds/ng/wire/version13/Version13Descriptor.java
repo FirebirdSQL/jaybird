@@ -65,7 +65,6 @@ public final class Version13Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public ServiceParameterBuffer createServiceParameterBuffer(final WireServiceConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
-        // TODO Version 3?
         return new ServiceParameterBufferImp(ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_2,
                 stringEncoding);
     }
@@ -73,7 +72,6 @@ public final class Version13Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public ServiceRequestBuffer createServiceRequestBuffer(final WireServiceConnection connection) {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
-        // TODO Version 3?
         return new ServiceRequestBufferImp(ServiceRequestBufferImp.SrbMetaData.SRB_VERSION_2, stringEncoding);
     }
 

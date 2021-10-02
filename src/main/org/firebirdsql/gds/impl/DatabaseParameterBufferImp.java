@@ -21,7 +21,6 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
@@ -65,11 +64,6 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
         @Override
         public final int getType() {
             return dpbVersion;
-        }
-
-        @Override
-        public final void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
         }
 
         @Override

@@ -45,7 +45,9 @@ public interface ParameterBufferMetaData {
      *
      * @param parameterBuffer Parameter buffer.
      */
-    void addPreamble(ParameterBuffer parameterBuffer);
+    default void addPreamble(ParameterBuffer parameterBuffer) {
+        // Do nothing
+    }
 
     /**
      * Gets the string argument type for the supplied tag.

@@ -21,7 +21,6 @@
 package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
@@ -55,11 +54,6 @@ public final class TransactionParameterBufferImpl extends ParameterBufferBase im
         @Override
         public final int getType() {
             return tpbVersion;
-        }
-
-        @Override
-        public final void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
         }
 
         @Override

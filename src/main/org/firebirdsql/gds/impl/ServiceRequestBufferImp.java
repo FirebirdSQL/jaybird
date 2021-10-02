@@ -41,7 +41,7 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
     }
 
     public enum SrbMetaData implements ParameterBufferMetaData {
-        // TODO Add isc_spb_version3 as well?
+        // Technically this has nothing to do with SPB version 2/3
         SRB_VERSION_2(ISCConstants.isc_spb_current_version) {
             // TODO Check if correct and add additional types
             @Override
@@ -81,11 +81,6 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
         @Override
         public final int getType() {
             return spbVersion;
-        }
-
-        @Override
-        public void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
         }
     }
 }
