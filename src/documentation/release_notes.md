@@ -245,7 +245,7 @@ Changes in Jaybird 3.0.11
 
 The following has been changed or fixed since Jaybird 3.0.10:
 
--   Changed: Closing a statement will now be sent to the server immediately ([JDBC-638](http://tracker.firebirdsql.org/browse/JDBC-638)) \
+-   Changed: Closing a statement will now be sent to the server immediately ([jaybird#668](https://github.com/FirebirdSQL/jaybird/issues/668)) \
     For the v11 protocol and up (Firebird 2.1 or higher), Jaybird applied an
     optimization copied from Firebird to not flush 'free' packets that are used
     to close a cursor or close a statement. The packet will then be sent at a
@@ -257,6 +257,9 @@ The following has been changed or fixed since Jaybird 3.0.10:
     This change only affects Jaybird's implementation of the Firebird wire
     protocol; connections with the 'native' protocol will still delay sending
     the 'free' packet.
+-   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
+    includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
+    This could lead to service requests not completing successfully.
 
 ### Known issues in Jaybird 3.0.11
 

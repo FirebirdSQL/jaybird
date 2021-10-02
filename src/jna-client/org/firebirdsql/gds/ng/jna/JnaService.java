@@ -82,7 +82,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try {
             final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
-                    : serviceParameterBuffer.toBytesWithType();
+                    : serviceParameterBuffer.toBytes();
             final byte[] serviceRequestBufferBytes =
                     serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
