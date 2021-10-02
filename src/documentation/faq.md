@@ -47,10 +47,10 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.3.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.4.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
-artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
+artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`). However, we
 recommend switching to the `jaybird` artifact.
 
 For example, for Java 8:
@@ -232,9 +232,11 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 4 supports Java 7, 8, 11 and 15. Support for Java 9 and higher is 
+Jaybird 4 supports Java 7, 8, 11 and 17. Support for Java 9 and higher is 
 limited to the latest LTS and current latest release, but in practice Jaybird
-should work on all Java 9+ versions.
+should work on all Java 9+ versions. For the time being, both Java 11 and 
+Java 17 are supported, but support for Java 11 may be dropped in a future point
+release.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with
 Jaybird 5. Java 8 support may be dropped from Jaybird 5 as well depending on
@@ -245,7 +247,8 @@ using the Java 8 version of the driver. Support for Java 9 and higher is
 limited to the latest LTS and current latest release, but in practice Jaybird
 should work on all Java 9+ versions.
 
-Jaybird 2.2 supports Java 6, 7 and 8.
+Jaybird 2.2 supports Java 6, 7 and 8. Jaybird 2.2.15 is that last release of
+Jaybird 2.2, and is end-of-life. We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all 
 JDBC 4.2 features are supported or fully implemented.
@@ -276,7 +279,7 @@ Jaybird 3 is the last version to support Firebird 2.0 and 2.1. Future versions
 of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
-support for new features of Firebird 3 (eg `BOOLEAN` support). Support for 
+support for new features of Firebird 3 (e.g. `BOOLEAN` support). Support for 
 Firebird 4 is limited to the Firebird 3 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5. Future
@@ -380,7 +383,7 @@ in brackets (eg `[::1]`). Use of IPv6 address literals is only supported in
 Jaybird 3 or newer with Firebird 3 or newer.
 
 The `<database>` part should be replaced with the database alias or the path to
-the database. In general it is advisable to use database aliases instead of the
+the database. In general, it is advisable to use database aliases instead of the
 path of the database file as it hides implementation details like file locations
 and OS type.
 
@@ -402,7 +405,7 @@ Jaybird 4 and higher also support:
 
 ### Open Office/Libre Office (Pure Java)
 
-Jaybird can be used together with OpenOffice and Libre Office Base. To address
+Jaybird can be used together with OpenOffice and LibreOffice Base. To address
 some compatibility issues (and differences in interpretation of JDBC
 specifications) a separate subprotocol is used:
 
