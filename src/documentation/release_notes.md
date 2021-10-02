@@ -305,8 +305,7 @@ Supported Firebird versions
 ---------------------------
 
 Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.7, and
-a recent Firebird 4 snapshot build, but should also support other Firebird
-versions from 2.5 and up.
+4.0.0, but should also support other Firebird versions from 2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
 expect the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -321,13 +320,6 @@ Jaybird 4 adds support for the Firebird 3 zlib compression in the pure Java wire
 protocol. The compression is disabled by default.
 
 ### Notes on Firebird 4 support
-
-At the time of release of Jaybird 4, Firebird 4 was still in testing. As a
-result, support for Firebird 4 is tentative. There can be incompatibilities with
-features or changes after Firebird version 4.0.0.1803 (Jaybird 4.0.0), 
-4.0.0.2143 (Jaybird 4.0.1), or 4.0.0.2325 (Jaybird 4.0.2). Once Firebird 4 is
-released, incompatibilities or otherwise breaking changes will be addressed in a
-point release of Jaybird 4.
 
 Jaybird 4 supports the protocol improvements of Firebird 4 for statement
 timeouts, but does not implement the new batch protocol.
@@ -351,7 +343,9 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 
 Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
-As of January 2021, that means we support Java 11 and Java 15.
+As of October 2021, we support Java 11 and Java 17. For the time being, both 
+Java 11 and Java 17 are supported, but support for Java 11 may be dropped in 
+a future point release.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
 have the same source and all JDBC 4.3 related functionality and can be used on
@@ -599,7 +593,9 @@ do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
-As of January 2021, that means we support Java 7, 8, 11 and 15.
+As of October 2021, we support Java 11 and Java 17. For the time being, both
+Java 11 and Java 17 are supported, but support for Java 11 may be dropped in
+a future point release.
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
@@ -611,9 +607,7 @@ Firebird support
 Support for Firebird 2.0 and 2.1 has been dropped. See [Firebird 2.0 and 2.1 no
 longer supported](#firebird-2.0-and-2.1-no-longer-supported) for details.
 
-Firebird versions 2.5, 3.0 and (upcoming) 4.0 are supported. Firebird 4 support
-may require an additional point release of Jaybird 4 to address possible
-incompatibilities since release of Jaybird 4.
+Firebird versions 2.5, 3.0 and 4.0 are supported.
 
 Wire encryption support
 -----------------------
@@ -1980,10 +1974,9 @@ Other fixes and changes
 -----------------------
 
 -   The distribution zip no longer includes the jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.rar.
-    This file was an example JCA Resource Archive.
+This file was an example JCA Resource Archive.
 
-    We currently plan to remove JCA support entirely in Jaybird 5. See also
-[Dropping JCA support](#dropping-jca-support).
+    JCA support will be removed entirely in Jaybird 5. See also [Dropping JCA support](#dropping-jca-support).
 
 -   Added support for Firebird 4 page size 32768 (32KB) in `FBManager` and backup 
 managers (back-ported to Jaybird 3.0.5) ([JDBC-468](http://tracker.firebirdsql.org/browse/JDBC-468))
