@@ -26,6 +26,7 @@ import java.io.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@InternalApi
 public final class IOUtils {
 
     private IOUtils() {

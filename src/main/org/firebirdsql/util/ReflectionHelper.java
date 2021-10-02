@@ -31,6 +31,7 @@ import java.util.Set;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
+@InternalApi
 public final class ReflectionHelper {
     
     private ReflectionHelper() {}

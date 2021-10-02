@@ -33,6 +33,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
+@InternalApi
 public final class SQLExceptionChainBuilder<E extends SQLException> {
 
     private E root;

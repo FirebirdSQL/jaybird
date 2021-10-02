@@ -24,6 +24,7 @@ package org.firebirdsql.util;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2.11
  */
+@InternalApi
 public final class NumericHelper {
 
     private NumericHelper() {
