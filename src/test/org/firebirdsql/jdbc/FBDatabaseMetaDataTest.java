@@ -850,7 +850,6 @@ public class FBDatabaseMetaDataTest {
 
     @Test
     public void testSupportsGetGeneratedKeys() throws Exception {
-        // Note: we are not testing behavior for absence of antlr-runtime
         assertEquals(supportInfoFor(connection).supportsInsertReturning(), dmd.supportsGetGeneratedKeys());
     }
 

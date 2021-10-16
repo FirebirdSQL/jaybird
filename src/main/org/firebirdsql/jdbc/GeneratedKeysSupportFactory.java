@@ -93,8 +93,7 @@ final class GeneratedKeysSupportFactory {
      *         {@code default} / {@code null} / empty string, or a list of query types to enable
      * @param fbDatabaseMetaData
      *         Database metadata object
-     * @return Appropriate generated keys support determined by config value, Firebird feature support and availability
-     * of ANTLR on the the classpath.
+     * @return Appropriate generated keys support determined by config value, and Firebird feature support.
      * @throws SQLException
      *         if a database access error occurs while determining feature support
      */
