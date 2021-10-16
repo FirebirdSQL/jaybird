@@ -111,6 +111,26 @@ public class TestFBBlob extends FBJUnit4TestBase {
     }
 
     /**
+     * Tests whether a blob is created as stream by default.
+     */
+    @Test
+    public void testStreamBlob_isDefault() throws SQLException {
+        try (Connection conn = getConnectionViaDriverManager()) {
+            populateBlob(conn, new byte[] { 1, 2, 3, 4, 5 });
+
+            try (PreparedStatement select = conn.prepareStatement(SELECT_BLOB)) {
+                select.setInt(1, 1);
+                try (ResultSet rs = select.executeQuery()) {
+                    assertTrue("Expected a row in result set", rs.next());
+                    FBBlob blob = (FBBlob) rs.getBlob(1);
+                    assertFalse("Expected a stream blob", blob.isSegmented());
+                    blob.free();
+                }
+            }
+        }
+    }
+
+    /**
      * Tests that closing a blob after opening an InputStream doesn't throw unexpected exceptions
      * <p>
      * Previously {@link FBBlob} threw a ConcurrentModificationException in this case.
