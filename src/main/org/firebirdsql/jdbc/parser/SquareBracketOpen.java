@@ -16,18 +16,31 @@
  *
  * All rights reserved.
  */
-
-/**
- * Statement parser for generated keys support.
- * <p>
- * <b>DO NOT USE!</b> This packages is for driver-internal purposes only.
- * </p>
- * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
- * statement information necessary to support the JDBC generated keys feature.
- * </p>
- */
-@InternalApi
 package org.firebirdsql.jdbc.parser;
 
-import org.firebirdsql.util.InternalApi;
+/**
+ * Signals an opening square bracket ({@code [} in the token stream.
+ * <p>
+ * Expected occurrence is in definition of array dimensions or when dereferencing an array element.
+ * </p>
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 5
+ */
+final class SquareBracketOpen extends AbstractSymbolToken implements OpenToken {
+
+    public SquareBracketOpen(int position) {
+        super(position);
+    }
+
+    @Override
+    public boolean closedBy(CloseToken closeToken) {
+        return closeToken instanceof SquareBracketClose;
+    }
+
+    @Override
+    public String text() {
+        return "[";
+    }
+
+}

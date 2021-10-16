@@ -16,18 +16,31 @@
  *
  * All rights reserved.
  */
-
-/**
- * Statement parser for generated keys support.
- * <p>
- * <b>DO NOT USE!</b> This packages is for driver-internal purposes only.
- * </p>
- * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
- * statement information necessary to support the JDBC generated keys feature.
- * </p>
- */
-@InternalApi
 package org.firebirdsql.jdbc.parser;
 
-import org.firebirdsql.util.InternalApi;
+/**
+ * Signals an opening curly brace (<code>{</code>) in the token stream.
+ * <p>
+ * This token shouldn't occur in Firebird syntax, but is used in JDBC escapes.
+ * </p>
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 5
+ */
+final class CurlyBraceOpen extends AbstractSymbolToken implements OpenToken {
+
+    public CurlyBraceOpen(int position) {
+        super(position);
+    }
+
+    @Override
+    public boolean closedBy(CloseToken closeToken) {
+        return closeToken instanceof CurlyBraceClose;
+    }
+
+    @Override
+    public String text() {
+        return "{";
+    }
+
+}

@@ -16,18 +16,17 @@
  *
  * All rights reserved.
  */
-
-/**
- * Statement parser for generated keys support.
- * <p>
- * <b>DO NOT USE!</b> This packages is for driver-internal purposes only.
- * </p>
- * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
- * statement information necessary to support the JDBC generated keys feature.
- * </p>
- */
-@InternalApi
 package org.firebirdsql.jdbc.parser;
 
-import org.firebirdsql.util.InternalApi;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class FirebirdReservedWordsTest {
+
+    @Test
+    void latest_returnFIREBIRD_4_0() {
+        assertThat(FirebirdReservedWords.latest()).isEqualTo(FirebirdReservedWords.FIREBIRD_4_0);
+    }
+
+}

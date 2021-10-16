@@ -158,8 +158,6 @@ You can download the latest versions from https://www.firebirdsql.org/en/jdbc-dr
 
 At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`).
 
-For `getGeneratedKeys` support you will need to include  `antlr-runtime-4.7.2.jar` on your classpath.
-
 For native, local or embedded support, you will need to include `jna-5.5.0.jar`  on your classpath.
 See also <<type-2-native-and-embedded-driver,Type 2 (native) and embedded driver>>.
 
@@ -197,6 +195,7 @@ If you manage your dependencies manually, you need to do the following:
  ** `jaybird-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
  ** `jaybird-full-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar`, the `jaybird-full` library no longer exists
 . Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
+. Remove the `antlr4-runtime-4.7.2.jar` library, it is no longer used by Jaybird
 
 [#gotchas]
 === Gotcha's
@@ -416,6 +415,19 @@ See https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-02-st
 
 To use segmented blobs, specify connection property `useStreamBlobs` with value `false`.
 
+[#generated-keys-parser-replaced]
+==== New parser for generated keys handling
+
+The '`generated keys`' parser has been replaced.
+This parser is used to detect statement types, the table name, and presence or absence of a `RETURNING` clause.
+The new parser has no external dependencies, so Jaybird no longer depends on the ANTLR runtime (`org.antlr:antlr4-runtime`).
+
+As a result of this change, it is possible that detection of some statements has changed, especially detection of the presence of a `RETURNING` clause.
+Please report any incorrect changes in detection on https://groups.google.com/g/firebird-java[the firebird-java list] or on https://github.com/FirebirdSQL/jaybird/issues.
+
+If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
+Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
+
 [#potentially-breaking-changes]
 === Potentially breaking changes
 
@@ -520,6 +532,13 @@ Some examples:
 * `"=a=b"` used to set the same, but now throws an `IllegalArgumentException.
 
 These cases need to be replaced with `"a=b"`.
+
+=== Generated keys support always available
+
+Previously, support for generated keys depended on the presence of the antlr4-runtime library on the classpath.
+With <<generated-keys-parser-replaced>>, generated keys support is now always available.
+
+See <<generated-keys-parser-replaced>> for information on disabling or ignoring generated keys support if you relied on this behaviour.
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation

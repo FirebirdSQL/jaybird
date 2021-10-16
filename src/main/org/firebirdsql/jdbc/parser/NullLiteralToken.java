@@ -16,18 +16,24 @@
  *
  * All rights reserved.
  */
-
-/**
- * Statement parser for generated keys support.
- * <p>
- * <b>DO NOT USE!</b> This packages is for driver-internal purposes only.
- * </p>
- * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
- * statement information necessary to support the JDBC generated keys feature.
- * </p>
- */
-@InternalApi
 package org.firebirdsql.jdbc.parser;
 
-import org.firebirdsql.util.InternalApi;
+/**
+ * Signals a null in the token stream.
+ * <p>
+ * The literal {@code UNKNOWN} is signalled as a {@link BooleanLiteralToken}.
+ * </p>
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 5
+ */
+final class NullLiteralToken extends AbstractToken implements LiteralToken {
+
+    NullLiteralToken(int pos, char[] srcChars, int start, int end) {
+        super(pos, srcChars, start, end);
+    }
+
+    public NullLiteralToken(int pos, CharSequence tokenText) {
+        super(pos, tokenText);
+    }
+}

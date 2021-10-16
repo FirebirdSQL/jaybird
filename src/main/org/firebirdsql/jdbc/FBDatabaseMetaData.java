@@ -3102,7 +3102,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public boolean supportsGetGeneratedKeys() throws SQLException {
         return firebirdSupportInfo.supportsInsertReturning()
-                && GeneratedKeysSupportFactory.isGeneratedKeysSupportLoaded()
                 && connection.getGeneratedKeysSupport().supportsGetGeneratedKeys();
     }
 

@@ -21,8 +21,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
-import org.firebirdsql.jdbc.parser.JaybirdStatementModel;
-import org.firebirdsql.jdbc.parser.StatementParser;
+import org.firebirdsql.jdbc.parser.DmlStatementDetector;
+import org.firebirdsql.jdbc.parser.DmlStatementType;
+import org.firebirdsql.jdbc.parser.FirebirdReservedWords;
+import org.firebirdsql.jdbc.parser.SqlParser;
+import org.firebirdsql.jdbc.parser.StatementIdentification;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -41,24 +44,22 @@ final class GeneratedKeysQueryBuilder {
     // TODO Add caching for column info
 
     private static final Logger logger = LoggerFactory.getLogger(GeneratedKeysQueryBuilder.class);
-    private static final GeneratedKeysSupport.QueryType[] statementTypeToQueryType;
+    private static final Map<DmlStatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
     static {
-        GeneratedKeysSupport.QueryType[] temp =
-                new GeneratedKeysSupport.QueryType[JaybirdStatementModel.MAX_STATEMENT_TYPE_VALUE + 1];
-        Arrays.fill(temp, GeneratedKeysSupport.QueryType.UNSUPPORTED);
-        temp[JaybirdStatementModel.INSERT_TYPE] = GeneratedKeysSupport.QueryType.INSERT;
-        temp[JaybirdStatementModel.UPDATE_TYPE] = GeneratedKeysSupport.QueryType.UPDATE;
-        temp[JaybirdStatementModel.DELETE_TYPE] = GeneratedKeysSupport.QueryType.DELETE;
-        temp[JaybirdStatementModel.UPDATE_OR_INSERT_TYPE] = GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT;
-        temp[JaybirdStatementModel.MERGE_TYPE] = GeneratedKeysSupport.QueryType.MERGE;
-        statementTypeToQueryType = temp;
+        Map<DmlStatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(DmlStatementType.class);
+        temp.put(DmlStatementType.INSERT, GeneratedKeysSupport.QueryType.INSERT);
+        temp.put(DmlStatementType.UPDATE, GeneratedKeysSupport.QueryType.UPDATE);
+        temp.put(DmlStatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
+        temp.put(DmlStatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
+        temp.put(DmlStatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
+        statementTypeToQueryType = Collections.unmodifiableMap(temp);
     }
 
     private static final int IDX_COLUMN_NAME = 4;
     private static final int IDX_ORDINAL_POSITION = 17;
 
     private final String originalSql;
-    private final JaybirdStatementModel statementModel;
+    private final StatementIdentification statementIdentification;
     private final Set<GeneratedKeysSupport.QueryType> supportedQueryTypes;
 
     /**
@@ -66,15 +67,15 @@ final class GeneratedKeysQueryBuilder {
      *
      * @param originalSql
      *         Original statement text
-     * @param statementModel
-     *         Parsed statement model
+     * @param statementIdentification
+     *         Parsed statement identification
      * @param supportedQueryTypes
      *         Supported query types
      */
-    private GeneratedKeysQueryBuilder(String originalSql, JaybirdStatementModel statementModel,
+    private GeneratedKeysQueryBuilder(String originalSql, StatementIdentification statementIdentification,
             Set<GeneratedKeysSupport.QueryType> supportedQueryTypes) {
         this.originalSql = originalSql;
-        this.statementModel = statementModel;
+        this.statementIdentification = statementIdentification;
         this.supportedQueryTypes = supportedQueryTypes;
     }
 
@@ -85,26 +86,30 @@ final class GeneratedKeysQueryBuilder {
      *         Original statement text
      */
     private GeneratedKeysQueryBuilder(String originalSql) {
-        this(originalSql, null, Collections.<GeneratedKeysSupport.QueryType>emptySet());
+        this(originalSql, null, Collections.emptySet());
     }
 
     /**
      * Create a generated keys query builder.
      *
-     * @param parser
-     *         Parser for parsing the statement
      * @param statementText
      *         Statement text
      * @param supportedQueryTypes
      *         Query types to support for generated keys
      * @return A generated keys query builder
      */
-    static GeneratedKeysQueryBuilder create(StatementParser parser, String statementText,
+    static GeneratedKeysQueryBuilder create(String statementText,
             Set<GeneratedKeysSupport.QueryType> supportedQueryTypes) {
         try {
-            JaybirdStatementModel statementModel = parser.parseStatement(statementText);
-            return new GeneratedKeysQueryBuilder(statementText, statementModel, supportedQueryTypes);
-        } catch (StatementParser.ParseException e) {
+            DmlStatementDetector detector = new DmlStatementDetector();
+            // NOTE: We currently don't care about the version of reserved words, so we use the latest.
+            // This may change once we apply multiple visitors (e.g. JDBC escape processing) with a single parser.
+            SqlParser.withReservedWords(FirebirdReservedWords.latest())
+                    .withVisitor(detector)
+                    .of(statementText)
+                    .parse();
+            return new GeneratedKeysQueryBuilder(statementText, detector.toStatementIdentification(), supportedQueryTypes);
+        } catch (RuntimeException e) {
             if (logger.isDebugEnabled()) logger.debug("Exception parsing query: " + statementText, e);
             return new GeneratedKeysQueryBuilder(statementText);
         }
@@ -114,17 +119,13 @@ final class GeneratedKeysQueryBuilder {
      * @return {@code true} when the query type is supported for returning generated keys
      */
     boolean isSupportedType() {
-        if (statementModel == null) {
+        if (statementIdentification == null) {
             return false;
         }
-        int statementType = statementModel.getStatementType();
-        try {
-            GeneratedKeysSupport.QueryType queryType = statementTypeToQueryType[statementType];
-            return supportedQueryTypes.contains(queryType);
-        } catch (IndexOutOfBoundsException e) {
-            logger.debug("Unsupported or incorrectly defined statement type: " + statementType);
-            return false;
-        }
+        DmlStatementType statementType = statementIdentification.getDmlStatementType();
+        GeneratedKeysSupport.QueryType queryType =
+                statementTypeToQueryType.getOrDefault(statementType, GeneratedKeysSupport.QueryType.UNSUPPORTED);
+        return supportedQueryTypes.contains(queryType);
     }
 
     /**
@@ -195,13 +196,13 @@ final class GeneratedKeysQueryBuilder {
      */
     private GeneratedKeysSupport.Query useReturningAllColumnsByName(FirebirdDatabaseMetaData databaseMetaData)
             throws SQLException {
-        List<String> columnNames = getAllColumnNames(statementModel.getTableName(), databaseMetaData);
+        List<String> columnNames = getAllColumnNames(statementIdentification.getTableName(), databaseMetaData);
         QuoteStrategy quoteStrategy = QuoteStrategy.forDialect(databaseMetaData.getConnectionDialect());
         return addColumnsByNameImpl(columnNames, quoteStrategy);
     }
 
     private boolean hasReturning() {
-        return statementModel != null && statementModel.hasReturning();
+        return statementIdentification != null && statementIdentification.returningClauseDetected();
     }
 
     /**
@@ -225,7 +226,7 @@ final class GeneratedKeysQueryBuilder {
                     .messageParameter("columnIndexes")
                     .toFlatSQLException();
         } else if (isSupportedType()) {
-            List<String> columnNames = getColumnNames(statementModel.getTableName(), columnIndexes, databaseMetaData);
+            List<String> columnNames = getColumnNames(statementIdentification.getTableName(), columnIndexes, databaseMetaData);
             QuoteStrategy quoteStrategy = QuoteStrategy.forDialect(databaseMetaData.getConnectionDialect());
             return addColumnsByNameImpl(columnNames, quoteStrategy);
         } else {

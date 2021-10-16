@@ -60,7 +60,6 @@ ext {
 }
 
 dependencies {
-    implementation 'org.antlr:antlr4-runtime:4.7.2'
     nativeImplementation 'net.java.dev.jna:jna:5.5.0'
 
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
