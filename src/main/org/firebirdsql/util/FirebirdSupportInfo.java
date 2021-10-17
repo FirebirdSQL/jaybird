@@ -522,6 +522,8 @@ public final class FirebirdSupportInfo {
             return 50;
         } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
             return 54;
+        } else if (databaseMajorVersion == 5 && databaseMinorVersion == 0) {
+            return 55;
         } else {
             return -1;
         }
