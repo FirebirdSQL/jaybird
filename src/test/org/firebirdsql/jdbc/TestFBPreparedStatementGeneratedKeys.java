@@ -30,7 +30,6 @@ import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -64,7 +63,7 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
     @After
     public void tearDownConnection() throws SQLException {
-        closeQuietly(con);
+        con.close();
     }
 
     /**
@@ -75,25 +74,24 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_noGeneratedKeys() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
-        assertEquals(FirebirdPreparedStatement.TYPE_INSERT, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_INSERT, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement not to produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement not to produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set without columns", 0, metaData.getColumnCount());
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set without columns", 0, metaData.getColumnCount());
 
-        assertFalse("Expected no rows in result set", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertFalse("Expected no rows in result set", rs.next());
+            }
+        }
     }
 
     /**
@@ -104,30 +102,29 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_returnGeneratedKeys() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertEquals(TEXT_VALUE, rs.getString(2));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertEquals(TEXT_VALUE, rs.getString(2));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     @Test
@@ -173,28 +170,27 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_returnGeneratedKeys_withReturning() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS);
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING ID", Statement.RETURN_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     /**
@@ -207,30 +203,29 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
     public void testPrepare_INSERT_returnGeneratedKeys_withReturningAll() throws Exception {
         assumeTrue("requires RETURNING * support", getDefaultSupportInfo().supportsReturningAll());
 
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING *", Statement.RETURN_GENERATED_KEYS);
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY + " RETURNING *", Statement.RETURN_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-        assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertEquals(TEXT_VALUE, rs.getString(2));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertEquals(TEXT_VALUE, rs.getString(2));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     /**
@@ -265,28 +260,27 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_columnIndexes() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1 });
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1 })) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     /**
@@ -297,30 +291,29 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_columnIndexes_quotedColumn() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1, 3 });
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new int[] { 1, 3 })) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 2 column", 2, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
-        assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 2 column", 2, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                assertEquals("Unexpected second column", "quote_column", metaData.getColumnName(2));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertEquals(2, rs.getInt(2));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertEquals(2, rs.getInt(2));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     // Other combination for execute(String, int[]) already covered in TestGeneratedKeysQuery
@@ -333,28 +326,27 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
      */
     @Test
     public void testPrepare_INSERT_columnNames() throws Exception {
-        PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID" });
-        assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, new String[] { "ID" })) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
 
-        stmt.setString(1, TEXT_VALUE);
-        assertFalse("Expected statement to not produce a result set", stmt.execute());
+            stmt.setString(1, TEXT_VALUE);
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
 
-        ResultSet rs = stmt.getGeneratedKeys();
-        assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
 
-        assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
-        assertFalse("Generated keys result set should be open", rs.isClosed());
+                assertEquals("Update count should be directly available", 1, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
 
-        ResultSetMetaData metaData = rs.getMetaData();
-        assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
-        assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 1 column", 1, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
 
-        assertTrue("Expected first row in result set", rs.next());
-        assertEquals(513, rs.getInt(1));
-        assertFalse("Expected no second row", rs.next());
-
-        closeQuietly(rs);
-        closeQuietly(stmt);
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertFalse("Expected no second row", rs.next());
+            }
+        }
     }
 
     /**
@@ -379,31 +371,73 @@ public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBas
 
     @Test
     public void testPrepare_SELECT_RETURN_GENERATED_KEYS_handledNormally() throws Exception {
-        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS);
-        boolean isResultSet = pstmt.execute();
-        assertTrue("Expected first result to be a result set", isResultSet);
-        ResultSet rs = pstmt.getResultSet();
-        assertNotNull("Expected a result set", rs);
-        assertTrue("Expected a row", rs.next());
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", Statement.RETURN_GENERATED_KEYS)) {
+            boolean isResultSet = pstmt.execute();
+            assertTrue("Expected first result to be a result set", isResultSet);
+            try (ResultSet rs = pstmt.getResultSet()) {
+                assertNotNull("Expected a result set", rs);
+                assertTrue("Expected a row", rs.next());
+            }
+        }
     }
 
     @Test
     public void testPrepare_SELECT_columnIndexes_handledNormally() throws Exception {
-        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new int[] { 1, 2 });
-        boolean isResultSet = pstmt.execute();
-        assertTrue("Expected first result to be a result set", isResultSet);
-        ResultSet rs = pstmt.getResultSet();
-        assertNotNull("Expected a result set", rs);
-        assertTrue("Expected a row", rs.next());
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new int[] { 1, 2 })) {
+            boolean isResultSet = pstmt.execute();
+            assertTrue("Expected first result to be a result set", isResultSet);
+            try (ResultSet rs = pstmt.getResultSet()) {
+                assertNotNull("Expected a result set", rs);
+                assertTrue("Expected a row", rs.next());
+            }
+        }
     }
 
     @Test
     public void testPrepare_SELECT_columnNames_handledNormally() throws Exception {
-        PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new String[] { "field1", "field2" });
-        boolean isResultSet = pstmt.execute();
-        assertTrue("Expected first result to be a result set", isResultSet);
-        ResultSet rs = pstmt.getResultSet();
-        assertNotNull("Expected a result set", rs);
-        assertTrue("Expected a row", rs.next());
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT * FROM RDB$DATABASE", new String[] { "field1", "field2" })) {
+            boolean isResultSet = pstmt.execute();
+            assertTrue("Expected first result to be a result set", isResultSet);
+            try (ResultSet rs = pstmt.getResultSet()) {
+                assertNotNull("Expected a result set", rs);
+                assertTrue("Expected a row", rs.next());
+            }
+        }
+    }
+
+    @Test
+    public void testPrepare_INSERT_multipleRows_returnGeneratedKeys() throws Exception {
+        assumeTrue("Requires multirow RETURNING support", getDefaultSupportInfo().supportsMultiRowReturning());
+        try (PreparedStatement stmt = con.prepareStatement(
+                "INSERT INTO TABLE_WITH_TRIGGER(TEXT) "
+                        + "(select cast(? as varchar(200)) from rdb$database "
+                        + "union all select cast(? as varchar(200)) from rdb$database)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_SELECT, ((FirebirdPreparedStatement) stmt).getStatementType());
+
+            stmt.setString(1, TEXT_VALUE + "_1");
+            stmt.setString(2, TEXT_VALUE + "_2");
+            assertFalse("Expected statement to not produce a result set", stmt.execute());
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull("Expected a non-null result set from getGeneratedKeys", rs);
+
+                assertEquals("Update count should be directly available", 2, stmt.getUpdateCount());
+                assertFalse("Generated keys result set should be open", rs.isClosed());
+
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals("Expected result set with 3 columns", 3, metaData.getColumnCount());
+                assertEquals("Unexpected first column", "ID", metaData.getColumnName(1));
+                assertEquals("Unexpected second column", "TEXT", metaData.getColumnName(2));
+
+                assertTrue("Expected first row in result set", rs.next());
+                assertEquals(513, rs.getInt(1));
+                assertEquals(TEXT_VALUE + "_1", rs.getString(2));
+                assertTrue("Expected second row in result set", rs.next());
+                assertEquals(514, rs.getInt(1));
+                assertEquals(TEXT_VALUE + "_2", rs.getString(2));
+                assertFalse("Expected no third row", rs.next());
+            }
+        }
     }
 }

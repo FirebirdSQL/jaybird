@@ -185,7 +185,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             checkValidity();
             notifyStatementStarted();
             try {
-                if (internalExecute(isExecuteProcedureStatement) && !generatedKeys) {
+                if (internalExecute(isExecuteProcedureStatement) && !isGeneratedKeyQuery()) {
                     throw new FBSQLException("Update statement returned results.");
                 }
                 return getUpdateCount();
@@ -565,8 +565,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
             flushFields();
 
             try {
-                fbStatement.execute(fieldValues);
-                return currentStatementResult == StatementResult.RESULT_SET;
+                return internalExecute(fieldValues);
             } catch (SQLException e) {
                 currentStatementResult = StatementResult.NO_MORE_RESULTS;
                 throw e;
@@ -642,7 +641,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                 notifyStatementStarted();
 
                 final int size = batchList.size();
-                if (generatedKeys) {
+                if (isGeneratedKeyQuery()) {
                     batchStatementListener = new BatchStatementListener(size);
                     fbStatement.addStatementListener(batchStatementListener);
                 } else {
@@ -666,7 +665,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
                     throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
                             ex.getErrorCode(), toLargeArray(results), ex);
                 } finally {
-                    if (generatedKeys) {
+                    if (batchStatementListener != null) {
                         fbStatement.removeStatementListener(batchStatementListener);
                         specialResult.clear();
                         specialResult.addAll(batchStatementListener.getRows());

@@ -248,6 +248,7 @@ This guarantees a stable module name for Jaybird, and allows for future modulari
 === Firebird support
 
 Firebird versions 2.5, 3.0 and 4.0 are supported.
+Support for Firebird 5.0 is experimental.
 
 [#wirecrypt-chacha]
 === ChaCha wire protocol encryption support
@@ -427,6 +428,14 @@ Please report any incorrect changes in detection on https://groups.google.com/g/
 
 If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
 Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
+
+[#multirow-returning]
+=== Firebird 5 multi-row RETURNING support
+
+Jaybird supports multi-row `RETURNING` introduced in Firebird 5.0.
+
+The entire generated keys result set is retrieved immediately on execute.
+So, if the statement inserts, updates or deletes a significant number of rows, this can consume a lot of memory in Jaybird.
 
 [#potentially-breaking-changes]
 === Potentially breaking changes

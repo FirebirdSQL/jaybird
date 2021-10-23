@@ -22,6 +22,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.logging.LoggerFactory;
@@ -71,7 +72,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     protected StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
 
-    // Singleton result indicates it is a stored procedure or [INSERT | UPDATE | DELETE] ... RETURNING ...
+    // Singleton result indicates it is a stored procedure or singleton [INSERT | UPDATE | DELETE] ... RETURNING ...
+    // In Firebird 5+ some RETURNING statements are multi-row, and some are singleton, in Firebird 4 and earlier, they
+    // are all singleton.
     protected boolean isSingletonResult;
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
     protected final List<RowValue> specialResult = new LinkedList<>();
@@ -319,11 +322,11 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     @Override
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
-        if (isGeneratedKeyQuery() && isSingletonResult) {
+        if (isGeneratedKeyQuery()) {
             return new FBResultSet(fbStatement.getRowDescriptor(), new ArrayList<>(specialResult),
                     resultSetListener);
         }
-        return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.<RowValue>emptyList());
+        return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.emptyList());
     }
 
     @Override
@@ -875,9 +878,31 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         checkValidity();
 
         prepareFixedStatement(sql);
-        fbStatement.execute(RowValue.EMPTY_ROW_VALUE);
+        return internalExecute(RowValue.EMPTY_ROW_VALUE);
+    }
 
-        return currentStatementResult == StatementResult.RESULT_SET;
+    protected boolean internalExecute(RowValue rowValue) throws SQLException {
+        fbStatement.execute(rowValue);
+        boolean hasResultSet = currentStatementResult == StatementResult.RESULT_SET;
+        if (hasResultSet && isGeneratedKeyQuery()) {
+            fetchMultiRowGeneratedKeys();
+            return false;
+        }
+        return hasResultSet;
+    }
+
+    private void fetchMultiRowGeneratedKeys() throws SQLException {
+        RowsFetchedListener rowsFetchedListener = new RowsFetchedListener();
+        try {
+            fbStatement.addStatementListener(rowsFetchedListener);
+            while (!rowsFetchedListener.isAllRowsFetched()) {
+                fbStatement.fetchRows(Integer.MAX_VALUE);
+            }
+            fbStatement.closeCursor();
+            currentStatementResult = StatementResult.UPDATE_COUNT;
+        } finally {
+            fbStatement.removeStatementListener(rowsFetchedListener);
+        }
     }
 
     protected void prepareFixedStatement(String sql) throws SQLException {
@@ -1213,6 +1238,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (isSingletonResult) {
                 specialResult.clear();
                 specialResult.add(rowValue);
+            } else if (isGeneratedKeyQuery()) {
+                specialResult.add(rowValue);
             }
         }
 
@@ -1248,7 +1275,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     clearWarnings();
                 } catch (SQLException e) {
                     // Ignoring exception (can't happen in current implementation)
-                    throw new AssertionError("Unexpected SQLException");
+                    throw new AssertionError("Unexpected SQLException", e);
                 }
                 break;
             }
@@ -1273,6 +1300,20 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                 return false;
             }
             return true;
+        }
+    }
+
+    private static final class RowsFetchedListener extends DefaultStatementListener {
+
+        private boolean allRowsFetched = false;
+
+        @Override
+        public void allRowsFetched(FbStatement sender) {
+            allRowsFetched = true;
+        }
+
+        public boolean isAllRowsFetched() {
+            return allRowsFetched;
         }
     }
 }
