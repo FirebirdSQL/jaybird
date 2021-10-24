@@ -250,6 +250,8 @@ This guarantees a stable module name for Jaybird, and allows for future modulari
 Firebird versions 2.5, 3.0 and 4.0 are supported.
 Support for Firebird 5.0 is experimental.
 
+Jaybird 5 is the last version to support Firebird 2.5.
+
 [#wirecrypt-chacha]
 === ChaCha wire protocol encryption support
 
@@ -673,6 +675,12 @@ As a result, the following methods, constants, properties and others are no long
 === Breaking changes for Jaybird 6
 
 With Jaybird 6 the following breaking changes will be introduced.
+
+[#dropping-support-firebird-25]
+==== Dropping support for Firebird 2.5
+
+Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdpjdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03]).
+In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
 [#removal-of-deprecated-classes-packages-and-methods-6]
 ==== Removal of deprecated classes, packages and methods
