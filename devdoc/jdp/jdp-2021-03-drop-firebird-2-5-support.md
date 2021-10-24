@@ -1,4 +1,4 @@
-# jdp-2021-03 Drop Firebird 2.5 support
+# jdp-2021-03: Drop Firebird 2.5 support
 
 ## Status
 
