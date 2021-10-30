@@ -52,11 +52,11 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.8.0'
+    junit_jupiter = '5.8.1'
     hamcrest = '2.2'
-    assertj = '3.20.2'
+    assertj = '3.21.0'
     jmock = '2.12.0'
-    mockito = '3.12.4'
+    mockito = '4.0.0'
 }
 
 dependencies {
@@ -82,7 +82,7 @@ dependencies {
         exclude group: 'org.jmock', module: 'jmock-legacy'
     }
     testImplementation("org.jmock:jmock-imposters:$jmock")
-    testImplementation 'net.bytebuddy:byte-buddy:1.11.16'
+    testImplementation 'net.bytebuddy:byte-buddy:1.11.21'
 
     testImplementation "org.mockito:mockito-core:$mockito"
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
