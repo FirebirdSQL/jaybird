@@ -18,17 +18,11 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.util.InternalApi;
 
-import java.sql.JDBCType;
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.sql.Types;
 import java.time.*;
-import java.time.format.DateTimeParseException;
-
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Implementation of {@link ObjectConverter} to support JDBC 4.2 type conversions.
@@ -103,79 +97,5 @@ class JDBC42ObjectConverter implements ObjectConverter {
             }
         }
         return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T getObject(FBField field, Class<T> type) throws SQLException {
-        switch (field.requiredType) {
-        case Types.DATE:
-            switch (type.getName()) {
-            case LOCAL_DATE_CLASS_NAME: {
-                if (field.isNull()) return null;
-                final DatatypeCoder.RawDateTimeStruct raw =
-                        field.getDatatypeCoder().decodeDateRaw(field.getFieldData());
-                return (T) LocalDate.of(raw.year, raw.month, raw.day);
-            }
-            case LOCAL_DATE_TIME_CLASS_NAME: {
-                if (field.isNull()) return null;
-                final DatatypeCoder.RawDateTimeStruct raw =
-                        field.getDatatypeCoder().decodeDateRaw(field.getFieldData());
-                return (T) LocalDate.of(raw.year, raw.month, raw.day).atStartOfDay();
-            }
-            }
-            break;
-        case Types.TIME:
-            switch (type.getName()) {
-            case LOCAL_TIME_CLASS_NAME: {
-                if (field.isNull()) return null;
-                final DatatypeCoder.RawDateTimeStruct raw =
-                        field.getDatatypeCoder().decodeTimeRaw(field.getFieldData());
-                return (T) LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
-            }
-            case LOCAL_DATE_TIME_CLASS_NAME: {
-                if (field.isNull()) return null;
-                final DatatypeCoder.RawDateTimeStruct raw =
-                        field.getDatatypeCoder().decodeTimeRaw(field.getFieldData());
-                return (T) LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos())
-                        .atDate(LocalDate.of(1970, 1, 1));
-            }
-            }
-            break;
-        case Types.TIMESTAMP:
-            if (LOCAL_DATE_TIME_CLASS_NAME.equals(type.getName())) {
-                if (field.isNull()) return null;
-                final DatatypeCoder.RawDateTimeStruct raw =
-                        field.getDatatypeCoder().decodeTimestampRaw(field.getFieldData());
-                return (T) LocalDateTime.of(raw.year, raw.month, raw.day, raw.hour, raw.minute, raw.second,
-                        raw.getFractionsAsNanos());
-            }
-            break;
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            try {
-                switch (type.getName()) {
-                case LOCAL_DATE_CLASS_NAME:
-                    return field.isNull() ? null : (T) LocalDate.parse(field.getString().trim());
-                case LOCAL_TIME_CLASS_NAME:
-                    return field.isNull() ? null : (T) LocalTime.parse(field.getString().trim());
-                case LOCAL_DATE_TIME_CLASS_NAME:
-                    return field.isNull() ? null : (T) LocalDateTime.parse(field.getString().trim());
-                case OFFSET_TIME_CLASS_NAME:
-                    return field.isNull() ? null : (T) OffsetTime.parse(field.getString().trim());
-                case OFFSET_DATE_TIME_CLASS_NAME:
-                    return field.isNull() ? null : (T) OffsetDateTime.parse(field.getString().trim());
-                case ZONED_DATE_TIME_CLASS_NAME:
-                    return field.isNull() ? null : (T) ZonedDateTime.parse(field.getString().trim());
-                }
-            } catch (DateTimeParseException e) {
-                throw new SQLException("Unable to convert value '" + field.getString() + "' to type " + type, e);
-            }
-            break;
-        }
-        throw new SQLNonTransientException(String.format(
-                "Unsupported conversion requested for field %s (JDBC type %s) requested type: %s",
-                field.getName(), JDBCType.valueOf(field.requiredType), type.getName()));
     }
 }

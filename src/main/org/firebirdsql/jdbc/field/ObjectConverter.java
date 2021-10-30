@@ -50,19 +50,4 @@ interface ObjectConverter {
      */
     boolean setObject(FBField field, Object object) throws java.sql.SQLException;
 
-    /**
-     * Get object with the specified type.
-     * <p>
-     * As this method is - for the time being - intended as a workaround for JDBC 4.2, it specifically only supports
-     * new conversions in JDBC 4.2. It will return false for any other object type.
-     * </p>
-     *
-     * @param field FBField implementation to set
-     * @param type Type conversion to get
-     * @param <T> Type parameter
-     * @return Value of the field in the specified type, or {@code null} when null.
-     * @throws java.sql.SQLException For conversion errors and unsupported types.
-     * @since 3.0
-     */
-    <T> T getObject(FBField field, Class<T> type) throws java.sql.SQLException;
 }

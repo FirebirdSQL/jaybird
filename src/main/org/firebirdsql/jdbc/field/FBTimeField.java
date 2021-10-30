@@ -20,6 +20,9 @@ package org.firebirdsql.jdbc.field;
 
 import java.sql.Timestamp;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
@@ -54,9 +57,23 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
         return getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal);
     }
 
+    @Override
+    LocalTime getLocalTime() throws SQLException {
+        if (isNull()) return null;
+        // TODO Push down into DatatypeCoder
+        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeTimeRaw(getFieldData());
+        return LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
+    }
+
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return new java.sql.Timestamp(getDatatypeCoder().decodeTimeCalendar(getFieldData(), cal).getTime());
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        LocalTime localTime = getLocalTime();
+        return localTime != null ? localTime.atDate(LocalDate.EPOCH) : null;
     }
 
     //--- setXXX methods

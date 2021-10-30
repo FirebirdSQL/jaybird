@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
+import java.time.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Map;
@@ -61,7 +62,9 @@ public abstract class FBField {
     static final String OBJECT_CONVERSION_ERROR = "Error converting to object.";
     static final String DATE_CONVERSION_ERROR = "Error converting to date.";
     static final String TIME_CONVERSION_ERROR = "Error converting to time.";
+    static final String TIME_TZ_CONVERSION_ERROR = "Error converting to time with time zone.";
     static final String TIMESTAMP_CONVERSION_ERROR = "Error converting to timestamp.";
+    static final String TIMESTAMP_TZ_CONVERSION_ERROR = "Error converting to timestamp with time zone.";
     static final String BINARY_STREAM_CONVERSION_ERROR = "Error converting to binary stream.";
     static final String CHARACTER_STREAM_CONVERSION_ERROR = "Error converting to character stream.";
     static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
@@ -353,11 +356,17 @@ public abstract class FBField {
             return (T) getBytes();
         case SQL_DATE_CLASS_NAME:
             return (T) getDate();
+        case LOCAL_DATE_CLASS_NAME:
+            return (T) getLocalDate();
         case UTIL_DATE_CLASS_NAME:
         case TIMESTAMP_CLASS_NAME:
             return (T) getTimestamp();
+        case LOCAL_DATE_TIME_CLASS_NAME:
+            return (T) getLocalDateTime();
         case TIME_CLASS_NAME:
             return (T) getTime();
+        case LOCAL_TIME_CLASS_NAME:
+            return (T) getLocalTime();
         case CALENDAR_CLASS_NAME:
             if (isNull()) {
                 return null;
@@ -367,6 +376,12 @@ public abstract class FBField {
                 calendar.setTimeInMillis(timestamp.getTime());
                 return (T) calendar;
             }
+        case OFFSET_TIME_CLASS_NAME:
+            return (T) getOffsetTime();
+        case OFFSET_DATE_TIME_CLASS_NAME:
+            return (T) getOffsetDateTime();
+        case ZONED_DATE_TIME_CLASS_NAME:
+            return (T) getZonedDateTime();
         case CLOB_CLASS_NAME:
         case NCLOB_CLASS_NAME:
             return (T) getClob();
@@ -391,7 +406,20 @@ public abstract class FBField {
         case DECIMAL128_CLASS_NAME:
             return (T) getDecimal(Decimal128.class);
         }
-        return getObjectConverter().getObject(this, type);
+        throw new SQLNonTransientException(String.format(
+                "Unsupported conversion requested for field \"%s\" (JDBC type %s) requested type: %s",
+                getName(), getJdbcTypeName(), type.getName()));
+    }
+
+    private String getJdbcTypeName() {
+        try {
+            return JDBCType.valueOf(requiredType).name();
+        } catch (IllegalArgumentException e) {
+            if (requiredType == JaybirdTypeCodes.DECFLOAT) {
+                return "DECFLOAT";
+            }
+            return String.valueOf(requiredType);
+        }
     }
 
     public InputStream getBinaryStream() throws SQLException {
@@ -423,11 +451,19 @@ public abstract class FBField {
         throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
     }
 
+    LocalDate getLocalDate() throws SQLException {
+        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+    }
+
     public Time getTime() throws SQLException {
         throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
     }
 
     public Time getTime(Calendar cal) throws SQLException {
+        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+    }
+
+    LocalTime getLocalTime() throws SQLException {
         throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
     }
 
@@ -437,6 +473,22 @@ public abstract class FBField {
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    LocalDateTime getLocalDateTime() throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    OffsetTime getOffsetTime() throws SQLException {
+        throw new TypeConversionException(FBField.TIME_TZ_CONVERSION_ERROR);
+    }
+
+    OffsetDateTime getOffsetDateTime() throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+    }
+
+    ZonedDateTime getZonedDateTime() throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
     }
 
     public Ref getRef() throws SQLException {

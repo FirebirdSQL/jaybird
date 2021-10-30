@@ -25,6 +25,9 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 /**
@@ -57,16 +60,37 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
 
+    @Override
+    LocalDate getLocalDate() throws SQLException {
+        LocalDateTime localDateTime = getLocalDateTime();
+        return localDateTime != null ? localDateTime.toLocalDate() : null;
+    }
+
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
         return new java.sql.Time(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
 
+    @Override
+    LocalTime getLocalTime() throws SQLException {
+        LocalDateTime localDateTime = getLocalDateTime();
+        return localDateTime != null ? localDateTime.toLocalTime() : null;
+    }
+
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
         return getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal);
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        if (isNull()) return null;
+        // TODO Push down into DatatypeCoder
+        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeTimestampRaw(getFieldData());
+        return LocalDateTime.of(raw.year, raw.month, raw.day, raw.hour, raw.minute, raw.second,
+                raw.getFractionsAsNanos());
     }
 
     public void setString(String value) throws SQLException {

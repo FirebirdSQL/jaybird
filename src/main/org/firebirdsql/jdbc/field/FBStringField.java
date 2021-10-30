@@ -29,7 +29,11 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
+import java.time.*;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
+
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Describe class <code>FBStringField</code> here.
@@ -48,6 +52,7 @@ import java.util.Calendar;
  * TODO check if the setBinaryStream(null) is allowed by specs.
  */
 class FBStringField extends FBField {
+    
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
     static final String LONG_TRUE = "true";
@@ -198,6 +203,16 @@ class FBStringField extends FBField {
     }
 
     @Override
+    LocalDate getLocalDate() throws SQLException {
+        String string = getString();
+        try {
+            return string != null ? LocalDate.parse(string.trim()) : null;
+        } catch (DateTimeParseException e) {
+            throw new SQLException("Unable to convert value '" + string + "' to type " + LOCAL_TIME_CLASS_NAME, e);
+        }
+    }
+
+    @Override
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeTime(getTime(), cal, isInvertTimeZone());
@@ -210,6 +225,16 @@ class FBStringField extends FBField {
     }
 
     @Override
+    LocalTime getLocalTime() throws SQLException {
+        String string = getString();
+        try {
+            return string != null ? LocalTime.parse(string.trim()) : null;
+        } catch (DateTimeParseException e) {
+            throw new SQLException("Unable to convert value '" + string + "' to type " + LOCAL_DATE_CLASS_NAME, e);
+        }
+    }
+
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeTimestamp(getTimestamp(), cal, isInvertTimeZone());
@@ -217,8 +242,64 @@ class FBStringField extends FBField {
 
     @Override
     public Timestamp getTimestamp() throws SQLException {
-        if (isNull()) return null;
-        return Timestamp.valueOf(getString().trim());
+        String string = getString();
+        if (string == null) return null;
+        string = string.trim();
+        int tIdx = string.indexOf('T');
+        if (tIdx != -1) {
+            // possibly yyyy-MM-ddTHH:mm:ss[.f...]
+            string = string.substring(0, tIdx) + ' ' + string.substring(tIdx + 1);
+        }
+        return Timestamp.valueOf(string);
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        String originalString = getString();
+        if (originalString == null) return null;
+        try {
+            String string = originalString.trim();
+            int spaceIdx = string.indexOf(' ');
+            if (spaceIdx != -1) {
+                // possibly yyyy-MM-dd HH:mm:ss[.f...]
+                string = string.substring(0, spaceIdx) + 'T' + string.substring(spaceIdx + 1);
+            }
+            return LocalDateTime.parse(string);
+        } catch (DateTimeParseException e) {
+            throw new SQLException(
+                    "Unable to convert value '" + originalString + "' to type " + LOCAL_DATE_TIME_CLASS_NAME, e);
+        }
+    }
+
+    @Override
+    OffsetTime getOffsetTime() throws SQLException {
+        String string = getString();
+        try {
+            return string != null ? OffsetTime.parse(string.trim()) : null;
+        } catch (DateTimeParseException e) {
+            throw new SQLException("Unable to convert value '" + string + "' to type " + OFFSET_TIME_CLASS_NAME, e);
+        }
+    }
+
+    @Override
+    OffsetDateTime getOffsetDateTime() throws SQLException {
+        String string = getString();
+        try {
+            return string != null ? OffsetDateTime.parse(string.trim()) : null;
+        } catch (DateTimeParseException e) {
+            throw new SQLException(
+                    "Unable to convert value '" + string + "' to type " + OFFSET_DATE_TIME_CLASS_NAME, e);
+        }
+    }
+
+    @Override
+    ZonedDateTime getZonedDateTime() throws SQLException {
+        String string = getString();
+        try {
+            return string != null ? ZonedDateTime.parse(string.trim()) : null;
+        } catch (DateTimeParseException e) {
+            throw new SQLException("Unable to convert value '" + string + "' to type " + ZONED_DATE_TIME_CLASS_NAME, e);
+        }
     }
 
     @Override

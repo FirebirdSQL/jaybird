@@ -24,6 +24,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 /**
@@ -53,6 +55,20 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     public Date getDate(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
+    }
+
+    @Override
+    LocalDate getLocalDate() throws SQLException {
+        if (isNull()) return null;
+        // TODO Push down into DatatypeCoder
+        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeDateRaw(getFieldData());
+        return LocalDate.of(raw.year, raw.month, raw.day);
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        LocalDate localDate = getLocalDate();
+        return localDate != null ? localDate.atStartOfDay() : null;
     }
 
     public String getString() throws SQLException {
