@@ -40,14 +40,14 @@ import java.sql.Date;
 import java.util.*;
 
 /**
- * Abstract implementation of {@link java.sql.PreparedStatement}.
+ * Implementation of {@link java.sql.PreparedStatement}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("RedundantThrows")
-public abstract class AbstractPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
+public class FBPreparedStatement extends FBStatement implements FirebirdPreparedStatement {
 
     public static final String METHOD_NOT_SUPPORTED =
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
@@ -94,7 +94,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * 
      * @throws SQLException if something went wrong.
      */
-    protected AbstractPreparedStatement(GDSHelper c, int rsType,
+    protected FBPreparedStatement(GDSHelper c, int rsType,
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener)
@@ -122,7 +122,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
      * @throws SQLException
      *             if something went wrong.
      */
-    protected AbstractPreparedStatement(GDSHelper c, String sql, int rsType,
+    protected FBPreparedStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability,
             FBObjectListener.StatementListener statementListener,
             FBObjectListener.BlobListener blobListener,

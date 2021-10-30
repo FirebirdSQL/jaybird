@@ -32,14 +32,14 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * Abstract implementation of {@link java.sql.CallableStatement}.
+ * Implementation of {@link java.sql.CallableStatement}.
  * 
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public abstract class AbstractCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
+public class FBCallableStatement extends FBPreparedStatement implements CallableStatement, FirebirdCallableStatement {
 
     static final String SET_BY_STRING_NOT_SUPPORTED = "Setting parameters by name is not supported";
     static final String NATIVE_CALL_COMMAND = "EXECUTE PROCEDURE ";
@@ -52,7 +52,7 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
 
     protected FBProcedureCall procedureCall;
 
-    protected AbstractCallableStatement(GDSHelper c, String sql, int rsType,
+    protected FBCallableStatement(GDSHelper c, String sql, int rsType,
             int rsConcurrency, int rsHoldability, 
             StoredProcedureMetaData storedProcMetaData,
             FBObjectListener.StatementListener statementListener, 

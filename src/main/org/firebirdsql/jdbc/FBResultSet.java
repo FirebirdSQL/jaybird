@@ -48,7 +48,7 @@ import java.util.Map;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("RedundantThrows")
-public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
 
@@ -104,7 +104,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
     /**
      * Creates a new <code>FBResultSet</code> instance.
      */
-    public AbstractResultSet(FBConnection connection,
+    public FBResultSet(FBConnection connection,
             FBStatement fbStatement,
             FbStatement stmt,
             FBObjectListener.ResultSetListener listener,
@@ -187,7 +187,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *         Row data
      * @throws SQLException
      */
-    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows,
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows,
             FBObjectListener.ResultSetListener listener) throws SQLException {
         // TODO Evaluate if we need to share more implementation with constructor above
         connection = null;
@@ -222,7 +222,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *         Row data
      * @throws SQLException
      */
-    public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
+    public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         this(rowDescriptor, null, rows, false);
     }
 
@@ -245,7 +245,7 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      *         {@code true} retrieves the blob data
      * @throws SQLException
      */
-    public AbstractResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
+    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             boolean retrieveBlobs) throws SQLException {
         this.connection = connection;
         this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
