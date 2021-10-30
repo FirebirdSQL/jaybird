@@ -45,8 +45,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private static final org.firebirdsql.logging.Logger log = LoggerFactory.getLogger(FBStatement.class);
-    protected static final JdbcVersionSupport jdbcVersionSupport =
-            JdbcVersionSupportHolder.INSTANCE.getJdbcVersionSupport();
 
     private static final AtomicInteger STATEMENT_ID_GENERATOR = new AtomicInteger();
 

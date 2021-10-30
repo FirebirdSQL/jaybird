@@ -562,7 +562,6 @@ See <<generated-keys-parser-replaced>> for information on disabling or ignoring 
 
 The following methods have been removed in Jaybird 5:
 
-* `JdbcVersionSupport.createBatchUpdateException`, the `JdbcVersionSupport` interface is an internal API of Jaybird, but was previously not marked as such.
 * `FirebirdConnectionProperties.getDatabaseParameterBuffer()`;
 there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor.
 * `FBConnection.getDatabaseParameterBuffer()`;
@@ -612,6 +611,10 @@ The following classes have been removed in Jaybird 5:
 * `IAttachProperties.DEFAULT_PORT`
 * `IAttachProperties.DEFAULT_SERVER_NAME`
 * `Base64Decoder` and `Base64DecoderImpl`, these classes were internal API, but not marked as such.
+* `JdbcVersionSupport` and implementations, `JdbcVersionSupportHolder`.
+These were implementation artifacts to support multiple JDBC versions.
+* `AbstractPreparedStatement`, `AbstractCallableStatement` and `AbstractResultSet`.
+These were implementation artifacts to support multiple JDBC versions.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation

@@ -95,8 +95,8 @@ sourceSets {
     main {
         java {
             srcDirs = findProperty('buildProfile') == 'java8'
-                    ? ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice']
-                    : ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
+                    ? ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice']
+                    : ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
         }
         resources {
             srcDirs = ['src/resources']
@@ -104,7 +104,7 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['src/test', 'src/test_42', 'src/jna-test']
+            srcDirs = ['src/test', 'src/jna-test']
         }
         resources {
             srcDirs = ['src/test_resources']
