@@ -559,52 +559,108 @@ public abstract class FBField {
             return;
         }
 
-        if (value instanceof BigDecimal) {
+        String typeName = value.getClass().getName();
+        // As a form of optimization, we switch on the class name.
+        // For non-final classes we'll also try using instanceof in the switch default.
+        switch (typeName) {
+        case BIG_DECIMAL_CLASS_NAME:
             setBigDecimal((BigDecimal) value);
-        } else if (value instanceof Blob) {
-            if (value instanceof FBBlob) {
-                setBlob((FBBlob) value);
-            } else {
-                setBinaryStream(((Blob) value).getBinaryStream());
-            }
-        } else if (value instanceof InputStream) {
-            setBinaryStream((InputStream) value);
-        } else if (value instanceof Reader) {
-            setCharacterStream((Reader) value);
-        } else if (value instanceof Boolean) {
-            setBoolean((Boolean) value);
-        } else if (value instanceof Byte) {
-            setByte((Byte) value);
-        } else if (value instanceof byte[]) {
+            return;
+        case FB_BLOB_CLASS_NAME:
+            setBlob((FBBlob) value);
+            return;
+        case FB_CLOB_CLASS_NAME:
+            setClob((FBClob) value);
+            return;
+        case BOOLEAN_CLASS_NAME:
+            setBoolean((boolean) value);
+            return;
+        case BYTE_CLASS_NAME:
+            setByte((byte) value);
+            return;
+        case BYTE_ARRAY_CLASS_NAME:
             setBytes((byte[]) value);
-        } else if (value instanceof Date) {
+            return;
+        case SQL_DATE_CLASS_NAME:
             setDate((Date) value);
-        } else if (value instanceof Double) {
-            setDouble((Double) value);
-        } else if (value instanceof Float) {
-            setFloat((Float) value);
-        } else if (value instanceof Integer) {
-            setInteger((Integer) value);
-        } else if (value instanceof Long) {
-            setLong((Long) value);
-        } else if (value instanceof Short) {
-            setShort((Short) value);
-        } else if (value instanceof String) {
+            return;
+        case DOUBLE_CLASS_NAME:
+            setDouble((double) value);
+            return;
+        case FLOAT_CLASS_NAME:
+            setFloat((float) value);
+            return;
+        case INTEGER_CLASS_NAME:
+            setInteger((int) value);
+            return;
+        case LONG_CLASS_NAME:
+            setLong((long) value);
+            return;
+        case SHORT_CLASS_NAME:
+            setShort((short) value);
+            return;
+        case STRING_CLASS_NAME:
             setString((String) value);
-        } else if (value instanceof Time) {
+            return;
+        case TIME_CLASS_NAME:
             setTime((Time) value);
-        } else if (value instanceof Timestamp) {
+            return;
+        case TIMESTAMP_CLASS_NAME:
             setTimestamp((Timestamp) value);
-        } else if (value instanceof DatatypeCoder.RawDateTimeStruct) {
+            return;
+        case UTIL_DATE_CLASS_NAME:
+            setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
+            return;
+        case RAW_DATE_TIME_STRUCT_CLASS_NAME:
             setRawDateTimeStruct((DatatypeCoder.RawDateTimeStruct) value);
-        } else if (value instanceof BigInteger) {
+            return;
+        case BIG_INTEGER_CLASS_NAME:
             setBigInteger((BigInteger) value);
-        } else if (value instanceof RowId) {
+            return;
+        case FB_ROW_ID_CLASS_NAME:
             setRowId((RowId) value);
-        } else if (value instanceof Decimal) {
+            return;
+        case DECIMAL32_CLASS_NAME:
+        case DECIMAL64_CLASS_NAME:
+        case DECIMAL128_CLASS_NAME:
             setDecimal((Decimal<?>) value);
-        } else if (!getObjectConverter().setObject(this, value)) {
-            throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
+            return;
+        default:
+            if (value instanceof BigDecimal) {
+                setBigDecimal((BigDecimal) value);
+            } else if (value instanceof BigInteger) {
+                setBigInteger((BigInteger) value);
+            } else if (value instanceof RowId) {
+                setRowId((RowId) value);
+            } else if (value instanceof InputStream) {
+                setBinaryStream((InputStream) value);
+            } else if (value instanceof Reader) {
+                setCharacterStream((Reader) value);
+            } else if (value instanceof Clob) {
+                if (value instanceof FBClob) {
+                    setClob((FBClob) value);
+                } else {
+                    setCharacterStream(((Clob) value).getCharacterStream());
+                }
+            } else if (value instanceof Blob) {
+                if (value instanceof FBBlob) {
+                    setBlob((FBBlob) value);
+                } else {
+                    setBinaryStream(((Blob) value).getBinaryStream());
+                }
+            } else if (value instanceof Date) {
+                setDate((Date) value);
+            } else if (value instanceof Time) {
+                setTime((Time) value);
+            } else if (value instanceof Timestamp) {
+                setTimestamp((Timestamp) value);
+            } else if (value instanceof java.util.Date) {
+                setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
+            } else if (value instanceof Decimal) {
+                setDecimal((Decimal<?>) value);
+            } else if (!getObjectConverter().setObject(this, value)) {
+                throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
+            }
         }
     }
 

@@ -48,6 +48,8 @@ public final class JavaTypeNameConstants {
     public static final String READER_CLASS_NAME = "java.io.Reader";
     public static final String BLOB_CLASS_NAME = "java.sql.Blob";
     public static final String FIREBIRD_BLOB_CLASS_NAME = "org.firebirdsql.jdbc.FirebirdBlob";
+    public static final String FB_BLOB_CLASS_NAME = "org.firebirdsql.jdbc.FBBlob";
+    public static final String FB_CLOB_CLASS_NAME = "org.firebirdsql.jdbc.FBClob";
     public static final String BYTE_ARRAY_CLASS_NAME = "[B"; // byte[]
     public static final String INPUT_STREAM_CLASS_NAME = "java.io.InputStream";
     public static final String TIMESTAMP_CLASS_NAME = "java.sql.Timestamp";
