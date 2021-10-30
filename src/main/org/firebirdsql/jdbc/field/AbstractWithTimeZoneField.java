@@ -94,24 +94,6 @@ abstract class AbstractWithTimeZoneField extends FBField {
     }
 
     @Override
-    public void setObject(Object value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        if (value instanceof OffsetTime) {
-            setOffsetTime((OffsetTime) value);
-        } else if (value instanceof OffsetDateTime) {
-            setOffsetDateTime((OffsetDateTime) value);
-        } else if (value instanceof ZonedDateTime) {
-            setZonedDateTime((ZonedDateTime) value);
-        } else {
-            super.setObject(value);
-        }
-    }
-
-    @Override
     public java.sql.Time getTime() throws SQLException {
         OffsetDateTime offsetDateTime = getOffsetDateTime();
         if (offsetDateTime == null) {

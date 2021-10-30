@@ -349,12 +349,7 @@ class FBStringField extends FBField {
 
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setString(value.toString());
+        setAsString(value);
     }
 
     //----- setBoolean, setString and setObject code
@@ -370,10 +365,7 @@ class FBStringField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
         setFieldData(getDatatypeCoder().encodeString(value));
     }
 
@@ -381,10 +373,7 @@ class FBStringField extends FBField {
 
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
@@ -400,10 +389,7 @@ class FBStringField extends FBField {
 
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
@@ -419,10 +405,7 @@ class FBStringField extends FBField {
 
     @Override
     public void setBytes(byte[] value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
@@ -436,71 +419,77 @@ class FBStringField extends FBField {
 
     @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setDate(getDatatypeCoder().encodeDate(value, cal));
     }
 
     @Override
     public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalDate(LocalDate localDate) throws SQLException {
+        setAsString(localDate);
     }
 
     @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setTime(getDatatypeCoder().encodeTime(value, cal, isInvertTimeZone()));
     }
 
     @Override
     public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalTime(LocalTime value) throws SQLException {
+        setAsString(value);
     }
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal, isInvertTimeZone()));
     }
 
     @Override
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setOffsetTime(OffsetTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setOffsetDateTime(OffsetDateTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setZonedDateTime(ZonedDateTime value) throws SQLException {
+        setAsString(value);
     }
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
+    private void setAsString(Object value) throws SQLException {
+        if (setWhenNull(value)) return;
         setString(value.toString());
     }
 }

@@ -134,10 +134,7 @@ final class FBLongField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setLong(Long.parseLong(value));
@@ -191,10 +188,7 @@ final class FBLongField extends FBField {
 
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         // check if value is within bounds
         if (value.compareTo(BD_MAX_LONG) > 0 || value.compareTo(BD_MIN_LONG) < 0)
@@ -205,10 +199,7 @@ final class FBLongField extends FBField {
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         // check if value is within bounds
         if (value.compareTo(BI_MAX_LONG) > 0 || value.compareTo(BI_MIN_LONG) < 0)

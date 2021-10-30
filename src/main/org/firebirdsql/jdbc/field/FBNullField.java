@@ -190,11 +190,7 @@ final class FBNullField extends FBField {
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     // ----- setBoolean, setObject and setObject code
@@ -207,88 +203,50 @@ final class FBNullField extends FBField {
 
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
         // TODO Do we need to consume and/or close streams?
         setDummyObject();
     }
 
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
         // TODO Do we need to consume and/or close streams?
         setDummyObject();
     }
 
     public void setBytes(byte[] value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     // ----- setDate, setTime and setTimestamp code
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-        setDummyObject();
+        setObject(value);
     }
 }

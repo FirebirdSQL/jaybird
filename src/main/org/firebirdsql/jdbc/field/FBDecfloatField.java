@@ -100,10 +100,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     }
 
     private void setDecimalInternal(T value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setFieldData(decimalHandling.encode(fieldDescriptor, value));
@@ -212,10 +209,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBigDecimal(new BigDecimal(value));
     }
@@ -240,10 +234,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setDecimalInternal(decimalHandling.valueOf(value));

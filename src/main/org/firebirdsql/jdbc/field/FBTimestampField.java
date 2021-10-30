@@ -94,39 +94,36 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     }
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setTimestamp(Timestamp.valueOf(value));
     }
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(value, cal));
+    }
+
+    @Override
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        if (setWhenNull(value)) return;
+        // TODO Push down into DatatypeCoder
+        setFieldData(getDatatypeCoder().encodeLocalDateTime(
+                value.getYear(), value.getMonthValue(), value.getDayOfMonth(),
+                value.getHour(), value.getMinute(), value.getSecond(), value.getNano()));
     }
 
     @Override
@@ -137,10 +134,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (raw == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeTimestampRaw(raw));
     }
 }

@@ -56,10 +56,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBytes(getDatatypeCoder().encodeString(value));
     }
@@ -73,10 +70,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setBytes(byte[] value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
@@ -94,10 +88,7 @@ class FBBinaryField extends FBField {
 
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
@@ -113,10 +104,7 @@ class FBBinaryField extends FBField {
 
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
@@ -140,10 +128,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setRowId(RowId value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBytes(value.getBytes());
     }

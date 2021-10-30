@@ -139,10 +139,7 @@ class FBDoubleField extends FBField {
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setDouble(Double.parseDouble(value));

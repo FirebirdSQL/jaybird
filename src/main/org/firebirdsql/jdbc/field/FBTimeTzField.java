@@ -50,10 +50,7 @@ class FBTimeTzField extends AbstractWithTimeZoneField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setStringParse(value);

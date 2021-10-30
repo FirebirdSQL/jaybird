@@ -101,8 +101,6 @@ public abstract class FBField {
     static final double MAX_DOUBLE_VALUE = Double.MAX_VALUE;
     static final double MIN_DOUBLE_VALUE = -1 * FBField.MAX_DOUBLE_VALUE;
 
-    private static final ObjectConverter OBJECT_CONVERTER = ObjectConverterHolder.INSTANCE.getObjectConverter();
-
     protected final FieldDescriptor fieldDescriptor;
     private final FieldDataProvider dataProvider;
     protected GDSHelper gdsHelper;
@@ -125,10 +123,6 @@ public abstract class FBField {
 
     protected final void setFieldData(byte[] data) {
         dataProvider.setFieldData(data);
-    }
-
-    protected final ObjectConverter getObjectConverter() {
-        return OBJECT_CONVERTER;
     }
 
     protected final DatatypeCoder getDatatypeCoder() {
@@ -405,10 +399,9 @@ public abstract class FBField {
             return (T) getDecimal(Decimal64.class);
         case DECIMAL128_CLASS_NAME:
             return (T) getDecimal(Decimal128.class);
+        default:
+            throw invalidGetConversion(type);
         }
-        throw new SQLNonTransientException(String.format(
-                "Unsupported conversion requested for field \"%s\" (JDBC type %s) requested type: %s",
-                getName(), getJdbcTypeName(), type.getName()));
     }
 
     private String getJdbcTypeName() {
@@ -584,6 +577,9 @@ public abstract class FBField {
         case SQL_DATE_CLASS_NAME:
             setDate((Date) value);
             return;
+        case LOCAL_DATE_CLASS_NAME:
+            setLocalDate((LocalDate) value);
+            return;
         case DOUBLE_CLASS_NAME:
             setDouble((double) value);
             return;
@@ -605,8 +601,23 @@ public abstract class FBField {
         case TIME_CLASS_NAME:
             setTime((Time) value);
             return;
+        case LOCAL_TIME_CLASS_NAME:
+            setLocalTime((LocalTime) value);
+            return;
         case TIMESTAMP_CLASS_NAME:
             setTimestamp((Timestamp) value);
+            return;
+        case LOCAL_DATE_TIME_CLASS_NAME:
+            setLocalDateTime((LocalDateTime) value);
+            return;
+        case OFFSET_TIME_CLASS_NAME:
+            setOffsetTime((OffsetTime) value);
+            return;
+        case OFFSET_DATE_TIME_CLASS_NAME:
+            setOffsetDateTime((OffsetDateTime) value);
+            return;
+        case ZONED_DATE_TIME_CLASS_NAME:
+            setZonedDateTime((ZonedDateTime) value);
             return;
         case UTIL_DATE_CLASS_NAME:
             setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
@@ -658,8 +669,8 @@ public abstract class FBField {
                 setTimestamp(new Timestamp(((java.util.Date) value).getTime()));
             } else if (value instanceof Decimal) {
                 setDecimal((Decimal<?>) value);
-            } else if (!getObjectConverter().setObject(this, value)) {
-                throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
+            } else {
+                throw invalidSetConversion(value.getClass());
             }
         }
     }
@@ -714,11 +725,19 @@ public abstract class FBField {
         throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
     }
 
+    void setLocalDate(LocalDate value) throws SQLException {
+        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+    }
+
     public void setTime(Time value, Calendar cal) throws SQLException {
         throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
     }
 
     public void setTime(Time value) throws SQLException {
+        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+    }
+
+    void setLocalTime(LocalTime value) throws SQLException {
         throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
     }
 
@@ -728,6 +747,22 @@ public abstract class FBField {
 
     public void setTimestamp(Timestamp value) throws SQLException {
         throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    void setOffsetTime(OffsetTime value) throws SQLException {
+        throw new TypeConversionException(FBField.TIME_TZ_CONVERSION_ERROR);
+    }
+
+    void setOffsetDateTime(OffsetDateTime value) throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+    }
+
+    void setZonedDateTime(ZonedDateTime value) throws SQLException {
+        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
@@ -748,6 +783,21 @@ public abstract class FBField {
 
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
         throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+    }
+
+    /**
+     * Sets the field to {@code NULL}, when {@code value} is {@code null}.
+     *
+     * @param value
+     *         Value to check for {@code null}
+     * @return {@code true} when {@code value} was {@code null}, {@code false} otherwise
+     */
+    final boolean setWhenNull(Object value) {
+        if (value == null) {
+            setNull();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -809,4 +859,25 @@ public abstract class FBField {
         final IConnectionProperties props = gdsHelper.getConnectionProperties();
         return props.isTimestampUsesLocalTimezone();
     }
+
+    SQLException invalidGetConversion(Class<?> requestedType) {
+        return invalidGetConversion(requestedType.getName());
+    }
+
+    SQLException invalidGetConversion(String requestedTypeName) {
+        return new TypeConversionException(String.format(
+                "Unsupported get conversion requested for field \"%s\" (JDBC type %s), target type: %s",
+                getName(), getJdbcTypeName(), requestedTypeName));
+    }
+
+    SQLException invalidSetConversion(Class<?> sourceType) {
+        return invalidSetConversion(sourceType.getName());
+    }
+
+    SQLException invalidSetConversion(String sourceTypeName) {
+        return new TypeConversionException(String.format(
+                "Unsupported set conversion requested for field \"%s\" (JDBC type %s), source type: %s",
+                getName(), getJdbcTypeName(), sourceTypeName));
+    }
+
 }

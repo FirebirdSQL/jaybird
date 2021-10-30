@@ -67,10 +67,7 @@ public final class FBWorkaroundStringField extends FBStringField {
     }
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
         byte[] data = getDatatypeCoder().encodeString(value);
 
         if (data.length > fieldDescriptor.getLength() && !isSystemTable(fieldDescriptor.getOriginalTableName())) {
@@ -93,10 +90,7 @@ public final class FBWorkaroundStringField extends FBStringField {
      * @throws SQLException if something went wrong.
      */
     public void setStringForced(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
         byte[] data = getDatatypeCoder().encodeString(value);
         setFieldData(data);
     }   

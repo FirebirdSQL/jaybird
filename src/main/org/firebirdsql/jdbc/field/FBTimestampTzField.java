@@ -60,10 +60,7 @@ class FBTimestampTzField extends AbstractWithTimeZoneField {
 
     @Override
     public void setDate(java.sql.Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         OffsetDateTime offsetDateTime = value.toLocalDate()
                 .atStartOfDay()
@@ -87,10 +84,7 @@ class FBTimestampTzField extends AbstractWithTimeZoneField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setStringParse(value);

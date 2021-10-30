@@ -177,10 +177,7 @@ final class FBBigDecimalField extends FBField {
     }
 
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         try {
             setBigDecimal(new BigDecimal(value));
@@ -190,20 +187,14 @@ final class FBBigDecimalField extends FBField {
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(fieldDataSize.encode(fieldDescriptor, value));
     }
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBigDecimal(new BigDecimal(value));
     }
