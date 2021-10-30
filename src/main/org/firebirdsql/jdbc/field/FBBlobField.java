@@ -132,8 +132,7 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField 
                     final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
 
                     if (segmentBuffer.length == 0) {
-                        // unexpected EOF
-                        throw new TypeConversionException(BYTES_CONVERSION_ERROR);
+                        throw invalidGetConversion("byte[]", "unexpected EOF");
                     }
 
                     System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
@@ -175,8 +174,9 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField 
     @Override
     public String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
-        if (fieldDescriptor.getSubType() < 0)
-            throw new TypeConversionException(STRING_CONVERSION_ERROR);
+        if (fieldDescriptor.getSubType() < 0) {
+            throw invalidGetConversion(String.class, String.format("BLOB SUB_TYPE %d", fieldDescriptor.getSubType()));
+        }
 
         Blob blob = getBlobInternal();
 

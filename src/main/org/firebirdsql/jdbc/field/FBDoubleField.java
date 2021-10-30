@@ -52,9 +52,9 @@ class FBDoubleField extends FBField {
         double value = getDatatypeCoder().decodeDouble(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_BYTE_VALUE ||
-            value < MIN_BYTE_VALUE)
-                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
+        if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
+            throw invalidGetConversion("byte", String.format("value %f out of range", value));
+        }
 
         return (byte) value;
     }
@@ -65,9 +65,9 @@ class FBDoubleField extends FBField {
         double value = getDatatypeCoder().decodeDouble(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidGetConversion("short", String.format("value %f out of range", value));
+        }
 
         return (short) value;
     }
@@ -78,9 +78,9 @@ class FBDoubleField extends FBField {
         double value = getDatatypeCoder().decodeDouble(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_INT_VALUE ||
-            value < MIN_INT_VALUE)
-                throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
+            throw invalidGetConversion("int", String.format("value %f out of range", value));
+        }
 
         return (int) value;
     }
@@ -91,9 +91,9 @@ class FBDoubleField extends FBField {
         double value = getDatatypeCoder().decodeDouble(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_LONG_VALUE ||
-            value < MIN_LONG_VALUE)
-                throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
+            throw invalidGetConversion("long", String.format("value %f out of range", value));
+        }
 
         return (long) value;
     }
@@ -105,9 +105,9 @@ class FBDoubleField extends FBField {
         double value = getDatatypeCoder().decodeDouble(getFieldData());
         float cValue = (float) value;
         // check if value is within bounds
-        if (cValue == Float.POSITIVE_INFINITY || 
-        	cValue == Float.NEGATIVE_INFINITY)
-            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + value);
+        if (cValue == Float.POSITIVE_INFINITY || cValue == Float.NEGATIVE_INFINITY) {
+            throw invalidGetConversion("float", String.format("value %f out of range", value));
+        }
 
         return cValue;
     }
@@ -141,10 +141,13 @@ class FBDoubleField extends FBField {
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
 
+        String string = value.trim();
         try {
-            setDouble(Double.parseDouble(value));
+            setDouble(Double.parseDouble(string));
         } catch(NumberFormatException nfex) {
-            throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
     
@@ -183,9 +186,9 @@ class FBDoubleField extends FBField {
         }
 
         // check if value is within bounds
-        if (value.compareTo(BD_MAX_DOUBLE) > 0 ||
-            value.compareTo(BD_MIN_DOUBLE) < 0)
-                throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(BD_MAX_DOUBLE) > 0 || value.compareTo(BD_MIN_DOUBLE) < 0) {
+            throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
+        }
 
         setDouble(value.doubleValue());
     }

@@ -32,6 +32,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+
 /**
  * Field for the SQL:2016 DECFLOAT type (decimal floating point), backed by an IEEE-754 Decimal64 or Decimal128.
  *
@@ -70,7 +73,10 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             return value.toBigDecimal();
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidGetConversion(BigDecimal.class,
+                    format("value %s out of range", value));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -79,7 +85,10 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             setDecimalInternal(value != null ? decimalHandling.valueOf(value) : null);
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidSetConversion(BigDecimal.class,
+                    format("value %f out of range", value));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -95,7 +104,10 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             setDecimalInternal(value != null ? value.toDecimal(decimalType, OverflowHandling.THROW_EXCEPTION) : null);
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidSetConversion(requireNonNull(value).getClass(),
+                    format("value %s out of range", value));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -105,7 +117,10 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         try {
             setFieldData(decimalHandling.encode(fieldDescriptor, value));
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidSetConversion(requireNonNull(value).getClass(),
+                    format("value %s out of range", value));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -136,7 +151,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
         if (value == null) return LONG_NULL_VALUE;
 
         if (BD_MIN_LONG.compareTo(value) > 0 || value.compareTo(BD_MAX_LONG) > 0) {
-            throw new TypeConversionException(LONG_CONVERSION_ERROR);
+            throw invalidGetConversion("long", format("value %f out of range", value));
         }
         return value.longValue();
     }
@@ -153,10 +168,9 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
         // check if value is within bounds
         if (longValue > MAX_INT_VALUE || longValue < MIN_INT_VALUE) {
-            throw new TypeConversionException(INT_CONVERSION_ERROR);
-        } else {
-            return (int) longValue;
+            throw invalidGetConversion("int", format("value %d out of range", longValue));
         }
+        return (int) longValue;
     }
 
     @Override
@@ -171,7 +185,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
         // check if value is within bounds
         if (longValue > MAX_SHORT_VALUE || longValue < MIN_SHORT_VALUE) {
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR);
+            throw invalidGetConversion("short", format("value %d out of range", longValue));
         }
 
         return (short) longValue;
@@ -189,7 +203,7 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
 
         // check if value is within bounds
         if (longValue > MAX_BYTE_VALUE || longValue < MIN_BYTE_VALUE) {
-            throw new TypeConversionException(BYTE_CONVERSION_ERROR);
+            throw invalidGetConversion("byte", format("value %d out of range", longValue));
         }
 
         return (byte) longValue;
@@ -236,12 +250,18 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
 
+        String string = value.trim();
         try {
-            setDecimalInternal(decimalHandling.valueOf(value));
+            setDecimalInternal(decimalHandling.valueOf(string));
         } catch (NumberFormatException nex) {
-            throw new TypeConversionException(STRING_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(nex);
+            throw conversionException;
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidSetConversion(String.class,
+                    format("value %s out of range", string));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 

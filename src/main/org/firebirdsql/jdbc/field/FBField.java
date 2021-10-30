@@ -36,6 +36,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
@@ -45,32 +46,6 @@ import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public abstract class FBField {
-    static final String BYTE_CONVERSION_ERROR = "Error converting to byte.";
-    static final String SHORT_CONVERSION_ERROR = "Error converting to short.";
-    static final String INT_CONVERSION_ERROR = "Error converting to int.";
-    static final String LONG_CONVERSION_ERROR = "Error converting to long.";
-    static final String FLOAT_CONVERSION_ERROR = "Error converting to float.";
-    static final String DOUBLE_CONVERSION_ERROR = "Error converting to double.";
-    static final String BIGDECIMAL_CONVERSION_ERROR = "Error converting to big decimal.";
-    static final String BIG_INTEGER_CONVERSION_ERROR = "Error converting to BigInteger.";
-    static final String DECIMAL_CONVERSION_ERROR = "Error converting to Decimal";
-    static final String INT128_CONVERSION_ERROR = "Error converting to Int128";
-    static final String OVERFLOW_ERROR =
-            "Value is too large to fit in target type, or cannot be represented by the target type";
-    static final String BOOLEAN_CONVERSION_ERROR = "Error converting to boolean.";
-    static final String STRING_CONVERSION_ERROR = "Error converting to string.";
-    static final String OBJECT_CONVERSION_ERROR = "Error converting to object.";
-    static final String DATE_CONVERSION_ERROR = "Error converting to date.";
-    static final String TIME_CONVERSION_ERROR = "Error converting to time.";
-    static final String TIME_TZ_CONVERSION_ERROR = "Error converting to time with time zone.";
-    static final String TIMESTAMP_CONVERSION_ERROR = "Error converting to timestamp.";
-    static final String TIMESTAMP_TZ_CONVERSION_ERROR = "Error converting to timestamp with time zone.";
-    static final String BINARY_STREAM_CONVERSION_ERROR = "Error converting to binary stream.";
-    static final String CHARACTER_STREAM_CONVERSION_ERROR = "Error converting to character stream.";
-    static final String BYTES_CONVERSION_ERROR = "Error converting to array of bytes.";
-    static final String BLOB_CONVERSION_ERROR = "Error converting to Firebird BLOB object";
-    static final String CLOB_CONVERSION_ERROR = "Error converting to Firebird CLOB object";
-    static final String ROWID_CONVERSION_ERROR = "Error converting to Firebird RowId object";
 
     static final String SQL_TYPE_NOT_SUPPORTED = "SQL type for this field is not yet supported.";
     static final String SQL_ARRAY_NOT_SUPPORTED = "Types.ARRAY: " + FBField.SQL_TYPE_NOT_SUPPORTED;
@@ -270,50 +245,50 @@ public abstract class FBField {
     // --- getters
 
     public byte getByte() throws SQLException {
-        throw new TypeConversionException(FBField.BYTE_CONVERSION_ERROR);
+        throw invalidGetConversion("byte");
     }
 
     public short getShort() throws SQLException {
-        throw new TypeConversionException(FBField.SHORT_CONVERSION_ERROR);
+        throw invalidGetConversion("short");
     }
 
     public int getInt() throws SQLException {
-        throw new TypeConversionException(FBField.INT_CONVERSION_ERROR);
+        throw invalidGetConversion("int");
     }
 
     public long getLong() throws SQLException {
-        throw new TypeConversionException(FBField.LONG_CONVERSION_ERROR);
+        throw invalidGetConversion("long");
     }
 
     public float getFloat() throws SQLException {
-        throw new TypeConversionException(FBField.FLOAT_CONVERSION_ERROR);
+        throw invalidGetConversion("float");
     }
 
     public double getDouble() throws SQLException {
-        throw new TypeConversionException(FBField.DOUBLE_CONVERSION_ERROR);
+        throw invalidGetConversion("double");
     }
 
     public BigDecimal getBigDecimal() throws SQLException {
-        throw new TypeConversionException(FBField.BIGDECIMAL_CONVERSION_ERROR);
+        throw invalidGetConversion(BigDecimal.class);
     }
 
-    public BigDecimal getBigDecimal(int scale) throws SQLException {
+    public final BigDecimal getBigDecimal(int scale) throws SQLException {
         return getBigDecimal();
     }
 
     public boolean getBoolean() throws SQLException {
-        throw new TypeConversionException(FBField.BOOLEAN_CONVERSION_ERROR);
+        throw invalidGetConversion("boolean");
     }
 
     public String getString() throws SQLException {
-        throw new TypeConversionException(FBField.STRING_CONVERSION_ERROR);
+        throw invalidGetConversion(String.class);
     }
 
     public Object getObject() throws SQLException {
         if (isNull()) {
             return null;
         }
-        throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
+        throw invalidGetConversion(Object.class);
     }
 
     public Object getObject(Map<String, Class<?>> map) throws SQLException {
@@ -405,18 +380,22 @@ public abstract class FBField {
     }
 
     private String getJdbcTypeName() {
+        return getJdbcTypeName(requiredType);
+    }
+
+    static String getJdbcTypeName(int jdbcType) {
+        if (jdbcType == JaybirdTypeCodes.DECFLOAT) {
+            return "DECFLOAT";
+        }
         try {
-            return JDBCType.valueOf(requiredType).name();
+            return JDBCType.valueOf(jdbcType).name();
         } catch (IllegalArgumentException e) {
-            if (requiredType == JaybirdTypeCodes.DECFLOAT) {
-                return "DECFLOAT";
-            }
-            return String.valueOf(requiredType);
+            return String.valueOf(jdbcType);
         }
     }
 
     public InputStream getBinaryStream() throws SQLException {
-        throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
+        throw invalidGetConversion(InputStream.class);
     }
 
     public Reader getCharacterStream() throws SQLException {
@@ -429,59 +408,59 @@ public abstract class FBField {
     }
 
     public byte[] getBytes() throws SQLException {
-        throw new TypeConversionException(FBField.BYTES_CONVERSION_ERROR);
+        throw invalidGetConversion("byte[]");
     }
 
     public Blob getBlob() throws SQLException {
-        throw new TypeConversionException(FBField.BLOB_CONVERSION_ERROR);
+        throw invalidGetConversion(Blob.class);
     }
 
     public Date getDate() throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidGetConversion(Date.class);
     }
 
     public Date getDate(Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidGetConversion(Date.class);
     }
 
     LocalDate getLocalDate() throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidGetConversion(LocalDate.class);
     }
 
     public Time getTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidGetConversion(Time.class);
     }
 
     public Time getTime(Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidGetConversion(Time.class);
     }
 
     LocalTime getLocalTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidGetConversion(LocalTime.class);
     }
 
     public Timestamp getTimestamp() throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidGetConversion(Timestamp.class);
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidGetConversion(Timestamp.class);
     }
 
     LocalDateTime getLocalDateTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidGetConversion(LocalDateTime.class);
     }
 
     OffsetTime getOffsetTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIME_TZ_CONVERSION_ERROR);
+        throw invalidGetConversion(OffsetTime.class);
     }
 
     OffsetDateTime getOffsetDateTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+        throw invalidGetConversion(OffsetDateTime.class);
     }
 
     ZonedDateTime getZonedDateTime() throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+        throw invalidGetConversion(ZonedDateTime.class);
     }
 
     public Ref getRef() throws SQLException {
@@ -489,7 +468,7 @@ public abstract class FBField {
     }
 
     public Clob getClob() throws SQLException {
-        throw new TypeConversionException(FBField.BLOB_CONVERSION_ERROR);
+        throw invalidGetConversion(Clob.class);
     }
 
     public Array getArray() throws SQLException {
@@ -497,53 +476,53 @@ public abstract class FBField {
     }
 
     public BigInteger getBigInteger() throws SQLException {
-        throw new TypeConversionException(FBField.BIG_INTEGER_CONVERSION_ERROR);
+        throw invalidGetConversion(BigInteger.class);
     }
 
     public RowId getRowId() throws SQLException {
-        throw new TypeConversionException(FBField.ROWID_CONVERSION_ERROR);
+        throw invalidGetConversion(RowId.class);
     }
 
     // --- setters
 
     public void setByte(byte value) throws SQLException {
-        throw new TypeConversionException(FBField.BYTE_CONVERSION_ERROR);
+        throw invalidSetConversion("byte");
     }
 
     public void setShort(short value) throws SQLException {
-        throw new TypeConversionException(FBField.SHORT_CONVERSION_ERROR);
+        throw invalidSetConversion("short");
     }
 
     public void setInteger(int value) throws SQLException {
-        throw new TypeConversionException(FBField.INT_CONVERSION_ERROR);
+        throw invalidSetConversion("int");
     }
 
     public void setLong(long value) throws SQLException {
-        throw new TypeConversionException(FBField.LONG_CONVERSION_ERROR);
+        throw invalidSetConversion("long");
     }
 
     public void setFloat(float value) throws SQLException {
-        throw new TypeConversionException(FBField.FLOAT_CONVERSION_ERROR);
+        throw invalidSetConversion("float");
     }
 
     public void setDouble(double value) throws SQLException {
-        throw new TypeConversionException(FBField.DOUBLE_CONVERSION_ERROR);
+        throw invalidSetConversion("double");
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        throw new TypeConversionException(FBField.BIGDECIMAL_CONVERSION_ERROR);
+        throw invalidSetConversion(BigDecimal.class);
     }
 
     public void setBoolean(boolean value) throws SQLException {
-        throw new TypeConversionException(FBField.BOOLEAN_CONVERSION_ERROR);
+        throw invalidSetConversion("boolean");
     }
 
     public void setString(String value) throws SQLException {
-        throw new TypeConversionException(FBField.STRING_CONVERSION_ERROR);
+        throw invalidSetConversion(String.class);
     }
 
     public void setBigInteger(BigInteger value) throws SQLException {
-        throw new TypeConversionException(FBField.BIG_INTEGER_CONVERSION_ERROR);
+        throw invalidSetConversion(BigInteger.class);
     }
 
     public void setObject(Object value) throws SQLException {
@@ -676,7 +655,7 @@ public abstract class FBField {
     }
 
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        throw new TypeConversionException(FBField.BINARY_STREAM_CONVERSION_ERROR);
+        throw invalidSetConversion(InputStream.class);
     }
 
     public final void setBinaryStream(InputStream in, long length) throws SQLException {
@@ -695,7 +674,7 @@ public abstract class FBField {
     }
 
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        throw new TypeConversionException(FBField.CHARACTER_STREAM_CONVERSION_ERROR);
+        throw invalidSetConversion(Reader.class);
     }
 
     public final void setCharacterStream(Reader in, long length) throws SQLException {
@@ -714,75 +693,75 @@ public abstract class FBField {
     }
 
     public void setBytes(byte[] value) throws SQLException {
-        throw new TypeConversionException(FBField.BYTES_CONVERSION_ERROR);
+        throw invalidSetConversion("byte[]");
     }
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidSetConversion(Date.class);
     }
 
     public void setDate(Date value) throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidSetConversion(Date.class);
     }
 
     void setLocalDate(LocalDate value) throws SQLException {
-        throw new TypeConversionException(FBField.DATE_CONVERSION_ERROR);
+        throw invalidSetConversion(LocalDate.class);
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidSetConversion(Time.class);
     }
 
     public void setTime(Time value) throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidSetConversion(Time.class);
     }
 
     void setLocalTime(LocalTime value) throws SQLException {
-        throw new TypeConversionException(FBField.TIME_CONVERSION_ERROR);
+        throw invalidSetConversion(LocalTime.class);
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidSetConversion(Timestamp.class);
     }
 
     public void setTimestamp(Timestamp value) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidSetConversion(Timestamp.class);
     }
 
     void setLocalDateTime(LocalDateTime value) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidSetConversion(LocalDateTime.class);
     }
 
     void setOffsetTime(OffsetTime value) throws SQLException {
-        throw new TypeConversionException(FBField.TIME_TZ_CONVERSION_ERROR);
+        throw invalidSetConversion(OffsetTime.class);
     }
 
     void setOffsetDateTime(OffsetDateTime value) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+        throw invalidSetConversion(OffsetDateTime.class);
     }
 
     void setZonedDateTime(ZonedDateTime value) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_TZ_CONVERSION_ERROR);
+        throw invalidSetConversion(ZonedDateTime.class);
     }
 
     public void setBlob(FBBlob blob) throws SQLException {
-        throw new TypeConversionException(FBField.BLOB_CONVERSION_ERROR);
+        throw invalidSetConversion(Blob.class);
     }
 
     public void setClob(FBClob clob) throws SQLException {
-        throw new TypeConversionException(FBField.CLOB_CONVERSION_ERROR);
+        throw invalidSetConversion(Clob.class);
     }
 
     public void setRowId(RowId rowId) throws SQLException {
-        throw new TypeConversionException(FBField.ROWID_CONVERSION_ERROR);
+        throw invalidSetConversion(RowId.class);
     }
 
     public DatatypeCoder.RawDateTimeStruct getRawDateTimeStruct() throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidGetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }
 
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        throw new TypeConversionException(FBField.TIMESTAMP_CONVERSION_ERROR);
+        throw invalidSetConversion(DatatypeCoder.RawDateTimeStruct.class);
     }
 
     /**
@@ -819,7 +798,10 @@ public abstract class FBField {
                     ? Decimal128.valueOf(bdValue, OverflowHandling.THROW_EXCEPTION)
                     : null;
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidGetConversion(Decimal128.class,
+                    String.format("value %s out of range", bdValue));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -830,7 +812,10 @@ public abstract class FBField {
                     ? value.toDecimal(targetType, OverflowHandling.THROW_EXCEPTION)
                     : null;
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidGetConversion(targetType,
+                    String.format("value %s out of range", value));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -848,7 +833,10 @@ public abstract class FBField {
         try {
             setBigDecimal(decimal != null ? decimal.toBigDecimal() : null);
         } catch (ArithmeticException e) {
-            throw new TypeConversionException(OVERFLOW_ERROR, e);
+            SQLException conversionException = invalidSetConversion(requireNonNull(decimal).getClass(),
+                    String.format("value %s out of range", decimal));
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -861,23 +849,47 @@ public abstract class FBField {
     }
 
     SQLException invalidGetConversion(Class<?> requestedType) {
-        return invalidGetConversion(requestedType.getName());
+        return invalidGetConversion(requestedType.getName(), null);
+    }
+
+    SQLException invalidGetConversion(Class<?> requestedType, String reason) {
+        return invalidGetConversion(requestedType.getName(), reason);
     }
 
     SQLException invalidGetConversion(String requestedTypeName) {
-        return new TypeConversionException(String.format(
-                "Unsupported get conversion requested for field \"%s\" (JDBC type %s), target type: %s",
-                getName(), getJdbcTypeName(), requestedTypeName));
+        return invalidGetConversion(requestedTypeName, null);
+    }
+
+    SQLException invalidGetConversion(String requestedTypeName, String reason) {
+        String message = String.format(
+                "Unsupported get conversion requested for field \"%s\" at %d (JDBC type %s), target type: %s",
+                getName(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), requestedTypeName);
+        if (reason != null) {
+            message = message + ", reason: " + reason;
+        }
+        return new TypeConversionException(message);
     }
 
     SQLException invalidSetConversion(Class<?> sourceType) {
-        return invalidSetConversion(sourceType.getName());
+        return invalidSetConversion(sourceType.getName(), null);
+    }
+
+    SQLException invalidSetConversion(Class<?> sourceType, String reason) {
+        return invalidSetConversion(sourceType.getName(), reason);
     }
 
     SQLException invalidSetConversion(String sourceTypeName) {
-        return new TypeConversionException(String.format(
-                "Unsupported set conversion requested for field \"%s\" (JDBC type %s), source type: %s",
-                getName(), getJdbcTypeName(), sourceTypeName));
+        return invalidSetConversion(sourceTypeName, null);
+    }
+
+    SQLException invalidSetConversion(String sourceTypeName, String reason) {
+        String message = String.format(
+                "Unsupported set conversion requested for field \"%s\" at %d (JDBC type %s), source type: %s",
+                getName(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
+        if (reason != null) {
+            message = message + ", reason: " + reason;
+        }
+        return new TypeConversionException(message);
     }
 
 }

@@ -88,7 +88,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
         toReturnDecfloat34Expectations(stringValue);
         
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.getDecimal(Decimal64.class);
     }
@@ -168,7 +168,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     public void setDecimal_decfloat16_Decimal128_exception_onOverflow() throws SQLException {
         setupDecfloat16Field();
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234E385"));
     }
@@ -329,7 +329,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     public void setBigDecimal_decfloat16_exception_onOverflow() throws SQLException {
         setupDecfloat16Field();
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.setBigDecimal(new BigDecimal("1.234567890123456E385"));
     }
@@ -363,7 +363,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
         // value too big to fit
         final String stringValue = "1.234567890123456789012345678901234E+6145";
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.setBigDecimal(new BigDecimal(stringValue));
     }
@@ -880,7 +880,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
         // value too big to fit
         final String stringValue = "1.234567890123456E385";
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.setString(stringValue);
     }
@@ -900,7 +900,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
         // value too big to fit
         final String stringValue = "1.234567890123456789012345678901234E+6145";
         expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(FBField.OVERFLOW_ERROR);
+        expectedException.expectMessage(containsString("out of range"));
 
         field.setString(stringValue);
     }

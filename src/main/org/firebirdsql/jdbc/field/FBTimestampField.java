@@ -96,7 +96,14 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
 
-        setTimestamp(Timestamp.valueOf(value));
+        String string = value.trim();
+        try {
+            setTimestamp(Timestamp.valueOf(string));
+        } catch (RuntimeException e) {
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
+        }
     }
 
     public void setDate(Date value, Calendar cal) throws SQLException {

@@ -116,7 +116,9 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
             }
             return bout.toByteArray();
         } catch(IOException ioex) {
-            throw new TypeConversionException(BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
+            SQLException conversionException = invalidGetConversion("bytes[]", ioex.getMessage());
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 

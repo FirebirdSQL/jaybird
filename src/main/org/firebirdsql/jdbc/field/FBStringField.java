@@ -81,10 +81,13 @@ class FBStringField extends FBField {
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Byte.parseByte(getString().trim());
+            return Byte.parseByte(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("byte", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -92,10 +95,13 @@ class FBStringField extends FBField {
     public short getShort() throws SQLException {
         if (isNull()) return SHORT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Short.parseShort(getString().trim());
+            return Short.parseShort(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("short", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -103,10 +109,13 @@ class FBStringField extends FBField {
     public int getInt() throws SQLException {
         if (isNull()) return INT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Integer.parseInt(getString().trim());
+            return Integer.parseInt(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(INT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("int", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -114,10 +123,13 @@ class FBStringField extends FBField {
     public long getLong() throws SQLException {
         if (isNull()) return LONG_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Long.parseLong(getString().trim());
+            return Long.parseLong(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("long", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -125,10 +137,13 @@ class FBStringField extends FBField {
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
 
+        String string = getString().trim();
         try {
-            return new BigDecimal(getString().trim());
+            return new BigDecimal(string);
         } catch (NumberFormatException e) {
-            throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion(BigDecimal.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -136,10 +151,13 @@ class FBStringField extends FBField {
     public float getFloat() throws SQLException {
         if (isNull()) return FLOAT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Float.parseFloat(getString().trim());
+            return Float.parseFloat(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("float", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -147,10 +165,13 @@ class FBStringField extends FBField {
     public double getDouble() throws SQLException {
         if (isNull()) return DOUBLE_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Double.parseDouble(getString().trim());
+            return Double.parseDouble(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("double", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -164,7 +185,7 @@ class FBStringField extends FBField {
         return trimmedValue.equalsIgnoreCase(LONG_TRUE) ||
                 trimmedValue.equalsIgnoreCase(SHORT_TRUE) ||
                 trimmedValue.equalsIgnoreCase(SHORT_TRUE_2) ||
-                trimmedValue.equalsIgnoreCase(SHORT_TRUE_3);
+                trimmedValue.equals(SHORT_TRUE_3);
     }
 
     @Override
@@ -306,10 +327,13 @@ class FBStringField extends FBField {
     public BigInteger getBigInteger() throws SQLException {
         if (isNull()) return null;
 
+        String string = getString().trim();
         try {
-            return new BigInteger(getString().trim());
+            return new BigInteger(string);
         } catch (NumberFormatException e) {
-            throw new TypeConversionException(BIG_INTEGER_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion(BigInteger.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 
@@ -383,7 +407,9 @@ class FBStringField extends FBField {
         try {
             setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(InputStream.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 
@@ -399,7 +425,9 @@ class FBStringField extends FBField {
         try {
             setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(Reader.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 

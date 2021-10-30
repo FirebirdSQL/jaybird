@@ -80,10 +80,13 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
 
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
+        String string = value.trim();
         try {
-            setTime(Time.valueOf(value));
+            setTime(Time.valueOf(string));
         } catch (RuntimeException e) {
-            throw new TypeConversionException(TIME_CONVERSION_ERROR, e);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 

@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.time.*;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
@@ -180,6 +181,20 @@ abstract class AbstractWithTimeZoneField extends FBField {
         } else {
             OffsetTime offsetTime = OffsetTime.parse(value.trim());
             setOffsetTime(offsetTime);
+        }
+    }
+
+    @Override
+    public void setString(String value) throws SQLException {
+        if (setWhenNull(value)) return;
+
+        String string = value.trim();
+        try {
+            setStringParse(string);
+        } catch (DateTimeParseException e) {
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
         }
     }
 }

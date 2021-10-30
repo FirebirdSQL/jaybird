@@ -56,8 +56,9 @@ final class FBLongField extends FBField {
         long value = getDatatypeCoder().decodeLong(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE)
-            throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
+        if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
+            throw invalidGetConversion("byte", String.format("value %d out of range", value));
+        }
 
         return (byte) value;
     }
@@ -69,8 +70,9 @@ final class FBLongField extends FBField {
         long value = getDatatypeCoder().decodeLong(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE)
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidGetConversion("short", String.format("value %d out of range", value));
+        }
 
         return (short) value;
     }
@@ -82,8 +84,9 @@ final class FBLongField extends FBField {
         long value = getDatatypeCoder().decodeLong(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_INT_VALUE || value < MIN_INT_VALUE)
-            throw new TypeConversionException(INT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_INT_VALUE || value < MIN_INT_VALUE) {
+            throw invalidGetConversion("int", String.format("value %d out of range", value));
+        }
 
         return (int) value;
     }
@@ -136,10 +139,13 @@ final class FBLongField extends FBField {
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
 
+        String string = value.trim();
         try {
-            setLong(Long.parseLong(value));
+            setLong(Long.parseLong(string));
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -156,8 +162,9 @@ final class FBLongField extends FBField {
     @Override
     public void setFloat(float value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE)
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
+            throw invalidSetConversion("float", String.format("value %f out of range", value));
+        }
 
         setLong((long) value);
     }
@@ -165,8 +172,9 @@ final class FBLongField extends FBField {
     @Override
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE)
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        if (value > MAX_LONG_VALUE || value < MIN_LONG_VALUE) {
+            throw invalidSetConversion("double", String.format("value %f out of range", value));
+        }
 
         setLong((long) value);
     }
@@ -191,8 +199,9 @@ final class FBLongField extends FBField {
         if (setWhenNull(value)) return;
 
         // check if value is within bounds
-        if (value.compareTo(BD_MAX_LONG) > 0 || value.compareTo(BD_MIN_LONG) < 0)
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(BD_MAX_LONG) > 0 || value.compareTo(BD_MIN_LONG) < 0) {
+            throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
+        }
 
         setLong(value.longValue());
     }
@@ -202,8 +211,9 @@ final class FBLongField extends FBField {
         if (setWhenNull(value)) return;
 
         // check if value is within bounds
-        if (value.compareTo(BI_MAX_LONG) > 0 || value.compareTo(BI_MIN_LONG) < 0)
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(BI_MAX_LONG) > 0 || value.compareTo(BI_MIN_LONG) < 0) {
+            throw invalidSetConversion(BigInteger.class, String.format("value %d out of range", value));
+        }
 
         setLong(value.longValueExact());
     }

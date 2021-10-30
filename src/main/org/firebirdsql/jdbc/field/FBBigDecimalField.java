@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
@@ -28,6 +27,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.sql.SQLException;
+
+import static org.firebirdsql.jdbc.JavaTypeNameConstants.BIG_DECIMAL_CLASS_NAME;
 
 /**
  * Describe class <code>FBBigDecimalField</code> here.
@@ -74,8 +75,9 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is within bounds
-        if (longValue > MAX_BYTE_VALUE || longValue < MIN_BYTE_VALUE)
-            throw new TypeConversionException(BYTE_CONVERSION_ERROR);
+        if (longValue > MAX_BYTE_VALUE || longValue < MIN_BYTE_VALUE) {
+            throw invalidGetConversion("byte", String.format("value %d out of range", longValue));
+        }
 
         return (byte) longValue;
     }
@@ -99,8 +101,9 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is within bounds
-        if (longValue > MAX_INT_VALUE || longValue < MIN_INT_VALUE)
-            throw new TypeConversionException(INT_CONVERSION_ERROR);
+        if (longValue > MAX_INT_VALUE || longValue < MIN_INT_VALUE) {
+            throw invalidGetConversion("int", String.format("value %d out of range", longValue));
+        }
 
         return (int) longValue;
     }
@@ -110,7 +113,7 @@ final class FBBigDecimalField extends FBField {
         if (value == null) return LONG_NULL_VALUE;
 
         if (BD_MIN_LONG.compareTo(value) > 0 || value.compareTo(BD_MAX_LONG) > 0) {
-            throw new TypeConversionException(LONG_CONVERSION_ERROR);
+            throw invalidGetConversion("long", String.format("value %f out of range", value));
         }
         return value.longValue();
     }
@@ -120,8 +123,9 @@ final class FBBigDecimalField extends FBField {
         long longValue = getLong();
 
         // check if value is within bounds
-        if (longValue > MAX_SHORT_VALUE || longValue < MIN_SHORT_VALUE)
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR);
+        if (longValue > MAX_SHORT_VALUE || longValue < MIN_SHORT_VALUE) {
+            throw invalidGetConversion("short", String.format("value %d out of range", longValue));
+        }
 
         return (short) longValue;
     }
@@ -179,10 +183,13 @@ final class FBBigDecimalField extends FBField {
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
 
+        String string = value.trim();
         try {
-            setBigDecimal(new BigDecimal(value));
+            setBigDecimal(new BigDecimal(string));
         } catch (NumberFormatException nex) {
-            throw new TypeConversionException(STRING_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(nex);
+            throw conversionException;
         }
     }
 
@@ -216,7 +223,7 @@ final class FBBigDecimalField extends FBField {
             protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_SHORT) > 0 || unscaledValue.compareTo(MIN_SHORT) < 0) {
-                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
+                    throw bigDecimalConversionError(fieldDescriptor, value);
                 }
                 return fieldDescriptor.getDatatypeCoder().encodeShort(unscaledValue.shortValue());
             }
@@ -232,7 +239,7 @@ final class FBBigDecimalField extends FBField {
             protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_INT) > 0 || unscaledValue.compareTo(MIN_INT) < 0) {
-                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
+                    throw bigDecimalConversionError(fieldDescriptor, value);
                 }
                 return fieldDescriptor.getDatatypeCoder().encodeInt(unscaledValue.intValue());
             }
@@ -248,7 +255,7 @@ final class FBBigDecimalField extends FBField {
             protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
                 BigInteger unscaledValue = normalize(value, -1 * fieldDescriptor.getScale());
                 if (unscaledValue.compareTo(MAX_LONG) > 0 || unscaledValue.compareTo(MIN_LONG) < 0) {
-                    throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR);
+                    throw bigDecimalConversionError(fieldDescriptor, value);
                 }
                 return fieldDescriptor.getDatatypeCoder().encodeLong(unscaledValue.longValue());
             }
@@ -263,9 +270,9 @@ final class FBBigDecimalField extends FBField {
             @Override
             protected byte[] encode(FieldDescriptor fieldDescriptor, BigDecimal value) throws SQLException {
                 // check if value is within bounds
-                if (value.compareTo(BD_MAX_DOUBLE) > 0 ||
-                        value.compareTo(BD_MIN_DOUBLE) < 0)
-                    throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + value);
+                if (value.compareTo(BD_MAX_DOUBLE) > 0 || value.compareTo(BD_MIN_DOUBLE) < 0) {
+                    throw bigDecimalConversionError(fieldDescriptor, value);
+                }
 
                 return fieldDescriptor.getDatatypeCoder().encodeDouble(value.doubleValue());
             }
@@ -283,7 +290,7 @@ final class FBBigDecimalField extends FBField {
                 if (unscaledValue.bitLength() > 127) {
                     // value will not fit in a 16-byte byte array,
                     // using 127 and not 128 because bitLength() does not include sign bit
-                    throw new TypeConversionException(INT128_CONVERSION_ERROR + ": " + OVERFLOW_ERROR);
+                    throw bigDecimalConversionError(fieldDescriptor, value);
                 }
                 return fieldDescriptor.getDatatypeCoder().encodeInt128(unscaledValue);
             }
@@ -352,6 +359,15 @@ final class FBBigDecimalField extends FBField {
                         .messageParameter(fieldDescriptor.getType())
                         .toFlatSQLException();
             }
+        }
+
+        SQLException bigDecimalConversionError(FieldDescriptor fieldDescriptor, BigDecimal value) {
+            String message = String.format(
+                    "Unsupported set conversion requested for field \"%s\" at %d (JDBC type %s), "
+                            + "source type: " + BIG_DECIMAL_CLASS_NAME + ", reason: value %f out of range",
+                    fieldDescriptor.getOriginalName(), fieldDescriptor.getPosition() + 1,
+                    getJdbcTypeName(JdbcTypeConverter.toJdbcType(fieldDescriptor)), value);
+            return new TypeConversionException(message);
         }
     }
 
