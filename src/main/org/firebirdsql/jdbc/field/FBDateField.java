@@ -39,6 +39,11 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getDate();
+    }
+
+    @Override
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
         if (isNull()) return null;
         return new java.sql.Timestamp(getDatatypeCoder().decodeDateCalendar(getFieldData(), cal).getTime());

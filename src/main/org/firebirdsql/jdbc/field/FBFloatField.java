@@ -41,6 +41,13 @@ final class FBFloatField extends FBField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        if (isNull()) return null;
+        // See JDBC 4.3, B.3 JDBC Types Mapped to Java Object Types
+        return getDouble();
+    }
+
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 

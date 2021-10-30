@@ -44,6 +44,11 @@ class FBBinaryField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getBytes();
+    }
+
+    @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeString(getFieldData());

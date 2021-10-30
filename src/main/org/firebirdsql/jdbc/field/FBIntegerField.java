@@ -44,6 +44,12 @@ final class FBIntegerField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        if (isNull()) return null;
+        return getInt();
+    }
+
+    @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 

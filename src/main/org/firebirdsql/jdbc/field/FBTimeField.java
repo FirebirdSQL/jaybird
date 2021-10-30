@@ -39,6 +39,11 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        return getTime();
+    }
+
     public String getString() throws SQLException {
         if (isNull()) return null;
         return String.valueOf(getTime());

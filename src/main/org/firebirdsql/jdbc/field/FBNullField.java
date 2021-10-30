@@ -30,7 +30,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 /**
- * FBField implementation for NULL fields (eg in condition ? IS NULL).
+ * FBField implementation for NULL fields (e.g. in condition ? IS NULL).
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */

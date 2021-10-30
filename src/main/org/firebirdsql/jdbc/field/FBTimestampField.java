@@ -40,6 +40,11 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        return getTimestamp();
+    }
+
     public String getString() throws SQLException {
         if (isNull()) return null;
 

@@ -68,6 +68,11 @@ class FBStringField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getString();
+    }
+
+    @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 

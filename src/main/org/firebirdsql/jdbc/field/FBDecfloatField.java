@@ -58,6 +58,11 @@ final class FBDecfloatField<T extends Decimal<T>> extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getBigDecimal();
+    }
+
+    @Override
     public BigDecimal getBigDecimal() throws SQLException {
         T value = getDecimal();
         if (value == null) return null;

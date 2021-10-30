@@ -59,6 +59,11 @@ final class FBBigDecimalField extends FBField {
         fieldDataSize = FieldDataSize.getFieldDataSize(fieldDescriptor);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        return getBigDecimal();
+    }
+
     public boolean getBoolean() throws SQLException {
         // TODO might be better to use BigDecimal.ONE.equals(getBigDecimal()) (or compareTo == 0), but is not backwards compatible.
         return getByte() == 1;

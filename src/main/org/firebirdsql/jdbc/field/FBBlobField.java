@@ -32,6 +32,7 @@ import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * Describe class <code>FBBlobField</code> here.
@@ -77,6 +78,14 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField 
         blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes));
         
         return blob;
+    }
+
+    @Override
+    public Object getObject() throws SQLException {
+        if (requiredType == Types.BLOB) {
+            return getBlob();
+        }
+        return getBytes();
     }
 
     @Override

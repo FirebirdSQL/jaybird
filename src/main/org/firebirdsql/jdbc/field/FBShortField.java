@@ -44,6 +44,13 @@ class FBShortField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        if (isNull()) return null;
+        // See JDBC 4.3, B.3 JDBC Types Mapped to Java Object Types
+        return getInt();
+    }
+
+    @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 

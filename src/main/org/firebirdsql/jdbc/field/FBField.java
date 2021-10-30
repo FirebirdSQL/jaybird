@@ -104,7 +104,6 @@ public abstract class FBField {
     private final FieldDataProvider dataProvider;
     protected GDSHelper gdsHelper;
     protected int requiredType;
-    protected int scale = -1;
 
     FBField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         if (fieldDescriptor == null) {
@@ -317,71 +316,7 @@ public abstract class FBField {
         if (isNull()) {
             return null;
         }
-
-        switch (requiredType) {
-        case Types.CHAR:
-        case Types.VARCHAR:
-        case Types.LONGVARCHAR:
-            return getString();
-
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            if (scale == -1) {
-                return getBigDecimal();
-            } else {
-                return getBigDecimal(scale);
-            }
-        case JaybirdTypeCodes.DECFLOAT:
-            return getBigDecimal();
-
-        case Types.BIT:
-        case Types.BOOLEAN:
-            return getBoolean();
-
-        case Types.TINYINT:
-        case Types.SMALLINT:
-        case Types.INTEGER:
-            return getInt();
-
-        case Types.BIGINT:
-            return getLong();
-
-        case Types.REAL:
-            return getFloat();
-
-        case Types.FLOAT:
-        case Types.DOUBLE:
-            return getDouble();
-
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-            return getBytes();
-
-        case Types.DATE:
-            return getDate();
-
-        case Types.TIME:
-            return getTime();
-
-        case Types.TIMESTAMP:
-            return getTimestamp();
-
-        case Types.CLOB:
-            return getClob();
-
-        case Types.BLOB:
-            return getBlob();
-
-        case Types.ARRAY:
-            return getArray();
-
-        case Types.ROWID:
-            return getRowId();
-
-        default:
-            throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
-        }
+        throw new TypeConversionException(FBField.OBJECT_CONVERSION_ERROR);
     }
 
     public Object getObject(Map<String, Class<?>> map) throws SQLException {
