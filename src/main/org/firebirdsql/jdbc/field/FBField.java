@@ -35,6 +35,7 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
@@ -848,48 +849,60 @@ public abstract class FBField {
         return props.isTimestampUsesLocalTimezone();
     }
 
-    SQLException invalidGetConversion(Class<?> requestedType) {
+    final SQLException invalidGetConversion(Class<?> requestedType) {
         return invalidGetConversion(requestedType.getName(), null);
     }
 
-    SQLException invalidGetConversion(Class<?> requestedType, String reason) {
+    final SQLException invalidGetConversion(Class<?> requestedType, String reason) {
         return invalidGetConversion(requestedType.getName(), reason);
     }
 
-    SQLException invalidGetConversion(String requestedTypeName) {
+    final SQLException invalidGetConversion(String requestedTypeName) {
         return invalidGetConversion(requestedTypeName, null);
     }
 
-    SQLException invalidGetConversion(String requestedTypeName, String reason) {
+    final SQLException invalidGetConversion(String requestedTypeName, String reason) {
         String message = String.format(
-                "Unsupported get conversion requested for field \"%s\" at %d (JDBC type %s), target type: %s",
-                getName(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), requestedTypeName);
+                "Unsupported get conversion requested for field %s at index %d (JDBC type %s), target type: %s",
+                getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), requestedTypeName);
         if (reason != null) {
             message = message + ", reason: " + reason;
         }
         return new TypeConversionException(message);
     }
 
-    SQLException invalidSetConversion(Class<?> sourceType) {
+    final SQLException invalidSetConversion(Class<?> sourceType) {
         return invalidSetConversion(sourceType.getName(), null);
     }
 
-    SQLException invalidSetConversion(Class<?> sourceType, String reason) {
+    final SQLException invalidSetConversion(Class<?> sourceType, String reason) {
         return invalidSetConversion(sourceType.getName(), reason);
     }
 
-    SQLException invalidSetConversion(String sourceTypeName) {
+    final SQLException invalidSetConversion(String sourceTypeName) {
         return invalidSetConversion(sourceTypeName, null);
     }
 
-    SQLException invalidSetConversion(String sourceTypeName, String reason) {
+    final SQLException invalidSetConversion(String sourceTypeName, String reason) {
         String message = String.format(
-                "Unsupported set conversion requested for field \"%s\" at %d (JDBC type %s), source type: %s",
-                getName(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
+                "Unsupported set conversion requested for field %s at index %d (JDBC type %s), source type: %s",
+                getAlias(), fieldDescriptor.getPosition() + 1, getJdbcTypeName(), sourceTypeName);
         if (reason != null) {
             message = message + ", reason: " + reason;
         }
         return new TypeConversionException(message);
+    }
+
+    final <T> T fromString(String value, Function<String, T> converter) throws SQLException {
+        if (value == null) return null;
+        String string = value.trim();
+        try {
+            return converter.apply(value);
+        } catch (RuntimeException e) {
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(e);
+            throw conversionException;
+        }
     }
 
 }

@@ -22,12 +22,9 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
 
 import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
 import java.time.*;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
-
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
  * Superclass for {@link FBTimeTzField}, {@link FBTimestampTzField} to handle legacy date/time types and common behaviour.
@@ -47,51 +44,40 @@ abstract class AbstractWithTimeZoneField extends FBField {
                 .getTimeZoneCodecFor(fieldDescriptor);
     }
 
+    @Override
     final OffsetDateTime getOffsetDateTime() throws SQLException {
         if (isNull()) return null;
 
         return timeZoneCodec.decodeOffsetDateTime(getFieldData());
     }
 
+    @Override
     final void setOffsetDateTime(OffsetDateTime offsetDateTime) throws SQLException {
         setFieldData(getTimeZoneCodec().encodeOffsetDateTime(offsetDateTime));
     }
 
+    @Override
     final OffsetTime getOffsetTime() throws SQLException {
         if (isNull()) return null;
 
         return timeZoneCodec.decodeOffsetTime(getFieldData());
     }
 
+    @Override
     final void setOffsetTime(OffsetTime offsetTime) throws SQLException {
         setFieldData(timeZoneCodec.encodeOffsetTime(offsetTime));
     }
 
+    @Override
     final ZonedDateTime getZonedDateTime() throws SQLException {
         if (isNull()) return null;
 
         return timeZoneCodec.decodeZonedDateTime(getFieldData());
     }
 
+    @Override
     final void setZonedDateTime(ZonedDateTime zonedDateTime) throws SQLException {
         setFieldData(timeZoneCodec.encodeZonedDateTime(zonedDateTime));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T getObject(Class<T> type) throws SQLException {
-        if (type == null) {
-            throw new SQLNonTransientException("getObject called with type null");
-        }
-        switch (type.getName()) {
-        case OFFSET_TIME_CLASS_NAME:
-            return (T) getOffsetTime();
-        case OFFSET_DATE_TIME_CLASS_NAME:
-            return (T) getOffsetDateTime();
-        case ZONED_DATE_TIME_CLASS_NAME:
-            return (T) getZonedDateTime();
-        }
-        return super.getObject(type);
     }
 
     @Override
@@ -172,14 +158,14 @@ abstract class AbstractWithTimeZoneField extends FBField {
         return defaultZoneId = ZoneId.systemDefault();
     }
 
-    void setStringParse(String value) throws SQLException {
+    private void setStringParse(String value) throws SQLException {
         // TODO Better way to do this?
         // TODO More lenient parsing?
         if (value.indexOf('T') != -1) {
-            OffsetDateTime offsetDateTime = OffsetDateTime.parse(value.trim());
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse(value);
             setOffsetDateTime(offsetDateTime);
         } else {
-            OffsetTime offsetTime = OffsetTime.parse(value.trim());
+            OffsetTime offsetTime = OffsetTime.parse(value);
             setOffsetTime(offsetTime);
         }
     }

@@ -81,15 +81,7 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     //--- setXXX methods
 
     public void setString(String value) throws SQLException {
-        if (setWhenNull(value)) return;
-        String string = value.trim();
-        try {
-            setTime(Time.valueOf(string));
-        } catch (RuntimeException e) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        setTime(fromString(value, Time::valueOf));
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {

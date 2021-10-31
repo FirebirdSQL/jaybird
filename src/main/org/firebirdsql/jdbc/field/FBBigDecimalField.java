@@ -181,16 +181,7 @@ final class FBBigDecimalField extends FBField {
     }
 
     public void setString(String value) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        String string = value.trim();
-        try {
-            setBigDecimal(new BigDecimal(string));
-        } catch (NumberFormatException nex) {
-            SQLException conversionException = invalidSetConversion(String.class, string);
-            conversionException.initCause(nex);
-            throw conversionException;
-        }
+        setBigDecimal(fromString(value, BigDecimal::new));
     }
 
     public void setBigDecimal(BigDecimal value) throws SQLException {
@@ -363,9 +354,9 @@ final class FBBigDecimalField extends FBField {
 
         SQLException bigDecimalConversionError(FieldDescriptor fieldDescriptor, BigDecimal value) {
             String message = String.format(
-                    "Unsupported set conversion requested for field \"%s\" at %d (JDBC type %s), "
+                    "Unsupported set conversion requested for field %s at index %d (JDBC type %s), "
                             + "source type: " + BIG_DECIMAL_CLASS_NAME + ", reason: value %f out of range",
-                    fieldDescriptor.getOriginalName(), fieldDescriptor.getPosition() + 1,
+                    fieldDescriptor.getFieldName(), fieldDescriptor.getPosition() + 1,
                     getJdbcTypeName(JdbcTypeConverter.toJdbcType(fieldDescriptor)), value);
             return new TypeConversionException(message);
         }

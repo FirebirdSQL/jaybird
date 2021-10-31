@@ -30,10 +30,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.time.*;
-import java.time.format.DateTimeParseException;
 import java.util.Calendar;
-
-import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
+import java.util.function.Function;
 
 /**
  * Describe class <code>FBStringField</code> here.
@@ -135,16 +133,7 @@ class FBStringField extends FBField {
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
-        if (isNull()) return null;
-
-        String string = getString().trim();
-        try {
-            return new BigDecimal(string);
-        } catch (NumberFormatException e) {
-            SQLException conversionException = invalidGetConversion(BigDecimal.class, string);
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return getValueAs(BigDecimal.class, BigDecimal::new);
     }
 
     @Override
@@ -219,18 +208,12 @@ class FBStringField extends FBField {
 
     @Override
     public Date getDate() throws SQLException {
-        if (isNull()) return null;
-        return Date.valueOf(getString().trim());
+        return getValueAs(Date.class, Date::valueOf);
     }
 
     @Override
     LocalDate getLocalDate() throws SQLException {
-        String string = getString();
-        try {
-            return string != null ? LocalDate.parse(string.trim()) : null;
-        } catch (DateTimeParseException e) {
-            throw new SQLException("Unable to convert value '" + string + "' to type " + LOCAL_TIME_CLASS_NAME, e);
-        }
+        return getValueAs(LocalDate.class, LocalDate::parse);
     }
 
     @Override
@@ -241,18 +224,12 @@ class FBStringField extends FBField {
 
     @Override
     public Time getTime() throws SQLException {
-        if (isNull()) return null;
-        return Time.valueOf(getString().trim());
+        return getValueAs(Time.class, Time::valueOf);
     }
 
     @Override
     LocalTime getLocalTime() throws SQLException {
-        String string = getString();
-        try {
-            return string != null ? LocalTime.parse(string.trim()) : null;
-        } catch (DateTimeParseException e) {
-            throw new SQLException("Unable to convert value '" + string + "' to type " + LOCAL_DATE_CLASS_NAME, e);
-        }
+        return getValueAs(LocalTime.class, LocalTime::parse);
     }
 
     @Override
@@ -263,78 +240,46 @@ class FBStringField extends FBField {
 
     @Override
     public Timestamp getTimestamp() throws SQLException {
-        String string = getString();
-        if (string == null) return null;
-        string = string.trim();
-        int tIdx = string.indexOf('T');
-        if (tIdx != -1) {
-            // possibly yyyy-MM-ddTHH:mm:ss[.f...]
-            string = string.substring(0, tIdx) + ' ' + string.substring(tIdx + 1);
-        }
-        return Timestamp.valueOf(string);
+        return getValueAs(Timestamp.class, string -> {
+            int tIdx = string.indexOf('T');
+            if (tIdx != -1) {
+                // possibly yyyy-MM-ddTHH:mm:ss[.f...]
+                string = string.substring(0, tIdx) + ' ' + string.substring(tIdx + 1);
+            }
+            return Timestamp.valueOf(string);
+        });
     }
 
     @Override
     LocalDateTime getLocalDateTime() throws SQLException {
-        String originalString = getString();
-        if (originalString == null) return null;
-        try {
-            String string = originalString.trim();
+        return getValueAs(LocalDateTime.class, string -> {
             int spaceIdx = string.indexOf(' ');
             if (spaceIdx != -1) {
                 // possibly yyyy-MM-dd HH:mm:ss[.f...]
                 string = string.substring(0, spaceIdx) + 'T' + string.substring(spaceIdx + 1);
             }
             return LocalDateTime.parse(string);
-        } catch (DateTimeParseException e) {
-            throw new SQLException(
-                    "Unable to convert value '" + originalString + "' to type " + LOCAL_DATE_TIME_CLASS_NAME, e);
-        }
+        });
     }
 
     @Override
     OffsetTime getOffsetTime() throws SQLException {
-        String string = getString();
-        try {
-            return string != null ? OffsetTime.parse(string.trim()) : null;
-        } catch (DateTimeParseException e) {
-            throw new SQLException("Unable to convert value '" + string + "' to type " + OFFSET_TIME_CLASS_NAME, e);
-        }
+        return getValueAs(OffsetTime.class, OffsetTime::parse);
     }
 
     @Override
     OffsetDateTime getOffsetDateTime() throws SQLException {
-        String string = getString();
-        try {
-            return string != null ? OffsetDateTime.parse(string.trim()) : null;
-        } catch (DateTimeParseException e) {
-            throw new SQLException(
-                    "Unable to convert value '" + string + "' to type " + OFFSET_DATE_TIME_CLASS_NAME, e);
-        }
+        return getValueAs(OffsetDateTime.class, OffsetDateTime::parse);
     }
 
     @Override
     ZonedDateTime getZonedDateTime() throws SQLException {
-        String string = getString();
-        try {
-            return string != null ? ZonedDateTime.parse(string.trim()) : null;
-        } catch (DateTimeParseException e) {
-            throw new SQLException("Unable to convert value '" + string + "' to type " + ZONED_DATE_TIME_CLASS_NAME, e);
-        }
+        return getValueAs(ZonedDateTime.class, ZonedDateTime::parse);
     }
 
     @Override
     public BigInteger getBigInteger() throws SQLException {
-        if (isNull()) return null;
-
-        String string = getString().trim();
-        try {
-            return new BigInteger(string);
-        } catch (NumberFormatException e) {
-            SQLException conversionException = invalidGetConversion(BigInteger.class, string);
-            conversionException.initCause(e);
-            throw conversionException;
-        }
+        return getValueAs(BigInteger.class, BigInteger::new);
     }
 
     //--- setXXX methods
@@ -519,5 +464,17 @@ class FBStringField extends FBField {
     private void setAsString(Object value) throws SQLException {
         if (setWhenNull(value)) return;
         setString(value.toString());
+    }
+
+    private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {
+        if (isNull()) return null;
+        String string = getString().trim();
+        try {
+            return converter.apply(string);
+        } catch (RuntimeException e) {
+            SQLException conversionException = invalidGetConversion(type, string);
+            conversionException.initCause(e);
+            throw conversionException;
+        }
     }
 }

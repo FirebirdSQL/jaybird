@@ -78,9 +78,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (setWhenNull(value)) return;
-
-        setDate(Date.valueOf(value));
+        setDate(fromString(value, Date::valueOf));
     }
 
     @Override
