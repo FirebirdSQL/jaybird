@@ -39,8 +39,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField, Timestamp> {
 
-    private static final String TEST_DATE = "2016-05-05";
-    private static final String TEST_TIMESTAMP = "2016-05-05 13:37:59";
+    private static final String TEST_DATE = "2016-01-01";
+    private static final String TEST_TIMESTAMP = "2016-01-01 13:37:59";
     private static final String TEST_TIME = "13:37:59";
     private static final LocalDateTime TEST_LOCAL_DATE_TIME = LocalDateTime.parse(TEST_TIMESTAMP.replace(' ', 'T'));
     private static final Timestamp TEST_SQL_TIMESTAMP = Timestamp.valueOf(TEST_TIMESTAMP);
@@ -109,7 +109,7 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
     @Override
     public void setDateCalendarNonNull() throws SQLException {
         // TODO Conversion seems wrong
-        setTimestampExpectations(LocalDateTime.parse("2016-05-04T22:00:00"));
+        setTimestampExpectations(LocalDateTime.parse("2015-12-31T23:00:00"));
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setDate(java.sql.Date.valueOf(TEST_DATE), calendar);
@@ -206,12 +206,8 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
-        // TODO Conversion doesn't seem to correctly handle time zone
-        // TODO Doesn't seem to handle date correctly
-//        assertEquals("Unexpected value for getTime(Calendar)",
-//                java.sql.Time.valueOf("14:37:59"), field.getTime(calendar));
         assertEquals("Unexpected value for getTime(Calendar)",
-                Time.valueOf("15:37:59").toString(), field.getTime(calendar).toString());
+                Time.valueOf("14:37:59").toString(), field.getTime(calendar).toString());
     }
 
     @Test
@@ -277,14 +273,14 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
 
         //TODO Conversion doesn't seem to correctly handle time zone
         assertEquals("Unexpected value for getTimestamp(Calendar)",
-                Timestamp.valueOf(TEST_DATE + " 15:37:59"), field.getTimestamp(calendar));
+                Timestamp.valueOf(TEST_DATE + " 14:37:59"), field.getTimestamp(calendar));
     }
 
     @Test
     @Override
     public void setTimestampCalendarNonNull() throws SQLException {
         //TODO Conversion doesn't seem to correctly handle time zone (looks like timezone is inverted)
-        setTimestampExpectations(LocalDateTime.parse(TEST_DATE + "T11:37:59"));
+        setTimestampExpectations(LocalDateTime.parse(TEST_DATE + "T12:37:59"));
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTimestamp(TEST_SQL_TIMESTAMP, calendar);
@@ -298,8 +294,8 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
         final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = field.getRawDateTimeStruct();
 
         assertEquals("year", 2016, rawDateTimeStruct.year);
-        assertEquals("month", 5, rawDateTimeStruct.month);
-        assertEquals("day", 5, rawDateTimeStruct.day);
+        assertEquals("month", 1, rawDateTimeStruct.month);
+        assertEquals("day", 1, rawDateTimeStruct.day);
         assertEquals("hour", 13, rawDateTimeStruct.hour);
         assertEquals("minute", 37, rawDateTimeStruct.minute);
         assertEquals("second", 59, rawDateTimeStruct.second);
@@ -315,8 +311,8 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
                 field.getObject(DatatypeCoder.RawDateTimeStruct.class);
 
         assertEquals("year", 2016, rawDateTimeStruct.year);
-        assertEquals("month", 5, rawDateTimeStruct.month);
-        assertEquals("day", 5, rawDateTimeStruct.day);
+        assertEquals("month", 1, rawDateTimeStruct.month);
+        assertEquals("day", 1, rawDateTimeStruct.day);
         assertEquals("hour", 13, rawDateTimeStruct.hour);
         assertEquals("minute", 37, rawDateTimeStruct.minute);
         assertEquals("second", 59, rawDateTimeStruct.second);
@@ -330,8 +326,8 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
 
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.year = 2016;
-        raw.month = 5;
-        raw.day = 5;
+        raw.month = 1;
+        raw.day = 1;
         raw.hour = 13;
         raw.minute = 37;
         raw.second = 59;
@@ -346,8 +342,8 @@ public class TestFBTimestampField extends BaseJUnit4TestFBField<FBTimestampField
 
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.year = 2016;
-        raw.month = 5;
-        raw.day = 5;
+        raw.month = 1;
+        raw.day = 1;
         raw.hour = 13;
         raw.minute = 37;
         raw.second = 59;

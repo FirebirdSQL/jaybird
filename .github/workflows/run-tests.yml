@@ -33,6 +33,6 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: build-artifacts
+          name: test-report-artifacts
           path: build/reports
           retention-days: 1
