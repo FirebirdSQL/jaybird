@@ -29,10 +29,10 @@ jobs:
           rm -f ~/.gradle/caches/modules-2/gc.properties
           rm -fr ~/.gradle/caches/*/plugin-resolution/
           find ~/.gradle/caches/ -name "*.lock" -type f -delete
-      - name: test report artifact
+      - name: Store Report Artifact
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: test-report-artifacts
+          name: report-artifacts
           path: build/reports
-          retention-days: 1
+          retention-days: 7
