@@ -20,8 +20,10 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.SimpleServer;
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.ISCConstants;
@@ -51,6 +53,12 @@ import static org.junit.Assert.*;
  * @since 3.0
  */
 public class TestV10EventHandling extends FBJUnit4TestBase {
+
+    @ClassRule
+    public static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+            .requiresEventPortAvailable()
+            .build()
+            .toRule();
 
     @ClassRule
     public static final RequireProtocol requireProtocol = requireProtocolVersion(10);

@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
+import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -25,6 +27,7 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,6 +52,12 @@ import static org.junit.Assume.assumeTrue;
  * This test assumes it is run against localhost
  */
 public class TestBackupManager {
+
+    @ClassRule
+    public static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build()
+            .toRule();
 
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();

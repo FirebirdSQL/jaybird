@@ -19,6 +19,7 @@
 
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,11 @@ class FBNBackupManagerTest {
             "create table data (id integer, val varchar(50))",
             "commit retain",
             "insert into data (id, val) values (1, 'first')");
+
+    @RegisterExtension
+    static RunEnvironmentExtension runEnvironmentExtension = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build();
 
     private final FBNBackupManager manager = configureServiceManager(new FBNBackupManager(getGdsType()));
 

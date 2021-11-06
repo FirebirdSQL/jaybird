@@ -219,7 +219,8 @@ test {
             'test.db.lc_ctype': project.'test.db.lc_ctype',
             'test.gds_type': project.'test.gds_type',
             'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
-            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false'
+            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false',
+            'test.db_on_docker': project.findProperty('test.dbondocker') ?: 'false',
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'

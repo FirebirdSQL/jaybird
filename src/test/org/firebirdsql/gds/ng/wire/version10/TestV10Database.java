@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
@@ -51,6 +52,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -202,6 +204,7 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
+        assumeTrue("Requires DB on local file system", EnvironmentRequirement.DB_LOCAL_FS.isMet());
         IConnectionProperties connectionProperties = getConnectionInfo();
         connectionProperties.setSqlDialect(3);
 

@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.rules.DatabaseUserRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
@@ -320,6 +321,7 @@ public class FBDriverTest {
     private void checkAuthenticationPlugin(String pluginName) throws Exception {
         assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
+        assumeTrue("Requires " + pluginName, EnvironmentRequirement.ALL_SRP_PLUGINS.isMet());
         // NOTE: If the test still fails, then this plugin is not enabled in the Firebird AuthServer config
         assumeTrue("Test requires support for authentication plugin " + pluginName,
                 getDefaultSupportInfo().supportsAuthenticationPlugin(pluginName));
@@ -499,6 +501,7 @@ public class FBDriverTest {
     @Test
     public void testProblematicUserAccount_DAVIDS() throws Exception {
         assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
+        assumeTrue("Requires Srp256", EnvironmentRequirement.ALL_SRP_PLUGINS.isMet());
         String username = "DAVIDS";
         String password = "aaa123";
         databaseUserRule.createUser(username, password, "Srp");

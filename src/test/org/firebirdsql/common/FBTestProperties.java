@@ -74,6 +74,7 @@ public final class FBTestProperties {
     public static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
+    public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
     public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
@@ -84,7 +85,7 @@ public final class FBTestProperties {
     }
 
     public static String getDatabasePath(String name) {
-        if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
+        if (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)
             return DB_PATH + "/" + name;
         else
             return new File(DB_PATH, name).getAbsolutePath();
