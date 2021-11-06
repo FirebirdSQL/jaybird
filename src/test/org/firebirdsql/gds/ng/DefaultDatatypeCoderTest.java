@@ -26,6 +26,9 @@ import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -110,39 +113,33 @@ public class DefaultDatatypeCoderTest {
     // Skipping string encoding
 
     @Test
-    public void testTimestamp() {
-        final java.util.Date date = new java.util.Date();
-        final java.sql.Timestamp testTimestamp = new java.sql.Timestamp(date.getTime());
-        // Make sure minimum Firebird precision (100 microseconds) is set
-        testTimestamp.setNanos((int) TimeUnit.MICROSECONDS.toNanos(975100));
-        final byte[] timestampBytes = datatypeCoder.encodeTimestamp(testTimestamp);
+    public void testLocalDateTime() {
+        LocalDateTime testTimestamp = LocalDateTime.parse("2021-10-31T17:23:01.1234");
+        byte[] timestampBytes = datatypeCoder.encodeLocalDateTime(testTimestamp);
 
-        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(timestampBytes);
+        LocalDateTime result = datatypeCoder.decodeLocalDateTime(timestampBytes);
 
         assertEquals("Unexpected timestamp", testTimestamp, result);
     }
 
     // TODO Tests for various Timestamp methods taking a Calendar
 
-    /**
-     * NOTE: {@link java.sql.Time} only supports second precision!
-     */
     @Test
-    public void testTime() {
-        final java.sql.Time testTime = java.sql.Time.valueOf("17:23:01");
-        final byte[] timeBytes = datatypeCoder.encodeTime(testTime);
+    public void testLocalTime() {
+        LocalTime testTime = LocalTime.parse("17:23:01");
+        byte[] timeBytes = datatypeCoder.encodeLocalTime(testTime);
 
-        final java.sql.Time result = datatypeCoder.decodeTime(timeBytes);
+        LocalTime result = datatypeCoder.decodeLocalTime(timeBytes);
 
         assertEquals("Unexpected time", testTime, result);
     }
 
     @Test
-    public void testDate() {
-        final java.sql.Date testDate = java.sql.Date.valueOf("2014-03-29");
-        final byte[] dateBytes = datatypeCoder.encodeDate(testDate);
+    public void testLocalDate() {
+        LocalDate testDate = LocalDate.parse("2014-03-29");
+        byte[] dateBytes = datatypeCoder.encodeLocalDate(testDate);
 
-        final java.sql.Date result = datatypeCoder.decodeDate(dateBytes);
+        LocalDate result = datatypeCoder.decodeLocalDate(dateBytes);
 
         assertEquals("Unexpected date", testDate, result);
     }
@@ -168,33 +165,34 @@ public class DefaultDatatypeCoderTest {
     // TODO java.time roundtrip tests
 
     /**
-     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDateTime(int, int, int, int, int, int, int)} using {@link DefaultDatatypeCoder#decodeTimestamp(byte[])}.
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDateTime(LocalDateTime)} using {@link DefaultDatatypeCoder#decodeTimestampCalendar(byte[], Calendar)}.
      */
     @Test
     public void testLocalDateTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
-        final byte[] localDateTimeBytes = datatypeCoder.encodeLocalDateTime(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
+        final byte[] localDateTimeBytes = datatypeCoder.encodeLocalDateTime(
+                LocalDateTime.of(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100)));
 
-        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(localDateTimeBytes);
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(localDateTimeBytes, Calendar.getInstance());
 
         assertEquals("Unexpected timestamp", expected, result);
     }
 
     /**
-     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDate(int, int, int)} using {@link DefaultDatatypeCoder#decodeDate(byte[])}.
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDate(LocalDate)} using {@link DefaultDatatypeCoder#decodeDateCalendar(byte[], Calendar)}.
      */
     @Test
     public void testLocalDateToDate() {
         final java.sql.Date expected = java.sql.Date.valueOf("2014-03-29");
-        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(2014, 3, 29);
+        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(LocalDate.of(2014, 3, 29));
 
-        final java.sql.Date result = datatypeCoder.decodeDate(localDateBytes);
+        final java.sql.Date result = datatypeCoder.decodeDateCalendar(localDateBytes, Calendar.getInstance());
 
         assertEquals("Unexpected date", expected, result);
     }
 
     /**
-     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalTime(int, int, int, int) using {@link DefaultDatatypeCoder#decodeTimestamp(byte[])}
+     * Test round trip for {@link DefaultDatatypeCoder#encodeLocalTime(LocalTime) using {@link DefaultDatatypeCoder#decodeTimestampCalendar(byte[], Calendar)}
      * <p>
      * We test using java.sql.Timestamp so we can check the maximum precision (which is not available through java.sql.Time)
      * </p>
@@ -203,27 +201,15 @@ public class DefaultDatatypeCoderTest {
     public void testLocalTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2014-03-29 17:43:01.9751");
         // We need a date part as well to construct a valid timestamp
-        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(2014, 3, 29);
-        final byte[] localTimeBytes = datatypeCoder.encodeLocalTime(17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100));
+        final byte[] localDateBytes = datatypeCoder.encodeLocalDate(LocalDate.of(2014, 3, 29));
+        final byte[] localTimeBytes = datatypeCoder.encodeLocalTime
+                (LocalTime.of(17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100)));
 
         final byte[] combinedDateTime = new byte[8];
         System.arraycopy(localDateBytes, 0, combinedDateTime, 0, 4);
         System.arraycopy(localTimeBytes, 0, combinedDateTime, 4, 4);
 
-        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(combinedDateTime);
-
-        assertEquals("Unexpected timestamp", expected, result);
-    }
-
-    /**
-     * Test round trip for timestamp conversion timezone.
-     */
-    @Test
-    public void testTimestampRoundtrip() {
-        final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
-        final byte[] dateTimeBytes = datatypeCoder.encodeTimestamp(expected);
-
-        final java.sql.Timestamp result = datatypeCoder.decodeTimestamp(dateTimeBytes);
+        final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(combinedDateTime, Calendar.getInstance());
 
         assertEquals("Unexpected timestamp", expected, result);
     }
@@ -240,16 +226,6 @@ public class DefaultDatatypeCoderTest {
         final byte[] dateTimeBytes = datatypeCoder.encodeTimestampCalendar(expected, calendar);
 
         final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(dateTimeBytes, calendar);
-
-        assertEquals("Unexpected timestamp", expected, result);
-    }
-
-    @Test
-    public void testTimeRoundtrip() {
-        final java.sql.Time expected = java.sql.Time.valueOf("17:43:01");
-        final byte[] timeBytes = datatypeCoder.encodeTime(expected);
-
-        final java.sql.Time result = datatypeCoder.decodeTime(timeBytes);
 
         assertEquals("Unexpected timestamp", expected, result);
     }
@@ -280,7 +256,6 @@ public class DefaultDatatypeCoderTest {
         List<String> encodingsToTry = Arrays.asList("ISO8859_1", "ISO8859_2", "ISO8859_3", "ISO8859_4", "ISO8859_5",
                 "ISO8859_6", "ISO8859_7", "ISO8859_8", "ISO8859_9", "DOS437");
         String additionalEncoding = "DOS850";
-        assert encodingsToTry.size() == 10 : "Unexected number of encodings";
         Map<String, DatatypeCoder> retrievedDatatypeCoders = new HashMap<>(encodingsToTry.size() + 1);
 
         IEncodingFactory encodingFactory = datatypeCoder.getEncodingFactory();

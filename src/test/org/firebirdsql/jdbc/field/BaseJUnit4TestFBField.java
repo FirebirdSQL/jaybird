@@ -47,6 +47,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -107,7 +110,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void getAlias() throws SQLException {
+    public void getAlias() {
         assertEquals("Unexpected value for getAlias()", ALIAS_VALUE, field.getAlias());
     }
 
@@ -427,7 +430,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     @Test
     public void getObjectMapNonNull() throws SQLException {
         expectedException.expect(FBDriverNotCapableException.class);
-        field.getObject(new HashMap<String,Class<?>>());
+        field.getObject(new HashMap<>());
     }
 
     @Test
@@ -437,7 +440,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
     }
 
     @Test
-    public void getRelationName() throws SQLException {
+    public void getRelationName() {
         assertEquals("Unexpected value for getRelationName()", RELATION_NAME_VALUE, field.getRelationName());
     }
 
@@ -835,50 +838,32 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
      * Expectations for setting fieldData to a specific Date value.
      * @param value Date value that is expected to be set
      */
-    protected final void setDateExpectations(final java.sql.Date value) {
-        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDate(value));
+    protected final void setDateExpectations(LocalDate value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalDate(value));
     }
 
     /**
      * Expectations to return a specific Date value from fieldData.
      * @param value Date value to return
      */
-    protected final void toReturnDateExpectations(final java.sql.Date value) {
-        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDate(value));
+    protected final void toReturnDateExpectations(LocalDate value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalDate(value));
     }
 
-    /**
-     * Expectations for setting fieldData to a specific Date value.
-     * @param value Date value that is expected to be set
-     * @param calendar Calendar instance for timezone
-     */
-    protected final void setDateExpectations(final java.sql.Date value, Calendar calendar) {
-        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDateCalendar(value, calendar));
+    protected final void toReturnTimeExpectations(LocalTime value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalTime(value));
     }
 
-    /**
-     * Expectations to return a specific Date value from fieldData.
-     * @param value Date value to return
-     * @param calendar Calendar instance for timezone
-     */
-    protected final void toReturnDateExpectations(final java.sql.Date value, Calendar calendar) {
-        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeDateCalendar(value, calendar));
+    protected final void setTimeExpectations(LocalTime value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalTime(value));
     }
 
-    protected final void toReturnTimeExpectations(final java.sql.Time value) {
-        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTime(value));
+    protected final void toReturnTimestampExpectations(LocalDateTime value) {
+        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalDateTime(value));
     }
 
-    protected final void setTimeExpectations(final java.sql.Time value) {
-        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTime(value));
-    }
-
-    protected final void toReturnTimestampExpectations(final java.sql.Timestamp value) {
-        toReturnValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTimestamp(value));
-    }
-
-    protected final void setTimestampExpectations(final java.sql.Timestamp value) {
-        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeTimestamp(value));
+    protected final void setTimestampExpectations(LocalDateTime value) {
+        setValueExpectations(fieldDescriptor.getDatatypeCoder().encodeLocalDateTime(value));
     }
 
     /**

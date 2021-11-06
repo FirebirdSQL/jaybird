@@ -33,6 +33,9 @@ import java.io.*;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 import static org.junit.Assert.*;
@@ -64,7 +67,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeString_delegatesToEncoding() throws Exception {
+    public void encodeString_delegatesToEncoding() {
         final String inputValue = "result value";
         final byte[] resultValue = { 1, 2, 3, 4};
 
@@ -78,7 +81,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void createWriter_delegatesToEncoding() throws Exception {
+    public void createWriter_delegatesToEncoding() {
         final OutputStream outputStream = context.mock(OutputStream.class);
         final Writer writer = new StringWriter();
 
@@ -92,7 +95,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeString_delegatesToEncoding() throws Exception {
+    public void decodeString_delegatesToEncoding() {
         final byte[] inputValue = { 1, 2, 3, 4};
         final String resultValue = "result value";
 
@@ -106,7 +109,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void createReader_delegatesToEncoding() throws Exception {
+    public void createReader_delegatesToEncoding() {
         final InputStream inputStream = context.mock(InputStream.class);
         final Reader reader = new StringReader("test");
 
@@ -120,14 +123,14 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void withEncodingDefinition_sameEncodingDefinitionReturnsCurrentInstance() throws Exception {
+    public void withEncodingDefinition_sameEncodingDefinitionReturnsCurrentInstance() {
         DatatypeCoder result = coder.forEncodingDefinition(encodingDefinition);
 
         assertSame(coder, result);
     }
 
     @Test
-    public void withEncodingDefinition_differentEncodingDefinitionDelegatesToParent() throws Exception {
+    public void withEncodingDefinition_differentEncodingDefinitionDelegatesToParent() {
         final DatatypeCoder newCoder = context.mock(DatatypeCoder.class, "newCoder");
         final EncodingDefinition otherEncodingDefinition = context.mock(EncodingDefinition.class, "otherEncodingDefinition");
 
@@ -141,26 +144,17 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void getEncodingDefinition() throws Exception {
+    public void getEncodingDefinition() {
         assertSame(encodingDefinition, coder.getEncodingDefinition());
     }
 
     @Test
-    public void unwrap() throws Exception {
+    public void unwrap() {
         assertSame(parentCoder, coder.unwrap());
     }
 
-//    TODO ?
-//    @Test
-//    public void equals() throws Exception {
-//    }
-//
-//    @Test
-//    public void testHashCode() throws Exception {
-//    }
-
     @Test
-    public void encodeShort_short() throws Exception {
+    public void encodeShort_short() {
         final short value = 23;
         final byte[] response = {1, 2, 3, 4};
 
@@ -174,7 +168,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeShort_int() throws Exception {
+    public void encodeShort_int() {
         final int value = 23;
         final byte[] response = {1, 2, 3, 4};
 
@@ -188,7 +182,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeShort() throws Exception {
+    public void decodeShort() {
         final byte[] value = {1, 2, 3, 4};
         final short response = 23;
 
@@ -202,7 +196,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeInt() throws Exception {
+    public void encodeInt() {
         final int value = 23;
         final byte[] response = {1, 2, 3, 4};
 
@@ -216,7 +210,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeInt() throws Exception {
+    public void decodeInt() {
         final byte[] value = {1, 2, 3, 4};
         final int response = 23;
 
@@ -230,7 +224,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeLong() throws Exception {
+    public void encodeLong() {
         final long value = 23;
         final byte[] response = {1, 2, 3, 4};
 
@@ -244,7 +238,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeLong() throws Exception {
+    public void decodeLong() {
         final byte[] value = {1, 2, 3, 4};
         final long response = 23;
 
@@ -258,7 +252,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeFloat() throws Exception {
+    public void encodeFloat() {
         final float value = 23.1f;
         final byte[] response = {1, 2, 3, 4};
 
@@ -272,7 +266,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeFloat() throws Exception {
+    public void decodeFloat() {
         final byte[] value = {1, 2, 3, 4};
         final float response = 23.1f;
 
@@ -286,7 +280,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDouble() throws Exception {
+    public void encodeDouble() {
         final double value = 23.1;
         final byte[] response = {1, 2, 3, 4};
 
@@ -300,7 +294,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDouble() throws Exception {
+    public void decodeDouble() {
         final byte[] value = {1, 2, 3, 4};
         final double response = 23.1;
 
@@ -314,22 +308,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestamp_calendar() throws Exception {
-        final Calendar calendar = Calendar.getInstance();
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimestamp(value, calendar); will(returnValue(response));
-        }});
-
-        Timestamp result = coder.encodeTimestamp(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    public void encodeTimestamp_calendar_boolean() throws Exception {
+    public void encodeTimestamp_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -348,21 +327,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestamp() throws Exception {
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimestamp(value); will(returnValue(response));
-        }});
-
-        byte[] result = coder.encodeTimestamp(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
-    public void encodeTimestampRaw() throws Exception {
+    public void encodeTimestampRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
 
@@ -376,7 +341,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestampCalendar() throws Exception {
+    public void encodeTimestampCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
@@ -391,22 +356,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestamp_calendar() throws Exception {
-        final Calendar calendar = Calendar.getInstance();
-        final Timestamp value = new Timestamp(System.currentTimeMillis());
-        final Timestamp response = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimestamp(value, calendar); will(returnValue(response));
-        }});
-
-        Timestamp result = coder.decodeTimestamp(value, calendar);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    public void decodeTimestamp_calendar_boolean() throws Exception {
+    public void decodeTimestamp_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -425,21 +375,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestamp() throws Exception {
-        final byte[] value = {1, 2, 3, 4};
-        final Timestamp response = new Timestamp(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimestamp(value); will(returnValue(response));
-        }});
-
-        Timestamp result = coder.decodeTimestamp(value);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    public void decodeTimestampRaw() throws Exception {
+    public void decodeTimestampRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
 
@@ -453,7 +389,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestampCalendar() throws Exception {
+    public void decodeTimestampCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Timestamp response = new Timestamp(System.currentTimeMillis());
@@ -468,7 +404,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTime_calendar_boolean() throws Exception {
+    public void encodeTime_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -487,21 +423,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTime() throws Exception {
-        final Time value = new Time(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTime(value); will(returnValue(response));
-        }});
-
-        byte[] result = coder.encodeTime(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
-    public void encodeTimeRaw() throws Exception {
+    public void encodeTimeRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
 
@@ -515,7 +437,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimeCalendar() throws Exception {
+    public void encodeTimeCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
@@ -530,7 +452,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTime_calendar_boolean() throws Exception {
+    public void decodeTime_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -549,21 +471,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTime() throws Exception {
-        final byte[] value = {1, 2, 3, 4};
-        final Time response = new Time(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTime(value); will(returnValue(response));
-        }});
-
-        Time result = coder.decodeTime(value);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    public void decodeTimeRaw() throws Exception {
+    public void decodeTimeRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
 
@@ -577,7 +485,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimeCalendar() throws Exception {
+    public void decodeTimeCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Time response = new Time(System.currentTimeMillis());
@@ -592,7 +500,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDate_calendar() throws Exception {
+    public void encodeDate_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -607,21 +515,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDate() throws Exception {
-        final Date value = new Date(System.currentTimeMillis());
-        final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeDate(value); will(returnValue(response));
-        }});
-
-        byte[] result = coder.encodeDate(value);
-
-        assertArrayEquals(response, result);
-    }
-
-    @Test
-    public void encodeDateRaw() throws Exception {
+    public void encodeDateRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
 
@@ -635,7 +529,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDateCalendar() throws Exception {
+    public void encodeDateCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
@@ -650,7 +544,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDate_calendar() throws Exception {
+    public void decodeDate_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
@@ -665,21 +559,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDate() throws Exception {
-        final byte[] value = {1, 2, 3, 4};
-        final Date response = new Date(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeDate(value); will(returnValue(response));
-        }});
-
-        Date result = coder.decodeDate(value);
-
-        assertSame(response, result);
-    }
-
-    @Test
-    public void decodeDateRaw() throws Exception {
+    public void decodeDateRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
 
@@ -693,7 +573,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDateCalendar() throws Exception {
+    public void decodeDateCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Date response = new Date(System.currentTimeMillis());
@@ -708,7 +588,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeBoolean() throws Exception {
+    public void decodeBoolean() {
         final byte[] valueTrue = {1, 0};
         final byte[] valueFalse = {0, 0};
 
@@ -722,7 +602,7 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeBoolean() throws Exception {
+    public void encodeBoolean() {
         final byte[] resultTrue = {1, 0};
         final byte[] resultFalse = {0, 0};
 
@@ -736,40 +616,40 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeLocalTime() throws Exception {
+    public void encodeLocalTime() {
         final byte[] response = {1, 2, 3, 4};
 
         context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalTime(1, 2, 3, 4); will(returnValue(response));
+            oneOf(parentCoder).encodeLocalTime(LocalTime.of(1, 2, 3, 4)); will(returnValue(response));
         }});
 
-        assertSame(response, coder.encodeLocalTime(1, 2, 3, 4));
+        assertSame(response, coder.encodeLocalTime(LocalTime.of(1, 2, 3, 4)));
     }
 
     @Test
-    public void encodeLocalDate() throws Exception {
+    public void encodeLocalDate() {
         final byte[] response = {1, 2, 3, 4};
 
         context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalDate(1, 2, 3); will(returnValue(response));
+            oneOf(parentCoder).encodeLocalDate(LocalDate.of(1, 2, 3)); will(returnValue(response));
         }});
 
-        assertSame(response, coder.encodeLocalDate(1, 2, 3));
+        assertSame(response, coder.encodeLocalDate(LocalDate.of(1, 2, 3)));
     }
 
     @Test
-    public void encodeLocalDateTime() throws Exception {
+    public void encodeLocalDateTime() {
         final byte[] response = {1, 2, 3, 4};
 
         context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalDateTime(1, 2, 3, 4, 5, 6, 7); will(returnValue(response));
+            oneOf(parentCoder).encodeLocalDateTime(LocalDateTime.of(1, 2, 3, 4, 5, 6, 7)); will(returnValue(response));
         }});
 
-        assertSame(response, coder.encodeLocalDateTime(1, 2, 3, 4, 5, 6, 7));
+        assertSame(response, coder.encodeLocalDateTime(LocalDateTime.of(1, 2, 3, 4, 5, 6, 7)));
     }
 
     @Test
-    public void getEncodingFactory() throws Exception {
+    public void getEncodingFactory() {
         final IEncodingFactory response = context.mock(IEncodingFactory.class);
 
         context.checking(new Expectations() {{

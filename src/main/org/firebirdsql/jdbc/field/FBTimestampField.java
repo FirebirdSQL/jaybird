@@ -36,6 +36,7 @@ import java.util.Calendar;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     FBTimestampField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
@@ -87,10 +88,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     @Override
     LocalDateTime getLocalDateTime() throws SQLException {
         if (isNull()) return null;
-        // TODO Push down into DatatypeCoder
-        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeTimestampRaw(getFieldData());
-        return LocalDateTime.of(raw.year, raw.month, raw.day, raw.hour, raw.minute, raw.second,
-                raw.getFractionsAsNanos());
+        return getDatatypeCoder().decodeLocalDateTime(getFieldData());
     }
 
     public void setString(String value) throws SQLException {
@@ -118,10 +116,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
     @Override
     void setLocalDateTime(LocalDateTime value) throws SQLException {
         if (setWhenNull(value)) return;
-        // TODO Push down into DatatypeCoder
-        setFieldData(getDatatypeCoder().encodeLocalDateTime(
-                value.getYear(), value.getMonthValue(), value.getDayOfMonth(),
-                value.getHour(), value.getMinute(), value.getSecond(), value.getNano()));
+        setFieldData(getDatatypeCoder().encodeLocalDateTime(value));
     }
 
     @Override

@@ -32,6 +32,9 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Objects;
 
@@ -212,18 +215,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp encodeTimestamp(Timestamp value, Calendar cal) {
-        return parentCoder.encodeTimestamp(value, cal);
-    }
-
-    @Override
     public Timestamp encodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
         return parentCoder.encodeTimestamp(value, cal, invertTimeZone);
-    }
-
-    @Override
-    public byte[] encodeTimestamp(Timestamp value) {
-        return parentCoder.encodeTimestamp(value);
     }
 
     @Override
@@ -237,18 +230,8 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public Timestamp decodeTimestamp(Timestamp value, Calendar cal) {
-        return parentCoder.decodeTimestamp(value, cal);
-    }
-
-    @Override
     public Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
         return parentCoder.decodeTimestamp(value, cal, invertTimeZone);
-    }
-
-    @Override
-    public Timestamp decodeTimestamp(byte[] byte_long) {
-        return parentCoder.decodeTimestamp(byte_long);
     }
 
     @Override
@@ -267,11 +250,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTime(Time d) {
-        return parentCoder.encodeTime(d);
-    }
-
-    @Override
     public byte[] encodeTimeRaw(RawDateTimeStruct raw) {
         return parentCoder.encodeTimeRaw(raw);
     }
@@ -284,11 +262,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public Time decodeTime(Time d, Calendar cal, boolean invertTimeZone) {
         return parentCoder.decodeTime(d, cal, invertTimeZone);
-    }
-
-    @Override
-    public Time decodeTime(byte[] int_byte) {
-        return parentCoder.decodeTime(int_byte);
     }
 
     @Override
@@ -307,11 +280,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeDate(Date d) {
-        return parentCoder.encodeDate(d);
-    }
-
-    @Override
     public byte[] encodeDateRaw(RawDateTimeStruct raw) {
         return parentCoder.encodeDateRaw(raw);
     }
@@ -324,11 +292,6 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     @Override
     public Date decodeDate(Date d, Calendar cal) {
         return parentCoder.decodeDate(d, cal);
-    }
-
-    @Override
-    public Date decodeDate(byte[] byte_int) {
-        return parentCoder.decodeDate(byte_int);
     }
 
     @Override
@@ -352,18 +315,33 @@ public final class EncodingSpecificDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalTime(int hour, int minute, int second, int nanos) {
-        return parentCoder.encodeLocalTime(hour, minute, second, nanos);
+    public LocalTime decodeLocalTime(byte[] data) {
+        return parentCoder.decodeLocalTime(data);
     }
 
     @Override
-    public byte[] encodeLocalDate(int year, int month, int day) {
-        return parentCoder.encodeLocalDate(year, month, day);
+    public byte[] encodeLocalTime(LocalTime value) {
+        return parentCoder.encodeLocalTime(value);
     }
 
     @Override
-    public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
-        return parentCoder.encodeLocalDateTime(year, month, day, hour, minute, second, nanos);
+    public LocalDate decodeLocalDate(byte[] data) {
+        return parentCoder.decodeLocalDate(data);
+    }
+
+    @Override
+    public byte[] encodeLocalDate(LocalDate value) {
+        return parentCoder.encodeLocalDate(value);
+    }
+
+    @Override
+    public LocalDateTime decodeLocalDateTime(byte[] data) {
+        return parentCoder.decodeLocalDateTime(data);
+    }
+
+    @Override
+    public byte[] encodeLocalDateTime(LocalDateTime value) {
+        return parentCoder.encodeLocalDateTime(value);
     }
 
     @Override

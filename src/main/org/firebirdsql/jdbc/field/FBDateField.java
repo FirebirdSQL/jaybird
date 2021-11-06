@@ -34,6 +34,7 @@ import java.util.Calendar;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 final class FBDateField extends AbstractWithoutTimeZoneField {
 
     FBDateField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
@@ -60,9 +61,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     @Override
     LocalDate getLocalDate() throws SQLException {
         if (isNull()) return null;
-        // TODO Push down into DatatypeCoder
-        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeDateRaw(getFieldData());
-        return LocalDate.of(raw.year, raw.month, raw.day);
+        return getDatatypeCoder().decodeLocalDate(getFieldData());
     }
 
     @Override
@@ -72,8 +71,8 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     }
 
     public String getString() throws SQLException {
-        if (isNull()) return null;
-        return getDatatypeCoder().decodeDate(getFieldData()).toString();
+        LocalDate localDate = getLocalDate();
+        return localDate != null ? localDate.toString() : null;
     }
 
     @Override
@@ -103,8 +102,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
     @Override
     void setLocalDate(LocalDate value) throws SQLException {
         if (setWhenNull(value)) return;
-        // TODO Push down into DatatypeCoder
-        setFieldData(getDatatypeCoder().encodeLocalDate(value.getYear(), value.getMonthValue(), value.getDayOfMonth()));
+        setFieldData(getDatatypeCoder().encodeLocalDate(value));
     }
 
     @Override

@@ -35,9 +35,11 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -243,11 +245,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     // times,dates...
 
     @Override
-    public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal) {
-        return encodeTimestamp(value, cal, false);
-    }
-
-    @Override
     public Timestamp encodeTimestamp(java.sql.Timestamp value, Calendar cal, boolean invertTimeZone) {
         if (cal == null) {
             return value;
@@ -261,11 +258,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     private int calculateOffset(Calendar cal, boolean invertTimeZone) {
         return (invertTimeZone ? -1 : 1) * (cal.getTimeZone().getRawOffset() -
                 Calendar.getInstance().getTimeZone().getRawOffset());
-    }
-
-    @Override
-    public byte[] encodeTimestamp(Timestamp value) {
-        return encodeTimestampCalendar(value, new GregorianCalendar());
     }
 
     @Override
@@ -288,11 +280,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal) {
-        return decodeTimestamp(value, cal, false);
-    }
-
-    @Override
     public java.sql.Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone) {
         if (cal == null) {
             return value;
@@ -301,11 +288,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
             return new Timestamp(time);
         }
-    }
-
-    @Override
-    public Timestamp decodeTimestamp(byte[] byte_long) {
-        return decodeTimestampCalendar(byte_long, new GregorianCalendar());
     }
 
     @Override
@@ -332,11 +314,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeTime(Time d) {
-        return encodeTimeCalendar(d, new GregorianCalendar());
-    }
-
-    @Override
     public byte[] encodeTimeRaw(RawDateTimeStruct raw) {
         return new datetime(raw).toTimeBytes();
     }
@@ -356,11 +333,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
             return new Time(time);
         }
-    }
-
-    @Override
-    public Time decodeTime(byte[] int_byte) {
-        return decodeTimeCalendar(int_byte, new GregorianCalendar());
     }
 
     @Override
@@ -386,11 +358,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeDate(Date d) {
-        return encodeDateCalendar(d, new GregorianCalendar());
-    }
-
-    @Override
     public byte[] encodeDateRaw(RawDateTimeStruct raw) {
         return new datetime(raw).toDateBytes();
     }
@@ -409,11 +376,6 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             cal.setTime(d);
             return new Date(cal.getTime().getTime());
         }
-    }
-
-    @Override
-    public Date decodeDate(byte[] byte_int) {
-        return decodeDateCalendar(byte_int, new GregorianCalendar());
     }
 
     @Override
@@ -439,20 +401,38 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
     }
 
     @Override
-    public byte[] encodeLocalTime(int hour, int minute, int second, int nanos) {
-        datetime dt = new datetime(0, 0, 0, hour, minute, second, nanos);
+    public LocalTime decodeLocalTime(byte[] data) {
+        datetime dt = new datetime(null, data);
+        return dt.toLocalTime();
+    }
+
+    @Override
+    public byte[] encodeLocalTime(LocalTime value) {
+        datetime dt = new datetime(null, value);
         return dt.toTimeBytes();
     }
 
     @Override
-    public byte[] encodeLocalDate(int year, int month, int day) {
-        datetime dt = new datetime(year, month, day, 0, 0, 0, 0);
+    public LocalDate decodeLocalDate(byte[] data) {
+        datetime dt = new datetime(data, null);
+        return dt.toLocalDate();
+    }
+
+    @Override
+    public byte[] encodeLocalDate(LocalDate value) {
+        datetime dt = new datetime(value, null);
         return dt.toDateBytes();
     }
 
     @Override
-    public byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos) {
-        datetime dt = new datetime(year, month, day, hour, minute, second, nanos);
+    public LocalDateTime decodeLocalDateTime(byte[] data) {
+        datetime dt = fromLongBytes(data);
+        return dt.toLocalDateTime();
+    }
+
+    @Override
+    public byte[] encodeLocalDateTime(LocalDateTime value) {
+        datetime dt = new datetime(value);
         return dt.toTimestampBytes();
     }
 
@@ -615,15 +595,23 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
 
         private final RawDateTimeStruct raw;
 
-        datetime(int year, int month, int day, int hour, int minute, int second, int nanos) {
+        datetime(LocalDateTime localDateTime) {
+            this(localDateTime.toLocalDate(), localDateTime.toLocalTime());
+        }
+
+        datetime(LocalDate localDate, LocalTime localTime) {
             raw = new RawDateTimeStruct();
-            raw.year = year;
-            raw.month = month;
-            raw.day = day;
-            raw.hour = hour;
-            raw.minute = minute;
-            raw.second = second;
-            raw.setFractionsFromNanos(nanos);
+            if (localDate != null) {
+                raw.year = localDate.getYear();
+                raw.month = localDate.getMonthValue();
+                raw.day = localDate.getDayOfMonth();
+            }
+            if (localTime != null) {
+                raw.hour = localTime.getHour();
+                raw.minute = localTime.getMinute();
+                raw.second = localTime.getSecond();
+                raw.setFractionsFromNanos(localTime.getNano());
+            }
         }
 
         datetime(Timestamp value, Calendar cOrig) {
@@ -692,6 +680,18 @@ public class DefaultDatatypeCoder implements DatatypeCoder {
             encodeInt(raw.getEncodedDate(), result, 0);
             encodeInt(raw.getEncodedTime(), result, 4);
             return result;
+        }
+
+        LocalDateTime toLocalDateTime() {
+            return LocalDateTime.of(toLocalDate(), toLocalTime());
+        }
+
+        LocalDate toLocalDate() {
+            return LocalDate.of(raw.year, raw.month, raw.day);
+        }
+
+        LocalTime toLocalTime() {
+            return LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
         }
 
         Time toTime(Calendar cOrig) {

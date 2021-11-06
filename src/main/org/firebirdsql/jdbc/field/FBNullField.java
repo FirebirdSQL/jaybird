@@ -34,6 +34,7 @@ import java.util.Calendar;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 final class FBNullField extends FBField {
 
     private static final String NULL_CONVERSION_ERROR = "Received non-NULL value of a NULL field.";
@@ -46,8 +47,7 @@ final class FBNullField extends FBField {
 
     @Override
     public Object getObject() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     @Override
@@ -68,6 +68,11 @@ final class FBNullField extends FBField {
         if (isNull()) {
             throw new TypeConversionException(NULL_CONVERSION_ERROR);
         }
+    }
+
+    private <T> T getAsNull() throws SQLException {
+        checkNull();
+        return null;
     }
 
     // ----- Math code
@@ -93,8 +98,7 @@ final class FBNullField extends FBField {
     }
 
     public BigDecimal getBigDecimal() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public float getFloat() throws SQLException {
@@ -115,52 +119,43 @@ final class FBNullField extends FBField {
     }
 
     public String getString() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     // ----- getXXXStream code
 
     public InputStream getBinaryStream() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public byte[] getBytes() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     // ----- getDate, getTime and getTimestamp code
 
     public Date getDate(Calendar cal) throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public Date getDate() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public Time getTime(Calendar cal) throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public Time getTime() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     public Timestamp getTimestamp() throws SQLException {
-        checkNull();
-        return null;
+        return getAsNull();
     }
 
     // --- setXXX methods

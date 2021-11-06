@@ -572,16 +572,17 @@ There is no direct replacement, though `GDSHelper.getConnectionProperties()` can
 there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor for read-only access.
 * `FbConnectionProperties.fromDpb(DatabaseParameterBuffer)`;
 there is no replacement.
-* `ParameterBufferHelper.getDpbKey(String)`;
+* `ParameterBufferHelper`
+** `getDpbKey(String)`;
 there is no replacement.
-* `ParameterBufferHelper.getDpbParameterType(String)`;
+** `getDpbParameterType(String)`;
 there is no replacement.
-* `ParameterBufferHelper.getDpbMap()`;
+** `getDpbMap()`;
 there is no replacement.
-* `ParameterBufferHelper.parseDpbString(String, Object)`;
+** `parseDpbString(String, Object)`;
 there is no replacement.
 This method was previously deprecated, but not for removal.
-* `ParameterBufferHelper.parseDpbString(String, String)`;
+** `parseDpbString(String, String)`;
 there is no replacement.
 * `AbstractParameterConverter.populateNonStandardProperties`;
 there is no direct replacement.
@@ -595,6 +596,19 @@ replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
 * `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
 handling of database coordinates is now considered internal to the protocol implementation.
 There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also jdp-2021-01).
+* `DatatypeCoder` (and implementations; these are informally considered internal implementation artifacts)
+// TODO Some of the replacement methods might get removed as well later on
+** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
+** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
+** `decodeTimestamp(Timestamp, Calendar)` -- use `decodeTimestamp(Timestamp, Calendar, boolean)`
+** `decodeTimestamp(byte[]`) -- use `decodeTimestampCalendar(byte[], Calendar)`
+** `encodeTime(Time)` -- use `encodeTimeCalendar(Time, Calendar)`
+** `decodeTime(byte[])` -- use `decodeTimeCalendar(byte[], Calendar)`
+** `encodeDate(Date)` -- use `encodeDateCalendar(Date, Calendar)`
+** `decodeDate(byte[])` -- use `decodeDateCalendar(byte[], Calendar)`
+** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
+** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
+** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
 
 The following methods had their visibility reduced:
 

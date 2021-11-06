@@ -36,6 +36,7 @@ import java.sql.Time;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 final class FBTimeField extends AbstractWithoutTimeZoneField {
 
     private static final LocalDate LOCAL_DATE_EPOCH = LocalDate.of(1970, 1, 1);
@@ -62,9 +63,7 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     @Override
     LocalTime getLocalTime() throws SQLException {
         if (isNull()) return null;
-        // TODO Push down into DatatypeCoder
-        final DatatypeCoder.RawDateTimeStruct raw = getDatatypeCoder().decodeTimeRaw(getFieldData());
-        return LocalTime.of(raw.hour, raw.minute, raw.second, raw.getFractionsAsNanos());
+        return getDatatypeCoder().decodeLocalTime(getFieldData());
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
@@ -103,9 +102,7 @@ final class FBTimeField extends AbstractWithoutTimeZoneField {
     @Override
     void setLocalTime(LocalTime value) throws SQLException {
         if (setWhenNull(value)) return;
-        // TODO Push down into DatatypeCoder
-        setFieldData(getDatatypeCoder().encodeLocalTime(
-                value.getHour(), value.getMinute(), value.getSecond(), value.getNano()));
+        setFieldData(getDatatypeCoder().encodeLocalTime(value));
     }
 
     @Override

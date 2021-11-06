@@ -25,9 +25,12 @@ import org.junit.Test;
 
 import java.sql.SQLException;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalTime;
 import java.util.Calendar;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -35,7 +38,10 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql.Time> {
+public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, Time> {
+
+    private static final LocalTime TEST_LOCAL_TIME = LocalTime.parse("13:37:59");
+    private static final Time TEST_SQL_TIME = Time.valueOf(TEST_LOCAL_TIME);
 
     @Before
     @Override
@@ -50,47 +56,43 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void getObjectNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(value);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject", value, field.getObject());
+        assertEquals("Unexpected value for getObject", TEST_SQL_TIME, field.getObject());
     }
 
     @Test
     public void setObjectNonNull() throws SQLException {
-        Time value = Time.valueOf("13:37:59");
-        setTimeExpectations(value);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
-        field.setObject(value);
+        field.setObject(TEST_SQL_TIME);
     }
 
     @Test
     @Override
     public void getStringNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(value);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         assertEquals("Unexpected value for getString", "13:37:59", field.getString());
     }
 
     @Test
     public void getObject_String() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(value);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         assertEquals("Unexpected value for getObject(String.class", "13:37:59", field.getObject(String.class));
     }
 
     @Test
     public void setStringNonNull() throws SQLException {
-        setTimeExpectations(java.sql.Time.valueOf("13:37:59"));
+        setTimeExpectations(TEST_LOCAL_TIME);
 
         field.setString("13:37:59");
     }
 
     @Test
     public void setObject_String() throws SQLException {
-        setTimeExpectations(java.sql.Time.valueOf("13:37:59"));
+        setTimeExpectations(TEST_LOCAL_TIME);
 
         field.setObject("13:37:59");
     }
@@ -105,58 +107,52 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void getTimeNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(expectedValue);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getTime", expectedValue, field.getTime());
+        assertEquals("Unexpected value for getTime", TEST_SQL_TIME, field.getTime());
     }
 
     @Test
     @Override
     public void getObject_java_sql_Time() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(expectedValue);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(java.sql.Time.class)",
-                expectedValue, field.getObject(java.sql.Time.class));
+        assertEquals("Unexpected value for getObject(Time.class)",
+                TEST_SQL_TIME, field.getObject(Time.class));
     }
 
     @Test
     @Override
     public void setTimeNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(value);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
-        field.setTime(value);
+        field.setTime(TEST_SQL_TIME);
     }
 
     @Test
     @Override
     public void getTimeCalendarNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(expectedValue);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         assertEquals("Unexpected value for getTime(Calendar)",
-                java.sql.Time.valueOf("14:37:59"), field.getTime(calendar));
+                Time.valueOf("14:37:59"), field.getTime(calendar));
     }
 
     @Test
     @Override
     public void setTimeCalendarNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(expectedValue);
+        setTimeExpectations(TEST_LOCAL_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
-        field.setTime(java.sql.Time.valueOf("14:37:59"), calendar);
+        field.setTime(Time.valueOf("14:37:59"), calendar);
     }
 
     @Test
     @Override
     public void getTimestampNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        java.sql.Timestamp expectedValue = java.sql.Timestamp.valueOf("1970-01-01 13:37:59");
-        toReturnTimeExpectations(value);
+        Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         assertEquals("Unexpected value for getTimestamp", expectedValue, field.getTimestamp());
     }
@@ -164,22 +160,20 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void getObject_java_sql_Timestamp() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        java.sql.Timestamp expectedValue = java.sql.Timestamp.valueOf("1970-01-01 13:37:59");
-        toReturnTimeExpectations(value);
+        Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(java.sql.Timestamp.class)",
-                expectedValue, field.getObject(java.sql.Timestamp.class));
+        assertEquals("Unexpected value for getObject(Timestamp.class)",
+                expectedValue, field.getObject(Timestamp.class));
     }
 
     @Test
     @Override
     public void getObject_java_util_Date() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
-        java.sql.Timestamp expectedValue = java.sql.Timestamp.valueOf("1970-01-01 13:37:59");
-        toReturnTimeExpectations(value);
+        Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        // Test depends on the fact that we currently return java.sql.Timestamp
+        // Test depends on the fact that we currently return Timestamp
         assertEquals("Unexpected value for getObject(java.util.Date.class)",
                 expectedValue, field.getObject(java.util.Date.class));
     }
@@ -187,10 +181,9 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void getObject_Calendar() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(java.sql.Timestamp.valueOf("1970-01-01 13:37:59"));
-        toReturnTimeExpectations(value);
+        calendar.setTime(Timestamp.valueOf("1970-01-01 13:37:59"));
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         assertEquals("Unexpected value for getObject(Calendar.class)", calendar, field.getObject(Calendar.class));
     }
@@ -198,48 +191,43 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void setTimestampNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(expectedValue);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
-        field.setTimestamp(java.sql.Timestamp.valueOf("2016-01-01 13:37:59"));
+        field.setTimestamp(Timestamp.valueOf("2016-01-01 13:37:59"));
     }
 
     @Test
     public void setObject_Timestamp() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(expectedValue);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
-        field.setObject(java.sql.Timestamp.valueOf("2016-01-01 13:37:59"));
+        field.setObject(Timestamp.valueOf("2016-01-01 13:37:59"));
     }
 
     @Test
     @Override
     public void getTimestampCalendarNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
-        toReturnTimeExpectations(value);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         assertEquals("Unexpected value for getTimestamp(Calendar)",
-                java.sql.Timestamp.valueOf("1970-01-01 14:37:59"), field.getTimestamp(calendar));
+                Timestamp.valueOf("1970-01-01 14:37:59"), field.getTimestamp(calendar));
     }
 
     @Test
     @Override
     public void setTimestampCalendarNonNull() throws SQLException {
-        java.sql.Time value = java.sql.Time.valueOf("13:37:59");
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
-        setTimeExpectations(value);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
-        field.setTimestamp(java.sql.Timestamp.valueOf("2016-01-01 14:37:59"), calendar);
+        field.setTimestamp(Timestamp.valueOf("2016-01-01 14:37:59"), calendar);
     }
 
     @Test
     @Override
     public void getRawDateTimeStructNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(expectedValue);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = field.getRawDateTimeStruct();
+        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = requireNonNull(field.getRawDateTimeStruct());
 
         assertEquals("year", 0, rawDateTimeStruct.year);
         assertEquals("month", 0, rawDateTimeStruct.month);
@@ -253,10 +241,9 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void getObject_RawDateTimeStruct() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        toReturnTimeExpectations(expectedValue);
+        toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct =
+        final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = 
                 field.getObject(DatatypeCoder.RawDateTimeStruct.class);
 
         assertEquals("year", 0, rawDateTimeStruct.year);
@@ -271,8 +258,7 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void setRawDateTimeStructNonNull() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(expectedValue);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.hour = 13;
@@ -285,8 +271,7 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
     @Test
     @Override
     public void setObject_RawDateTimeStruct() throws SQLException {
-        java.sql.Time expectedValue = java.sql.Time.valueOf("13:37:59");
-        setTimeExpectations(expectedValue);
+        setTimeExpectations(TEST_LOCAL_TIME);
 
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.hour = 13;
@@ -298,6 +283,6 @@ public class TestFBTimeField extends BaseJUnit4TestFBField<FBTimeField, java.sql
 
     @Override
     protected Time getNonNullObject() {
-        return java.sql.Time.valueOf("13:37:59");
+        return Time.valueOf("13:37:59");
     }
 }
