@@ -136,9 +136,10 @@ public abstract class AbstractParameterConverter<D extends AbstractConnection<IC
     private void populateFromProperties(IAttachProperties<?> props, ParameterBuffer pb,
             Predicate<ConnectionProperty> hasPbItem, ToIntFunction<ConnectionProperty> getPbItem) {
         Map<ConnectionProperty, Object> connectionProperties = props.connectionPropertyValues();
-        for (ConnectionProperty property : connectionProperties.keySet()) {
+        for (Map.Entry<ConnectionProperty, Object> entry : connectionProperties.entrySet()) {
+            ConnectionProperty property = entry.getKey();
             if (!hasPbItem.test(property)) continue;
-            Object propertyValue = connectionProperties.get(property);
+            Object propertyValue = entry.getValue();
             if (propertyValue == null) continue;
             ConnectionPropertyType propertyType = property.type();
             int pbItem = getPbItem.applyAsInt(property);

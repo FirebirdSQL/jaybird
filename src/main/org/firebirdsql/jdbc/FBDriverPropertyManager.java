@@ -45,7 +45,8 @@ class FBDriverPropertyManager {
         Map<String, String> result = new HashMap<>(props.size());
         ConnectionPropertyRegistry propertyRegistry = ConnectionPropertyRegistry.getInstance();
 
-        for (String propName : props.keySet()) {
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            String propName = entry.getKey();
             ConnectionProperty property = propertyRegistry.getByName(propName);
 
             String primaryName = property != null ? property.name() : propName;
@@ -54,7 +55,7 @@ class FBDriverPropertyManager {
                 throw new FBSQLException("Specified properties contain multiple references to a property: "
                         + "primary name " + primaryName + ", current name: " + propName);
             }
-            String propValue = props.get(propName);
+            String propValue = entry.getValue();
             result.put(primaryName, propValue);
         }
         return result;
