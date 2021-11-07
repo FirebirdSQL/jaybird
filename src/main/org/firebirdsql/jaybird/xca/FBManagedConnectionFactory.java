@@ -670,7 +670,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
             if (gdsType == null) {
                 gdsType = GDSFactory.getDefaultGDSType();
             }
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType, fbConnectionProperties);
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(shared, gdsType, fbConnectionProperties);
             mcf.setDefaultConnectionManager(fbCm);
             if (!shared) {
                 return mcf;
