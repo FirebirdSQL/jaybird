@@ -53,6 +53,8 @@ import static org.hamcrest.core.IsNull.notNullValue;
  */
 class FBServiceManagerTest {
 
+    // NOTE Some of these tests may fail when using a Firebird 3.0 or earlier client library with the NATIVE protocol
+
     @ParameterizedTest
     @MethodSource
     void testGetServerVersion(String serverName, Integer portNumber, String serviceName) throws Exception {
@@ -84,14 +86,12 @@ class FBServiceManagerTest {
             final String serverName = DB_SERVER_URL;
             final String ipv6SafeServerName = serverName.indexOf(':') != -1 ? '[' + serverName + ']' : serverName;
             final List<String> urlFormats = new ArrayList<>();
-            urlFormats.add("%1$s/%2$d");
             urlFormats.add("%1$s/%2$d:");
             urlFormats.add("%1$s/%2$d:%3$s");
             urlFormats.add("//%1$s:%2$d");
             urlFormats.add("//%1$s:%2$d/");
             urlFormats.add("//%1$s:%2$d/%3$s");
             if (DB_SERVER_PORT == PropertyConstants.DEFAULT_PORT) {
-                urlFormats.add("%1$s");
                 urlFormats.add("%1$s:");
                 urlFormats.add("%1$s:%3$s");
                 urlFormats.add("//%1$s");
@@ -101,9 +101,13 @@ class FBServiceManagerTest {
                     // no hostname + port:
                     urlFormats.add("%3$s");
                 }
+                if (isOtherNativeType().matches(gdsTypeName)) {
+                    urlFormats.add("%1$s");
+                }
             }
 
             if (isOtherNativeType().matches(gdsTypeName)) {
+                urlFormats.add("%1$s/%2$d");
                 // NOTE: This test assumes a Firebird 3.0 or higher client library is used
                 urlFormats.add("inet://%1$s:%2$d/%3$s");
                 urlFormats.add("inet://%1$s:%2$d/");

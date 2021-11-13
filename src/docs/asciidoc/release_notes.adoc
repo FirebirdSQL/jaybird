@@ -317,6 +317,7 @@ Some examples that all identify the same service:
 * `(serverName = null, portNumber = 3050, serviceName = "//")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
 * `(serverName = null, portNumber = 3050, serviceName = "service_mgr")`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
 * `(serverName = null, portNumber = 3050, serviceName = null)`  -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, serviceName = "host/3050:")` -- for PURE_JAVA the `:` is required, otherwise `host/3050` is taken as the service name, for NATIVE and EMBEDDED behaviour will depend on the client version and connected Firebird version
 
 These changes apply to `FBConnectionPoolDataSource`, `FBSimpleDataSource`, `FBXADataSource`, `FirebirdConnectionProperties` implementations, `ServiceManager` implementations, `EventManager` implementations, and -- with some caveats -- JDBC URLs.
 
