@@ -19,15 +19,21 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.management.FBManager;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
+import org.firebirdsql.management.FBManager;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ryan Baldwin
@@ -68,6 +74,8 @@ public class TestSpecialEmbeddedServerUrls {
         fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
         fbManager = null;
+
+        cleanUpFile(mRelativeDatabasePath);
     }
 
     @Test
@@ -110,12 +118,20 @@ public class TestSpecialEmbeddedServerUrls {
 
             testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
 
-            Connection connection =
-                    DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mRelativeDatabasePath + "?encoding=NONE",
-                            "SYSDBA", "masterkey");
-            connection.close();
+            try (Connection connection = DriverManager.getConnection(
+                    "jdbc:firebirdsql:embedded:" + mRelativeDatabasePath + "?encoding=NONE",
+                    "SYSDBA", "masterkey")) {
+                assertTrue(connection.isValid(1000));
+            }
         } finally {
             testFBManager.stop();
+        }
+    }
+
+    private static void cleanUpFile(String path) throws IOException {
+        Path filePath = Paths.get(path);
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);;
         }
     }
 }
