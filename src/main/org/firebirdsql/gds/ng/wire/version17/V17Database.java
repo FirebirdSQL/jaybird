@@ -16,28 +16,31 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version16;
+package org.firebirdsql.gds.ng.wire.version17;
 
-import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.firebirdsql.gds.ng.wire.FbWireService;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
-import org.firebirdsql.gds.ng.wire.version10.V10Service;
-import org.firebirdsql.gds.ng.wire.version15.V15CommonConnectionInfo;
+import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
+import org.firebirdsql.gds.ng.wire.version15.V15Database;
 
 /**
- * Class to contain common connection information shared by the V16 tests.
+ * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 17 wire protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
+ * @since 5
  */
-public class V16CommonConnectionInfo extends V15CommonConnectionInfo {
+public class V17Database extends V15Database {
 
-    V16CommonConnectionInfo() {
-        this(new Version16Descriptor(), V16Database.class, V10Service.class);
-    }
-
-    public V16CommonConnectionInfo(ProtocolDescriptor protocolDescriptor,
-            Class<? extends FbWireDatabase> expectedDatabaseType, Class<? extends FbWireService> expectedServiceType) {
-        super(protocolDescriptor, expectedDatabaseType, expectedServiceType);
+    /**
+     * Creates a V17Database instance.
+     *
+     * @param connection
+     *         A WireConnection with an established connection to the server.
+     * @param descriptor
+     *         The ProtocolDescriptor that created this connection (this is used for creating further dependent
+     *         objects).
+     */
+    protected V17Database(WireDatabaseConnection connection,
+            ProtocolDescriptor descriptor) {
+        super(connection, descriptor);
     }
 }

@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 import java.sql.SQLException;
 
@@ -178,6 +179,57 @@ public interface FbStatement extends ExceptionListenable {
      *         size is not <code>&gt; 0</code>.
      */
     void fetchRows(int fetchSize) throws SQLException;
+
+    /**
+     * Requests this statement to fetch rows using the specified fetch type.
+     * <p>
+     * The default implementation only supports {@link FetchType#NEXT} by redirecting to {@link #fetchRows(int)} and
+     * throws an {@code SQLFeatureNotSupported} for other types.
+     * </p>
+     * <p>
+     * The caller is responsible for tracking and correcting for server-side positional state, taking into account any
+     * rows already fetched. For example, if 100 rows have been fetched with {@code NEXT} or {@code PRIOR}, and 80
+     * rows are still in the local buffer, the server-side position is actually 80 rows ahead (or behind). The next
+     * fetch with {@code RELATIVE} will need to correct this in {@code position}, and a {@code PRIOR} after
+     * a {@code NEXT} or a {@code NEXT} after a {@code PRIOR} will need to reposition with {@code RELATIVE} or
+     * {@code ABSOLUTE}, or know how many rows to ignore from the fetched batch.
+     * </p>
+     *
+     * @param fetchType
+     *         Fetch type
+     * @param fetchSize
+     *         Number of rows to fetch (must be {@code > 0}) (ignored for types other than {@link FetchType#NEXT} and
+     *         {@link FetchType#PRIOR})
+     * @param position
+     *         Absolute or relative position for the row to fetch (ignored for types other than
+     *         {@link FetchType#ABSOLUTE} and {@link FetchType#RELATIVE})
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         For types other than {@link FetchType#NEXT} if the protocol version or the implementation does not
+     *         support scroll fetch
+     * @throws SQLException
+     *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
+     *         size is not {@code > 0}.
+     */
+    // TODO Unstable API
+    default void fetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException {
+        if (fetchType == FetchType.NEXT) {
+            fetchRows(fetchSize);
+            return;
+        }
+        throw new FBDriverNotCapableException("implementation does not support fetchScroll");
+    }
+
+    /**
+     * Reports whether this statement implementation supports {@link #fetchScroll(FetchType, int, int)} with anything
+     * other than {@link FetchType#NEXT}.
+     *
+     * @return {@code true} {@code fetchScroll} supported, {@code false} if not supported (default implementation
+     * returns {@code false})
+     */
+    // TODO Unstable API
+    default boolean supportsFetchScroll() {
+        return false;
+    }
 
     /**
      * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
@@ -331,4 +383,56 @@ public interface FbStatement extends ExceptionListenable {
      * @since 4.0
      */
     long getTimeout() throws SQLException;
+
+    /**
+     * Set cursor flag.
+     * <p>
+     * If a protocol version does not support cursor flags, this is silently ignored.
+     * </p>
+     *
+     * @param flag
+     *         Cursor flag to set
+     * @throws SQLException
+     *         If this statement is closed, or the specified flag is not supported
+     */
+    // TODO Unstable API
+    default void setCursorFlag(CursorFlag flag) throws SQLException {
+        // do nothing
+    }
+
+    /**
+     * Clears cursor flag.
+     * <p>
+     * Setting a cursor flag only affects subsequent executes. A currently open cursor will not be affected.
+     * </p>
+     * <p>
+     * If a protocol version does not support cursor flags, this is silently ignored.
+     * </p>
+     *
+     * @param flag
+     *         Cursor flag to clear
+     * @throws SQLException
+     *         If this statement is closed
+     */
+    // TODO Unstable API
+    default void clearCursorFlag(CursorFlag flag) throws SQLException {
+        // do nothing
+    }
+
+    /**
+     * Reports whether a cursor flag is set.
+     * <p>
+     * If a protocol version does not support cursor flags, {@code false} should be returned.
+     * </p>
+     *
+     * @param flag
+     *         Cursor flag
+     * @return {@code true} when set, {@code false} otherwise
+     * @throws SQLException
+     *         If this statement is closed
+     */
+    // TODO Unstable API
+    default boolean isCursorFlagSet(CursorFlag flag) throws SQLException {
+        return false;
+    }
 }

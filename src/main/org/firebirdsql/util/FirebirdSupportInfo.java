@@ -321,6 +321,9 @@ public final class FirebirdSupportInfo {
             return isVersionEqualOrAbove(3, 0, 2);
         case 16:
             return isVersionEqualOrAbove(4, 0, 0);
+        case 17:
+            // TODO Protocol 17 might be 4.0.1
+            return isVersionEqualOrAbove(5, 0 ,0);
         default:
             return false;
         }

@@ -1,32 +1,32 @@
 /*
  * Public Firebird Java API.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.gds.impl.wire;
 
 /**
  * Constants for wire protocol operations and messages.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public interface WireProtocolConstants {
@@ -60,25 +60,25 @@ public interface WireProtocolConstants {
     int op_attach = 19; /* Attach database */
     int op_create = 20; /* Create database */
     int op_detach = 21; /* Detach database */
-    
+
     /* Request based operations */
-    int op_compile = 22; 
+    int op_compile = 22;
     int op_start = 23;
     int op_start_and_send = 24;
     int op_send = 25;
     int op_receive = 26;
     int op_unwind = 27;
     int op_release = 28;
-    
+
     /* Transaction operations */
-    int op_transaction = 29; 
+    int op_transaction = 29;
     int op_commit = 30;
     int op_rollback = 31;
     int op_prepare = 32;
     int op_reconnect = 33;
-    
+
     /* Blob operations */
-    int op_create_blob = 34; 
+    int op_create_blob = 34;
     int op_open_blob = 35;
     int op_get_segment = 36;
     int op_put_segment = 37;
@@ -86,7 +86,7 @@ public interface WireProtocolConstants {
     int op_close_blob = 39;
 
     /* Information services */
-    int op_info_database = 40; 
+    int op_info_database = 40;
     int op_info_request = 41;
     int op_info_transaction = 42;
     int op_info_blob = 43;
@@ -128,19 +128,19 @@ public interface WireProtocolConstants {
     int op_execute2 = 76; /* execute a statement with msgs */
     int op_insert = 77;
     int op_sql_response = 78; /* response from execute; exec immed; insert */
-    
+
     int op_transact = 79;
     int op_transact_response = 80;
-    
+
     int op_drop_database = 81;
-    
+
     int op_service_attach = 82;
     int op_service_detach = 83;
     int op_service_info = 84;
     int op_service_start = 85;
-    
+
     int op_rollback_retaining = 86;
-    
+
     /* Two following opcode are used in vulcan.
        No plans to implement them completely for a while, but to
        support protocol 11, where they are used, have them here. */
@@ -162,29 +162,48 @@ public interface WireProtocolConstants {
 
     int op_crypt = 96;
     int op_crypt_key_callback = 97;
-    int op_cond_accept = 98;
-    
+    int op_cond_accept = 98;  /* Server accepts connection, returns some data to client
+                                 and asks client to continue authentication before attach call */
+
+    int op_batch_create = 99;
+    int op_batch_msg = 100;
+    int op_batch_exec = 101;
+    int op_batch_rls = 102;
+    int op_batch_cs = 103;
+    int op_batch_regblob = 104;
+    int op_batch_blob_stream = 105;
+    int op_batch_set_bpb = 106;
+
+    int op_repl_data = 107;
+    int op_repl_req = 108;
+
+    int op_batch_cancel = 109;
+    int op_batch_sync = 110;
+    int op_info_batch = 111;
+
+    int op_fetch_scroll = 112;
+
     /* Protocol version constants */
-    
+
     int CONNECT_VERSION2 = 2;
     int CONNECT_VERSION3 = 3;
-    
+
      /* Protocol 10 includes support for warnings and removes the requirement for
         encoding and decoding status codes */
     int PROTOCOL_VERSION10 = 10;
-    
+
     /* Since protocol 11 we must be separated from Borland Interbase.
        Therefore always set highmost bit in protocol version to 1.
        For unsigned protocol version this does not break version's compare. */
     int FB_PROTOCOL_FLAG = 0x8000;
     int FB_PROTOCOL_MASK = ~FB_PROTOCOL_FLAG & 0xFFFF;
-    
+
     /* Protocol 11 has support for user authentication related
        operations (op_update_account_info, op_authenticate_user and
        op_trusted_auth). When specific operation is not supported,
        we say "sorry". */
     int PROTOCOL_VERSION11 = (FB_PROTOCOL_FLAG | 11);
-    
+
     /* Protocol 12 has support for asynchronous call op_cancel.
        Currently implemented asynchronously only for TCP/IP. */
     int PROTOCOL_VERSION12 = (FB_PROTOCOL_FLAG | 12);
@@ -205,9 +224,14 @@ public interface WireProtocolConstants {
     	- supports statement timeouts */
     int PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
 
+    /* Protocol 17:
+        - supports op_batch_sync, op_info_batch, op_fetch_scroll
+        TODO: Provisional */
+    int PROTOCOL_VERSION17 = (FB_PROTOCOL_FLAG | 17);
+
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */
-    
+
     /* User identification data, if any, is of form:
        <type> <length> <data>
        where
@@ -234,7 +258,7 @@ public interface WireProtocolConstants {
     int TAG_KEY_PLUGINS = 1;
     int TAG_KNOWN_PLUGINS = 2;
     int TAG_PLUGIN_SPECIFIC = 3;
-    
+
     // Protocol Types
     // p_acpt_type
     // int ptype_page = 1; // Page server protocol

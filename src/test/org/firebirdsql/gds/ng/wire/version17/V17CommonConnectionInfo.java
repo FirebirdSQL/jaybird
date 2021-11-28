@@ -16,27 +16,27 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version16;
+package org.firebirdsql.gds.ng.wire.version17;
 
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireService;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.version10.V10Service;
-import org.firebirdsql.gds.ng.wire.version15.V15CommonConnectionInfo;
+import org.firebirdsql.gds.ng.wire.version16.V16CommonConnectionInfo;
 
 /**
- * Class to contain common connection information shared by the V16 tests.
+ * Class to contain common connection information shared by the V17 tests.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
+ * @since 5
  */
-public class V16CommonConnectionInfo extends V15CommonConnectionInfo {
+public class V17CommonConnectionInfo extends V16CommonConnectionInfo {
 
-    V16CommonConnectionInfo() {
-        this(new Version16Descriptor(), V16Database.class, V10Service.class);
+    V17CommonConnectionInfo() {
+        this(new Version17Descriptor(), V17Database.class, V10Service.class);
     }
 
-    public V16CommonConnectionInfo(ProtocolDescriptor protocolDescriptor,
+    public V17CommonConnectionInfo(ProtocolDescriptor protocolDescriptor,
             Class<? extends FbWireDatabase> expectedDatabaseType, Class<? extends FbWireService> expectedServiceType) {
         super(protocolDescriptor, expectedDatabaseType, expectedServiceType);
     }

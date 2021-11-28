@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.wire.version12.Version12Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
+import org.firebirdsql.gds.ng.wire.version17.Version17Descriptor;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -35,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 /**
@@ -52,16 +54,16 @@ public class TestProtocolCollection {
      * </p>
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void testGetDefaultCollection() {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
-                Arrays.<Class<? extends ProtocolDescriptor>>asList(
+                Arrays.asList(
                         Version10Descriptor.class,
                         Version11Descriptor.class,
                         Version12Descriptor.class,
                         Version13Descriptor.class,
                         Version15Descriptor.class,
-                        Version16Descriptor.class));
+                        Version16Descriptor.class,
+                        Version17Descriptor.class));
     }
 
     /**
@@ -69,7 +71,6 @@ public class TestProtocolCollection {
      * a collection with the supplied descriptors.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void testCreate() {
         // Version 10 with weight 3, type 1
         ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new EmptyProtocolDescriptor(
@@ -88,8 +89,7 @@ public class TestProtocolCollection {
                 alternativeDescriptorV10Weight3_1, alternativeDescriptorV10Weight2, alternativeDescriptorV10Weight3_2);
 
         // We expect the descriptor 'Version 10 with weight 3, type 1' to be returned
-        assertProtocolCollection(collection, Arrays.<Class<? extends ProtocolDescriptor>>asList(
-                alternativeDescriptorV10Weight3_1.getClass()));
+        assertProtocolCollection(collection, singletonList(alternativeDescriptorV10Weight3_1.getClass()));
     }
 
     /**
@@ -98,15 +98,13 @@ public class TestProtocolCollection {
      * ProtocolDescriptors with the same version.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void testCreateSameVersion() {
         ProtocolDescriptor alternativeDescriptor = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2);
         ProtocolCollection collection = ProtocolCollection.create(new Version10Descriptor(), alternativeDescriptor);
 
-        assertProtocolCollection(collection,
-                Arrays.<Class<? extends ProtocolDescriptor>>asList(alternativeDescriptor.getClass()));
+        assertProtocolCollection(collection, singletonList(alternativeDescriptor.getClass()));
     }
 
     /**
@@ -137,9 +135,8 @@ public class TestProtocolCollection {
 
     private void assertProtocolCollection(ProtocolCollection collection,
                                           List<Class<? extends ProtocolDescriptor>> expected) {
-        Set<Class<? extends ProtocolDescriptor>> expectedProtocols = new HashSet<Class<? extends ProtocolDescriptor>>(
-                expected);
-        Set<Class<? extends ProtocolDescriptor>> unexpectedProtocols = new HashSet<Class<? extends ProtocolDescriptor>>();
+        Set<Class<? extends ProtocolDescriptor>> expectedProtocols = new HashSet<>(expected);
+        Set<Class<? extends ProtocolDescriptor>> unexpectedProtocols = new HashSet<>();
 
         for (ProtocolDescriptor descriptor : collection) {
             Class<? extends ProtocolDescriptor> descriptorClass = descriptor.getClass();
