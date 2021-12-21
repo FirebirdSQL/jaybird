@@ -60,6 +60,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private volatile boolean allRowsFetched = false;
+    // Indicates whether at least one fetch was done for the current cursor
+    private boolean fetchedRow;
     private volatile StatementState state = StatementState.NEW;
     private volatile StatementType type = StatementType.NONE;
     private volatile RowDescriptor parameterDescriptor;
@@ -81,7 +83,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                 synchronized (getSynchronizationObject()) {
                     try {
                         if (RESET_TO_PREPARED.contains(getState())) {
-                            // Cursor has been closed due to commit, rollback, etc, back to prepared state
+                            // Cursor has been closed due to commit, rollback, etc., back to prepared state
                             try {
                                 switchState(StatementState.PREPARED);
                             } catch (SQLException e) {
@@ -106,13 +108,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected AbstractFbStatement(Object syncObject) {
         this.syncObject = syncObject;
         exceptionListenerDispatcher.addListener(new StatementCancelledListener());
+        statementListenerDispatcher.addListener(new SelfListener());
     }
 
     /**
      * Gets the {@link TransactionListener} instance for this statement.
      * <p>
-     * This method should only be called by this object itself. Subclasses may provide their own transaction listener, but
-     * the instance returned by this method should be the same for the lifetime of this {@link FbStatement}.
+     * This method should only be called by this object itself. Subclasses may provide their own transaction listener,
+     * but the instance returned by this method should be the same for the lifetime of this {@link FbStatement}.
      * </p>
      *
      * @return The transaction listener instance for this statement.
@@ -123,6 +126,15 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     protected final WarningMessageCallback getStatementWarningCallback() {
         return warningCallback;
+    }
+
+    /**
+     * Has at least one row been fetched from the current cursor?
+     *
+     * @return {@code true} if at least one row has been fetched of the current cursor, {@code false} otherwise
+     */
+    protected final boolean hasFetchedRows() {
+        return fetchedRow;
     }
 
     /**
@@ -223,7 +235,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
-    public StatementState getState() {
+    public final StatementState getState() {
         return state;
     }
 
@@ -401,7 +413,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @see #getParameterDescriptionInfoRequestItems()
      */
     public byte[] getStatementInfoRequestItems() {
-        return ((AbstractFbDatabase) getDatabase()).getStatementInfoRequestItems();
+        return ((AbstractFbDatabase<?>) getDatabase()).getStatementInfoRequestItems();
     }
 
     /**
@@ -409,7 +421,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @see #getStatementInfoRequestItems()
      */
     public byte[] getParameterDescriptionInfoRequestItems() {
-        return ((AbstractFbDatabase) getDatabase()).getParameterDescriptionInfoRequestItems();
+        return ((AbstractFbDatabase<?>) getDatabase()).getParameterDescriptionInfoRequestItems();
     }
 
     /**
@@ -740,7 +752,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener to reset the statement state when it has been cancelled due to statement timeout.
      */
-    private class StatementCancelledListener implements ExceptionListener {
+    private final class StatementCancelledListener implements ExceptionListener {
 
         @Override
         public void errorOccurred(Object source, SQLException ex) {
@@ -759,6 +771,25 @@ public abstract class AbstractFbStatement implements FbStatement {
                 }
                 break;
             }
+        }
+    }
+
+    /**
+     * Listener that allows a statement to listen to itself, so it can react to its own actions or state transitions.
+     */
+    private final class SelfListener extends DefaultStatementListener {
+        @Override
+        public void receivedRow(FbStatement sender, RowValue rowValue) {
+            if (getState() == StatementState.CURSOR_OPEN) {
+                fetchedRow = true;
+            }
+        }
+
+        @Override
+        public void statementStateChanged(FbStatement sender, StatementState newState,
+                StatementState previousState) {
+            // Any statement state change indicates existing 'fetched' information is no longer valid
+            fetchedRow = false;
         }
     }
 }

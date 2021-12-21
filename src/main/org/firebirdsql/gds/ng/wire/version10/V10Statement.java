@@ -511,7 +511,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_fetch);
         xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(calculateBlr(getRowDescriptor()));
+        xdrOut.writeBuffer(hasFetchedRows() ? null : calculateBlr(getRowDescriptor()));
         xdrOut.writeInt(0); // out_message_number = out_message_type
         xdrOut.writeInt(fetchSize); // fetch size
     }

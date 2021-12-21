@@ -37,7 +37,7 @@ import java.util.WeakHashMap;
  */
 public abstract class AbstractFbWireStatement extends AbstractFbStatement implements FbWireStatement {
 
-    private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<RowDescriptor, byte[]>());
+    private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<>());
     private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
     private FbWireDatabase database;
 

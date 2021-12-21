@@ -80,7 +80,7 @@ public class V17Statement extends V16Statement {
                         throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
                     }
                     try {
-                        int actualFetchSize = fetchType.supportsBatch() ? fetchSize : 1;
+                        int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
                         sendFetchScroll(fetchType, actualFetchSize, position);
                         getXdrOut().flush();
                     } catch (IOException ex) {
@@ -105,14 +105,11 @@ public class V17Statement extends V16Statement {
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll);
         xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(calculateBlr(getRowDescriptor()));
+        xdrOut.writeBuffer(hasFetchedRows() ? null : calculateBlr(getRowDescriptor()));
         xdrOut.writeInt(0); // out_message_number = out_message_type
         xdrOut.writeInt(fetchSize); // fetch size
         xdrOut.writeInt(fetchType.getFbFetchType()); // p_sqldata_fetch_op
-        // TODO Will change in next build of Firebird
-        if (fetchType == FetchType.ABSOLUTE || fetchType == FetchType.RELATIVE) {
-            xdrOut.writeInt(position); // p_sqldata_fetch_pos
-        }
+        xdrOut.writeInt(position); // p_sqldata_fetch_pos
     }
 
     protected final int getCursorFlagsAsInt() {
