@@ -16,31 +16,30 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.gds.ng.wire.version16.TestV16OutputBlob;
+import org.firebirdsql.gds.ng.wire.version16.TestV16EventHandling;
 import org.junit.ClassRule;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob} in the version 17 protocol
- * (note: there is no version 17 specific implementation of this class).
+ * Tests for events in {@link V18Database}, reuses test for V16.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V17OutputBlobTest extends TestV16OutputBlob {
+public class V18EventHandlingTest extends TestV16EventHandling {
 
     @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(17);
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
 
-    public V17OutputBlobTest() {
-        this(new V17CommonConnectionInfo());
+    public V18EventHandlingTest() {
+        this(new V18CommonConnectionInfo());
     }
 
-    protected V17OutputBlobTest(V17CommonConnectionInfo commonConnectionInfo) {
+    protected V18EventHandlingTest(V18CommonConnectionInfo commonConnectionInfo) {
         super(commonConnectionInfo);
     }
 }

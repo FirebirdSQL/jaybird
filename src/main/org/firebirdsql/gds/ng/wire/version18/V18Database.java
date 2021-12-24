@@ -16,22 +16,22 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.firebirdsql.gds.ng.wire.version15.V15Database;
+import org.firebirdsql.gds.ng.wire.version16.V16Database;
 
 /**
- * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 17 wire protocol.
+ * {@link org.firebirdsql.gds.ng.wire.FbWireDatabase} implementation for the version 18 wire protocol.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V17Database extends V15Database {
+public class V18Database extends V16Database {
 
     /**
-     * Creates a V17Database instance.
+     * Creates a V18Database instance.
      *
      * @param connection
      *         A WireConnection with an established connection to the server.
@@ -39,8 +39,7 @@ public class V17Database extends V15Database {
      *         The ProtocolDescriptor that created this connection (this is used for creating further dependent
      *         objects).
      */
-    protected V17Database(WireDatabaseConnection connection,
-            ProtocolDescriptor descriptor) {
+    protected V18Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
     }
 }

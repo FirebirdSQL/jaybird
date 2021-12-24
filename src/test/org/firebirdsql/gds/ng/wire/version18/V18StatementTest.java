@@ -16,31 +16,31 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.gds.ng.wire.version16.TestV16InputBlob;
+import org.firebirdsql.gds.ng.wire.version16.TestV16Statement;
 import org.junit.ClassRule;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} in the version 17 protocol
- * (note: there is no version 17 specific implementation of this class).
+ * Tests for {@link V18Statement} in the V18 protocol, reuses test for V16.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V17InputBlobTest extends TestV16InputBlob {
+public class V18StatementTest extends TestV16Statement {
 
     @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(17);
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
 
-    public V17InputBlobTest() {
-        this(new V17CommonConnectionInfo());
+    public V18StatementTest() {
+        this(new V18CommonConnectionInfo());
     }
 
-    protected V17InputBlobTest(V17CommonConnectionInfo commonConnectionInfo) {
+    protected V18StatementTest(V18CommonConnectionInfo commonConnectionInfo) {
         super(commonConnectionInfo);
     }
+
 }

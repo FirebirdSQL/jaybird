@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,31 +16,28 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.gds.ng.wire.version16.TestV16Transaction;
+import org.firebirdsql.gds.ng.wire.version16.V16StatementTimeoutTest;
 import org.junit.ClassRule;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction} in the version 17 protocol
- * (note: there is no version 16 specific implementation of this class).
- *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 5
  */
-public class V17TransactionTest extends TestV16Transaction {
+public class V18StatementTimeoutTest extends V16StatementTimeoutTest {
 
     @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(17);
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
 
-    public V17TransactionTest() {
-        this(new V17CommonConnectionInfo());
+    public V18StatementTimeoutTest() {
+        this(new V18CommonConnectionInfo());
     }
 
-    protected V17TransactionTest(V17CommonConnectionInfo commonConnectionInfo) {
+    protected V18StatementTimeoutTest(V18CommonConnectionInfo commonConnectionInfo) {
         super(commonConnectionInfo);
     }
+
 }

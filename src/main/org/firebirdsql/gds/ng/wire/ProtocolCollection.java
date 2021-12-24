@@ -118,7 +118,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 "org.firebirdsql.gds.ng.wire.version13.Version13Descriptor",
                 "org.firebirdsql.gds.ng.wire.version15.Version15Descriptor",
                 "org.firebirdsql.gds.ng.wire.version16.Version16Descriptor",
-                "org.firebirdsql.gds.ng.wire.version17.Version17Descriptor",
+                "org.firebirdsql.gds.ng.wire.version18.Version18Descriptor",
         };
         final List<ProtocolDescriptor> protocols = new ArrayList<>(protocolClasses.length);
         for (String className : protocolClasses) {

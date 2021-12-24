@@ -225,9 +225,12 @@ public interface WireProtocolConstants {
     int PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
 
     /* Protocol 17:
-        - supports op_batch_sync, op_info_batch, op_fetch_scroll
-        TODO: Provisional */
+        - supports op_batch_sync, op_info_batch */
     int PROTOCOL_VERSION17 = (FB_PROTOCOL_FLAG | 17);
+
+    /* Protocol 18:
+        - supports op_fetch_scroll */
+    int PROTOCOL_VERSION18 = (FB_PROTOCOL_FLAG | 18);
 
     /* Architectures */
     int arch_generic = 1; /* Generic -- always use canonical forms */

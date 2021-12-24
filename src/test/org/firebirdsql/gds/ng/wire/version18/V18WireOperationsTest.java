@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.gds.ng.wire.version16.TestV16WireOperations;
@@ -28,16 +28,16 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V17WireOperationsTest extends TestV16WireOperations {
+public class V18WireOperationsTest extends TestV16WireOperations {
 
     @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(17);
+    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
 
-    public V17WireOperationsTest() {
-        this(new V17CommonConnectionInfo());
+    public V18WireOperationsTest() {
+        this(new V18CommonConnectionInfo());
     }
 
-    protected V17WireOperationsTest(V17CommonConnectionInfo commonConnectionInfo) {
+    protected V18WireOperationsTest(V18CommonConnectionInfo commonConnectionInfo) {
         super(commonConnectionInfo);
     }
 }

@@ -28,7 +28,7 @@ import org.firebirdsql.gds.ng.wire.version12.Version12Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
-import org.firebirdsql.gds.ng.wire.version17.Version17Descriptor;
+import org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -63,7 +63,7 @@ public class TestProtocolCollection {
                         Version13Descriptor.class,
                         Version15Descriptor.class,
                         Version16Descriptor.class,
-                        Version17Descriptor.class));
+                        Version18Descriptor.class));
     }
 
     /**

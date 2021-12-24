@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
@@ -39,17 +39,17 @@ import java.util.Set;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V17Statement extends V16Statement {
+public class V18Statement extends V16Statement {
 
     private final Set<CursorFlag> cursorFlags = EnumSet.noneOf(CursorFlag.class);
 
     /**
-     * Creates a new instance of V17Statement for the specified database.
+     * Creates a new instance of V18Statement for the specified database.
      *
      * @param database
      *         FbWireDatabase implementation
      */
-    public V17Statement(FbWireDatabase database) {
+    public V18Statement(FbWireDatabase database) {
         super(database);
     }
 

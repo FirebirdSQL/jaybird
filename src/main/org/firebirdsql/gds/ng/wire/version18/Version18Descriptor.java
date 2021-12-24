@@ -16,7 +16,7 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.wire.version17;
+package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.BlobParameterBuffer;
@@ -40,20 +40,17 @@ import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
 import org.firebirdsql.gds.ng.wire.version15.V15WireOperations;
 
 /**
- * The {@link ProtocolDescriptor} for the Firebird version 16 protocol. This version
+ * The {@link ProtocolDescriptor} for the Firebird version 18 protocol. This version
  * applies to Firebird 5, but also works with newer Firebird versions.
- * <p>
- * TODO: v17 might get associated with Firebird 4.0.1
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public final class Version17Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
+public final class Version18Descriptor extends AbstractProtocolDescriptor implements ProtocolDescriptor {
 
-    public Version17Descriptor() {
+    public Version18Descriptor() {
         super(
-                WireProtocolConstants.PROTOCOL_VERSION17,
+                WireProtocolConstants.PROTOCOL_VERSION18,
                 WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_lazy_send, // Protocol implementation expects lazy send
                 WireProtocolConstants.ptype_lazy_send,
@@ -63,7 +60,7 @@ public final class Version17Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireDatabase createDatabase(WireDatabaseConnection connection) {
-        return new V17Database(connection, this);
+        return new V18Database(connection, this);
     }
 
     @Override
@@ -91,7 +88,7 @@ public final class Version17Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireStatement createStatement(final FbWireDatabase database) {
-        return new V17Statement(database);
+        return new V18Statement(database);
     }
 
     @Override
