@@ -11,7 +11,8 @@ The following has been changed or fixed since Jaybird 4.0.5
 
 -   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
     includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
-    This could lead to service requests not completing successfully.
+    This could lead to service requests not completing successfully for native
+    connections.
 
 Jaybird 4.0.4
 -------------
@@ -117,7 +118,7 @@ The following has been changed or fixed since Jaybird 4.0.0
     For `TIME WITH TIME ZONE`, the returned value is rebased on the current
     date.
 -   Fixed: `Connection.setNetworkTimeout` incorrectly used the provided
-    `Executor` to set the timeout ([JDBC-631](tracker.firebirdsql.org/browse/JDBC-631)) \
+    `Executor` to set the timeout ([JDBC-631](http://tracker.firebirdsql.org/browse/JDBC-631)) \
     This caused a race condition where the timeout was possibly applied too
     late, and when `connection.close()` was called immediately after, this could
     trigger a `NullPointerException` that would bubble up into the executor.
