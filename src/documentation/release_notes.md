@@ -15,6 +15,10 @@ the application server and driver.
 About this version
 ------------------
 
+**Jaybird 3.0.12 is the last version of Jaybird 3, and as Jaybird 3 is now 
+end-of-life, it will no longer receive updates. We recommend upgrading to 
+Jaybird 4.**
+
 Jaybird 3 is a big change from Jaybird 2.2 and earlier. The entire low-level 
 implementation has been rewritten to be able to support protocol improvements in
 newer Firebird versions. We have also made changes with a stricter 
@@ -25,11 +29,9 @@ We recommend that you do not consider Jaybird 3 a drop-in replacement for
 Jaybird 2.2, and study these release notes carefully. Test your application with
 Jaybird 3 before using it in production.
 
-Although Jaybird 3 is still maintained, we recommend updating to Jaybird 4.
-
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
-be sent to the Firebird-java mailing list or reported on the issue tracker
-<https://github.com/FirebirdSQL/jaybird/issues/>.
+be sent to the [Firebird-java Google Group](https://groups.google.com/g/firebird-java)
+or reported on the issue tracker <https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Support
 =======
@@ -44,7 +46,7 @@ See also [Where to get help](https://www.firebirdsql.org/file/documentation/driv
 Supported Firebird versions
 ---------------------------
 
-Jaybird 3 was tested against Firebird 2.5.9, and 3.0.7, but should also 
+Jaybird 3 was tested against Firebird 2.5.9, 3.0.8 and 4.0.1, but should also 
 support other Firebird versions from 2.0 and up. Firebird 4 is not fully 
 supported in Jaybird 3, we recommend switching to Jaybird 4.
 
@@ -91,7 +93,8 @@ have the same source and all JDBC 4.3 related functionality.
 
 Given the limited support period for Java 9 and higher versions, we limit
 support on those versions to the most recent LTS version and the latest release.
-As of January 2021, this means Java 11 and Java 15 are supported.
+As of December 2021, this means Java 11 and Java 17 are supported (we decided to
+support both LTS versions).
 
 Jaybird 3 is not modularized, but since Jaybird 3.0.3, it declares the 
 automatic module name `org.firebirdsql.jaybird`.
@@ -235,10 +238,25 @@ Gotchas
 -------
 
 If you find a problem while upgrading, or other bugs: please report it 
-on <http://tracker.firebirdsql.org/brows/JDBC>.
+on <https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Jaybird 3.0.x changelog
 =======================
+
+Changes in Jaybird 3.0.12
+-------------------------
+
+The following has been changed or fixed since Jaybird 3.0.11:
+
+-   Jaybird 3 is now end-of-life. Please upgrade to Jaybird 4.
+-   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
+    includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
+    This could lead to service requests not completing successfully for native
+    connections.
+
+### Known issues in Jaybird 3.0.12
+
+See [Known Issues]
 
 Changes in Jaybird 3.0.11
 -------------------------
@@ -257,13 +275,6 @@ The following has been changed or fixed since Jaybird 3.0.10:
     This change only affects Jaybird's implementation of the Firebird wire
     protocol; connections with the 'native' protocol will still delay sending
     the 'free' packet.
--   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
-    includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
-    This could lead to service requests not completing successfully.
-
-### Known issues in Jaybird 3.0.11
-
-See [Known Issues]
 
 Changes in Jaybird 3.0.10
 -------------------------
@@ -1246,7 +1257,7 @@ The changes due to the new protocol implementation and/or JDBC conformance are
 listed below.
 
 **The list might not be complete, if you notice a difference in behavior that is
-not listed, please [report it as bug](http://tracker.firebirdsql.org/brows/JDBC).** 
+not listed, please [report it as bug](https://github.com/FirebirdSQL/jaybird/issues/).** 
 It might have been a change we forgot to document, but it could just as well be 
 an implementation bug.
 
@@ -1699,7 +1710,7 @@ and `local` protocol. Be aware that this dependency does not support `embedded`.
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>fbclient</artifactId>
-    <version>3.0.4.0</artifactId>
+    <version>3.0.8.0</artifactId>
 </dependency>
 ```
 
