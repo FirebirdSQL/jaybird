@@ -628,9 +628,8 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
                         break;
                     }
                 } catch (FBIncorrectXidException ex) {
-                    String message = "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId;
-                    log.warn(message + ": " + ex + "; see debug level for stacktrace");
-                    log.debug(message, ex);
+                    log.warnDebug(
+                            "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
                 }
 
                 row++;

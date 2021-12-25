@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -29,7 +29,6 @@ import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
-import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
 import org.firebirdsql.logging.Logger;
@@ -117,8 +116,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] ASC_BYTES = getBytes("A");
     private static final byte[] DESC_BYTES = getBytes("D");
 
-    private GDSHelper gdsHelper;
-    private FBConnection connection;
+    private final GDSHelper gdsHelper;
+    private final FBConnection connection;
     private final FirebirdSupportInfo firebirdSupportInfo;
 
     private static final int STATEMENT_CACHE_SIZE = 12;
@@ -143,9 +142,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                     try {
                         stmt.close();
                     } catch (Exception e) {
-                        log.warn("error closing cached statements in DatabaseMetaData.close; "
-                                + "see debug level for stacktrace");
-                        log.debug("error closing cached statements in DatabaseMetaData.close", e);
+                        log.warnDebug("error closing cached statements in DatabaseMetaData.close", e);
                     }
                 }
             } finally {
@@ -1224,11 +1221,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         List<String> params = procedureClause.hasCondition()
                 ? Collections.singletonList(procedureClause.getValue())
-                : Collections.<String>emptyList();
+                : Collections.emptyList();
 
         try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -1319,7 +1316,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(sql, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -1462,7 +1459,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
 
     @Override
-    public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[])
+    public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
         if (hasGlobalTemporaryTables()) {
             return getTables_2_5(tableNamePattern, types);
@@ -1690,7 +1687,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     @Override
@@ -1839,7 +1836,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2091,7 +2088,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(sql, params)) {
             // return empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2137,12 +2134,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         List<String> params = tableClause.hasCondition()
                 ? Collections.singletonList(tableClause.getValue())
-                : Collections.<String>emptyList();
+                : Collections.emptyList();
 
         try (ResultSet rs = doQuery(sql, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             return processTablePrivileges(rowDescriptor, rs);
@@ -2232,12 +2229,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
             final RowIdLifetime rowIdLifetime = getRowIdLifetime();
             if (rowIdLifetime == RowIdLifetime.ROWID_VALID_TRANSACTION && scope == DatabaseMetaData.bestRowSession) {
                 // consider RDB$DB_KEY scope transaction
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "RDB$DB\\_KEY")) {
                 if (!pseudoColumns.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                    return new FBResultSet(rowDescriptor, Collections.emptyList());
                 }
                 rows.add(rowValueBuilder
                         .at(0).set(createShort(
@@ -2317,12 +2314,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .toRowDescriptor();
 
         if (table == null || "".equals(table)) {
-            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            return new FBResultSet(rowDescriptor, Collections.emptyList());
         }
 
         try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "%")) {
             if (!pseudoColumns.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             List<RowValue> rowValues = new ArrayList<>(2);
@@ -2377,7 +2374,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(GET_PRIMARY_KEYS, params)) {
             // if nothing found, return empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2465,7 +2462,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(GET_IMPORTED_KEYS, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2537,7 +2534,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(GET_EXPORTED_KEYS, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             List<RowValue> rows = new ArrayList<>();
@@ -2612,7 +2609,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try (ResultSet rs = doQuery(GET_CROSS_KEYS, params)) {
             // return empty result set if nothing found
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -2894,7 +2891,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         try (ResultSet rs = doQuery(GET_INDEX_INFO, params)) {
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -3040,7 +3037,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(6).simple(SQL_SHORT, 0, "BASE_TYPE", "UDT").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     @Override
@@ -3081,7 +3078,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(20).simple(SQL_SHORT, 0, "SOURCE_DATA_TYPE", "ATTRIBUTES").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     @Override
@@ -3122,7 +3119,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     /**
@@ -3140,7 +3137,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTABLE_NAME", "SUPERTABLES").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     @Override
@@ -3224,7 +3221,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(3).simple(SQL_VARYING, 31, "DESCRIPTION", "CLIENTINFO").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     /**
@@ -3274,7 +3271,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CATALOG", "TABLESCHEMAS").addField()
                 .toRowDescriptor();
 
-        return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+        return new FBResultSet(rowDescriptor, Collections.emptyList());
     }
 
     @Override
@@ -3382,7 +3379,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table and/or column not possible
-            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            return new FBResultSet(rowDescriptor, Collections.emptyList());
         }
 
         final boolean supportsRecordVersion = firebirdSupportInfo.supportsRecordVersionPseudoColumn();
@@ -3392,7 +3389,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
         if (!(retrieveDbKey || retrieveRecordVersion)) {
             // No matching columns
-            return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+            return new FBResultSet(rowDescriptor, Collections.emptyList());
         }
 
         Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
@@ -3402,12 +3399,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         }
         sql += GET_PSEUDO_COLUMNS_END;
         List<String> params = tableNameClause.hasCondition()
-                ? Collections.<String>singletonList(tableNameClause.getValue())
-                : Collections.<String>emptyList();
+                ? Collections.singletonList(tableNameClause.getValue())
+                : Collections.emptyList();
 
         try (ResultSet rs = doQuery(sql, params)) {
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             byte[] dbKeyBytes = retrieveDbKey ? getBytes("RDB$DB_KEY") : null;
@@ -3631,11 +3628,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(propertyName);
-            }
-        });
+        return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
     }
 
     private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {

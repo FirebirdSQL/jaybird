@@ -78,9 +78,7 @@ public class GDSFactory {
                 loadPluginsFromClassLoader(classLoader);
             }
         } catch (Exception ex) {
-            String message = "Can't register plugins";
-            log.error(message + ": " + ex + "; see debug level for stacktrace");
-            log.debug(message, ex);
+            log.errorDebug("Can't register plugins", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
@@ -130,9 +128,7 @@ public class GDSFactory {
                         GDSFactoryPlugin plugin = pluginIterator.next();
                         registerPlugin(plugin);
                     } catch (Exception | ServiceConfigurationError e) {
-                        String message = "Can't register plugin (skipping)";
-                        log.error(message + ": " + e + "; see debug level for stacktrace");
-                        log.debug(message, e);
+                        log.errorDebug("Can't register plugin (skipping)", e);
                     }
                 }
                 break;
@@ -169,9 +165,7 @@ public class GDSFactory {
             GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
             registerPlugin(plugin);
         } catch (Exception ex) {
-            String message = "Can't register plugin " + className;
-            log.error(message + ": " + ex + "; see debug level for stacktrace");
-            log.debug(message, ex);
+            log.errorDebug("Can't register plugin " + className, ex);
         }
     }
 

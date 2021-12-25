@@ -528,9 +528,7 @@ public class FBEventManager implements EventManager {
                 try {
                     fbDatabase.countEvents(eventHandle);
                 } catch (SQLException e) {
-                    String message = "Exception processing event counts";
-                    log.warn(message + ": " + e + "; see debug level for stacktrace");
-                    log.debug(message, e);
+                    log.warnDebug("Exception processing event counts", e);
                 }
 
                 if (initialized && !cancelled) {
@@ -542,9 +540,7 @@ public class FBEventManager implements EventManager {
                 try {
                     register();
                 } catch (SQLException e) {
-                    String message = "Exception registering for event";
-                    log.warn(message + ": " + e + "; see debug level for stacktrace");
-                    log.debug(message, e);
+                    log.warnDebug("Exception registering for event", e);
                 }
             }
         }
@@ -609,9 +605,9 @@ class OneTimeEventListener implements EventListener {
 
 class DatabaseEventImpl implements DatabaseEvent {
 
-    private int eventCount;
+    private final int eventCount;
 
-    private String eventName;
+    private final String eventName;
 
     public DatabaseEventImpl(String eventName, int eventCount) {
         this.eventName = eventName;

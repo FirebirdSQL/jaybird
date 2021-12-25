@@ -1,21 +1,21 @@
 /*
-* Firebird Open Source JavaEE Connector - JDBC Driver
-*
-* Distributable under LGPL license.
-* You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* LGPL License for more details.
-*
-* This file was created by members of the firebird development team.
-* All individual contributions remain the Copyright (C) of those
-* individuals.  Contributors to this file are either listed here or
-* can be obtained from a source control history command.
-*
-* All rights reserved.
-*/
+ * Firebird Open Source JDBC Driver
+ *
+ * Distributable under LGPL license.
+ * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * LGPL License for more details.
+ *
+ * This file was created by members of the firebird development team.
+ * All individual contributions remain the Copyright (C) of those
+ * individuals.  Contributors to this file are either listed here or
+ * can be obtained from a source control history command.
+ *
+ * All rights reserved.
+ */
 package org.firebirdsql.logging;
 
 /**
@@ -24,7 +24,6 @@ package org.firebirdsql.logging;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
  */
 public interface Logger {
 
@@ -63,5 +62,39 @@ public interface Logger {
     void fatal(String message);
 
     void fatal(String message, Throwable t);
+
+    /**
+     * Logs the message on warn with the throwable {@code toString()} and a note that the stacktrace is on debug.
+     * The {@code message} and the stacktrace of {@code t} are also logged on debug.
+     *
+     * @param message
+     *         Message to log
+     * @param t
+     *         Throwable to log ({@code toString()} on warn and full stacktrace on debug)
+     */
+    // This is a bit of a special case, but the pattern was repeated often enough to warrant its own method
+    default void warnDebug(String message, Throwable t) {
+        if (isWarnEnabled()) {
+            warn(message + ": " + t + "; see debug level for stacktrace");
+            debug(message, t);
+        }
+    }
+
+    /**
+     * Logs the message on error with the throwable {@code toString()} and a note that the stacktrace is on debug.
+     * The {@code message} and the stacktrace of {@code t} are also logged on debug.
+     *
+     * @param message
+     *         Message to log
+     * @param t
+     *         Throwable to log ({@code toString()} on error and full stacktrace on debug)
+     */
+    // This is a bit of a special case, but the pattern was repeated often enough to warrant its own method
+    default void errorDebug(String message, Throwable t) {
+        if (isErrorEnabled()) {
+            error(message + ": " + t + "; see debug level for stacktrace");
+            debug(message, t);
+        }
+    }
 
 }

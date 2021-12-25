@@ -47,7 +47,6 @@ public class FirebirdEmbeddedLookup {
      *
      * @return the first embedded instance matching the current platform that installed without errors
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     public static Optional<FirebirdEmbeddedLibrary> findFirebirdEmbedded() {
         try {
             ServiceLoader<FirebirdEmbeddedProvider> firebirdEmbeddedProviders =
@@ -61,9 +60,7 @@ public class FirebirdEmbeddedLookup {
                         return Optional.of(provider.getFirebirdEmbeddedLibrary());
                     }
                 } catch (Exception | ServiceConfigurationError e) {
-                    String message = "Can't load FirebirdEmbeddedProvider (skipping)";
-                    log.error(message + ": " + e + "; see debug level for stacktrace");
-                    log.debug(message, e);
+                    log.errorDebug("Can't load FirebirdEmbeddedProvider (skipping)", e);
                 }
             }
         } catch (ServiceConfigurationError | RuntimeException e) {

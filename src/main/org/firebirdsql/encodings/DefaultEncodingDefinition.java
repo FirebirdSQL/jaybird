@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,6 +24,8 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+
+import static java.lang.String.format;
 
 /**
  * Definition of a Firebird encoding. This is the default implementation of {@link EncodingDefinition}.
@@ -173,11 +175,10 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             // Prevent further attempts
             encoding = null;
-            String message = String.format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or "
-                            + "unsupported character set name, handling as information-only",
-                    charsetName, firebirdEncodingName);
-            logger.warn(message + ": " + e + "; see debug level for stacktrace");
-            logger.debug(message, e);
+            logger.warnDebug(
+                    format("charsetName=\"%s\" specified for Firebird encoding \"%s\" is an illegal or unsupported "
+                            + "character set name, handling as information-only", charsetName, firebirdEncodingName),
+                    e);
         }
     }
 

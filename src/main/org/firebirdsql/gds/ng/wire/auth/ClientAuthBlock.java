@@ -469,9 +469,7 @@ public final class ClientAuthBlock {
                 log.warn("No authentication plugins loaded through service loader, falling back to default list");
             }
         } catch (Exception e) {
-            String message = "Unable to load authentication plugins through ServiceLoader, using fallback list";
-            log.warn(message + ": " + e + "; see debug level for stacktrace");
-            log.debug(message, e);
+            log.warnDebug("Unable to load authentication plugins through ServiceLoader, using fallback list", e);
         }
         return loadFallbackPluginProviders(ClientAuthBlock.class.getClassLoader());
     }
