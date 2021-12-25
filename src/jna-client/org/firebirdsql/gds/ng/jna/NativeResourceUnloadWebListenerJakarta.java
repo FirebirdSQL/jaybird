@@ -20,20 +20,23 @@ package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
 
 /**
- * Servlet context listener responsible for unloading native libraries if loaded in the current context.
+ * Servlet context listener for jakarta.servlet for unloading native libraries if loaded in the current context.
+ * <p>
+ * Twin of {@link NativeResourceUnloadWebListenerJavaX}.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
+ * @since 5
  */
 @WebListener
-public class NativeResourceUnloadWebListener implements ServletContextListener {
+public class NativeResourceUnloadWebListenerJakarta implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
