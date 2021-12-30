@@ -637,13 +637,13 @@ Java 7 version of Jaybird).
 
 Given the limited support period for Java 9 and higher versions, we limit
 support on those versions to the most recent LTS version and the latest release.
-As of January 2020, this means Java 11 and Java 15 are supported.
+As of December 2021, this means Java 11 and Java 17 are supported.
 
 We recommend to only use the Java 8 version of Jaybird with Java 9+, and not use 
 the Java 7 version of Jaybird. The Java 7 version doesn't implement all the 
-JDBC 4.3 features that are implemented in the Java 8 version. In addition, since 
-Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` module, 
-where the Java 8 version doesn't need that module. 
+JDBC 4.2 and 4.3 features that are implemented in the Java 8 version. In addition,
+since Jaybird 3.0.4, the Java 7 version of Jaybird needs the `java.xml.bind` 
+module, where the Java 8 version doesn't need that module. 
 
 Firebird support
 ----------------

@@ -25,7 +25,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.1.java8</version>
+    <version>5.0.0.java8</version>
 </dependency>
 ~~~
 
@@ -47,10 +47,10 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.3.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.5.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
-artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
+artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`). However, we
 recommend switching to the `jaybird` artifact.
 
 For example, for Java 8:
@@ -59,7 +59,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.3.java8</version>
+    <version>4.0.5.java8</version>
 </dependency>
 ~~~
 
@@ -71,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.3.java8</version>
+    <version>4.0.5.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -102,13 +102,14 @@ explicitly include JNA 5.5.0 as a dependency:
 <!-- For GitHub markdown compatibility -->
 <a name="jaybird-3.0"></a>
 
-Jaybird 3.0 is currently maintained, but we recommend upgrading to Jaybird 4.
+Jaybird 3.0 is end-of-life and will receive no further updates. We recommend 
+upgrading to Jaybird 4.
 
 Jaybird 3.0 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)  
-Version: `3.0.11`
+Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`),  
+Version: `3.0.12`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
 `jaybird`. For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
@@ -119,7 +120,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.11</version>
+    <version>3.0.12</version>
 </dependency>
 ~~~
 
@@ -131,7 +132,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.11</version>
+    <version>3.0.12</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -160,13 +161,14 @@ explicitly include JNA 4.4.0 as a dependency:
 
 #### Jaybird 2.2 ####
 
-Jaybird 2.2 is end-of-life. We recommend upgrading to Jaybird 4.
+Jaybird 2.2 is end-of-life and will receive no further updates. We recommend
+upgrading to Jaybird 4.
 
 Jaybird 2.2 is available on Maven, with a separate artifact
 for each supported Java version.
 
 Groupid: `org.firebirdsql.jdbc`,  
-Artifactid: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`)  
+Artifactid: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`),  
 Version: `2.2.15`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id
@@ -214,7 +216,7 @@ Jaybird JDBC driver is distributed under the GNU Lesser General Public License
 Using Jaybird (by importing Jaybird's public interfaces in your Java code), and
 extending Jaybird by subclassing or implementation of an extension interface
 (but not abstract or concrete class) is considered by the authors of Jaybird to
-be dynamic linking. Hence our interpretation of the LGPL is that the use of the
+be dynamic linking. Hence, our interpretation of the LGPL is that the use of the
 unmodified Jaybird source does not affect the license of your application code.
 
 Even more, all extension interfaces to which an application might want to link
@@ -232,9 +234,11 @@ specify an explicit version, or be released under a different license.
 Which Java versions are supported?
 ----------------------------------
 
-Jaybird 4 supports Java 7, 8, 11 and 15. Support for Java 9 and higher is 
+Jaybird 4 supports Java 7, 8, 11 and 17. Support for Java 9 and higher is 
 limited to the latest LTS and current latest release, but in practice Jaybird
-should work on all Java 9+ versions.
+should work on all Java 9+ versions. For the time being, both Java 11 and 
+Java 17 are supported, but formal support for Java 11 may be dropped in a future
+point release.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with
 Jaybird 5. Java 8 support may be dropped from Jaybird 5 as well depending on
@@ -243,9 +247,11 @@ the actual release timeline.
 Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9 and higher
 using the Java 8 version of the driver. Support for Java 9 and higher is 
 limited to the latest LTS and current latest release, but in practice Jaybird
-should work on all Java 9+ versions.
+should work on all Java 9+ versions. Jaybird 3.0.12 is that last release of
+Jaybird 3.0, and is end-of-life. We recommend upgrading to Jaybird 4.
 
-Jaybird 2.2 supports Java 6, 7 and 8.
+Jaybird 2.2 supports Java 6, 7 and 8. Jaybird 2.2.15 is that last release of
+Jaybird 2.2, and is end-of-life. We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all 
 JDBC 4.2 features are supported or fully implemented.
@@ -276,7 +282,7 @@ Jaybird 3 is the last version to support Firebird 2.0 and 2.1. Future versions
 of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher. Jaybird 2.2.4 added
-support for new features of Firebird 3 (eg `BOOLEAN` support). Support for 
+support for new features of Firebird 3 (e.g. `BOOLEAN` support). Support for 
 Firebird 4 is limited to the Firebird 3 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5. Future
@@ -380,7 +386,7 @@ in brackets (eg `[::1]`). Use of IPv6 address literals is only supported in
 Jaybird 3 or newer with Firebird 3 or newer.
 
 The `<database>` part should be replaced with the database alias or the path to
-the database. In general it is advisable to use database aliases instead of the
+the database. In general, it is advisable to use database aliases instead of the
 path of the database file as it hides implementation details like file locations
 and OS type.
 
@@ -402,9 +408,9 @@ Jaybird 4 and higher also support:
 
 ### Open Office/Libre Office (Pure Java)
 
-Jaybird can be used together with OpenOffice and Libre Office Base. To address
+Jaybird can be used together with OpenOffice and LibreOffice Base. To address
 some compatibility issues (and differences in interpretation of JDBC
-specifications) a separate subprotocol is used:
+specifications) a separate sub-protocol is used:
 
     jdbc:firebirdsql:oo://host[:port]/<database>
 
@@ -584,6 +590,9 @@ one of the following options:
 How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
 -----------------------------------------------------------------------------------
 
+NOTE: Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` option and 
+recommends not to use it.
+
 Firebird 3.0.2 adds support for "TCP Loopback Fast Path" (`SIO_LOOPBACK_FAST_PATH` 
 socket option). This is available in Windows 8 / Windows Server 2012 and higher.
 This feature enables performance optimizations when connecting through 
@@ -613,8 +622,8 @@ does exist (with that password), but not for the authentication plugins tried
 for this connection.
 
 For example, Jaybird 2.2.x and earlier only support legacy authentication, if
-you try to login as a user created for SRP authentication, you will get the same
-error.
+you try to log in as a user created for SRP authentication, you will get the 
+same error.
 
 ### Incompatible wire encryption levels requested on client and server (335545064) ###  
 
@@ -780,7 +789,7 @@ The following methods are implemented, but do not work as expected:
     * `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
 * `java.sql.CallableStatement`
     * `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`. 
-      The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of
+      The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of
       the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)` 
 * `java.sql.ResultSetMetaData`
     * `isReadOnly(i)` always returns false
@@ -788,7 +797,7 @@ The following methods are implemented, but do not work as expected:
     * `isDefinitivelyWritable(i)` always returns true
 * `java.sql.ResultSet`
     * `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`. 
-      The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of
+      The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of
       the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 
 Features
