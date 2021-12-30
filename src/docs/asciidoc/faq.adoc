@@ -24,9 +24,10 @@ TODO Hidden for now
 
 Jaybird 5 is in development and not yet available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`, \
-Artifactid: `jaybird`, \
-Version: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
+[horizontal]
+Groupid:: `org.firebirdsql.jdbc`
+Artifactid:: `jaybird`,
+Version:: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
@@ -34,24 +35,26 @@ recommend switching to the `jaybird` artifact.
 
 For example, for Java 8:
 
-~~~ {.xml}
+[source,xml]
+----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.1.java8</version>
+    <version>5.0.0.java8</version>
 </dependency>
-~~~
+----
 
-If you want to use Type 2 support (native, local or embedded), you need to
-explicitly include JNA 5.5.0 as a dependency:
+If you want to use Type 2 support (native or embedded), you need to explicitly
+include JNA 5.5.0 as a dependency:
 
-~~~ {.xml}
+[source,xml]
+----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
     <version>5.5.0</version>
 </dependency>
-~~~
+----
 ////
 
 [#jaybird-4]
@@ -59,30 +62,33 @@ explicitly include JNA 5.5.0 as a dependency:
 
 Jaybird 4 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`, \ Artifactid: `jaybird`, \ Version: `4.0.3.javaXX` (where `XX` is `7`, `8` or `11`)
+[horizontal]
+Groupid:: `org.firebirdsql.jdbc`
+Artifactid:: `jaybird`
+Version:: `4.0.5.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`.
 However, we recommend switching to the `jaybird` artifact.
 
 For example, for Java 8:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.3.java8</version>
+    <version>4.0.5.java8</version>
 </dependency>
 ----
 
-If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided  dependency:
+If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided dependency:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.3.java8</version>
+    <version>4.0.5.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -98,9 +104,9 @@ If your application is deployed to a Java EE application server, you will need t
 </dependency>
 ----
 
-If you want to use Type 2 support (native, local or embedded), you need to  explicitly include JNA 5.5.0 as a dependency:
+If you want to use Type 2 support (native, local or embedded), you need to explicitly include JNA 5.5.0 as a dependency:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
@@ -116,34 +122,38 @@ If you want to use Type 2 support (native, local or embedded), you need to  expl
 
 +++<a name="jaybird-3.0">++++++</a>+++
 
-Jaybird 3.0 is currently maintained, but we recommend upgrading to Jaybird 4.
+Jaybird 3.0 is end-of-life and will receive no further updates.
+We recommend upgrading to Jaybird 4.
 
 Jaybird 3.0 is available from Maven central:
 
-Groupid: `org.firebirdsql.jdbc`, + Artifactid: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`) + Version: `3.0.11`
+[horizontal]
+Groupid:: `org.firebirdsql.jdbc`
+Artifactid:: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)
+Version:: `3.0.12`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id `jaybird`.
 For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
 
 For example, for Java 8:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.11</version>
+    <version>3.0.12</version>
 </dependency>
 ----
 
-If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided  dependency:
+If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided dependency:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.11</version>
+    <version>3.0.12</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -161,7 +171,7 @@ If your application is deployed to a Java EE application server, you will need t
 
 If you want to use Type 2 support (native, local or embedded), you need to  explicitly include JNA 4.4.0 as a dependency:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
@@ -173,19 +183,22 @@ If you want to use Type 2 support (native, local or embedded), you need to  expl
 [#jaybird-2-2]
 ==== Jaybird 2.2
 
-Jaybird 2.2 is end-of-life.
+Jaybird 2.2 is end-of-life and will receive no further updates.
 We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2 is available on Maven, with a separate artifact for each supported Java version.
 
-Groupid: `org.firebirdsql.jdbc`, + Artifactid: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`) + Version: `2.2.15`
+[horizontal]
+Groupid:: `org.firebirdsql.jdbc`
+Artifactid:: `jaybird-XX` (where `XX` is `jdk16`, `jdk17` or `jdk18`)
+Version:: `2.2.15`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id `jaybird`.
 For Jaybird 2.2 this relocation artifact points to `jaybird-jdk17`.
 
 For example:
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
@@ -220,7 +233,7 @@ Jaybird JDBC driver is distributed under the GNU Lesser General Public License (
 Text of the license can be obtained from http://www.gnu.org/copyleft/lesser.html.
 
 Using Jaybird (by importing Jaybird's public interfaces in your Java code), and extending Jaybird by subclassing or implementation of an extension interface (but not abstract or concrete class) is considered by the authors of Jaybird to be dynamic linking.
-Hence our interpretation of the LGPL is that the use of the unmodified Jaybird source does not affect the license of your application code.
+Hence, our interpretation of the LGPL is that the use of the unmodified Jaybird source does not affect the license of your application code.
 
 Even more, all extension interfaces to which an application might want to link are released under dual LGPL/modified BSD license.
 Latter is basically "AS IS" license that allows any kind of use of that source code.
@@ -236,18 +249,23 @@ Future versions of Jaybird may specify an explicit version, or be released under
 [#which-java-versions-are-supported]
 == Which Java versions are supported?
 
-Jaybird 4 supports Java 7, 8, 11 and 15.
-Support for Java 9 and higher is  limited to the latest LTS and current latest release, but in practice Jaybird should work on all Java 9+ versions.
+Jaybird 4 supports Java 7, 8, 11 and 17.
+Support for Java 9 and higher is limited to the latest LTS and current latest release, but in practice Jaybird should work on all Java 9+ versions.
+For the time being, both Java 11 and Java 17 are supported, but formal support for Java 11 may be dropped in a future point release.
 
 Jaybird 4 is the last version to support Java 7, support will be dropped with Jaybird 5.
 Java 8 support may be dropped from Jaybird 5 as well depending on the actual release timeline.
 
 Jaybird 3.0 supports Java 7 and 8 and has basic support for Java 9 and higher using the Java 8 version of the driver.
-Support for Java 9 and higher is  limited to the latest LTS and current latest release, but in practice Jaybird should work on all Java 9+ versions.
+Support for Java 9 and higher is limited to the latest LTS and current latest release, but in practice Jaybird should work on all Java 9+ versions.
+Jaybird 3.0.12 is that last release of Jaybird 3.0, and is end-of-life.
+We recommend upgrading to Jaybird 4.
 
 Jaybird 2.2 supports Java 6, 7 and 8.
+Jaybird 2.2.15 is that last release of Jaybird 2.2, and is end-of-life.
+We recommend upgrading to Jaybird 4.
 
-Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all  JDBC 4.2 features are supported or fully implemented.
+Jaybird 2.2.4 added basic support for Java 8 (JDBC 4.2), although not all JDBC 4.2 features are supported or fully implemented.
 
 Jaybird 2.2.7 is the last version to support Java 5, support has been dropped with Jaybird 2.2.8.
 
@@ -271,7 +289,7 @@ Jaybird 3 is the last version to support Firebird 2.0 and 2.1.
 Future versions of Jaybird are not guaranteed to work with version 2.1 and earlier.
 
 Jaybird 2.2 supports all Firebird versions 1.0 and higher.
-Jaybird 2.2.4 added support for new features of Firebird 3 (eg `BOOLEAN` support).
+Jaybird 2.2.4 added support for new features of Firebird 3 (e.g. `BOOLEAN` support).
 Support for  Firebird 4 is limited to the Firebird 3 feature set.
 
 Jaybird 2.2 is the last version to support Firebird 1.0 and 1.5.
@@ -361,7 +379,7 @@ The `<host>` part is either the hostname, the IPv4 address, or the IPv6 address 
 Use of IPv6 address literals is only supported in  Jaybird 3 or newer with Firebird 3 or newer.
 
 The `<database>` part should be replaced with the database alias or the path to the database.
-In general it is advisable to use database aliases instead of the path of the database file as it hides implementation details like file locations and OS type.
+In general, it is advisable to use database aliases instead of the path of the database file as it hides implementation details like file locations and OS type.
 
 On Linux the root `/` should be included in the path.
 A database located on `/opt/firebird/db.fdb` should use (note the double slash after port!):
@@ -382,8 +400,8 @@ Jaybird 4 and higher also support:
 [#open-officelibre-office-pure-java]
 === Open Office/Libre Office (Pure Java)
 
-Jaybird can be used together with OpenOffice and Libre Office Base.
-To address some compatibility issues (and differences in interpretation of JDBC specifications) a separate subprotocol is used:
+Jaybird can be used together with OpenOffice and LibreOffice Base.
+To address some compatibility issues (and differences in interpretation of JDBC specifications) a separate sub-protocol is used:
 
  jdbc:firebirdsql:oo://host[:port]/<database>
 
@@ -451,8 +469,8 @@ For special situations it is possible to specify both `charSet` and `encoding` t
 
 To phrase differently:
 
-* `encoding=<firebird charset>`: use connection encoding `<firebird charset>` and  interpret in the equivalent Java character set
-* `charSet=<java charset>`: use Firebird equivalent of `<java charset>` as  connection encoding and interpret in +++<java charset="">++++++</java>+++
+* `encoding=<firebird charset>`: use connection encoding `<firebird charset>` and interpret in the equivalent Java character set
+* `charSet=<java charset>`: use Firebird equivalent of `<java charset>` as connection encoding and interpret in +++<java charset="">++++++</java>+++
 * `encoding=<firebird charset>&charSet=<java charset>`: use connection encoding  `<firebird charset>`, but interpret in `<java charset>`
 
 The handling of Firebird character set `NONE` is slightly different, see below.
@@ -470,19 +488,19 @@ When used as a connection character set, Jaybird handles `NONE` as follows:
 [#none-jaybird3]
 ==== Jaybird 3.0 and higher
 
-* `encoding=NONE` means connection encoding `NONE` and interpret columns with  character set `NONE` using the default JVM encoding, and interpret columns with an explicit character set in their equivalent Java character set
+* `encoding=NONE` means connection encoding `NONE` and interpret columns with character set `NONE` using the default JVM encoding, and interpret columns with an explicit character set in their equivalent Java character set
 * `encoding=NONE&charSet=ISO-8859-1` the same, but instead of the JVM default, use `ISO-8859-1`
 
 [#none-jaybird2-2]
 ==== Jaybird 2.2 and earlier
 
-* `encoding=NONE` means use connection encoding `NONE` and interpret everything  using the default JVM encoding
-* `encoding=NONE&charSet=ISO-8859-1` the same, but instead of the JVM default,  use `ISO-8859-1`
+* `encoding=NONE` means use connection encoding `NONE` and interpret everything using the default JVM encoding
+* `encoding=NONE&charSet=ISO-8859-1` the same, but instead of the JVM default, use `ISO-8859-1`
 
 [#what-happens-if-no-connection-character-set-is-specified]
 === What happens if no connection character set is specified?
 
-When no character set has been specified explicitly, Jaybird 2.2 and earlier,  and Jaybird 3.0.2 and higher default to connection character set `NONE`.
+When no character set has been specified explicitly, Jaybird 2.2 and earlier, and Jaybird 3.0.2 and higher default to connection character set `NONE`.
 See  <<how-does-character-set-none-work,How does character set `NONE` work?>> for details on character set `NONE`.
 
 Jaybird 3.0.0 and 3.0.1, however, will reject the connection, see <<how-can-i-solve-the-error-connection-rejected-no-connection-character-set-specified,How can I solve the error "Connection rejected: No connection character set specified">>.
@@ -494,11 +512,11 @@ Jaybird 3.0.2 introduces the system property `org.firebirdsql.jdbc.requireConnec
 [#how-can-i-solve-the-error-connection-rejected-no-connection-character-set-specified]
 === How can I solve the error "Connection rejected: No connection character set specified"
 
-If no character set has been set, Jaybird 3 will reject the connection with  an `SQLNonTransientConnectionException` with message  _"Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding).
-Please specify a connection character set  (eg property charSet=utf-8) or consult the Jaybird documentation for more  information."_
+If no character set has been set, Jaybird 3 will reject the connection with an `SQLNonTransientConnectionException` with message _"Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding).
+Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information."_
 
-In Jaybird 3.0.0 and 3.0.1 this error will be thrown if the character set has  not been set explicitly.
-In Jaybird 3.0.2 and higher this error will only be  thrown if system property `org.firebirdsql.jdbc.requireConnectionEncoding` has been set to `true`.
+In Jaybird 3.0.0 and 3.0.1 this error will be thrown if the character set has not been set explicitly.
+In Jaybird 3.0.2 and higher this error will only be thrown if system property `org.firebirdsql.jdbc.requireConnectionEncoding` has been set to `true`.
 
 To address this error, you can set the default connection character set using one of the following options:
 
@@ -507,7 +525,7 @@ To address this error, you can set the default connection character set using on
 Use `encoding=NONE` for the default behavior (with some caveats, see  <<how-does-character-set-none-work,How does character set `NONE` work?>>).
 
 * Use connection property `charSet` (alias: `localEncoding`) with a Java character set name.
-* Use a combination of `encoding` and `charSet`, if you want to reinterpret a  Firebird character set in a Java character set other than the default  mapping.
+* Use a combination of `encoding` and `charSet`, if you want to reinterpret a Firebird character set in a Java character set other than the default  mapping.
 * By providing a default Firebird character set with system property  `org.firebirdsql.jdbc.defaultConnectionEncoding`.
 Jaybird will apply the specified character set as the default when no character set is specified in the connection properties.
 +
@@ -519,16 +537,17 @@ With Jaybird 3.0.2 or higher, it is better to just not set system property  `org
 [#how-can-i-enable-the-windows-tcp-loopback-fast-path-introduced-in-firebird-3-0-2]
 == How can I enable the Windows "TCP Loopback Fast Path" introduced in Firebird 3.0.2?
 
-Firebird 3.0.2 adds support for "TCP Loopback Fast Path" (`SIO_LOOPBACK_FAST_PATH`  socket option).
+CAUTION: Microsoft has deprecated the `SIO_LOOPBACK_FAST_PATH` and recommends not to use it.
+
+Firebird 3.0.2 adds support for "`TCP Loopback Fast Path`" (`SIO_LOOPBACK_FAST_PATH` socket option).
 This is available in Windows 8 / Windows Server 2012 and higher.
-This feature enables performance optimizations when connecting through  localhost (127.0.0.1 / ::1).
+This feature enables performance optimizations when connecting through localhost (127.0.0.1 / ::1).
 It requires support on both client and server side.
 
-Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60,  it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback`  with value `true` (e.g.
-specify `-Djdk.net.useFastTcpLoopback=true` in your Java  commandline).
+Java support for "TCP Loopback Fast Path" was introduced in Java 8 update 60, it can be enabled by specifying the system property `jdk.net.useFastTcpLoopback` with value `true` (e.g. specify `-Djdk.net.useFastTcpLoopback=true` in your Java commandline).
 
-Unfortunately, Java only has an 'all-or-nothing' support for the "TCP Loopback  Fast Path", so Jaybird cannot enable this for you: you must specify this  property on JVM startup.
-On the other hand, this has the benefit that this works  for all Jaybird versions, as long as you use Java 8 update 60 or higher (and  Firebird 3.0.2 or higher).
+Unfortunately, Java only has an 'all-or-nothing' support for the "`TCP Loopback Fast Path`", so Jaybird cannot enable this for you: you must specify this  property on JVM startup.
+On the other hand, this has the benefit that this works for all Jaybird versions, as long as you use Java 8 update 60 or higher (and Firebird 3.0.2 or higher).
 
 [#common-connection-errors]
 == Common connection errors
@@ -538,32 +557,32 @@ On the other hand, this has the benefit that this works  for all Jaybird version
 
 This error means that the user does not exist, or that the specified password is not correct.
 
-When connecting to Firebird 3 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried  for this connection.
+When connecting to Firebird 3 and higher, this error can also mean that the user does exist (with that password), but not for the authentication plugins tried for this connection.
 
-For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to login as a user created for SRP authentication, you will get the same error.
+For example, Jaybird 2.2.x and earlier only support legacy authentication, if you try to log in as a user created for SRP authentication, you will get the same error.
 
 [#incompatible-wire-encryption-levels-requested-on-client-and-server-335545064]
 === Incompatible wire encryption levels requested on client and server (335545064)
 
-With Jaybird 3.0.0 - 3.0.3 connecting to Firebird 3 or higher, this usually  means that the setting `WireCrypt` is set to its (default) value of `Required`.
+With Jaybird 3.0.0 - 3.0.3 connecting to Firebird 3 or higher, this usually means that the setting `WireCrypt` is set to its (default) value of `Required`.
 
-Upgrade to Jaybird 3.0.4 or higher, or relax this setting (in `firebird.conf`)  to `WireCrypt = Enabled`.
+Upgrade to Jaybird 3.0.4 or higher, or relax this setting (in `firebird.conf`) to `WireCrypt = Enabled`.
 
 See also https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki - Jaybird and Firebird 3]
 
-With Jaybird 3.0.4 or higher, or Jaybird 4, this error means that you have  requested a connection with a mismatch in encryption settings.
-For example, you  specified connection property `wireCrypt=required` while Firebird is set to  `WireCrypt = Disabled` (or vice versa).
+With Jaybird 3.0.4 or higher, or Jaybird 4, this error means that you have requested a connection with a mismatch in encryption settings.
+For example, you specified connection property `wireCrypt=required` while Firebird is set to `WireCrypt = Disabled` (or vice versa).
 
 [#connection-rejected-by-remote-interface-335544421]
 === connection rejected by remote interface (335544421)
 
-In general this error means that Jaybird requested a connection with properties  not supported by Firebird.
+In general this error means that Jaybird requested a connection with properties not supported by Firebird.
 It can have other causes than described below.
 
 [#cause-username-or-password-is-null]
 ==== Cause: username or password is null
 
-With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving username  or password null will lead to Jaybird not trying any authentication plugin, and as a result, Firebird will reject the connection.
+With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result, Firebird will reject the connection.
 
 With Firebird 2.5 and earlier, or Jaybird 2.2, this situation will normally yield error _"Your user name and password are not defined.
 Ask your database  administrator to set up a Firebird login."_.
@@ -571,13 +590,13 @@ Ask your database  administrator to set up a Firebird login."_.
 [#cause-wirecrypt-required]
 ==== Cause: wirecrypt required
 
-With Jaybird 2.2.x connecting to Firebird 3 or higher, this usually means that  the setting `WireCrypt` is set to its (default) value of `Required`.
+With Jaybird 2.2.x connecting to Firebird 3 or higher, this usually means that the setting `WireCrypt` is set to its (default) value of `Required`.
 
 Relax this setting (in `firebird.conf`) to `WireCrypt = Enabled`.
 
 See also https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki - Jaybird and Firebird 3]
 
-Make sure you check the other settings mentioned in that article, otherwise  you'll get the next error.
+Make sure you check the other settings mentioned in that article, otherwise you'll get the next error.
 
 [#error-occurred-during-login-please-check-server-firebird-log-for-details-335545106]
 === Error occurred during login, please check server firebird.log for details (335545106)
@@ -590,31 +609,31 @@ SERVER	Sat Oct 28 10:07:26 2017
 	No matching plugins on server
 ----
 
-with Jaybird 2.2.x connecting to Firebird 3 or higher, this means that the  setting `AuthServer` does not include the `Legacy_Auth` plugin.
+with Jaybird 2.2.x connecting to Firebird 3 or higher, this means that the setting `AuthServer` does not include the `Legacy_Auth` plugin.
 
 Enable `Legacy_Auth` (in `firebird.conf`) by adding this value to the property  `AuthServer`, for example: `AuthServer = Srp, Legacy_Auth`.
 
-With Jaybird 4 and higher this can also mean that none of the default  authentication plugins, or those specified using connection property  `authPlugins`, are listed in the `AuthServer` setting.
+With Jaybird 4 and higher this can also mean that none of the default authentication plugins, or those specified using connection property  `authPlugins`, are listed in the `AuthServer` setting.
 Either revise the Firebird configuration, or explicitly configure connection property `authPlugins` with authentication plugins that are configured in Firebird.
 
-You also need to make sure your user is created with the legacy user manager, see https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki - Jaybird and Firebird 3]  for details.
+You also need to make sure your user is created with the legacy user manager, see https://github.com/FirebirdSQL/jaybird/wiki/Jaybird-and-Firebird-3[Jaybird Wiki - Jaybird and Firebird 3] for details.
 
 [#encryption-key-did-not-meet-algorithm-requirements-of-symmetricarc4-337248282]
 === Encryption key did not meet algorithm requirements of Symmetric/Arc4 (337248282)
 
-If the exception cause is _java.security.InvalidKeyException: Illegal key size  or default parameters_, this means that your Java install applies a security  policy that does not allow ARCFOUR with a 160 bit encryption key.
+If the exception cause is _java.security.InvalidKeyException: Illegal key size or default parameters_, this means that your Java install applies a security policy that does not allow ARCFOUR with a 160 bit encryption key.
 
 If `wireCrypt=ENABLED` (the default), this is just logged as a warning.
-The  connection will succeed, but it does mean that the connection will not be  encrypted.
-If `wireCrypt=REQUIRED`, this is thrown as an exception, and the  connection will fail.
+The connection will succeed, but it does mean that the connection will not be encrypted.
+If `wireCrypt=REQUIRED`, this is thrown as an exception, and the connection will fail.
 
-This could indicate that your Java version applies the limited strength  Cryptographic Jurisdiction Policy (this was the default in Java 8 Update 152 and  earlier), or has been explicitly configured to apply the limited policy, or has a custom security policy to restrict the cryptographic key size.
+This could indicate that your Java version applies the limited strength Cryptographic Jurisdiction Policy (this was the default in Java 8 Update 152 and earlier), or has been explicitly configured to apply the limited policy, or has a custom security policy to restrict the cryptographic key size.
 
 Solutions and workarounds:
 
-* Apply the unlimited Cryptographic Jurisdiction Policy, see https://stackoverflow.com/a/3864276/466862[this Stack  Overflow answer]
+* Apply the unlimited Cryptographic Jurisdiction Policy, see https://stackoverflow.com/a/3864276/466862[this Stack Overflow answer]
 * Relax your custom security policy to allow 160 bit keys for ARCFOUR
-* Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in  `firebird.conf`
+* Disable wire encryption for Firebird by setting `WireCrypt = Disabled` in `firebird.conf`
 * Set `wireCrypt=DISABLED` in the connection properties
 
 Be aware that the first two options may have legal implications depending on the local law in your country regarding cryptography.
@@ -682,14 +701,14 @@ The following methods are implemented, but do not work as expected:
  ** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
 * `java.sql.CallableStatement`
  ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
-The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
+The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 * `java.sql.ResultSetMetaData`
  ** `isReadOnly(i)` always returns false
  ** `isWritable(i)` always returns true
  ** `isDefinitivelyWritable(i)` always returns true
 * `java.sql.ResultSet`
  ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
-The method is deprecated, and we suggest to use `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
+The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 
 [#features]
 = Features
@@ -704,7 +723,7 @@ This implementation (and all other classes in `org.firebirdsql.pool`) was deprec
 Jaybird provides a basic `DataSource` implementation and a `ConnectionPoolDataSource` implementation.
 Contrary to its name the latter *does not provide a connection pool*, but is intended to be used by a connection pool (as implemented in an application server) to create connections _for_ the connection pool.
 
-If your application is built on a Java EE application server, we suggest you use the connection pooling provided by the application server using the `javax.sql.ConnectionPoolDataSource` implementation `org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the  `javax.sql.XADataSource` implementation `org.firebirdsql.ds.FBXADataSource`.
+If your application is built on a Java EE application server, we suggest you use the connection pooling provided by the application server using the `javax.sql.ConnectionPoolDataSource` implementation `org.firebirdsql.ds.FBConnectionPoolDataSource`, or using the `javax.sql.XADataSource` implementation `org.firebirdsql.ds.FBXADataSource`.
 
 If you develop standalone applications, or you use an application server without connection pooling, we suggest you use third-party libraries like:
 
@@ -720,7 +739,7 @@ If you develop standalone applications, or you use an application server without
 
 The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 
-[source,{.xml}]
+[source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
@@ -735,9 +754,9 @@ The minimal `module.xml` to use Jaybird 3 under Wildfly is:
 </module>
 ----
 
-With Jaybird 3.0.4 and higher for Java 7 (but not Java 8!) in Wildfly (or JBoss),  you will need to add the module `javax.xml.bind.api` to your module:
+With Jaybird 3.0.4 and higher for Java 7 (but not Java 8!) in Wildfly (or JBoss), you will need to add the module `javax.xml.bind.api` to your module:
 
-[source,{.xml}]
+[source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.firebirdsql">
