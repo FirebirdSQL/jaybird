@@ -7,7 +7,7 @@ For known issues, consult [Known Issues](#known-issues).
 Jaybird 4.0.5
 -------------
 
-The following has been changed or fixed since Jaybird 4.0.5
+The following has been changed or fixed since Jaybird 4.0.4
 
 -   Fixed: `JnaService` implementation call to `isc_service_query` incorrectly
     includes type ([jaybird#678](https://github.com/FirebirdSQL/jaybird/issues/678)) \
@@ -308,14 +308,14 @@ Upgrading from Jaybird 3 to 4 should be simple, but please make sure to read
 [Upgrading from Jaybird 3 to Jaybird 4](#upgrading-from-jaybird-3-to-jaybird-4).
 
 Bug reports about undocumented changes in behavior are appreciated. Feedback can
-be sent to the Firebird-java mailing list or reported on the issue tracker
-<https://github.com/FirebirdSQL/jaybird/issues/>.
+be sent to the [Firebird-java Google Group](https://groups.google.com/g/firebird-java) 
+or reported on the issue tracker <https://github.com/FirebirdSQL/jaybird/issues/>.
 
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.7, and
-4.0.0, but should also support other Firebird versions from 2.5 and up.
+Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.8, and
+4.0.1, but should also support other Firebird versions from 2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
 expect the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -353,7 +353,7 @@ Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher
 
 Given the limited support period for Java 9 and higher versions, we will limit
 support on those versions to the most recent LTS version and the latest release.
-As of October 2021, we support Java 11 and Java 17. For the time being, both 
+As of December 2021, we support Java 11 and Java 17. For the time being, both 
 Java 11 and Java 17 are supported, but support for Java 11 may be dropped in 
 a future point release.
 
@@ -603,7 +603,7 @@ do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
 support on those versions to the most recent LTS version and the latest release.
-As of October 2021, we support Java 11 and Java 17. For the time being, both
+As of December 2021, we support Java 11 and Java 17. For the time being, both
 Java 11 and Java 17 are supported, but support for Java 11 may be dropped in
 a future point release.
 
