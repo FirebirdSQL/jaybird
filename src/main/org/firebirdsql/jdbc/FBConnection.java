@@ -35,7 +35,12 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
@@ -462,22 +467,67 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         if (timeout < 0) {
             throw new SQLException("Timeout should be >= 0", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
+        if (Thread.holdsLock(getSynchronizationObject())) {
+            // Trying to async check validity will not work (this shouldn't normally happen, except maybe when Jaybird
+            // internals call isValid(int) or user code locks on result of getSynchronizationObject())
+            return isValidImpl(timeout);
+        }
+        return isValidAsync(timeout);
+    }
+
+    private boolean isValidAsync(int timeout) {
+        Future<Boolean> isValidFuture = ForkJoinPool.commonPool().submit(() -> isValidImpl(timeout));
+        try {
+            return timeout != 0 ? isValidFuture.get(timeout, TimeUnit.SECONDS) : isValidFuture.get();
+        } catch (ExecutionException e) {
+            log.debug("isValidImpl produced an exception", e);
+            return false;
+        } catch (InterruptedException e) {
+            isValidFuture.cancel(true);
+            // restore interrupted state
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (TimeoutException e) {
+            isValidFuture.cancel(true);
+            return false;
+        }
+    }
+
+    private boolean isValidImpl(int timeout) {
         synchronized (getSynchronizationObject()) {
             if (isClosed()) {
                 return false;
             }
-            // TODO Check if we can set the connection timeout temporarily for this call
-            if (timeout != 0) {
-                addWarning(new SQLWarning(
-                        String.format("Connection.isValid does not support non-zero timeouts, timeout value %d has been ignored",
-                                timeout)));
-            }
+            int originalNetworkTimeout = -1;
+            boolean networkTimeoutChanged = false;
             try {
-                getFbDatabase().getDatabaseInfo(
-                        new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
+                FbDatabase db = getFbDatabase();
+                if (timeout != 0) {
+                    try {
+                        originalNetworkTimeout = db.getNetworkTimeout();
+                        db.setNetworkTimeout((int) TimeUnit.SECONDS.toMillis(timeout));
+                        networkTimeoutChanged = true;
+                    } catch (SQLFeatureNotSupportedException ignored) {
+                        // Implementation doesn't support network timeout
+                    }
+                }
+
+                db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
                 return true;
             } catch (SQLException ex) {
+                log.debug("Exception while checking connection validity", ex);
                 return false;
+            } finally {
+                if (networkTimeoutChanged) {
+                    try {
+                        getFbDatabase().setNetworkTimeout(originalNetworkTimeout);
+                    } catch (SQLException e) {
+                        log.debug("Exception while resetting connection network timeout", e);
+                        // We're interpreting this as an indication the connection is no longer valid
+                        //noinspection ReturnInsideFinallyBlock
+                        return false;
+                    }
+                }
             }
         }
     }
