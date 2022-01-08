@@ -4,6 +4,16 @@ Jaybird 4.0.x changelog
 Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4).
 For known issues, consult [Known Issues](#known-issues).
 
+Jaybird 4.0.6
+-------------
+
+The following has been changed or fixed since Jaybird 4.0.5
+
+-   Improvement: `Connection.isValid(int)` now uses the timeout as a network 
+    timeout, if possible ([jaybird#685](https://github.com/FirebirdSQL/jaybird/issues/685)) \
+    This is only supported for pure Java connections. For native connections,
+    the timeout is ignored (and a `SQLWarning` is registered).
+
 Jaybird 4.0.5
 -------------
 

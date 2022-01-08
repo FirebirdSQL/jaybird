@@ -40,6 +40,7 @@ import javax.resource.ResourceException;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static org.firebirdsql.gds.impl.DatabaseParameterBufferExtension.GENERATED_KEYS_ENABLED;
@@ -493,18 +494,39 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
             if (isClosed()) {
                 return false;
             }
-            // TODO Check if we can set the connection timeout temporarily for this call
-            if (timeout != 0) {
-                addWarning(new SQLWarning(
-                        String.format("Connection.isValid does not support non-zero timeouts, timeout value %d has been ignored",
-                                timeout)));
-            }
+            int originalNetworkTimeout = -1;
+            boolean networkTimeoutChanged = false;
             try {
-                getFbDatabase().getDatabaseInfo(
-                        new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
+                FbDatabase db = getFbDatabase();
+                if (timeout != 0) {
+                    try {
+                        originalNetworkTimeout = db.getNetworkTimeout();
+                        db.setNetworkTimeout((int) TimeUnit.SECONDS.toMillis(timeout));
+                        networkTimeoutChanged = true;
+                    } catch (SQLFeatureNotSupportedException ignored) {
+                        // Implementation doesn't support network timeout
+                        addWarning(new SQLWarning(
+                                String.format("Connection.isValid does not support non-zero timeouts, timeout value %d has been ignored",
+                                        timeout)));
+                    }
+                }
+
+                db.getDatabaseInfo(new byte[] { ISCConstants.isc_info_ods_version, ISCConstants.isc_info_end }, 10);
                 return true;
             } catch (SQLException ex) {
+                log.debug("Exception while checking connection validity", ex);
                 return false;
+            } finally {
+                if (networkTimeoutChanged) {
+                    try {
+                        getFbDatabase().setNetworkTimeout(originalNetworkTimeout);
+                    } catch (SQLException e) {
+                        log.debug("Exception while resetting connection network timeout", e);
+                        // We're interpreting this as an indication the connection is no longer valid
+                        //noinspection ReturnInsideFinallyBlock
+                        return false;
+                    }
+                }
             }
         }
     }
