@@ -13,6 +13,8 @@ The following has been changed or fixed since Jaybird 4.0.5
     timeout, if possible ([jaybird#685](https://github.com/FirebirdSQL/jaybird/issues/685)) \
     This is only supported for pure Java connections. For native connections,
     the timeout is ignored (and a `SQLWarning` is registered).
+-   `NativeResourceUnloadWebListener` would fail in Servlet containers with 
+    a `NoClassDefFoundError` if JNA wasn't on the classpath ([jaybird#686](https://github.com/FirebirdSQL/jaybird/issues/686))
 
 Jaybird 4.0.5
 -------------

@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.jna.fbclient.FbClientLibrary;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
@@ -51,9 +49,9 @@ public class NativeResourceUnloadWebListener implements ServletContextListener {
 
     private boolean jaybirdLoadedInContext(ServletContextEvent servletContextEvent) {
         ClassLoader servletContextClassLoader = servletContextEvent.getServletContext().getClassLoader();
-        ClassLoader fbClientLibraryClassLoader = FbClientLibrary.class.getClassLoader();
+        ClassLoader fbClientDatabaseFactoryClassLoader = FbClientDatabaseFactory.class.getClassLoader();
 
-        // TODO Maybe to naive, search parents of fbClientLibraryClassLoader as well?
-        return servletContextClassLoader == fbClientLibraryClassLoader;
+        // TODO Maybe to naive, search parents of fbClientDatabaseFactoryClassLoader as well?
+        return servletContextClassLoader == fbClientDatabaseFactoryClassLoader;
     }
 }
