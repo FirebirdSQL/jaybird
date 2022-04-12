@@ -55,7 +55,7 @@ class CryptSessionConfigImpl implements CryptSessionConfig {
 
     @Override
     public byte[] getDecryptKey() {
-        return encryptKey;
+        return decryptKey;
     }
 
     @Override
