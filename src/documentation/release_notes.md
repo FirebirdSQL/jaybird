@@ -9,12 +9,15 @@ Jaybird 4.0.6
 
 The following has been changed or fixed since Jaybird 4.0.5
 
--   Improvement: `Connection.isValid(int)` now uses the timeout as a network 
-    timeout, if possible ([jaybird#685](https://github.com/FirebirdSQL/jaybird/issues/685)) \
-    This is only supported for pure Java connections. For native connections,
-    the timeout is ignored (and a `SQLWarning` is registered).
--   `NativeResourceUnloadWebListener` would fail in Servlet containers with 
-    a `NoClassDefFoundError` if JNA wasn't on the classpath ([jaybird#686](https://github.com/FirebirdSQL/jaybird/issues/686))
+- Improvement: `Connection.isValid(int)` now uses the timeout as a network  
+  timeout, if possible ([jaybird#685](https://github.com/FirebirdSQL/jaybird/issues/685)) \
+  This is only supported for pure Java connections. For native connections,
+  the timeout is ignored (and a `SQLWarning` is registered).
+- `NativeResourceUnloadWebListener` would fail in Servlet containers with 
+  a `NoClassDefFoundError` if JNA wasn't on the classpath ([jaybird#686](https://github.com/FirebirdSQL/jaybird/issues/686))
+- Fixed: Calling `isBeforeFirst()`, `isAfterLast()`, `isFirst()`, or `isLast()`
+  on a closed result set resulted in a `NullPointerException` instead of a
+  `SQLException` ([jaybird#689](https://github.com/FirebirdSQL/jaybird/issues/689))
 
 Jaybird 4.0.5
 -------------

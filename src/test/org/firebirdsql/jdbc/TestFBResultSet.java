@@ -1426,6 +1426,24 @@ public class TestFBResultSet extends FBJUnit4TestBase {
         }
     }
 
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/689">jaybird#689</a>
+     */
+    @Test
+    public void testIsAfterLast_bug689() throws Exception {
+        try (Statement stmt = connection.createStatement();
+             ResultSet resultSet = stmt.executeQuery("select * from RDB$DATABASE")) {
+
+            while (resultSet.next()) {
+                assertFalse("Should not be after last", resultSet.isAfterLast());
+            }
+
+            expectedException.expect(SQLException.class);
+            expectedException.expectMessage("The result set is closed");
+            resultSet.isAfterLast();
+        }
+    }
+
     private void createTestData(int recordCount) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
             for (int i = 0; i < recordCount; i++) {
