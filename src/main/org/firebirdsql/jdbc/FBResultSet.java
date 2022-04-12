@@ -884,21 +884,25 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
+        checkOpen();
         return fbFetcher.isBeforeFirst();
     }
 
     @Override
     public boolean isAfterLast() throws SQLException {
+        checkOpen();
         return fbFetcher.isAfterLast();
     }
 
     @Override
     public boolean isFirst() throws SQLException {
+        checkOpen();
         return fbFetcher.isFirst();
     }
 
     @Override
     public boolean isLast() throws SQLException {
+        checkOpen();
         return fbFetcher.isLast();
     }
 
