@@ -43,7 +43,7 @@ public final class ByteArrayArgument extends Argument {
      * @param type
      *        Parameter type
      * @param value
-     *        Byte array with a length up to 255 bytes.
+     *        Byte array with a maximum length defined by {@code argumentType}.
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
         super(type);

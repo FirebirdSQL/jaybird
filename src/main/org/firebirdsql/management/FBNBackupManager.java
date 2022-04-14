@@ -38,17 +38,20 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
 
     private final List<String> backupFiles = new ArrayList<>();
 
-    private int backupLevel;
+    private int backupLevel = -1;
+    private String backupGuid;
     private boolean noDBTriggers;
+    private boolean inPlaceRestore;
+    private boolean preserveSequence;
 
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on the default GDSType.
+     * Create a new instance of {@code FBNBackupManager} based on the default GDSType.
      */
     public FBNBackupManager() {
     }
 
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBNBackupManager} based on a given GDSType name.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -58,7 +61,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     }
 
     /**
-     * Create a new instance of <code>FBNBackupManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBNBackupManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -67,22 +70,22 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         super(gdsType);
     }
 
+    @Override
     public void setBackupFile(String backupFile) {
         addBackupFile(backupFile);
     }
 
+    @Override
     public void addBackupFile(String backupFile) {
         backupFiles.add(backupFile);
     }
 
+    @Override
     public void clearBackupFiles() {
         backupFiles.clear();
     }
 
-    public void setDatabase(String database) {
-        super.setDatabase(database);
-    }
-
+    @Override
     public void backupDatabase() throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getBackupSRB(service));
@@ -100,15 +103,21 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         ServiceRequestBuffer backupSPB = service.createServiceRequestBuffer();
         backupSPB.addArgument(isc_action_svc_nbak);
         backupSPB.addArgument(isc_spb_dbname, getDatabase());
-        if (backupFiles.size() == 0) {
+        if (backupFiles.isEmpty()) {
             throw new SQLException("No backup file specified");
         }
         String backupFile = backupFiles.get(0);
 
         backupSPB.addArgument(isc_spb_nbk_file, backupFile);
-        backupSPB.addArgument(isc_spb_nbk_level, backupLevel);
-        if (noDBTriggers) {
-            backupSPB.addArgument(isc_spb_options, isc_spb_nbk_no_triggers);
+        // Previously, the default level was 0, retain that default if no backup GUID has been set
+        int resolvedBackupLevel = backupLevel == -1 && backupGuid == null ? 0 : backupLevel;
+        backupSPB.addArgument(isc_spb_nbk_level, resolvedBackupLevel);
+        if (backupGuid != null) {
+            backupSPB.addArgument(isc_spb_nbk_guid, backupGuid);
+        }
+        int options = getOptions();
+        if (options != 0) {
+            backupSPB.addArgument(isc_spb_options, options);
         }
 
         return backupSPB;
@@ -117,6 +126,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     /**
      * @see org.firebirdsql.management.NBackupManager#restoreDatabase()
      */
+    @Override
     public void restoreDatabase() throws SQLException {
         try (FbService service = attachServiceManager()) {
             executeServicesOperation(service, getRestoreSRB(service));
@@ -133,22 +143,75 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         restoreSPB.addArgument(isc_action_svc_nrest);
         restoreSPB.addArgument(isc_spb_dbname, getDatabase());
 
-        if (backupFiles.size() == 0) {
+        if (backupFiles.isEmpty()) {
             throw new SQLException("No backup file specified");
         }
         for (String backupFile : backupFiles) {
             restoreSPB.addArgument(isc_spb_nbk_file, backupFile);
         }
+        int options = getOptions();
+        if (options != 0) {
+            restoreSPB.addArgument(isc_spb_options, options);
+        }
 
         return restoreSPB;
     }
 
+    @Override
+    public void fixupDatabase() throws SQLException {
+        try (FbService service = attachServiceManager()) {
+            executeServicesOperation(service, getFixupSRB(service));
+        }
+    }
+
+    private ServiceRequestBuffer getFixupSRB(FbService service) {
+        ServiceRequestBuffer restoreSPB = service.createServiceRequestBuffer();
+        restoreSPB.addArgument(isc_action_svc_nfix);
+        restoreSPB.addArgument(isc_spb_dbname, getDatabase());
+        int options = getOptions();
+        if (options != 0) {
+            restoreSPB.addArgument(isc_spb_options, options);
+        }
+        return restoreSPB;
+    }
+
+    private int getOptions() {
+        int options = 0;
+        if (noDBTriggers) {
+            options |= isc_spb_nbk_no_triggers;
+        }
+        if (inPlaceRestore) {
+            options |= isc_spb_nbk_inplace;
+        }
+        if (preserveSequence) {
+            options |= isc_spb_nbk_sequence;
+        }
+        return options;
+    }
+
+    @Override
     public void setBackupLevel(int backupLevel) {
         this.backupLevel = backupLevel;
     }
 
+    @Override
+    public void setBackupGuid(String guid) {
+        backupGuid = guid;
+    }
+
+    @Override
     public void setNoDBTriggers(boolean noDBTriggers) {
         this.noDBTriggers = noDBTriggers;
+    }
+
+    @Override
+    public void setInPlaceRestore(boolean inPlaceRestore) {
+        this.inPlaceRestore = inPlaceRestore;
+    }
+
+    @Override
+    public void setPreserveSequence(boolean preserveSequence) {
+        this.preserveSequence = preserveSequence;
     }
 
 }

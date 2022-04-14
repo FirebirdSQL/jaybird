@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -28,6 +27,8 @@ import org.firebirdsql.gds.ng.FbDatabaseFactory;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -204,285 +205,64 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
         return shared;
     }
 
-    public int getBlobBufferSize() {
-        return connectionProperties.getBlobBufferSize();
-    }
-
-    public int getBuffersNumber() {
-        return connectionProperties.getBuffersNumber();
-    }
-
-    public String getCharSet() {
-        return connectionProperties.getCharSet();
-    }
-
-    public String getDatabase() {
-        return connectionProperties.getDatabase();
-    }
-
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return connectionProperties.getDatabaseParameterBuffer();
-    }
-
-    public String getDefaultIsolation() {
-        return connectionProperties.getDefaultIsolation();
-    }
-
-    public int getDefaultTransactionIsolation() {
-        return connectionProperties.getDefaultTransactionIsolation();
-    }
-
-    public String getEncoding() {
-        return connectionProperties.getEncoding();
-    }
-
-    public String getNonStandardProperty(String key) {
-        return connectionProperties.getNonStandardProperty(key);
-    }
-
-    public String getPassword() {
-        return connectionProperties.getPassword();
-    }
-
-    public String getRoleName() {
-        return connectionProperties.getRoleName();
-    }
-
-    public int getSocketBufferSize() {
-        return connectionProperties.getSocketBufferSize();
-    }
-
-    public String getSqlDialect() {
-        return connectionProperties.getSqlDialect();
-    }
-
-    public String getTpbMapping() {
-        return connectionProperties.getTpbMapping();
-    }
-
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return connectionProperties.getTransactionParameters(isolation);
-    }
-
-    public String getType() {
-        return connectionProperties.getType();
-    }
-
-    public String getUserName() {
-        return connectionProperties.getUserName();
-    }
-
-    public boolean isTimestampUsesLocalTimezone() {
-        return connectionProperties.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return connectionProperties.isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        ensureCanModify(() -> connectionProperties.setBlobBufferSize(bufferSize));
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        ensureCanModify(() -> connectionProperties.setBuffersNumber(buffersNumber));
-    }
-
-    public void setCharSet(String charSet) {
-        ensureCanModify(() -> connectionProperties.setCharSet(charSet));
-    }
-
-    public void setDatabase(String database) {
-        ensureCanModify(() -> connectionProperties.setDatabase(database));
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        ensureCanModify(() -> connectionProperties.setDefaultIsolation(isolation));
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        ensureCanModify(() -> connectionProperties.setDefaultTransactionIsolation(defaultIsolationLevel));
-    }
-
-    public void setEncoding(String encoding) {
-        ensureCanModify(() -> connectionProperties.setEncoding(encoding));
-    }
-
-    public void setNonStandardProperty(String key, String value) {
-        ensureCanModify(() -> connectionProperties.setNonStandardProperty(key, value));
     }
 
     public void setNonStandardProperty(String propertyMapping) {
         ensureCanModify(() -> connectionProperties.setNonStandardProperty(propertyMapping));
     }
 
-    public void setPassword(String password) {
-        ensureCanModify(() -> connectionProperties.setPassword(password));
-    }
-
-    public void setRoleName(String roleName) {
-        ensureCanModify(() -> connectionProperties.setRoleName(roleName));
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        ensureCanModify(() -> connectionProperties.setSocketBufferSize(socketBufferSize));
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        ensureCanModify(() -> connectionProperties.setSqlDialect(sqlDialect));
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        ensureCanModify(() -> connectionProperties.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone));
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        ensureCanModify(() -> connectionProperties.setTpbMapping(tpbMapping));
-    }
-
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
         ensureCanModify(() -> connectionProperties.setTransactionParameters(isolation, tpb));
-    }
-
-    public void setType(String type) {
-        ensureCanModify(() -> {
-            if (gdsType != null) {
-                throw new IllegalStateException("Cannot change GDS type at runtime.");
-            }
-
-            connectionProperties.setType(type);
-        });
-    }
-
-    public void setUserName(String userName) {
-        ensureCanModify(() -> connectionProperties.setUserName(userName));
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        ensureCanModify(() -> connectionProperties.setUseStreamBlobs(useStreamBlobs));
-    }
-
-    public boolean isDefaultResultSetHoldable() {
-        return connectionProperties.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        ensureCanModify(() -> connectionProperties.setDefaultResultSetHoldable(isHoldable));
     }
 
     public void setDefaultConnectionManager(XcaConnectionManager defaultCm) {
         ensureCanModify(() -> {
             // Ensures that instances with different connection managers do not resolve to the same connection manager
-            connectionProperties.setNonStandardProperty(
-                    DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
+            connectionProperties.setProperty(DEFAULT_CONNECTION_MANAGER_TYPE, defaultCm.getClass().getName());
             this.defaultCm = defaultCm;
         });
     }
 
-    public int getSoTimeout() {
-        return connectionProperties.getSoTimeout();
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        ensureCanModify(() -> connectionProperties.setSoTimeout(soTimeout));
-    }
-
-    public int getConnectTimeout() {
-        return connectionProperties.getConnectTimeout();
-    }
-
-    public void setConnectTimeout(int connectTimeout) {
-        ensureCanModify(() -> connectionProperties.setConnectTimeout(connectTimeout));
+    @Override
+    public String getProperty(String name) {
+        return connectionProperties.getProperty(name);
     }
 
     @Override
-    public boolean isUseFirebirdAutocommit() {
-        return connectionProperties.isUseFirebirdAutocommit();
+    public void setProperty(String name, String value) {
+        ensureCanModify(() -> {
+            if (PropertyNames.type.equals(name) && gdsType != null) {
+                throw new IllegalStateException("Cannot change GDS type at runtime.");
+            }
+            connectionProperties.setProperty(name, value);
+        });
     }
 
     @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        ensureCanModify(() -> connectionProperties.setUseFirebirdAutocommit(useFirebirdAutocommit));
+    public Integer getIntProperty(String name) {
+        return connectionProperties.getIntProperty(name);
     }
 
     @Override
-    public String getWireCrypt() {
-        return connectionProperties.getWireCrypt();
+    public void setIntProperty(String name, Integer value) {
+        ensureCanModify(() -> connectionProperties.setIntProperty(name, value));
     }
 
     @Override
-    public void setWireCrypt(String wireCrypt) {
-        ensureCanModify(() -> connectionProperties.setWireCrypt(wireCrypt));
+    public Boolean getBooleanProperty(String name) {
+        return connectionProperties.getBooleanProperty(name);
     }
 
     @Override
-    public String getDbCryptConfig() {
-        return connectionProperties.getDbCryptConfig();
+    public void setBooleanProperty(String name, Boolean value) {
+        ensureCanModify(() -> connectionProperties.setBooleanProperty(name, value));
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        ensureCanModify(() -> connectionProperties.setDbCryptConfig(dbCryptConfig));
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return connectionProperties.getAuthPlugins();
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        ensureCanModify(() -> connectionProperties.setAuthPlugins(authPlugins));
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return connectionProperties.getGeneratedKeysEnabled();
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        ensureCanModify(() -> connectionProperties.setGeneratedKeysEnabled(generatedKeysEnabled));
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return connectionProperties.getDataTypeBind();
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        ensureCanModify(() -> connectionProperties.setDataTypeBind(dataTypeBind));
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return connectionProperties.getSessionTimeZone();
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        ensureCanModify(() -> connectionProperties.setSessionTimeZone(sessionTimeZone));
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return connectionProperties.isIgnoreProcedureType();
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        ensureCanModify(() -> connectionProperties.setIgnoreProcedureType(ignoreProcedureType));
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return connectionProperties.isWireCompression();
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        ensureCanModify(() -> connectionProperties.setWireCompression(wireCompression));
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return connectionProperties.connectionPropertyValues();
     }
 
     @Override
@@ -516,7 +296,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
     }
 
     public FBConnectionRequestInfo getDefaultConnectionRequestInfo() throws SQLException {
-        return new FBConnectionRequestInfo(getDatabaseParameterBuffer().deepCopy());
+        return new FBConnectionRequestInfo(connectionProperties.asIConnectionProperties().asNewMutable());
     }
 
     public FBTpb getDefaultTpb() throws SQLException {
@@ -890,7 +670,7 @@ public class FBManagedConnectionFactory implements FirebirdConnectionProperties,
             if (gdsType == null) {
                 gdsType = GDSFactory.getDefaultGDSType();
             }
-            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(gdsType, fbConnectionProperties);
+            FBManagedConnectionFactory mcf = new FBManagedConnectionFactory(shared, gdsType, fbConnectionProperties);
             mcf.setDefaultConnectionManager(fbCm);
             if (!shared) {
                 return mcf;

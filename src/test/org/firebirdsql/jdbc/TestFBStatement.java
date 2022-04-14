@@ -37,9 +37,10 @@ import static org.firebirdsql.common.JdbcResourceHelper.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -463,7 +464,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             rs.close();
 
             String plan = stmt.getLastExecutionPlan();
-            assertThat("Expected non-empty plan", plan, not(isEmptyOrNullString()));
+            assertThat("Expected non-empty plan", plan, not(emptyOrNullString()));
         }
     }
 
@@ -500,7 +501,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             rs.close();
 
             String plan = stmt.getLastExplainedExecutionPlan();
-            assertThat("Expected non-empty detailed plan", plan, not(isEmptyOrNullString()));
+            assertThat("Expected non-empty detailed plan", plan, not(emptyOrNullString()));
         }
     }
 

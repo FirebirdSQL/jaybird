@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.encodings.EncodingFactory;
@@ -51,6 +52,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -202,9 +204,9 @@ public class TestV10Database {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
+        assumeTrue("Requires DB on local file system", EnvironmentRequirement.DB_LOCAL_FS.isMet());
         IConnectionProperties connectionProperties = getConnectionInfo();
-        connectionProperties.getExtraDatabaseParameters()
-                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+        connectionProperties.setSqlDialect(3);
 
         File dbFile = new File(connectionProperties.getAttachObjectName());
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionProperties,

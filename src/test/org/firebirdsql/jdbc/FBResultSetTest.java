@@ -37,6 +37,7 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -105,6 +106,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
         "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
     //@formatter:on
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -169,6 +171,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                     } else if (counter == recordCount - 1) {
                         try {
                             rs.isLast();
+                            // TODO This assertion seems to be wrong
                             assertTrue("ResultSet.isLast() should be true", false);
                         } catch (SQLException ex) {
                             // TODO Ignoring exception probably wrong
@@ -187,7 +190,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                 }
 
                 assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
-                assertTrue("ResultSet.next() should return false.", !rs.next());
+                assertFalse("ResultSet.next() should return false.", rs.next());
             }
         }
         connection.commit();
@@ -214,7 +217,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
             }
 
             assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
-            assertTrue("ResultSet.next() should return false.", !rs.next());
+            assertFalse("ResultSet.next() should return false.", rs.next());
         }
         connection.commit();
     }
@@ -301,7 +304,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
             assertTrue("isFirst() should report true", rs.isFirst());
 
             boolean hasRow = rs.previous();
-            assertTrue("Should not point to the row", !hasRow);
+            assertFalse("Should not point to the row", hasRow);
             assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
 
             rs.relative(5);
@@ -326,7 +329,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
             } catch (SQLException ex) {
                 // everything is fine
             }
-            assertTrue("ResultSet.next() should return false.", !rs.next());
+            assertFalse("ResultSet.next() should return false.", rs.next());
         }
     }
 
@@ -577,7 +580,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
             stmt.setInt(1, recordCount + 10);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                assertTrue("Should not find any record", !rs.next());
+                assertFalse("Should not find any record", rs.next());
             }
 
             stmt.setInt(1, recordCount - 1);
@@ -637,18 +640,25 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                     assertEquals(counter, rs.getInt(1));
                     assertEquals("newString" + counter, rs.getString(2));
 
-                    assertEquals(null, rs.getString(3));
+                    assertNull(rs.getString(3));
                     rs.updateString(3, "str" + counter);
 
-                    assertEquals(null, rs.getString(4));
+                    assertNull(rs.getString(4));
                     rs.updateString(4, "str" + counter);
 
                     // check whether row can be updated
                     rs.updateRow();
 
+                    // visibility of updates without refresh
+                    assertEquals(counter, rs.getInt(1));
+                    assertEquals("newString" + counter, rs.getString(2));
+                    assertEquals("str" + counter, rs.getString(3));
+                    assertEquals("str" + counter, rs.getString(4));
+
                     // check whether row can be refreshed
                     rs.refreshRow();
 
+                    // visibility of updates after refresh
                     assertEquals(counter, rs.getInt(1));
                     assertEquals("newString" + counter, rs.getString(2));
                     assertEquals("str" + counter, rs.getString(3));
@@ -657,7 +667,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                     counter++;
                 }
 
-                assertTrue("Should process " + recordCount + " rows.", counter == recordCount);
+                assertEquals("Should process " + recordCount + " rows.", counter, recordCount);
 
                 // check the insertRow() feature
                 rs.moveToInsertRow();
@@ -740,18 +750,25 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                     assertEquals(counter, rs.getInt(2));
                     assertEquals("newString" + counter, rs.getString(3));
 
-                    assertEquals(null, rs.getString(4));
+                    assertNull(rs.getString(4));
                     rs.updateString(4, "str" + counter);
 
-                    assertEquals(null, rs.getString(5));
+                    assertNull(rs.getString(5));
                     rs.updateString(5, "str" + counter);
 
                     // check whether row can be updated
                     rs.updateRow();
 
+                    // visibility of updates without refresh
+                    assertEquals(counter, rs.getInt(2));
+                    assertEquals("newString" + counter, rs.getString(3));
+                    assertEquals("str" + counter, rs.getString(4));
+                    assertEquals("str" + counter, rs.getString(5));
+
                     // check whether row can be refreshed
                     rs.refreshRow();
 
+                    // visibility of updates after refresh
                     assertEquals(counter, rs.getInt(2));
                     assertEquals("newString" + counter, rs.getString(3));
                     assertEquals("str" + counter, rs.getString(4));
@@ -945,7 +962,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                 assertTrue("Should have at least one row", rs.next());
                 assertEquals("First record should have ID=1", 1, rs.getInt("id"));
                 assertEquals("BLOB should be also saved", "test", rs.getString("blob_str"));
-                assertTrue("Should have only one row.", !rs.next());
+                assertFalse("Should have only one row.", rs.next());
             }
         }
     }
@@ -1006,8 +1023,6 @@ public class FBResultSetTest extends FBJUnit4TestBase {
                     // everything is ok
                 }
             }
-
-            rs.close();
         }
         connection.setAutoCommit(true);
     }
@@ -1410,6 +1425,24 @@ public class FBResultSetTest extends FBJUnit4TestBase {
             assertEquals("long_str", "long_str_updated", rs.getString("long_str"));
             assertEquals("blob_str", blob_str_value, rs.getString("blob_str"));
             assertArrayEquals("blob_bin", blob_bin_value, rs.getBytes("blob_bin"));
+        }
+    }
+
+    /**
+     * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/689">jaybird#689</a>
+     */
+    @Test
+    public void testIsAfterLast_bug689() throws Exception {
+        try (Statement stmt = connection.createStatement();
+             ResultSet resultSet = stmt.executeQuery("select * from RDB$DATABASE")) {
+
+            while (resultSet.next()) {
+                assertFalse("Should not be after last", resultSet.isAfterLast());
+            }
+
+            expectedException.expect(SQLException.class);
+            expectedException.expectMessage("The result set is closed");
+            resultSet.isAfterLast();
         }
     }
 

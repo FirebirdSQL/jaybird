@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IConnectionProperties}.
  *
@@ -30,19 +28,11 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 public final class FbImmutableConnectionProperties extends AbstractImmutableAttachProperties<IConnectionProperties>
         implements IConnectionProperties {
 
-    private final String databaseName;
-    private final short connectionDialect;
-    private final int pageCacheSize;
-    private final boolean resultSetDefaultHoldable;
-    private final boolean columnLabelForName;
-    private final String sessionTimezone;
-    private final DatabaseParameterBuffer extraDatabaseParameters;
-
     /**
      * Copy constructor for FbConnectionProperties.
      * <p>
-     * All properties defined in {@link org.firebirdsql.gds.ng.IConnectionProperties} are
-     * copied from <code>src</code> to the new instance.
+     * All properties defined in {@link org.firebirdsql.gds.ng.IConnectionProperties} are copied from {@code src} to
+     * the new instance.
      * </p>
      *
      * @param src
@@ -50,83 +40,6 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
      */
     public FbImmutableConnectionProperties(IConnectionProperties src) {
         super(src);
-        databaseName = src.getDatabaseName();
-        connectionDialect = src.getConnectionDialect();
-        pageCacheSize = src.getPageCacheSize();
-        resultSetDefaultHoldable = src.isResultSetDefaultHoldable();
-        columnLabelForName = src.isColumnLabelForName();
-        sessionTimezone = src.getSessionTimeZone();
-        extraDatabaseParameters = src.getExtraDatabaseParameters().deepCopy();
-    }
-
-    @Override
-    public String getDatabaseName() {
-        return databaseName;
-    }
-
-    @Override
-    public void setDatabaseName(final String databaseName) {
-        immutable();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getDatabaseName();
-    }
-
-    @Override
-    public short getConnectionDialect() {
-        return connectionDialect;
-    }
-
-    @Override
-    public void setConnectionDialect(final short connectionDialect) {
-        immutable();
-    }
-
-    @Override
-    public int getPageCacheSize() {
-        return pageCacheSize;
-    }
-
-    @Override
-    public void setPageCacheSize(final int pageCacheSize) {
-        immutable();
-    }
-
-    @Override
-    public void setResultSetDefaultHoldable(final boolean holdable) {
-        immutable();
-    }
-
-    @Override
-    public boolean isResultSetDefaultHoldable() {
-        return resultSetDefaultHoldable;
-    }
-
-    @Override
-    public void setColumnLabelForName(final boolean columnLabelForName) {
-        immutable();
-    }
-
-    @Override
-    public boolean isColumnLabelForName() {
-        return columnLabelForName;
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        immutable();
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return sessionTimezone;
-    }
-
-    @Override
-    public DatabaseParameterBuffer getExtraDatabaseParameters() {
-        return extraDatabaseParameters.deepCopy();
     }
 
     @Override
@@ -139,4 +52,12 @@ public final class FbImmutableConnectionProperties extends AbstractImmutableAtta
     public IConnectionProperties asNewMutable() {
         return new FbConnectionProperties(this);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FbImmutableConnectionProperties)) return false;
+        return super.equals(o);
+    }
+
 }

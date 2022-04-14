@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,8 +28,6 @@ package org.firebirdsql.gds.ng;
 public final class FbServiceProperties extends AbstractAttachProperties<IServiceProperties>
         implements IServiceProperties {
 
-    private String serviceName = IServiceProperties.DEFAULT_SERVICE_NAME;
-
     private FbImmutableServiceProperties immutableServicePropertiesCache;
 
     /**
@@ -43,31 +41,12 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
      */
     public FbServiceProperties(IServiceProperties src) {
         super(src);
-        if (src != null) {
-            serviceName = src.getServiceName();
-        }
     }
 
     /**
      * Default constructor for FbServiceProperties
      */
     public FbServiceProperties() {
-    }
-
-    @Override
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    @Override
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-        dirtied();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getServiceName();
     }
 
     @Override
@@ -81,6 +60,13 @@ public final class FbServiceProperties extends AbstractAttachProperties<IService
     @Override
     public IServiceProperties asNewMutable() {
         return new FbServiceProperties(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FbServiceProperties)) return false;
+        return super.equals(o);
     }
 
     @Override

@@ -18,16 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 
 /**
  * This class is provides mapping capabilities between standard JDBC
@@ -52,7 +54,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * same condition, retrieving the additional "phantom" row in the second
      * read.
      */
-    public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
+    public static final String TRANSACTION_SERIALIZABLE = TransactionNameMapping.TRANSACTION_SERIALIZABLE;
 
     /**
      * Dirty reads and non-repeatable reads are prevented; phantom reads can
@@ -62,14 +64,14 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * first transaction rereads the row, getting different values the second
      * time (a "non-repeatable read").
      */
-    public static final String TRANSACTION_REPEATABLE_READ = "TRANSACTION_REPEATABLE_READ";
+    public static final String TRANSACTION_REPEATABLE_READ = TransactionNameMapping.TRANSACTION_REPEATABLE_READ;
 
     /**
      * Dirty reads are prevented; non-repeatable reads and phantom reads can
      * occur. This level only prohibits a transaction from reading a row with
      * uncommitted changes in it.
      */
-    public static final String TRANSACTION_READ_COMMITTED = "TRANSACTION_READ_COMMITTED";
+    public static final String TRANSACTION_READ_COMMITTED = TransactionNameMapping.TRANSACTION_READ_COMMITTED;
 
     private static final List<String> ISOLATION_LEVEL_NAMES = Collections.unmodifiableList(Arrays.asList(
             TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED));
@@ -82,13 +84,13 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * any of the changes are rolled back, the second transaction will have
      * retrieved an invalid row. <b>This level is not actually supported </b>
      */
-    public static final String TRANSACTION_READ_UNCOMMITTED = "TRANSACTION_READ_UNCOMMITTED";
+    public static final String TRANSACTION_READ_UNCOMMITTED = TransactionNameMapping.TRANSACTION_READ_UNCOMMITTED;
 
     /**
      * Indicates that transactions are not supported. <b>This level is not
      * supported </b>
      */
-    public static final String TRANSACTION_NONE = "TRANSACTION_NONE";
+    public static final String TRANSACTION_NONE = TransactionNameMapping.TRANSACTION_NONE;
 
     /**
      * Convert transaction isolation level into string.
@@ -98,25 +100,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @return corresponding string representation.
      */
     public static String getTransactionIsolationName(int isolationLevel) {
-        switch (isolationLevel) {
-        case Connection.TRANSACTION_NONE:
-            return TRANSACTION_NONE;
-
-        case Connection.TRANSACTION_READ_UNCOMMITTED:
-            return TRANSACTION_READ_UNCOMMITTED;
-
-        case Connection.TRANSACTION_READ_COMMITTED:
-            return TRANSACTION_READ_COMMITTED;
-
-        case Connection.TRANSACTION_REPEATABLE_READ:
-            return TRANSACTION_REPEATABLE_READ;
-
-        case Connection.TRANSACTION_SERIALIZABLE:
-            return TRANSACTION_SERIALIZABLE;
-
-        default:
-            throw new IllegalArgumentException("Incorrect transaction isolation level.");
-        }
+        return TransactionNameMapping.toIsolationLevelName(isolationLevel);
     }
 
     /**
@@ -127,20 +111,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @return corresponding constant.
      */
     public static int getTransactionIsolationLevel(String isolationName) {
-        switch (isolationName) {
-        case TRANSACTION_NONE:
-            return Connection.TRANSACTION_NONE;
-        case TRANSACTION_READ_UNCOMMITTED:
-            return Connection.TRANSACTION_READ_UNCOMMITTED;
-        case TRANSACTION_READ_COMMITTED:
-            return Connection.TRANSACTION_READ_COMMITTED;
-        case TRANSACTION_REPEATABLE_READ:
-            return Connection.TRANSACTION_REPEATABLE_READ;
-        case TRANSACTION_SERIALIZABLE:
-            return Connection.TRANSACTION_SERIALIZABLE;
-        default:
-            throw new IllegalArgumentException("Invalid isolation name.");
-        }
+        return TransactionNameMapping.toIsolationLevel(isolationName);
     }
 
     // ConcurrentHashMap because changes can - potentially - be made concurrently
@@ -156,20 +127,20 @@ public class FBTpbMapper implements Serializable, Cloneable {
         // TODO Should use isc_tpb_mapping.properties
 
         TransactionParameterBuffer serializableTpb = new TransactionParameterBufferImpl();
-        serializableTpb.addArgument(ISCConstants.isc_tpb_write);
-        serializableTpb.addArgument(ISCConstants.isc_tpb_wait);
-        serializableTpb.addArgument(ISCConstants.isc_tpb_consistency);
+        serializableTpb.addArgument(isc_tpb_write);
+        serializableTpb.addArgument(isc_tpb_wait);
+        serializableTpb.addArgument(isc_tpb_consistency);
 
         TransactionParameterBuffer repeatableReadTpb = new TransactionParameterBufferImpl();
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_write);
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_wait);
-        repeatableReadTpb.addArgument(ISCConstants.isc_tpb_concurrency);
+        repeatableReadTpb.addArgument(isc_tpb_write);
+        repeatableReadTpb.addArgument(isc_tpb_wait);
+        repeatableReadTpb.addArgument(isc_tpb_concurrency);
 
         TransactionParameterBuffer readCommittedTpb = new TransactionParameterBufferImpl();
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_write);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_wait);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        readCommittedTpb.addArgument(ISCConstants.isc_tpb_rec_version);
+        readCommittedTpb.addArgument(isc_tpb_write);
+        readCommittedTpb.addArgument(isc_tpb_wait);
+        readCommittedTpb.addArgument(isc_tpb_read_committed);
+        readCommittedTpb.addArgument(isc_tpb_rec_version);
 
         mapping.put(Connection.TRANSACTION_SERIALIZABLE, serializableTpb);
         mapping.put(Connection.TRANSACTION_REPEATABLE_READ, repeatableReadTpb);
@@ -250,6 +221,12 @@ public class FBTpbMapper implements Serializable, Cloneable {
      *         if resource cannot be loaded or contains incorrect values.
      */
     public FBTpbMapper(String mappingResource, ClassLoader cl) throws SQLException {
+        // TODO The documentation of DatabaseConnectionProperties.setTpbMapping suggests more functionality than
+        //  actually available
+        // Make sure the documented 'res:' protocol works
+        if (mappingResource.startsWith("res:")) {
+            mappingResource = mappingResource.substring(4);
+        }
         try {
             ResourceBundle res = ResourceBundle.getBundle(mappingResource, Locale.getDefault(), cl);
 
@@ -316,7 +293,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
      * @see #processMapping(FirebirdConnectionProperties, Properties)
      */
     public static void processMapping(FirebirdConnectionProperties connectionProperties, Map<String, String> info)
-            throws SQLException{
+            throws SQLException {
         for (String isolationName : ISOLATION_LEVEL_NAMES) {
             String property = info.get(isolationName);
             if (property == null) continue;
@@ -435,12 +412,11 @@ public class FBTpbMapper implements Serializable, Cloneable {
         return mapping.get(defaultIsolationLevel);
     }
 
-    public int getDefaultTransactionIsolation() {
+    int getDefaultTransactionIsolation() {
         return defaultIsolationLevel;
     }
 
-    public void setDefaultTransactionIsolation(int isolationLevel) {
-        // TODO Check if valid isolation level
+    void setDefaultTransactionIsolation(int isolationLevel) {
         this.defaultIsolationLevel = isolationLevel;
     }
 

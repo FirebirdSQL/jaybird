@@ -18,10 +18,8 @@
  */
 package org.firebirdsql.common.matchers;
 
-import org.firebirdsql.gds.impl.jni.*;
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOOLocalGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.hamcrest.Matcher;
@@ -30,7 +28,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.isIn;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.in;
 
 /**
  * Matchers for checking GDS types (eg for type specific assumptions).
@@ -43,15 +43,14 @@ public class GdsTypeMatchers {
             Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME));
     private static final List<String> EMBEDDED_TYPES = Collections.unmodifiableList(
             Arrays.asList(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME, FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME));
-    private static final List<String> OTHER_NATIVE_TYPES = Collections.unmodifiableList(
-            Arrays.asList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, LocalGDSFactoryPlugin.LOCAL_TYPE_NAME,
-                    FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME, FbOOLocalGDSFactoryPlugin.LOCAL_TYPE_NAME));
+    private static final List<String> OTHER_NATIVE_TYPES =
+            Collections.singletonList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
 
     /**
      * @return Matcher for pure java types
      */
     public static Matcher<String> isPureJavaType() {
-        return isIn(PURE_JAVA_TYPES);
+        return is(in(PURE_JAVA_TYPES));
     }
 
     /**
@@ -65,7 +64,7 @@ public class GdsTypeMatchers {
      * @return Matcher for native types (excluding embedded)
      */
     public static Matcher<String> isOtherNativeType() {
-        return isIn(OTHER_NATIVE_TYPES);
+        return is(in(OTHER_NATIVE_TYPES));
     }
 
 }

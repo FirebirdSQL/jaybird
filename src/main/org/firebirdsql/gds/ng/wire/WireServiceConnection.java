@@ -19,7 +19,9 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 
 import java.sql.SQLException;
 
@@ -55,6 +57,34 @@ public class WireServiceConnection extends WireConnection<IServiceProperties, Fb
     public WireServiceConnection(IServiceProperties serviceProperties, IEncodingFactory encodingFactory,
             ProtocolCollection protocols) throws SQLException {
         super(serviceProperties, encodingFactory, protocols);
+    }
+
+    @Override
+    protected DbAttachInfo toDbAttachInfo(IServiceProperties attachProperties) throws SQLException {
+        final DbAttachInfo initialDbAttachInfo = DbAttachInfo.of(attachProperties);
+
+        DbAttachInfo dbAttachInfo;
+        if (initialDbAttachInfo.hasServerName()) {
+            dbAttachInfo = initialDbAttachInfo;
+        } else if (initialDbAttachInfo.hasAttachObjectName()) {
+            dbAttachInfo = DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+        } else {
+            // fallback to localhost + service_mgr
+            return new DbAttachInfo(PropertyConstants.DEFAULT_SERVER_NAME, initialDbAttachInfo.getPortNumber(),
+                    PropertyConstants.DEFAULT_SERVICE_NAME);
+        }
+
+        if (!dbAttachInfo.hasServerName()) {
+            // fallback to localhost (preserves backwards compatibility when serverName/host defaulted to localhost)
+            dbAttachInfo = dbAttachInfo.withServerName(PropertyConstants.DEFAULT_SERVER_NAME);
+        }
+
+        if (!dbAttachInfo.hasAttachObjectName()) {
+            // fallback to service_mgr
+            dbAttachInfo = dbAttachInfo.withAttachObjectName(PropertyConstants.DEFAULT_SERVICE_NAME);
+        }
+
+        return dbAttachInfo;
     }
 
     @Override

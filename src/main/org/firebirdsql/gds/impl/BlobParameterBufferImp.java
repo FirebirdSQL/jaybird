@@ -20,7 +20,6 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
 
 /**
@@ -48,11 +47,6 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements BlobP
         }
 
         @Override
-        public final void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
-        }
-
-        @Override
         public final ArgumentType getStringArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
         }
@@ -64,6 +58,11 @@ public class BlobParameterBufferImp extends ParameterBufferBase implements BlobP
 
         @Override
         public final ArgumentType getIntegerArgumentType(int tag) {
+            return ArgumentType.TraditionalDpb;
+        }
+
+        @Override
+        public final ArgumentType getSingleArgumentType(int tag) {
             return ArgumentType.TraditionalDpb;
         }
     }

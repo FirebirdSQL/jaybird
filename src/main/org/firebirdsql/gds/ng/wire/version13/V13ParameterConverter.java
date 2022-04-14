@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -30,6 +30,8 @@ import org.firebirdsql.gds.ng.wire.WireServiceConnection;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.version12.V12ParameterConverter;
 import org.firebirdsql.jaybird.Version;
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 
 import java.sql.SQLException;
 
@@ -48,7 +50,7 @@ public class V13ParameterConverter extends V12ParameterConverter {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         DatabaseParameterBuffer dpb =
                 new DatabaseParameterBufferImp(DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_2, stringEncoding);
-        dpb.addArgument(ISCConstants.isc_dpb_utf8_filename, 1);
+        dpb.addArgument(DpbItems.isc_dpb_utf8_filename);
         return dpb;
     }
 
@@ -56,7 +58,7 @@ public class V13ParameterConverter extends V12ParameterConverter {
         final Encoding stringEncoding = connection.getEncodingFactory().getEncodingForFirebirdName("UTF8");
         ServiceParameterBuffer spb = new ServiceParameterBufferImp(
                 ServiceParameterBufferImp.SpbMetaData.SPB_VERSION_3_ATTACH, stringEncoding);
-        spb.addArgument(ISCConstants.isc_spb_utf8_filename, 1);
+        spb.addArgument(SpbItems.isc_spb_utf8_filename);
         return spb;
     }
 
@@ -65,23 +67,23 @@ public class V13ParameterConverter extends V12ParameterConverter {
             final DatabaseParameterBuffer dpb) throws SQLException {
         super.populateDefaultProperties(connection, dpb);
 
-        dpb.addArgument(ISCConstants.isc_dpb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
+        dpb.addArgument(DpbItems.isc_dpb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
     }
 
     @Override
-    protected void populateAuthenticationProperties(final AbstractConnection connection,
+    protected void populateAuthenticationProperties(final AbstractConnection<?, ?> connection,
             final ConnectionParameterBuffer pb) throws SQLException {
         if (!(connection instanceof WireConnection)) {
             throw new IllegalArgumentException(
                     "populateAuthenticationProperties should have been called with a WireConnection instance, was "
                             + connection.getClass().getName());
         }
-        ClientAuthBlock clientAuthBlock = ((WireConnection) connection).getClientAuthBlock();
+        ClientAuthBlock clientAuthBlock = ((WireConnection<?, ?>) connection).getClientAuthBlock();
         if (clientAuthBlock == null || clientAuthBlock.isAuthComplete()) {
             return;
         }
-        
-        IAttachProperties props = connection.getAttachProperties();
+
+        IAttachProperties<?> props = connection.getAttachProperties();
         ParameterTagMapping tagMapping = pb.getTagMapping();
         if (props.getUser() != null) {
             pb.addArgument(tagMapping.getUserNameTag(), props.getUser());
@@ -95,6 +97,6 @@ public class V13ParameterConverter extends V12ParameterConverter {
             final ServiceParameterBuffer spb) throws SQLException {
         super.populateDefaultProperties(connection, spb);
 
-        spb.addArgument(ISCConstants.isc_spb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
+        spb.addArgument(SpbItems.isc_spb_client_version, Version.JAYBIRD_DISPLAY_VERSION);
     }
 }

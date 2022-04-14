@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.Pointer;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -50,6 +51,7 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
     private static final boolean bigEndian = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
     private final FbClientLibrary clientLibrary;
+    private final String attachUrl;
 
     /**
      * Creates a JnaConnection (without establishing a connection to the server).
@@ -65,7 +67,22 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
             throws SQLException {
         super(attachProperties, encodingFactory);
         this.clientLibrary = requireNonNull(clientLibrary, "parameter clientLibrary cannot be null");
+        this.attachUrl = createAttachUrl(toDbAttachInfo(attachProperties), attachProperties);
     }
+
+    private DbAttachInfo toDbAttachInfo(T attachProperties) throws SQLException {
+        DbAttachInfo initialDbAttachInfo = DbAttachInfo.of(attachProperties);
+
+        if (!initialDbAttachInfo.hasServerName() && initialDbAttachInfo.hasAttachObjectName()
+                && initialDbAttachInfo.getAttachObjectName().startsWith("//")) {
+            // This is a connection string using the default URL format which is not directly supported by fbclient
+            return DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+        }
+
+        return initialDbAttachInfo;
+    }
+
+    protected abstract String createAttachUrl(DbAttachInfo dbAttachInfo, T attachProperties) throws SQLException;
 
     /**
      * @return The client library instance associated with the connection.
@@ -160,24 +177,34 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
     }
 
     /**
-     * Builds the attach URL for the library.
+     * Gets the attach URL for the library.
      *
      * @return Attach URL
      */
     public String getAttachUrl() {
-        StringBuilder sb = new StringBuilder();
-        if (getServerName() != null) {
-            boolean ipv6 = getServerName().indexOf(':') != -1;
-            if (ipv6) {
-                sb.append('[').append(getServerName()).append(']');
-            } else {
-                sb.append(getServerName());
-            }
-            sb.append('/')
-                    .append(getPortNumber())
-                    .append(':');
+        return attachUrl;
+    }
+
+    /**
+     * Builds the attach URL for the library.
+     *
+     * @return Attach URL
+     */
+    protected static String toAttachUrl(DbAttachInfo dbAttachInfo) {
+        if (!dbAttachInfo.hasServerName()) {
+            return dbAttachInfo.getAttachObjectName();
         }
-        sb.append(getAttachObjectName());
+        String serverName = dbAttachInfo.getServerName();
+        String attachObjectName = dbAttachInfo.getAttachObjectName();
+        StringBuilder sb = new StringBuilder(serverName.length() + attachObjectName.length() + 4);
+        boolean ipv6 = serverName.indexOf(':') != -1;
+        if (ipv6) {
+            sb.append('[').append(serverName).append(']');
+        } else {
+            sb.append(serverName);
+        }
+        sb.append('/').append(dbAttachInfo.getPortNumber())
+                .append(':').append(attachObjectName);
         return sb.toString();
     }
 }

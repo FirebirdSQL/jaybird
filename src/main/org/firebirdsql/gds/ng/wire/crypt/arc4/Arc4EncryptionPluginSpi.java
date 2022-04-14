@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.gds.ng.wire.crypt.arc4;
 
-import org.firebirdsql.gds.ng.wire.WireConnection;
+import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPluginSpi;
@@ -39,7 +39,7 @@ public final class Arc4EncryptionPluginSpi implements EncryptionPluginSpi {
     }
 
     @Override
-    public EncryptionPlugin createEncryptionPlugin(WireConnection<?, ?> connection) {
-        return new Arc4EncryptionPlugin(connection.getClientAuthBlock());
+    public EncryptionPlugin createEncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
+        return new Arc4EncryptionPlugin(cryptSessionConfig);
     }
 }

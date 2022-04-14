@@ -32,6 +32,9 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 /**
@@ -238,14 +241,6 @@ public interface DatatypeCoder {
      * Encode a {@code Timestamp} using a given {@code Calendar}.
      *
      * @param value The {@code Timestamp} to be encoded
-     * @param cal The {@code Calendar} to be used for encoding, may be {@code null}
-     */
-    Timestamp encodeTimestamp(Timestamp value, Calendar cal);
-
-    /**
-     * Encode a {@code Timestamp} using a given {@code Calendar}.
-     *
-     * @param value The {@code Timestamp} to be encoded
      * @param cal The {@code Calendar} to be used for encoding,
      *        may be {@code null}
      * @param invertTimeZone If {@code true}, the timezone offset value
@@ -256,14 +251,6 @@ public interface DatatypeCoder {
     Timestamp encodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
 
     /**
-     * Encode a {@code Timestamp} as a {@code byte} array.
-     *
-     * @param value The {@code Timestamp} to be encoded
-     * @return The array of {@code byte}s that represents the given {@code Timestamp} value
-     */
-    byte[] encodeTimestamp(Timestamp value);
-
-    /**
      * Encode the date and time portions of a raw date time struct into a {@code byte} array.
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
@@ -271,17 +258,14 @@ public interface DatatypeCoder {
      */
     byte[] encodeTimestampRaw(RawDateTimeStruct raw);
 
-    byte[] encodeTimestampCalendar(Timestamp value, Calendar c);
-
     /**
-     * Decode a {@code Timestamp} value using a given {@code Calendar}.
+     * Encode a {@code Timestamp} as a {@code byte} array.
      *
-     * @param value The {@code Timestamp} to be decoded
-     * @param cal The {@code Calendar} to be used in decoding,
-     *        may be {@code null}
-     * @return The decoded {@code Timestamp}
+     * @param value The {@code Timestamp} to be encoded
+     * @param c Calendar to use for time zone calculation
+     * @return The array of {@code byte}s that represents the given {@code Timestamp} value
      */
-    Timestamp decodeTimestamp(Timestamp value, Calendar cal);
+    byte[] encodeTimestampCalendar(Timestamp value, Calendar c);
 
     /**
      * Decode a {@code Timestamp} value using a given {@code Calendar}.
@@ -297,14 +281,6 @@ public interface DatatypeCoder {
     Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
 
     /**
-     * Decode a 8-byte {@code byte} array into a {@code Timestamp}.
-     *
-     * @param byte_long The {@code byte} array to be decoded
-     * @return A {@code Timestamp} value from the decoded bytes
-     */
-    Timestamp decodeTimestamp(byte[] byte_long);
-
-    /**
      * Decode a 8-byte {@code byte} array into a raw date time struct.
      *
      * @param byte_long The {@code byte} array to be decoded
@@ -312,6 +288,13 @@ public interface DatatypeCoder {
      */
     RawDateTimeStruct decodeTimestampRaw(byte[] byte_long);
 
+    /**
+     * Decode a 8-byte {@code byte} array into a {@code Timestamp}.
+     *
+     * @param byte_long The {@code byte} array to be decoded
+     * @param c Calendar to use for time zone calculation
+     * @return A {@code Timestamp} value from the decoded bytes
+     */
     Timestamp decodeTimestampCalendar(byte[] byte_long, Calendar c);
 
     /**
@@ -324,14 +307,6 @@ public interface DatatypeCoder {
     java.sql.Time encodeTime(Time d, Calendar cal, boolean invertTimeZone);
 
     /**
-     * Encode a {@code Time} value into a {@code byte} array.
-     *
-     * @param d The {@code Time} to be encoded
-     * @return The array of {@code byte}s representing the given {@code Time}
-     */
-    byte[] encodeTime(Time d);
-
-    /**
      * Encode the time portion of a raw date time struct into a {@code byte} array.
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
@@ -339,6 +314,13 @@ public interface DatatypeCoder {
      */
     byte[] encodeTimeRaw(RawDateTimeStruct raw);
 
+    /**
+     * Encode a {@code Time} value into a {@code byte} array.
+     *
+     * @param d The {@code Time} to be encoded
+     * @param c Calendar to use for time zone calculation
+     * @return The array of {@code byte}s representing the given {@code Time}
+     */
     byte[] encodeTimeCalendar(Time d, Calendar c);
 
     /**
@@ -351,14 +333,6 @@ public interface DatatypeCoder {
     Time decodeTime(Time d, Calendar cal, boolean invertTimeZone);
 
     /**
-     * Decode a {@code byte} array into a {@code Time} value.
-     *
-     * @param int_byte The {@code byte} array to be decoded
-     * @return The decoded {@code Time}
-     */
-    Time decodeTime(byte[] int_byte);
-
-    /**
      * Decode a {@code byte} array into a raw date time struct.
      *
      * @param int_byte The {@code byte} array to be decoded
@@ -366,6 +340,13 @@ public interface DatatypeCoder {
      */
     RawDateTimeStruct decodeTimeRaw(byte[] int_byte);
 
+    /**
+     * Decode a {@code byte} array into a {@code Time} value.
+     *
+     * @param int_byte The {@code byte} array to be decoded
+     * @param c Calendar to use for time zone calculation
+     * @return The decoded {@code Time}
+     */
     Time decodeTimeCalendar(byte[] int_byte, Calendar c);
 
     /**
@@ -378,14 +359,6 @@ public interface DatatypeCoder {
     Date encodeDate(Date d, Calendar cal);
 
     /**
-     * Encode a {@code Date} value into a {@code byte} array.
-     *
-     * @param d The {@code Date} to be encoded
-     * @return The array of {@code byte}s representing the given {@code Date}
-     */
-    byte[] encodeDate(Date d);
-
-    /**
      * Encode the date portion of a raw date time struct into a {@code byte} array.
      *
      * @param raw The {@code RawDateTimeStruct} to be encoded
@@ -393,6 +366,13 @@ public interface DatatypeCoder {
      */
     byte[] encodeDateRaw(RawDateTimeStruct raw);
 
+    /**
+     * Encode a {@code Date} value into a {@code byte} array.
+     *
+     * @param d The {@code Date} to be encoded
+     * @param c Calendar to use for time zone calculation
+     * @return The array of {@code byte}s representing the given {@code Date}
+     */
     byte[] encodeDateCalendar(Date d, Calendar c);
 
     /**
@@ -405,14 +385,6 @@ public interface DatatypeCoder {
     Date decodeDate(Date d, Calendar cal);
 
     /**
-     * Decode a {@code byte} array into a {@code Date} value.
-     *
-     * @param byte_int The {@code byte} array to be decoded
-     * @return The decoded {@code Date}
-     */
-    Date decodeDate(byte[] byte_int);
-
-    /**
      * Decode a {@code byte} array into a raw date time struct.
      *
      * @param byte_int The {@code byte} array to be decoded
@@ -420,6 +392,13 @@ public interface DatatypeCoder {
      */
     RawDateTimeStruct decodeDateRaw(byte[] byte_int);
 
+    /**
+     * Decode a {@code byte} array into a {@code Date} value.
+     *
+     * @param byte_int The {@code byte} array to be decoded
+     * @param c Calendar to use for time zone calculation
+     * @return The decoded {@code Date}
+     */
     Date decodeDateCalendar(byte[] byte_int, Calendar c);
 
     /**
@@ -439,39 +418,58 @@ public interface DatatypeCoder {
     byte[] encodeBoolean(boolean value);
 
     /**
-     * Encodes a java.time.LocalTime equivalent to time bytes.
+     * Decode LocalTime from supplied data.
      *
-     * @param hour Number of hours (is assumed to be 0..23)
-     * @param minute Number of minutes (is assumed to be 0..59)
-     * @param second Number of seconds (is assumed to be 0..59)
-     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
+     * @param data (expected) 4 bytes
+     * @return LocalTime value
+     * @since 5
+     */
+    LocalTime decodeLocalTime(byte[] data);
+
+    /**
+     * Encodes a java.time.LocalTime to time bytes.
+     *
+     * @param value LocalTime value to encode
      * @return Byte array for time
+     * @since 5
      */
-    byte[] encodeLocalTime(int hour, int minute, int second, int nanos);
+    byte[] encodeLocalTime(LocalTime value);
 
     /**
-     * Encodes a java.time.LocalDate equivalent to date bytes.
+     * Decode LocalDate from supplied data.
      *
-     * @param year Year
-     * @param month Month (is assumed to be 1..12)
-     * @param day Day (is assumed to be valid for year and month)
+     * @param data (expected) 4 bytes
+     * @return LocalDate value
+     * @since 5
+     */
+    LocalDate decodeLocalDate(byte[] data);
+
+    /**
+     * Encodes a java.time.LocalDate to date bytes.
+     *
+     * @param value LocalDate to encode
      * @return Byte array for date
+     * @since 5
      */
-    byte[] encodeLocalDate(int year, int month, int day);
+    byte[] encodeLocalDate(LocalDate value);
 
     /**
-     * Encodes a java.time.LocalDateTime equivalent to timestamp bytes.
+     * Decode LocalDateTime from supplied data.
      *
-     * @param year Year
-     * @param month Month (is assumed to be 1..12)
-     * @param day Day (is assumed to be valid for year and month)
-     * @param hour Number of hours (is assumed to be 0..23)
-     * @param minute Number of minutes (is assumed to be 0..59)
-     * @param second Number of seconds (is assumed to be 0..59)
-     * @param nanos Sub-second nanoseconds (actual resolution is 100 microseconds, is assumed to be 0 .. 10^9 - 1 ns)
-     * @return Byte array for timestamp
+     * @param data (expected) 8 bytes
+     * @return LocalDateTime value
+     * @since 5
      */
-    byte[] encodeLocalDateTime(int year, int month, int day, int hour, int minute, int second, int nanos);
+    LocalDateTime decodeLocalDateTime(byte[] data);
+
+    /**
+     * Encodes a java.time.LocalDateTime to timestamp bytes.
+     *
+     * @param value LocalDateTime to encode
+     * @return Byte array for date
+     * @since 5
+     */
+    byte[] encodeLocalDateTime(LocalDateTime value);
 
     /**
      * Decodes a decimal64 from byte array.

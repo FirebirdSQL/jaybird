@@ -35,10 +35,10 @@ import java.util.Hashtable;
  */
 public class DataSourceFactory implements ObjectFactory {
 
+    @SuppressWarnings("RedundantThrows")
     @Override
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
-            Hashtable<?, ?> environment) throws Exception {
-
+    public Object getObjectInstance(Object obj, Name name, Context nameCtx,Hashtable<?, ?> environment)
+            throws Exception {
         Reference ref = (Reference) obj;
         String className = ref.getClassName();
         switch (className) {
@@ -53,14 +53,14 @@ public class DataSourceFactory implements ObjectFactory {
         }
     }
 
-    private Object loadConnectionPoolDS(Reference ref) throws Exception {
+    private Object loadConnectionPoolDS(Reference ref) {
         FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
         loadAbstractCommonDataSource(ds, ref);
 
         return ds;
     }
 
-    private Object loadXADS(Reference ref) throws Exception {
+    private Object loadXADS(Reference ref) {
         FBXADataSource ds = new FBXADataSource();
         loadAbstractCommonDataSource(ds, ref);
 
@@ -82,26 +82,14 @@ public class DataSourceFactory implements ObjectFactory {
         return ds;
     }
 
-    private void loadAbstractCommonDataSource(FBAbstractCommonDataSource ds, Reference ref) throws Exception {
+    private void loadAbstractCommonDataSource(FBAbstractCommonDataSource ds, Reference ref) {
         RefAddr propertyContent = ref.get(FBAbstractCommonDataSource.REF_PROPERTIES);
         if (propertyContent != null) {
             byte[] data = (byte[]) propertyContent.getContent();
             FBConnectionProperties props = (FBConnectionProperties) deserialize(data);
             ds.setConnectionProperties(props);
         }
-        String oldDatabase = ds.getConnectionProperties().getDatabase();
         ds.setDescription(getRefAddr(ref, FBAbstractCommonDataSource.REF_DESCRIPTION));
-        ds.setServerName(getRefAddr(ref, FBAbstractCommonDataSource.REF_SERVER_NAME));
-        String portNumber = getRefAddr(ref, FBAbstractCommonDataSource.REF_PORT_NUMBER);
-        if (portNumber != null) {
-            ds.setPortNumber(Integer.parseInt(portNumber));
-        }
-        ds.setDatabaseName(getRefAddr(ref, FBAbstractCommonDataSource.REF_DATABASE_NAME));
-        /*
-         * When the user uses the database property instead of databaseName (with serverName and portNumber),
-         * then the database connection property might be set to null now, so restore original value
-         */
-        ds.getConnectionProperties().setDatabase(oldDatabase);
     }
 
     /**

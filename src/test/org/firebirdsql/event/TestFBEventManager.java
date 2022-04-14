@@ -18,12 +18,16 @@
  */
 package org.firebirdsql.event;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
+import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.Unstable;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 
 import java.io.File;
 import java.sql.Connection;
@@ -42,8 +46,17 @@ import static org.junit.Assert.*;
  */
 public class TestFBEventManager {
 
+    private static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+            .requiresEventPortAvailable()
+            .build()
+            .toRule();
+
+    private static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+
     @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    public static final TestRule classRules = RuleChain
+            .outerRule(runEnvironmentRule)
+            .around(usesDatabase);
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -79,15 +92,15 @@ public class TestFBEventManager {
     private void setupDefaultEventManager() throws SQLException {
         eventManager = new FBEventManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
-            eventManager.setHost(DB_SERVER_URL);
+            eventManager.setServerName(DB_SERVER_URL);
         }
         eventManager.setUser(DB_USER);
         eventManager.setPassword(DB_PASSWORD);
-        eventManager.setPort(DB_SERVER_PORT);
+        eventManager.setPortNumber(DB_SERVER_PORT);
         
         // have to resolve relative path to the absolute one
         File tempFile = new File(getDatabasePath());
-        eventManager.setDatabase(tempFile.getAbsolutePath());
+        eventManager.setDatabaseName(tempFile.getAbsolutePath());
         
         eventManager.connect();
     }
@@ -312,7 +325,7 @@ public class TestFBEventManager {
             }
 
             try {
-                eventManager.setHost("abc");
+                eventManager.setServerName("abc");
                 fail("should not allow setHost");
             } catch (UnsupportedOperationException e) {
                 // expected

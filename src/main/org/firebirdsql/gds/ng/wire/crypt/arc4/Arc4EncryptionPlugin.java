@@ -19,7 +19,7 @@
 package org.firebirdsql.gds.ng.wire.crypt.arc4;
 
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
+import org.firebirdsql.gds.ng.wire.crypt.CryptSessionConfig;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionIdentifier;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionInitInfo;
 import org.firebirdsql.gds.ng.wire.crypt.EncryptionPlugin;
@@ -42,10 +42,12 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.*;
  */
 public final class Arc4EncryptionPlugin implements EncryptionPlugin {
 
-    private final ClientAuthBlock clientAuthBlock;
+    private static final String ARCFOUR_CIPHER_NAME = "ARCFOUR";
+    
+    private final CryptSessionConfig cryptSessionConfig;
 
-    public Arc4EncryptionPlugin(ClientAuthBlock clientAuthBlock) {
-        this.clientAuthBlock = clientAuthBlock;
+    Arc4EncryptionPlugin(CryptSessionConfig cryptSessionConfig) {
+        this.cryptSessionConfig = cryptSessionConfig;
     }
 
     @Override
@@ -56,9 +58,8 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
     @Override
     public EncryptionInitInfo initializeEncryption() {
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
-        byte[] key = getKey(chainBuilder);
-        Cipher encryptionCipher = createEncryptionCipher(key, chainBuilder);
-        Cipher decryptionCipher = createDecryptionCipher(key, chainBuilder);
+        Cipher encryptionCipher = createEncryptionCipher(chainBuilder);
+        Cipher decryptionCipher = createDecryptionCipher(chainBuilder);
 
         if (chainBuilder.hasException()) {
             return EncryptionInitInfo.failure(getEncryptionIdentifier(), chainBuilder.getException());
@@ -66,31 +67,12 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
         return EncryptionInitInfo.success(getEncryptionIdentifier(), encryptionCipher, decryptionCipher);
     }
 
-    private byte[] getKey(SQLExceptionChainBuilder<SQLException> chainBuilder) {
-        byte[] key = null;
-        try {
-            key = getKey(clientAuthBlock);
-        } catch (SQLException e) {
-            chainBuilder.append(e);
-        }
-        return key;
+    private Cipher createEncryptionCipher(SQLExceptionChainBuilder<SQLException> chainBuilder) {
+        return createCipher(Cipher.ENCRYPT_MODE, cryptSessionConfig.getEncryptKey(), chainBuilder);
     }
 
-    private Cipher createEncryptionCipher(byte[] key, SQLExceptionChainBuilder<SQLException> chainBuilder) {
-        return createCipher(Cipher.ENCRYPT_MODE, key, chainBuilder);
-    }
-
-    private Cipher createDecryptionCipher(byte[] key, SQLExceptionChainBuilder<SQLException> chainBuilder) {
-        return createCipher(Cipher.DECRYPT_MODE, key, chainBuilder);
-    }
-
-    private byte[] getKey(ClientAuthBlock clientAuthBlock) throws SQLException {
-        if (!clientAuthBlock.supportsEncryption()) {
-            throw new FbExceptionBuilder().nonTransientException(jb_cryptNoCryptKeyAvailable)
-                    .messageParameter(getEncryptionIdentifier().toString())
-                    .toFlatSQLException();
-        }
-        return clientAuthBlock.getSessionKey();
+    private Cipher createDecryptionCipher(SQLExceptionChainBuilder<SQLException> chainBuilder) {
+        return createCipher(Cipher.DECRYPT_MODE, cryptSessionConfig.getDecryptKey(), chainBuilder);
     }
 
     private Cipher createCipher(int mode, byte[] key, SQLExceptionChainBuilder<SQLException> chainBuilder) {
@@ -104,8 +86,8 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
 
     private Cipher createCipher(int mode, byte[] key) throws SQLException {
         try {
-            Cipher rc4Cipher = Cipher.getInstance("ARCFOUR");
-            SecretKeySpec rc4Key = new SecretKeySpec(key, "ARCFOUR");
+            Cipher rc4Cipher = Cipher.getInstance(ARCFOUR_CIPHER_NAME);
+            SecretKeySpec rc4Key = new SecretKeySpec(key, ARCFOUR_CIPHER_NAME);
             rc4Cipher.init(mode, rc4Key);
             return rc4Cipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {

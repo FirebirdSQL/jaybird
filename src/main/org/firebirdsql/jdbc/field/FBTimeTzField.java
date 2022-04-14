@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.SQLException;
-import java.time.format.DateTimeParseException;
 
 /**
  * Field for {@code TIME WITH TIME ZONE}.
@@ -46,20 +45,6 @@ class FBTimeTzField extends AbstractWithTimeZoneField {
         if (isNull()) return null;
 
         return String.valueOf(getOffsetTime());
-    }
-
-    @Override
-    public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        try {
-            setStringParse(value);
-        } catch (DateTimeParseException e) {
-            throw new TypeConversionException("Unable to convert value '" + value + "' to type TIME WITH TIME ZONE", e);
-        }
     }
 
 }

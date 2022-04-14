@@ -850,7 +850,6 @@ public class FBDatabaseMetaDataTest {
 
     @Test
     public void testSupportsGetGeneratedKeys() throws Exception {
-        // Note: we are not testing behavior for absence of antlr-runtime
         assertEquals(supportInfoFor(connection).supportsInsertReturning(), dmd.supportsGetGeneratedKeys());
     }
 
@@ -873,6 +872,9 @@ public class FBDatabaseMetaDataTest {
         case "12":
         case "13":
         case "14":
+        case "15":
+        case "16":
+        case "17":
             expectedMinor = 3;
             break;
         default:

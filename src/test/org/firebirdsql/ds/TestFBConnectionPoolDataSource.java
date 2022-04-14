@@ -93,17 +93,18 @@ public class TestFBConnectionPoolDataSource extends FBConnectionPoolTestBase {
     public void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
         
-        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+        assertEquals("someValue", ds.getProperty("someProperty"));
     }
     
     /**
      * Test if a property stored with {@link FBConnectionPoolDataSource#setNonStandardProperty(String, String)} is retrievable.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testSetNonStandardProperty_twoParam() {
         ds.setNonStandardProperty("someProperty", "someValue");
         
-        assertEquals("someValue", ds.getNonStandardProperty("someProperty"));
+        assertEquals("someValue", ds.getProperty("someProperty"));
     }
 
     @Test

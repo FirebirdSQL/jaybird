@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -119,9 +119,7 @@ final class MessageLoader {
 
                 resourceType.store(errorCode, value, this);
             } catch (NumberFormatException e) {
-                String message = "Key " + key + " is not a number; ignored";
-                log.warn(message + "; see debug level for stacktrace");
-                log.debug(message, e);
+                log.warnDebug("Key " + key + " is not a number; ignored", e);
             }
         }
     }

@@ -39,4 +39,8 @@ class FBRowIdField extends FBBinaryField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        return getRowId();
+    }
 }

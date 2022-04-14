@@ -149,7 +149,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * Set the GDS plugin type to use.
      *
      * @param type
-     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED}, {@code LOCAL})
+     *         GDS plugin type name ({@code PURE_JAVA}, {@code NATIVE}, {@code EMBEDDED})
      */
     void setType(String type);
 
@@ -230,6 +230,26 @@ public interface FBManagerMBean extends AutoCloseable {
      * @see #setDefaultCharacterSet(String)
      */
     String getDefaultCharacterSet();
+
+    /**
+     * Control force write behaviour of the created database.
+     * <p>
+     * Only use this method if you know what you're doing, and if you can live with data loss and database corruption.
+     * In general it is advisable to use the Firebird default ({@code null} for this method).
+     * </p>
+     *
+     * @param forceWrite
+     *         {@code null} - default behaviour (force write enabled after database creation and initialization),
+     *         {@code true} - enable force write at database creation,
+     *         {@code false} - disable force write
+     */
+    void setForceWrite(Boolean forceWrite);
+
+    /**
+     * @return The forced writes configuration
+     * @see #setForceWrite(Boolean)
+     */
+    Boolean getForceWrite();
 
     /**
      * Get if the database will be created when calling {@link #start()}.

@@ -40,11 +40,13 @@ import java.util.Properties;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test Firebird 3 and higher authentication introduced in protocol v13.
@@ -92,7 +94,7 @@ public class Firebird3PlusAuthenticationTest {
     /**
      * This test assumes that the Firebird 3 config for {@code UserManager} contains {@code Legacy_UserManager}.
      * <p>
-     * Replicates the test of {@link org.firebirdsql.management.TestFBServiceManager#testGetServerVersion()}.
+     * Replicates the test of {@code FBServiceManagerTest.testGetServerVersion()}.
      * </p>
      */
     @Test
@@ -101,8 +103,8 @@ public class Firebird3PlusAuthenticationTest {
         final String password = "legacy";
         databaseUserRule.createUser(username, password, "Legacy_UserManager");
         final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
-        fbServiceManager.setHost(FBTestProperties.DB_SERVER_URL);
-        fbServiceManager.setPort(FBTestProperties.DB_SERVER_PORT);
+        fbServiceManager.setServerName(FBTestProperties.DB_SERVER_URL);
+        fbServiceManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         fbServiceManager.setUser(username);
         fbServiceManager.setPassword(password);
         fbServiceManager.setAuthPlugins("Legacy_Auth");
@@ -117,7 +119,7 @@ public class Firebird3PlusAuthenticationTest {
     /**
      * This test assumes that the Firebird 3 config for {@code UserManager} contains {@code Srp}.
      * <p>
-     * Replicates the test of {@link org.firebirdsql.management.TestFBServiceManager#testGetServerVersion()}.
+     * Replicates the test of {@code FBServiceManagerTest.testGetServerVersion()}.
      * </p>
      */
     @Test
@@ -126,8 +128,8 @@ public class Firebird3PlusAuthenticationTest {
         final String password = "srp";
         databaseUserRule.createUser(username, password, "Srp");
         final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
-        fbServiceManager.setHost(FBTestProperties.DB_SERVER_URL);
-        fbServiceManager.setPort(FBTestProperties.DB_SERVER_PORT);
+        fbServiceManager.setServerName(FBTestProperties.DB_SERVER_URL);
+        fbServiceManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         fbServiceManager.setUser(username);
         fbServiceManager.setPassword(password);
 

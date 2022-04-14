@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -56,6 +56,7 @@ public class FBManager implements FBManagerMBean {
     private int dialect = ISCConstants.SQL_DIALECT_CURRENT;
     private int pageSize = -1;
     private String defaultCharacterSet;
+    private Boolean forceWrite;
     private boolean forceCreate;
     private boolean createOnStart;
     private boolean dropOnStop;
@@ -223,6 +224,16 @@ public class FBManager implements FBManagerMBean {
     }
 
     @Override
+    public void setForceWrite(Boolean forceWrite) {
+        this.forceWrite = forceWrite;
+    }
+
+    @Override
+    public Boolean getForceWrite() {
+        return forceWrite;
+    }
+
+    @Override
     public boolean isCreateOnStart() {
         return createOnStart;
     }
@@ -278,15 +289,17 @@ public class FBManager implements FBManagerMBean {
         try {
             IConnectionProperties connectionProperties = createDefaultConnectionProperties(user, password);
             connectionProperties.setDatabaseName(fileName);
-            connectionProperties.setConnectionDialect((short) dialect);
+            connectionProperties.setSqlDialect(dialect);
             if (getPageSize() != -1) {
-                connectionProperties.getExtraDatabaseParameters()
-                        .addArgument(ISCConstants.isc_dpb_page_size, getPageSize());
+                connectionProperties.setIntProperty("page_size", getPageSize());
             }
             if (getDefaultCharacterSet() != null) {
-                connectionProperties.getExtraDatabaseParameters()
-                        .addArgument(ISCConstants.isc_dpb_set_db_charset, getDefaultCharacterSet());
+                connectionProperties.setProperty("set_db_charset", getDefaultCharacterSet());
             }
+            if (forceWrite != null) {
+                connectionProperties.setBooleanProperty("force_write", forceWrite);
+            }
+
             try (FbDatabase db = dbFactory.connect(connectionProperties)) {
                 db.createDatabase();
             }

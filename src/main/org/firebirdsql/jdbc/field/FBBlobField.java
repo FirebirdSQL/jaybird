@@ -32,6 +32,7 @@ import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * Describe class <code>FBBlobField</code> here.
@@ -39,7 +40,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-class FBBlobField extends FBField implements FBFlushableField {
+class FBBlobField extends FBField implements FBCloseableField, FBFlushableField {
 
     protected FirebirdBlob blob;
     private boolean blobExplicitNull;
@@ -77,6 +78,14 @@ class FBBlobField extends FBField implements FBFlushableField {
         blob = new FBBlob(gdsHelper, getDatatypeCoder().decodeLong(bytes));
         
         return blob;
+    }
+
+    @Override
+    public Object getObject() throws SQLException {
+        if (requiredType == Types.BLOB) {
+            return getBlob();
+        }
+        return getBytes();
     }
 
     @Override
@@ -123,8 +132,7 @@ class FBBlobField extends FBField implements FBFlushableField {
                     final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
 
                     if (segmentBuffer.length == 0) {
-                        // unexpected EOF
-                        throw new TypeConversionException(BYTES_CONVERSION_ERROR);
+                        throw invalidGetConversion("byte[]", "unexpected EOF");
                     }
 
                     System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
@@ -166,8 +174,9 @@ class FBBlobField extends FBField implements FBFlushableField {
     @Override
     public String getString() throws SQLException {
         // getString() is not defined for BLOB fields, only for BINARY
-        if (fieldDescriptor.getSubType() < 0)
-            throw new TypeConversionException(STRING_CONVERSION_ERROR);
+        if (fieldDescriptor.getSubType() < 0) {
+            throw invalidGetConversion(String.class, String.format("BLOB SUB_TYPE %d", fieldDescriptor.getSubType()));
+        }
 
         Blob blob = getBlobInternal();
 

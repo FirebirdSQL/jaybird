@@ -142,8 +142,8 @@ publishing {
                 }
 
                 issueManagement {
-                    system = 'JIRA Tracker'
-                    url = 'http://tracker.firebirdsql.org/browse/JDBC'
+                    system = 'GitHub'
+                    url = 'https://github.com/FirebirdSQL/jaybird/issues/'
                 }
             }
         }

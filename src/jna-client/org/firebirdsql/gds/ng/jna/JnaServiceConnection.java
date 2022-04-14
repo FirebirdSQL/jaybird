@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.ng.IServiceProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.sql.SQLException;
@@ -60,6 +61,15 @@ public final class JnaServiceConnection  extends JnaConnection<IServicePropertie
     public JnaServiceConnection(FbClientLibrary clientLibrary, IServiceProperties connectionProperties,
             IEncodingFactory encodingFactory) throws SQLException {
         super(clientLibrary, connectionProperties, encodingFactory);
+    }
+
+    @Override
+    protected String createAttachUrl(DbAttachInfo dbAttachInfo, IServiceProperties attachProperties) {
+        if (!dbAttachInfo.hasAttachObjectName()) {
+            // fallback to service_mgr
+            dbAttachInfo = dbAttachInfo.withAttachObjectName(PropertyConstants.DEFAULT_SERVICE_NAME);
+        }
+        return toAttachUrl(dbAttachInfo);
     }
 
     /**

@@ -39,7 +39,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBLongVarCharField extends FBStringField implements FBFlushableField {
+public class FBLongVarCharField extends FBStringField implements FBCloseableField, FBFlushableField {
 
     // TODO Reduce duplication with FBBlobField
 
@@ -116,7 +116,9 @@ public class FBLongVarCharField extends FBStringField implements FBFlushableFiel
             }
             return bout.toByteArray();
         } catch(IOException ioex) {
-            throw new TypeConversionException(BYTES_CONVERSION_ERROR + " " + ioex.getMessage());
+            SQLException conversionException = invalidGetConversion("bytes[]", ioex.getMessage());
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,6 +22,7 @@ import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10ParameterConverter;
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
 
 import java.sql.SQLException;
 
@@ -38,7 +39,8 @@ import java.sql.SQLException;
 public class V11ParameterConverter extends V10ParameterConverter {
 
     @Override
-    protected void populateDefaultProperties(final WireDatabaseConnection connection, final DatabaseParameterBuffer dpb) throws SQLException {
+    protected void populateDefaultProperties(final WireDatabaseConnection connection,
+            final DatabaseParameterBuffer dpb) throws SQLException {
         super.populateDefaultProperties(connection, dpb);
 
         addProcessName(dpb);
@@ -52,9 +54,10 @@ public class V11ParameterConverter extends V10ParameterConverter {
      *         Database parameter buffer
      */
     protected final void addProcessName(DatabaseParameterBuffer dpb) {
+        if (dpb.hasArgument(DpbItems.isc_dpb_process_name)) return;
         String processName = JaybirdSystemProperties.getProcessName();
         if (processName != null) {
-            dpb.addArgument(DatabaseParameterBuffer.PROCESS_NAME, processName);
+            dpb.addArgument(DpbItems.isc_dpb_process_name, processName);
         }
     }
 
@@ -62,12 +65,13 @@ public class V11ParameterConverter extends V10ParameterConverter {
      * Adds the processId (pid) to the dpb, if available.
      *
      * @param dpb
-     *         Database Database parameter buffer
+     *         Database parameter buffer
      */
     protected final void addProcessId(DatabaseParameterBuffer dpb) {
+        if (dpb.hasArgument(DpbItems.isc_dpb_process_id)) return;
         Integer pid = JaybirdSystemProperties.getProcessId();
         if (pid != null) {
-            dpb.addArgument(DatabaseParameterBuffer.PROCESS_ID, pid);
+            dpb.addArgument(DpbItems.isc_dpb_process_id, pid);
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -47,12 +47,8 @@ public final class EncodingFactory implements IEncodingFactory {
 
     private static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
     private static final int MAX_NORMAL_CHARSET_ID = 255;
-    private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR = new Comparator<EncodingSet>() {
-        @Override
-        public int compare(final EncodingSet o1, final EncodingSet o2) {
-            return o1.getPreferenceWeight() - o2.getPreferenceWeight();
-        }
-    };
+    private static final Comparator<EncodingSet> ENCODING_SET_COMPARATOR =
+            Comparator.comparingInt(EncodingSet::getPreferenceWeight);
 
     public static final String ENCODING_NAME_NONE = "NONE";
     public static final String ENCODING_NAME_OCTETS = "OCTETS";
@@ -333,8 +329,8 @@ public final class EncodingFactory implements IEncodingFactory {
         return (T) coder;
     }
 
-    @SuppressWarnings({ "unchecked", "JavaReflectionMemberAccess" })
-    protected static <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass,
+    @SuppressWarnings({ "unchecked" })
+    static <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass,
             IEncodingFactory encodingFactory) {
         // Avoid reflection if we can:
         if (datatypeCoderClass == DefaultDatatypeCoder.class) {
@@ -369,21 +365,27 @@ public final class EncodingFactory implements IEncodingFactory {
      *
      * @see EncodingSet
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static NavigableSet<EncodingSet> loadEncodingSets() {
         final TreeSet<EncodingSet> encodingSets = new TreeSet<>(ENCODING_SET_COMPARATOR);
         final ServiceLoader<EncodingSet> encodingSetLoader = ServiceLoader.load(EncodingSet.class, EncodingFactory.class.getClassLoader());
         // We can't use foreach here, because the encoding sets are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<EncodingSet> encodingSetIterator = encodingSetLoader.iterator();
         // Load the encoding sets and populate the TreeMap
-        while (encodingSetIterator.hasNext()) {
+        int retry = 0;
+        while (retry < 2) {
             try {
-                final EncodingSet encodingSet = encodingSetIterator.next();
-                encodingSets.add(encodingSet);
-            } catch (Exception | ServiceConfigurationError e) {
-                String message = "Could not load encoding set (skipping)";
-                log.error(message + ": " + e + "; see debug level for stacktrace");
-                log.debug(message, e);
+                while (encodingSetIterator.hasNext()) {
+                    try {
+                        EncodingSet encodingSet = encodingSetIterator.next();
+                        encodingSets.add(encodingSet);
+                    } catch (Exception | ServiceConfigurationError e) {
+                        log.errorDebug("Could not load encoding set (skipping)", e);
+                    }
+                }
+                break;
+            } catch (ServiceConfigurationError e) {
+                log.error("Error finding next EncodingSet", e);
+                retry++;
             }
         }
         return encodingSets;

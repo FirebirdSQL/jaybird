@@ -1,22 +1,23 @@
 # Jaybird
 Jaybird is a JDBC driver suite to connect to Firebird database servers.
 
-[![Build Status](https://travis-ci.com/FirebirdSQL/jaybird.svg?branch=master)](https://travis-ci.com/FirebirdSQL/jaybird)
+[![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/build-only.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Abuild-only)
+[![Build Status](https://github.com/FirebirdSQL/jaybird/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/FirebirdSQL/jaybird/actions?query=branch%3Amaster+workflow%3Arun-tests)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.firebirdsql.jdbc/jaybird/)
 
 ## Reporting bugs or improvements
 
 For security vulnerabilities, see [Security Policy](https://github.com/FirebirdSQL/jaybird/security/policy).
 
-For bugs or improvement, go to our [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC).
+For bugs or improvement, go to our [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/).
 
 ## Resources
 
 - [Downloads](https://www.firebirdsql.org/en/jdbc-driver/)
-- [Issue tracker](http://tracker.firebirdsql.org/browse/JDBC)
+- [Issue tracker](https://github.com/FirebirdSQL/jaybird/issues/)
 - [Wiki](https://github.com/FirebirdSQL/jaybird/wiki)
-- [FAQ](src/documentation/faq.md)
-- [Release notes](src/documentation/release_notes.md)
+- [FAQ](src/docs/faq.md)
+- [Release notes](src/docs/release_notes.md)
 - [How to contribute](CONTRIBUTING.md)
 
 ## License

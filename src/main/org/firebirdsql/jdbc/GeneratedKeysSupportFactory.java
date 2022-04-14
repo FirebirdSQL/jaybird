@@ -20,9 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.jdbc.parser.StatementParser;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -40,12 +37,9 @@ import java.util.Set;
  */
 final class GeneratedKeysSupportFactory {
 
-    static final String GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE =
-            "Generated keys functionality not available, most likely cause: ";
     static final String REASON_NO_RETURNING_SUPPORT =
             "This version of Firebird does not support retrieving generated keys (support was added in Firebird 2.0)";
     static final String REASON_EXPLICITLY_DISABLED = "disabled through connection property";
-    private static final String REASON_NO_ANTLR = "antlr-runtime not available on classpath";
     private static final String GENERATED_KEYS_ENABLED_DEFAULT = "default";
     private static final String GENERATED_KEYS_DISABLED = "disabled";
     private static final String GENERATED_KEYS_IGNORED = "ignored";
@@ -99,8 +93,7 @@ final class GeneratedKeysSupportFactory {
      *         {@code default} / {@code null} / empty string, or a list of query types to enable
      * @param fbDatabaseMetaData
      *         Database metadata object
-     * @return Appropriate generated keys support determined by config value, Firebird feature support and availability
-     * of ANTLR on the the classpath.
+     * @return Appropriate generated keys support determined by config value, and Firebird feature support.
      * @throws SQLException
      *         if a database access error occurs while determining feature support
      */
@@ -113,8 +106,6 @@ final class GeneratedKeysSupportFactory {
             return DisabledGeneratedKeysSupport.EXPLICITLY_DISABLED;
         } else if (GENERATED_KEYS_IGNORED.equals(normalizedConfigValue)) {
             return IgnoredGeneratedKeysSupport.INSTANCE;
-        } else if (!isGeneratedKeysSupportLoaded()) {
-            return DisabledGeneratedKeysSupport.PARSER_NOT_LOADED;
         } else {
             Set<GeneratedKeysSupport.QueryType> returningSupport =
                     GeneratedKeysSupport.QueryType.returningSupportForVersion(
@@ -123,14 +114,14 @@ final class GeneratedKeysSupportFactory {
             if (returningSupport.isEmpty()) {
                 return new DisabledGeneratedKeysSupport(REASON_NO_RETURNING_SUPPORT);
             } else if (GENERATED_KEYS_ENABLED_DEFAULT.equals(normalizedConfigValue)) {
-                return new DefaultGeneratedKeysSupport(ParserHolder.PARSER, fbDatabaseMetaData, returningSupport);
+                return new DefaultGeneratedKeysSupport(fbDatabaseMetaData, returningSupport);
             } else {
                 Set<GeneratedKeysSupport.QueryType> enabledTypes =
                         getEnabledTypes(normalizedConfigValue, returningSupport);
                 if (enabledTypes.isEmpty()) {
                     return IgnoredGeneratedKeysSupport.INSTANCE;
                 }
-                return new DefaultGeneratedKeysSupport(ParserHolder.PARSER, fbDatabaseMetaData, enabledTypes);
+                return new DefaultGeneratedKeysSupport(fbDatabaseMetaData, enabledTypes);
             }
         }
     }
@@ -151,19 +142,6 @@ final class GeneratedKeysSupportFactory {
     }
 
     /**
-     * Indicates if generated keys support has been loaded and available for use.
-     * <p>
-     * This method returns {@code false} when the antlr-runtime is not on the classpath or the {@link StatementParser}
-     * implementation could not be loaded for other reasons.
-     * </p>
-     *
-     * @return {@code true} if generated keys can be used in the driver (assuming the Firebird version supports it)
-     */
-    static boolean isGeneratedKeysSupportLoaded() {
-        return ParserHolder.PARSER != null;
-    }
-
-    /**
      * The default generated keys support, either based on the capabilities of Firebird or on a reduced set based on
      * configuration.
      *
@@ -171,16 +149,14 @@ final class GeneratedKeysSupportFactory {
      */
     private static final class DefaultGeneratedKeysSupport implements GeneratedKeysSupport {
 
-        private final StatementParser parser;
         private final FirebirdDatabaseMetaData fbDatabaseMetaData;
         private final Set<QueryType> supportedQueryTypes;
 
-        private DefaultGeneratedKeysSupport(StatementParser parser, FirebirdDatabaseMetaData fbDatabaseMetaData,
+        private DefaultGeneratedKeysSupport(FirebirdDatabaseMetaData fbDatabaseMetaData,
                 Set<QueryType> supportedQueryTypes) {
             assert !supportedQueryTypes.contains(QueryType.UNSUPPORTED)
                     : "supportedQueryTypes should not contain UNSUPPORTED";
             assert !supportedQueryTypes.isEmpty() : "At least one query type should be present";
-            this.parser = parser;
             this.fbDatabaseMetaData = fbDatabaseMetaData;
             this.supportedQueryTypes = supportedQueryTypes;
         }
@@ -190,11 +166,11 @@ final class GeneratedKeysSupportFactory {
             switch (autoGeneratedKeys) {
             case Statement.NO_GENERATED_KEYS:
                 return GeneratedKeysQueryBuilder
-                        .create(parser, sql, supportedQueryTypes)
+                        .create(sql, supportedQueryTypes)
                         .forNoGeneratedKeysOption();
             case Statement.RETURN_GENERATED_KEYS:
                 return GeneratedKeysQueryBuilder
-                        .create(parser, sql, supportedQueryTypes)
+                        .create(sql, supportedQueryTypes)
                         .forReturnGeneratedKeysOption(fbDatabaseMetaData);
             default:
                 throw new FbExceptionBuilder()
@@ -206,14 +182,14 @@ final class GeneratedKeysSupportFactory {
         @Override
         public Query buildQuery(String sql, int[] columnIndexes) throws SQLException {
             return GeneratedKeysQueryBuilder
-                    .create(parser, sql, supportedQueryTypes)
+                    .create(sql, supportedQueryTypes)
                     .forColumnsByIndex(columnIndexes, fbDatabaseMetaData);
         }
 
         @Override
         public Query buildQuery(String sql, String[] columnNames) throws SQLException {
             return GeneratedKeysQueryBuilder
-                    .create(parser, sql, supportedQueryTypes)
+                    .create(sql, supportedQueryTypes)
                     .forColumnsByName(columnNames);
         }
 
@@ -240,8 +216,6 @@ final class GeneratedKeysSupportFactory {
     private static final class DisabledGeneratedKeysSupport implements GeneratedKeysSupport {
         private static final DisabledGeneratedKeysSupport EXPLICITLY_DISABLED =
                 new DisabledGeneratedKeysSupport(REASON_EXPLICITLY_DISABLED);
-        private static final DisabledGeneratedKeysSupport PARSER_NOT_LOADED =
-                new DisabledGeneratedKeysSupport(REASON_NO_ANTLR);
 
         private final String reasonDisabled;
 
@@ -335,31 +309,4 @@ final class GeneratedKeysSupportFactory {
             return new Query(false, sql);
         }
     }
-
-    /**
-     * Initialization-on-demand depending on classloading behavior specified in JLS 12.4
-     */
-    private static final class ParserHolder {
-        private static final StatementParser PARSER;
-
-        static {
-            // Attempt to load statement parser
-            StatementParser temp = null;
-            try {
-                temp = (StatementParser) Class.forName("org.firebirdsql.jdbc.parser.StatementParserImpl")
-                        .getDeclaredConstructor()
-                        .newInstance();
-            } catch (Throwable ex) {
-                // Unable to load class of parser implementation, antlr4-runtime not in path
-                Logger log = LoggerFactory.getLogger(GeneratedKeysSupport.class);
-                String message = "Unable to load generated key parser. " + GENERATED_KEYS_FUNCTIONALITY_NOT_AVAILABLE
-                        + REASON_NO_ANTLR;
-                log.error(message + ": " + ex + "; see debug level for stacktrace");
-                log.debug(message, ex);
-            } finally {
-                PARSER = temp;
-            }
-        }
-    }
-
 }

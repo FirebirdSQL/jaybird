@@ -19,7 +19,11 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.encodings.IEncodingFactory;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.impl.DbAttachInfo;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 
 import java.sql.SQLException;
 
@@ -55,6 +59,30 @@ public final class WireDatabaseConnection extends WireConnection<IConnectionProp
     public WireDatabaseConnection(IConnectionProperties connectionProperties, IEncodingFactory encodingFactory,
             ProtocolCollection protocols) throws SQLException {
         super(connectionProperties, encodingFactory, protocols);
+    }
+
+    @Override
+    protected DbAttachInfo toDbAttachInfo(IConnectionProperties attachProperties) throws SQLException {
+        final DbAttachInfo initialDbAttachInfo = DbAttachInfo.of(attachProperties);
+
+        DbAttachInfo dbAttachInfo = initialDbAttachInfo.hasServerName()
+                ? initialDbAttachInfo
+                : DbAttachInfo.parseConnectString(initialDbAttachInfo.getAttachObjectName());
+
+        if (!dbAttachInfo.hasServerName()) {
+            // fallback to localhost (preserves backwards compatibility when serverName/host defaulted to localhost)
+            dbAttachInfo = dbAttachInfo.withServerName(PropertyConstants.DEFAULT_SERVER_NAME);
+        }
+
+        if (!dbAttachInfo.hasAttachObjectName()) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    .messageParameter(initialDbAttachInfo.getAttachObjectName())
+                    .messageParameter("null or empty database name in connection string")
+                    .toFlatSQLException();
+        }
+
+        return dbAttachInfo;
     }
 
     @Override

@@ -59,8 +59,8 @@ public class DatabaseExistsRule implements TestRule {
 
     private void checkDatabaseExists() {
         FBStatisticsManager statisticsManager = new FBStatisticsManager(FBTestProperties.getGdsType());
-        statisticsManager.setHost(FBTestProperties.DB_SERVER_URL);
-        statisticsManager.setPort(FBTestProperties.DB_SERVER_PORT);
+        statisticsManager.setServerName(FBTestProperties.DB_SERVER_URL);
+        statisticsManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         statisticsManager.setUser(FBTestProperties.DB_USER);
         statisticsManager.setPassword(FBTestProperties.DB_PASSWORD);
         statisticsManager.setDatabase(databaseName);

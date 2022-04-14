@@ -25,6 +25,9 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Calendar;
 
 /**
@@ -33,11 +36,17 @@ import java.util.Calendar;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     FBTimestampField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
+    }
+
+    @Override
+    public Object getObject() throws SQLException {
+        return getTimestamp();
     }
 
     public String getString() throws SQLException {
@@ -52,10 +61,22 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return new java.sql.Date(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
     }
 
+    @Override
+    LocalDate getLocalDate() throws SQLException {
+        LocalDateTime localDateTime = getLocalDateTime();
+        return localDateTime != null ? localDateTime.toLocalDate() : null;
+    }
+
     public Time getTime(Calendar cal) throws SQLException {
         if (isNull()) return null;
 
         return new java.sql.Time(getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal).getTime());
+    }
+
+    @Override
+    LocalTime getLocalTime() throws SQLException {
+        LocalDateTime localDateTime = getLocalDateTime();
+        return localDateTime != null ? localDateTime.toLocalTime() : null;
     }
 
     public Timestamp getTimestamp(Calendar cal) throws SQLException {
@@ -64,40 +85,38 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
         return getDatatypeCoder().decodeTimestampCalendar(getFieldData(), cal);
     }
 
-    public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        if (isNull()) return null;
+        return getDatatypeCoder().decodeLocalDateTime(getFieldData());
+    }
 
-        setTimestamp(Timestamp.valueOf(value));
+    public void setString(String value) throws SQLException {
+        setTimestamp(fromString(value, Timestamp::valueOf));
     }
 
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
 
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(new java.sql.Timestamp(value.getTime()), cal));
     }
 
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeTimestampCalendar(value, cal));
+    }
+
+    @Override
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        if (setWhenNull(value)) return;
+        setFieldData(getDatatypeCoder().encodeLocalDateTime(value));
     }
 
     @Override
@@ -108,10 +127,7 @@ class FBTimestampField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (raw == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeTimestampRaw(raw));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -342,7 +342,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                     expectedResponseCount = 0;
                                     SQLWarning sqlWarning = new SQLWarning(
                                             "Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                    log.warn(sqlWarning.toString() + "; see debug level for stacktrace");
+                                    log.warn(sqlWarning + "; see debug level for stacktrace");
                                     log.debug(sqlWarning.toString(), sqlWarning);
                                     statementWarningCallback.processWarning(sqlWarning);
                                 }

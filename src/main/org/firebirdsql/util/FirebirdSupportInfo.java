@@ -41,7 +41,7 @@ import java.sql.SQLException;
  * Primary reason for existence of this class is to support version dependent functionality in Jaybird or
  * version dependent tests in the Jaybird test suite, so feature checks are only added when they are necessary for
  * Jaybird or the test suite. That said: if you miss feature checks, don't hesitate to create an issue in
- * the <a href="http://tracker.firebirdsql.org/browse/JDBC">Jaybird tracker</a>.
+ * the <a href="https://github.com/FirebirdSQL/jaybird/issues/">Jaybird tracker</a>.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -231,6 +231,13 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsReturningAll() {
         return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when {@code RETURNING} supports multiple rows, {@code false} only singleton results
+     */
+    public boolean supportsMultiRowReturning() {
+        return isVersionEqualOrAbove(5, 0);
     }
 
     /**
@@ -437,6 +444,14 @@ public final class FirebirdSupportInfo {
         return isVersionEqualOrAbove(3, 0);
     }
 
+    public boolean supportsWireCryptArc4() {
+        return isVersionEqualOrAbove(3, 0);
+    }
+
+    public boolean supportsWireCryptChaCha() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
     /**
      * @return {@code true} when zlib wire compression is supported
      */
@@ -513,7 +528,9 @@ public final class FirebirdSupportInfo {
         } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
             return 50;
         } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
-            return 53;
+            return 54;
+        } else if (databaseMajorVersion == 5 && databaseMinorVersion == 0) {
+            return 56;
         } else {
             return -1;
         }
@@ -559,6 +576,45 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsStatementTimeouts() {
         return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports statement unprepare ({@code DSQL_unprepare})
+     */
+    public boolean supportsStatementUnprepare() {
+        return isVersionEqualOrAbove(2, 5);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports NBackup backup with GUID
+     */
+    public boolean supportsNBackupWithGuid() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports NBackup in-place restore
+     */
+    public boolean supportsNBackupInPlaceRestore() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports NBackup fixup
+     */
+    public boolean supportsNBackupFixup() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird version supports NBackup preserve sequence
+     */
+    public boolean supportsNBackupPreserveSequence() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    public boolean isWindows() {
+        return serverVersion.getPlatform().equals("WI");
     }
 
     /**

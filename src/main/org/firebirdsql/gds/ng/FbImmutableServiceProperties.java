@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.ng;
 
+import java.util.Objects;
+
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IServiceProperties}.
  *
@@ -27,8 +29,6 @@ package org.firebirdsql.gds.ng;
  */
 public final class FbImmutableServiceProperties extends AbstractImmutableAttachProperties<IServiceProperties>
         implements IServiceProperties {
-
-    private final String serviceName;
 
     /**
      * Copy constructor for FbServiceProperties.
@@ -41,22 +41,6 @@ public final class FbImmutableServiceProperties extends AbstractImmutableAttachP
      */
     public FbImmutableServiceProperties(IServiceProperties src) {
         super(src);
-        serviceName = src.getServiceName();
-    }
-
-    @Override
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    @Override
-    public void setServiceName(String serviceName) {
-        immutable();
-    }
-
-    @Override
-    public String getAttachObjectName() {
-        return getServiceName();
     }
 
     @Override
@@ -69,4 +53,12 @@ public final class FbImmutableServiceProperties extends AbstractImmutableAttachP
     public IServiceProperties asNewMutable() {
         return new FbServiceProperties(this);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FbImmutableServiceProperties)) return false;
+        return super.equals(o);
+    }
+
 }

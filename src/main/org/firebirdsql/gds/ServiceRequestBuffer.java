@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -25,6 +23,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.gds;
+
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 
 /**
  * Instance of this interface represents a Service Request Buffer from the
@@ -145,13 +145,13 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * **********************************************************************
      * Parameters for ACTION_BACKUP call.
      */
-    int BACKUP_DB_NAME                  = ServiceParameterBuffer.DBNAME;
+    int BACKUP_DB_NAME                  = SpbItems.isc_spb_dbname;
     int BACKUP_FILE                     = ISCConstants.isc_spb_bkp_file;
     int BACKUP_LENGTH                   = ISCConstants.isc_spb_bkp_length;
     int BACKUP_FACTOR                   = ISCConstants.isc_spb_bkp_factor;
 
     // Backup operation options, each constant is a bit in a bit mask.
-    int BACKUP_OPTIONS                  = ServiceParameterBuffer.OPTIONS;
+    int BACKUP_OPTIONS                  = SpbItems.isc_spb_options;
     
     // Each constant below represents a bit in a bit mask.
     int BACKUP_IGNORE_CHECKSUMS         = ISCConstants.isc_spb_bkp_ignore_checksums;
@@ -167,7 +167,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * **********************************************************************
      * Parameters for ACTION_RESTORE call.
      */
-    int RESTORE_DB_NAME                 = ServiceParameterBuffer.DBNAME;
+    int RESTORE_DB_NAME                 = SpbItems.isc_spb_dbname;
     int RESTORE_BACKUP_PATH             = ServiceRequestBuffer.BACKUP_FILE;
     int RESTORE_LENGTH                  = ISCConstants.isc_spb_res_length;
     int RESTORE_BUFFERS                 = ISCConstants.isc_spb_res_buffers;
@@ -179,7 +179,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int RESTORE_ACCESS_MODE_READWRITE   = ISCConstants.isc_spb_res_am_readwrite;
     
     // Restore operation options
-    int RESTORE_OPTIONS                 = ServiceParameterBuffer.OPTIONS;
+    int RESTORE_OPTIONS                 = SpbItems.isc_spb_options;
     
     // Each constant below represents a bit in a bit mask.
     int RESTORE_DEACTIVATE_IDX          = ISCConstants.isc_spb_res_deactivate_idx;
@@ -194,7 +194,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * **********************************************************************
      * Parameters for setting database properties.
      */
-    int PROPS_DB_NAME                   = ServiceParameterBuffer.DBNAME;
+    int PROPS_DB_NAME                   = SpbItems.isc_spb_dbname;
     int PROPS_BUFFERS                   = ISCConstants.isc_spb_prp_page_buffers;
     int PROPS_SWEEP_INTERVAL            = ISCConstants.isc_spb_prp_sweep_interval;
     int PROPS_SHUTDOWN_DB               = ISCConstants.isc_spb_prp_shutdown_db;
@@ -218,7 +218,7 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
     int PROPS_ACCESS_MODE_READWRITE     = ISCConstants.isc_spb_prp_am_readwrite;
     
     // Database property options
-    int PROPS_OPTIONS                   = ServiceParameterBuffer.OPTIONS;
+    int PROPS_OPTIONS                   = SpbItems.isc_spb_options;
     
     // Each constant below represents a bit in a bit mask
     int PROPS_ACTIVATE_SHADOW           = ISCConstants.isc_spb_prp_activate;
@@ -228,14 +228,14 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * **********************************************************************
      * Parameters for database repair.
      */
-    int REPAIR_DB_NAME                  = ServiceParameterBuffer.DBNAME;
+    int REPAIR_DB_NAME                  = SpbItems.isc_spb_dbname;
     int REPAIR_COMMIT_TRANSACTIONS      = ISCConstants.isc_spb_rpr_commit_trans;
     int REPAIR_ROLLBACK_TRANSACTIONS    = ISCConstants.isc_spb_rpr_rollback_trans;
     int REPAIR_RECOVER_TWO_PHASE        = ISCConstants.isc_spb_rpr_recover_two_phase;
     int REPAIR_TRANSACTION_ID           = ISCConstants.isc_spb_tra_id;
     
     // Database repair options
-    int REPAIR_OPTIONS                  = ServiceParameterBuffer.OPTIONS;
+    int REPAIR_OPTIONS                  = SpbItems.isc_spb_options;
     
     // Each constant below represents a bit in a bit mask.
     int REPAIR_VALIDATE_DB              = ISCConstants.isc_spb_rpr_validate_db;
@@ -251,10 +251,10 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * **********************************************************************
      * Parameters for database statistics.
      */
-    int STATS_DB_NAME                   = ServiceParameterBuffer.DBNAME;
+    int STATS_DB_NAME                   = SpbItems.isc_spb_dbname;
     
     // Database statistics options.
-    int STATS_OPTIONS                   = ServiceParameterBuffer.OPTIONS;
+    int STATS_OPTIONS                   = SpbItems.isc_spb_dbname;
     
     // Each constant below represents a bit in a bit mask.
     int STATS_DATA_PAGES                = ISCConstants.isc_spb_sts_data_pages;

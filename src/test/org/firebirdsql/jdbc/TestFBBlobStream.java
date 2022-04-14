@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.JdbcResourceHelper;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +69,7 @@ public class TestFBBlobStream extends FBJUnit4TestBase {
     @Before
     public void setUp() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.put("isc_dpb_use_stream_blobs", "");
+        props.put(PropertyNames.useStreamBlobs, "");
 
         connection = DriverManager.getConnection(getUrl(), props);
 

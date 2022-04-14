@@ -22,7 +22,6 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 
 /**
@@ -60,10 +59,7 @@ class FBTimestampTzField extends AbstractWithTimeZoneField {
 
     @Override
     public void setDate(java.sql.Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         OffsetDateTime offsetDateTime = value.toLocalDate()
                 .atStartOfDay()
@@ -83,20 +79,6 @@ class FBTimestampTzField extends AbstractWithTimeZoneField {
         if (isNull()) return null;
 
         return String.valueOf(getOffsetDateTime());
-    }
-
-    @Override
-    public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        try {
-            setStringParse(value);
-        } catch (DateTimeParseException e) {
-            throw new TypeConversionException("Unable to convert value '" + value + "' to type TIMESTAMP WITH TIME ZONE", e);
-        }
     }
 
 }

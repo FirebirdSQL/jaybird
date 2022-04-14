@@ -42,6 +42,12 @@ final class FBBooleanField extends FBField {
         super(fieldDescriptor, dataProvider, requiredType);
     }
 
+    @Override
+    public Object getObject() throws SQLException {
+        if (isNull()) return null;
+        return getBoolean();
+    }
+
     public byte getByte() throws SQLException {
         if (isNull()) {
             return BYTE_NULL_VALUE;

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,20 +18,20 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+import org.junit.jupiter.api.Test;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests for {@link FbConnectionProperties}
@@ -41,15 +39,12 @@ import static org.junit.Assert.assertNull;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FbConnectionPropertiesTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class FbConnectionPropertiesTest {
 
     private final FbConnectionProperties info = new FbConnectionProperties();
 
     @Test
-    public void testDatabaseName() {
+    void testDatabaseName() {
         assertNull(info.getDatabaseName());
         final String databaseName = "testDatabaseName";
         info.setDatabaseName(databaseName);
@@ -57,23 +52,23 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testServerName() {
-        assertEquals("localhost", info.getServerName());
+    void testServerName() {
+        assertNull(info.getServerName());
         final String serverName = "testServerName";
         info.setServerName(serverName);
         assertEquals(serverName, info.getServerName());
     }
 
     @Test
-    public void testPortNumber() {
-        assertEquals(IConnectionProperties.DEFAULT_PORT, info.getPortNumber());
+    void testPortNumber() {
+        assertEquals(PropertyConstants.DEFAULT_PORT, info.getPortNumber());
         final int portNumber = 1234;
         info.setPortNumber(portNumber);
         assertEquals(portNumber, info.getPortNumber());
     }
 
     @Test
-    public void testUser() {
+    void testUser() {
         assertNull(info.getUser());
         final String user = "testUser";
         info.setUser(user);
@@ -81,7 +76,7 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testPassword() {
+    void testPassword() {
         assertNull(info.getPassword());
         final String password = "testPassword";
         info.setPassword(password);
@@ -89,7 +84,7 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testCharSet() {
+    void testCharSet() {
         assertNull(info.getCharSet());
         final String charSet = "UTF-8";
         info.setCharSet(charSet);
@@ -99,7 +94,7 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testEncoding() {
+    void testEncoding() {
         assertNull(info.getEncoding());
         final String encoding = "UTF8";
         info.setEncoding(encoding);
@@ -109,7 +104,7 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testRoleName() {
+    void testRoleName() {
         assertNull(info.getRoleName());
         final String roleName = "ROLE1";
         info.setRoleName(roleName);
@@ -117,15 +112,15 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testSqlDialect() {
-        assertEquals(IConnectionProperties.DEFAULT_DIALECT, info.getConnectionDialect());
-        final short sqlDialect = 2;
-        info.setConnectionDialect(sqlDialect);
-        assertEquals(sqlDialect, info.getConnectionDialect());
+    void testSqlDialect() {
+        assertEquals(PropertyConstants.DEFAULT_DIALECT, info.getSqlDialect());
+        final int sqlDialect = 2;
+        info.setSqlDialect(sqlDialect);
+        assertEquals(sqlDialect, info.getSqlDialect());
     }
 
     @Test
-    public void testSocketBufferSize() {
+    void testSocketBufferSize() {
         assertEquals(IConnectionProperties.DEFAULT_SOCKET_BUFFER_SIZE, info.getSocketBufferSize());
         final int socketBufferSize = 64 * 1024;
         info.setSocketBufferSize(socketBufferSize);
@@ -133,47 +128,48 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testBuffersNumber() {
-        assertEquals(IConnectionProperties.DEFAULT_BUFFERS_NUMBER, info.getPageCacheSize());
+    void testBuffersNumber() {
+        assertEquals(PropertyConstants.DEFAULT_PAGE_CACHE_SIZE, info.getPageCacheSize());
         final int buffersNumber = 2048;
         info.setPageCacheSize(buffersNumber);
         assertEquals(buffersNumber, info.getPageCacheSize());
     }
 
     @Test
-    public void testSoTimeout() {
-        assertEquals(IConnectionProperties.DEFAULT_SO_TIMEOUT, info.getSoTimeout());
+    void testSoTimeout() {
+        assertEquals(IAttachProperties.DEFAULT_SO_TIMEOUT, info.getSoTimeout());
         final int soTimeout = 4000;
         info.setSoTimeout(soTimeout);
         assertEquals(soTimeout, info.getSoTimeout());
     }
 
     @Test
-    public void testConnectTimeout() {
-        assertEquals(IConnectionProperties.DEFAULT_CONNECT_TIMEOUT, info.getConnectTimeout());
+    void testConnectTimeout() {
+        assertEquals(IAttachProperties.DEFAULT_CONNECT_TIMEOUT, info.getConnectTimeout());
         final int connectTimeout = 5;
         info.setConnectTimeout(connectTimeout);
         assertEquals(connectTimeout, info.getConnectTimeout());
     }
 
     @Test
-    public void testWireCrypt() {
-        assertEquals(WireCrypt.DEFAULT, info.getWireCrypt());
+    void testWireCrypt() {
+        assertEquals(WireCrypt.DEFAULT.name(), info.getWireCrypt());
+        assertEquals(WireCrypt.DEFAULT, info.getWireCryptAsEnum());
         final WireCrypt wireCrypt = WireCrypt.DISABLED;
-        info.setWireCrypt(wireCrypt);
-        assertEquals(wireCrypt, info.getWireCrypt());
+        info.setWireCryptAsEnum(wireCrypt);
+        assertEquals(wireCrypt.name(), info.getWireCrypt());
+        assertEquals(wireCrypt, info.getWireCryptAsEnum());
     }
 
     @Test
-    public void testWireCryptNullPointerExceptionOnNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("wireCrypt");
-
-        info.setWireCrypt(null);
+    void testWireCryptNullPointerExceptionOnNull() {
+        assertThatExceptionOfType(NullPointerException.class)
+                .isThrownBy(() -> info.setWireCryptAsEnum(null))
+                .withMessage("wireCrypt");
     }
 
     @Test
-    public void testDbCryptConfig() {
+    void testDbCryptConfig() {
         assertNull(info.getDbCryptConfig());
         final String dbCryptConfig = "ABCDEF";
         info.setDbCryptConfig(dbCryptConfig);
@@ -181,87 +177,68 @@ public class FbConnectionPropertiesTest {
     }
 
     @Test
-    public void testAuthPlugins() {
-        assertNull(info.getAuthPlugins());
+    void testAuthPlugins() {
+        assertEquals(PropertyConstants.DEFAULT_AUTH_PLUGINS, info.getAuthPlugins());
         final String authPlugins = "XYZ,ABC";
         info.setAuthPlugins(authPlugins);
         assertEquals(authPlugins, info.getAuthPlugins());
     }
 
     @Test
-    public void testCopyConstructor() throws Exception {
+    void testConnectionPropertyValues() {
+        info.setSqlDialect(2);
+        info.setConnectTimeout(15);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
+        info.setDbCryptConfig("XYZcrypt");
+        info.setAuthPlugins("XXXauth");
+
+        ConnectionPropertyRegistry registry = ConnectionPropertyRegistry.getInstance();
+        Map<ConnectionProperty, Object> expected = new HashMap<>();
+        expected.put(registry.getByName("sqlDialect"), 2);
+        expected.put(registry.getByName("connectTimeout"), 15);
+        expected.put(registry.getByName("wireCrypt"), WireCrypt.REQUIRED.name());
+        expected.put(registry.getByName("dbCryptConfig"), "XYZcrypt");
+        expected.put(registry.getByName("authPlugins"), "XXXauth");
+        // Default value set through FbConnectionProperties()
+        expected.put(registry.getByName("sessionTimeZone"), TimeZone.getDefault().getID());
+
+        assertThat(info.connectionPropertyValues()).isEqualTo(expected);
+    }
+
+    @Test
+    void testCopyConstructor() {
         info.setDatabaseName("testValue");
         info.setServerName("xyz");
         info.setPortNumber(1203);
-        info.setConnectionDialect((short) 2);
+        info.setSqlDialect(2);
         info.setConnectTimeout(15);
-        info.setWireCrypt(WireCrypt.REQUIRED);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
         info.setDbCryptConfig("XYZcrypt");
         info.setAuthPlugins("XXXauth");
 
         FbConnectionProperties copy = new FbConnectionProperties(info);
-        BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class);
-        for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-            Method method = descriptor.getReadMethod();
-            if (method == null) continue;
-            // Compare all properties
-            assertEquals(method.invoke(info), method.invoke(copy));
-        }
+        assertThat(copy)
+                .extracting("databaseName", "serverName", "portNumber")
+                .isEqualTo(Arrays.<Object>asList("testValue", "xyz", 1203));
+        assertThat(info.connectionPropertyValues()).isEqualTo(copy.connectionPropertyValues());
     }
 
     @Test
-    public void testAsImmutable() throws Exception {
-        // TODO Explicitly test properties instead of using reflection
-        Map<String, Object> testValues = new HashMap<>();
-        int intValue = 1;
-        BeanInfo beanInfo = Introspector.getBeanInfo(FbConnectionProperties.class, Object.class);
-        for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-            if ("extraDatabaseParameters".equals(descriptor.getName())) {
-                // Property extraDatabaseParameters has no setter
-                continue;
-            }
-            Method method = descriptor.getWriteMethod();
-            if (method == null) {
-                continue;
-            }
-            Class<?> parameterType = method.getParameterTypes()[0];
-            if (parameterType == int.class) {
-                Object value = intValue++;
-                method.invoke(info, value);
-                testValues.put(descriptor.getName(), value);
-            } else if (parameterType == short.class) {
-                Object value = (short) (intValue++);
-                method.invoke(info, value);
-                testValues.put(descriptor.getName(), value);
-            } else if (parameterType == String.class) {
-                method.invoke(info, method.getName());
-                testValues.put(descriptor.getName(), method.getName());
-            } else if (parameterType == boolean.class) {
-                method.invoke(info, true);
-                testValues.put(descriptor.getName(), true);
-            } else if (parameterType == WireCrypt.class) {
-                method.invoke(info, WireCrypt.REQUIRED);
-                testValues.put(descriptor.getName(), WireCrypt.REQUIRED);
-            } else {
-                throw new IllegalStateException("Unexpected setter type: " + parameterType);
-            }
-        }
+    void testAsImmutable() {
+        info.setDatabaseName("testValue");
+        info.setServerName("xyz");
+        info.setPortNumber(1203);
+        info.setSqlDialect(2);
+        info.setConnectTimeout(15);
+        info.setWireCryptAsEnum(WireCrypt.REQUIRED);
+        info.setDbCryptConfig("XYZcrypt");
+        info.setAuthPlugins("XXXauth");
 
         IConnectionProperties immutable = info.asImmutable();
-        BeanInfo immutableBean = Introspector.getBeanInfo(FbImmutableConnectionProperties.class, Object.class);
-        for (PropertyDescriptor descriptor : immutableBean.getPropertyDescriptors()) {
-            if (Arrays.asList("attachObjectName").contains(descriptor.getName())) {
-                continue;
-            }
-            if ("extraDatabaseParameters".equals(descriptor.getName())) {
-                // Property extraDatabaseParameters always returns a buffer
-                // TODO: Add or update test(s) to include extraDatabaseParameters
-                continue;
-            }
-            Method method = descriptor.getReadMethod();
-            Object value = method.invoke(immutable);
-            String propertyName = descriptor.getName();
-            assertEquals(String.format("Value for property %s doesn't match expected value", propertyName), testValues.get(propertyName), value);
-        }
+        assertThat(immutable)
+                .isInstanceOf(FbImmutableConnectionProperties.class)
+                .extracting("databaseName", "serverName", "portNumber")
+                .isEqualTo(Arrays.<Object>asList("testValue", "xyz", 1203));
+        assertThat(info.connectionPropertyValues()).isEqualTo(immutable.connectionPropertyValues());
     }
 }

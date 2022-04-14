@@ -18,15 +18,16 @@
  */
 package org.firebirdsql.util;
 
+import java.util.Base64;
+
 /**
  * Helper methods for byte arrays.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
+@InternalApi
 public final class ByteArrayHelper {
-
-    private static final Base64Decoder BASE_64_DECODER = new Base64DecoderImpl();
 
     //@formatter:off
     private static final char[] BYTE_2_HEX=(
@@ -102,7 +103,39 @@ public final class ByteArrayHelper {
      * @return byte array after decoding
      */
     public static byte[] fromBase64String(String base64) {
-        return BASE_64_DECODER.decodeBase64(base64);
+        return Base64.getDecoder().decode(base64);
+    }
+
+    /**
+     * Decodes a base64url encoded string to a byte array.
+     * <p>
+     * Base64url applies the &quot;URL and Filename safe&quot; Base 64 Alphabet.
+     * </p>
+     *
+     * @param base64url
+     *         Base64url encoded data
+     * @return byte array after decoding
+     * @since 5
+     */
+    public static byte[] fromBase64urlString(String base64url) {
+        return Base64.getUrlDecoder().decode(base64url);
+    }
+
+    /**
+     * Returns the index of the first occurrence of {@code b} in {@code array}.
+     *
+     * @param array
+     *         Array to search
+     * @param b
+     *         byte to find
+     * @return the index of the first occurrence of {@code b}, or {@code -1} if {@code b} is not in the array
+     * @since 5
+     */
+    public static int indexOf(byte[] array, byte b) {
+        for (int idx = 0; idx < array.length; idx++) {
+            if (array[idx] == b) return idx;
+        }
+        return -1;
     }
 
 }

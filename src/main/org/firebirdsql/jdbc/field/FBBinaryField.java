@@ -44,6 +44,11 @@ class FBBinaryField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getBytes();
+    }
+
+    @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
         return getDatatypeCoder().decodeString(getFieldData());
@@ -51,10 +56,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBytes(getDatatypeCoder().encodeString(value));
     }
@@ -68,10 +70,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setBytes(byte[] value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
@@ -89,10 +88,7 @@ class FBBinaryField extends FBField {
 
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
@@ -102,16 +98,15 @@ class FBBinaryField extends FBField {
         try {
             setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(InputStream.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         if (length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, (int) length,
@@ -121,7 +116,9 @@ class FBBinaryField extends FBField {
         try {
             setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(Reader.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 
@@ -135,10 +132,7 @@ class FBBinaryField extends FBField {
 
     @Override
     public void setRowId(RowId value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setBytes(value.getBytes());
     }

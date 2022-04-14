@@ -202,6 +202,29 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    public void unprepare() throws SQLException {
+        if (getDatabase().getServerVersion().isEqualOrAbove(2, 5)) {
+            try {
+                synchronized (getSynchronizationObject()) {
+                    StatementState currentState = getState();
+                    // Cannot unprepare if NEW, and unpreparing if ALLOCATED makes no sense
+                    if (!(currentState == StatementState.NEW || currentState == StatementState.ALLOCATED)) {
+                        // TODO This throws an exception if a transition to ALLOCATED is not allowed, consider if this
+                        //  is desired, or if checking validity of transition and only logging a warning is better
+                        switchState(StatementState.ALLOCATED);
+                        free(ISCConstants.DSQL_unprepare);
+                    }
+                }
+            } catch (SQLException e) {
+                exceptionListenerDispatcher.errorOccurred(e);
+                throw e;
+            }
+        } else {
+            closeCursor();
+        }
+    }
+
+    @Override
     public StatementState getState() {
         return state;
     }

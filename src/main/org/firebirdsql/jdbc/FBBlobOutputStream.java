@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,9 +18,8 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,8 +42,8 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         buf = new byte[owner.getBufferLength()];
 
         synchronized (owner.getSynchronizationObject()) {
-            DatabaseParameterBuffer dpb = owner.getGdsHelper().getDatabaseParameterBuffer();
-            boolean useStreamBlobs = dpb.hasArgument(DatabaseParameterBufferExtension.USE_STREAM_BLOBS);
+            IConnectionProperties props = owner.getGdsHelper().getConnectionProperties();
+            boolean useStreamBlobs = props.isUseStreamBlobs();
             blobHandle = owner.getGdsHelper().createBlob(!useStreamBlobs);
         }
 
@@ -208,7 +205,8 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
     }
 
     /**
-     * @throws IOException When this output stream has been closed.
+     * @throws IOException
+     *         When this output stream has been closed.
      */
     private void checkClosed() throws IOException {
         if (blobHandle == null || !blobHandle.isOpen()) {

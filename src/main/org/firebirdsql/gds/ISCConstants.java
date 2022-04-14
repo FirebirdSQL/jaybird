@@ -24,6 +24,10 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.jaybird.fb.constants.DpbItems;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
+
 /**
  * Constants for Firebird features, parameter blocks and errors.
  *
@@ -40,8 +44,9 @@ public interface ISCConstants {
     int SQL_DIALECT_V6             = 3;
     int SQL_DIALECT_CURRENT        = SQL_DIALECT_V6;
 
-    int DSQL_close   =  1;
-    int DSQL_drop    =  2;
+    int DSQL_close     = 1;
+    int DSQL_drop      = 2;
+    int DSQL_unprepare = 4;
 
     /************************/
     /* Blob seek parameters */
@@ -65,144 +70,206 @@ public interface ISCConstants {
     int isc_dpb_version1                = 1;
     int isc_dpb_version2                = 2;
 
-    int isc_dpb_cdd_pathname            = 1;
-    int isc_dpb_allocation              = 2;
-    int isc_dpb_journal                 = 3;
-    int isc_dpb_page_size               = 4;
-    int isc_dpb_num_buffers             = 5;
-    int isc_dpb_buffer_length           = 6;
-    int isc_dpb_debug                   = 7;
-    int isc_dpb_garbage_collect         = 8;
-    int isc_dpb_verify                  = 9;
-    int isc_dpb_sweep                   = 10;
-    int isc_dpb_enable_journal          = 11;
-    int isc_dpb_disable_journal         = 12;
-    int isc_dpb_dbkey_scope             = 13;
-    int isc_dpb_number_of_users         = 14;
-    int isc_dpb_trace                   = 15;
-    int isc_dpb_no_garbage_collect      = 16;
-    int isc_dpb_damaged                 = 17;
-    int isc_dpb_license                 = 18;
-    int isc_dpb_sys_user_name           = 19;
-    int isc_dpb_encrypt_key             = 20;
-    int isc_dpb_activate_shadow         = 21;
-    int isc_dpb_sweep_interval          = 22;
-    int isc_dpb_delete_shadow           = 23;
-    int isc_dpb_force_write             = 24;
-    int isc_dpb_begin_log               = 25;
-    int isc_dpb_quit_log                = 26;
-    int isc_dpb_no_reserve              = 27;
-    int isc_dpb_user_name               = 28;
-    int isc_dpb_user                    = isc_dpb_user_name;
-    int isc_dpb_password                = 29;
-    int isc_dpb_password_enc            = 30;
-    int isc_dpb_sys_user_name_enc       = 31;
-    int isc_dpb_interp                  = 32;
-    int isc_dpb_online_dump             = 33;
-    int isc_dpb_old_file_size           = 34;
-    int isc_dpb_old_num_files           = 35;
-    int isc_dpb_old_file                = 36;
-    int isc_dpb_old_start_page          = 37;
-    int isc_dpb_old_start_seqno         = 38;
-    int isc_dpb_old_start_file          = 39;
-    int isc_dpb_drop_walfile            = 40;
-    int isc_dpb_old_dump_id             = 41;
-    int isc_dpb_wal_backup_dir          = 42;
-    int isc_dpb_wal_chkptlen            = 43;
-    int isc_dpb_wal_numbufs             = 44;
-    int isc_dpb_wal_bufsize             = 45;
-    int isc_dpb_wal_grp_cmt_wait        = 46;
-    int isc_dpb_lc_messages             = 47;
-    int isc_dpb_lc_ctype                = 48;
-    int isc_dpb_cache_manager           = 49;
-    int isc_dpb_shutdown                = 50;
-    int isc_dpb_online                  = 51;
-    int isc_dpb_shutdown_delay          = 52;
-    int isc_dpb_reserved                = 53;
-    int isc_dpb_overwrite               = 54;
-    int isc_dpb_sec_attach              = 55;
-    int isc_dpb_disable_wal             = 56;
-    int isc_dpb_connect_timeout         = 57;
-    int isc_dpb_dummy_packet_interval   = 58;
-    int isc_dpb_gbak_attach             = 59;
-    int isc_dpb_sql_role_name           = 60;
-    int isc_dpb_set_page_buffers        = 61;
-    int isc_dpb_working_directory       = 62;
-    int isc_dpb_sql_dialect             = 63;
-    int isc_dpb_set_db_readonly         = 64;
-    int isc_dpb_set_db_sql_dialect      = 65;
-    int isc_dpb_gfix_attach             = 66;
-    int isc_dpb_gstat_attach            = 67;
-    int isc_dpb_set_db_charset          = 68;
+    @Deprecated
+    int isc_dpb_cdd_pathname            = DpbItems.isc_dpb_cdd_pathname;
+    @Deprecated
+    int isc_dpb_allocation              = DpbItems.isc_dpb_allocation;
+    @Deprecated
+    int isc_dpb_journal                 = DpbItems.isc_dpb_journal;
+    @Deprecated
+    int isc_dpb_page_size               = DpbItems.isc_dpb_page_size;
+    @Deprecated
+    int isc_dpb_num_buffers             = DpbItems.isc_dpb_num_buffers;
+    @Deprecated
+    int isc_dpb_buffer_length           = DpbItems.isc_dpb_buffer_length;
+    @Deprecated
+    int isc_dpb_debug                   = DpbItems.isc_dpb_debug;
+    @Deprecated
+    int isc_dpb_garbage_collect         = DpbItems.isc_dpb_garbage_collect;
+    @Deprecated
+    int isc_dpb_verify                  = DpbItems.isc_dpb_verify;
+    @Deprecated
+    int isc_dpb_sweep                   = DpbItems.isc_dpb_sweep;
+    @Deprecated
+    int isc_dpb_enable_journal          = DpbItems.isc_dpb_enable_journal;
+    @Deprecated
+    int isc_dpb_disable_journal         = DpbItems.isc_dpb_disable_journal;
+    @Deprecated
+    int isc_dpb_dbkey_scope             = DpbItems.isc_dpb_dbkey_scope;
+    @Deprecated
+    int isc_dpb_number_of_users         = DpbItems.isc_dpb_number_of_users;
+    @Deprecated
+    int isc_dpb_trace                   = DpbItems.isc_dpb_trace;
+    @Deprecated
+    int isc_dpb_no_garbage_collect      = DpbItems.isc_dpb_no_garbage_collect;
+    @Deprecated
+    int isc_dpb_damaged                 = DpbItems.isc_dpb_damaged;
+    @Deprecated
+    int isc_dpb_license                 = DpbItems.isc_dpb_license;
+    @Deprecated
+    int isc_dpb_sys_user_name           = DpbItems.isc_dpb_sys_user_name;
+    @Deprecated
+    int isc_dpb_encrypt_key             = DpbItems.isc_dpb_encrypt_key;
+    @Deprecated
+    int isc_dpb_activate_shadow         = DpbItems.isc_dpb_activate_shadow;
+    @Deprecated
+    int isc_dpb_sweep_interval          = DpbItems.isc_dpb_sweep_interval;
+    @Deprecated
+    int isc_dpb_delete_shadow           = DpbItems.isc_dpb_delete_shadow;
+    @Deprecated
+    int isc_dpb_force_write             = DpbItems.isc_dpb_force_write;
+    @Deprecated
+    int isc_dpb_begin_log               = DpbItems.isc_dpb_begin_log;
+    @Deprecated
+    int isc_dpb_quit_log                = DpbItems.isc_dpb_quit_log;
+    @Deprecated
+    int isc_dpb_no_reserve              = DpbItems.isc_dpb_no_reserve;
+    @Deprecated
+    int isc_dpb_user_name               = DpbItems.isc_dpb_user_name;
+    @Deprecated
+    int isc_dpb_user                    = DpbItems.isc_dpb_user;
+    @Deprecated
+    int isc_dpb_password                = DpbItems.isc_dpb_password;
+    @Deprecated
+    int isc_dpb_password_enc            = DpbItems.isc_dpb_password_enc;
+    @Deprecated
+    int isc_dpb_sys_user_name_enc       = DpbItems.isc_dpb_sys_user_name_enc;
+    @Deprecated
+    int isc_dpb_interp                  = DpbItems.isc_dpb_interp;
+    @Deprecated
+    int isc_dpb_online_dump             = DpbItems.isc_dpb_online_dump;
+    @Deprecated
+    int isc_dpb_old_file_size           = DpbItems.isc_dpb_old_file_size;
+    @Deprecated
+    int isc_dpb_old_num_files           = DpbItems.isc_dpb_old_num_files;
+    @Deprecated
+    int isc_dpb_old_file                = DpbItems.isc_dpb_old_file;
+    @Deprecated
+    int isc_dpb_old_start_page          = DpbItems.isc_dpb_old_start_page;
+    @Deprecated
+    int isc_dpb_old_start_seqno         = DpbItems.isc_dpb_old_start_seqno;
+    @Deprecated
+    int isc_dpb_old_start_file          = DpbItems.isc_dpb_old_start_file;
+    @Deprecated
+    int isc_dpb_drop_walfile            = DpbItems.isc_dpb_drop_walfile;
+    @Deprecated
+    int isc_dpb_old_dump_id             = DpbItems.isc_dpb_old_dump_id;
+    @Deprecated
+    int isc_dpb_wal_backup_dir          = DpbItems.isc_dpb_wal_backup_dir;
+    @Deprecated
+    int isc_dpb_wal_chkptlen            = DpbItems.isc_dpb_wal_chkptlen;
+    @Deprecated
+    int isc_dpb_wal_numbufs             = DpbItems.isc_dpb_wal_numbufs;
+    @Deprecated
+    int isc_dpb_wal_bufsize             = DpbItems.isc_dpb_wal_bufsize;
+    @Deprecated
+    int isc_dpb_wal_grp_cmt_wait        = DpbItems.isc_dpb_wal_grp_cmt_wait;
+    @Deprecated
+    int isc_dpb_lc_messages             = DpbItems.isc_dpb_lc_messages;
+    @Deprecated
+    int isc_dpb_lc_ctype                = DpbItems.isc_dpb_lc_ctype;
+    @Deprecated
+    int isc_dpb_cache_manager           = DpbItems.isc_dpb_cache_manager;
+    @Deprecated
+    int isc_dpb_shutdown                = DpbItems.isc_dpb_shutdown;
+    @Deprecated
+    int isc_dpb_online                  = DpbItems.isc_dpb_online;
+    @Deprecated
+    int isc_dpb_shutdown_delay          = DpbItems.isc_dpb_shutdown_delay;
+    @Deprecated
+    int isc_dpb_reserved                = DpbItems.isc_dpb_reserved;
+    @Deprecated
+    int isc_dpb_overwrite               = DpbItems.isc_dpb_overwrite;
+    @Deprecated
+    int isc_dpb_sec_attach              = DpbItems.isc_dpb_sec_attach;
+    @Deprecated
+    int isc_dpb_disable_wal             = DpbItems.isc_dpb_disable_wal;
+    @Deprecated
+    int isc_dpb_connect_timeout         = DpbItems.isc_dpb_connect_timeout;
+    @Deprecated
+    int isc_dpb_dummy_packet_interval   = DpbItems.isc_dpb_dummy_packet_interval;
+    @Deprecated
+    int isc_dpb_gbak_attach             = DpbItems.isc_dpb_gbak_attach;
+    @Deprecated
+    int isc_dpb_sql_role_name           = DpbItems.isc_dpb_sql_role_name;
+    @Deprecated
+    int isc_dpb_set_page_buffers        = DpbItems.isc_dpb_set_page_buffers;
+    @Deprecated
+    int isc_dpb_working_directory       = DpbItems.isc_dpb_working_directory;
+    @Deprecated
+    int isc_dpb_sql_dialect             = DpbItems.isc_dpb_sql_dialect;
+    @Deprecated
+    int isc_dpb_set_db_readonly         = DpbItems.isc_dpb_set_db_readonly;
+    @Deprecated
+    int isc_dpb_set_db_sql_dialect      = DpbItems.isc_dpb_set_db_sql_dialect;
+    @Deprecated
+    int isc_dpb_gfix_attach             = DpbItems.isc_dpb_gfix_attach;
+    @Deprecated
+    int isc_dpb_gstat_attach            = DpbItems.isc_dpb_gstat_attach;
+    @Deprecated
+    int isc_dpb_set_db_charset          = DpbItems.isc_dpb_set_db_charset;
 
     // Firebird 2.1 constants
-    int isc_dpb_gsec_attach             = 69;
-    int isc_dpb_address_path            = 70;
-    int isc_dpb_process_id              = 71;
-    int isc_dpb_no_db_triggers          = 72;
-    int isc_dpb_trusted_auth            = 73;
-    int isc_dpb_process_name            = 74;
+    @Deprecated
+    int isc_dpb_gsec_attach             = DpbItems.isc_dpb_gsec_attach;
+    @Deprecated
+    int isc_dpb_address_path            = DpbItems.isc_dpb_address_path;
+    @Deprecated
+    int isc_dpb_process_id              = DpbItems.isc_dpb_process_id;
+    @Deprecated
+    int isc_dpb_no_db_triggers          = DpbItems.isc_dpb_no_db_triggers;
+    @Deprecated
+    int isc_dpb_trusted_auth            = DpbItems.isc_dpb_trusted_auth;
+    @Deprecated
+    int isc_dpb_process_name            = DpbItems.isc_dpb_process_name;
 
     // Firebird 2.5 constants
-    int isc_dpb_trusted_role            = 75;
-    int isc_dpb_org_filename            = 76;
-    int isc_dpb_utf8_filename           = 77;
-    int isc_dpb_ext_call_depth          = 78;
+    @Deprecated
+    int isc_dpb_trusted_role            = DpbItems.isc_dpb_trusted_role;
+    @Deprecated
+    int isc_dpb_org_filename            = DpbItems.isc_dpb_org_filename;
+    @Deprecated
+    int isc_dpb_utf8_filename           = DpbItems.isc_dpb_utf8_filename;
+    @Deprecated
+    int isc_dpb_ext_call_depth          = DpbItems.isc_dpb_ext_call_depth;
 
     // Firebird 3.0 constants
-    int isc_dpb_auth_block				= 79;
-    int isc_dpb_client_version			= 80;
-    int isc_dpb_remote_protocol			= 81;
-    int isc_dpb_host_name				= 82;
-    int isc_dpb_os_user					= 83;
-    int isc_dpb_specific_auth_data      = 84;
-    int isc_dpb_auth_plugin_list		= 85;
-    int isc_dpb_auth_plugin_name		= 86;
-    int isc_dpb_config					= 87;
-    int isc_dpb_nolinger				= 88;
-    int isc_dpb_reset_icu				= 89;
-    int isc_dpb_map_attach              = 90;
+    @Deprecated
+    int isc_dpb_auth_block				= DpbItems.isc_dpb_auth_block;
+    @Deprecated
+    int isc_dpb_client_version			= DpbItems.isc_dpb_client_version;
+    @Deprecated
+    int isc_dpb_remote_protocol			= DpbItems.isc_dpb_remote_protocol;
+    @Deprecated
+    int isc_dpb_host_name				= DpbItems.isc_dpb_host_name;
+    @Deprecated
+    int isc_dpb_os_user					= DpbItems.isc_dpb_os_user;
+    @Deprecated
+    int isc_dpb_specific_auth_data      = DpbItems.isc_dpb_specific_auth_data;
+    @Deprecated
+    int isc_dpb_auth_plugin_list		= DpbItems.isc_dpb_auth_plugin_list;
+    @Deprecated
+    int isc_dpb_auth_plugin_name		= DpbItems.isc_dpb_auth_plugin_name;
+    @Deprecated
+    int isc_dpb_config					= DpbItems.isc_dpb_config;
+    @Deprecated
+    int isc_dpb_nolinger				= DpbItems.isc_dpb_nolinger;
+    @Deprecated
+    int isc_dpb_reset_icu				= DpbItems.isc_dpb_reset_icu;
+    @Deprecated
+    int isc_dpb_map_attach              = DpbItems.isc_dpb_map_attach;
 
     // Firebird 4 constants
-    int isc_dpb_session_time_zone       = 91;
-    int isc_dpb_set_db_replica          = 92;
-    int isc_dpb_set_bind                = 93;
-    int isc_dpb_decfloat_round          = 94;
-    int isc_dpb_decfloat_traps          = 95;
-
-    /*
-     * Driver-specific DPB params that will be removed before sending them
-     * to the server. These params influence only client side.
-     */
-    int isc_dpb_socket_buffer_size      = 129;
-    int isc_dpb_blob_buffer_size        = 130;
-    int isc_dpb_use_stream_blobs        = 131;
     @Deprecated
-    int isc_dpb_paranoia_mode           = 132;
-    int isc_dpb_timestamp_uses_local_timezone        = 133;
-    // unused 134 (was isc_dpb_use_standard_udf)
-    int isc_dpb_local_encoding          = 135;
+    int isc_dpb_session_time_zone       = DpbItems.isc_dpb_session_time_zone;
     @Deprecated
-    int isc_dpb_mapping_path            = 136;
+    int isc_dpb_set_db_replica          = DpbItems.isc_dpb_set_db_replica;
     @Deprecated
-    int isc_dpb_no_result_set_tracking  = 137;
-    int isc_dpb_result_set_holdable     = 138;
-    int isc_dpb_filename_charset        = 139;
+    int isc_dpb_set_bind                = DpbItems.isc_dpb_set_bind;
     @Deprecated
-    int isc_dpb_octets_as_bytes         = 140;
-    int isc_dpb_so_timeout              = 141;
-    int isc_dpb_column_label_for_name   = 142;
-    int isc_dpb_use_firebird_autocommit = 143;
-    int isc_dpb_wire_crypt_level        = 144;
-    int isc_dpb_db_crypt_config         = 145;
-    int isc_dpb_generated_keys_enabled  = 146;
-    int isc_dpb_ignore_procedure_type   = 147;
-    int isc_dpb_wire_compression        = 148;
-
-    // Lowest Jaybird DPB extension value
-    int jaybirdMinIscDpbValue = isc_dpb_socket_buffer_size;
-    // NOTE: Update this when adding new Jaybird specific DPB items
-    int jaybirdMaxIscDpbValue = isc_dpb_wire_compression;
+    int isc_dpb_decfloat_round          = DpbItems.isc_dpb_decfloat_round;
+    @Deprecated
+    int isc_dpb_decfloat_traps          = DpbItems.isc_dpb_decfloat_traps;
 
     /*************************************/
     /* Transaction parameter block stuff */
@@ -210,27 +277,49 @@ public interface ISCConstants {
 
     int isc_tpb_version1                = 1;
     int isc_tpb_version3                = 3;
-    int isc_tpb_consistency             = 1;
-    int isc_tpb_concurrency             = 2;
-    int isc_tpb_shared                  = 3;
-    int isc_tpb_protected               = 4;
-    int isc_tpb_exclusive               = 5;
-    int isc_tpb_wait                    = 6;
-    int isc_tpb_nowait                  = 7;
-    int isc_tpb_read                    = 8;
-    int isc_tpb_write                   = 9;
-    int isc_tpb_lock_read               = 10;
-    int isc_tpb_lock_write              = 11;
-    int isc_tpb_verb_time               = 12;
-    int isc_tpb_commit_time             = 13;
-    int isc_tpb_ignore_limbo            = 14;
-    int isc_tpb_read_committed          = 15;
-    int isc_tpb_autocommit              = 16;
-    int isc_tpb_rec_version             = 17;
-    int isc_tpb_no_rec_version          = 18;
-    int isc_tpb_restart_requests        = 19;
-    int isc_tpb_no_auto_undo            = 20;
-    int isc_tpb_lock_timeout            = 21;
+
+    @Deprecated
+    int isc_tpb_consistency             = TpbItems.isc_tpb_consistency;
+    @Deprecated
+    int isc_tpb_concurrency             = TpbItems.isc_tpb_concurrency;
+    @Deprecated
+    int isc_tpb_shared                  = TpbItems.isc_tpb_shared;
+    @Deprecated
+    int isc_tpb_protected               = TpbItems.isc_tpb_protected;
+    @Deprecated
+    int isc_tpb_exclusive               = TpbItems.isc_tpb_exclusive;
+    @Deprecated
+    int isc_tpb_wait                    = TpbItems.isc_tpb_wait;
+    @Deprecated
+    int isc_tpb_nowait                  = TpbItems.isc_tpb_nowait;
+    @Deprecated
+    int isc_tpb_read                    = TpbItems.isc_tpb_read;
+    @Deprecated
+    int isc_tpb_write                   = TpbItems.isc_tpb_write;
+    @Deprecated
+    int isc_tpb_lock_read               = TpbItems.isc_tpb_lock_read;
+    @Deprecated
+    int isc_tpb_lock_write              = TpbItems.isc_tpb_lock_write;
+    @Deprecated
+    int isc_tpb_verb_time               = TpbItems.isc_tpb_verb_time;
+    @Deprecated
+    int isc_tpb_commit_time             = TpbItems.isc_tpb_commit_time;
+    @Deprecated
+    int isc_tpb_ignore_limbo            = TpbItems.isc_tpb_ignore_limbo;
+    @Deprecated
+    int isc_tpb_read_committed          = TpbItems.isc_tpb_read_committed;
+    @Deprecated
+    int isc_tpb_autocommit              = TpbItems.isc_tpb_autocommit;
+    @Deprecated
+    int isc_tpb_rec_version             = TpbItems.isc_tpb_rec_version;
+    @Deprecated
+    int isc_tpb_no_rec_version          = TpbItems.isc_tpb_no_rec_version;
+    @Deprecated
+    int isc_tpb_restart_requests        = TpbItems.isc_tpb_restart_requests;
+    @Deprecated
+    int isc_tpb_no_auto_undo            = TpbItems.isc_tpb_no_auto_undo;
+    @Deprecated
+    int isc_tpb_lock_timeout            = TpbItems.isc_tpb_lock_timeout;
 
     /*************************************/
     /* Service parameter block stuff */
@@ -240,38 +329,68 @@ public interface ISCConstants {
     int isc_spb_current_version         = 2;
     int isc_spb_version			        = isc_spb_current_version;
     int isc_spb_version3                = 3;
-    int isc_spb_user_name               = isc_dpb_user_name;
-    int isc_spb_sys_user_name           = isc_dpb_sys_user_name;
-    int isc_spb_sys_user_name_enc       = isc_dpb_sys_user_name_enc;
-    int isc_spb_password                = isc_dpb_password;
-    int isc_spb_password_enc            = isc_dpb_password_enc;
-    int isc_spb_command_line            = 105;
-    int isc_spb_dbname                  = 106;
-    int isc_spb_verbose                 = 107;
-    int isc_spb_options                 = 108;
-    int isc_spb_address_path            = 109;
-    int isc_spb_process_id              = 110;
-    int isc_spb_trusted_auth			= 111;
-    int isc_spb_process_name            = 112;
-    int isc_spb_trusted_role            = 113;
-    int isc_spb_verbint                 = 114;
-    int isc_spb_auth_block              = 115;
-    int isc_spb_auth_plugin_name        = 116;
-    int isc_spb_auth_plugin_list        = 117;
-    int isc_spb_utf8_filename			= 118;
-    int isc_spb_client_version          = 119;
-    int isc_spb_remote_protocol         = 120;
-    int isc_spb_host_name               = 121;
-    int isc_spb_os_user                 = 122;
-    int isc_spb_config					= 123;
-    int isc_spb_expected_db				= 124;
 
-    int isc_spb_connect_timeout         = isc_dpb_connect_timeout;
-    int isc_spb_dummy_packet_interval   = isc_dpb_dummy_packet_interval;
-    int isc_spb_sql_role_name           = isc_dpb_sql_role_name;
+    @Deprecated
+    int isc_spb_user_name               = SpbItems.isc_spb_user_name;
+    @Deprecated
+    int isc_spb_sys_user_name           = SpbItems.isc_spb_sys_user_name;
+    @Deprecated
+    int isc_spb_sys_user_name_enc       = SpbItems.isc_spb_sys_user_name_enc;
+    @Deprecated
+    int isc_spb_password                = SpbItems.isc_spb_password;
+    @Deprecated
+    int isc_spb_password_enc            = SpbItems.isc_spb_password_enc;
+    @Deprecated
+    int isc_spb_command_line            = SpbItems.isc_spb_command_line;
+    @Deprecated
+    int isc_spb_dbname                  = SpbItems.isc_spb_dbname;
+    @Deprecated
+    int isc_spb_verbose                 = SpbItems.isc_spb_verbose;
+    @Deprecated
+    int isc_spb_options                 = SpbItems.isc_spb_options;
+    @Deprecated
+    int isc_spb_address_path            = SpbItems.isc_spb_address_path;
+    @Deprecated
+    int isc_spb_process_id              = SpbItems.isc_spb_process_id;
+    @Deprecated
+    int isc_spb_trusted_auth			= SpbItems.isc_spb_trusted_auth;
+    @Deprecated
+    int isc_spb_process_name            = SpbItems.isc_spb_process_name;
+    @Deprecated
+    int isc_spb_trusted_role            = SpbItems.isc_spb_trusted_role;
+    @Deprecated
+    int isc_spb_verbint                 = SpbItems.isc_spb_verbint;
+    @Deprecated
+    int isc_spb_auth_block              = SpbItems.isc_spb_auth_block;
+    @Deprecated
+    int isc_spb_auth_plugin_name        = SpbItems.isc_spb_auth_plugin_name;
+    @Deprecated
+    int isc_spb_auth_plugin_list        = SpbItems.isc_spb_auth_plugin_list;
+    @Deprecated
+    int isc_spb_utf8_filename			= SpbItems.isc_spb_utf8_filename;
+    @Deprecated
+    int isc_spb_client_version          = SpbItems.isc_spb_client_version;
+    @Deprecated
+    int isc_spb_remote_protocol         = SpbItems.isc_spb_remote_protocol;
+    @Deprecated
+    int isc_spb_host_name               = SpbItems.isc_spb_host_name;
+    @Deprecated
+    int isc_spb_os_user                 = SpbItems.isc_spb_os_user;
+    @Deprecated
+    int isc_spb_config					= SpbItems.isc_spb_config;
+    @Deprecated
+    int isc_spb_expected_db				= SpbItems.isc_spb_expected_db;
+
+    @Deprecated
+    int isc_spb_connect_timeout         = SpbItems.isc_spb_connect_timeout;
+    @Deprecated
+    int isc_spb_dummy_packet_interval   = SpbItems.isc_spb_dummy_packet_interval;
+    @Deprecated
+    int isc_spb_sql_role_name           = SpbItems.isc_spb_sql_role_name;
 
     // This will not be used in protocol 13, therefore may be reused
-    int isc_spb_specific_auth_data      = isc_spb_trusted_auth;
+    @Deprecated
+    int isc_spb_specific_auth_data      = SpbItems.isc_spb_specific_auth_data;
 
     /*****************************************
      * Parameters for isc_action_svc_nbak    *
@@ -281,7 +400,10 @@ public interface ISCConstants {
     int isc_spb_nbk_level  = 5;
     int isc_spb_nbk_file   = 6;
     int isc_spb_nbk_direct = 7;
+    int isc_spb_nbk_guid   = 8;
     int isc_spb_nbk_no_triggers = 0x01;
+    int isc_spb_nbk_inplace     = 0x02;
+    int isc_spb_nbk_sequence    = 0x04;
 
     /*****************************
      * Service action items      *
@@ -315,6 +437,7 @@ public interface ISCConstants {
     // Firebird 3
     int isc_action_svc_display_user_adm = 29; // Displays user(s) from security database with admin info
     int isc_action_svc_validate         = 30; // Starts database online validation
+    int isc_action_svc_nfix             = 31; // Fixup database after file system copy
 
     /*****************************************
      * Parameters for isc_action_svc_trace   *
@@ -716,6 +839,19 @@ public interface ISCConstants {
     int fb_info_crypt_state = 134;
     int fb_info_statement_timeout_db = 135;
     int fb_info_statement_timeout_att = 136;
+    int fb_info_protocol_version = 137;
+    int fb_info_crypt_plugin = 138;
+    int fb_info_creation_timestamp_tz = 139;
+    int fb_info_wire_crypt = 140;
+    // Return list of features supported by provider of current connection
+    int fb_info_features = 141;
+    int fb_info_next_attachment = 142;
+    int fb_info_next_statement = 143;
+    int fb_info_db_guid = 144;
+    int fb_info_db_file_id = 145;
+    int fb_info_replica_mode = 146;
+    int fb_info_username = 147;
+    int fb_info_sqlrole = 148;
 
     int isc_info_db_impl_rdb_vms = 1;
     int isc_info_db_impl_rdb_eln = 2;

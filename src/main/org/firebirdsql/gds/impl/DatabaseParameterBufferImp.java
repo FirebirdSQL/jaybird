@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,17 +21,13 @@ package org.firebirdsql.gds.impl;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.gds.ParameterTagMapping;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
-
-import static org.firebirdsql.gds.ISCConstants.jaybirdMaxIscDpbValue;
-import static org.firebirdsql.gds.ISCConstants.jaybirdMinIscDpbValue;
 
 /**
  * Implementation for DatabaseParameterBuffer.
  */
-public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBufferExtension {
+public final class DatabaseParameterBufferImp extends ParameterBufferBase implements DatabaseParameterBuffer {
 
     public DatabaseParameterBufferImp(DpbMetaData dpbMetaData, Encoding defaultEncoding) {
         super(dpbMetaData, defaultEncoding);
@@ -44,17 +40,6 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
 
         // All the Argument sub classes are immutable so to make a 'deep' copy this is all we have to do.
         copy.getArgumentsList().addAll(this.getArgumentsList());
-
-        return copy;
-    }
-
-    @Override
-    public DatabaseParameterBuffer removeExtensionParams() {
-        final DatabaseParameterBuffer copy = deepCopy();
-
-        for (int extensionDpb = jaybirdMinIscDpbValue; extensionDpb <= jaybirdMaxIscDpbValue; extensionDpb++) {
-            copy.removeArgument(extensionDpb);
-        }
 
         return copy;
     }
@@ -82,11 +67,6 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
         }
 
         @Override
-        public final void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
-        }
-
-        @Override
         public final ArgumentType getStringArgumentType(int tag) {
             return argumentType;
         }
@@ -98,6 +78,11 @@ public final class DatabaseParameterBufferImp extends ParameterBufferBase implem
 
         @Override
         public final ArgumentType getIntegerArgumentType(int tag) {
+            return argumentType;
+        }
+
+        @Override
+        public final ArgumentType getSingleArgumentType(int tag) {
             return argumentType;
         }
     }

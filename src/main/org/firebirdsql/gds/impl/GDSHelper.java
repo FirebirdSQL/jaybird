@@ -74,11 +74,6 @@ public final class GDSHelper implements Synchronizable {
         return database.getConnectionProperties();
     }
 
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() {
-        // TODO Calls to this method should be replaced with an explicit property check
-        return database.getConnectionProperties().getExtraDatabaseParameters();
-    }
-
     /**
      * @return Connection dialect
      */
@@ -262,12 +257,7 @@ public final class GDSHelper implements Synchronizable {
      * @return The length of blob buffers
      */
     public int getBlobBufferLength() {
-        // TODO Add as explicit property on IConnectionProperties
-        DatabaseParameterBuffer dpb = database.getConnectionProperties().getExtraDatabaseParameters();
-        if (dpb.hasArgument(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE))
-            return dpb.getArgumentAsInt(DatabaseParameterBufferExtension.BLOB_BUFFER_SIZE);
-        else
-            return DEFAULT_BLOB_BUFFER_SIZE;
+        return database.getConnectionProperties().getBlobBufferSize();
     }
 
     /**

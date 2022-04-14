@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc.field;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -31,9 +32,9 @@ import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.jmock.Expectations;
+import org.jmock.imposters.ByteBuddyClassImposteriser;
 import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.lib.concurrent.Synchroniser;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class FBNullFieldTest {
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
     {
-        context.setImposteriser(ClassImposteriser.INSTANCE);
+        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
         context.setThreadingPolicy(new Synchroniser());
     }
 
@@ -139,7 +140,7 @@ public class FBNullFieldTest {
     @Test
     public void setCharacterStreamNonNull() throws SQLException {
         setNonNullExpectations();
-        Reader in = context.mock(Reader.class);
+        Reader in = new StringReader("test");
         // TODO Read and/or close expectation?
         
         field.setCharacterStream(in, 15);

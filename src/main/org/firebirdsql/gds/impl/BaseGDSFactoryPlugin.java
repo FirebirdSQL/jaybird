@@ -54,6 +54,26 @@ public abstract class BaseGDSFactoryPlugin implements GDSFactoryPlugin {
     }
 
     @Override
+    public String getDatabasePath(String server, Integer port, String path) throws GDSException {
+        if (path == null) {
+            throw new GDSException("Database name/path is required.");
+        }
+
+        if (server == null) {
+            return path;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("//").append(server);
+        if (port != null) {
+            sb.append(':').append(port.intValue());
+        }
+        sb.append('/').append(path);
+
+        return sb.toString();
+    }
+
+    @Override
     public final int hashCode() {
         return getTypeName().hashCode();
     }

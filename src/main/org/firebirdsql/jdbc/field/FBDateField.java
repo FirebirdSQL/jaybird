@@ -24,6 +24,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 /**
@@ -32,10 +34,16 @@ import java.util.Calendar;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("RedundantThrows")
 final class FBDateField extends AbstractWithoutTimeZoneField {
 
     FBDateField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType) throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
+    }
+
+    @Override
+    public Object getObject() throws SQLException {
+        return getDate();
     }
 
     @Override
@@ -50,39 +58,51 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
         return getDatatypeCoder().decodeDateCalendar(getFieldData(), cal);
     }
 
-    public String getString() throws SQLException {
+    @Override
+    LocalDate getLocalDate() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeDate(getFieldData()).toString();
+        return getDatatypeCoder().decodeLocalDate(getFieldData());
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        LocalDate localDate = getLocalDate();
+        return localDate != null ? localDate.atStartOfDay() : null;
+    }
+
+    public String getString() throws SQLException {
+        LocalDate localDate = getLocalDate();
+        return localDate != null ? localDate.toString() : null;
     }
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setDate(Date.valueOf(value));
+        setDate(fromString(value, Date::valueOf));
     }
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeDateCalendar(new java.sql.Date(value.getTime()), cal));
     }
 
     @Override
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        setLocalDate(value != null ? value.toLocalDate() : null);
+    }
+
+    @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setFieldData(getDatatypeCoder().encodeDateCalendar(value, cal));
+    }
+
+    @Override
+    void setLocalDate(LocalDate value) throws SQLException {
+        if (setWhenNull(value)) return;
+        setFieldData(getDatatypeCoder().encodeLocalDate(value));
     }
 
     @Override
@@ -93,10 +113,7 @@ final class FBDateField extends AbstractWithoutTimeZoneField {
 
     @Override
     public void setRawDateTimeStruct(DatatypeCoder.RawDateTimeStruct raw) throws SQLException {
-        if (raw == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(raw)) return;
         setFieldData(getDatatypeCoder().encodeDateRaw(raw));
     }
 }

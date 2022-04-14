@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
+import static org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_AUTH_PLUGINS;
 
 /**
  * Manages client authentication with multiple pluginProviders.
@@ -52,7 +53,6 @@ public final class ClientAuthBlock {
     private static final Logger log = LoggerFactory.getLogger(ClientAuthBlock.class);
 
     private static final Pattern AUTH_PLUGIN_LIST_SPLIT = Pattern.compile("[ \t,;]+");
-    private static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
     private static final Map<String, AuthenticationPluginSpi> PLUGIN_MAPPING = getAvailableAuthenticationPlugins();
 
     private final IAttachProperties<?> attachProperties;
@@ -152,7 +152,7 @@ public final class ClientAuthBlock {
         pluginProviders = getSupportedPluginProviders();
 
         if (!serverPlugins.isEmpty()) {
-            LinkedList<AuthenticationPluginSpi> mergedProviderList = new LinkedList<>();
+            List<AuthenticationPluginSpi> mergedProviderList = new ArrayList<>();
             for (AuthenticationPluginSpi clientProvider : pluginProviders) {
                 if (serverPlugins.contains(clientProvider.getPluginName())) {
                     mergedProviderList.add(clientProvider);
@@ -437,7 +437,6 @@ public final class ClientAuthBlock {
         return Collections.unmodifiableMap(pluginMapping);
     }
 
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static List<AuthenticationPluginSpi> getAvailableAuthenticationPluginSpis() {
         try {
             ServiceLoader<AuthenticationPluginSpi> pluginLoader =
@@ -445,13 +444,22 @@ public final class ClientAuthBlock {
             List<AuthenticationPluginSpi> pluginList = new ArrayList<>();
             // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
             Iterator<AuthenticationPluginSpi> pluginIterator = pluginLoader.iterator();
-            while (pluginIterator.hasNext()) {
+            int retry = 0;
+            while (retry < 2) {
                 try {
-                    AuthenticationPluginSpi plugin = pluginIterator.next();
-                    pluginList.add(plugin);
-                } catch (Exception | ServiceConfigurationError e) {
-                    log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
-                    log.debug("Failed to load plugin with exception", e);
+                    while (pluginIterator.hasNext()) {
+                        try {
+                            AuthenticationPluginSpi plugin = pluginIterator.next();
+                            pluginList.add(plugin);
+                        } catch (Exception | ServiceConfigurationError e) {
+                            log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
+                            log.debug("Failed to load plugin with exception", e);
+                        }
+                    }
+                    break;
+                } catch (ServiceConfigurationError e) {
+                    log.error("Error finding next AuthenticationPluginSpi", e);
+                    retry++;
                 }
             }
 
@@ -461,10 +469,7 @@ public final class ClientAuthBlock {
                 log.warn("No authentication plugins loaded through service loader, falling back to default list");
             }
         } catch (Exception e) {
-            String message =
-                    "Unable to load authentication plugins through ServiceLoader, using fallback list";
-            log.warn(message + ": " + e + "; see debug level for stacktrace");
-            log.debug(message, e);
+            log.warnDebug("Unable to load authentication plugins through ServiceLoader, using fallback list", e);
         }
         return loadFallbackPluginProviders(ClientAuthBlock.class.getClassLoader());
     }

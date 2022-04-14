@@ -26,10 +26,13 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.InternalApi;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -42,7 +45,7 @@ import java.util.Map.Entry;
  */
 public class GDSFactory {
 
-    private static Logger log = LoggerFactory.getLogger(GDSFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
 
     /**
      * Class for string comparison in the descendant order. This effectively
@@ -75,9 +78,7 @@ public class GDSFactory {
                 loadPluginsFromClassLoader(classLoader);
             }
         } catch (Exception ex) {
-            String message = "Can't register plugins";
-            log.error(message + ": " + ex + "; see debug level for stacktrace");
-            log.debug(message, ex);
+            log.errorDebug("Can't register plugins", ex);
         }
 
         if (jdbcUrlToPluginMap.isEmpty()) {
@@ -115,19 +116,25 @@ public class GDSFactory {
      * @param classLoader
      *         instance of {@link ClassLoader}.
      */
-    @SuppressWarnings("WhileLoopReplaceableByForEach")
     private static void loadPluginsFromClassLoader(ClassLoader classLoader) {
         ServiceLoader<GDSFactoryPlugin> pluginLoader = ServiceLoader.load(GDSFactoryPlugin.class, classLoader);
         // We can't use foreach here, because the plugins are lazily loaded, which might trigger a ServiceConfigurationError
         Iterator<GDSFactoryPlugin> pluginIterator = pluginLoader.iterator();
-        while (pluginIterator.hasNext()) {
+        int retry = 0;
+        while (retry < 2) {
             try {
-                GDSFactoryPlugin plugin = pluginIterator.next();
-                registerPlugin(plugin);
-            } catch (Exception | ServiceConfigurationError e) {
-                String message = "Can't register plugin (skipping)";
-                log.error(message + ": " + e + "; see debug level for stacktrace");
-                log.debug(message, e);
+                while (pluginIterator.hasNext()) {
+                    try {
+                        GDSFactoryPlugin plugin = pluginIterator.next();
+                        registerPlugin(plugin);
+                    } catch (Exception | ServiceConfigurationError e) {
+                        log.errorDebug("Can't register plugin (skipping)", e);
+                    }
+                }
+                break;
+            } catch (ServiceConfigurationError e) {
+                log.error("Error finding next GDSFactoryPlugin", e);
+                retry++;
             }
         }
     }
@@ -144,7 +151,6 @@ public class GDSFactory {
         String[] pluginClasses = new String[] {
                 "org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin",
-                "org.firebirdsql.gds.impl.jni.LocalGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.FbOONativeGDSFactoryPlugin",
                 "org.firebirdsql.gds.impl.jni.FbOOLocalGDSFactoryPlugin",
@@ -162,9 +168,7 @@ public class GDSFactory {
             GDSFactoryPlugin plugin = (GDSFactoryPlugin) clazz.getDeclaredConstructor().newInstance();
             registerPlugin(plugin);
         } catch (Exception ex) {
-            String message = "Can't register plugin " + className;
-            log.error(message + ": " + ex + "; see debug level for stacktrace");
-            log.debug(message, ex);
+            log.errorDebug("Can't register plugin " + className, ex);
         }
     }
 
@@ -279,9 +283,28 @@ public class GDSFactory {
      * @param databasePath
      *         path to the database.
      * @return newly created JDBC URL.
+     * @deprecated Use {@link #getJdbcUrl(GDSType, DatabaseConnectionProperties)}; will be removed in Jaybird 6
      */
+    @Deprecated
     public static String getJdbcUrl(GDSType gdsType, String databasePath) {
         return getPlugin(gdsType).getDefaultProtocol() + databasePath;
+    }
+
+    /**
+     * Create JDBC URL for the specified GDS type and database connection properties.
+     *
+     * @param gdsType
+     *         type of the plugin, to which operation will be delegated to.
+     * @param dbConnectionProperties
+     *         Database connection properties
+     * @return newly created JDBC URL
+     * @throws SQLException When required information is missing to build the URL
+     */
+    public static String getJdbcUrl(GDSType gdsType, DatabaseConnectionProperties dbConnectionProperties)
+            throws SQLException {
+        DbAttachInfo dbAttachInfo = DbAttachInfo.of(dbConnectionProperties);
+        GDSFactoryPlugin plugin = getPlugin(gdsType);
+        return plugin.getDefaultProtocol() + plugin.getDatabasePath(dbAttachInfo);
     }
 
     /**
@@ -325,7 +348,8 @@ public class GDSFactory {
      * @throws IllegalArgumentException
      *         if specified type is not known.
      */
-    private static GDSFactoryPlugin getPlugin(GDSType gdsType) {
+    @InternalApi
+    public static GDSFactoryPlugin getPlugin(GDSType gdsType) {
         GDSFactoryPlugin gdsPlugin = typeToPluginMap.get(gdsType);
         if (gdsPlugin == null) {
             throw new IllegalArgumentException("Specified GDS type " + gdsType + " is unknown.");

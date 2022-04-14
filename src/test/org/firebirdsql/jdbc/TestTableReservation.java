@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -32,21 +32,11 @@ import java.sql.SQLException;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class TestTableReservation extends FBJUnit4TestBase {
-
-    private static final int READ_COMMITTED = TransactionParameterBuffer.READ_COMMITTED;
-    private static final int CONCURRENCY = TransactionParameterBuffer.CONCURRENCY;
-    private static final int CONSISTENCY = TransactionParameterBuffer.CONSISTENCY;
-
-    private static final int LOCK_READ = TransactionParameterBuffer.LOCK_READ;
-    private static final int LOCK_WRITE = TransactionParameterBuffer.LOCK_WRITE;
-
-    private static final int SHARED = TransactionParameterBuffer.SHARED;
-    private static final int PROTECTED = TransactionParameterBuffer.PROTECTED;
-    private static final int EXCLUSIVE = TransactionParameterBuffer.EXCLUSIVE;
 
     private static final String CREATE_TABLE_1 = ""
             + "CREATE TABLE table_1("
@@ -61,14 +51,8 @@ public class TestTableReservation extends FBJUnit4TestBase {
     private static final String INSERT_TABLE_1 =
             "INSERT INTO table_1 VALUES(?)";
 
-    private static final String INSERT_TABLE_2 =
-            "INSERT INTO table_2 VALUES(?)";
-
     private static final String SELECT_TABLE_1 =
             "SELECT id FROM table_1 WHERE id = ?";
-
-    private static final String SELECT_TABLE_2 =
-            "SELECT id FROM table_2 WHERE id = ?";
 
     private FirebirdConnection connection1;
     private FirebirdConnection connection2;
@@ -118,11 +102,11 @@ public class TestTableReservation extends FBJUnit4TestBase {
 
         // specify new isolation level
         tpb.addArgument(isolationLevel);
-        if (isolationLevel == TransactionParameterBuffer.READ_COMMITTED)
-            tpb.addArgument(TransactionParameterBuffer.REC_VERSION);
+        if (isolationLevel == isc_tpb_read_committed)
+            tpb.addArgument(isc_tpb_rec_version);
 
-        tpb.addArgument(!readOnly ? TransactionParameterBuffer.WRITE : TransactionParameterBuffer.READ);
-        tpb.addArgument(TransactionParameterBuffer.NOWAIT);
+        tpb.addArgument(!readOnly ? isc_tpb_write : isc_tpb_read);
+        tpb.addArgument(isc_tpb_nowait);
 
         tpb.addArgument(lockMode, tableName);
         tpb.addArgument(lockType);
@@ -131,10 +115,10 @@ public class TestTableReservation extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedWriteProtectedWrite() throws SQLException {
+    public void testProtectedWriteProtectedWrite() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
 
             execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -147,10 +131,10 @@ public class TestTableReservation extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedWriteProtectedRead() throws SQLException {
+    public void testProtectedWriteProtectedRead() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
             execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -163,10 +147,10 @@ public class TestTableReservation extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedWriteSharedWrite() throws SQLException {
+    public void testProtectedWriteSharedWrite() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
 
             execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -179,10 +163,10 @@ public class TestTableReservation extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedWriteSharedRead() throws SQLException {
+    public void testProtectedWriteSharedRead() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", PROTECTED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
             execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -195,10 +179,10 @@ public class TestTableReservation extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSharedWriteSharedRead() throws SQLException {
+    public void testSharedWriteSharedRead() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
             execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -212,8 +196,8 @@ public class TestTableReservation extends FBJUnit4TestBase {
 
     @Test
     public void testSharedReadSharedRead() throws SQLException {
-        prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
-        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
         execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -221,8 +205,8 @@ public class TestTableReservation extends FBJUnit4TestBase {
 
     @Test
     public void testProtectedReadSharedRead() throws SQLException {
-        prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
-        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", SHARED, false);
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
         execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -230,18 +214,18 @@ public class TestTableReservation extends FBJUnit4TestBase {
 
     @Test
     public void testSharedWriteSharedWrite() throws SQLException {
-        prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-        prepareTPB(connection2, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
 
         execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
     }
 
     @Test
-    public void testSharedWriteProtectedRead() throws SQLException {
+    public void testSharedWriteProtectedRead() {
         try {
-            prepareTPB(connection1, CONSISTENCY, LOCK_WRITE, "TABLE_1", SHARED, false);
-            prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
+            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
             execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
             execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
@@ -255,8 +239,8 @@ public class TestTableReservation extends FBJUnit4TestBase {
 
     @Test
     public void testProtectedReadProtectedRead() throws SQLException {
-        prepareTPB(connection1, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
-        prepareTPB(connection2, CONSISTENCY, LOCK_READ, "TABLE_1", PROTECTED, false);
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
         execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });

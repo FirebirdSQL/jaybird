@@ -18,8 +18,9 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
+
+import java.sql.SQLNonTransientException;
 
 /**
  * This exception is thrown when the requested type conversion cannot be
@@ -27,7 +28,7 @@ import org.firebirdsql.jdbc.SQLStateConstants;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class TypeConversionException extends FBSQLException {
+public class TypeConversionException extends SQLNonTransientException {
 
     private static final long serialVersionUID = 9145386635318036933L;
 
@@ -36,7 +37,6 @@ public class TypeConversionException extends FBSQLException {
     }
 
     public TypeConversionException(String msg, Throwable cause) {
-        super(msg, SQLStateConstants.SQL_STATE_INVALID_CONVERSION);
-        initCause(cause);
+        super(msg, SQLStateConstants.SQL_STATE_INVALID_CONVERSION, cause);
     }
 }

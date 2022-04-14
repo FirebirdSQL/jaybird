@@ -29,7 +29,9 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
+import java.time.*;
 import java.util.Calendar;
+import java.util.function.Function;
 
 /**
  * Describe class <code>FBStringField</code> here.
@@ -48,6 +50,7 @@ import java.util.Calendar;
  * TODO check if the setBinaryStream(null) is allowed by specs.
  */
 class FBStringField extends FBField {
+    
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
     static final String LONG_TRUE = "true";
@@ -68,13 +71,21 @@ class FBStringField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        return getString();
+    }
+
+    @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Byte.parseByte(getString().trim());
+            return Byte.parseByte(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("byte", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -82,10 +93,13 @@ class FBStringField extends FBField {
     public short getShort() throws SQLException {
         if (isNull()) return SHORT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Short.parseShort(getString().trim());
+            return Short.parseShort(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("short", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -93,10 +107,13 @@ class FBStringField extends FBField {
     public int getInt() throws SQLException {
         if (isNull()) return INT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Integer.parseInt(getString().trim());
+            return Integer.parseInt(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(INT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("int", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -104,32 +121,32 @@ class FBStringField extends FBField {
     public long getLong() throws SQLException {
         if (isNull()) return LONG_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Long.parseLong(getString().trim());
+            return Long.parseLong(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(LONG_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("long", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
     @Override
     public BigDecimal getBigDecimal() throws SQLException {
-        if (isNull()) return null;
-
-        try {
-            return new BigDecimal(getString().trim());
-        } catch (NumberFormatException e) {
-            throw new TypeConversionException(BIGDECIMAL_CONVERSION_ERROR + " " + getString().trim());
-        }
+        return getValueAs(BigDecimal.class, BigDecimal::new);
     }
 
     @Override
     public float getFloat() throws SQLException {
         if (isNull()) return FLOAT_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Float.parseFloat(getString().trim());
+            return Float.parseFloat(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(FLOAT_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("float", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -137,10 +154,13 @@ class FBStringField extends FBField {
     public double getDouble() throws SQLException {
         if (isNull()) return DOUBLE_NULL_VALUE;
 
+        String string = getString().trim();
         try {
-            return Double.parseDouble(getString().trim());
+            return Double.parseDouble(string);
         } catch (NumberFormatException nfex) {
-            throw new TypeConversionException(DOUBLE_CONVERSION_ERROR + " " + getString().trim());
+            SQLException conversionException = invalidGetConversion("double", string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -154,7 +174,7 @@ class FBStringField extends FBField {
         return trimmedValue.equalsIgnoreCase(LONG_TRUE) ||
                 trimmedValue.equalsIgnoreCase(SHORT_TRUE) ||
                 trimmedValue.equalsIgnoreCase(SHORT_TRUE_2) ||
-                trimmedValue.equalsIgnoreCase(SHORT_TRUE_3);
+                trimmedValue.equals(SHORT_TRUE_3);
     }
 
     @Override
@@ -188,8 +208,12 @@ class FBStringField extends FBField {
 
     @Override
     public Date getDate() throws SQLException {
-        if (isNull()) return null;
-        return Date.valueOf(getString().trim());
+        return getValueAs(Date.class, Date::valueOf);
+    }
+
+    @Override
+    LocalDate getLocalDate() throws SQLException {
+        return getValueAs(LocalDate.class, LocalDate::parse);
     }
 
     @Override
@@ -200,8 +224,12 @@ class FBStringField extends FBField {
 
     @Override
     public Time getTime() throws SQLException {
-        if (isNull()) return null;
-        return Time.valueOf(getString().trim());
+        return getValueAs(Time.class, Time::valueOf);
+    }
+
+    @Override
+    LocalTime getLocalTime() throws SQLException {
+        return getValueAs(LocalTime.class, LocalTime::parse);
     }
 
     @Override
@@ -212,19 +240,46 @@ class FBStringField extends FBField {
 
     @Override
     public Timestamp getTimestamp() throws SQLException {
-        if (isNull()) return null;
-        return Timestamp.valueOf(getString().trim());
+        return getValueAs(Timestamp.class, string -> {
+            int tIdx = string.indexOf('T');
+            if (tIdx != -1) {
+                // possibly yyyy-MM-ddTHH:mm:ss[.f...]
+                string = string.substring(0, tIdx) + ' ' + string.substring(tIdx + 1);
+            }
+            return Timestamp.valueOf(string);
+        });
+    }
+
+    @Override
+    LocalDateTime getLocalDateTime() throws SQLException {
+        return getValueAs(LocalDateTime.class, string -> {
+            int spaceIdx = string.indexOf(' ');
+            if (spaceIdx != -1) {
+                // possibly yyyy-MM-dd HH:mm:ss[.f...]
+                string = string.substring(0, spaceIdx) + 'T' + string.substring(spaceIdx + 1);
+            }
+            return LocalDateTime.parse(string);
+        });
+    }
+
+    @Override
+    OffsetTime getOffsetTime() throws SQLException {
+        return getValueAs(OffsetTime.class, OffsetTime::parse);
+    }
+
+    @Override
+    OffsetDateTime getOffsetDateTime() throws SQLException {
+        return getValueAs(OffsetDateTime.class, OffsetDateTime::parse);
+    }
+
+    @Override
+    ZonedDateTime getZonedDateTime() throws SQLException {
+        return getValueAs(ZonedDateTime.class, ZonedDateTime::parse);
     }
 
     @Override
     public BigInteger getBigInteger() throws SQLException {
-        if (isNull()) return null;
-
-        try {
-            return new BigInteger(getString().trim());
-        } catch (NumberFormatException e) {
-            throw new TypeConversionException(BIG_INTEGER_CONVERSION_ERROR + " " + getString().trim());
-        }
+        return getValueAs(BigInteger.class, BigInteger::new);
     }
 
     //--- setXXX methods
@@ -263,12 +318,7 @@ class FBStringField extends FBField {
 
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
-
-        setString(value.toString());
+        setAsString(value);
     }
 
     //----- setBoolean, setString and setObject code
@@ -284,10 +334,7 @@ class FBStringField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
         setFieldData(getDatatypeCoder().encodeString(value));
     }
 
@@ -295,10 +342,7 @@ class FBStringField extends FBField {
 
     @Override
     protected void setBinaryStreamInternal(InputStream in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
@@ -308,16 +352,15 @@ class FBStringField extends FBField {
         try {
             setBytes(IOUtils.toBytes(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(BINARY_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(InputStream.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 
     @Override
     protected void setCharacterStreamInternal(Reader in, long length) throws SQLException {
-        if (in == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(in)) return;
 
         // TODO More specific value
         if (length > Integer.MAX_VALUE) {
@@ -327,16 +370,15 @@ class FBStringField extends FBField {
         try {
             setString(IOUtils.toString(in, (int) length));
         } catch (IOException ioex) {
-            throw new TypeConversionException(CHARACTER_STREAM_CONVERSION_ERROR);
+            SQLException conversionException = invalidSetConversion(Reader.class);
+            conversionException.initCause(ioex);
+            throw conversionException;
         }
     }
 
     @Override
     public void setBytes(byte[] value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         if (value.length > fieldDescriptor.getLength()) {
             throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, value.length,
@@ -350,71 +392,89 @@ class FBStringField extends FBField {
 
     @Override
     public void setDate(Date value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setDate(getDatatypeCoder().encodeDate(value, cal));
     }
 
     @Override
     public void setDate(Date value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalDate(LocalDate localDate) throws SQLException {
+        setAsString(localDate);
     }
 
     @Override
     public void setTime(Time value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setTime(getDatatypeCoder().encodeTime(value, cal, isInvertTimeZone()));
     }
 
     @Override
     public void setTime(Time value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalTime(LocalTime value) throws SQLException {
+        setAsString(value);
     }
 
     @Override
     public void setTimestamp(Timestamp value, Calendar cal) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         setTimestamp(getDatatypeCoder().encodeTimestamp(value, cal, isInvertTimeZone()));
     }
 
     @Override
     public void setTimestamp(Timestamp value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
-        setString(value.toString());
+    @Override
+    void setLocalDateTime(LocalDateTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setOffsetTime(OffsetTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setOffsetDateTime(OffsetDateTime value) throws SQLException {
+        setAsString(value);
+    }
+
+    @Override
+    void setZonedDateTime(ZonedDateTime value) throws SQLException {
+        setAsString(value);
     }
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        setAsString(value);
+    }
 
+    private void setAsString(Object value) throws SQLException {
+        if (setWhenNull(value)) return;
         setString(value.toString());
+    }
+
+    private <T> T getValueAs(Class<T> type, Function<String, T> converter) throws SQLException {
+        if (isNull()) return null;
+        String string = getString().trim();
+        try {
+            return converter.apply(string);
+        } catch (RuntimeException e) {
+            SQLException conversionException = invalidGetConversion(type, string);
+            conversionException.initCause(e);
+            throw conversionException;
+        }
     }
 }

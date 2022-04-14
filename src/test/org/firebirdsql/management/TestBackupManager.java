@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
+import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
@@ -25,6 +27,7 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -50,6 +53,12 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestBackupManager {
 
+    @ClassRule
+    public static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build()
+            .toRule();
+
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
 
@@ -72,8 +81,8 @@ public class TestBackupManager {
         backupManager = new FBBackupManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             assumeTrue("Test needs to run on localhost for proper clean up", isLocalHost(DB_SERVER_URL));
-            backupManager.setHost(DB_SERVER_URL);
-            backupManager.setPort(DB_SERVER_PORT);
+            backupManager.setServerName(DB_SERVER_URL);
+            backupManager.setPortNumber(DB_SERVER_PORT);
         }
         backupManager.setUser(DB_USER);
         backupManager.setPassword(DB_PASSWORD);

@@ -20,46 +20,71 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.jaybird.props.AttachmentProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 
 /**
- * Container for attachment information (ie server, port and filename/alias).
+ * Container for attachment information (ie server, port and filename/alias/service name/url).
  */
+@InternalApi
 public class DbAttachInfo {
 
-    private String server = "localhost";
-    private int port = 3050;
-    private String fileName;
+    private final String serverName;
+    private final int portNumber;
+    private final String attachObjectName;
 
-    private DbAttachInfo(String server, Integer port, String fileName, String originalConnectString)
-            throws SQLException {
-        if (fileName == null || fileName.equals("")) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(originalConnectString)
-                    .messageParameter("null or empty database name in connection string")
-                    .toFlatSQLException();
-        }
-        if (server != null) {
-            this.server = server;
-        }
-        if (port != null) {
-            this.port = port;
-        }
-        this.fileName = fileName;
+    public DbAttachInfo(String serverName, Integer portNumber, String attachObjectName) {
+        this(serverName, portNumber != null ? portNumber : PropertyConstants.DEFAULT_PORT, attachObjectName);
     }
 
-    public String getServer() {
-        return server;
+    public DbAttachInfo(String serverName, int portNumber, String attachObjectName) {
+        this.serverName = serverName == null || serverName.isEmpty() ? null : serverName;
+        this.portNumber = portNumber;
+        this.attachObjectName = attachObjectName == null || attachObjectName.isEmpty() ? null : attachObjectName;
     }
 
-    public int getPort() {
-        return port;
+    public static DbAttachInfo of(AttachmentProperties attachmentProperties) {
+        return new DbAttachInfo(attachmentProperties.getServerName(), attachmentProperties.getPortNumber(),
+                attachmentProperties.getProperty(PropertyNames.attachObjectName));
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getServerName() {
+        return serverName;
+    }
+
+    public boolean hasServerName() {
+        return serverName != null;
+    }
+
+    public int getPortNumber() {
+        return portNumber;
+    }
+
+    public String getAttachObjectName() {
+        return attachObjectName;
+    }
+
+    public boolean hasAttachObjectName() {
+        return attachObjectName != null;
+    }
+
+    public DbAttachInfo withServerName(String serverName) {
+        return new DbAttachInfo(serverName, portNumber, attachObjectName);
+    }
+
+    public DbAttachInfo withAttachObjectName(String attachObjectName) {
+        return new DbAttachInfo(serverName, portNumber, attachObjectName);
+    }
+
+    public <T extends IAttachProperties<T>> void copyTo(T attachProperties) {
+        attachProperties.setServerName(serverName);
+        attachProperties.setPortNumber(portNumber);
+        attachProperties.setAttachObjectName(attachObjectName);
     }
 
     public static DbAttachInfo parseConnectString(String connectString) throws SQLException {
@@ -71,115 +96,130 @@ public class DbAttachInfo {
                     .toFlatSQLException();
         }
 
-        // allows standard syntax //host:port/....
-        // and old fb syntax host/port:....
+        // allows standard syntax //host:port/.... and old fb syntax host/port:....
         connectString = connectString.trim();
         if (connectString.startsWith("//")) {
-            return parseUrlConnectString(connectString.substring(2));
+            return parseUrlConnectString(connectString.substring(2), connectString);
         } else {
             return parseLegacyConnectString(connectString);
         }
     }
 
-    private static DbAttachInfo parseUrlConnectString(String connectString) throws SQLException {
+    private static DbAttachInfo parseUrlConnectString(String connectString, String originalConnectString)
+            throws SQLException {
         // Expect host/filename, host:port/filename, ipv4/filename, ipv4:port/filename, [ipv6]/filename or [ipv6]:port/filename
-        String server = null;
-        String fileName = null;
-        Integer port = null;
-        int sep = connectString.indexOf('/');
-        if (sep == 0 || sep == connectString.length() - 1) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(connectString)
-                    .messageParameter("Host separator: '/' at beginning or end")
-                    .toFlatSQLException();
-        } else if (sep > 0) {
-            server = connectString.substring(0, sep);
-            fileName = connectString.substring(sep + 1);
-            if (server.charAt(0) == '[') {
-                //ipv6
-                int endIpv6Address = server.indexOf(']');
-                if (endIpv6Address == -1) {
-                    throw new FbExceptionBuilder()
-                            .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                            .messageParameter(connectString)
-                            .messageParameter("IPv6 address expected, missing closing ']'")
-                            .toFlatSQLException();
-                }
-                if (endIpv6Address != server.length() - 1) {
-                    if (server.charAt(endIpv6Address + 1) == ':') {
-                        port = parsePortNumber(connectString, server.substring(endIpv6Address + 2));
-                    } else {
-                        throw new FbExceptionBuilder()
-                                .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                                .messageParameter(connectString)
-                                .messageParameter("Unexpected tokens '" + server.substring(endIpv6Address + 1) + "' after IPv6 address")
-                                .toFlatSQLException();
-                    }
-                }
-                server = server.substring(1, endIpv6Address);
-            } else {
-                // ipv4 or hostname
-                int portSep = server.indexOf(':');
-                if (portSep == 0 || portSep == server.length() - 1) {
-                    throw new FbExceptionBuilder()
-                            .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                            .messageParameter(connectString)
-                            .messageParameter("Port separator: ':' at beginning or end of: " + server)
-                            .toFlatSQLException();
-                } else if (portSep > 0) {
-                    String portString = server.substring(portSep + 1);
-                    port = parsePortNumber(connectString, portString);
-                    server = server.substring(0, portSep);
-                }
-            }
-        } else if (sep == -1) {
-            throw new FbExceptionBuilder()
-                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
-                    .messageParameter(connectString)
-                    .messageParameter("null or empty database name in connection string")
-                    .toFlatSQLException();
+        if (connectString.isEmpty()) {
+            // allow just '//'
+            return new DbAttachInfo(null, null, null);
         }
-        return new DbAttachInfo(server, port, fileName, connectString);
+        String server;
+        String fileName;
+        Integer port = null;
+        int pathSep, portSep;
+        int connectStringLength = connectString.length();
+        if (connectString.charAt(0) == '[') {
+            // IPv6 address
+            int endIpv6Address = connectString.indexOf(']');
+            if (endIpv6Address == -1) {
+                throw new FbExceptionBuilder()
+                        .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                        .messageParameter(originalConnectString)
+                        .messageParameter("IPv6 address expected, missing closing ']'")
+                        .toFlatSQLException();
+            }
+            server = connectString.substring(1, endIpv6Address);
+            int afterEndIpv6Address = endIpv6Address + 1;
+            pathSep = connectString.indexOf('/', afterEndIpv6Address);
+            if (pathSep == -1) pathSep = connectStringLength;
+            portSep = connectString.indexOf(':', afterEndIpv6Address);
+            if (portSep > pathSep) portSep = -1;
+            if (!(portSep == afterEndIpv6Address || pathSep == afterEndIpv6Address)) {
+                throw new FbExceptionBuilder()
+                        .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                        .messageParameter(originalConnectString)
+                        .messageParameter("Unexpected tokens '" + connectString.substring(afterEndIpv6Address)
+                                + "' after IPv6 address")
+                        .toFlatSQLException();
+            }
+        } else {
+            pathSep = connectString.indexOf('/');
+            if (pathSep == -1) pathSep = connectStringLength;
+            if (pathSep == 0) {
+                portSep = -1;
+                server = null;
+            } else {
+                portSep = connectString.indexOf(':');
+                if (portSep > pathSep) portSep = -1;
+                int endServer = portSep != -1 ? portSep : pathSep;
+                server = connectString.substring(0, endServer);
+            }
+        }
+        if (portSep == 0 || portSep == connectStringLength - 1) {
+            throw new FbExceptionBuilder()
+                    .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
+                    .messageParameter(originalConnectString)
+                    .messageParameter("Port separator ':' at beginning or end")
+                    .toFlatSQLException();
+        } else if (portSep > 0) {
+            port = parsePortNumber(originalConnectString, connectString.substring(portSep + 1, pathSep));
+        }
+
+        fileName = pathSep < connectStringLength - 1 ? connectString.substring(pathSep + 1) : null;
+
+        return new DbAttachInfo(server, port, fileName);
     }
 
     private static DbAttachInfo parseLegacyConnectString(String connectString) throws SQLException {
-        char hostSepChar = ':';
-        char portSepChar = '/';
+        // NOTE: This method does not support IPv6 addresses enclosed in []
         String server = null;
-        String fileName = null;
+        String fileName;
         Integer port = null;
-        int sep = connectString.indexOf(hostSepChar);
-        if (sep == 0 || sep == connectString.length() - 1) {
+        int sep = connectString.indexOf(':');
+        if (sep == 0) {
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter(connectString)
-                    .messageParameter("Host separator: '" + hostSepChar + "' at beginning or end")
+                    .messageParameter("Path separator ':' at beginning")
                     .toFlatSQLException();
-        } else if (sep > 0) {
+        } else if (sep == 1 && !isLikelyWindowsAbsolutePath(connectString) || sep > 1) {
             server = connectString.substring(0, sep);
             fileName = connectString.substring(sep + 1);
-            int portSep = server.indexOf(portSepChar);
+            int portSep = server.indexOf('/');
             if (portSep == 0 || portSep == server.length() - 1) {
                 throw new FbExceptionBuilder()
                         .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                         .messageParameter(connectString)
-                        .messageParameter("Port separator: '" + portSepChar + "' at beginning or end of: " + server)
+                        .messageParameter("Port separator '/' at beginning or end")
                         .toFlatSQLException();
             } else if (portSep > 0) {
                 String portString = server.substring(portSep + 1);
                 port = parsePortNumber(connectString, portString);
                 server = server.substring(0, portSep);
             }
-        } else if (sep == -1) {
+        } else {
             fileName = connectString;
         }
-        return new DbAttachInfo(server, port, fileName, connectString);
+        return new DbAttachInfo(server, port, fileName);
     }
 
-    private static int parsePortNumber(String connectString, String portString) throws SQLException {
+    private static boolean isLikelyWindowsAbsolutePath(String connectString) {
+        if (connectString.length() < 4 || connectString.charAt(1) != ':') {
+            return false;
+        } else {
+            char possiblyPathSeparator = connectString.charAt(2);
+            if (possiblyPathSeparator == '\\' || possiblyPathSeparator == '/') {
+                char possiblyDriveLetter = connectString.charAt(0);
+                return 'C' <= possiblyDriveLetter && possiblyDriveLetter <= 'Z'
+                        || 'c' <= possiblyDriveLetter && possiblyDriveLetter <= 'z';
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private static Integer parsePortNumber(String connectString, String portString) throws SQLException {
         try {
-            return Integer.parseInt(portString);
+            return Integer.valueOf(portString);
         } catch (NumberFormatException e) {
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)

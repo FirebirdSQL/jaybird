@@ -133,6 +133,18 @@ public interface FbStatement extends ExceptionListenable {
     void prepare(String statementText) throws SQLException;
 
     /**
+     * Attempts to unprepare the currently prepared statement.
+     * <p>
+     * For Firebird versions that do not support {@code DSQL_unprepare}, the implementation should attempt to close the
+     * cursor (using {@link #closeCursor()}).
+     * </p>
+     *
+     * @throws SQLException
+     *         If a database access error occurs
+     */
+    void unprepare() throws SQLException;
+
+    /**
      * Validates if the number of parameters matches the expected number and types, and if all values have been set.
      *
      * @param parameters
@@ -242,8 +254,9 @@ public interface FbStatement extends ExceptionListenable {
      * The retrieved SQL counts are also notified to all registered {@link StatementListener}s.
      * </p>
      * <p>
-     * In general the {@link FbStatement} will (should) retrieve and notify listeners of the SQL counts automatically at times were
-     * it is relevant (eg after executing a statement that does not produce multiple rows, or after fetching all rows).
+     * In general the {@link FbStatement} will (should) retrieve and notify listeners of the SQL counts automatically
+     * at times where it is relevant (eg after executing a statement that does not produce multiple rows, or after
+     * fetching all rows).
      * </p>
      *
      * @return The SQL counts of the last execution of this statement

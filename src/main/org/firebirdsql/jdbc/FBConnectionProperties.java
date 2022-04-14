@@ -18,107 +18,144 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.encodings.EncodingDefinition;
-import org.firebirdsql.encodings.EncodingFactory;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferImp;
+import org.firebirdsql.gds.ng.AbstractAttachProperties;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.firebirdsql.jdbc.FBDriverPropertyManager.getCanonicalName;
-
 public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
     private static final long serialVersionUID = 611228437520889118L;
 
+    @Deprecated
     public static final String DATABASE_PROPERTY = "database";
+    @Deprecated
     public static final String TYPE_PROPERTY = "type";
+    /**
+     * @deprecated Use {@link PropertyNames#defaultIsolation}
+     */
+    @Deprecated
     public static final String ISOLATION_PROPERTY = "isolation";
+    /**
+     * @deprecated Use {@link PropertyNames#defaultIsolation}
+     */
+    @Deprecated
     public static final String DEFAULT_ISOLATION_PROPERTY = "defaultIsolation";
 
-    public static final String BLOB_BUFFER_SIZE_PROPERTY = "blobBufferSize";
+    @Deprecated
+    public static final String BLOB_BUFFER_SIZE_PROPERTY = PropertyNames.blobBufferSize;
+    /**
+     * @deprecated Use {@link PropertyNames#charSet}
+     */
+    @Deprecated
     public static final String LOCAL_ENCODING_PROPERTY = "localEncoding";
-    public static final String ENCODING_PROPERTY = "encoding";
-    public static final String ROLE_NAME_PROPERTY = "roleName";
-    public static final String SQL_DIALECT_PROPERTY = "sqlDialect";
-    public static final String USE_STREAM_BLOBS_PROPERTY = "useStreamBlobs";
-    public static final String SOCKET_BUFFER_SIZE_PROPERTY = "socketBufferSize";
-    public static final String TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY = "timestampUsesLocalTimezone";
+    @Deprecated
+    public static final String ENCODING_PROPERTY = PropertyNames.encoding;
+    @Deprecated
+    public static final String ROLE_NAME_PROPERTY = PropertyNames.roleName;
+    @Deprecated
+    public static final String SQL_DIALECT_PROPERTY = PropertyNames.sqlDialect;
+    @Deprecated
+    public static final String USE_STREAM_BLOBS_PROPERTY = PropertyNames.useStreamBlobs;
+    @Deprecated
+    public static final String SOCKET_BUFFER_SIZE_PROPERTY = PropertyNames.socketBufferSize;
+    @Deprecated
+    public static final String TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY = PropertyNames.timestampUsesLocalTimezone;
+    /**
+     * @deprecated Use {@link PropertyNames#user}
+     */
+    @Deprecated
     public static final String USER_NAME_PROPERTY = "userName";
-    public static final String PASSWORD_PROPERTY = "password";
+    @Deprecated
+    public static final String PASSWORD_PROPERTY = PropertyNames.password;
+    /**
+     * @deprecated Use {@link PropertyNames#pageCacheSize}
+     */
+    @Deprecated
     public static final String BUFFERS_NUMBER_PROPERTY = "buffersNumber";
+    /**
+     * @deprecated Use {@link PropertyNames#defaultResultSetHoldable}
+     */
+    @Deprecated
     public static final String DEFAULT_HOLDABLE_RS_PROPERTY = "defaultHoldable";
-    public static final String SO_TIMEOUT = "soTimeout";
-    public static final String CONNECT_TIMEOUT = "connectTimeout";
-    public static final String USE_FIREBIRD_AUTOCOMMIT = "useFirebirdAutocommit";
-    public static final String WIRE_CRYPT_LEVEL = "wireCrypt";
-    public static final String DB_CRYPT_CONFIG = "dbCryptConfig";
-    public static final String AUTH_PLUGINS = "authPlugins";
-    public static final String GENERATED_KEYS_ENABLED = "generatedKeysEnabled";
-    public static final String DATA_TYPE_BIND = "dataTypeBind";
-    public static final String SESSION_TIME_ZONE = "sessionTimeZone";
-    public static final String IGNORE_PROCEDURE_TYPE = "ignoreProcedureType";
-    public static final String WIRE_COMPRESSION = "wireCompression";
+    @Deprecated
+    public static final String SO_TIMEOUT = PropertyNames.soTimeout;
+    @Deprecated
+    public static final String CONNECT_TIMEOUT = PropertyNames.connectTimeout;
+    @Deprecated
+    public static final String USE_FIREBIRD_AUTOCOMMIT = PropertyNames.useFirebirdAutocommit;
+    @Deprecated
+    public static final String WIRE_CRYPT_LEVEL = PropertyNames.wireCrypt;
+    @Deprecated
+    public static final String DB_CRYPT_CONFIG = PropertyNames.dbCryptConfig;
+    @Deprecated
+    public static final String AUTH_PLUGINS = PropertyNames.authPlugins;
+    @Deprecated
+    public static final String GENERATED_KEYS_ENABLED = PropertyNames.generatedKeysEnabled;
+    @Deprecated
+    public static final String DATA_TYPE_BIND = PropertyNames.dataTypeBind;
+    @Deprecated
+    public static final String SESSION_TIME_ZONE = PropertyNames.sessionTimeZone;
+    @Deprecated
+    public static final String IGNORE_PROCEDURE_TYPE = PropertyNames.ignoreProcedureType;
+    @Deprecated
+    public static final String WIRE_COMPRESSION = PropertyNames.wireCompression;
 
-    private Map<String, Object> properties = new HashMap<>();
-    private String type;
-    private String database;
+    private FbConnectionProperties properties;
 
-    private String tpbMapping;
-    private int defaultTransactionIsolation = Connection.TRANSACTION_READ_COMMITTED;
     private Map<Integer, TransactionParameterBuffer> customMapping = new HashMap<>();
     private FBTpbMapper mapper;
 
-    private int getIntProperty(String name) {
-        Integer value = (Integer) properties.get(getCanonicalName(name));
-        return value != null ? value : 0;
+    public FBConnectionProperties() {
+        properties = new FbConnectionProperties();
+        properties.registerPropertyUpdateListener(createPropertyUpdateListener());
     }
 
-    private String getStringProperty(String name) {
-        Object value = properties.get(getCanonicalName(name));
-        return value != null ? value.toString() : null;
+    @Override
+    public String getProperty(String name) {
+        return properties.getProperty(name);
     }
 
-    private boolean getBooleanProperty(String name) {
-        String canonicalName = getCanonicalName(name);
-        return properties.containsKey(canonicalName) && (Boolean) properties.get(canonicalName);
+    @Override
+    public void setProperty(String name, String value) {
+        properties.setProperty(name, value);
     }
 
-    private void setIntProperty(String name, int value) {
-        properties.put(getCanonicalName(name), value);
+    @Override
+    public Integer getIntProperty(String name) {
+        return properties.getIntProperty(name);
     }
 
-    private void setStringProperty(String name, String value) {
-        if (DATABASE_PROPERTY.equals(name)) {
-            setDatabase(value);
-        } else if (TYPE_PROPERTY.equals(name)) {
-            setType(value);
-        }
-
-        name = getCanonicalName(name);
-        Object objValue = ParameterBufferHelper.parseDpbString(name, value);
-
-        properties.put(name, objValue);
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        properties.setIntProperty(name, value);
     }
 
-    private void setBooleanProperty(String name, boolean value) {
-        String canonicalName = getCanonicalName(name);
-        if (value) {
-            properties.put(canonicalName, Boolean.TRUE);
-        } else {
-            properties.remove(canonicalName);
-        }
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return properties.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        properties.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return properties.connectionPropertyValues();
     }
 
     public int hashCode() {
-        return Objects.hash(type, database);
+        return Objects.hash(getType(), getServerName(), getPortNumber(), getDatabaseName());
     }
 
     public boolean equals(Object obj) {
@@ -132,23 +169,18 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
 
         FBConnectionProperties that = (FBConnectionProperties) obj;
 
-        boolean result = this.properties.equals(that.properties);
-        result &= Objects.equals(this.type, that.type);
-        result &= Objects.equals(this.database, that.database);
-        result &= Objects.equals(this.tpbMapping, that.tpbMapping);
-        result &= this.defaultTransactionIsolation == that.defaultTransactionIsolation;
-        result &= this.customMapping.equals(that.customMapping);
-        // If one or both are null we are identical (see also JDBC-249)
-        result &= (this.mapper == null || that.mapper == null) || this.mapper.equals(that.mapper);
-
-        return result;
+        return this.properties.equals(that.properties)
+                && this.customMapping.equals(that.customMapping)
+                // If one or both are null we are identical (see also JDBC-249)
+                && (this.mapper == null || that.mapper == null || this.mapper.equals(that.mapper));
     }
 
     public Object clone() {
         try {
             FBConnectionProperties clone = (FBConnectionProperties) super.clone();
 
-            clone.properties = new HashMap<>(properties);
+            clone.properties = (FbConnectionProperties) properties.asNewMutable();
+            clone.properties.registerPropertyUpdateListener(clone.createPropertyUpdateListener());
             clone.customMapping = new HashMap<>(customMapping);
             clone.mapper = mapper != null ? (FBTpbMapper) mapper.clone() : null;
 
@@ -158,366 +190,24 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
         }
     }
 
-    public String getDatabase() {
-        return database;
-    }
-
-    public void setDatabase(String database) {
-        this.database = database;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public int getBlobBufferSize() {
-        return getIntProperty(BLOB_BUFFER_SIZE_PROPERTY);
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        setIntProperty(BLOB_BUFFER_SIZE_PROPERTY, bufferSize);
-    }
-
-    public String getCharSet() {
-        return getStringProperty(LOCAL_ENCODING_PROPERTY);
-    }
-
-    public void setCharSet(String charSet) {
-        if (charSet == null) {
-            return;
-        }
-
-        // Normalize the name of the encoding
-        final EncodingDefinition encodingDefinition = EncodingFactory.getPlatformDefault()
-                .getEncodingDefinitionByCharsetAlias(charSet);
-        if (encodingDefinition == null) {
-            return;
-        }
-        setStringProperty(LOCAL_ENCODING_PROPERTY, encodingDefinition.getJavaEncodingName());
-
-        if (getStringProperty(ENCODING_PROPERTY) != null) {
-            return;
-        }
-
-        String encoding = encodingDefinition.getFirebirdEncodingName();
-        if (encoding != null) {
-            setStringProperty(ENCODING_PROPERTY, encoding);
-        }
-    }
-
-    public String getEncoding() {
-        return getStringProperty(ENCODING_PROPERTY);
-    }
-
-    public void setEncoding(String encoding) {
-        if (encoding == null) {
-            return;
-        }
-        setStringProperty(ENCODING_PROPERTY, encoding);
-
-        if (getStringProperty(LOCAL_ENCODING_PROPERTY) != null) {
-            return;
-        }
-
-        final EncodingDefinition encodingDefinition = EncodingFactory.getPlatformDefault()
-                .getEncodingDefinitionByFirebirdName(encoding);
-        if (encodingDefinition != null && !encodingDefinition.isInformationOnly()) {
-            setStringProperty(LOCAL_ENCODING_PROPERTY, encodingDefinition.getJavaEncodingName());
-        }
-    }
-
-    public String getRoleName() {
-        return getStringProperty(ROLE_NAME_PROPERTY);
-    }
-
-    public void setRoleName(String roleName) {
-        if (roleName != null) {
-            setStringProperty(ROLE_NAME_PROPERTY, roleName);
-        }
-    }
-
-    public String getSqlDialect() {
-        return getStringProperty(SQL_DIALECT_PROPERTY);
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        if (sqlDialect != null) {
-            setStringProperty(SQL_DIALECT_PROPERTY, sqlDialect);
-        }
-    }
-
-    public boolean isUseStreamBlobs() {
-        return getBooleanProperty(USE_STREAM_BLOBS_PROPERTY);
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        setBooleanProperty(USE_STREAM_BLOBS_PROPERTY, useStreamBlobs);
-    }
-
-    public int getSocketBufferSize() {
-        return getIntProperty(SOCKET_BUFFER_SIZE_PROPERTY);
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        setIntProperty(SOCKET_BUFFER_SIZE_PROPERTY, socketBufferSize);
-    }
-
-    public boolean isTimestampUsesLocalTimezone() {
-        return getBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY);
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        setBooleanProperty(TIMESTAMP_USES_LOCAL_TIMEZONE_PROPERTY, timestampUsesLocalTimezone);
-    }
-
-    public String getUserName() {
-        return getStringProperty(USER_NAME_PROPERTY);
-    }
-
-    public void setUserName(String userName) {
-        setStringProperty(USER_NAME_PROPERTY, userName);
-    }
-
-    public String getPassword() {
-        return getStringProperty(PASSWORD_PROPERTY);
-    }
-
-    public void setPassword(String password) {
-        setStringProperty(PASSWORD_PROPERTY, password);
-    }
-
-    public int getBuffersNumber() {
-        return getIntProperty(BUFFERS_NUMBER_PROPERTY);
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        setIntProperty(BUFFERS_NUMBER_PROPERTY, buffersNumber);
-    }
-
-    public String getNonStandardProperty(String key) {
-        return getStringProperty(key);
-    }
-
-    public void setNonStandardProperty(String key, String value) {
-        if (ISOLATION_PROPERTY.equals(key) || DEFAULT_ISOLATION_PROPERTY.equals(key)) {
-            setDefaultIsolation(value);
-        } else {
-            setStringProperty(key, value);
-        }
-    }
-
-    public boolean isDefaultResultSetHoldable() {
-        return getBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY);
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        setBooleanProperty(DEFAULT_HOLDABLE_RS_PROPERTY, isHoldable);
-    }
-
-    public int getSoTimeout() {
-        return getIntProperty(SO_TIMEOUT);
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        setIntProperty(SO_TIMEOUT, soTimeout);
-    }
-
     @Override
-    public int getConnectTimeout() {
-        return getIntProperty(CONNECT_TIMEOUT);
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        setIntProperty(CONNECT_TIMEOUT, connectTimeout);
-    }
-
-    @Override
-    public boolean isUseFirebirdAutocommit() {
-        return getBooleanProperty(USE_FIREBIRD_AUTOCOMMIT);
-    }
-
-    @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        setBooleanProperty(USE_FIREBIRD_AUTOCOMMIT, useFirebirdAutocommit);
-    }
-
-    @Override
-    public String getWireCrypt() {
-        return getStringProperty(WIRE_CRYPT_LEVEL);
-    }
-
-    @Override
-    public void setWireCrypt(String wireCrypt) {
-        setStringProperty(WIRE_CRYPT_LEVEL, wireCrypt);
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return getStringProperty(DB_CRYPT_CONFIG);
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        setStringProperty(DB_CRYPT_CONFIG, dbCryptConfig);
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return getStringProperty(AUTH_PLUGINS);
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        setStringProperty(AUTH_PLUGINS, authPlugins);
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return getStringProperty(GENERATED_KEYS_ENABLED);
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        setStringProperty(GENERATED_KEYS_ENABLED, generatedKeysEnabled);
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return getStringProperty(DATA_TYPE_BIND);
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        setStringProperty(DATA_TYPE_BIND, dataTypeBind);
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return getStringProperty(SESSION_TIME_ZONE);
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        setStringProperty(SESSION_TIME_ZONE, sessionTimeZone);
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return getBooleanProperty(IGNORE_PROCEDURE_TYPE);
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        setBooleanProperty(IGNORE_PROCEDURE_TYPE, ignoreProcedureType);
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return getBooleanProperty(WIRE_COMPRESSION);
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        setBooleanProperty(WIRE_COMPRESSION, wireCompression);
-    }
-
     public void setNonStandardProperty(String propertyMapping) {
-        char[] chars = propertyMapping.toCharArray();
-        StringBuilder key = new StringBuilder();
-        StringBuilder value = new StringBuilder();
-
-        boolean keyProcessed = false;
-        for (char ch : chars) {
-            boolean isSeparator = Character.isWhitespace(ch) || ch == '=' || ch == ':';
-
-            // if no key was processed, ignore white spaces
-            if (key.length() == 0 && isSeparator)
-                continue;
-
-            if (!keyProcessed && !isSeparator) {
-                key.append(ch);
-            } else if (!keyProcessed) {
-                keyProcessed = true;
-            } else if (value.length() != 0 || !isSeparator) {
-                value.append(ch);
-            }
+        String key;
+        String value;
+        int equalsIndex = propertyMapping.indexOf('=');
+        if (equalsIndex == -1) {
+            key = propertyMapping.trim();
+            value = "";
+        } else {
+            key = propertyMapping.substring(0, equalsIndex).trim();
+            value = propertyMapping.substring(equalsIndex + 1).trim();
         }
-
-        String keyStr = key.toString().trim();
-        String valueStr = value.length() > 0 ? value.toString().trim() : null;
-
-        setNonStandardProperty(keyStr, valueStr);
-    }
-
-    /**
-     * @deprecated TODO Usage of this method should be removed or revised as current use of default encoding is not correct.
-     */
-    @Deprecated
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        // TODO Instance creation should be done through FbDatabase or database factory?
-        DatabaseParameterBuffer dpb = new DatabaseParameterBufferImp(
-                DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
-                EncodingFactory.getPlatformEncoding());
-        for (Map.Entry<String, Object> entry : properties.entrySet()) {
-            String propertyName = entry.getKey();
-            Object value = entry.getValue();
-
-            Integer dpbType = ParameterBufferHelper.getDpbKey(propertyName);
-
-            if (dpbType == null)
-                continue;
-
-            if (value instanceof Boolean) {
-                if ((Boolean) value)
-                    dpb.addArgument(dpbType);
-            } else if (value instanceof Byte) {
-                dpb.addArgument(dpbType, new byte[] { (Byte) value });
-            } else if (value instanceof Integer) {
-                dpb.addArgument(dpbType, (Integer) value);
-            } else if (value instanceof String) {
-                dpb.addArgument(dpbType, (String) value);
-            } else if (value == null)
-                dpb.addArgument(dpbType);
+        if (key.length() > 0) {
+            setProperty(key, value);
+        } else {
+            throw new IllegalArgumentException("Invalid non-standard property. "
+                    + "Expected format: propertyName[=propertyValue], was: '" + propertyMapping + "'");
         }
-        return dpb;
-    }
-
-    public String getTpbMapping() {
-        return tpbMapping;
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        if (mapper != null) {
-            throw new IllegalStateException("Properties are already initialized.");
-        }
-        this.tpbMapping = tpbMapping;
-    }
-
-    public int getDefaultTransactionIsolation() {
-        if (mapper != null) {
-            return mapper.getDefaultTransactionIsolation();
-        }
-        return defaultTransactionIsolation;
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        defaultTransactionIsolation = defaultIsolationLevel;
-        if (mapper != null) {
-            mapper.setDefaultTransactionIsolation(defaultIsolationLevel);
-        }
-    }
-
-    public String getDefaultIsolation() {
-        return FBTpbMapper.getTransactionIsolationName(getDefaultTransactionIsolation());
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        setDefaultTransactionIsolation(FBTpbMapper.getTransactionIsolationLevel(isolation));
     }
 
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
@@ -539,21 +229,44 @@ public class FBConnectionProperties implements FirebirdConnectionProperties, Ser
             return mapper;
         }
 
+        String tpbMapping = getTpbMapping();
         if (tpbMapping == null) {
             mapper = FBTpbMapper.getDefaultMapper();
         } else {
             mapper = new FBTpbMapper(tpbMapping, getClass().getClassLoader());
         }
 
-        mapper.setDefaultTransactionIsolation(defaultTransactionIsolation);
+        mapper.setDefaultTransactionIsolation(getDefaultTransactionIsolation());
 
-        for (Map.Entry<Integer, TransactionParameterBuffer> entry : customMapping.entrySet()) {
-            Integer isolation = entry.getKey();
-            TransactionParameterBuffer tpb = entry.getValue();
-
-            mapper.setMapping(isolation, tpb);
-        }
+        customMapping.forEach(mapper::setMapping);
 
         return mapper;
     }
+
+    /**
+     * @return A mutable view of these connection properties as an implementation of {@link IConnectionProperties}
+     * @since 5
+     */
+    public IConnectionProperties asIConnectionProperties() {
+        return properties;
+    }
+
+    private AbstractAttachProperties.PropertyUpdateListener createPropertyUpdateListener() {
+        return new AbstractAttachProperties.PropertyUpdateListener() {
+            @Override
+            public void beforeUpdate(ConnectionProperty connectionProperty, Object newValue) {
+                if (PropertyNames.tpbMapping.equals(connectionProperty.name()) && mapper != null) {
+                    throw new IllegalStateException("Cannot update tpbMapping, properties are already initialized.");
+                }
+            }
+
+            @Override
+            public void afterUpdate(ConnectionProperty connectionProperty, Object newValue) {
+                if (PropertyNames.defaultIsolation.equals(connectionProperty.name()) && mapper != null) {
+                    mapper.setDefaultTransactionIsolation(getDefaultTransactionIsolation());
+                }
+            }
+        };
+    }
+
 }

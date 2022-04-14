@@ -66,7 +66,16 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
             public ArgumentType getIntegerArgumentType(int tag) {
                 return ArgumentType.TraditionalDpb;
             }
+
+            @Override
+            public ArgumentType getSingleArgumentType(int tag) {
+                if (tag == ISCConstants.isc_spb_current_version) {
+                    return ArgumentType.SingleTpb;
+                }
+                return ArgumentType.TraditionalDpb;
+            }
         },
+        // Technically this has nothing to do with SPB version 2/3
         SPB_VERSION_2(ISCConstants.isc_spb_current_version) {
             // TODO Check if correct and add additional types
             @Override
@@ -90,6 +99,11 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
                     return ArgumentType.IntSpb;
                 }
             }
+
+            @Override
+            public ArgumentType getSingleArgumentType(int tag) {
+                return ArgumentType.SingleTpb;
+            }
         },
         SPB_VERSION_3_ATTACH(ISCConstants.isc_spb_version3) {
             @Override
@@ -106,6 +120,11 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
             public ArgumentType getIntegerArgumentType(int tag) {
                 return ArgumentType.Wide;
             }
+
+            @Override
+            public ArgumentType getSingleArgumentType(int tag) {
+                return ArgumentType.Wide;
+            }
         };
 
         private final int spbVersion;
@@ -117,11 +136,6 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
         @Override
         public final int getType() {
             return spbVersion;
-        }
-
-        @Override
-        public void addPreamble(ParameterBuffer parameterBuffer) {
-            // Do nothing
         }
     }
 }

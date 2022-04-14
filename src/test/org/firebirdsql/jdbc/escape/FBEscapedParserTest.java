@@ -18,10 +18,12 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -29,85 +31,94 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBEscapedParserTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class FBEscapedParserTest {
 
     @Test
-    public void testStringWithoutEscapes() throws Exception {
+    void testStringWithoutEscapes() throws Exception {
         final String input = "SELECT * FROM some_table WHERE x = 'xyz'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Expected output identical to input for string without escapes", input, parseResult);
     }
 
-    @Test
-    public void testEscapeEscape() throws Exception {
-        final String input = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' {escape '&'}";
+    @ParameterizedTest
+    @ValueSource(strings = { "escape", "ESCAPE" })
+    void testEscapeEscape(String escape) throws Exception {
+        final String input = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' {" + escape + " '&'}";
         final String expectedOutput = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' ESCAPE '&'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {escape ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testFunctionEscape() throws Exception {
-        final String input = "SELECT * FROM some_table WHERE {fn abs(x)} = ?";
+    @ParameterizedTest
+    @ValueSource(strings = { "fn", "FN" })
+    void testFunctionEscape(String fn) throws Exception {
+        final String input = "SELECT * FROM some_table WHERE {" + fn + " abs(x)} = ?";
         final String expectedOutput = "SELECT * FROM some_table WHERE abs(x) = ?";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {fn ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testDateEscape() throws Exception {
-        final String input = "SELECT * FROM some_table WHERE x = {d '2012-12-28'}";
+    @ParameterizedTest
+    @ValueSource(strings = { "d", "D" })
+    void testDateEscape(String d) throws Exception {
+        final String input = "SELECT * FROM some_table WHERE x = {" + d + " '2012-12-28'}";
         final String expectedOutput = "SELECT * FROM some_table WHERE x = DATE '2012-12-28'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {d ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testTimeEscape() throws Exception {
-        final String input = "SELECT * FROM some_table WHERE x = {t '22:15:28'}";
+    @ParameterizedTest
+    @ValueSource(strings = { "t", "T" })
+    void testTimeEscape(String t) throws Exception {
+        final String input = "SELECT * FROM some_table WHERE x = {" + t + " '22:15:28'}";
         final String expectedOutput = "SELECT * FROM some_table WHERE x = TIME '22:15:28'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {t ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testTimestampEscape() throws Exception {
-        final String input = "SELECT * FROM some_table WHERE x = {ts '2012-12-28 22:15:28'}";
+    @ParameterizedTest
+    @ValueSource(strings = { "ts", "TS" })
+    void testTimestampEscape(String ts) throws Exception {
+        final String input = "SELECT * FROM some_table WHERE x = {" + ts + " '2012-12-28 22:15:28'}";
         final String expectedOutput = "SELECT * FROM some_table WHERE x = TIMESTAMP '2012-12-28 22:15:28'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {ts ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testOuterjoinEscape() throws Exception {
-        final String input = "SELECT * FROM {oj some_table FULL OUTER JOIN some_other_table ON some_table.x = some_other_table.x}";
+    @ParameterizedTest
+    @ValueSource(strings = { "oj", "OJ" })
+    void testOuterjoinEscape(String oj) throws Exception {
+        final String input = "SELECT * FROM {" + oj + " some_table FULL OUTER JOIN some_other_table ON some_table.x = some_other_table.x}";
         final String expectedOutput = "SELECT * FROM some_table FULL OUTER JOIN some_other_table ON some_table.x = some_other_table.x";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {oj ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testSimpleLimitEscape() throws Exception {
-        final String input = "SELECT * FROM some_table {limit 10}";
+    @ParameterizedTest
+    @ValueSource(strings = { "limit", "LIMIT" })
+    void testSimpleLimitEscape(String limit) throws Exception {
+        final String input = "SELECT * FROM some_table {" + limit + " 10}";
         final String expectedOutput = "SELECT * FROM some_table ROWS 10";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {limit ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testExtendedLimitEscape() throws Exception {
-        final String input = "SELECT * FROM some_table {limit 10 offset 15}";
+    @ParameterizedTest
+    @CsvSource({
+            "limit, offset",
+            "LIMIT, offset",
+            "limit, OFFSET",
+    })
+    void testExtendedLimitEscape(String limit, String offset) throws Exception {
+        final String input = "SELECT * FROM some_table {" + limit + " 10 " + offset + " 15}";
         final String expectedOutput = "SELECT * FROM some_table ROWS 15 TO 15+10";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
@@ -115,7 +126,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testSimpleLimitEscapeWithParameter() throws Exception {
+    void testSimpleLimitEscapeWithParameter() throws Exception {
         final String input = "SELECT * FROM some_table {limit ?}";
         final String expectedOutput = "SELECT * FROM some_table ROWS ?";
 
@@ -124,7 +135,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testExtendedLimitEscapeRowsParameter() throws Exception {
+    void testExtendedLimitEscapeRowsParameter() throws Exception {
         final String input = "SELECT * FROM some_table {limit ? offset 15}";
         final String expectedOutput = "SELECT * FROM some_table ROWS 15 TO 15+?";
 
@@ -139,11 +150,11 @@ public class FBEscapedParserTest {
      * </p>
      */
     @Test
-    public void testExtendedLimitEscapeOffsetParameter() throws Exception {
+    void testExtendedLimitEscapeOffsetParameter() {
         final String input = "SELECT * FROM some_table {limit 10 offset ?}";
-        expectedException.expect(FBSQLParseException.class);
 
-        FBEscapedParser.toNativeSql(input);
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     /**
@@ -153,25 +164,27 @@ public class FBEscapedParserTest {
      * </p>
      */
     @Test
-    public void testExtendedLimitEscapeRowsAndOffsetParameter() throws Exception {
+    void testExtendedLimitEscapeRowsAndOffsetParameter() {
         final String input = "SELECT * FROM some_table {limit ? offset ?}";
-        expectedException.expect(FBSQLParseException.class);
 
-        FBEscapedParser.toNativeSql(input);
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
-    @Test
-    public void testCallEscape() throws Exception {
-        final String input = "{call FUNCTION(?,?)}";
+    @ParameterizedTest
+    @ValueSource(strings = { "call", "CALL" })
+    void testCallEscape(String call) throws Exception {
+        final String input = "{" + call + " FUNCTION(?,?)}";
         final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?)";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
         assertEquals("Unexpected output for {call ..}", expectedOutput, parseResult);
     }
 
-    @Test
-    public void testQuestionmarkCallEscape() throws Exception {
-        final String input = "{?=call FUNCTION(?,?)}";
+    @ParameterizedTest
+    @ValueSource(strings = { "call", "CALL" })
+    void testQuestionmarkCallEscape(String call) throws Exception {
+        final String input = "{?=" + call + " FUNCTION(?,?)}";
         final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?,?)";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
@@ -179,7 +192,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testQuestionmarkCallEscapeExtraWhitespace() throws Exception {
+    void testQuestionmarkCallEscapeExtraWhitespace() throws Exception {
         final String input = "{? = call FUNCTION(?,?)}";
         final String expectedOutput = "EXECUTE PROCEDURE FUNCTION(?,?,?)";
 
@@ -188,41 +201,41 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testUnsupportedKeyword() throws Exception {
+    void testUnsupportedKeyword() {
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{fn ABS(?)} {doesnotexist xyz}";
-        expectedException.expect(FBSQLParseException.class);
-
-        FBEscapedParser.toNativeSql(input);
+        
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testTooManyCurlyBraceOpen() throws Exception {
+    void testTooManyCurlyBraceOpen() {
         final String input = "{escape '&'";
-        expectedException.expect(FBSQLParseException.class);
-
-        FBEscapedParser.toNativeSql(input);
+        
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testTooManyCurlyBraceClose() throws Exception {
+    void testTooManyCurlyBraceClose() {
         final String input = "{escape '&'}}";
-        expectedException.expect(FBSQLParseException.class);
 
-        FBEscapedParser.toNativeSql(input);
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testCurlyBraceOpenClose() throws Exception {
+    void testCurlyBraceOpenClose() {
         // NOTE: need to include an existent keyword, otherwise string isn't parsed at all
         final String input = "{escape '&'} {}";
-        expectedException.expect(FBSQLParseException.class);
 
-        FBEscapedParser.toNativeSql(input);
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testAdditionalWhitespaceBetweenEscapeAndParameter() throws Exception {
+    void testAdditionalWhitespaceBetweenEscapeAndParameter() throws Exception {
         final String input = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' {escape      '&'}";
         final String expectedOutput = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' ESCAPE '&'";
 
@@ -231,7 +244,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testAdditionalWhitespaceAfterParameter() throws Exception {
+    void testAdditionalWhitespaceAfterParameter() throws Exception {
         final String input = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' {escape '&'     }";
         final String expectedOutput = "SELECT * FROM some_table WHERE x LIKE '_x&_yz' ESCAPE '&'";
 
@@ -240,7 +253,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testNestedEscapes() throws Exception {
+    void testNestedEscapes() throws Exception {
         final String input = "{fn LTRIM({fn RTRIM('  abc  ')})}";
         final String expectedOutput = "TRIM(LEADING FROM TRIM(TRAILING FROM '  abc  '))";
 
@@ -252,7 +265,7 @@ public class FBEscapedParserTest {
      * Tests if the parser preserves whitespace inside parameters (implementation coalesces multiple whitespace characters into one space)
      */
     @Test
-    public void testWhitespaceInParameter() throws Exception {
+    void testWhitespaceInParameter() throws Exception {
         final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
         final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
 
@@ -264,7 +277,7 @@ public class FBEscapedParserTest {
      * Tests if the parser does not process JDBC escapes inside a line comment
      */
     @Test
-    public void testEscapeInLineComment() throws Exception {
+    void testEscapeInLineComment() throws Exception {
         final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))} --{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
         final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10))) --{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\nTRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
 
@@ -276,7 +289,7 @@ public class FBEscapedParserTest {
      * Tests if the parser does not process JDBC escapes inside a block comment
      */
     @Test
-    public void testEscapeInBlockComment() throws Exception {
+    void testEscapeInBlockComment() throws Exception {
         final String input = "{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))} /*{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n*/{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}";
         final String expectedOutput = "TRIM(LEADING FROM CAST( ? AS VARCHAR(10))) /*{fn LTRIM(CAST( ?\tAS  VARCHAR(10)))}\n*/TRIM(LEADING FROM CAST( ? AS VARCHAR(10)))";
 
@@ -288,7 +301,7 @@ public class FBEscapedParserTest {
      * Tests if the parser correctly processes an escape that is directly after a '-' (potential start of line comment).
      */
     @Test
-    public void testLineCommentStartFollowedByEscape() throws Exception {
+    void testLineCommentStartFollowedByEscape() throws Exception {
         final String input = "6-{fn EXP(2)}";
         final String expectedOutput = "6-EXP(2)";
 
@@ -300,7 +313,7 @@ public class FBEscapedParserTest {
      * Tests if the parser correctly processes an escape that is directly after a '/' (potential start of block comment).
      */
     @Test
-    public void testBlockCommentStartFollowedByEscape() throws Exception {
+    void testBlockCommentStartFollowedByEscape() throws Exception {
         final String input = "6/{fn EXP(2)}";
         final String expectedOutput = "6/EXP(2)";
 
@@ -309,7 +322,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testQLiteral_basic() throws Exception {
+    void testQLiteral_basic() throws Exception {
         final String input = "q'x {fn EXP(2)} x'";
 
         String parseResult = FBEscapedParser.toNativeSql(input);
@@ -317,7 +330,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testQLiteral_processesEscapeAfterLiteral() throws Exception {
+    void testQLiteral_processesEscapeAfterLiteral() throws Exception {
         final String input = "Q'x {fn EXP(2)} x'{fn EXP(2)}";
         final String expectedOutput = "Q'x {fn EXP(2)} x'EXP(2)";
 
@@ -326,7 +339,7 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testQButNotLiteral() throws Exception {
+    void testQButNotLiteral() throws Exception {
         final String input = "qMx {fn EXP(2)} x'";
         final String expectedOutput = "qMx EXP(2) x'";
 
@@ -335,23 +348,23 @@ public class FBEscapedParserTest {
     }
 
     @Test
-    public void testQLiteralStart_AtEndOfString_throwsParseException() throws Exception {
+    void testQLiteralStart_AtEndOfString_throwsParseException() {
         final String input = "{fn EXP(2)} q'";
-        expectedException.expect(FBSQLParseException.class);
 
-        FBEscapedParser.toNativeSql(input);
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testQLiteral_InLiteralEndOfString_throwsParseException() throws Exception {
+    void testQLiteral_InLiteralEndOfString_throwsParseException() {
         final String input = "{fn EXP(2)} q'abc";
-        expectedException.expect(FBSQLParseException.class);
-
-        FBEscapedParser.toNativeSql(input);
+        
+        assertThatThrownBy(() -> FBEscapedParser.toNativeSql(input))
+                .isInstanceOf(FBSQLParseException.class);
     }
 
     @Test
-    public void testQLiteralSpecials() throws Exception {
+    void testQLiteralSpecials() throws Exception {
         checkQLiteralSpecialsBalancedStartEnd('(', ')');
         checkQLiteralSpecialsBalancedStartEnd(')', ')');
         checkQLiteralSpecialsBalancedStartEnd('{', '}');

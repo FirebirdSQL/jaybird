@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,28 +18,29 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Collections.unmodifiableMap;
+
 /**
  * Abstract immutable implementation of {@link org.firebirdsql.gds.ng.IAttachProperties}.
+ * <p>
+ * NOTE: This class relies on the default implementation provided in
+ * {@link org.firebirdsql.jaybird.props.AttachmentProperties}, so in itself, immutability is not guaranteed by this
+ * class: subclasses need to be {@code final} and guard against mutation (that is, they do not override setters, unless
+ * they call {@link #immutable()}(.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
 public abstract class AbstractImmutableAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
-    private final String serverName;
-    private final int portNumber;
-    private final String user;
-    private final String password;
-    private final String roleName;
-    private final String charSet;
-    private final String encoding;
-    private final int socketBufferSize;
-    private final int soTimeout;
-    private final int connectTimeout;
-    private final WireCrypt wireCrypt;
-    private final String dbCryptConfig;
-    private final String authPlugins;
-    private final boolean wireCompression;
+    private final Map<ConnectionProperty, Object> propValues;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -52,160 +53,81 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
      *         Source to copy from
      */
     protected AbstractImmutableAttachProperties(IAttachProperties<T> src) {
-        serverName = src.getServerName();
-        portNumber = src.getPortNumber();
-        user = src.getUser();
-        password = src.getPassword();
-        roleName = src.getRoleName();
-        charSet = src.getCharSet();
-        encoding = src.getEncoding();
-        socketBufferSize = src.getSocketBufferSize();
-        soTimeout = src.getSoTimeout();
-        connectTimeout = src.getConnectTimeout();
-        wireCrypt = src.getWireCrypt();
-        dbCryptConfig = src.getDbCryptConfig();
-        authPlugins = src.getAuthPlugins();
-        wireCompression = src.isWireCompression();
+        propValues = src instanceof AbstractImmutableAttachProperties
+                ? ((AbstractImmutableAttachProperties<T>) src).propValues
+                : unmodifiableMap(new HashMap<>(src.connectionPropertyValues()));
     }
 
     @Override
-    public String getServerName() {
-        return serverName;
+    public final String getProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asString(propValues.get(property));
     }
 
     @Override
-    public void setServerName(final String serverName) {
+    public final void setProperty(String name, String value) {
         immutable();
     }
 
     @Override
-    public int getPortNumber() {
-        return portNumber;
+    public final Integer getIntProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asInteger(propValues.get(property));
     }
 
     @Override
-    public void setPortNumber(final int portNumber) {
+    public final void setIntProperty(String name, Integer value) {
         immutable();
     }
 
     @Override
-    public String getUser() {
-        return user;
+    public final Boolean getBooleanProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asBoolean(propValues.get(property));
     }
 
     @Override
-    public void setUser(final String user) {
+    public final void setBooleanProperty(String name, Boolean value) {
         immutable();
     }
 
-    @Override
-    public String getPassword() {
-        return password;
+    /**
+     * Returns the property of the specified name.
+     * <p>
+     * When the property is not a known property, an unknown variant is returned.
+     * </p>
+     *
+     * @param name
+     *         Property name
+     * @return A connection property instance, never {@code null}
+     */
+    protected final ConnectionProperty property(String name) {
+        return ConnectionPropertyRegistry.getInstance().getOrUnknown(name);
     }
 
     @Override
-    public void setPassword(final String password) {
-        immutable();
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return propValues;
     }
 
     @Override
-    public String getRoleName() {
-        return roleName;
+    public final boolean isImmutable() {
+        return true;
     }
 
     @Override
-    public void setRoleName(final String roleName) {
-        immutable();
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractImmutableAttachProperties)) return false;
+
+        AbstractImmutableAttachProperties<?> that = (AbstractImmutableAttachProperties<?>) o;
+
+        return propValues.equals(that.propValues);
     }
 
     @Override
-    public String getCharSet() {
-        return charSet;
-    }
-
-    @Override
-    public void setCharSet(final String charSet) {
-        immutable();
-    }
-
-    @Override
-    public String getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(final String encoding) {
-        immutable();
-    }
-
-    @Override
-    public int getSocketBufferSize() {
-        return socketBufferSize;
-    }
-
-    @Override
-    public void setSocketBufferSize(final int socketBufferSize) {
-        immutable();
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return soTimeout;
-    }
-
-    @Override
-    public void setSoTimeout(final int soTimeout) {
-        immutable();
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    @Override
-    public void setConnectTimeout(final int connectTimeout) {
-        immutable();
-    }
-
-    @Override
-    public WireCrypt getWireCrypt() {
-        return wireCrypt;
-    }
-
-    @Override
-    public void setWireCrypt(final WireCrypt wireCrypt) {
-        immutable();
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return dbCryptConfig;
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        immutable();
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return authPlugins;
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        immutable();
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return wireCompression;
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        immutable();
+    public int hashCode() {
+        return propValues.hashCode();
     }
 
     /**

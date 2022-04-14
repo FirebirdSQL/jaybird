@@ -1,13 +1,14 @@
 import org.apache.tools.ant.filters.*
+import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 /*
   Gradle build script for Jaybird - Firebird JDBC driver.
 
   Define target Java version:
-  - -PbuildProfile=java8 or
-    not specified or unknown value : Java 8  (supported)
-  - -PbuildProfile=java11          : Java 11 (supported)
-  - -PbuildProfile=java14          : Java 14 (for compatibility testing only)
+  - -PbuildProfile=java8           : Java 8  (supported)
+  - -PbuildProfile=java11or
+    not specified or unknown value : Java 11 (supported)
+  - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
 
   Uploading archives:
 
@@ -19,6 +20,7 @@ plugins {
     id 'nu.studer.credentials' version '2.1'
     id 'maven-publish'
     id 'signing'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 defaultTasks 'clean', 'build'
@@ -50,41 +52,52 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.6.2'
+    junit_jupiter = '5.8.2'
     hamcrest = '2.2'
+    assertj = '3.21.0'
     jmock = '2.12.0'
+    mockito = '4.2.0'
 }
 
 dependencies {
-    implementation 'org.antlr:antlr4-runtime:4.7.2'
     nativeImplementation 'net.java.dev.jna:jna:5.5.0'
 
-    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
 
     // Use JUnit Jupiter API for testing.
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junit_jupiter"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
 
     // Support JUnit 4
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:$junit_jupiter"
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.2'
 
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
+    testImplementation "org.assertj:assertj-core:$assertj"
 
-    testImplementation "org.jmock:jmock-junit4:$jmock"
-    testImplementation "org.jmock:jmock-legacy:$jmock"
+    testImplementation("org.jmock:jmock-junit4:$jmock") {
+        exclude group: 'org.jmock', module: 'jmock-legacy'
+    }
+    testImplementation("org.jmock:jmock-imposters:$jmock")
+    testImplementation 'net.bytebuddy:byte-buddy:1.12.6'
 
-    testImplementation 'cglib:cglib:3.3.0'
-    testImplementation 'org.ow2.asm:asm:8.0.1'
-    testImplementation 'org.objenesis:objenesis:3.1'
+    testImplementation "org.mockito:mockito-core:$mockito"
+    testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
+
+    testImplementation 'org.ow2.asm:asm:9.2'
+    testImplementation 'org.objenesis:objenesis:3.2'
 }
 
 sourceSets {
     main {
         java {
-            srcDirs = ['src/main', 'src/extern', 'src/jdbc_42', 'src/jna-client', 'src/openoffice', 'src/nativeoo']
+            srcDirs = findProperty('buildProfile') == 'java8'
+                    ? ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/nativeoo']
+                    : ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/nativeoo', 'src/chacha_j11']
         }
         resources {
             srcDirs = ['src/resources']
@@ -92,7 +105,7 @@ sourceSets {
     }
     test {
         java {
-            srcDirs = ['src/test', 'src/test_42', 'src/jna-test', 'src/nativeoo-test']
+            srcDirs = ['src/test', 'src/jna-test', 'src/nativeoo-test']
         }
         resources {
             srcDirs = ['src/test_resources']
@@ -118,17 +131,32 @@ processResources {
     ]
 }
 
-apply from: 'documentation.gradle'
+//apply from: 'documentation.gradle'
+
+asciidoctorj {
+    attributes 'revnumber': null,
+            'version_simple': project.'version.simple',
+            'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
+            'version_tag': project.'version.tag',
+            'version_example': "${project.'version.simple'}.java8${project.'version.tag'}",
+            'stylesdir': file('src/docs/theme/jaybird-html'),
+            'stylesheet': 'firebird.css',
+            'docinfo': 'shared',
+            'docinfodir': file('src/docs/theme/jaybird-html/docinfo')
+}
 
 task dist(type: Zip) {
-    dependsOn assemble, buildAllDocs
+    dependsOn assemble, asciidoctor
     destinationDirectory = file("$buildDir/dist")
 
     from jar.outputs
     from javadocJar.outputs
     from sourcesJar.outputs
-    from buildReleaseNotes.outputs
-    from(buildFaq.outputs) {
+    from(asciidoctor.outputs) {
+        include 'release_notes.html'
+    }
+    from(asciidoctor.outputs) {
+        exclude 'release_notes.html'
         into 'docs'
     }
     from(javadoc.outputs) {
@@ -178,6 +206,7 @@ javadoc {
 }
 
 test {
+    println "Running tests for type ${project.'test.gds_type'}"
     // Use junit platform for unit tests
     useJUnitPlatform()
 
@@ -190,13 +219,14 @@ test {
             'test.db.port': project.'test.db.port',
             'test.db.lc_ctype': project.'test.db.lc_ctype',
             'test.gds_type': project.'test.gds_type',
-            'test.use_firebird_autocommit': project.'test.use_firebird_autocommit',
-            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'true'
+            'test.use_firebird_autocommit': project.'test.use.firebird.autocommit',
+            'jdk.net.useFastTcpLoopback': project.findProperty('jdk.net.useFastTcpLoopback') ?: 'false',
+            'test.db_on_docker': project.findProperty('test.dbondocker') ?: 'false',
     )
     if (project.hasProperty('test.jna.library.path')) {
         systemProperty 'jna.library.path', project.'test.jna.library.path'
     } else if (project.'test.gds_type' == 'NATIVE' || project.'test.gds_type' == 'EMBEDDED') {
-        println "Running test type ${project.'test.gds.type'} without explicit native library path. " +
+        println "Running test type ${project.'test.gds_type'} without explicit native library path. " +
                 "Specify property 'test.jna.library.path' to point to a Firebird client location (NATIVE) or " +
                 "Firebird install (EMBEDDED)."
     }

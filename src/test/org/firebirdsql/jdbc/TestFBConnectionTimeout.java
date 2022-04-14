@@ -20,9 +20,9 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.management.FBManager;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -167,9 +167,12 @@ public class TestFBConnectionTimeout {
      */
     private static String buildTestURL() {
         GDSType gdsType = FBTestProperties.getGdsType();
+        FbConnectionProperties properties = new FbConnectionProperties();
+        properties.setServerName(NON_EXISTENT_IP);
+        properties.setDatabaseName("db");
         try {
-            return GDSFactory.getJdbcUrl(gdsType, GDSFactory.getDatabasePath(gdsType, NON_EXISTENT_IP, null, "db"));
-        } catch (GDSException e) {
+            return GDSFactory.getJdbcUrl(gdsType, properties);
+        } catch (SQLException e) {
             fail("Unable to generate testURL");
         }
         return null;

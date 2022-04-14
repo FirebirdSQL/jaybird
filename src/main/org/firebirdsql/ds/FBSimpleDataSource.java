@@ -18,19 +18,19 @@
  */
 package org.firebirdsql.ds;
 
-import org.firebirdsql.gds.DatabaseParameterBuffer;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDataSource;
-import org.firebirdsql.jdbc.FirebirdConnectionProperties;
 
 import javax.naming.*;
 import javax.sql.DataSource;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
@@ -44,8 +44,8 @@ import java.sql.SQLException;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
-public class FBSimpleDataSource extends RootCommonDataSource implements DataSource, Serializable, Referenceable,
-        FirebirdConnectionProperties {
+public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
+        implements DataSource, Serializable, Referenceable {
 
     private static final long serialVersionUID = 3156578540634970427L;
     static final String REF_DESCRIPTION = "description";
@@ -88,9 +88,11 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * Get buffer length for the BLOB fields.
      *
      * @return length of BLOB buffer.
+     * @deprecated Use {@link #getBlobBufferSize()}; will be removed in Jaybird 6
      */
+    @Deprecated
     public Integer getBlobBufferLength() {
-        return mcf.getBlobBufferSize();
+        return getBlobBufferSize();
     }
 
     /**
@@ -99,375 +101,61 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      *
      * @param length
      *         new length of the BLOB buffer.
+     * @deprecated Use {@link #setBlobBufferSize(int)}; will be removed in Jaybird 6
      */
+    @Deprecated
     public void setBlobBufferLength(Integer length) {
-        mcf.setBlobBufferSize(length);
+        setBlobBufferSize(length);
     }
 
-    /**
-     * Get name of the database.
-     *
-     * @return database name, value is equal to the part of full JDBC URL without
-     * the {@code jdbc:firebirdsql:} part.
-     * @deprecated use {@link #getDatabase} instead for the sake of naming
-     * compatibility.
-     */
-    @Deprecated
-    public String getDatabaseName() {
-        return getDatabase();
-    }
-
-    /**
-     * Set database name.
-     *
-     * @param name
-     *         connection URL without {@code "jdbc:firebirdsql:"}
-     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
-     *         example).
-     * @deprecated use {@link #setDatabase(String)} instead for the sake of
-     * naming compatibility.
-     */
-    @Deprecated
-    public void setDatabaseName(String name) {
-        setDatabase(name);
-    }
-
-    /**
-     * Get name of the database.
-     *
-     * @return database name, value is equal to the part of full JDBC URL without
-     * the {@code jdbc:firebirdsql:} part.
-     */
-    public String getDatabase() {
-        return mcf.getDatabase();
-    }
-
-    /**
-     * Set database name.
-     *
-     * @param name
-     *         connection URL without {@code "jdbc:firebirdsql:"}
-     *         prefix ({@code "//localhost:3050/c:/database/employee.fdb"}) for
-     *         example).
-     */
-    public void setDatabase(String name) {
-        mcf.setDatabase(name);
-    }
-
-    /**
-     * Get user name that is used in {@link #getConnection()} method.
-     *
-     * @return default user name.
-     * @deprecated use {@link #getUserName()} instead for the sake of naming
-     * compatibility.
-     */
-    @Deprecated
-    public String getUser() {
-        return getUserName();
-    }
-
-    /**
-     * Set user name that will be used in {@link #getConnection()} method.
-     *
-     * @param user
-     *         default user name.
-     * @deprecated use {@link #setUserName(String)} instead for the sake of naming compatibility.
-     */
-    @Deprecated
-    public void setUser(String user) {
-        setUserName(user);
-    }
-
-    /**
-     * Get user name that is used in {@link #getConnection()} method.
-     *
-     * @return default user name.
-     */
-    public String getUserName() {
-        return mcf.getUserName();
-    }
-
-    /**
-     * Set user name that will be used in {@link #getConnection()} method.
-     *
-     * @param userName
-     *         default user name.
-     */
-    public void setUserName(String userName) {
-        mcf.setUserName(userName);
-    }
-
-    /**
-     * Get password used in {@link #getConnection()} method.
-     *
-     * @return password corresponding to the user name returned by
-     * {@link #getUserName()}.
-     */
-    public String getPassword() {
-        return mcf.getPassword();
-    }
-
-    /**
-     * Set password that will be used in the {@link #getConnection()} method.
-     *
-     * @param password
-     *         password corresponding to the user name set in {@link #setUserName(String)}.
-     */
-    public void setPassword(String password) {
-        mcf.setPassword(password);
-    }
-
-    /**
-     * Get encoding for connections produced by this data source.
-     *
-     * @return encoding for the connection.
-     */
-    public String getEncoding() {
-        return mcf.getEncoding();
-    }
-
-    /**
-     * Set encoding for connections produced by this data source.
-     *
-     * @param encoding
-     *         encoding for the connection.
-     */
-    public void setEncoding(String encoding) {
-        mcf.setEncoding(encoding);
-    }
-
-    public String getTpbMapping() {
-        return mcf.getTpbMapping();
-    }
-
-    public void setTpbMapping(String tpbMapping) {
-        mcf.setTpbMapping(tpbMapping);
-    }
-
-    public int getBlobBufferSize() {
-        return mcf.getBlobBufferSize();
-    }
-
-    public int getBuffersNumber() {
-        return mcf.getBuffersNumber();
-    }
-
-    public String getCharSet() {
-        return mcf.getCharSet();
-    }
-
-    public DatabaseParameterBuffer getDatabaseParameterBuffer() throws SQLException {
-        return mcf.getDatabaseParameterBuffer();
-    }
-
-    public String getDefaultIsolation() {
-        return mcf.getDefaultIsolation();
-    }
-
-    public int getDefaultTransactionIsolation() {
-        return mcf.getDefaultTransactionIsolation();
-    }
-
-    public String getNonStandardProperty(String key) {
-        return mcf.getNonStandardProperty(key);
-    }
-
-    public String getRoleName() {
-        return mcf.getRoleName();
-    }
-
-    public int getSocketBufferSize() {
-        return mcf.getSocketBufferSize();
-    }
-
-    public String getSqlDialect() {
-        return mcf.getSqlDialect();
-    }
-
+    @Override
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
         return mcf.getTransactionParameters(isolation);
     }
 
-    public String getType() {
-        return mcf.getType();
-    }
-
-    public boolean isTimestampUsesLocalTimezone() {
-        return mcf.isTimestampUsesLocalTimezone();
-    }
-
-    public boolean isUseStreamBlobs() {
-        return mcf.isUseStreamBlobs();
-    }
-
-    public void setBlobBufferSize(int bufferSize) {
-        mcf.setBlobBufferSize(bufferSize);
-    }
-
-    public void setBuffersNumber(int buffersNumber) {
-        mcf.setBuffersNumber(buffersNumber);
-    }
-
-    public void setCharSet(String charSet) {
-        mcf.setCharSet(charSet);
-    }
-
-    public void setDefaultIsolation(String isolation) {
-        mcf.setDefaultIsolation(isolation);
-    }
-
-    public void setDefaultTransactionIsolation(int defaultIsolationLevel) {
-        mcf.setDefaultTransactionIsolation(defaultIsolationLevel);
-    }
-
-    public void setNonStandardProperty(String key, String value) {
-        mcf.setNonStandardProperty(key, value);
-    }
-
-    public void setNonStandardProperty(String propertyMapping) {
-        mcf.setNonStandardProperty(propertyMapping);
-    }
-
-    public void setRoleName(String roleName) {
-        mcf.setRoleName(roleName);
-    }
-
-    public void setSocketBufferSize(int socketBufferSize) {
-        mcf.setSocketBufferSize(socketBufferSize);
-    }
-
-    public void setSqlDialect(String sqlDialect) {
-        mcf.setSqlDialect(sqlDialect);
-    }
-
-    public void setTimestampUsesLocalTimezone(boolean timestampUsesLocalTimezone) {
-        mcf.setTimestampUsesLocalTimezone(timestampUsesLocalTimezone);
-    }
-
+    @Override
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
         mcf.setTransactionParameters(isolation, tpb);
     }
 
-    public void setType(String type) {
-        mcf.setType(type);
-    }
-
-    public void setUseStreamBlobs(boolean useStreamBlobs) {
-        mcf.setUseStreamBlobs(useStreamBlobs);
-    }
-
-    public boolean isDefaultResultSetHoldable() {
-        return mcf.isDefaultResultSetHoldable();
-    }
-
-    public void setDefaultResultSetHoldable(boolean isHoldable) {
-        mcf.setDefaultResultSetHoldable(isHoldable);
-    }
-
-    public int getSoTimeout() {
-        return mcf.getSoTimeout();
-    }
-
-    public void setSoTimeout(int soTimeout) {
-        mcf.setSoTimeout(soTimeout);
-    }
-
-    public int getConnectTimeout() {
-        return mcf.getConnectTimeout();
-    }
-
-    public void setConnectTimeout(int connectTimeout) {
-        mcf.setConnectTimeout(connectTimeout);
+    @Override
+    public void setNonStandardProperty(String propertyMapping) {
+        mcf.setNonStandardProperty(propertyMapping);
     }
 
     @Override
-    public boolean isUseFirebirdAutocommit() {
-        return mcf.isUseFirebirdAutocommit();
+    public String getProperty(String name) {
+        return mcf.getProperty(name);
     }
 
     @Override
-    public void setUseFirebirdAutocommit(boolean useFirebirdAutocommit) {
-        mcf.setUseFirebirdAutocommit(useFirebirdAutocommit);
+    public void setProperty(String name, String value) {
+        mcf.setProperty(name, value);
     }
 
     @Override
-    public String getWireCrypt() {
-        return mcf.getWireCrypt();
+    public Integer getIntProperty(String name) {
+        return mcf.getIntProperty(name);
     }
 
     @Override
-    public void setWireCrypt(String wireCrypt) {
-        mcf.setWireCrypt(wireCrypt);
+    public void setIntProperty(String name, Integer value) {
+        mcf.setIntProperty(name, value);
     }
 
     @Override
-    public String getDbCryptConfig() {
-        return mcf.getDbCryptConfig();
+    public Boolean getBooleanProperty(String name) {
+        return mcf.getBooleanProperty(name);
     }
 
     @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        mcf.setDbCryptConfig(dbCryptConfig);
+    public void setBooleanProperty(String name, Boolean value) {
+        mcf.setBooleanProperty(name, value);
     }
 
     @Override
-    public String getAuthPlugins() {
-        return mcf.getAuthPlugins();
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        mcf.setAuthPlugins(authPlugins);
-    }
-
-    @Override
-    public String getGeneratedKeysEnabled() {
-        return mcf.getGeneratedKeysEnabled();
-    }
-
-    @Override
-    public void setGeneratedKeysEnabled(String generatedKeysEnabled) {
-        mcf.setGeneratedKeysEnabled(generatedKeysEnabled);
-    }
-
-    @Override
-    public String getDataTypeBind() {
-        return mcf.getDataTypeBind();
-    }
-
-    @Override
-    public void setDataTypeBind(String dataTypeBind) {
-        mcf.setDataTypeBind(dataTypeBind);
-    }
-
-    @Override
-    public String getSessionTimeZone() {
-        return mcf.getSessionTimeZone();
-    }
-
-    @Override
-    public void setSessionTimeZone(String sessionTimeZone) {
-        mcf.setSessionTimeZone(sessionTimeZone);
-    }
-
-    @Override
-    public boolean isIgnoreProcedureType() {
-        return mcf.isIgnoreProcedureType();
-    }
-
-    @Override
-    public void setIgnoreProcedureType(boolean ignoreProcedureType) {
-        mcf.setIgnoreProcedureType(ignoreProcedureType);
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return mcf.isWireCompression();
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        mcf.setWireCompression(wireCompression);
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return mcf.connectionPropertyValues();
     }
 
     @Override
@@ -486,6 +174,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @throws SQLException
      *         if something went wrong.
      */
+    @Override
     public Connection getConnection() throws SQLException {
         return getDataSource().getConnection();
     }
@@ -501,28 +190,9 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
      * @throws SQLException
      *         if something went wrong.
      */
+    @Override
     public Connection getConnection(String username, String password) throws SQLException {
         return getDataSource().getConnection(username, password);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This property is an alias for the connectTimeout property.
-     * </p>
-     */
-    public int getLoginTimeout() throws SQLException {
-        return getConnectTimeout();
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * This property is an alias for the connectTimeout property.
-     * </p>
-     */
-    public void setLoginTimeout(int loginTimeout) throws SQLException {
-        setConnectTimeout(loginTimeout);
     }
 
     /**
@@ -557,7 +227,7 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
             return ds;
         }
 
-        if (mcf.getDatabase() == null || "".equals(mcf.getDatabase().trim())) {
+        if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
             throw new SQLException("Database was not specified. Cannot provide connections.");
         }
 
@@ -568,10 +238,12 @@ public class FBSimpleDataSource extends RootCommonDataSource implements DataSour
 
     // JDBC 4.0
 
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface != null && iface.isAssignableFrom(getClass());
     }
 
+    @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         if (!isWrapperFor(iface)) {
             throw new SQLException("Unable to unwrap to class " + iface.getName());

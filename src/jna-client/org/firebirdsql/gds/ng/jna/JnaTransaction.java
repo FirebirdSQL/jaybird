@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -92,9 +92,10 @@ public class JnaTransaction extends AbstractFbTransaction {
             final TransactionState transactionState = getState();
             if (transactionState != TransactionState.COMMITTED) {
                 String message = "Commit not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Commit not completed"));
+                    log.warnDebug(message, new RuntimeException("Commit not completed"));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }
@@ -118,9 +119,10 @@ public class JnaTransaction extends AbstractFbTransaction {
             final TransactionState transactionState = getState();
             if (transactionState != TransactionState.ROLLED_BACK) {
                 String message = "Rollback not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Rollback not completed"));
+                    log.warnDebug(message, new RuntimeException("Rollback not completed"));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }
@@ -149,9 +151,10 @@ public class JnaTransaction extends AbstractFbTransaction {
         } finally {
             if (getState() != TransactionState.PREPARED) {
                 String message = "Prepare not completed";
-                log.warn(message + "; see debug level for stacktrace");
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException(message));
+                    log.warnDebug(message, new RuntimeException(message));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }

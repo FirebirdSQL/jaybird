@@ -26,9 +26,14 @@ import org.junit.Test;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Locale;
 
+import static org.firebirdsql.common.FBTestProperties.DB_NAME;
 import static org.hamcrest.CoreMatchers.endsWith;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for support of the scalar system function escapes as defined in
@@ -48,7 +53,7 @@ public class TestScalarSystemFunctions {
             ResultSet rs = stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
             assertTrue("Expected at least one row", rs.next());
             assertThat("Unexpected result for function escape DATABASE()",
-                    rs.getString(1), endsWith(FBTestProperties.DB_NAME.toUpperCase()));
+                    rs.getString(1), anyOf(endsWith(DB_NAME.toUpperCase(Locale.ROOT)), endsWith(DB_NAME)));
         }
     }
 

@@ -51,17 +51,16 @@ public abstract class TestXABase extends FBJUnit4TestBase {
     /**
      * Creates a suitable {@link FBManagedConnectionFactory} for testing.
      *
-     * @param shared {@code true} factory is suitable for sharing, {@code false} otherwise
+     * @param shared
+     *         {@code true} factory is suitable for sharing, {@code false} otherwise
      * @return connection factory
      */
     public FBManagedConnectionFactory initMcf(boolean shared) {
         FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
-        mcf.setDatabase(DB_DATASOURCE_URL);
-        mcf.setUserName(DB_USER);
+        mcf.setDatabaseName(DB_DATASOURCE_URL);
+        mcf.setUser(DB_USER);
         mcf.setPassword(DB_PASSWORD);
         mcf.setEncoding(DB_LC_CTYPE);
-
-        mcf.setSqlDialect("3");
 
         return mcf;
     }

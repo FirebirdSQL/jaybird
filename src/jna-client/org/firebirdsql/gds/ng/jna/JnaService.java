@@ -83,7 +83,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
         try {
             final byte[] serviceParameterBufferBytes = serviceParameterBuffer == null ? null
-                    : serviceParameterBuffer.toBytesWithType();
+                    : serviceParameterBuffer.toBytes();
             final byte[] serviceRequestBufferBytes =
                     serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
@@ -146,7 +146,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
                     // TODO Replace with specific error (eg native client error)
                     throw new FbExceptionBuilder()
                             .exception(ISCConstants.isc_network_error)
-                            .messageParameter(connection.getServerName())
+                            .messageParameter(connection.getAttachUrl())
                             .cause(ex)
                             .toSQLException();
                 }
@@ -168,7 +168,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
      * @throws SQLException
      *         For errors reading or writing database information.
      */
-    protected void afterAttachActions() throws SQLException {
+    private void afterAttachActions() throws SQLException {
         getServiceInfo(null, getDescribeServiceRequestBuffer(), 1024, getServiceInformationProcessor());
     }
 
@@ -184,7 +184,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(connection.getServerName())
+                        .messageParameter(connection.getAttachUrl())
                         .cause(ex)
                         .toSQLException();
             } finally {

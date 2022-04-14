@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,6 +22,8 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.util.*;
+
+import static java.lang.String.format;
 
 /**
  * Collection of protocols for a connect request.
@@ -49,17 +51,21 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                     ServiceLoader.load(ProtocolDescriptor.class, classLoader);
             // We can't use foreach here, because the descriptors are lazily loaded, which might trigger a ServiceConfigurationError
             Iterator<ProtocolDescriptor> descriptorIterator = descriptors.iterator();
-            //noinspection WhileLoopReplaceableByForEach
-            while (descriptorIterator.hasNext()) {
+            int retry = 0;
+            while (retry < 2) {
                 try {
-                    ProtocolDescriptor protocol = descriptorIterator.next();
-                    if (!supportedProtocols.contains(protocol)) {
-                        supportedProtocols.add(protocol);
+                    while (descriptorIterator.hasNext()) {
+                        try {
+                            ProtocolDescriptor protocol = descriptorIterator.next();
+                            supportedProtocols.add(protocol);
+                        } catch (Exception | ServiceConfigurationError e) {
+                            log.errorDebug("Could not load protocol descriptor (skipping)", e);
+                        }
                     }
-                } catch (Exception | ServiceConfigurationError e) {
-                    String message = "Could not load protocol descriptor (skipping)";
-                    log.error(message + ": " + e + "; see debug level for stacktrace");
-                    log.debug(message, e);
+                    break;
+                } catch (ServiceConfigurationError e) {
+                    log.error("Error finding next ProtocolDescriptor", e);
+                    retry++;
                 }
             }
         }
@@ -120,10 +126,7 @@ public final class ProtocolCollection implements Iterable<ProtocolDescriptor> {
                 ProtocolDescriptor protocol = (ProtocolDescriptor) clazz.getDeclaredConstructor().newInstance();
                 protocols.add(protocol);
             } catch (Exception e) {
-                String message =
-                        String.format("Unable to load protocol %s in loadProtocolsFallback; skipping", className);
-                log.warn(message + ": " + e + "; see debug level for stacktrace");
-                log.debug(message, e);
+                log.warnDebug(format("Unable to load protocol %s in loadProtocolsFallback; skipping", className), e);
             }
         }
         return protocols;

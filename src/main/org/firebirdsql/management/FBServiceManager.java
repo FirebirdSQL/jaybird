@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,16 +19,25 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.Map;
 
-import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.gds.ISCConstants.isc_info_end;
+import static org.firebirdsql.gds.ISCConstants.isc_info_svc_to_eof;
+import static org.firebirdsql.gds.ISCConstants.isc_info_truncated;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 
 /**
@@ -40,7 +49,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 public class FBServiceManager implements ServiceManager {
 
     private final IServiceProperties serviceProperties = new FbServiceProperties();
-    private FbDatabaseFactory dbFactory;
+    private final FbDatabaseFactory dbFactory;
     private String database;
     private OutputStream logger;
 
@@ -73,17 +82,26 @@ public class FBServiceManager implements ServiceManager {
      *         The GDS implementation type to use
      */
     public FBServiceManager(GDSType gdsType) {
+        serviceProperties.setType(gdsType.toString());
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
     }
 
     @Override
+    public final void setType(String type) {
+        throw new IllegalStateException("Type must be specified on construction");
+    }
+
+    // NOTE: we're redirecting the default implementations of the interface here to ensure the
+    //  service manager can be introspected as a JavaBean (default methods are not returned by the introspector)
+
+    @Override
     public void setCharSet(String charSet) {
-        serviceProperties.setCharSet(charSet);
+        ServiceManager.super.setCharSet(charSet);
     }
 
     @Override
     public String getCharSet() {
-        return serviceProperties.getCharSet();
+        return ServiceManager.super.getCharSet();
     }
 
     /**
@@ -93,7 +111,7 @@ public class FBServiceManager implements ServiceManager {
      *         name of the user.
      */
     public void setUser(String user) {
-        serviceProperties.setUser(user);
+        ServiceManager.super.setUser(user);
     }
 
     /**
@@ -102,7 +120,7 @@ public class FBServiceManager implements ServiceManager {
      * @return name of the user that performs the operation.
      */
     public String getUser() {
-        return serviceProperties.getUser();
+        return ServiceManager.super.getUser();
     }
 
     /**
@@ -110,92 +128,162 @@ public class FBServiceManager implements ServiceManager {
      *         The password to set.
      */
     public void setPassword(String password) {
-        serviceProperties.setPassword(password);
+        ServiceManager.super.setPassword(password);
     }
 
     /**
      * @return Returns the password.
      */
     public String getPassword() {
-        return serviceProperties.getPassword();
+        return ServiceManager.super.getPassword();
     }
 
+    @Override
+    public String getServerName() {
+        return ServiceManager.super.getServerName();
+    }
+
+    @Override
+    public void setServerName(String serverName) {
+        ServiceManager.super.setServerName(serverName);
+    }
+
+    @Override
+    public int getPortNumber() {
+        return ServiceManager.super.getPortNumber();
+    }
+
+    @Override
+    public void setPortNumber(int portNumber) {
+        ServiceManager.super.setPortNumber(portNumber);
+    }
+
+    @Override
+    public String getServiceName() {
+        return ServiceManager.super.getServiceName();
+    }
+
+    @Override
+    public void setServiceName(String serviceName) {
+        ServiceManager.super.setServiceName(serviceName);
+    }
+
+    @Override
     public void setDatabase(String database) {
         this.database = database;
     }
 
+    @Override
     public String getDatabase() {
         return database;
     }
 
-    /**
-     * @return Returns the host.
-     */
+    @Override
+    @Deprecated
     public String getHost() {
-        return serviceProperties.getServerName();
+        return getServerName();
     }
 
-    /**
-     * @param host
-     *         The host to set.
-     */
+    @Override
+    @Deprecated
     public void setHost(String host) {
-        serviceProperties.setServerName(host);
+        setServerName(host);
     }
 
-    /**
-     * @return Returns the port.
-     */
+    @Override
+    @Deprecated
     public int getPort() {
-        return serviceProperties.getPortNumber();
+        return getPortNumber();
     }
 
-    /**
-     * @param port
-     *         The port to set.
-     */
+    @Override
+    @Deprecated
     public void setPort(int port) {
-        serviceProperties.setPortNumber(port);
+        setPortNumber(port);
     }
 
     @Override
-    public WireCrypt getWireCrypt() {
-        return serviceProperties.getWireCrypt();
+    public String getWireCrypt() {
+        return ServiceManager.super.getWireCrypt();
     }
 
     @Override
-    public void setWireCrypt(WireCrypt wireCrypt) {
-        serviceProperties.setWireCrypt(wireCrypt);
+    public WireCrypt getWireCryptAsEnum() {
+        return serviceProperties.getWireCryptAsEnum();
+    }
+
+    @Override
+    public void setWireCryptAsEnum(WireCrypt wireCrypt) {
+        serviceProperties.setWireCryptAsEnum(wireCrypt);
     }
 
     @Override
     public String getDbCryptConfig() {
-        return serviceProperties.getDbCryptConfig();
+        return ServiceManager.super.getDbCryptConfig();
     }
 
     @Override
     public void setDbCryptConfig(String dbCryptConfig) {
-        serviceProperties.setDbCryptConfig(dbCryptConfig);
+        ServiceManager.super.setDbCryptConfig(dbCryptConfig);
     }
 
     @Override
     public String getAuthPlugins() {
-        return serviceProperties.getDbCryptConfig();
+        return ServiceManager.super.getDbCryptConfig();
     }
 
     @Override
     public void setAuthPlugins(String authPlugins) {
-        serviceProperties.setAuthPlugins(authPlugins);
+        ServiceManager.super.setAuthPlugins(authPlugins);
     }
 
     @Override
     public boolean isWireCompression() {
-        return serviceProperties.isWireCompression();
+        return ServiceManager.super.isWireCompression();
     }
 
     @Override
     public void setWireCompression(boolean wireCompression) {
-        serviceProperties.setWireCompression(wireCompression);
+        ServiceManager.super.setWireCompression(wireCompression);
+    }
+
+    @Override
+    public String getProperty(String name) {
+        return serviceProperties.getProperty(name);
+    }
+
+    @Override
+    public void setProperty(String name, String value) {
+        if (PropertyNames.type.equals(name)) {
+            // Triggers exception
+            setType(value);
+        }
+        serviceProperties.setProperty(name, value);
+    }
+
+    @Override
+    public Integer getIntProperty(String name) {
+        return serviceProperties.getIntProperty(name);
+    }
+
+    @Override
+    public void setIntProperty(String name, Integer value) {
+        serviceProperties.setIntProperty(name, value);
+    }
+
+    @Override
+    public Boolean getBooleanProperty(String name) {
+        return serviceProperties.getBooleanProperty(name);
+    }
+
+    @Override
+    public void setBooleanProperty(String name, Boolean value) {
+        serviceProperties.setBooleanProperty(name, value);
+    }
+
+    @Override
+    public Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return serviceProperties.connectionPropertyValues();
     }
 
     /**
@@ -213,23 +301,6 @@ public class FBServiceManager implements ServiceManager {
         this.logger = logger;
     }
 
-    public String getServiceName() {
-        StringBuilder sb = new StringBuilder();
-        if (getHost() != null) {
-
-            sb.append(getHost());
-
-            if (getPort() != 3050) {
-                sb.append('/');
-                sb.append(getPort());
-            }
-
-            sb.append(':');
-        }
-        sb.append("service_mgr");
-        return sb.toString();
-    }
-
     public FbService attachServiceManager() throws SQLException {
         FbService fbService = dbFactory.serviceConnect(serviceProperties);
         fbService.attach();
@@ -241,14 +312,38 @@ public class FBServiceManager implements ServiceManager {
             throw new SQLException("Property database needs to be set.");
         }
         FbConnectionProperties connectionProperties = new FbConnectionProperties();
-        connectionProperties.setServerName(serviceProperties.getServerName());
-        connectionProperties.setPortNumber(serviceProperties.getPortNumber());
+        createDatabaseAttachInfo().copyTo(connectionProperties);
         connectionProperties.setUser(serviceProperties.getUser());
         connectionProperties.setPassword(serviceProperties.getPassword());
-        connectionProperties.setDatabaseName(database);
         FbDatabase fbDatabase = dbFactory.connect(connectionProperties);
         fbDatabase.attach();
         return fbDatabase;
+    }
+
+    private DbAttachInfo createDatabaseAttachInfo() {
+        // NOTE: If it turns out we need to tweak this for specific protocol implementations, this may need to move to
+        // FbDatabaseFactory (e.g. as a default method to be overridden by implementations)
+        final String serverName = serviceProperties.getServerName();
+        final String serviceAttachObjectName = serviceProperties.getAttachObjectName();
+        if (serverName != null || serviceAttachObjectName == null || serviceAttachObjectName.isEmpty()) {
+            return new DbAttachInfo(serverName, serviceProperties.getPortNumber(), database);
+        }
+        String databaseAttachObjectName;
+        if (serviceAttachObjectName.equals(PropertyConstants.DEFAULT_SERVICE_NAME)) {
+            databaseAttachObjectName = database;
+        } else if (serviceAttachObjectName.endsWith(PropertyConstants.DEFAULT_SERVICE_NAME)) {
+            databaseAttachObjectName = serviceAttachObjectName
+                    .substring(0, serviceAttachObjectName.length() - 11 /* service_mgr */) + database;
+        } else if (serviceAttachObjectName.endsWith("/") || serviceAttachObjectName.endsWith(":")) {
+            // e.g. //localhost/ or inet://localhost/ or localhost:
+            databaseAttachObjectName = serviceAttachObjectName + database;
+        } else {
+            // e.g. //localhost or inet://localhost
+            // NOTE: This is probably the most error-prone conversion, but making this more robust increases complexity
+            // significantly, so instead we'll just let Firebird fail if this guess is wrong
+            databaseAttachObjectName = serviceAttachObjectName + '/' + database;
+        }
+        return new DbAttachInfo(null, serviceProperties.getPortNumber(), databaseAttachObjectName);
     }
 
     public void queueService(FbService service) throws SQLException, IOException {

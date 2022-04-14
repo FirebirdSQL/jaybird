@@ -694,7 +694,7 @@ public class TimeZoneByNameMappingTest {
                 testCase(64914, "US/Michigan"),
                 testCase(64913, "US/Mountain"),
                 testCase(64912, "US/Pacific"),
-                testCase(64911, "US/Pacific-New"),
+                testCase(64911, "America/Los_Angeles", "America/Los_Angeles", 65383), // was US/Pacific-New (see also TimeZoneMapping)
                 testCase(64910, "US/Samoa"),
                 testCase(64909, "UTC"),
                 testCase(64908, "Universal"),

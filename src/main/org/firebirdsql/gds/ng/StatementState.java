@@ -66,12 +66,12 @@ public enum StatementState {
         }
     },
     /**
-     * Statement has been allocated
+     * Statement has been allocated or unprepared
      */
     ALLOCATED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, CLOSING);
+            return EnumSet.of(ERROR, PREPARED, ALLOCATED, CLOSING);
         }
     },
     /**
@@ -80,7 +80,7 @@ public enum StatementState {
     PREPARED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, EXECUTING, CLOSING, PREPARED);
+            return EnumSet.of(ERROR, EXECUTING, CLOSING, PREPARED, ALLOCATED);
         }
     },
     /**
@@ -103,7 +103,7 @@ public enum StatementState {
 
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, CLOSING);
+            return EnumSet.of(ERROR, PREPARED, ALLOCATED, CLOSING);
         }
     },
     /**

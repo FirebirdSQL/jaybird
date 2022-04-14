@@ -1,30 +1,30 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.gds;
+
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 
 /**
  * Instances of this interface represent Transaction Parameter Buffer from the
@@ -33,37 +33,58 @@ package org.firebirdsql.gds;
 public interface TransactionParameterBuffer extends ParameterBuffer {
 
     //@formatter:off
-    int AUTOCOMMIT         = ISCConstants.isc_tpb_autocommit;
+    @Deprecated
+    int AUTOCOMMIT          = TpbItems.isc_tpb_autocommit;
 
-    int READ_COMMITTED      = ISCConstants.isc_tpb_read_committed;
-    int REC_VERSION         = ISCConstants.isc_tpb_rec_version;
-    int NO_REC_VERSION      = ISCConstants.isc_tpb_no_rec_version;
+    @Deprecated
+    int READ_COMMITTED      = TpbItems.isc_tpb_read_committed;
+    @Deprecated
+    int REC_VERSION         = TpbItems.isc_tpb_rec_version;
+    @Deprecated
+    int NO_REC_VERSION      = TpbItems.isc_tpb_no_rec_version;
 
-    int CONCURRENCY         = ISCConstants.isc_tpb_concurrency;
-    int CONSISTENCY         = ISCConstants.isc_tpb_consistency;
+    @Deprecated
+    int CONCURRENCY         = TpbItems.isc_tpb_concurrency;
+    @Deprecated
+    int CONSISTENCY         = TpbItems.isc_tpb_consistency;
 
-    int SHARED              = ISCConstants.isc_tpb_shared;
-    int PROTECTED           = ISCConstants.isc_tpb_protected;
-    int EXCLUSIVE           = ISCConstants.isc_tpb_exclusive;
+    @Deprecated
+    int SHARED              = TpbItems.isc_tpb_shared;
+    @Deprecated
+    int PROTECTED           = TpbItems.isc_tpb_protected;
+    @Deprecated
+    int EXCLUSIVE           = TpbItems.isc_tpb_exclusive;
 
-    int WAIT                = ISCConstants.isc_tpb_wait;
-    int NOWAIT              = ISCConstants.isc_tpb_nowait;
+    @Deprecated
+    int WAIT                = TpbItems.isc_tpb_wait;
+    @Deprecated
+    int NOWAIT              = TpbItems.isc_tpb_nowait;
 
-    int READ                = ISCConstants.isc_tpb_read;
-    int WRITE               = ISCConstants.isc_tpb_write;
-    
-    int LOCK_READ           = ISCConstants.isc_tpb_lock_read;
-    int LOCK_WRITE          = ISCConstants.isc_tpb_lock_write;
-    
-    int VERB_TIME           = ISCConstants.isc_tpb_verb_time;
-    int COMMIT_TIME         = ISCConstants.isc_tpb_commit_time;
+    @Deprecated
+    int READ                = TpbItems.isc_tpb_read;
+    @Deprecated
+    int WRITE               = TpbItems.isc_tpb_write;
 
-    int IGNORE_LIMBO        = ISCConstants.isc_tpb_ignore_limbo;
-    int RESTART_REQUESTS    = ISCConstants.isc_tpb_restart_requests;
-    
-    int NO_AUTO_UNDO        = ISCConstants.isc_tpb_no_auto_undo;
-    
-    int LOCK_TIMEOUT        = ISCConstants.isc_tpb_lock_timeout;
+    @Deprecated
+    int LOCK_READ           = TpbItems.isc_tpb_lock_read;
+    @Deprecated
+    int LOCK_WRITE          = TpbItems.isc_tpb_lock_write;
+
+    @Deprecated
+    int VERB_TIME           = TpbItems.isc_tpb_verb_time;
+    @Deprecated
+    int COMMIT_TIME         = TpbItems.isc_tpb_commit_time;
+
+    @Deprecated
+    int IGNORE_LIMBO        = TpbItems.isc_tpb_ignore_limbo;
+    @Deprecated
+    int RESTART_REQUESTS    = TpbItems.isc_tpb_restart_requests;
+
+    @Deprecated
+    int NO_AUTO_UNDO        = TpbItems.isc_tpb_no_auto_undo;
+
+    @Deprecated
+    int LOCK_TIMEOUT        = TpbItems.isc_tpb_lock_timeout;
     //@formatter:on
 
     /**

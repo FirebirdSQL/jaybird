@@ -27,6 +27,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
@@ -42,7 +43,8 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
     // TODO Check if a calendar with a bigger offset might be better
     // TODO Check if dynamic selection of timezone is needed to prevent location-dependent and/or summer/winter time issues
     private final Calendar tzCalendar = Calendar.getInstance(getOneHourBehindTimeZone());
-    private static final java.sql.Date TEST_SQL_DATE = java.sql.Date.valueOf("2012-03-11");
+    private static final LocalDate TEST_LOCAL_DATE = LocalDate.parse("2012-03-11");
+    private static final java.sql.Date TEST_SQL_DATE = java.sql.Date.valueOf(TEST_LOCAL_DATE);
 
     @Before
     @Override
@@ -406,14 +408,14 @@ public class TestFBDateField extends BaseJUnit4TestFBField<FBDateField, java.sql
     }
     
     /**
-     * Expectations to return {@link #TEST_SQL_DATE} from fieldData
+     * Expectations to return {@link #TEST_LOCAL_DATE} from fieldData
      */
     private void toReturnTestSqlDateExpectations() {
-        toReturnDateExpectations(TEST_SQL_DATE);
+        toReturnDateExpectations(TEST_LOCAL_DATE);
     }
     
     private void setTestSqlDateExpectations() {
-        setDateExpectations(TEST_SQL_DATE);
+        setDateExpectations(TEST_LOCAL_DATE);
     }
 
     @Override

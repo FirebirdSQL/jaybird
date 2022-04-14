@@ -26,6 +26,7 @@ import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBServiceManager;
+import org.firebirdsql.management.ServiceManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.io.File;
@@ -73,6 +74,7 @@ public final class FBTestProperties {
     public static final String DB_SERVER_URL = getProperty("test.db.host", "localhost");
     public static final int DB_SERVER_PORT = Integer.parseInt(getProperty("test.db.port", "3050"));
     public static final String DB_LC_CTYPE = getProperty("test.db.lc_ctype", "NONE");
+    public static final boolean DB_ON_DOCKER = Boolean.parseBoolean(getProperty("test.db_on_docker", "false"));
     public static final String DB_DATASOURCE_URL = getdbpath(DB_NAME);
     public static final String GDS_TYPE = getProperty("test.gds_type", "PURE_JAVA");
     public static final boolean USE_FIREBIRD_AUTOCOMMIT =
@@ -83,7 +85,7 @@ public final class FBTestProperties {
     }
 
     public static String getDatabasePath(String name) {
-        if (!"127.0.0.1".equals(DB_SERVER_URL) && !"localhost".equals(DB_SERVER_URL))
+        if (!("127.0.0.1".equals(DB_SERVER_URL) || "localhost".equals(DB_SERVER_URL)) || DB_ON_DOCKER)
             return DB_PATH + "/" + name;
         else
             return new File(DB_PATH, name).getAbsolutePath();
@@ -98,7 +100,7 @@ public final class FBTestProperties {
      */
     public static String getdbpath(String name) {
         final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "LOCAL".equalsIgnoreCase(gdsType)) {
+        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
             return new File(DB_PATH, name).getAbsolutePath();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
@@ -119,6 +121,19 @@ public final class FBTestProperties {
         }
 
         return returnValue;
+    }
+
+    /**
+     * Configures the host, port, user and password of a service manager using the default properties.
+     *
+     * @param serviceManager Service manager to configure
+     */
+    public static <T extends ServiceManager> T configureServiceManager(T serviceManager) {
+        serviceManager.setServerName(DB_SERVER_URL);
+        serviceManager.setPortNumber(DB_SERVER_PORT);
+        serviceManager.setUser(DB_USER);
+        serviceManager.setPassword(DB_PASSWORD);
+        return serviceManager;
     }
 
     /**
@@ -145,8 +160,8 @@ public final class FBTestProperties {
                 if (gdsType == GDSType.getType("PURE_JAVA")
                         || gdsType == GDSType.getType("NATIVE")
                         || gdsType == GDSType.getType("OOREMOTE") ) {
-                    fbServiceManager.setHost(DB_SERVER_URL);
-                    fbServiceManager.setPort(DB_SERVER_PORT);
+                    fbServiceManager.setServerName(DB_SERVER_URL);
+                    fbServiceManager.setPortNumber(DB_SERVER_PORT);
                 }
                 fbServiceManager.setUser(FBTestProperties.DB_USER);
                 fbServiceManager.setPassword(FBTestProperties.DB_PASSWORD);
@@ -163,10 +178,8 @@ public final class FBTestProperties {
         gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("LOCAL"), "jdbc:firebirdsql:local:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("FBOOEMBEDDED"), "jdbc:firebirdsql:fboo:embedded:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("FBOONATIVE"), "jdbc:firebirdsql:fboo:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("FBOOLOCAL"), "jdbc:firebirdsql:fboo:local:");
         gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
 
         // TODO Replace with an external definition/way to add additional types for third party plugins?
@@ -187,7 +200,7 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE) || "LOCAL".equalsIgnoreCase(GDS_TYPE)) {
+        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
         } else {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
@@ -232,6 +245,8 @@ public final class FBTestProperties {
         }
         fbManager.start();
         fbManager.setForceCreate(true);
+        // disable force write for minor increase in test throughput
+        fbManager.setForceWrite(false);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
     }
 

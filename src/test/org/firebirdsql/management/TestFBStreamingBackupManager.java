@@ -18,10 +18,13 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.GDSType;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,6 +49,12 @@ public class TestFBStreamingBackupManager {
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
 
+    @ClassRule
+    public static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build()
+            .toRule();
+
     @Rule
     public final RuleChain ruleChain = RuleChain.outerRule(RequireProtocol.requireProtocolVersion(12))
             .around(temporaryFolder)
@@ -63,8 +72,8 @@ public class TestFBStreamingBackupManager {
         System.out.println(tempFolder);
         backupManager = new FBStreamingBackupManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            backupManager.setHost(DB_SERVER_URL);
-            backupManager.setPort(DB_SERVER_PORT);
+            backupManager.setServerName(DB_SERVER_URL);
+            backupManager.setPortNumber(DB_SERVER_PORT);
         }
         backupManager.setUser(DB_USER);
         backupManager.setPassword(DB_PASSWORD);

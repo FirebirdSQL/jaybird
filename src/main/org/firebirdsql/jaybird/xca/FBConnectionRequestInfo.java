@@ -18,185 +18,69 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.firebirdsql.encodings.Encoding;
-import org.firebirdsql.gds.DatabaseParameterBuffer;
-import org.firebirdsql.gds.Parameter;
-import org.firebirdsql.gds.ParameterTagMapping;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.impl.wire.Xdrable;
+import org.firebirdsql.gds.ng.IConnectionProperties;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.Iterator;
 
 /**
- * The class {@code FBConnectionRequestInfo} holds a clumplet that is
- * used to store and transfer connection-specific information such as user,
- * password, and other dpb information.
+ * The class {@code FBConnectionRequestInfo} holds connection-specific information such as user, password, and other
+ * information.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBConnectionRequestInfo implements DatabaseParameterBufferExtension, Serializable {
+public class FBConnectionRequestInfo implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    
-    private final DatabaseParameterBuffer dpb;
+    private static final long serialVersionUID = 2L;
 
-    public FBConnectionRequestInfo(DatabaseParameterBuffer dpb) {
-        this.dpb = dpb;
-    }
+    private final IConnectionProperties connectionProperties;
 
     /**
-     * Perform a deep copy of this object, returning the copied instance.
+     * Creates a connection request info based on a set of connection properties.
+     * <p>
+     * Mutable connection properties are used as is, so the caller is responsible to provide a copy if mutations
+     * shouldn't propagate. Immutable properties are automatically copied to a mutable version.
+     * </p>
      *
-     * @return A deep-copied copy of this FBConnectionRequestInfo object
+     * @param connectionProperties
+     *         Connection properties
+     * @since 5
      */
-    @Override
-    public DatabaseParameterBuffer deepCopy() {
-        return new FBConnectionRequestInfo(dpb.deepCopy());
-    }
-
-    /**
-     * Get the underlying Database Parameter Buffer for this object.
-     *
-     * @return The underlying dpb for this object
-     */
-    public DatabaseParameterBuffer getDpb() {
-        return dpb;
-    }
-
-    @Override
-    public void addArgument(int argumentType, byte[] content) {
-        dpb.addArgument(argumentType, content);
-    }
-
-    @Override
-    public void addArgument(int argumentType, int value) {
-        dpb.addArgument(argumentType, value);
-    }
-
-    @Override
-    public void addArgument(int argumentType, long value) {
-        dpb.addArgument(argumentType, value);
-    }
-
-    @Override
-    public void addArgument(int argumentType, String value) {
-        dpb.addArgument(argumentType, value);
-    }
-
-    @Override
-    public void addArgument(int argumentType, String value, Encoding encoding) {
-        dpb.addArgument(argumentType, value, encoding);
-    }
-
-    @Override
-    public int getType() {
-        return dpb.getType();
-    }
-
-    @Override
-    public void addArgument(int argumentType) {
-        dpb.addArgument(argumentType);
-    }
-
-    @Override
-    public int getArgumentAsInt(int argumentType) {
-        return dpb.getArgumentAsInt(argumentType);
-    }
-
-    @Override
-    public String getArgumentAsString(int argumentType) {
-        return dpb.getArgumentAsString(argumentType);
-    }
-
-    @Override
-    public boolean hasArgument(int argumentType) {
-        return dpb.hasArgument(argumentType);
-    }
-
-    @Override
-    public void removeArgument(int argumentType) {
-        dpb.removeArgument(argumentType);
-    }
-
-    @Override
-    public DatabaseParameterBuffer removeExtensionParams() {
-        if (dpb instanceof DatabaseParameterBufferExtension)
-            return ((DatabaseParameterBufferExtension) dpb).removeExtensionParams();
-        else
-            return dpb;
-    }
-
-    @Override
-    public Iterator<Parameter> iterator() {
-        return dpb.iterator();
-    }
-
-    @Override
-    public void writeArgumentsTo(OutputStream outputStream) throws IOException {
-        dpb.writeArgumentsTo(outputStream);
-    }
-
-    @Override
-    public Xdrable toXdrable() {
-        return dpb.toXdrable();
-    }
-
-    @Override
-    public byte[] toBytes() {
-        return dpb.toBytes();
-    }
-
-    @Override
-    public byte[] toBytesWithType() {
-        return dpb.toBytesWithType();
-    }
-
-    @Override
-    public int size() {
-        return dpb.size();
+    public FBConnectionRequestInfo(IConnectionProperties connectionProperties) {
+        this.connectionProperties =
+                connectionProperties.isImmutable() ? connectionProperties.asNewMutable() : connectionProperties;
     }
 
     public void setUserName(String userName) {
-        removeArgument(DatabaseParameterBufferExtension.USER_NAME);
-        if (userName != null) {
-            addArgument(DatabaseParameterBufferExtension.USER_NAME, userName);
-        }
+        connectionProperties.setUser(userName);
     }
 
     public void setPassword(String password) {
-        removeArgument(DatabaseParameterBufferExtension.PASSWORD);
-        if (password != null) {
-            addArgument(DatabaseParameterBufferExtension.PASSWORD, password);
-        }
+        connectionProperties.setPassword(password);
+    }
+
+    /**
+     * @return A mutable view on the connection properties of this connection request
+     * @since 5
+     */
+    public IConnectionProperties asIConnectionProperties() {
+        return connectionProperties;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        if (!(obj instanceof FBConnectionRequestInfo))
-            return false;
+        FBConnectionRequestInfo that = (FBConnectionRequestInfo) o;
 
-        return this.dpb.equals(((FBConnectionRequestInfo) obj).dpb);
+        return connectionProperties.equals(that.connectionProperties);
     }
 
     @Override
     public int hashCode() {
-        return dpb.hashCode();
+        return connectionProperties.hashCode();
     }
 
-    @Override
-    public ParameterTagMapping getTagMapping() {
-        return dpb.getTagMapping();
-    }
-
-    @Override
-    public Encoding getDefaultEncoding() {
-        return dpb.getDefaultEncoding();
-    }
 }

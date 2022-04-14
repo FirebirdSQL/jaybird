@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,15 @@
  */
 package org.firebirdsql.gds.ng;
 
-import static java.util.Objects.requireNonNull;
+import org.firebirdsql.jaybird.props.def.ConnectionProperty;
+import org.firebirdsql.jaybird.props.internal.ConnectionPropertyRegistry;
+import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.InternalApi;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Abstract mutable implementation of {@link IAttachProperties}.
@@ -28,20 +36,20 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> implements IAttachProperties<T> {
 
-    private String serverName = IAttachProperties.DEFAULT_SERVER_NAME;
-    private int portNumber = IAttachProperties.DEFAULT_PORT;
-    private String user;
-    private String password;
-    private String roleName;
-    private String charSet;
-    private String encoding;
-    private int socketBufferSize = IAttachProperties.DEFAULT_SOCKET_BUFFER_SIZE;
-    private int soTimeout = IAttachProperties.DEFAULT_SO_TIMEOUT;
-    private int connectTimeout = IAttachProperties.DEFAULT_CONNECT_TIMEOUT;
-    private WireCrypt wireCrypt = WireCrypt.DEFAULT;
-    private String dbCryptConfig;
-    private String authPlugins;
-    private boolean wireCompression;
+    private static final PropertyUpdateListener NULL_LISTENER = new PropertyUpdateListener() {
+        @Override
+        public void beforeUpdate(ConnectionProperty connectionProperty, Object newValue) {
+            // do nothing
+        }
+
+        @Override
+        public void afterUpdate(ConnectionProperty connectionProperty, Object newValue) {
+            // do nothing
+        }
+    };
+
+    private final Map<ConnectionProperty, Object> propertyValues;
+    private PropertyUpdateListener propertyUpdateListener = NULL_LISTENER;
 
     /**
      * Copy constructor for IAttachProperties.
@@ -53,21 +61,9 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      *         Source to copy from
      */
     protected AbstractAttachProperties(IAttachProperties<T> src) {
+        this();
         if (src != null) {
-            serverName = src.getServerName();
-            portNumber = src.getPortNumber();
-            user = src.getUser();
-            password = src.getPassword();
-            roleName = src.getRoleName();
-            charSet = src.getCharSet();
-            encoding = src.getEncoding();
-            socketBufferSize = src.getSocketBufferSize();
-            soTimeout = src.getSoTimeout();
-            connectTimeout = src.getConnectTimeout();
-            wireCrypt = src.getWireCrypt();
-            dbCryptConfig = src.getDbCryptConfig();
-            authPlugins = src.getAuthPlugins();
-            wireCompression = src.isWireCompression();
+            propertyValues.putAll(src.connectionPropertyValues());
         }
     }
 
@@ -75,164 +71,156 @@ public abstract class AbstractAttachProperties<T extends IAttachProperties<T>> i
      * Default constructor for AbstractAttachProperties
      */
     protected AbstractAttachProperties() {
+        propertyValues = new HashMap<>();
+    }
+
+    // For internal use, to provide serialization support in FbConnectionProperties
+    AbstractAttachProperties(HashMap<ConnectionProperty, Object> propertyValues) {
+        this.propertyValues = propertyValues;
     }
 
     @Override
-    public String getServerName() {
-        return serverName;
+    public final void setProperty(String name, String value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
     }
 
     @Override
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
+    public final String getProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asString(propertyValues.get(property));
+    }
+
+    @Override
+    public final void setIntProperty(String name, Integer value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
+    }
+
+    @Override
+    public final Integer getIntProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asInteger(propertyValues.get(property));
+    }
+
+    @Override
+    public final void setBooleanProperty(String name, Boolean value) {
+        ConnectionProperty property = property(name);
+        setProperty(property, property.type().toType(value));
+    }
+
+    @Override
+    public final Boolean getBooleanProperty(String name) {
+        ConnectionProperty property = property(name);
+        return property.type().asBoolean(propertyValues.get(property));
+    }
+
+    private void setProperty(ConnectionProperty property, Object value) {
+        if (value == null) {
+            value = resolveStoredDefaultValue(property);
+        }
+        // Exceptions thrown from the listener will prevent update from property
+        propertyUpdateListener.beforeUpdate(property, value);
+        if (value != null) {
+            propertyValues.put(property, property.validate(value));
+        } else {
+            propertyValues.remove(property);
+        }
         dirtied();
+        try {
+            propertyUpdateListener.afterUpdate(property, value);
+        } catch (Exception e) {
+            LoggerFactory.getLogger(this.getClass())
+                    .warn("Ignored exception calling propertyUpdateListener.afterUpdate", e);
+        }
+    }
+
+    /**
+     * Resolve the default value for the specified connection property.
+     * <p>
+     * This method is only used for properties that must have a stored default value to function correctly.
+     * </p>
+     *
+     * @param property Connection property
+     * @return Default value to apply (usually {@code null})
+     */
+    protected Object resolveStoredDefaultValue(ConnectionProperty property) {
+        return null;
+    }
+
+    /**
+     * Returns the property of the specified name.
+     * <p>
+     * When the property is not a known property, an unknown variant is returned.
+     * </p>
+     *
+     * @param name
+     *         Property name
+     * @return A connection property instance, never {@code null}
+     */
+    protected final ConnectionProperty property(String name) {
+        return ConnectionPropertyRegistry.getInstance().getOrUnknown(name);
     }
 
     @Override
-    public int getPortNumber() {
-        return portNumber;
+    public final Map<ConnectionProperty, Object> connectionPropertyValues() {
+        return unmodifiableMap(propertyValues);
     }
 
     @Override
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
-        dirtied();
+    public final boolean isImmutable() {
+        return false;
+    }
+
+    /**
+     * Registers an update listener that is notified when a connection property is modified.
+     * <p>
+     * This method is only for internal use within Jaybird.
+     * </p>
+     *
+     * @param listener Listener to register or {@code null} to unregister
+     * @throws IllegalStateException When a property update listener was already registered
+     */
+    @InternalApi
+    public void registerPropertyUpdateListener(PropertyUpdateListener listener) {
+        if (listener == null) {
+            propertyUpdateListener = NULL_LISTENER;
+        } else if (propertyUpdateListener == NULL_LISTENER) {
+            propertyUpdateListener = listener;
+        } else {
+            throw new IllegalStateException("A listener is already registered");
+        }
     }
 
     @Override
-    public String getUser() {
-        return user;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AbstractAttachProperties)) return false;
+
+        AbstractAttachProperties<?> that = (AbstractAttachProperties<?>) o;
+
+        return propertyValues.equals(that.propertyValues);
     }
 
     @Override
-    public void setUser(String user) {
-        this.user = user;
-        dirtied();
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public void setPassword(String password) {
-        this.password = password;
-        dirtied();
-    }
-
-    @Override
-    public String getRoleName() {
-        return roleName;
-    }
-
-    @Override
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-        dirtied();
-    }
-
-    @Override
-    public String getCharSet() {
-        return charSet;
-    }
-
-    @Override
-    public void setCharSet(String charSet) {
-        this.charSet = charSet;
-        dirtied();
-    }
-
-    @Override
-    public String getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-        dirtied();
-    }
-
-    @Override
-    public int getSocketBufferSize() {
-        return socketBufferSize;
-    }
-
-    @Override
-    public void setSocketBufferSize(int socketBufferSize) {
-        this.socketBufferSize = socketBufferSize;
-        dirtied();
-    }
-
-    @Override
-    public int getSoTimeout() {
-        return soTimeout;
-    }
-
-    @Override
-    public void setSoTimeout(int soTimeout) {
-        this.soTimeout = soTimeout;
-        dirtied();
-    }
-
-    @Override
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    @Override
-    public void setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
-        dirtied();
-    }
-
-    @Override
-    public WireCrypt getWireCrypt() {
-        return wireCrypt;
-    }
-
-    @Override
-    public void setWireCrypt(WireCrypt wireCrypt) {
-        this.wireCrypt = requireNonNull(wireCrypt, "wireCrypt");
-        dirtied();
-    }
-
-    @Override
-    public String getDbCryptConfig() {
-        return dbCryptConfig;
-    }
-
-    @Override
-    public void setDbCryptConfig(String dbCryptConfig) {
-        this.dbCryptConfig = dbCryptConfig;
-        dirtied();
-    }
-
-    @Override
-    public String getAuthPlugins() {
-        return authPlugins;
-    }
-
-    @Override
-    public void setAuthPlugins(String authPlugins) {
-        this.authPlugins = authPlugins;
-        dirtied();
-    }
-
-    @Override
-    public boolean isWireCompression() {
-        return wireCompression;
-    }
-
-    @Override
-    public void setWireCompression(boolean wireCompression) {
-        this.wireCompression = wireCompression;
-        dirtied();
+    public int hashCode() {
+        return propertyValues.hashCode();
     }
 
     /**
      * Called by setters if they have been called.
      */
     protected abstract void dirtied();
+
+    /**
+     * Property update listener. This interface is only for internal use within Jaybird.
+     */
+    @InternalApi
+    public interface PropertyUpdateListener {
+
+        void beforeUpdate(ConnectionProperty connectionProperty, Object newValue);
+
+        void afterUpdate(ConnectionProperty connectionProperty, Object newValue);
+
+    }
 }

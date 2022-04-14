@@ -23,6 +23,7 @@ package org.firebirdsql.util;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@InternalApi
 public final class StringUtils {
 
     private StringUtils() {

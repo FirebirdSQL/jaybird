@@ -44,15 +44,22 @@ class FBShortField extends FBField {
     }
 
     @Override
+    public Object getObject() throws SQLException {
+        if (isNull()) return null;
+        // See JDBC 4.3, B.3 JDBC Types Mapped to Java Object Types
+        return getInt();
+    }
+
+    @Override
     public byte getByte() throws SQLException {
         if (isNull()) return BYTE_NULL_VALUE;
 
         short value = getDatatypeCoder().decodeShort(getFieldData());
 
         // check if value is within bounds
-        if (value > MAX_BYTE_VALUE ||
-            value < MIN_BYTE_VALUE)
-                throw new TypeConversionException(BYTE_CONVERSION_ERROR + " " + value);
+        if (value > MAX_BYTE_VALUE || value < MIN_BYTE_VALUE) {
+            throw invalidGetConversion("byte", String.format("value %d out of range", value));
+        }
 
         return (byte) value;
     }
@@ -123,15 +130,15 @@ class FBShortField extends FBField {
 
     @Override
     public void setString(String value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
+        String string = value.trim();
         try {
-            setShort(Short.parseShort(value));
+            setShort(Short.parseShort(string));
         } catch(NumberFormatException nfex) {
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+            SQLException conversionException = invalidSetConversion(String.class, string);
+            conversionException.initCause(nfex);
+            throw conversionException;
         }
     }
 
@@ -148,9 +155,9 @@ class FBShortField extends FBField {
     @Override
     public void setFloat(float value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidSetConversion("float", String.format("value %f out of range", value));
+        }
 
         setShort((short)value);
     }
@@ -158,9 +165,9 @@ class FBShortField extends FBField {
     @Override
     public void setDouble(double value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidSetConversion("double", String.format("value %f out of range", value));
+        }
 
         setShort((short)value);
     }
@@ -168,9 +175,9 @@ class FBShortField extends FBField {
     @Override
     public void setLong(long value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidSetConversion("long", String.format("value %d out of range", value));
+        }
 
         setShort((short)value);
     }
@@ -178,9 +185,9 @@ class FBShortField extends FBField {
     @Override
     public void setInteger(int value) throws SQLException {
         // check if value is within bounds
-        if (value > MAX_SHORT_VALUE ||
-            value < MIN_SHORT_VALUE)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value > MAX_SHORT_VALUE || value < MIN_SHORT_VALUE) {
+            throw invalidSetConversion("int", String.format("value %d out of range", value));
+        }
 
         setShort((short)value);
     }
@@ -192,28 +199,24 @@ class FBShortField extends FBField {
 
     @Override
     public void setBigDecimal(BigDecimal value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         // check if value is within bounds
-        if (value.compareTo(BD_MAX_SHORT) > 0 || value.compareTo(BD_MIN_SHORT) < 0)
-                throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(BD_MAX_SHORT) > 0 || value.compareTo(BD_MIN_SHORT) < 0) {
+            throw invalidSetConversion(BigDecimal.class, String.format("value %f out of range", value));
+        }
 
         setShort(value.shortValue());
     }
 
     @Override
     public void setBigInteger(BigInteger value) throws SQLException {
-        if (value == null) {
-            setNull();
-            return;
-        }
+        if (setWhenNull(value)) return;
 
         // check if value is within bounds
-        if (value.compareTo(BI_MAX_SHORT) > 0 || value.compareTo(BI_MIN_SHORT) < 0)
-            throw new TypeConversionException(SHORT_CONVERSION_ERROR + " " + value);
+        if (value.compareTo(BI_MAX_SHORT) > 0 || value.compareTo(BI_MIN_SHORT) < 0) {
+            throw invalidSetConversion(BigInteger.class, String.format("value %d out of range", value));
+        }
 
         setShort(value.shortValueExact());
     }
