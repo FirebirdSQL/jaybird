@@ -7,7 +7,9 @@ import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IAttachment;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBlob;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -17,9 +19,10 @@ import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentEmpty;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_blobPutSegmentTooLong;
 
 /**
+ * Implementation of {@link org.firebirdsql.gds.ng.FbBlob} for native OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListener {
 

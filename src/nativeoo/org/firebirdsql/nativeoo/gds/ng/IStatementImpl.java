@@ -5,14 +5,30 @@ import com.sun.jna.Pointer;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.fields.*;
+import org.firebirdsql.gds.ng.AbstractFbStatement;
+import org.firebirdsql.gds.ng.FbBatch;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbMessageMetadata;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.OperationCloseHandle;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.StatementType;
+import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.gds.ng.jna.JnaDatabase;
-import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
 import org.firebirdsql.jna.fbclient.XSQLVAR;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBatch;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMaster;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMessageMetadata;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMetadataBuilder;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IResultSet;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatement;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatementIntf;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
@@ -217,17 +233,15 @@ public class IStatementImpl extends AbstractFbStatement {
                 // clear status
                 getStatus();
                 int length = inMeta.getLength(status, idx);
+                processStatus();
                 offset += length;
                 inMessage.position(nullOffset);
                 inMessage.put(nullShort);
                 offset += nullShort.length;
                 inMessage.position(offset);
                 // Although we pass a null value, length and type must still be specified
-                if (length == 0) {
-                    length = fieldDescriptor.getLength() != 0 ? fieldDescriptor.getLength() : Integer.MIN_VALUE;
-                }
-                metadataBuilder.setLength(status, idx, length);
                 metadataBuilder.setType(status, idx, inMeta.getType(status, idx) | 1);
+                metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                 metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
             } else {
 
@@ -239,10 +253,8 @@ public class IStatementImpl extends AbstractFbStatement {
                 inMessage.position(offset);
                 if (fieldDescriptor.isVarying()) {
                     int length = Math.min(fieldDescriptor.getLength(), fieldData.length);
-                    if (length == 0)
-                        length = fieldDescriptor.getLength() != 0 ? fieldDescriptor.getLength() : Integer.MIN_VALUE;
-                    metadataBuilder.setLength(status, idx, length);
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_VARYING + 1);
+                    metadataBuilder.setLength(status, idx, length);
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
                     byte[] encodeShort = fieldDescriptor.getDatatypeCoder().encodeShort(fieldData.length);
                     inMessage.put(encodeShort);
@@ -250,39 +262,36 @@ public class IStatementImpl extends AbstractFbStatement {
                     inMessage.position(offset);
 
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TEXT)) {
-                    metadataBuilder.setLength(status, idx, Math.min(fieldDescriptor.getLength(), fieldData.length));
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_TEXT + 1);
+                    metadataBuilder.setLength(status, idx, Math.min(fieldDescriptor.getLength(), fieldData.length));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_BLOB)) {
                     if (offset != 0)
                         offset += offset % alignment;
                     inMessage.position(offset);
-                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_BLOB + 1);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
-
-
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TYPE_TIME)) {
                     if (offset != 0)
                         offset += offset % alignment;
                     inMessage.position(offset);
-                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_TYPE_TIME + 1);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TIMESTAMP)) {
                     if (offset != 0)
                         offset += offset % alignment;
                     inMessage.position(offset);
-                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_TIMESTAMP + 1);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
                 } else {
                     if (offset % alignment != 0)
                         offset += offset % alignment;
                     inMessage.position(offset);
-                    int length = inMeta.getLength(status, idx);
-                    metadataBuilder.setLength(status, idx, length != 0 ? length : Integer.MIN_VALUE);
                     metadataBuilder.setType(status, idx, fieldDescriptor.getType());
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, 0);
                 }
                 inMessage.put(fieldData);

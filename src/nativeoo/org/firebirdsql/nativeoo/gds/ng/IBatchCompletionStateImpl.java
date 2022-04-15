@@ -1,15 +1,17 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.gds.ng.FbBatchCompletionState;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBatchCompletionState;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IUtil;
 
 import java.sql.SQLException;
 
 /**
- * Implementation of {@Link FbBatchCompletionState} for native batch execution.
+ * Implementation of {@link org.firebirdsql.gds.ng.FbBatchCompletionState} for native batch execution.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IBatchCompletionStateImpl implements FbBatchCompletionState {
 

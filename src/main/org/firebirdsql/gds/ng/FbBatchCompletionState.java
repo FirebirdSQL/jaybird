@@ -15,7 +15,7 @@ public interface FbBatchCompletionState {
 
     int EXECUTE_FAILED = -1;
     int SUCCESS_NO_INFO = -2;
-    int NO_MORE_ERRORS = -1;
+    int NO_MORE_ERRORS = 0xFFFFFFFF;
 
     /**
      * @return Count of executed statements.

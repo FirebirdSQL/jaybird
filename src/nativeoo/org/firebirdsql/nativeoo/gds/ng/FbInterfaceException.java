@@ -3,7 +3,7 @@ package org.firebirdsql.nativeoo.gds.ng;
 /**
  * Class with for wrapping an exception thrown by the native interface.
  *
- * @since 4.0
+ * @since 5.0
  */
 public class FbInterfaceException {
     public static void catchException(FbInterface.IStatus status, Throwable t) {
@@ -13,7 +13,7 @@ public class FbInterfaceException {
         java.io.PrintWriter pw = new java.io.PrintWriter(sw);
         t.printStackTrace(pw);
         String msg = sw.toString();
-        try (CloseableMemory memory = new CloseableMemory(msg.length())) {
+        try (CloseableMemory memory = new CloseableMemory(msg.length() + 1)) {
             memory.setString(0, msg);
             com.sun.jna.Pointer[] vector = new com.sun.jna.Pointer[]{
                     new com.sun.jna.Pointer(org.firebirdsql.gds.ISCConstants.isc_arg_gds),

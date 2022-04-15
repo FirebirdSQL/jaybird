@@ -4,10 +4,10 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.BatchParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.BatchParameterBufferImpl;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -244,10 +244,10 @@ public abstract class AbstractBatchTest {
 
     private FbTransaction getTransaction() throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
         return db.startTransaction(tpb);
     }
 

@@ -20,6 +20,8 @@ package org.firebirdsql.common.matchers;
 
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.hamcrest.Matcher;
@@ -43,8 +45,8 @@ public class GdsTypeMatchers {
             Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME));
     private static final List<String> EMBEDDED_TYPES = Collections.unmodifiableList(
             Arrays.asList(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME, FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME));
-    private static final List<String> OTHER_NATIVE_TYPES =
-            Collections.singletonList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME);
+    private static final List<String> OTHER_NATIVE_TYPES = Collections.unmodifiableList(
+            Arrays.asList(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME));
 
     /**
      * @return Matcher for pure java types
@@ -57,7 +59,7 @@ public class GdsTypeMatchers {
      * @return Matcher for embedded types
      */
     public static Matcher<String> isEmbeddedType() {
-        return isIn(EMBEDDED_TYPES);
+        return is(in(EMBEDDED_TYPES));
     }
 
     /**

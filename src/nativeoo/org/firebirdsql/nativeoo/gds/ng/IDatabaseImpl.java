@@ -1,14 +1,37 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
-import org.firebirdsql.gds.*;
-import org.firebirdsql.gds.impl.DatabaseParameterBufferExtension;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.BatchParameterBuffer;
+import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.DatabaseParameterBuffer;
+import org.firebirdsql.gds.EventHandle;
+import org.firebirdsql.gds.EventHandler;
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.VaxEncoding;
+import org.firebirdsql.gds.ng.AbstractFbDatabase;
+import org.firebirdsql.gds.ng.FbBatch;
+import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbMessageMetadata;
+import org.firebirdsql.gds.ng.FbMetadataBuilder;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.ParameterConverter;
+import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IAttachment;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IEvents;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMaster;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IProvider;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.ITransaction;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,20 +46,20 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * Implementation of {@link org.firebirdsql.gds.ng.FbDatabase} for native OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         implements FbAttachment, TransactionListener {
 
     private static final ParameterConverter<NativeDatabaseConnection, ?> PARAMETER_CONVERTER = new IParameterConverterImpl();
 
-    private final FbClientLibrary clientLibrary;
-    private final IMaster master;
+    private FbClientLibrary clientLibrary;
+    private IMaster master;
     private final IProvider provider;
     private final IUtil util;
-    private IAttachment attachment;
+    protected IAttachment attachment;
     private IEvents events;
-    private final IStatus status;
+    protected IStatus status;
 
 
     public IDatabaseImpl(NativeDatabaseConnection connection) {
@@ -59,9 +82,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     @Override
     public void attach() throws SQLException {
         try {
-            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                    .toDatabaseParameterBuffer(connection))
-                    .removeExtensionParams();
+            final DatabaseParameterBuffer dpb = PARAMETER_CONVERTER.toDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, false);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -86,9 +107,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     @Override
     public void createDatabase() throws SQLException {
         try {
-            final DatabaseParameterBuffer dpb = ((DatabaseParameterBufferExtension) PARAMETER_CONVERTER
-                    .toDatabaseParameterBuffer(connection))
-                    .removeExtensionParams();
+            final DatabaseParameterBuffer dpb = PARAMETER_CONVERTER.toDatabaseParameterBuffer(connection);
             attachOrCreate(dpb, true);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

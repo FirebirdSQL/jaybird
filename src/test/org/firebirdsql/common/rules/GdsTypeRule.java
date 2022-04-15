@@ -23,6 +23,8 @@ package org.firebirdsql.common.rules;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -112,7 +114,7 @@ public final class GdsTypeRule implements TestRule {
      */
     public static GdsTypeRule supportsFBOONativeOnly() {
         return supports(FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME,
-                FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME, FbOOLocalGDSFactoryPlugin.LOCAL_TYPE_NAME);
+                FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
     }
 
     /**

@@ -2,15 +2,17 @@ package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbMetadataBuilder;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMessageMetadata;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMetadataBuilder;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.sql.SQLException;
 
 /**
- * Implementation of {@link FbMessageMetadata} for native OO API.
+ * Implementation of {@link org.firebirdsql.gds.ng.FbMessageMetadata} for native OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IMessageMetadataImpl implements FbMessageMetadata {
 
@@ -127,6 +129,12 @@ public class IMessageMetadataImpl implements FbMessageMetadata {
 
     public int getType(int index) throws SQLException {
         int result = metadata.getType(getStatus(), index);
+        processStatus();
+        return result;
+    }
+
+    public boolean isNullable(int index) throws SQLException {
+        boolean result = metadata.isNullable(getStatus(), index);
         processStatus();
         return result;
     }

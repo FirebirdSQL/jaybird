@@ -14,6 +14,7 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
 import org.junit.ClassRule;
@@ -148,8 +149,7 @@ public class IDatabaseImplTest {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        connectionInfo.getExtraDatabaseParameters()
-                .addArgument(ISCConstants.isc_dpb_sql_dialect, 3);
+        connectionInfo.setSqlDialect(3);
         IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
         File dbFile = new File(connectionInfo.getDatabaseName());
         try {
@@ -287,17 +287,19 @@ public class IDatabaseImplTest {
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
         return db.startTransaction(tpb);
     }
 
     private static void safelyClose(FbDatabase db) {
         if (db == null) return;
         try {
-            db.close();
+            if (db.isAttached()) {
+                db.close();
+            }
         } catch (SQLException ex) {
             ex.printStackTrace();
             // ignore

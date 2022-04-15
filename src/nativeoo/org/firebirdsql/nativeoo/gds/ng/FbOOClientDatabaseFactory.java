@@ -4,6 +4,12 @@ import com.sun.jna.Native;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
+/**
+ * Implementation of {@link org.firebirdsql.nativeoo.gds.ng.AbstractNativeOODatabaseFactory} to connect with native
+ * client library via OO API.
+ *
+ * @since 5.0
+ */
 public class FbOOClientDatabaseFactory extends AbstractNativeOODatabaseFactory {
     private static final FbOOClientDatabaseFactory INSTANCE = new FbOOClientDatabaseFactory();
 

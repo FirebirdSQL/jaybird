@@ -23,7 +23,7 @@ public class IParameterConverterImpl extends AbstractParameterConverter<NativeDa
             pb.addArgument(tagMapping.getPasswordTag(), props.getPassword());
         }
 
-        if (props.getWireCrypt() != WireCrypt.DEFAULT) {
+        if (props.getWireCryptAsEnum() != WireCrypt.DEFAULT) {
             // Need to do this differently when having to add multiple configs
             String configString = "WireCrypt = " + props.getWireCrypt();
             pb.addArgument(tagMapping.getConfigTag(), configString);

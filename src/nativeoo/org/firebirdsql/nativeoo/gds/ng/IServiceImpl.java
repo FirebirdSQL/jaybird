@@ -6,10 +6,17 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.AbstractFbService;
+import org.firebirdsql.gds.ng.FbAttachment;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.ParameterConverter;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IMaster;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IProvider;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IService;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.sql.SQLException;
 
@@ -123,7 +130,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
                     // TODO Replace with specific error (eg native client error)
                     throw new FbExceptionBuilder()
                             .exception(ISCConstants.isc_network_error)
-                            .messageParameter(connection.getServerName())
+                            .messageParameter(connection.getAttachUrl())
                             .cause(ex)
                             .toSQLException();
                 }
@@ -173,7 +180,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
                 // TODO Replace with specific error (eg native client error)
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_network_error)
-                        .messageParameter(connection.getServerName())
+                        .messageParameter(connection.getAttachUrl())
                         .cause(ex)
                         .toSQLException();
             } finally {

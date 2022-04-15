@@ -3,7 +3,8 @@ package org.firebirdsql.nativeoo.gds.ng;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.ITransaction;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 

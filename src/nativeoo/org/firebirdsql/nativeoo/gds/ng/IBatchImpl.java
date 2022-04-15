@@ -4,21 +4,28 @@ import com.sun.jna.ptr.LongByReference;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.AbstractFbBatch;
+import org.firebirdsql.gds.ng.FbBatchCompletionState;
+import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbMessageMetadata;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBBlob;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
-import org.firebirdsql.nativeoo.gds.ng.FbInterface.*;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IAttachment;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBatch;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBatchCompletionState;
+import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
 /**
- * Implementation of {@link FbBatch} for native OO API.
+ * Implementation of {@link org.firebirdsql.gds.ng.FbBatch} for native OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IBatchImpl extends AbstractFbBatch {
 

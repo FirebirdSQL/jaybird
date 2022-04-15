@@ -159,7 +159,8 @@ public final class FBTestProperties {
                 final FBServiceManager fbServiceManager = new FBServiceManager(gdsType);
                 if (gdsType == GDSType.getType("PURE_JAVA")
                         || gdsType == GDSType.getType("NATIVE")
-                        || gdsType == GDSType.getType("OOREMOTE") ) {
+                        || gdsType == GDSType.getType("OOREMOTE")
+                        || gdsType == GDSType.getType("FBOONATIVE")) {
                     fbServiceManager.setServerName(DB_SERVER_URL);
                     fbServiceManager.setPortNumber(DB_SERVER_PORT);
                 }
@@ -239,7 +240,8 @@ public final class FBTestProperties {
         final GDSType gdsType = getGdsType();
         if (gdsType == GDSType.getType("PURE_JAVA")
                 || gdsType == GDSType.getType("NATIVE")
-                || gdsType == GDSType.getType("OOREMOTE")) {
+                || gdsType == GDSType.getType("OOREMOTE")
+                || gdsType == GDSType.getType("FBOONATIVE")) {
             fbManager.setServer(DB_SERVER_URL);
             fbManager.setPort(DB_SERVER_PORT);
         }

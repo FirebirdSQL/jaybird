@@ -22,6 +22,8 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;

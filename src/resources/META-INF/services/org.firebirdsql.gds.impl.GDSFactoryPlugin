@@ -2,6 +2,5 @@ org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin
 org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin
 org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin
 org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin
-org.firebirdsql.gds.impl.nativeoo.FbOOLocalGDSFactoryPlugin
 org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin
 org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin

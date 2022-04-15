@@ -40,5 +40,7 @@ public interface FbMessageMetadata {
 
     int getType(int index) throws SQLException;
 
+    boolean isNullable(int index) throws SQLException;
+
     FbMetadataBuilder getBuilder() throws SQLException;
 }

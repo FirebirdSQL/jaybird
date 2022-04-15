@@ -1,10 +1,20 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbService;
+import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.IServiceProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 
 import java.sql.SQLException;
 
+/**
+ * Implementation of {@link org.firebirdsql.gds.ng.FbDatabaseFactory} for the Native OO protocol implementation.
+ *
+ * @since 5.0
+ */
 public abstract class AbstractNativeOODatabaseFactory implements FbDatabaseFactory {
     @Override
     public FbDatabase connect(IConnectionProperties connectionProperties) throws SQLException {

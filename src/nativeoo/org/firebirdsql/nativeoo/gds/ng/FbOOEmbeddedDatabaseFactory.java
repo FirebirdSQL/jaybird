@@ -2,7 +2,7 @@ package org.firebirdsql.nativeoo.gds.ng;
 
 import com.sun.jna.Native;
 import org.firebirdsql.gds.JaybirdSystemProperties;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -12,6 +12,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Implementation of {@link org.firebirdsql.nativeoo.gds.ng.AbstractNativeOODatabaseFactory} to connect with embedded
+ * client library via OO API.
+ *
+ * @since 5.0
+ */
 public class FbOOEmbeddedDatabaseFactory extends AbstractNativeOODatabaseFactory {
 
     private static final Logger log = LoggerFactory.getLogger(FbOOEmbeddedDatabaseFactory.class);

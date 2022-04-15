@@ -5,7 +5,7 @@ import com.sun.jna.Memory;
 /**
  * Memory class for send and receive native messages using OO API.
  *
- * @since 4.0
+ * @since 5.0
  */
 public class CloseableMemory extends Memory implements AutoCloseable {
 

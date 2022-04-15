@@ -23,8 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -117,7 +117,7 @@ public class IBatchImplTest extends AbstractBatchTest {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    private final AbstractNativeOODatabaseFactory factory =
+    private AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
@@ -270,13 +270,13 @@ public class IBatchImplTest extends AbstractBatchTest {
                 0);
         fieldData = fieldValues.getFieldData(15);
         assertEquals(testDate,
-                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDate(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDateCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(16);
         assertEquals(testTime,
-                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTime(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTimeCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(17);
         assertEquals(testTimestamp,
-                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestampCalendar(fieldData, Calendar.getInstance()));
 
     }
 
@@ -431,13 +431,13 @@ public class IBatchImplTest extends AbstractBatchTest {
                 0);
         fieldData = fieldValues.getFieldData(15);
         assertEquals(testDate,
-                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDate(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDateCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(16);
         assertEquals(testTime,
-                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTime(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTimeCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(17);
         assertEquals(testTimestamp,
-                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestampCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(18);
         blobID = statement.getRowDescriptor().getFieldDescriptor(18).getDatatypeCoder().decodeLong(fieldData);
         checkBlob(blobID, INSERT_QUERY_WITH_BLOBS.getBytes());
@@ -630,13 +630,13 @@ public class IBatchImplTest extends AbstractBatchTest {
                 0);
         fieldData = fieldValues.getFieldData(15);
         assertEquals(testDate,
-                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDate(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDateCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(16);
         assertEquals(testTime,
-                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTime(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTimeCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(17);
         assertEquals(testTimestamp,
-                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestampCalendar(fieldData, Calendar.getInstance()));
     }
 
     @Test
@@ -840,13 +840,13 @@ public class IBatchImplTest extends AbstractBatchTest {
                 0);
         fieldData = fieldValues.getFieldData(15);
         assertEquals(testDate,
-                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDate(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(15).getDatatypeCoder().decodeDateCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(16);
         assertEquals(testTime,
-                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTime(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(16).getDatatypeCoder().decodeTimeCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(17);
         assertEquals(testTimestamp,
-                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestamp(fieldData));
+                statement.getRowDescriptor().getFieldDescriptor(17).getDatatypeCoder().decodeTimestampCalendar(fieldData, Calendar.getInstance()));
         fieldData = fieldValues.getFieldData(18);
         blobID = statement.getRowDescriptor().getFieldDescriptor(18).getDatatypeCoder().decodeLong(fieldData);
         checkBlob(blobID, testBytes);

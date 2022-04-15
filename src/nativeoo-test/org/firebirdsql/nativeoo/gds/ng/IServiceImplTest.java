@@ -10,6 +10,7 @@ import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
 
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.junit.ClassRule;
@@ -30,8 +31,10 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -131,8 +134,8 @@ public class IServiceImplTest {
 
             ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
             actionSrb.addArgument(isc_action_svc_db_stats);
-            actionSrb.addArgument(isc_spb_dbname, getDatabasePath());
-            actionSrb.addArgument(isc_spb_options, isc_spb_sts_hdr_pages);
+            actionSrb.addArgument(SpbItems.isc_spb_dbname, getDatabasePath());
+            actionSrb.addArgument(SpbItems.isc_spb_options, isc_spb_sts_hdr_pages);
 
             service.startServiceAction(actionSrb);
 

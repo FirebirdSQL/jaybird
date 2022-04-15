@@ -5,13 +5,13 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -158,10 +158,10 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
         return db.startTransaction(tpb);
     }
 }
