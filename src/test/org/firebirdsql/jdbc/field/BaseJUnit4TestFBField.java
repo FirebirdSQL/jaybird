@@ -88,6 +88,7 @@ public abstract class BaseJUnit4TestFBField<T extends FBField, O> {
         context.setThreadingPolicy(new Synchroniser());
     }
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

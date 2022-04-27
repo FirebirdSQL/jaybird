@@ -32,6 +32,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class FBEscapedParserTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

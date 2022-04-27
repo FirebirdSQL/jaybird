@@ -34,6 +34,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestSqlCountHolder {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

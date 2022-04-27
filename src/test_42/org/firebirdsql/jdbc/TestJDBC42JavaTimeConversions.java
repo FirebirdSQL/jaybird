@@ -44,9 +44,9 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.2
  */
-@SuppressWarnings("Since15")
 public class TestJDBC42JavaTimeConversions extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

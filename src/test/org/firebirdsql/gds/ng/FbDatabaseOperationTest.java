@@ -43,6 +43,7 @@ public class FbDatabaseOperationTest {
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

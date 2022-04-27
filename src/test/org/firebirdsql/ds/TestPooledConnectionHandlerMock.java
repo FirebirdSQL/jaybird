@@ -51,14 +51,13 @@ public class TestPooledConnectionHandlerMock {
         context.setThreadingPolicy(new Synchroniser());
     }
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * The isClosed() method of PooledConnectionHandler and its proxy should
      * report <code>true</code> after handler close.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testHandlerClose_IsClosed() throws SQLException {
@@ -83,8 +82,6 @@ public class TestPooledConnectionHandlerMock {
     /**
      * The isClosed() method of PooledConnectionHandler and its proxy should
      * report <code>true</code> after proxy close.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testProxyClose_IsClosed() throws SQLException {
@@ -110,8 +107,6 @@ public class TestPooledConnectionHandlerMock {
     /**
      * Closing the PooledConnectionHandler should not notify the owner and not
      * close the physical connection.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testHandlerClose_NoNotify() throws SQLException {
@@ -135,8 +130,6 @@ public class TestPooledConnectionHandlerMock {
     /**
      * Closing the Proxy of the PooledConnectionHandler should notify the owner
      * but not close the physical connection.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testProxyClose_Notify() throws SQLException {
@@ -164,8 +157,6 @@ public class TestPooledConnectionHandlerMock {
      * notified of the exception.
      * 
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
     public void testClosedHandler_throwsException() throws SQLException {
@@ -198,8 +189,6 @@ public class TestPooledConnectionHandlerMock {
      * connection was closed; the owner should not be notified of the exception.
      * 
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
     public void testClosedProxy_throwsException() throws SQLException {
@@ -229,8 +218,6 @@ public class TestPooledConnectionHandlerMock {
     /**
      * Calling a Connection method on an open proxy should notify the owner of
      * the occurrence of an exception.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testException_Notify() throws SQLException {
@@ -262,8 +249,6 @@ public class TestPooledConnectionHandlerMock {
     /**
      * Closing a proxy should rollback the physical connection if not in
      * auto-commit.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testCloseNotAutoCommit_rollback() throws SQLException {
@@ -291,8 +276,6 @@ public class TestPooledConnectionHandlerMock {
 
     /**
      * Calling close() on a closed proxy should not throw an exception.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testDoubleClose_allowed() throws SQLException {

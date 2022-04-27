@@ -66,6 +66,7 @@ import static org.junit.Assume.*;
  */
 public class FBConnectionTest {
 
+    @SuppressWarnings("deprecation")
     private final ExpectedException expectedException = ExpectedException.none();
     private final DatabaseUserRule databaseUserRule = DatabaseUserRule.withDatabaseUser();
     private final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();

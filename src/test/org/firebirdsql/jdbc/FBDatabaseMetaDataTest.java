@@ -38,7 +38,13 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -168,6 +174,7 @@ public class FBDatabaseMetaDataTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testHasNoWildcards() {
         assertTrue("claims test\\_me has wildcards", FBDatabaseMetaData.hasNoWildcards("test\\_me"));
@@ -177,6 +184,7 @@ public class FBDatabaseMetaDataTest {
         assertFalse("claims test%me has no wildcards", FBDatabaseMetaData.hasNoWildcards("test%me"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStripEscape() {
         assertEquals("strip escape wrong", "test_me", FBDatabaseMetaData.stripEscape("test\\_me"));

@@ -51,6 +51,7 @@ public class TestFBStreamingBackupManager {
             .around(temporaryFolder)
             .around(usesDatabase);
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -77,7 +78,7 @@ public class TestFBStreamingBackupManager {
     public void testStreamingBackupAndRestore() throws Exception {
         usesDatabase.createDefaultDatabase();
         final Path backupPath = Paths.get(tempFolder.getAbsolutePath(), "testbackup.fbk");
-        try (OutputStream backupOutputStream = new FileOutputStream(backupPath.toFile())) {
+        try (OutputStream backupOutputStream = Files.newOutputStream(backupPath.toFile().toPath())) {
             backupManager.setBackupOutputStream(backupOutputStream);
             backupManager.backupDatabase();
         }
@@ -87,7 +88,7 @@ public class TestFBStreamingBackupManager {
         backupManager.clearRestorePaths();
         usesDatabase.addDatabase(restorePath.toString());
         backupManager.setDatabase(restorePath.toString());
-        try (InputStream restoreInputStream = new FileInputStream(backupPath.toFile())) {
+        try (InputStream restoreInputStream = Files.newInputStream(backupPath.toFile().toPath())) {
             backupManager.setRestoreInputStream(restoreInputStream);
             backupManager.restoreDatabase();
         }

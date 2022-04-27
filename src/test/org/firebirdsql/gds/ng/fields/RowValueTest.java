@@ -35,6 +35,7 @@ import static org.junit.Assume.assumeFalse;
 
 public class RowValueTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -39,9 +39,11 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_EXPLICITLY_DISABLED;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_NO_RETURNING_SUPPORT;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Tests for {@link GeneratedKeysSupportFactory}.
@@ -56,6 +58,7 @@ public class GeneratedKeysSupportFactoryTest {
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

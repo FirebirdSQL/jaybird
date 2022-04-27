@@ -30,6 +30,7 @@ import org.junit.rules.ExpectedException;
  */
 public class ConvertFunctionTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

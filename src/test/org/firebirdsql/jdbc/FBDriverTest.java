@@ -41,7 +41,12 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -56,6 +61,7 @@ public class FBDriverTest {
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
     @Rule
@@ -207,7 +213,7 @@ public class FBDriverTest {
             try (ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1")) {
                 assertTrue("Should have at least one row", rs.next());
                 assertEquals("Value should be 1.", 1, rs.getInt(1));
-                assertTrue("Should have only one row.", !rs.next());
+                assertFalse("Should have only one row.", rs.next());
             }
         }
     }

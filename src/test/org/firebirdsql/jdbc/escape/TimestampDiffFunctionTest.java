@@ -32,6 +32,7 @@ import org.junit.rules.ExpectedException;
  */
 public class TimestampDiffFunctionTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

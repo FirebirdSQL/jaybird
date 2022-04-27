@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestFBMaintenanceManager extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

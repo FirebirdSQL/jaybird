@@ -42,6 +42,7 @@ public class TestTransactionHelper {
 
     private static final int TEST_ERROR_CODE = ISCConstants.isc_dsql_error;
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

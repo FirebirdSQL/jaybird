@@ -39,6 +39,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestDbAttachInfo {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

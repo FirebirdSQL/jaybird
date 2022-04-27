@@ -28,7 +28,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import static org.hamcrest.CoreMatchers.endsWith;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for support of the scalar system function escapes as defined in

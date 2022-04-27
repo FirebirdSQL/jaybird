@@ -32,6 +32,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFBRowId {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -51,7 +52,7 @@ public class TestFBRowId {
     }
 
     @Test
-    public void toStringPrintsArrayAsHex() throws Exception {
+    public void toStringPrintsArrayAsHex() {
         byte[] rowIdBytes = { 0x0e, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 };
         FBRowId fbRowId = new FBRowId(rowIdBytes);
 

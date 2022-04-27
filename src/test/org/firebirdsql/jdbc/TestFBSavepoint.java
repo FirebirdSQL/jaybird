@@ -43,6 +43,7 @@ public class TestFBSavepoint {
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -38,6 +38,7 @@ import static org.junit.Assert.*;
  */
 public class TestFBTpbMapper {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -47,6 +47,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestFBPreparedStatementGeneratedKeys extends FBTestGeneratedKeysBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

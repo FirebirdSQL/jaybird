@@ -33,9 +33,12 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class OperationMonitorTest {
 
@@ -132,7 +135,7 @@ public class OperationMonitorTest {
             connection.setAutoCommit(false);
             List<OperationReport> reportedOperations = syncCancelOperationAware.getReportedOperations();
             assertEquals(0, reportedOperations.size());
-            try (ResultSet rs = stmt.executeQuery("select 1 from RDB$DATABASE")) {
+            try (ResultSet ignored = stmt.executeQuery("select 1 from RDB$DATABASE")) {
                 fail("should throw exception");
             } catch (SQLException e) {
                 assertThat(e, errorCodeEquals(ISCConstants.isc_cancelled));

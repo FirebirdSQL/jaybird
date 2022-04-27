@@ -51,6 +51,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

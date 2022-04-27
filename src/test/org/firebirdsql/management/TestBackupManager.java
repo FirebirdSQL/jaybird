@@ -53,6 +53,7 @@ public class TestBackupManager {
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -46,6 +46,7 @@ public class SessionTimeZoneTest {
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

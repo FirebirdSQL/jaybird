@@ -46,6 +46,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public class FBManagerTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

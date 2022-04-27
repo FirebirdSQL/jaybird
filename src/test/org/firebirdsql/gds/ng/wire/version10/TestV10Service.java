@@ -45,7 +45,11 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link V10Service}. This test class can be sub-classed for tests running on newer protocol versions.
@@ -61,6 +65,7 @@ public class TestV10Service {
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

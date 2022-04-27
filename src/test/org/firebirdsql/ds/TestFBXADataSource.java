@@ -41,6 +41,7 @@ import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -57,10 +58,11 @@ public class TestFBXADataSource {
     @ClassRule
     public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
     
-    private List<XAConnection> connections = new ArrayList<>();
+    private final List<XAConnection> connections = new ArrayList<>();
 
     private FBXADataSource ds;
 
@@ -114,7 +116,7 @@ public class TestFBXADataSource {
         Connection con = pc.getConnection();
 
         assertTrue("Autocommit should be true", con.getAutoCommit());
-        assertTrue("Read-only should be false", !con.isReadOnly());
+        assertFalse("Read-only should be false", con.isReadOnly());
         assertEquals("Tx isolation level should be read committed.",
                 Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation());
 

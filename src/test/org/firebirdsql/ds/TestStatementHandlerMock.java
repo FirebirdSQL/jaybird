@@ -50,14 +50,13 @@ public class TestStatementHandlerMock {
         context.setThreadingPolicy(new Synchroniser());
     }
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
     /**
      * Closing the statement proxy for a second time should not throw an
      * exception.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testProxyDoubleClose_allowed() throws SQLException {
@@ -84,8 +83,6 @@ public class TestStatementHandlerMock {
      * statement was closed; the owner should not be notified of the exception.
      * 
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
     public void testClosedProxy_throwsException() throws SQLException {
@@ -114,8 +111,6 @@ public class TestStatementHandlerMock {
     /**
      * Calling a Statement method on an open proxy should notify the owner of
      * the occurrence of an exception.
-     * 
-     * @throws SQLException
      */
     @Test
     public void testException_notify() throws SQLException {
@@ -168,8 +163,6 @@ public class TestStatementHandlerMock {
      * As a secondary test, checks 1) if the wrapped statement is closed and 2)
      * if owner is notified of statement close.
      * </p>
-     * 
-     * @throws SQLException
      */
     @Test
     public void testHandlerClose_IsClosed() throws SQLException {
@@ -197,8 +190,6 @@ public class TestStatementHandlerMock {
      * As a secondary test, checks 1) if the wrapped statement is closed and 2)
      * if owner is notified of statement close.
      * </p>
-     * 
-     * @throws SQLException
      */
     @Test
     public void testProxyClose_IsClosed() throws SQLException {

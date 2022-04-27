@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNull;
 
 public class PositionFunctionTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

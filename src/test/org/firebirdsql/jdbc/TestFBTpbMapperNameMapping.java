@@ -43,6 +43,7 @@ import static org.junit.Assume.assumeThat;
 @RunWith(Parameterized.class)
 public class TestFBTpbMapperNameMapping {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -135,6 +135,7 @@ public abstract class AbstractStatementTest {
         connectionInfo.setEncoding("NONE");
     }
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

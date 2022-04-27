@@ -40,6 +40,7 @@ import static org.junit.Assert.*;
  */
 public class TestFBStatisticsManager extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

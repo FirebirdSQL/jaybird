@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 public class LengthFunctionTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

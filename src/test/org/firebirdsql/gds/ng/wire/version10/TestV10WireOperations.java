@@ -51,6 +51,7 @@ public class TestV10WireOperations {
     @ClassRule
     public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 public class FbExceptionBuilderTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
 

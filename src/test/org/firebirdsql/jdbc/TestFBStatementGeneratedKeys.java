@@ -53,6 +53,7 @@ public class TestFBStatementGeneratedKeys extends FBTestGeneratedKeysBase {
     private static final String TEST_UPDATE_OR_INSERT =
             "UPDATE OR INSERT INTO TABLE_WITH_TRIGGER(ID, TEXT) VALUES (1, '" + TEXT_VALUE + "') MATCHING (ID)";
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

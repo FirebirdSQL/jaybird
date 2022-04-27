@@ -82,6 +82,7 @@ public class DatabaseEncryptionTest {
             .around(RequireProtocol.requireProtocolVersion(13))
             .around(DatabaseExistsRule.requireExistence(CRYPTTEST_DB));
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

@@ -43,6 +43,7 @@ import static org.junit.Assert.assertNull;
  */
 public class FbConnectionPropertiesTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

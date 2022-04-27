@@ -38,6 +38,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestRowIdSupport extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

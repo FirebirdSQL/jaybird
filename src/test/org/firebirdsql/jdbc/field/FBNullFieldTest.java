@@ -58,6 +58,7 @@ public class FBNullFieldTest {
         context.setThreadingPolicy(new Synchroniser());
     }
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

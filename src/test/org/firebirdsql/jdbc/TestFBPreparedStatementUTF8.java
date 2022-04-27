@@ -48,6 +48,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -78,12 +79,9 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
 
     @Before
     public void setUp() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
+        try (Connection connection = getConnectionViaDriverManager()) {
             assumeTrue(supportInfoFor(connection).supportsUtf8());
             executeCreateTable(connection, CREATE_TABLE);
-        } finally {
-            connection.close();
         }
     }
 
@@ -190,7 +188,6 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
      * @param fbCharacterSet
      *         Firebird encoding name
      * @return Connection
-     * @throws SQLException
      */
     private Connection getConnection(String fbCharacterSet) throws SQLException {
         Properties props = new Properties();
@@ -211,16 +208,12 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
      *         String value to insert
      * @param id
      *         ID of the record
-     * @throws SQLException
      */
     private void insertString(Connection connection, String columnName, String testString, int id) throws SQLException {
-        PreparedStatement insert = connection.prepareStatement(String.format(INSERT_FORMAT, columnName));
-        try {
+        try (PreparedStatement insert = connection.prepareStatement(String.format(INSERT_FORMAT, columnName))) {
             insert.setInt(1, id);
             insert.setString(2, testString);
             insert.executeUpdate();
-        } finally {
-            insert.close();
         }
     }
 
@@ -237,21 +230,14 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
      * @param id
      *         ID of the record
      * @return Selected String value
-     * @throws SQLException
      */
     private String selectString(Connection connection, String columnName, int id) throws SQLException {
-        PreparedStatement select = connection.prepareStatement(String.format(SELECT_FORMAT, columnName));
-        try {
+        try (PreparedStatement select = connection.prepareStatement(String.format(SELECT_FORMAT, columnName))) {
             select.setInt(1, id);
-            ResultSet rs = select.executeQuery();
-            try {
+            try (ResultSet rs = select.executeQuery()) {
                 assertTrue("Expected a row", rs.next());
                 return rs.getString(1);
-            } finally {
-                rs.close();
             }
-        } finally {
-            select.close();
         }
     }
 
@@ -266,17 +252,13 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
      *         String to insert
      * @param expectedOutput
      *         Expected result of select
-     * @throws Exception
      */
     private void basicSuccessTest(String connectionEncoding, String columnName, String testInput,
             String expectedOutput) throws Exception {
-        Connection connection = getConnection(connectionEncoding);
-        try {
+        try (Connection connection = getConnection(connectionEncoding)) {
             insertString(connection, columnName, testInput, DEFAULT_ID);
 
             assertEquals(expectedOutput, selectString(connection, columnName, DEFAULT_ID));
-        } finally {
-            connection.close();
         }
     }
 
@@ -291,17 +273,13 @@ public class TestFBPreparedStatementUTF8 extends FBJUnit4TestBase {
      *         String to insert
      * @param exceptionExpectation
      *         Expected exception matcher
-     * @throws Exception
      */
     private void basicFailureTest(String connectionEncoding, String columnName, String testInput,
             Matcher<?> exceptionExpectation) throws Exception {
-        Connection connection = getConnection(connectionEncoding);
-        try {
+        try (Connection connection = getConnection(connectionEncoding)) {
             expectedException.expect(exceptionExpectation);
 
             insertString(connection, columnName, testInput, DEFAULT_ID);
-        } finally {
-            connection.close();
         }
     }
 

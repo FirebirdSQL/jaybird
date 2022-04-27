@@ -42,6 +42,7 @@ import static org.junit.Assume.assumeThat;
  */
 public class TestFBCachedBlob {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -289,7 +290,7 @@ public class TestFBCachedBlob {
      * Test if repeated calls to {@link FBCachedBlob#getSynchronizationObject()} return the same object.
      */
     @Test
-    public void testGetSynchronizationObject() throws Exception {
+    public void testGetSynchronizationObject() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         final Object sync1 = blob.getSynchronizationObject();

@@ -73,6 +73,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

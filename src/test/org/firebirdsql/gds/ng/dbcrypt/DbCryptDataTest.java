@@ -31,6 +31,7 @@ import static org.junit.Assert.*;
  */
 public class DbCryptDataTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

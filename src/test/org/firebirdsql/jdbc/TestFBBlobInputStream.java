@@ -48,6 +48,7 @@ import static org.junit.Assert.*;
  */
 public class TestFBBlobInputStream extends FBJUnit4TestBase {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

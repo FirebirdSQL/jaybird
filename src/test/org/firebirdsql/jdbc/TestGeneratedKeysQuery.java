@@ -32,7 +32,10 @@ import java.sql.Statement;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link GeneratedKeysSupport} and related classes.
@@ -48,6 +51,7 @@ public class TestGeneratedKeysQuery {
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

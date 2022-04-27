@@ -31,8 +31,11 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -66,6 +69,7 @@ public class GeneratedKeysEnabledTest {
                     "END"
     );
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
     
