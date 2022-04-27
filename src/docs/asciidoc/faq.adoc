@@ -65,7 +65,7 @@ Jaybird 4 is available from Maven central:
 [horizontal]
 Groupid:: `org.firebirdsql.jdbc`
 Artifactid:: `jaybird`
-Version:: `4.0.5.javaXX` (where `XX` is `7`, `8` or `11`)
+Version:: `4.0.6.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`.
 However, we recommend switching to the `jaybird` artifact.
@@ -77,7 +77,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.5.java8</version>
+    <version>4.0.6.java8</version>
 </dependency>
 ----
 
@@ -88,7 +88,7 @@ If your application is deployed to a Java EE application server, you will need t
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.5.java8</version>
+    <version>4.0.6.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -309,8 +309,7 @@ Jaybird does not support Interbase, and as far as we know connecting to Interbas
 Apart from this FAQ, you can get additional information from:
 
 * https://github.com/FirebirdSQL/jaybird/wiki/[Jaybird wiki]
-* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 2.2 and higher, work in progress)
-* https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf[Jaybird 2.1 JDBC driver - Java Programmers Manual] (PDF)
+* https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html[Jaybird JDBC Driver Java Programmer's Manual] (HTML, https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf[PDF version]) (covers Jaybird 2.2 and higher)
 * https://www.firebirdsql.org/en/devel-jdbc-driver/[Firebird Website: Development, JDBC Driver]
 
 For version specific details, consult the release notes
@@ -695,7 +694,7 @@ The following methods are implemented, but do not work as expected:
 
 * `java.sql.Statement`
  ** `get/setMaxFieldSize` does nothing
- ** `get/setQueryTimeout` does nothing
+ ** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
  ** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
  ** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
