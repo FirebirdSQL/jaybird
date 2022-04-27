@@ -47,7 +47,7 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.5.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.6.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`). However, we
@@ -59,7 +59,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.5.java8</version>
+    <version>4.0.6.java8</version>
 </dependency>
 ~~~
 
@@ -71,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.5.java8</version>
+    <version>4.0.6.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -305,8 +305,7 @@ Apart from this FAQ, you can get additional information from:
 
 * [Jaybird wiki](https://github.com/FirebirdSQL/jaybird/wiki/)
 * [Jaybird JDBC Driver Java Programmer’s Manual](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.html) (HTML, [PDF version](https://firebirdsql.github.io/jaybird-manual/jaybird_manual.pdf))
-(covers Jaybird 2.2 and higher, work in progress)
-* [Jaybird 2.1 JDBC driver - Java Programmers Manual](https://www.firebirdsql.org/file/documentation/drivers_documentation/Jaybird_2_1_JDBC_driver_manual.pdf) (PDF)
+(covers Jaybird 2.2 and higher)
 * [Firebird Website: Development, JDBC Driver](https://www.firebirdsql.org/en/devel-jdbc-driver/)
 
 For version specific details, consult the release notes
@@ -783,7 +782,7 @@ The following methods are implemented, but do not work as expected:
 
 * `java.sql.Statement`
     * `get/setMaxFieldSize` does nothing
-    * `get/setQueryTimeout` does nothing
+    * `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
     * `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
     * `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`

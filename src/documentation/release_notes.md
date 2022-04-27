@@ -329,7 +329,7 @@ or reported on the issue tracker <https://github.com/FirebirdSQL/jaybird/issues/
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.8, and
+Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.9, and
 4.0.1, but should also support other Firebird versions from 2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
@@ -734,7 +734,7 @@ package, Firebird requires the `KeyHolderPlugin` configuration to be globally
 defined in `firebird.conf`. Database-specific configuration in `databases.conf` 
 will be ignored for service operations. Be aware that some service operations on 
 encrypted databases are not supported by Firebird 3 (eg `gstat` equivalents 
-other than `gstat -h` or `gstat -e`).
+other than `gstat -h` or `gstat -e`).                  
 
 Other warnings and limitations
 
@@ -782,7 +782,7 @@ The original `Srp` plugin uses SHA-1, the new Srp-variants use SHA-224, SHA-256,
 SHA-384 and SHA-512 respectively[^srpHash].
 
 [^srpHash]: Internally `SrpNNN` continues to use SHA-1, only the client-proof 
-applies the SHA-NNN hash. See also [CORE-5788](http://tracker.firebirdsql.org/browse/CORE-5788).
+applies the SHA-NNN hash. See also [firebird#6051/CORE-5788](https://github.com/FirebirdSQL/firebird/issues/6051).
 
 Be aware, support for these plugins depends on support of these hash algorithms 
 in the JVM. For example, SHA-224 is not supported in Oracle Java 7 by default 
