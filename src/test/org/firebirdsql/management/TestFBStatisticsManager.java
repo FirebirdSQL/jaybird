@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,12 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -32,32 +31,37 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
+import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
+import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
+import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getGdsType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test the FBStatisticsManager class
  */
-public class TestFBStatisticsManager extends FBJUnit4TestBase {
+class TestFBStatisticsManager {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @SuppressWarnings("JUnit5MalformedExtensions")
+    @RegisterExtension
+    final UsesDatabaseExtension usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private FBStatisticsManager statManager;
-
     private OutputStream loggingStream;
 
-    public static final String DEFAULT_TABLE = ""
+    private static final String DEFAULT_TABLE = ""
         + "CREATE TABLE TEST ("
         + "     TESTVAL INTEGER NOT NULL"
         + ")";
 
-    public TestFBStatisticsManager() throws ClassNotFoundException {
-        Class.forName("org.firebirdsql.jdbc.FBDriver");
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         loggingStream = new ByteArrayOutputStream();
     
         statManager = new FBStatisticsManager(getGdsType());
@@ -72,86 +76,69 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
     }
 
     private void createTestTable() throws SQLException {
-        createTestTable(DEFAULT_TABLE);
-    }
-
-    private void createTestTable(String tableDef) throws SQLException {
         try (Connection conn = getConnectionViaDriverManager()) {
             Statement stmt = conn.createStatement();
-            stmt.execute(tableDef);
+            stmt.execute(DEFAULT_TABLE);
         }
     }
 
     @Test
-    public void testGetHeaderPage() throws SQLException {
+    void testGetHeaderPage() throws SQLException {
         statManager.getHeaderPage();
         String headerPage = loggingStream.toString();
 
         // Not a lot more we can really do to ensure that it's a real
         // header page, unfortunately :(
-        assertTrue("The header page must include 'Database header page information'",
-                headerPage.contains("Database header page information"));
-
-        assertFalse("The statistics must not include data table info",
-                headerPage.contains("Data pages"));
+        assertThat(headerPage)
+                .describedAs("The header page must include 'Database header page information'")
+                .contains("Database header page information")
+                .describedAs("The statistics must not include data table info").doesNotContain("Data pages");
     }
 
     @Test
-    public void testGetDatabaseStatistics() throws SQLException {
-        
+    void testGetDatabaseStatistics() throws SQLException {
         createTestTable();
         statManager.getDatabaseStatistics();
         String statistics = loggingStream.toString();
 
-        assertTrue("The database page analysis must be in the statistics",
-                statistics.contains("Data pages"));
-
-        assertFalse("System table information must not be in basic statistics",
-                statistics.contains("RDB$DATABASE"));
+        assertThat(statistics)
+                .describedAs("The database page analysis must be in the statistics").contains("Data pages")
+                .describedAs("System table information must not be in basic statistics").doesNotContain("RDB$DATABASE");
     }
 
     @Test
-    public void testGetStatsWithBadOptions() throws SQLException {
-        try {
-            statManager.getDatabaseStatistics(
-                    (StatisticsManager.DATA_TABLE_STATISTICS
-                     | StatisticsManager.SYSTEM_TABLE_STATISTICS
-                     | StatisticsManager.INDEX_STATISTICS) * 2);
-            fail("Options to getDatabaseStatistics must be a combination "
-                    + "of DATA_TABLE_STATISTICS, SYSTEM_TABLE_STATISTICS "
-                    + "and INDEX_STATISTICS, or 0");
-        } catch (IllegalArgumentException e){
-            // Ignore
-        }
+    void testGetStatsWithBadOptions() {
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() ->
+                statManager.getDatabaseStatistics(
+                        (StatisticsManager.DATA_TABLE_STATISTICS
+                                | StatisticsManager.SYSTEM_TABLE_STATISTICS
+                                | StatisticsManager.INDEX_STATISTICS) * 2));
     }
 
     @Test
-    public void testGetSystemStats() throws SQLException {
+    void testGetSystemStats() throws SQLException {
         statManager.getDatabaseStatistics(
                 StatisticsManager.SYSTEM_TABLE_STATISTICS);
         String statistics = loggingStream.toString();
-        assertTrue("Statistics with SYSTEM_TABLE_STATISTICS option must "
-                    + "include system table info",
-                statistics.contains("RDB$DATABASE"));
+
+        assertThat(statistics)
+                .describedAs("Statistics with SYSTEM_TABLE_STATISTICS option must include system table info")
+                .contains("RDB$DATABASE");
     }
 
     @Test
-    public void testGetTableStatistics() throws SQLException {
+    void testGetTableStatistics() throws SQLException {
         createTestTable();
-        statManager.getTableStatistics(new String[]{"TEST"});
+        statManager.getTableStatistics(new String[] { "TEST" });
         String statistics = loggingStream.toString();
 
-        System.out.println(statistics);
-        
-        assertTrue("The database page analysis must be in the statistics",
-                statistics.contains("Data pages"));
-
-        assertTrue("The table name must be in the statistics",
-                statistics.contains("TEST"));
+        assertThat(statistics)
+                .describedAs("The database page analysis must be in the statistics").contains("Data pages")
+                .describedAs("The table name must be in the statistics").contains("TEST");
     }
 
     @Test
-    public void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
+    void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
         int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3, 0) ? 1 : 2;
@@ -164,35 +151,37 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
             FBStatisticsManager.DatabaseTransactionInfo databaseTransactionInfo =
                     statManager.getDatabaseTransactionInfo();
             // The transaction values checked here might be implementation dependent
-            assertEquals("oldest", oldest, databaseTransactionInfo.getOldestTransaction());
-            assertEquals("oldest active", oldest + 1, databaseTransactionInfo.getOldestActiveTransaction());
-            assertEquals("oldest snapshot", oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction());
-            assertEquals("next", oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction());
-            assertEquals("active", 1, databaseTransactionInfo.getActiveTransactionCount());
+            assertEquals(oldest, databaseTransactionInfo.getOldestTransaction(), "oldest");
+            assertEquals(oldest + 1, databaseTransactionInfo.getOldestActiveTransaction(), "oldest active");
+            assertEquals(oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction(), "oldest snapshot");
+            assertEquals(oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction(), "next");
+            assertEquals(1, databaseTransactionInfo.getActiveTransactionCount(), "active");
         }
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        int oldest;
         if (supportInfo.isVersionEqualOrAbove(5, 0)) {
-            oldest = 2;
+            return 2;
+        } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
+            return 1;
+        } else if (supportInfo.isVersionEqualOrAbove(3, 0, 10)) {
+            return 2;
         } else if (supportInfo.isVersionEqualOrAbove(2, 5)) {
-            oldest = 1;
+            return 1;
         } else {
-            oldest = 5;
+            return 5;
         }
-        return oldest;
     }
 
     @Test
-    public void testGetDatabaseTransactionInfo_noDatabaseNameSpecified() throws SQLException {
+    void testGetDatabaseTransactionInfo_noDatabaseNameSpecified() {
         statManager.setDatabase(null);
-        expectedException.expect(SQLException.class);
-        statManager.getDatabaseTransactionInfo();
+        assertThatExceptionOfType(SQLException.class)
+                .isThrownBy(() -> statManager.getDatabaseTransactionInfo());
     }
 
     @Test
-    public void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
+    void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
         int oldest = getExpectedOldest(supportInfo);
         int expectedNextOffset;
@@ -213,11 +202,11 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
             FBStatisticsManager.DatabaseTransactionInfo databaseTransactionInfo =
                     FBStatisticsManager.getDatabaseTransactionInfo(conn);
             // The transaction values checked here might be implementation dependent
-            assertEquals("oldest", oldest, databaseTransactionInfo.getOldestTransaction());
-            assertEquals("oldest active", oldest + 1, databaseTransactionInfo.getOldestActiveTransaction());
-            assertEquals("oldest snapshot", oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction());
-            assertEquals("next", oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction());
-            assertEquals("active", 1, databaseTransactionInfo.getActiveTransactionCount());
+            assertEquals(oldest, databaseTransactionInfo.getOldestTransaction(), "oldest");
+            assertEquals(oldest + 1, databaseTransactionInfo.getOldestActiveTransaction(), "oldest active");
+            assertEquals(oldest + 1, databaseTransactionInfo.getOldestSnapshotTransaction(), "oldest snapshot");
+            assertEquals(oldest + expectedNextOffset, databaseTransactionInfo.getNextTransaction(), "next");
+            assertEquals(1, databaseTransactionInfo.getActiveTransactionCount(), "active");
         }
     }
 }
