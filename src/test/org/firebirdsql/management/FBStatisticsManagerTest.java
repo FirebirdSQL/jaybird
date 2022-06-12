@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Test the FBStatisticsManager class
  */
-class TestFBStatisticsManager {
+class FBStatisticsManagerTest {
 
     @SuppressWarnings("JUnit5MalformedExtensions")
     @RegisterExtension
