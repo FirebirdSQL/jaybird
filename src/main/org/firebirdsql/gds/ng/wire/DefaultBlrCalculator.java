@@ -90,10 +90,10 @@ public class DefaultBlrCalculator implements BlrCalculator {
      * @return Byte array OutputStream with header already written
      */
     private ByteArrayOutputStream getByteArrayOutputStream(final int fieldCount) {
-        // Approximate size for the blr so we can allocate a ByteArray with a sufficiently large buffer, so no resize is needed
+        // Approximate size for the blr to allocate an array with a sufficiently large buffer, so no resize is needed
         // 8 bytes: 6 bytes header + 2 bytes tail
-        // 5 bytes per field: 3 bytes maximum required + 2 bytes for the null indicator and end of parameter
-        final int approximateSize = 8 + 5 * fieldCount;
+        // 7 bytes per field: 5 bytes maximum required + 2 bytes for the null indicator and end of parameter
+        final int approximateSize = 8 + 7 * fieldCount;
         final ByteArrayOutputStream bout = new ByteArrayOutputStream(approximateSize);
         final int parameterCount = 2 * fieldCount; // 1 actual field, 1 null descriptor (?)
 
@@ -119,14 +119,18 @@ public class DefaultBlrCalculator implements BlrCalculator {
         final int fieldType = field.getType() & ~1;
         switch (fieldType) {
         case SQL_VARYING:
-            // TODO Use blr_varying2 instead, blr_varying2 was already in Firebird 1
-            bout.write(blr_varying);
+            bout.write(blr_varying2);
+            bout.write(field.getSubType());
+            // Formally bout.write(field.getSubType() >> 8);, but that would be the collation id, which is not relevant
+            bout.write(0);
             bout.write(len);
             bout.write(len >> 8);
             break;
         case SQL_TEXT:
-            // TODO Use blr_text2 instead, brl_text2 was already in Firebird 1
-            bout.write(blr_text);
+            bout.write(blr_text2);
+            bout.write(field.getSubType());
+            // Formally bout.write(field.getSubType() >> 8);, but that would be the collation id, which is not relevant
+            bout.write(0);
             bout.write(len);
             bout.write(len >> 8);
             break;
