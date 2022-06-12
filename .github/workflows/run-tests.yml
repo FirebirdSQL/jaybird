@@ -1,6 +1,9 @@
 name: run-tests
 on: [push,pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,9 +13,9 @@ jobs:
           version: 'v4.0'
           isc_password: 'masterkey'
           enable_legacy_client_auth: 'true'
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Java 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
@@ -30,7 +33,7 @@ jobs:
           rm -fr ~/.gradle/caches/*/plugin-resolution/
           find ~/.gradle/caches/ -name "*.lock" -type f -delete
       - name: Store Report Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: report-artifacts
