@@ -42,7 +42,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbStatement extends ExceptionListenable {
+public interface FbStatement extends ExceptionListenable, AutoCloseable {
 
     /**
      * @return Transaction currently associated with this statement
@@ -59,7 +59,6 @@ public interface FbStatement extends ExceptionListenable {
      *
      * @param transaction
      *         The transaction
-     * @throws SQLException
      */
     void setTransaction(FbTransaction transaction) throws SQLException;
 
@@ -90,9 +89,8 @@ public interface FbStatement extends ExceptionListenable {
 
     /**
      * Close and deallocate this statement.
-     *
-     * @throws SQLException
      */
+    @Override
     void close() throws SQLException;
 
     /**
@@ -101,8 +99,6 @@ public interface FbStatement extends ExceptionListenable {
      * <p>
      * Equivalent to calling {@link #closeCursor(boolean)} with {@code false}.
      * </p>
-     *
-     * @throws SQLException
      */
     void closeCursor() throws SQLException;
 
@@ -115,7 +111,6 @@ public interface FbStatement extends ExceptionListenable {
      *
      * @param transactionEnd
      *         Close is in response to a transaction end.
-     * @throws SQLException
      */
     void closeCursor(boolean transactionEnd) throws SQLException;
 
@@ -198,19 +193,19 @@ public interface FbStatement extends ExceptionListenable {
      * @param fetchType
      *         Fetch type
      * @param fetchSize
-     *         Number of rows to fetch (must be {@code > 0}) (ignored for types other than {@link FetchType#NEXT} and
-     *         {@link FetchType#PRIOR})
+     *         Number of rows to fetch (must be {@code > 0}) (ignored by server for types other than
+     *         {@link FetchType#NEXT} and {@link FetchType#PRIOR})
      * @param position
-     *         Absolute or relative position for the row to fetch (ignored for types other than
+     *         Absolute or relative position for the row to fetch (ignored by server for types other than
      *         {@link FetchType#ABSOLUTE} and {@link FetchType#RELATIVE})
      * @throws java.sql.SQLFeatureNotSupportedException
      *         For types other than {@link FetchType#NEXT} if the protocol version or the implementation does not
      *         support scroll fetch
      * @throws SQLException
-     *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
-     *         size is not {@code > 0}.
+     *         For database access errors, when called on a closed statement, when no cursor is open or for server-side
+     *         error conditions
+     * @see #supportsFetchScroll()
      */
-    // TODO Unstable API
     default void fetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException {
         if (fetchType == FetchType.NEXT) {
             fetchRows(fetchSize);
@@ -220,13 +215,20 @@ public interface FbStatement extends ExceptionListenable {
     }
 
     /**
+     * Has at least one fetch been executed on the current cursor?
+     *
+     * @return {@code true} if at least one fetch has been executed on the current cursor, {@code false} otherwise
+     * (including if nothing has been executed, or the current statement has no cursor)
+     */
+    boolean hasFetched();
+
+    /**
      * Reports whether this statement implementation supports {@link #fetchScroll(FetchType, int, int)} with anything
      * other than {@link FetchType#NEXT}.
      *
      * @return {@code true} {@code fetchScroll} supported, {@code false} if not supported (default implementation
      * returns {@code false})
      */
-    // TODO Unstable API
     default boolean supportsFetchScroll() {
         return false;
     }
@@ -272,8 +274,59 @@ public interface FbStatement extends ExceptionListenable {
      *         Response buffer length to use
      * @return Response buffer
      * @throws SQLException
+     *         For errors retrieving or transforming the response.
      */
     byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException;
+
+    /**
+     * Request cursor info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If requesting cursor info is not supported (Firebird 4.0 or earlier, or native implementation)
+     * @see #supportsCursorInfo() 
+     */
+    default <T> T getCursorInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support getCursorInfo");
+    }
+
+    /**
+     * Request cursor info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @return Response buffer
+     * @throws SQLException
+     *         For errors retrieving or transforming the response
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If requesting cursor info is not supported (Firebird 4.0 or earlier, or native implementation)
+     */
+    default byte[] getCursorInfo(byte[] requestItems, int bufferLength) throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support getCursorInfo");
+    }
+
+    /**
+     * Reports whether this statement implementation supports {@link #getCursorInfo(byte[], int, InfoProcessor)} and
+     * {@link #getCursorInfo(byte[], int)}.
+     *
+     * @return {@code true} {@code getCursorInfo} supported, {@code false} if not supported (default implementation
+     * returns {@code false})
+     */
+    default boolean supportsCursorInfo() {
+        return false;
+    }
 
     /**
      * @return The default size to use for the sql info buffer
@@ -395,7 +448,6 @@ public interface FbStatement extends ExceptionListenable {
      * @throws SQLException
      *         If this statement is closed, or the specified flag is not supported
      */
-    // TODO Unstable API
     default void setCursorFlag(CursorFlag flag) throws SQLException {
         // do nothing
     }
@@ -414,7 +466,6 @@ public interface FbStatement extends ExceptionListenable {
      * @throws SQLException
      *         If this statement is closed
      */
-    // TODO Unstable API
     default void clearCursorFlag(CursorFlag flag) throws SQLException {
         // do nothing
     }
@@ -431,7 +482,6 @@ public interface FbStatement extends ExceptionListenable {
      * @throws SQLException
      *         If this statement is closed
      */
-    // TODO Unstable API
     default boolean isCursorFlagSet(CursorFlag flag) throws SQLException {
         return false;
     }

@@ -60,44 +60,34 @@ public class V18Statement extends V16Statement {
     }
 
     @Override
-    public void fetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException {
-//        if (fetchType == FetchType.NEXT) {
-//            fetchRows(fetchSize);
-//            return;
-//        }
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                if (!getState().isCursorOpen()) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
-                }
-                // TODO Check logic for handling fetch after we reached EOF
-//                if (isAllRowsFetched()) return;
+    protected void fetchScrollImpl(FetchType fetchType, int fetchSize, int position) throws SQLException {
+        synchronized (getSynchronizationObject()) {
+            checkStatementValid();
+            if (!getState().isCursorOpen()) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+            }
 
-                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
-                    if (operationCloseHandle.isCancelled()) {
-                        // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
-                    }
-                    try {
-                        int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
-                        sendFetchScroll(fetchType, actualFetchSize, position);
-                        getXdrOut().flush();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                    }
-                    try {
-                        processFetchResponse();
-                    } catch (IOException ex) {
-                        switchState(StatementState.ERROR);
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                    }
+            try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                if (operationCloseHandle.isCancelled()) {
+                    // operation was synchronously cancelled from an OperationAware implementation
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                }
+                try {
+                    // We are allowing 0 and negative fetch sizes here, in case this triggers some server behaviour
+                    int actualFetchSize = fetchType.supportsBatch() ? fetchSize : Math.min(1, fetchSize);
+                    sendFetchScroll(fetchType, actualFetchSize, position);
+                    getXdrOut().flush();
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                }
+                try {
+                    processFetchResponse(fetchType.direction(position));
+                } catch (IOException ex) {
+                    switchState(StatementState.ERROR);
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
                 }
             }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
         }
     }
 
@@ -105,11 +95,31 @@ public class V18Statement extends V16Statement {
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_fetch_scroll);
         xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(hasFetchedRows() ? null : calculateBlr(getRowDescriptor()));
+        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
         xdrOut.writeInt(0); // out_message_number = out_message_type
         xdrOut.writeInt(fetchSize); // fetch size
         xdrOut.writeInt(fetchType.getFbFetchType()); // p_sqldata_fetch_op
         xdrOut.writeInt(position); // p_sqldata_fetch_pos
+    }
+
+    @Override
+    protected byte[] getCursorInfoImpl(byte[] requestItems, int bufferLength) throws SQLException {
+        if (!hasFetched()) {
+            // Attempting to retrieve cursor information when cursor is not open causes SQLDA errors on fetch.
+            // This is an attempt to protect against that problem by disallowing such requests.
+            throw new FbExceptionBuilder().transientException(ISCConstants.isc_cursor_not_open).toSQLException();
+        }
+        return getInfo(WireProtocolConstants.op_info_cursor, requestItems, bufferLength);
+    }
+
+    @Override
+    public boolean supportsFetchScroll() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCursorInfo() {
+        return true;
     }
 
     protected final int getCursorFlagsAsInt() {

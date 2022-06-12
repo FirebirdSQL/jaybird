@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -36,8 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -84,13 +82,7 @@ public class TestReconnectTransaction extends FBJUnit4TestBase {
 
     @Test
     public void testReconnectTransaction() throws Exception {
-        FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
+        FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
         FbDatabaseFactory databaseFactory = FBTestProperties.getFbDatabaseFactory();
         try (FbDatabase dbHandle1 = databaseFactory.connect(connectionInfo)) {

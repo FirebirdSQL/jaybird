@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -1242,7 +1242,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void beforeFirst(FbStatement sender) {
+            if (!isValidSender(sender)) return;
+            // TODO Evaluate if we need to do any processing
+        }
+
+        @Override
+        public void afterLast(FbStatement sender) {
             if (!isValidSender(sender)) return;
             // TODO Evaluate if we need to do any processing
         }
@@ -1303,10 +1309,10 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private static final class RowsFetchedListener extends DefaultStatementListener {
 
-        private boolean allRowsFetched = false;
+        private boolean allRowsFetched;
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             allRowsFetched = true;
         }
 

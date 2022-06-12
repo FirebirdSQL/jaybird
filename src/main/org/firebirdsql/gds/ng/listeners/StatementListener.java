@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,39 +43,61 @@ public interface StatementListener {
 
     /**
      * Method to be notified of a new row of data.
+     * <p>
+     * Listeners that process {@link #beforeFirst(FbStatement)} and/or {@link #afterLast(FbStatement)} should consider
+     * calls to this method to clear the <i>before-first</i> or <i>after-last</i> state to an <li>in-cursor</li> state.
+     * </p>
      *
      * @param sender
-     *         The <code>FbStatement</code> that called this method.
+     *         The {@code FbStatement}that called this method.
      * @param rowValue
      *         The row values.
      */
     void receivedRow(FbStatement sender, RowValue rowValue);
 
     /**
-     * Method to be notified when all rows have been fetched.
+     * Method to be notified when the cursor of a statement is positioned before the first row.
      * <p>
-     * This method may also be called when the statement did not produce any rows (or did not open a result set).
+     * When server-side scrolling is used, this method can be called multiple times during the lifetime of a single
+     * open cursor. This method may be called even if the cursor is already <i>before-first</i>.
      * </p>
      *
      * @param sender
-     *         The <code>FbStatement</code> that called this method.
+     *         The {@code FbStatement} that called this method.
      * @see #statementExecuted(FbStatement, boolean, boolean)
+     * @see #receivedRow(FbStatement, RowValue)
+     * @see #afterLast(FbStatement)
      */
-    void allRowsFetched(FbStatement sender);
+    void beforeFirst(FbStatement sender);
+
+    /**
+     * Method to be notified when the cursor of a statement is positioned after the last row.
+     * <p>
+     * When server-side scrolling is used, this method might be called multiple times during the lifetime of a single
+     * open cursor. This method may be called even if the cursor is already <i>after-last</i>.
+     * </p>
+     *
+     * @param sender
+     *         The {@code FbStatement} that called this method.
+     * @see #statementExecuted(FbStatement, boolean, boolean)
+     * @see #receivedRow(FbStatement, RowValue)
+     * @see #beforeFirst(FbStatement)
+     */
+    void afterLast(FbStatement sender);
 
     /**
      * Method to be notified when a statement has been executed.
      * <p>
-     * This event with <code>hasResultSet=true</code> can be seen as the counter part of {@link #allRowsFetched(FbStatement)}.
+     * This event with {@code hasResultSet=true} can be seen as a counterpart of {@link #afterLast(FbStatement)}.
      * </p>
      *
      * @param sender
-     *         The <code>FbStatement</code> that called this method.
+     *         The {@code FbStatement} that called this method.
      * @param hasResultSet
-     *         <code>true</code> there is a result set, <code>false</code> there is no result set
+     *         {@code true} there is a result set, {@code false} there is no result set
      * @param hasSingletonResult
-     *         <code>true</code> singleton result, <code>false</code> statement will produce indeterminate number of rows;
-     *         can be ignored when <code>hasResultSet</code> is false.
+     *         {@code true} singleton result, {@code false} statement will produce indeterminate number of rows;
+     *         can be ignored when {@code hasResultSet} is {@code false}.
      */
     void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult);
 
@@ -85,7 +105,7 @@ public interface StatementListener {
      * Method to be notified when the state of a statement has changed.
      *
      * @param sender
-     *         The <code>FbStatement</code> that called this method.
+     *         The {@code FbStatement} that called this method.
      * @param newState
      *         The new state of the statement
      * @param previousState
@@ -94,7 +114,7 @@ public interface StatementListener {
     void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState);
 
     /**
-     * Called when a warning was received for the <code>sender</code> statement.
+     * Called when a warning was received for the {@code sender} statement.
      *
      * @param sender
      *         Statement receiving the warning

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -94,16 +92,16 @@ public class TestStatementListenerDispatcher {
     }
 
     /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#allRowsFetched(org.firebirdsql.gds.ng.FbStatement)}
+     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#beforeFirst(FbStatement)}
      * is forwarded correctly.
      */
     @Test
-    public void testAllRowsFetched() {
+    public void testBeforeFirst() {
         final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).allRowsFetched(statement);
+        expectations.exactly(1).of(listener).beforeFirst(statement);
         context.checking(expectations);
 
-        dispatcher.allRowsFetched(statement);
+        dispatcher.beforeFirst(statement);
     }
 
     /**
@@ -111,17 +109,48 @@ public class TestStatementListenerDispatcher {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testAllRowsFetched_withException() {
+    public void testBeforeFirst_withException() {
         final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
         dispatcher.addListener(listener2);
         final Expectations expectations = new Expectations();
         for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).allRowsFetched(statement);
+            expectations.exactly(1).of(currentListener).beforeFirst(statement);
             expectations.will(throwException(new RuntimeException()));
         }
         context.checking(expectations);
 
-        dispatcher.allRowsFetched(statement);
+        dispatcher.beforeFirst(statement);
+    }
+
+    /**
+     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#afterLast(FbStatement)}
+     * is forwarded correctly.
+     */
+    @Test
+    public void testAfterLast() {
+        final Expectations expectations = new Expectations();
+        expectations.exactly(1).of(listener).afterLast(statement);
+        context.checking(expectations);
+
+        dispatcher.afterLast(statement);
+    }
+
+    /**
+     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
+     * exceptions thrown to call of the dispatcher.
+     */
+    @Test
+    public void testAfterLast_withException() {
+        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+        dispatcher.addListener(listener2);
+        final Expectations expectations = new Expectations();
+        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
+            expectations.exactly(1).of(currentListener).afterLast(statement);
+            expectations.will(throwException(new RuntimeException()));
+        }
+        context.checking(expectations);
+
+        dispatcher.afterLast(statement);
     }
 
     /**

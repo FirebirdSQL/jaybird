@@ -721,6 +721,10 @@ public interface ISCConstants {
     int isc_info_sql_stmt_set_generator  = 13;
     int isc_info_sql_stmt_savepoint      = 14;
 
+    // Cursor info information items
+    
+    int INF_RECORD_COUNT = 10;
+
     /*****************************/
     /* Request information items */
     /*****************************/

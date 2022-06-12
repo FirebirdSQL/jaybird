@@ -45,4 +45,12 @@ public final class FetchResponse implements Response {
     public int getCount() {
         return count;
     }
+
+    @Override
+    public String toString() {
+        return "FetchResponse{" +
+                "status=" + status +
+                ", count=" + count +
+                '}';
+    }
 }

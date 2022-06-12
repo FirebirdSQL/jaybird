@@ -182,6 +182,7 @@ public interface WireProtocolConstants {
     int op_info_batch = 111;
 
     int op_fetch_scroll = 112;
+    int op_info_cursor = 113;
 
     /* Protocol version constants */
 

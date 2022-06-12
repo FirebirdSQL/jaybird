@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -39,9 +37,10 @@ import java.util.List;
  */
 public class SimpleStatementListener implements StatementListener {
 
-    private final List<RowValue> rows = new ArrayList<RowValue>();
-    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<SQLWarning>());
-    private Boolean allRowsFetched;
+    private final List<RowValue> rows = new ArrayList<>();
+    private final List<SQLWarning> warnings = Collections.synchronizedList(new ArrayList<>());
+    private Boolean beforeFirst;
+    private Boolean afterLast;
     private Boolean hasResultSet;
     private Boolean hasSingletonResult;
     private SqlCountHolder sqlCounts;
@@ -49,11 +48,33 @@ public class SimpleStatementListener implements StatementListener {
     @Override
     public void receivedRow(FbStatement sender, RowValue rowValue) {
         rows.add(rowValue);
+        beforeFirst = false;
+        afterLast = false;
     }
 
     @Override
-    public void allRowsFetched(FbStatement sender) {
-        allRowsFetched = true;
+    public void beforeFirst(FbStatement sender) {
+        beforeFirst = true;
+        afterLast = false;
+    }
+
+    public void clearBeforeFirst() {
+        beforeFirst = null;
+    }
+
+    @Override
+    public void afterLast(FbStatement sender) {
+        beforeFirst = false;
+        afterLast = true;
+    }
+
+    public void clearAfterLast() {
+        afterLast = null;
+    }
+
+    public void clearPosition() {
+        clearBeforeFirst();
+        clearAfterLast();
     }
 
     @Override
@@ -77,8 +98,12 @@ public class SimpleStatementListener implements StatementListener {
         this.sqlCounts = sqlCounts;
     }
 
-    public Boolean isAllRowsFetched() {
-        return allRowsFetched;
+    public Boolean isBeforeFirst() {
+        return beforeFirst;
+    }
+
+    public Boolean isAfterLast() {
+        return afterLast;
     }
 
     public Boolean hasResultSet() {
@@ -98,7 +123,8 @@ public class SimpleStatementListener implements StatementListener {
     }
 
     public void clear() {
-        allRowsFetched = null;
+        beforeFirst = null;
+        afterLast = null;
         hasResultSet = null;
         hasSingletonResult = null;
         sqlCounts = null;

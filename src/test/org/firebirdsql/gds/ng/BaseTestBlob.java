@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,9 +22,6 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.Before;
@@ -235,7 +232,6 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param id ID of the record to be created in blob_table
      * @param baseContent Base content
      * @param requiredSize Required size
-     * @throws SQLException
      */
     protected void populateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         Connection con = getConnectionViaDriverManager();
@@ -257,7 +253,6 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * Populates a stream blob for testing.
      *
      * @param testId Id of the record to be inserted.
-     * @throws SQLException
      */
     protected void populateStreamBlob(int testId, byte[] baseContent, int requiredSize) throws SQLException {
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
@@ -302,7 +297,6 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param testBytes Bytes to write
      * @param db Database to use
      * @param blobParameterBuffer Blob parameter buffer (or null)
-     * @throws SQLException
      */
     protected void writeBlob(int testId, byte[] testBytes, FbDatabase db, BlobParameterBuffer blobParameterBuffer) throws SQLException {
         final SimpleStatementListener listener = new SimpleStatementListener();
@@ -341,7 +335,6 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param baseContent Base content
      * @param requiredSize Required (expected) size
      * @return <code>true</code> when the content matches.
-     * @throws SQLException
      */
     protected boolean validateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         try (Connection con = getConnectionViaDriverManager();
@@ -360,25 +353,12 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
     /**
      * Creates a database connection to the test database.
      * @return FbWireDatabase instance
-     * @throws SQLException
      */
     protected FbDatabase createDatabaseConnection() throws SQLException {
-        final FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-        return createFbDatabase(connectionInfo);
+        return createFbDatabase(FBTestProperties.getDefaultFbConnectionProperties());
     }
 
     protected final FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 }

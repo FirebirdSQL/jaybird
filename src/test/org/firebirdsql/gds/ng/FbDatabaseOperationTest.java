@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -35,6 +35,7 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
 import static org.hamcrest.Matchers.allOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -43,6 +44,7 @@ public class FbDatabaseOperationTest {
 
     @Rule
     public final JUnitRuleMockery context = new JUnitRuleMockery();
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
@@ -76,7 +78,7 @@ public class FbDatabaseOperationTest {
 
     @Test
     public void signalFetchNotifiesFetchStart() {
-        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase);
+        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
         assertEquals("reported operations", 1, reportedOperations.size());
         assertOperationReport(reportedOperations.get(0), OperationReport.Type.START, Operation.Type.STATEMENT_FETCH,
                 handle);
@@ -93,11 +95,21 @@ public class FbDatabaseOperationTest {
 
     @Test
     public void closeOfFetchNotifiesFetchEnd() {
-        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase);
+        class CompletionHandler implements Runnable {
+            boolean hasRun;
+
+            @Override
+            public void run() {
+                hasRun = true;
+            }
+        }
+        CompletionHandler completionHandler = new CompletionHandler();
+        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, completionHandler);
         handle.close();
         assertEquals("reported operations", 2, reportedOperations.size());
         assertOperationReport(reportedOperations.get(1), OperationReport.Type.END, Operation.Type.STATEMENT_FETCH,
                 handle);
+        assertTrue("Expected completion handler to have been run", completionHandler.hasRun);
     }
 
     @Test
@@ -114,7 +126,7 @@ public class FbDatabaseOperationTest {
 
     @Test
     public void unclosedFetchAllowsCancellation() throws Exception {
-        FbDatabaseOperation.signalFetch(fbDatabase);
+        FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
         Operation operation = reportedOperations.get(0).getOperation();
 
         context.checking(new Expectations() {{
@@ -145,7 +157,7 @@ public class FbDatabaseOperationTest {
 
     @Test
     public void closedFetchDisallowsCancellation() throws Exception {
-        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase);
+        OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
         Operation operation = reportedOperations.get(0).getOperation();
         handle.close();
 

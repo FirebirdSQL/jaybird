@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,10 +28,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -47,16 +48,7 @@ public class TestJnaDatabaseConnection {
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Test
     public void construct_clientLibraryNull_IllegalArgument() throws Exception {

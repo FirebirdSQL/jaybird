@@ -58,7 +58,7 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         assumeTrue(unmetRequirements.isEmpty(), () -> "The following requirements were not met: " + unmetRequirements);
     }
 

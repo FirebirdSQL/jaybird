@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,9 +21,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -61,27 +57,14 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
-    protected final FbConnectionProperties connectionInfo;
-
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     protected FbDatabase db;
 
     @Before
     public void setUp() throws Exception {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
-        try {
+        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
             DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
-        } finally {
-            closeQuietly(con);
         }
 
         db = createDatabase();
@@ -170,27 +153,20 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
     }
 
     protected final void assertValueForKey(int key, boolean hasRow, String expectedValue) throws SQLException {
-        Connection connection = getConnectionViaDriverManager();
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            pstmt = connection.prepareStatement("SELECT thevalue FROM keyvalue WHERE thekey = ?");
+        try (Connection connection = getConnectionViaDriverManager();
+             PreparedStatement pstmt = connection.prepareStatement("SELECT thevalue FROM keyvalue WHERE thekey = ?")) {
             pstmt.setInt(1, key);
-            rs = pstmt.executeQuery();
-            assertEquals("Unexpected value for rs.next()", hasRow, rs.next());
-            if (hasRow) {
-                assertEquals("Unexpected value for rs.getString(1)", expectedValue, rs.getString(1));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                assertEquals("Unexpected value for rs.next()", hasRow, rs.next());
+                if (hasRow) {
+                    assertEquals("Unexpected value for rs.getString(1)", expectedValue, rs.getString(1));
+                }
             }
-        } finally {
-            closeQuietly(rs);
-            closeQuietly(pstmt);
-            closeQuietly(connection);
         }
     }
 
     private void insertKeyValue(FbTransaction transaction, int key, String value) throws SQLException {
-        FbStatement statement = db.createStatement(transaction);
-        try {
+        try (FbStatement statement = db.createStatement(transaction)) {
             statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
 
             RowValue rowValue = RowValue.of(
@@ -198,17 +174,10 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
                     db.getEncoding().encodeToCharset(value));
 
             statement.execute(rowValue);
-        } finally {
-            statement.close();
         }
     }
 
     protected final FbTransaction getTransaction() throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 }

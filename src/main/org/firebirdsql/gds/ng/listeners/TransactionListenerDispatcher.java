@@ -44,4 +44,9 @@ public final class TransactionListenerDispatcher extends AbstractListenerDispatc
             }
         }
     }
+
+    @Override
+    protected void logError(String message, Throwable throwable) {
+        log.error(message, throwable);
+    }
 }

@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,19 +19,12 @@
 package org.firebirdsql.common.rules;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.hamcrest.Matchers.isIn;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
 /**
@@ -45,12 +36,13 @@ import static org.junit.Assume.assumeThat;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @see GdsTypeExtension
  */
 public final class GdsTypeRule implements TestRule {
 
-    private Matcher<String> testTypeMatcher;
+    private final Matcher<String> testTypeMatcher;
 
-    private GdsTypeRule(Matcher<String> testTypeMatcher) {
+    public GdsTypeRule(Matcher<String> testTypeMatcher) {
         this.testTypeMatcher = testTypeMatcher;
     }
 
@@ -81,8 +73,7 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule supports(String... supportedTypes) {
-        final Set<String> supportedTypesSet = new HashSet<>(Arrays.asList(supportedTypes));
-        return new GdsTypeRule(isIn(supportedTypesSet));
+        return GdsTypeExtension.supports(supportedTypes).toRule();
     }
 
     /**
@@ -92,8 +83,7 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule excludes(String... excludedTypes) {
-        final Set<String> excludedTypesSet = new HashSet<>(Arrays.asList(excludedTypes));
-        return new GdsTypeRule(not(isIn(excludedTypesSet)));
+        return GdsTypeExtension.excludes(excludedTypes).toRule();
     }
 
     /**
@@ -102,7 +92,7 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule supportsNativeOnly() {
-        return supports(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+        return GdsTypeExtension.supportsNativeOnly().toRule();
     }
 
     /**
@@ -111,6 +101,6 @@ public final class GdsTypeRule implements TestRule {
      * @return Instance
      */
     public static GdsTypeRule excludesNativeOnly() {
-        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+        return GdsTypeExtension.excludesNativeOnly().toRule();
     }
 }

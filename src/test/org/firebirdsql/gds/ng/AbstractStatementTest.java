@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,8 +24,6 @@ import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -118,16 +116,7 @@ public abstract class AbstractStatementTest {
     protected FbDatabase db;
     private FbTransaction transaction;
     protected FbStatement statement;
-    protected final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -199,12 +188,12 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
     }
 
@@ -263,14 +252,14 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", listener.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, listener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, listener.getRows().size());
         assertNull("Expected no SQL counts yet", listener.getSqlCounts());
 
         // 100 should be sufficient to fetch all character sets
         statement.fetchRows(100);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, listener.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, listener.isAfterLast());
         // Number is database dependent (unicode_fss + all single byte character sets)
         assertTrue("Expected more than two rows", listener.getRows().size() > 2);
 
@@ -320,7 +309,7 @@ public abstract class AbstractStatementTest {
 
         assertTrue("Expected singleton result for executable stored procedure", listener.hasSingletonResult());
         assertFalse("Expected no result set for executable stored procedure", listener.hasResultSet());
-        assertTrue("Expected all rows to have been fetched", listener.isAllRowsFetched());
+        assertTrue("Expected all rows to have been fetched", listener.isAfterLast());
         assertEquals("Expected 1 row", 1, listener.getRows().size());
         RowValue fieldValues = listener.getRows().get(0);
         assertEquals("Expected one field", 1, fieldValues.getCount());
@@ -563,12 +552,12 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
 
         statement.closeCursor();
@@ -578,12 +567,12 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener2.isAfterLast());
         assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
     }
 
@@ -601,12 +590,12 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
 
         statement.closeCursor();
@@ -621,12 +610,12 @@ public abstract class AbstractStatementTest {
 
         assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
         assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
+        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
         assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
+        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener2.isAfterLast());
         assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
     }
 
@@ -877,12 +866,7 @@ public abstract class AbstractStatementTest {
     }
 
     private FbTransaction getTransaction() throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
     protected FbTransaction getOrCreateTransaction() throws SQLException {

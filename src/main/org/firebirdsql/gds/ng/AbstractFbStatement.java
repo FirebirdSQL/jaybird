@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,6 +23,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.*;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -50,6 +51,11 @@ public abstract class AbstractFbStatement implements FbStatement {
             EnumSet.of(StatementState.EXECUTING, StatementState.CURSOR_OPEN));
     private static final Logger log = LoggerFactory.getLogger(AbstractFbStatement.class);
 
+    // NOTE: BEFORE_FIRST is also used for statements that don't produce rows
+    private static final int BEFORE_FIRST = -1;
+    private static final int IN_CURSOR = 0;
+    private static final int AFTER_LAST = 1;
+
     private final Object syncObject;
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
@@ -59,9 +65,9 @@ public abstract class AbstractFbStatement implements FbStatement {
     };
     protected final StatementListenerDispatcher statementListenerDispatcher = new StatementListenerDispatcher();
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
-    private volatile boolean allRowsFetched = false;
+    private volatile int cursorPosition = BEFORE_FIRST;
     // Indicates whether at least one fetch was done for the current cursor
-    private boolean fetchedRow;
+    private boolean fetched;
     private volatile StatementState state = StatementState.NEW;
     private volatile StatementType type = StatementType.NONE;
     private volatile RowDescriptor parameterDescriptor;
@@ -128,13 +134,9 @@ public abstract class AbstractFbStatement implements FbStatement {
         return warningCallback;
     }
 
-    /**
-     * Has at least one row been fetched from the current cursor?
-     *
-     * @return {@code true} if at least one row has been fetched of the current cursor, {@code false} otherwise
-     */
-    protected final boolean hasFetchedRows() {
-        return fetchedRow;
+    @Override
+    public final boolean hasFetched() {
+        return fetched;
     }
 
     /**
@@ -307,28 +309,46 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         Row data
      */
     protected final void queueRowData(RowValue rowData) {
+        cursorPosition = IN_CURSOR;
         statementListenerDispatcher.receivedRow(this, rowData);
     }
 
     /**
-     * Sets the <code>allRowsFetched</code> property.
+     * Marks the cursor position as before-first.
      * <p>
-     * When set to true all registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified
-     * for the {@link org.firebirdsql.gds.ng.listeners.StatementListener#allRowsFetched(FbStatement)} event.
+     * All registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified for
+     * the {@link org.firebirdsql.gds.ng.listeners.StatementListener#beforeFirst(FbStatement)} event.
      * </p>
-     *
-     * @param allRowsFetched
-     *         <code>true</code>: all rows fetched, <code>false</code> not all rows fetched.
      */
-    protected final void setAllRowsFetched(boolean allRowsFetched) {
-        this.allRowsFetched = allRowsFetched;
-        if (allRowsFetched) {
-            statementListenerDispatcher.allRowsFetched(this);
+    protected final void setBeforeFirst() {
+       setBeforeFirst(true);
+    }
+
+    private void setBeforeFirst(boolean notify) {
+        cursorPosition = BEFORE_FIRST;
+        if (notify) {
+            statementListenerDispatcher.beforeFirst(this);
         }
     }
 
-    protected final boolean isAllRowsFetched() {
-        return allRowsFetched;
+    protected final boolean isBeforeFirst() {
+        return cursorPosition == BEFORE_FIRST;
+    }
+
+    /**
+     * Marks the cursor position as after-last.
+     * <p>
+     * All registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances are notified for
+     * the {@link org.firebirdsql.gds.ng.listeners.StatementListener#afterLast(FbStatement)} event.
+     * </p>
+     */
+    protected final void setAfterLast() {
+        cursorPosition = AFTER_LAST;
+        statementListenerDispatcher.afterLast(this);
+    }
+
+    protected final boolean isAfterLast() {
+        return cursorPosition == AFTER_LAST;
     }
 
     /**
@@ -346,15 +366,17 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Resets the statement for next execution. Implementation in derived class must synchronize on {@link #getSynchronizationObject()} and
-     * call <code>super.reset(resetAll)</code>
+     * Resets the statement for next execution. Implementation in derived class must synchronize on
+     * {@link #getSynchronizationObject()} and call {@code super.reset(resetAll)}
      *
      * @param resetAll
      *         Also reset field and parameter info
      */
     protected void reset(boolean resetAll) {
         synchronized (getSynchronizationObject()) {
-            setAllRowsFetched(false);
+            StatementType statementType = getType();
+            // Don't notify for non result-set types, but ensure the cursor position value is before-first
+            setBeforeFirst(statementType.isTypeWithCursor() || statementType.isTypeWithSingletonResult());
 
             if (resetAll) {
                 setParameterDescriptor(null);
@@ -424,6 +446,44 @@ public abstract class AbstractFbStatement implements FbStatement {
         return ((AbstractFbDatabase<?>) getDatabase()).getParameterDescriptionInfoRequestItems();
     }
 
+    @Override
+    public final void fetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException {
+        if (fetchType == FetchType.NEXT) {
+            fetchRows(fetchSize);
+            return;
+        }
+        try {
+            fetchScrollImpl(fetchType, fetchSize, position);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    /**
+     * Implementation of {@link #fetchScroll(FetchType, int, int)}.
+     * <p>
+     * An implementation should <b>not</b> notify {@code exceptionListenerDispatcher}, as that is already handled in
+     * {@link #fetchScroll(FetchType, int, int)}.
+     * </p>
+     * <p>
+     * The implementation of {@link #fetchScroll(FetchType, int, int)} redirects {@link FetchType#NEXT} to
+     * {@link #fetchRows(int)}. The implementation does need to handle {@code NEXT}, but only when actually implementing
+     * the other scroll direction.
+     * </p>
+     *
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If the protocol version or the implementation does not support scroll fetch (even for {@code NEXT})
+     * @throws SQLException
+     *         For database access errors, when called on a closed statement, when no cursor is open, or for serverside
+     *         error conditions
+     * @see #fetchScroll(FetchType, int, int) 
+     * @see #supportsFetchScroll()
+     */
+    protected void fetchScrollImpl(FetchType fetchType, int fetchSize, int position) throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support fetchScroll");
+    }
+
     /**
      * Request statement info.
      *
@@ -448,6 +508,47 @@ public abstract class AbstractFbStatement implements FbStatement {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
+    }
+
+    @Override
+    public final <T> T getCursorInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        final byte[] sqlInfo = getCursorInfo(requestItems, bufferLength);
+        try {
+            return infoProcessor.process(sqlInfo);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public final byte[] getCursorInfo(byte[] requestItems, int bufferLength) throws SQLException {
+        try {
+            checkStatementValid();
+            return getCursorInfoImpl(requestItems, bufferLength);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    /**
+     * Implementation of {@link #getCursorInfo(byte[], int)}.
+     * <p>
+     * An implementation should <b>not</b> notify {@code exceptionListenerDispatcher}, as that is already handled in
+     * {@link #getCursorInfo(byte[], int)}.
+     * </p>
+     *
+     * @throws SQLException
+     *         For errors retrieving or transforming the response
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If requesting cursor info is not supported (Firebird 4.0 or earlier, or native implementation)
+     * @see #getCursorInfo(byte[], int)
+     * @see #supportsCursorInfo()
+     */
+    protected byte[] getCursorInfoImpl(byte[] requestItems, int bufferLength) throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support getCursorInfo: " + getClass());
     }
 
     @Override
@@ -489,7 +590,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     public SqlCountHolder getSqlCounts() throws SQLException {
         try {
             checkStatementValid();
-            if (getState() == StatementState.CURSOR_OPEN && !isAllRowsFetched()) {
+            if (getState() == StatementState.CURSOR_OPEN && !isAfterLast()) {
                 // We disallow fetching count when we haven't fetched all rows yet.
                 // TODO SQLState
                 throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
@@ -518,7 +619,6 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param option
      *         Free option
-     * @throws SQLException
      */
     protected abstract void free(int option) throws SQLException;
 
@@ -746,7 +846,11 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @return {@code OperationCloseHandle} handle for the operation
      */
     protected final OperationCloseHandle signalFetch() {
-        return FbDatabaseOperation.signalFetch(getDatabase());
+        return FbDatabaseOperation.signalFetch(getDatabase(), this::fetchExecuted);
+    }
+
+    private void fetchExecuted() {
+        fetched = true;
     }
 
     /**
@@ -779,17 +883,9 @@ public abstract class AbstractFbStatement implements FbStatement {
      */
     private final class SelfListener extends DefaultStatementListener {
         @Override
-        public void receivedRow(FbStatement sender, RowValue rowValue) {
-            if (getState() == StatementState.CURSOR_OPEN) {
-                fetchedRow = true;
-            }
-        }
-
-        @Override
-        public void statementStateChanged(FbStatement sender, StatementState newState,
-                StatementState previousState) {
+        public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
             // Any statement state change indicates existing 'fetched' information is no longer valid
-            fetchedRow = false;
+            fetched = false;
         }
     }
 }

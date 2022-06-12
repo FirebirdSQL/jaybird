@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,10 +23,11 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.EventHandle;
 import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.SimpleEventHandler;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -36,8 +37,7 @@ import org.junit.Test;
 
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -69,16 +69,7 @@ public class TestJnaEvents extends FBJUnit4TestBase {
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     private JnaDatabase db;
 
@@ -200,11 +191,6 @@ public class TestJnaEvents extends FBJUnit4TestBase {
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 }

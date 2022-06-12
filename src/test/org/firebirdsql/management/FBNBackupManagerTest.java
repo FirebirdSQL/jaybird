@@ -16,12 +16,12 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,15 +54,17 @@ class FBNBackupManagerTest {
     Path tempDir;
 
     @RegisterExtension
+    @Order(1)
+    static RunEnvironmentExtension runEnvironmentExtension = RunEnvironmentExtension.builder()
+            .requiresDbOnLocalFileSystem()
+            .build();
+
+    @SuppressWarnings("JUnit5MalformedExtensions")
+    @RegisterExtension
     UsesDatabaseExtension usesDatabase = UsesDatabaseExtension.usesDatabase(
             "create table data (id integer, val varchar(50))",
             "commit retain",
             "insert into data (id, val) values (1, 'first')");
-
-    @RegisterExtension
-    static RunEnvironmentExtension runEnvironmentExtension = RunEnvironmentExtension.builder()
-            .requiresDbOnLocalFileSystem()
-            .build();
 
     private final FBNBackupManager manager = configureServiceManager(new FBNBackupManager(getGdsType()));
 

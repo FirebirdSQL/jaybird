@@ -18,9 +18,13 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -121,6 +125,31 @@ public final class FBTestProperties {
         }
 
         return returnValue;
+    }
+
+    public static FbConnectionProperties getDefaultFbConnectionProperties() {
+        FbConnectionProperties connectionInfo = new FbConnectionProperties();
+        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
+        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        connectionInfo.setUser(DB_USER);
+        connectionInfo.setPassword(DB_PASSWORD);
+        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setEncoding(DB_LC_CTYPE);
+        return connectionInfo;
+    }
+
+    /**
+     * Creates a default TPB (read_committed, rec_version, write, wait).
+     *
+     * @return TPB
+     */
+    public static TransactionParameterBuffer getDefaultTpb() {
+        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
+        return tpb;
     }
 
     /**

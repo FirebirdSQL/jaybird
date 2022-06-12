@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -151,4 +151,20 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     public final RowDescriptor emptyRowDescriptor() {
         return database.emptyRowDescriptor();
     }
+
+    @Override
+    public byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException {
+        try {
+            checkStatementValid();
+            return getInfo(WireProtocolConstants.op_info_sql, requestItems, bufferLength);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    protected byte[] getInfo(int operation, byte[] requestItems, int bufferLength) throws SQLException {
+        return getDatabase().getInfo(operation, getHandle(), requestItems, bufferLength, getStatementWarningCallback());
+    }
+
 }

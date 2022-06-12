@@ -64,4 +64,9 @@ public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<
             }
         }
     }
+
+    @Override
+    protected void logError(String message, Throwable throwable) {
+        log.error(message, throwable);
+    }
 }

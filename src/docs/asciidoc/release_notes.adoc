@@ -612,6 +612,13 @@ There is no direct equivalent beyond accessing the properties with the same name
 ** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
 ** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
 ** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
+* `V10Statement` (this is internal implementation, but might be used by custom protocol implementations)
+** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
+** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
+* `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
+* `AbstractFbStatement` (this is internal implementation, but might be used by custom protocol implementations)
+** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
+** `isAllRowsFetched()` -- `isAfterLast()`
 
 The following methods had their visibility reduced:
 

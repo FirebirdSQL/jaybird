@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,12 +38,16 @@ import static java.util.Objects.requireNonNull;
  */
 final class FbDatabaseOperation implements Operation, OperationCloseHandle {
 
+    private static final Runnable NO_OP = () -> {};
+
     private final Type type;
     private volatile FbDatabase fbDatabase;
     private volatile boolean cancelled;
+    private Runnable onCompletion;
 
-    private FbDatabaseOperation(Operation.Type type, FbDatabase fbDatabase) {
+    private FbDatabaseOperation(Operation.Type type, FbDatabase fbDatabase, Runnable onCompletion) {
         this.type = requireNonNull(type, "type");
+        this.onCompletion = onCompletion != null ? onCompletion : NO_OP;
         this.fbDatabase = requireNonNull(fbDatabase, "fbDatabase");
     }
 
@@ -79,9 +83,12 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
     @Override
     public void close() {
         final FbDatabase previous = fbDatabase;
+        final Runnable onCompletion = this.onCompletion;
+        this.onCompletion = null;
         fbDatabase = null;
         if (previous != null) {
             OperationMonitor.endOperation(this);
+            onCompletion.run();
         }
     }
 
@@ -89,12 +96,16 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
         return signalOperation(fbDatabase, Type.STATEMENT_EXECUTE);
     }
 
-    static OperationCloseHandle signalFetch(FbDatabase fbDatabase) {
-        return signalOperation(fbDatabase, Type.STATEMENT_FETCH);
+    static OperationCloseHandle signalFetch(FbDatabase fbDatabase, Runnable onCompletion) {
+        return signalOperation(fbDatabase, Type.STATEMENT_FETCH, onCompletion);
     }
 
-    private static OperationCloseHandle signalOperation(FbDatabase fbDatabase, Type statementExecute) {
-        FbDatabaseOperation fbDatabaseOperation = new FbDatabaseOperation(statementExecute, fbDatabase);
+    private static OperationCloseHandle signalOperation(FbDatabase fbDatabase, Type type) {
+        return signalOperation(fbDatabase, type, NO_OP);
+    }
+
+    private static OperationCloseHandle signalOperation(FbDatabase fbDatabase, Type type, Runnable onCompletion) {
+        FbDatabaseOperation fbDatabaseOperation = new FbDatabaseOperation(type, fbDatabase, onCompletion);
         OperationMonitor.startOperation(fbDatabaseOperation);
         return fbDatabaseOperation;
     }

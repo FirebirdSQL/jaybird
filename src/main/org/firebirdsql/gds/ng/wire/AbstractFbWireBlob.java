@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,13 +19,9 @@
 package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
-import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
-import org.firebirdsql.gds.ng.FbExceptionBuilder;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 /**
@@ -110,26 +106,9 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     @Override
     public byte[] getBlobInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
         try {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getDatabase().getXdrStreamAccess().getXdrOut();
-                    xdrOut.writeInt(WireProtocolConstants.op_info_blob);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation
-                    xdrOut.writeBuffer(requestItems);
-                    xdrOut.writeInt(bufferLength);
-                    xdrOut.flush();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
+            return getDatabase()
                     // TODO: Blob warning callback or just database default?
-                    GenericResponse response = getDatabase().readGenericResponse(null);
-                    return response.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
-            }
+                    .getInfo(WireProtocolConstants.op_info_blob, getHandle(), requestItems, bufferLength, null);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

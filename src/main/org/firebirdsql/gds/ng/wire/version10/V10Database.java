@@ -390,37 +390,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public final byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
-        // TODO Write common info request implementation shared for db, sql, transaction and blob?
-        try {
-            checkAttached();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_info_database);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation
-                    xdrOut.writeBuffer(requestItems);
-                    xdrOut.writeInt(maxBufferLength);
-
-                    xdrOut.flush();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    final GenericResponse genericResponse = readGenericResponse(null);
-                    return genericResponse.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
-            }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
-    }
-
-    @Override
     public final void executeImmediate(String statementText, FbTransaction transaction) throws SQLException {
         // TODO also implement op_exec_immediate2
         try {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -59,17 +59,7 @@ public class WireDatabaseConnectionTest {
      */
     private static final double TIMEOUT_DELTA_MS = 200;
     
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setUser(FBTestProperties.DB_USER);
-        connectionInfo.setPassword(FBTestProperties.DB_PASSWORD);
-        // TODO consider keeping NONE the default in WireConnection if not specified
-        connectionInfo.setEncoding("NONE");
-    }
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     /**
      * Tests {@link WireConnection#isConnected()} when no connection has been

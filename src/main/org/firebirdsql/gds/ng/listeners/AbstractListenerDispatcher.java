@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * Dispatcher to maintain a list of listeners of type <code>TListener</code>
@@ -31,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
+public abstract class AbstractListenerDispatcher<TListener> implements Iterable<TListener> {
 
     private final CopyOnWriteArrayList<TListener> listeners = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<WeakReference<TListener>> weakListeners = new CopyOnWriteArrayList<>();
@@ -95,6 +96,19 @@ public class AbstractListenerDispatcher<TListener> implements Iterable<TListener
             }
         }
     }
+
+    // TODO Change other listeners to use notify just like StatementListenerDispatcher
+    protected final void notify(Consumer<TListener> notificationHandler, String notificationLogName) {
+        for (TListener listener : this) {
+            try {
+                notificationHandler.accept(listener);
+            } catch (Exception e) {
+                logError("Error on notify " + notificationLogName + " to listener " + listener, e);
+            }
+        }
+    }
+
+    protected abstract void logError(String message, Throwable throwable);
 
     /**
      * Removes all listeners from this dispatcher.

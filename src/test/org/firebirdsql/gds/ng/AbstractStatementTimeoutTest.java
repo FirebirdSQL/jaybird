@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,8 +21,6 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.rules.UsesDatabase;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.junit.*;
@@ -35,9 +33,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -51,16 +51,7 @@ public abstract class AbstractStatementTimeoutTest {
     protected FbDatabase db;
     private FbTransaction transaction;
     protected FbStatement statement;
-    protected final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
@@ -203,12 +194,7 @@ public abstract class AbstractStatementTimeoutTest {
     }
 
     private FbTransaction getTransaction() throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
     protected FbTransaction getOrCreateTransaction() throws SQLException {

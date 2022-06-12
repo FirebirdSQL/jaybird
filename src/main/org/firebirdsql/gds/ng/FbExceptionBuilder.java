@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -144,6 +144,19 @@ public final class FbExceptionBuilder {
      */
     public FbExceptionBuilder nonTransientConnectionException(int errorCode) {
         setNextExceptionInformation(Type.NON_TRANSIENT_CONNECT, errorCode);
+        return this;
+    }
+
+    /**
+     * Force the next exception to be a {@link java.sql.SQLTransientException}.
+     *
+     * @param errorCode
+     *         The Firebird error code
+     * @return this FbExceptionBuilder
+     * @see #exception(int)
+     */
+    public FbExceptionBuilder transientException(int errorCode) {
+        setNextExceptionInformation(Type.TRANSIENT, errorCode);
         return this;
     }
 
@@ -590,12 +603,21 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create exception of {@link java.sql.SQLNonTransientConnectionException}
+         * Force builder to create exception of {@link java.sql.SQLNonTransientConnectionException} or a subclass.
          */
         NON_TRANSIENT_CONNECT(SQLStateConstants.SQL_STATE_CONNECTION_ERROR) {
             @Override
             public SQLException createSQLException(final String message, final String sqlState, final int errorCode) {
                 return new SQLNonTransientConnectionException(message, sqlState, errorCode);
+            }
+        },
+        /**
+         * Force build to create exception of {@link java.sql.SQLTransientException} or a subclass.
+         */
+        TRANSIENT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {
+            @Override
+            public SQLException createSQLException(String message, String sqlState, int errorCode) {
+                return new SQLTransientException(message, sqlState, errorCode);
             }
         };
 

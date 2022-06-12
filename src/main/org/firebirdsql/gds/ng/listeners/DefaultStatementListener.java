@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -40,7 +38,11 @@ public class DefaultStatementListener implements StatementListener {
     }
 
     @Override
-    public void allRowsFetched(FbStatement sender) {
+    public void beforeFirst(FbStatement sender) {
+    }
+
+    @Override
+    public void afterLast(FbStatement sender) {
     }
 
     @Override

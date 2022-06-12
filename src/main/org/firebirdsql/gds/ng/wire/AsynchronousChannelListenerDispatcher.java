@@ -56,4 +56,9 @@ public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispa
             }
         }
     }
+
+    @Override
+    protected void logError(String message, Throwable throwable) {
+        log.error(message, throwable);
+    }
 }

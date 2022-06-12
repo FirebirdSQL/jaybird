@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @see org.firebirdsql.common.extension.RequireProtocolExtension
  */
 public class RequireProtocol implements TestRule {
 
@@ -39,7 +40,7 @@ public class RequireProtocol implements TestRule {
         return new RequireProtocol(protocolVersion);
     }
 
-    private RequireProtocol(int protocolVersion) {
+    public RequireProtocol(int protocolVersion) {
         this.protocolVersion = protocolVersion;
     }
 
