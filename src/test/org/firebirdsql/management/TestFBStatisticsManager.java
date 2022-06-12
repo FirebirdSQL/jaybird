@@ -153,8 +153,9 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
 
     @Test
     public void testGetDatabaseTransactionInfo_usingServiceConfig() throws SQLException {
-        int oldest = getDefaultSupportInfo().isVersionEqualOrAbove(2, 5) ? 1: 5;
-        int expectedNextOffset = getDefaultSupportInfo().isVersionEqualOrAbove(3, 0) ? 1 : 2;
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        int oldest = getExpectedOldest(supportInfo);
+        int expectedNextOffset = supportInfo.isVersionEqualOrAbove(3, 0) ? 1 : 2;
         createTestTable();
         
         try (Connection conn = getConnectionViaDriverManager()) {
@@ -172,6 +173,20 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
         }
     }
 
+    private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
+        if (supportInfo.isVersionEqualOrAbove(5, 0)) {
+            return 2;
+        } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
+            return 1;
+        } else if (supportInfo.isVersionEqualOrAbove(3, 0, 10)) {
+            return 2;
+        } else if (supportInfo.isVersionEqualOrAbove(2, 5)) {
+            return 1;
+        } else {
+            return 5;
+        }
+    }
+
     @Test
     public void testGetDatabaseTransactionInfo_noDatabaseNameSpecified() throws SQLException {
         statManager.setDatabase(null);
@@ -182,7 +197,7 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
     @Test
     public void testGetDatabaseTransactionInfo_usingConnection() throws SQLException {
         FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
-        int oldest = supportInfo.isVersionEqualOrAbove(2, 5) ? 1: 5;
+        int oldest = getExpectedOldest(supportInfo);
         int expectedNextOffset;
         if (supportInfo.isVersionEqualOrAbove(3, 0)) {
             expectedNextOffset = 1;
