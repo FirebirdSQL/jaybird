@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBStatement}.
  */
-class TestFBStatement {
+class FBStatementTest {
 
     @RegisterExtension
     final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
