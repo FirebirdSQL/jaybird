@@ -131,25 +131,22 @@ public class V18Statement extends V16Statement {
     }
 
     @Override
-    public final void setCursorFlag(CursorFlag flag) throws SQLException {
+    public final void setCursorFlag(CursorFlag flag) {
         synchronized (getSynchronizationObject()) {
-            checkStatementValid();
             cursorFlags.add(flag);
         }
     }
 
     @Override
-    public final void clearCursorFlag(CursorFlag flag) throws SQLException {
+    public final void clearCursorFlag(CursorFlag flag) {
         synchronized (getSynchronizationObject()) {
-            checkStatementValid();
             cursorFlags.remove(flag);
         }
     }
 
     @Override
-    public final boolean isCursorFlagSet(CursorFlag flag) throws SQLException {
+    public final boolean isCursorFlagSet(CursorFlag flag) {
         synchronized (getSynchronizationObject()) {
-            checkStatementValid();
             return cursorFlags.contains(flag);
         }
     }

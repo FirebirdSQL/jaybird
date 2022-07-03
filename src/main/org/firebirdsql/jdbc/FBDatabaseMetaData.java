@@ -3000,16 +3000,22 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public boolean updatesAreDetected(int type) throws SQLException {
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        //  change to return true when behaviour of EMULATED is the same
         return false;
     }
 
     @Override
     public boolean deletesAreDetected(int type) throws SQLException {
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        //  change to return true when behaviour of EMULATED is the same
         return false;
     }
 
     @Override
     public boolean insertsAreDetected(int type) throws SQLException {
+        // TODO Currently not correct when scrollableCursor=SERVER (and not a holdable cursor);
+        //  change to return true when behaviour of EMULATED is the same
         return false;
     }
 
@@ -3226,7 +3232,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p>
      * This method does not return columns of functions defined in packages.
      * </p>

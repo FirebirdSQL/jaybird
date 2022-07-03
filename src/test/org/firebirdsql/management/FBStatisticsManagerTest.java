@@ -48,9 +48,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class FBStatisticsManagerTest {
 
-    @SuppressWarnings("JUnit5MalformedExtensions")
     @RegisterExtension
-    final UsesDatabaseExtension usesDatabase = UsesDatabaseExtension.usesDatabase();
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private FBStatisticsManager statManager;
     private OutputStream loggingStream;

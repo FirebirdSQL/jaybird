@@ -224,14 +224,20 @@ final class FBServerScrollFetcher implements FBFetcher {
         synchronized (syncObject) {
             checkOpen();
             int oldLocalPosition = localPosition;
-            boolean noMaxRows = maxRows == 0;
-            int cursorSize = noMaxRows || localPosition == 0 ? this.cursorSize : requireCursorSize();
+            boolean hasMaxRows = maxRows > 0;
+            int cursorSize = hasMaxRows && oldLocalPosition != 0 ? requireCursorSize() : this.cursorSize;
             int newLocalPosition =
                     (cursorSize != CURSOR_SIZE_UNKNOWN ? Math.min(cursorSize, oldLocalPosition) : oldLocalPosition) + 1;
             if (!inWindow(newLocalPosition)) {
-                int fetchSize = noMaxRows
-                        ? actualFetchSize()
-                        : Math.min(actualFetchSize(), cursorSize + 1 - oldLocalPosition);
+                int fetchSize = actualFetchSize();
+                if (hasMaxRows) {
+                    if (cursorSize == CURSOR_SIZE_UNKNOWN) {
+                        // special case if not fetched yet while maxRows is set
+                        fetchSize = Math.min(fetchSize, maxRows);
+                    } else {
+                        fetchSize = Math.min(fetchSize, cursorSize + 1 - oldLocalPosition);
+                    }
+                }
                 if (fetchSize == 0) {
                     afterLast();
                     return false;
@@ -437,7 +443,7 @@ final class FBServerScrollFetcher implements FBFetcher {
     }
 
     private int actualFetchSize() {
-        return fetchSize >= 0 ? fetchSize : DEFAULT_FETCH_ROWS;
+        return fetchSize > 0 ? fetchSize : DEFAULT_FETCH_ROWS;
     }
 
     @Override

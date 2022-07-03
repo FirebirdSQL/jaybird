@@ -61,9 +61,17 @@ class FBUpdatableFetcher implements FBFetcher {
     /**
      * Creates an updatable fetcher wrapping a real fetcher.
      *
-     * @param fetcher The fetcher decorated by this fetcher
+     * @param fetcher
+     *         The fetcher decorated by this fetcher
+     * @param fetcherListener
+     *         Fetcher listener
+     * @param deletedRowMarker
+     *         Deleted row marker
      */
     FBUpdatableFetcher(FBFetcher fetcher, FBObjectListener.FetcherListener fetcherListener, RowValue deletedRowMarker) {
+        if (!deletedRowMarker.isDeletedRowMarker()) {
+            throw new IllegalArgumentException("deletedRowMarker should return true for isDeletedRowMarker()");
+        }
         this.fetcher = fetcher;
         fetcher.setFetcherListener(rowListener);
         this.fetcherListener = fetcherListener;
@@ -249,16 +257,19 @@ class FBUpdatableFetcher implements FBFetcher {
     @Override
     public void insertRow(RowValue data) throws SQLException {
         insertedRows.add(data);
+        fetcherListener.rowChanged(this, data);
     }
 
     @Override
     public void deleteRow() throws SQLException {
         modifiedRows.put(position, deletedRowMarker);
+        fetcherListener.rowChanged(this, deletedRowMarker);
     }
 
     @Override
     public void updateRow(RowValue data) throws SQLException {
         modifiedRows.put(position, data);
+        fetcherListener.rowChanged(this, data);
     }
 
     @Override
@@ -284,6 +295,31 @@ class FBUpdatableFetcher implements FBFetcher {
     @Override
     public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
         this.fetcherListener = fetcherListener;
+    }
+
+    @Override
+    public boolean rowInserted() throws SQLException {
+        return !(isBeforeFirst() || isAfterLast()) && firstInsertPosition() <= position;
+    }
+
+    @Override
+    public boolean rowUpdated() throws SQLException {
+        if (isBeforeFirst() || isAfterLast()) {
+            return false;
+        }
+
+        RowValue rowValue = modifiedRows.get(position);
+        return !(rowValue == null || rowValue.isDeletedRowMarker());
+    }
+
+    @Override
+    public boolean rowDeleted() throws SQLException {
+        if (isBeforeFirst() || isAfterLast()) {
+            return false;
+        }
+
+        RowValue rowValue = modifiedRows.get(position);
+        return rowValue != null && rowValue.isDeletedRowMarker();
     }
 
     private static class InternalFetcherListener implements FBObjectListener.FetcherListener {

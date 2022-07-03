@@ -408,6 +408,16 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setDefaultIsolation(isolation);
     }
 
+    @Override
+    public String getScrollableCursor() {
+        return FirebirdConnectionProperties.super.getScrollableCursor();
+    }
+
+    @Override
+    public void setScrollableCursor(String scrollableCursor) {
+        FirebirdConnectionProperties.super.setScrollableCursor(scrollableCursor);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override

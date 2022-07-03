@@ -489,4 +489,31 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
         setBooleanProperty(PropertyNames.processName, timestampUsesLocalTimezone);
     }
 
+    /**
+     * @return Configuration of scrollable cursors, either {@code EMULATED} (default) or {@code SERVER} (case-insensitive)
+     * @see #setScrollableCursor(String)
+     */
+    default String getScrollableCursor() {
+        return getProperty(PropertyNames.scrollableCursor, PropertyConstants.DEFAULT_SCROLLABLE_CURSOR);
+    }
+
+    /**
+     * Sets the type of scrollable cursor.
+     * <p>
+     * Possible values are (case-insensitive):
+     * </p>
+     * <ul>
+     * <li>{@code EMULATED} (default) - emulate scrollable cursors in memory by fetching all rows</li>
+     * <li>{@code SERVER} - user server-side scrollable cursor (requires Firebird 5.0 and pure-java connection).
+     * Falls back to {@code EMULATED} behaviour when server-side support is not available, or when holdable cursors are
+     * requested</li>
+     * </ul>
+     *
+     * @param scrollableCursor
+     *         Scrollable cursor type, one of {@code EMULATED} or {@code SERVER} (case-insensitive)
+     */
+    default void setScrollableCursor(String scrollableCursor) {
+        setProperty(PropertyNames.scrollableCursor, scrollableCursor);
+    }
+
 }

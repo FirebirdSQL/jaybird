@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,30 +18,41 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
 
+import static java.sql.ResultSet.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class FBResultSetTest extends FBJUnit4TestBase {
+class FBResultSetTest {
+
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     //@formatter:off
     private static final String SELECT_STATEMENT =
@@ -94,431 +105,355 @@ public class FBResultSetTest extends FBJUnit4TestBase {
     private static final String SELECT_FROM_VIEW_STATEMENT =
         "SELECT * FROM test_empty_string_view";
 
-    private static final String INSERT_INTO_TABLE_STATEMENT =
-        "INSERT INTO test_table (id, str) VALUES(?, ?)";
-
-    private static final String INSERT_LONG_STR_STATEMENT =
-        "INSERT INTO test_table (id, long_str) VALUES(?, ?)";
-
     private static final String CURSOR_NAME = "some_cursor";
 
     private static final String UPDATE_TABLE_STATEMENT =
         "UPDATE test_table SET str = ? WHERE CURRENT OF " + CURSOR_NAME;
     //@formatter:on
 
-    @SuppressWarnings("deprecation")
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private Connection connection;
-
-    @Before
-    public void setUp() throws Exception {
-        connection = getConnectionViaDriverManager();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        closeQuietly(connection);
-    }
-
     /**
      * Test if all columns are found correctly.
-     *
-     * @throws Exception
-     *         if something went wrong.
      */
     @Test
-    public void testFindColumn() throws Exception {
-        try (Statement stmt = connection.createStatement();
+    void testFindColumn() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(SELECT_STATEMENT)) {
-            assertTrue("Should have at least one row.", rs.next());
+            assertTrue(rs.next(), "Should have at least one row");
 
-            assertEquals("COL1 should be 1.", 1, rs.getInt("COL1"));
-            assertEquals("col1 should be 1.", 1, rs.getInt("col1"));
-            assertEquals("\"col1\" should be 2.", 2, rs.getInt("\"col1\""));
-            assertEquals("Col1 should be 1.", 1, rs.getInt("Col1"));
+            assertEquals(1, rs.getInt("COL1"), "COL1 should be 1");
+            assertEquals(1, rs.getInt("col1"), "col1 should be 1");
+            assertEquals(2, rs.getInt("\"col1\""), "\"col1\" should be 2");
+            assertEquals(1, rs.getInt("Col1"), "Col1 should be 1");
         }
     }
 
     /**
      * Test if positioned updates work correctly.
-     *
-     * @throws java.lang.Exception
-     *         if something went wrong.
      */
     @Test
-    public void testPositionedUpdate() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
+    void testPositionedUpdate() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
 
-        createTestData(recordCount);
+            createTestData(recordCount, connection);
 
-        connection.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-        try (Statement select = connection.createStatement()) {
-            select.setCursorName(CURSOR_NAME);
-            ResultSet rs = select.executeQuery("SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
+            try (Statement select = connection.createStatement()) {
+                select.setCursorName(CURSOR_NAME);
+                ResultSet rs = select.executeQuery("SELECT id, str FROM test_table FOR UPDATE OF " + CURSOR_NAME);
 
-            assertTrue("ResultSet.isBeforeFirst() should be true.", rs.isBeforeFirst());
+                assertTrue(rs.isBeforeFirst(), "ResultSet.isBeforeFirst() should be true");
 
-            try (PreparedStatement update = connection.prepareStatement(UPDATE_TABLE_STATEMENT)) {
-                int counter = 0;
+                try (PreparedStatement update = connection.prepareStatement(UPDATE_TABLE_STATEMENT)) {
+                    int counter = 1;
 
-                while (rs.next()) {
-                    if (counter == 0) {
-                        assertTrue("ResultSet.isFirst() should be true", rs.isFirst());
-                    } else if (counter == recordCount - 1) {
-                        try {
-                            rs.isLast();
-                            // TODO This assertion seems to be wrong
-                            assertTrue("ResultSet.isLast() should be true", false);
-                        } catch (SQLException ex) {
-                            // TODO Ignoring exception probably wrong
-                            // correct
+                    while (rs.next()) {
+                        assertEquals(counter == 1, rs.isFirst(), "ResultSet.isFirst() should be true for first row");
+                        if (counter == recordCount) {
+                            assertThrows(FBDriverNotCapableException.class, rs::isLast,
+                                    "Named cursor (for update) cannot detect last position");
                         }
+                        assertEquals(counter, rs.getRow(), "ResultSet.getRow() should be correct");
+
+                        update.setInt(1, rs.getInt(1) + 1);
+                        int updatedCount = update.executeUpdate();
+
+                        assertEquals(1, updatedCount, "Number of update rows");
+                        counter++;
                     }
 
+                    assertTrue(rs.isAfterLast(), "ResultSet.isAfterLast() should be true");
+                    assertFalse(rs.next(), "ResultSet.next() should return false");
+                }
+            }
+            connection.commit();
+
+            try (Statement select = connection.createStatement();
+                 ResultSet rs = select.executeQuery("SELECT id, str FROM test_table")) {
+                int counter = 1;
+
+                assertTrue(rs.isBeforeFirst(), "ResultSet.isBeforeFirst() should be true");
+
+                while (rs.next()) {
+                    assertEquals(counter == 1, rs.isFirst(), "ResultSet.isFirst() should be true for first row");
+                    assertEquals(counter == recordCount, rs.isLast(), "ResultSet.isLast() should be true for last row");
+
+                    int idValue = rs.getInt(1);
+                    int strValue = rs.getInt(2);
+
+                    assertEquals(idValue + 1, strValue, "Value of str column must be equal to id + 1");
                     counter++;
-
-                    assertEquals("ResultSet.getRow() should be correct", counter, rs.getRow());
-
-                    update.setInt(1, rs.getInt(1) + 1);
-                    int updatedCount = update.executeUpdate();
-
-                    assertEquals("Number of update rows", 1, updatedCount);
                 }
 
-                assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
-                assertFalse("ResultSet.next() should return false.", rs.next());
+                assertTrue(rs.isAfterLast(), "ResultSet.isAfterLast() should be true");
+                assertFalse(rs.next(), "ResultSet.next() should return false");
             }
+            connection.commit();
         }
-        connection.commit();
-
-        try (Statement select = connection.createStatement();
-             ResultSet rs = select.executeQuery("SELECT id, str FROM test_table")) {
-            int counter = 0;
-
-            assertTrue("ResultSet.isBeforeFirst() should be true", rs.isBeforeFirst());
-
-            while (rs.next()) {
-                if (counter == 0) {
-                    assertTrue("ResultSet.isFirst() should be true", rs.isFirst());
-                } else if (counter == recordCount - 1) {
-                    assertTrue("ResultSet.isLast() should be true", rs.isLast());
-                }
-
-                counter++;
-
-                int idValue = rs.getInt(1);
-                int strValue = rs.getInt(2);
-
-                assertEquals("Value of str column must be equal to id + 1", idValue + 1, strValue);
-            }
-
-            assertTrue("ResultSet.isAfterLast() should be true", rs.isAfterLast());
-            assertFalse("ResultSet.next() should return false.", rs.next());
-        }
-        connection.commit();
     }
 
     /**
      * This test checks if an empty column in a view is correctly returned
      * to the client.
-     *
-     * @throws Exception
-     *         if something went wrong.
      */
     @Test
-    public void testEmptyColumnInView() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeCreateTable(connection, CREATE_VIEW_STATEMENT);
+    void testEmptyColumnInView() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            executeCreateTable(connection, CREATE_VIEW_STATEMENT);
 
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < 10; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "");
-                ps.executeUpdate();
+            createTestData(10, i -> "", connection, "long_str");
+
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(SELECT_FROM_VIEW_STATEMENT)) {
+                int counter = 1;
+                while (rs.next()) {
+                    String marker = rs.getString(1);
+                    int key = rs.getInt(2);
+                    String value = rs.getString(3);
+
+                    assertEquals("marker", marker, "Marker should be correct");
+                    assertEquals(counter, key, "Key should be same as counter");
+                    assertEquals("", value, "EMPTY_CHAR string should be empty");
+
+                    counter++;
+                }
+
+                assertEquals(10, counter - 1, "Should read 10 records");
             }
         }
-
-        connection.setAutoCommit(false);
-
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(SELECT_FROM_VIEW_STATEMENT)) {
-            int counter = 0;
-            while (rs.next()) {
-                String marker = rs.getString(1);
-                int key = rs.getInt(2);
-                String value = rs.getString(3);
-
-                assertEquals("Marker should be correct.", "marker", marker);
-                assertEquals("Key should be same as counter.", counter, key);
-                assertEquals("EMPTY_CHAR string should be empty.", "", value);
-
-                counter++;
-            }
-
-            assertEquals("Should read 10 records", 10, counter);
-        }
-
-        connection.setAutoCommit(true);
     }
 
     /**
      * Test cursor scrolling in case of ResultSet.TEST_SCROLL_INSENSITIVE.
-     *
-     * @throws Exception
-     *         if something went wrong.
      */
-    @Test
-    public void testScrollInsensitive() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testScrollInsensitive(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
 
-        createTestData(recordCount);
+            createTestData(recordCount, connection);
 
-        connection.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
-            int testValue;
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+                 ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
+                int testValue;
 
-            rs.last();
-            testValue = recordCount - 1;
-            assertEquals("ID of last record should be equal to " + testValue, testValue, rs.getInt(1));
-            assertTrue("isLast() should return true", rs.isLast());
+                rs.last();
+                testValue = recordCount;
+                assertEquals(testValue, rs.getInt(1), "ID of last record should be equal to " + testValue);
+                assertTrue(rs.isLast(), "isLast() should return true");
 
-            rs.absolute(recordCount / 2);
-            testValue = recordCount / 2 - 1;
-            assertEquals("ID after absolute positioning should return " + testValue, testValue, rs.getInt(1));
+                rs.absolute(recordCount / 2);
+                testValue = recordCount / 2;
+                assertEquals(testValue, rs.getInt(1), "ID after absolute positioning should return " + testValue);
 
-            rs.absolute(-1);
-            testValue = recordCount - 1;
-            assertEquals("ID after absolute positioning with negative position should return " + testValue,
-                    testValue, rs.getInt(1));
+                rs.absolute(-1);
+                testValue = recordCount;
+                assertEquals(testValue, rs.getInt(1),
+                        "ID after absolute positioning with negative position should return " + testValue);
 
-            rs.first();
-            testValue = 0;
-            assertEquals("ID after first() should return " + testValue, testValue, rs.getInt(1));
-            assertTrue("isFirst() should report true", rs.isFirst());
+                rs.first();
+                testValue = 1;
+                assertEquals(testValue, rs.getInt(1), "ID after first() should return " + testValue);
+                assertTrue(rs.isFirst(), "isFirst() should report true");
 
-            boolean hasRow = rs.previous();
-            assertFalse("Should not point to the row", hasRow);
-            assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
+                boolean hasRow = rs.previous();
+                assertFalse(hasRow, "Should not point to the row");
+                assertTrue(rs.isBeforeFirst(), "isBeforeFirst() should return true");
 
-            rs.relative(5);
-            rs.relative(-4);
-            testValue = 0;
-            assertEquals("ID after relative positioning should return " + testValue, testValue, rs.getInt(1));
+                rs.relative(5);
+                rs.relative(-4);
+                //noinspection ConstantConditions
+                testValue = 1;
+                assertEquals(testValue, rs.getInt(1), "ID after relative positioning should return " + testValue);
 
-            rs.beforeFirst();
-            assertTrue("isBeforeFirst() should return true", rs.isBeforeFirst());
-            try {
-                rs.getInt(1);
-                fail("Should not be possible to access column if cursor does not point to a row.");
-            } catch (SQLException ex) {
-                // everything is fine
+                rs.beforeFirst();
+                assertTrue(rs.isBeforeFirst(), "isBeforeFirst() should return true");
+                assertThrows(SQLException.class, () -> rs.getInt(1),
+                        "Should not be possible to access column if cursor does not point to a row");
+
+                rs.afterLast();
+                assertTrue(rs.isAfterLast(), "isAfterLast() should return true");
+                assertThrows(SQLException.class, () -> rs.getInt(1),
+                        "Should not be possible to access column if cursor does not point to a row");
+
+                assertFalse(rs.next(), "ResultSet.next() should return false");
             }
-
-            rs.afterLast();
-            assertTrue("isAfterLast() should return true", rs.isAfterLast());
-            try {
-                rs.getInt(1);
-                fail("Should not be possible to access column if cursor does not point to a row.");
-            } catch (SQLException ex) {
-                // everything is fine
-            }
-            assertFalse("ResultSet.next() should return false.", rs.next());
         }
     }
 
     /**
      * Test {@link ResultSet#absolute(int)} cursor scrolling in case of ResultSet.TEST_SCROLL_INSENSITIVE.
      */
-    @Test
-    public void testScrollInsensitive_Absolute() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testScrollInsensitive_Absolute(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
 
-        createTestData(recordCount);
+            createTestData(recordCount, connection);
 
-        connection.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
-            assertTrue("Should be before first", rs.isBeforeFirst());
-            assertFalse("Should not be after last", rs.isAfterLast());
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
+                ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table");
+                assertTrue(rs.isBeforeFirst(), "Should be before first");
+                assertFalse(rs.isAfterLast(), "Should not be after last");
 
-            assertTrue("Position 1 is in result set", rs.absolute(1));
-            assertEquals(0, rs.getInt(1));
-            assertFalse("Should not be before first", rs.isBeforeFirst());
-            assertFalse("Should not be after last", rs.isAfterLast());
+                assertTrue(rs.absolute(1), "Position 1 is in result set");
+                assertEquals(1, rs.getInt(1));
+                assertFalse(rs.isBeforeFirst(), "Should not be before first");
+                assertFalse(rs.isAfterLast(), "Should not be after last");
 
-            assertFalse("Position 0 is outside result set", rs.absolute(0));
-            assertFalse("Position 11 is outside result set", rs.absolute(11));
-            assertFalse("Should not be before first", rs.isBeforeFirst());
-            assertTrue("Should be after last", rs.isAfterLast());
+                assertFalse(rs.absolute(0), "Position 0 is outside result set");
+                assertFalse(rs.absolute(11), "Position 11 is outside result set");
+                assertFalse(rs.isBeforeFirst(), "Should not be before first");
+                assertTrue(rs.isAfterLast(), "Should be after last");
 
-            assertTrue("Position 10 is inside result set", rs.absolute(10));
-            assertFalse("Should not be before first", rs.isBeforeFirst());
-            assertFalse("Should not be after last", rs.isAfterLast());
-            assertEquals(9, rs.getInt(1));
+                assertTrue(rs.absolute(10), "Position 10 is inside result set");
+                assertFalse(rs.isBeforeFirst(), "Should not be before first");
+                assertFalse(rs.isAfterLast(), "Should not be after last");
+                assertEquals(10, rs.getInt(1));
 
-            assertFalse("Position 15 is outside result set", rs.absolute(15));
-            assertFalse("Should not be before first", rs.isBeforeFirst());
-            assertTrue("Should be after last", rs.isAfterLast());
+                assertFalse(rs.absolute(15), "Position 15 is outside result set");
+                assertFalse(rs.isBeforeFirst(), "Should not be before first");
+                assertTrue(rs.isAfterLast(), "Should be after last");
 
-            assertTrue("Position -1 is inside result set", rs.absolute(-1));
-            assertFalse("Should not be before first", rs.isBeforeFirst());
-            assertFalse("Should not be after last", rs.isAfterLast());
-            assertEquals(9, rs.getInt(1));
+                assertTrue(rs.absolute(-1), "Position -1 is inside result set");
+                assertFalse(rs.isBeforeFirst(), "Should not be before first");
+                assertFalse(rs.isAfterLast(), "Should not be after last");
+                assertEquals(10, rs.getInt(1));
 
-            assertFalse("Position -11 is outside result set", rs.absolute(-11));
-            assertTrue("Should be before first", rs.isBeforeFirst());
-            assertFalse("Should not be after last", rs.isAfterLast());
+                assertFalse(rs.absolute(-11), "Position -11 is outside result set");
+                assertTrue(rs.isBeforeFirst(), "Should be before first");
+                assertFalse(rs.isAfterLast(), "Should not be after last");
+            }
         }
     }
 
     /**
      * This test case tries to reproduce a NPE reported in Firebird-Java group
      * by vmdd_tech after Jaybird 1.5 beta 1 release.
-     *
-     * @throws Exception
-     *         if something goes wrong.
      */
     @Test
-    public void testBugReport1() throws Exception {
-        assumeTrue("Test requires UDF support", getDefaultSupportInfo().supportsNativeUserDefinedFunctions());
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeDDL(connection, CREATE_SUBSTR_FUNCTION);
+    void testBugReport1() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsNativeUserDefinedFunctions(), "Test requires UDF support");
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            executeDDL(connection, CREATE_SUBSTR_FUNCTION);
 
-        try (PreparedStatement insertStmt = connection.prepareStatement(INSERT_LONG_STR_STATEMENT)) {
-            insertStmt.setInt(1, 1);
-            insertStmt.setString(2, "aaa");
+            IntFunction<String> rowData = id -> {
+                switch (id) {
+                case 1:
+                    return "aaa";
+                case 2:
+                    return "'more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                case 3:
+                    return "more than 80 chars are in hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+                default:
+                    throw new IllegalArgumentException("Expected values 1, 2 or 3, received: " + id);
+                }
+            };
+            createTestData(3, rowData, connection, "long_str");
 
-            insertStmt.execute();
+            final String query = "SELECT id, substr(long_str,1,2) FROM test_table ORDER BY id DESC";
+            try (Statement stmt = connection.createStatement()) {
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    assertTrue(rs.next(), "Should have at least one row");
+                } catch (SQLException ex) {
+                    if (ex.getErrorCode() != ISCConstants.isc_string_truncation
+                            && !ex.getMessage().contains("string truncation")) throw ex;
+                    // it is ok as well, since substr is declared as CSTRING(80)
+                    // and truncation error happens
+                    System.out.println("First query generated exception " + ex.getMessage());
+                }
 
-            insertStmt.setInt(1, 2);
-            insertStmt.setString(2, "'more than 80 chars are in " +
-                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+                try (ResultSet rs = stmt.executeQuery(query)) {
+                    assertTrue(rs.next(), "Should have at least one row");
 
-            insertStmt.execute();
-
-            insertStmt.setInt(1, 3);
-            insertStmt.setString(2, "more than 80 chars are in " +
-                    "hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
-
-            insertStmt.execute();
-        }
-
-        final String query = "SELECT id, substr(long_str,1,2) FROM test_table ORDER BY id DESC";
-        try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(query)) {
-                assertTrue("Should have at least one row", rs.next());
-            } catch (SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation
-                        && !ex.getMessage().contains("string truncation")) throw ex;
-                // it is ok as well, since substr is declared as CSTRING(80)
-                // and truncation error happens
-                System.out.println("First query generated exception " + ex.getMessage());
-            }
-
-            try (ResultSet rs = stmt.executeQuery(query)) {
-                assertTrue("Should have at least one row", rs.next());
-
-                rs.getObject(1);
-            } catch (SQLException ex) {
-                if (ex.getErrorCode() != ISCConstants.isc_string_truncation
-                        && !ex.getMessage().contains("string truncation")) throw ex;
-                // it is ok as well, since substr is declared as CSTRING(80)
-                // and truncation error happens
-                System.out.println("Second query generated exception " + ex.getMessage());
+                    rs.getObject(1);
+                } catch (SQLException ex) {
+                    if (ex.getErrorCode() != ISCConstants.isc_string_truncation
+                            && !ex.getMessage().contains("string truncation")) throw ex;
+                    // it is ok as well, since substr is declared as CSTRING(80)
+                    // and truncation error happens
+                    System.out.println("Second query generated exception " + ex.getMessage());
+                }
             }
         }
     }
 
     /**
      * Test if result set type and concurrency is correct.
-     *
-     * @throws Exception
-     *         if something went wrong.
      */
-    @Test
-    public void testBugReport2() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testBugReport2(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
 
-        createTestData(recordCount);
+            createTestData(recordCount, connection);
 
-        connection.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
-            assertTrue("Should have at least one row", rs.next());
-            assertEquals("ResultSet type should be TYPE_SCROLL_INSENSITIVE",
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
-            assertEquals("ResultSet concurrency should be CONCUR_READ_ONLY",
-                    ResultSet.CONCUR_READ_ONLY, rs.getConcurrency());
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+                 ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
+                assertTrue(rs.next(), "Should have at least one row");
+                assertEquals(TYPE_SCROLL_INSENSITIVE, rs.getType(), "ResultSet type should be TYPE_SCROLL_INSENSITIVE");
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "ResultSet concurrency should be CONCUR_READ_ONLY");
 
-            rs.last();
+                rs.last();
 
-            assertEquals("ResultSet type should not change.", ResultSet.TYPE_SCROLL_INSENSITIVE, rs.getType());
-        }
-    }
-
-    @Test
-    public void testBugReport3() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
-
-        createTestData(recordCount);
-
-        connection.setAutoCommit(true);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-             ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
-            try {
-                rs.first();
-                fail("first() should not work in TYPE_FORWARD_ONLY result sets");
-            } catch (SQLException ex) {
-                // should fail, everything is fine.
-            }
-
-            while (rs.next()) {
-                // do nothing, just loop.
-            }
-
-            try {
-                rs.first();
-                fail("first() should not work in TYPE_FORWARD_ONLY result sets.");
-            } catch (SQLException ex) {
-                // everything is fine
+                assertEquals(TYPE_SCROLL_INSENSITIVE, rs.getType(), "ResultSet type should not change");
             }
         }
     }
 
-    @Ignore
     @Test
-    public void testMemoryGrowth() throws Exception {
+    void testBugReport3() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
+
+            createTestData(recordCount, connection);
+
+            try (Statement stmt = connection.createStatement(TYPE_FORWARD_ONLY, CONCUR_READ_ONLY);
+                 ResultSet rs = stmt.executeQuery("SELECT id, str FROM test_table")) {
+                assertThrows(SQLException.class, rs::first, "first() should not work in TYPE_FORWARD_ONLY result sets");
+
+                //noinspection StatementWithEmptyBody
+                while (rs.next()) {
+                    // do nothing, just loop.
+                }
+
+                assertThrows(SQLException.class, rs::first, "first() should not work in TYPE_FORWARD_ONLY result sets");
+            }
+        }
+    }
+
+    @Disabled
+    @Test
+    void testMemoryGrowth() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.put("no_result_set_tracking", "");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
             connection.setAutoCommit(false);
 
             System.out.println("Inserting...");
             int recordCount = 1;
 
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT INTO test_table(id, very_long_str) VALUES (?, ?)")) {
-                byte[] string = createRandomByteString(19000);
-
-                for (int i = 0; i < recordCount; i++) {
-                    ps.setInt(1, i);
-                    ps.setString(2, new String(string));
-                    ps.executeUpdate();
-                }
-            }
+            IntFunction<String> rowData = id -> new String(createRandomByteString(19000));
+            createTestData(recordCount, rowData, connection, "very_long_str");
 
             connection.commit();
 
@@ -533,6 +468,7 @@ public class FBResultSetTest extends FBJUnit4TestBase {
 
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                    //noinspection StatementWithEmptyBody
                     while (rs.next()) {
                         // just loop through result set
                     }
@@ -556,43 +492,36 @@ public class FBResultSetTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testResultSetNotClosed() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+    void testResultSetNotClosed() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
-        connection.setAutoCommit(false);
+            connection.setAutoCommit(false);
 
-        final int recordCount = 1;
+            final int recordCount = 1;
+            IntFunction<String> rowData = id -> new String(createRandomByteString(19000));
+            createTestData(recordCount, rowData, connection, "very_long_str");
+            connection.commit();
 
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, very_long_str) VALUES (?, ?)")) {
-            byte[] string = createRandomByteString(19000);
+            try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?")) {
+                stmt.setInt(1, recordCount + 10);
 
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, new String(string));
-                ps.executeUpdate();
-            }
-        }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertFalse(rs.next(), "Should not find any record");
+                }
 
-        connection.commit();
-        connection.setAutoCommit(false);
+                stmt.setInt(1, recordCount);
 
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM test_table WHERE id = ?")) {
-            stmt.setInt(1, recordCount + 10);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                assertFalse("Should not find any record", rs.next());
-            }
-
-            stmt.setInt(1, recordCount - 1);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                assertTrue("Should find a record", rs.next());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertTrue(rs.next(), "Should find a record");
+                }
             }
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private byte[] createRandomByteString(int length) {
-        Random random = new Random();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         byte[] string = new byte[length];
         for (int i = 0; i < length; i++) {
             string[i] = (byte) random.nextInt(128);
@@ -600,436 +529,438 @@ public class FBResultSetTest extends FBJUnit4TestBase {
         return string;
     }
 
-    @Test
-    public void testUpdatableResultSet() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        connection.setAutoCommit(false);
-
-        final int recordCount = 10;
-
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)")) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
-            }
-        }
-
-        connection.commit();
-
-        connection.setAutoCommit(true);
-
-        connection.clearWarnings();
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            assertNull("No warnings should be added", connection.getWarnings());
-
-            try (ResultSet rs = stmt.executeQuery("SELECT id, long_str, str, \"CamelStr\" FROM test_table ORDER BY id")) {
-
-                int counter = 0;
-                while (rs.next()) {
-                    int id = rs.getInt(1);
-                    assertEquals(counter, id);
-
-                    String longStr = rs.getString(2);
-                    assertEquals("oldString" + counter, longStr);
-
-                    rs.updateString(2, "newString" + counter);
-
-                    assertEquals(counter, rs.getInt(1));
-                    assertEquals("newString" + counter, rs.getString(2));
-
-                    assertNull(rs.getString(3));
-                    rs.updateString(3, "str" + counter);
-
-                    assertNull(rs.getString(4));
-                    rs.updateString(4, "str" + counter);
-
-                    // check whether row can be updated
-                    rs.updateRow();
-
-                    // visibility of updates without refresh
-                    assertEquals(counter, rs.getInt(1));
-                    assertEquals("newString" + counter, rs.getString(2));
-                    assertEquals("str" + counter, rs.getString(3));
-                    assertEquals("str" + counter, rs.getString(4));
-
-                    // check whether row can be refreshed
-                    rs.refreshRow();
-
-                    // visibility of updates after refresh
-                    assertEquals(counter, rs.getInt(1));
-                    assertEquals("newString" + counter, rs.getString(2));
-                    assertEquals("str" + counter, rs.getString(3));
-                    assertEquals("str" + counter, rs.getString(4));
-
-                    counter++;
-                }
-
-                assertEquals("Should process " + recordCount + " rows.", counter, recordCount);
-
-                // check the insertRow() feature
-                rs.moveToInsertRow();
-                rs.updateInt(1, recordCount);
-                rs.updateString(2, "newString" + recordCount);
-                rs.updateString(3, "bug");
-                rs.updateString(4, "quoted column");
-                rs.insertRow();
-                rs.moveToCurrentRow();
-
-                // check whether newly inserted row can be updated
-                rs.last();
-                rs.updateString(3, "str" + recordCount);
-                rs.updateRow();
-            }
-
-            try (ResultSet rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id")) {
-                int counter = 0;
-                while (rs.next()) {
-                    int id = rs.getInt(1);
-                    assertEquals(counter, id);
-
-                    String longStr = rs.getString(2);
-                    assertEquals("newString" + counter, longStr);
-                    assertEquals("str" + counter, rs.getString(3));
-                    counter++;
-
-                    if (counter == recordCount + 1)
-                        rs.deleteRow();
-                }
-
-                assertEquals(counter, recordCount + 1);
-            }
-
-            try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM test_table")) {
-
-                assertTrue(rs.next());
-                assertEquals(recordCount, rs.getInt(1));
-            }
-        }
-    }
-
-    @Test
-    public void testUpdatableResultSetNoPK() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
-
-        connection.setAutoCommit(false);
-
-        final int recordCount = 10;
-
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table2(id, long_str) VALUES (?, ?)")) {
-            for (int i = 1; i <= recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
-            }
-        }
-
-        connection.commit();
-        connection.setAutoCommit(true);
-        connection.clearWarnings();
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            assertNull("No warnings should be added", connection.getWarnings());
-
-            try (ResultSet rs = stmt.executeQuery(
-                    "SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table2 ORDER BY 2")) {
-
-                int counter = 1;
-                while (rs.next()) {
-
-                    int id = rs.getInt(2);
-                    assertEquals(counter, id);
-
-                    String longStr = rs.getString(3);
-                    assertEquals("oldString" + counter, longStr);
-
-                    rs.updateString(3, "newString" + counter);
-
-                    assertEquals(counter, rs.getInt(2));
-                    assertEquals("newString" + counter, rs.getString(3));
-
-                    assertNull(rs.getString(4));
-                    rs.updateString(4, "str" + counter);
-
-                    assertNull(rs.getString(5));
-                    rs.updateString(5, "str" + counter);
-
-                    // check whether row can be updated
-                    rs.updateRow();
-
-                    // visibility of updates without refresh
-                    assertEquals(counter, rs.getInt(2));
-                    assertEquals("newString" + counter, rs.getString(3));
-                    assertEquals("str" + counter, rs.getString(4));
-                    assertEquals("str" + counter, rs.getString(5));
-
-                    // check whether row can be refreshed
-                    rs.refreshRow();
-
-                    // visibility of updates after refresh
-                    assertEquals(counter, rs.getInt(2));
-                    assertEquals("newString" + counter, rs.getString(3));
-                    assertEquals("str" + counter, rs.getString(4));
-                    assertEquals("str" + counter, rs.getString(5));
-
-                    counter++;
-                }
-            }
-        }
-    }
-
-    @Test
-    public void testUpdatableStatementResultSetDowngradeToReadOnlyWhenQueryNotUpdatable() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-             ResultSet rs = stmt.executeQuery("select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
-
-            SQLWarning warning = stmt.getWarnings();
-            assertThat(warning, allOf(
-                    notNullValue(),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
-
-            assertEquals("Expected downgrade to CONCUR_READ_ONLY", ResultSet.CONCUR_READ_ONLY, rs.getConcurrency());
-        }
-    }
-
-    @Test
-    public void testGetExecutionPlan() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        try (Statement stmt = connection.createStatement();
-             FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
-
-            String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
-        }
-
-        try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
-             FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
-            String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
-        }
-
-        // Ensure there isn't a crash when attempting to retrieve the
-        // execution plan from a non-statement-based ResultSet
-        java.sql.DatabaseMetaData metaData = connection.getMetaData();
-        try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
-            assertEquals("Non-statement-based result set has no execution plan", "", rs.getExecutionPlan());
-        }
-    }
-
-    @Test
-    public void testGetExplainedExecutionPlan() throws Exception {
-        assumeTrue("Test requires explained execution plan support",
-                getDefaultSupportInfo().supportsExplainedExecutionPlan());
-
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        try (Statement stmt = connection.createStatement();
-             FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
-
-            String execPlan = rs.getExplainedExecutionPlan();
-            assertTrue("Detailed execution plan should reference test_table",
-                    execPlan.toUpperCase().contains("TEST_TABLE"));
-        }
-
-        try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
-             FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
-            String execPlan = rs.getExplainedExecutionPlan();
-            assertTrue("Detailed execution plan should reference test_table",
-                    execPlan.toUpperCase().contains("TEST_TABLE"));
-        }
-
-        // Ensure there isn't a crash when attempting to retrieve the
-        // detailed execution plan from a non-statement-based ResultSet
-        java.sql.DatabaseMetaData metaData = connection.getMetaData();
-        try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
-            assertEquals("Non-statement-based result set has no detailed execution plan", "",
-                    rs.getExplainedExecutionPlan());
-        }
-    }
-
-    @Test
-    public void testHoldabilityStatement() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final int recordCount = 10;
-
-        createTestData(recordCount);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT);
-             Statement stmt2 = connection.createStatement()) {
-            // execute first query
-            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery(SELECT_TEST_TABLE);
-
-            // now execute another query, causes commit in auto-commit mode
-            stmt2.executeQuery("SELECT * FROM rdb$database");
-
-            // now let's access the result set
-            int actualCount = 0;
-            assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
-            while (rs.next()) {
-                rs.getString(1);
-                actualCount++;
-            }
-            assertEquals("Unexpected number of reads from holdable result set", recordCount, actualCount);
-        }
-    }
-
-    @Test
-    public void testHoldabilityPreparedStatement() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        final int recordCount = 10;
-
-        createTestData(recordCount);
-
-        try (PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
-             Statement stmt2 = connection.createStatement()) {
-            // execute first query
-            FirebirdResultSet rs = (FirebirdResultSet) stmt.executeQuery();
-
-            // now execute another query, causes commit in auto-commit mode
-            stmt2.executeQuery("SELECT * FROM rdb$database");
-
-            // now let's access the result set
-            int actualCount = 0;
-            assertEquals("Unexpected holdability", ResultSet.HOLD_CURSORS_OVER_COMMIT, rs.getHoldability());
-            while (rs.next()) {
-                rs.getString(1);
-                actualCount++;
-            }
-            assertEquals("Unexpected number of reads from holdable resultset", recordCount, actualCount);
-        }
-    }
-
-    @Test
-    public void testFetchSize() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        final int FETCH_SIZE = 3;
-        try (Statement stmt = connection.createStatement()) {
-            int fetchSize = stmt.getFetchSize();
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-                assertEquals("Default stmt fetch size must match ResultSet fetch size", fetchSize, rs.getFetchSize());
-            }
-
-            stmt.setFetchSize(FETCH_SIZE);
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-                assertEquals("ResultSet fetchsize must match Statement fetchSize", FETCH_SIZE, rs.getFetchSize());
-            }
-        }
-    }
-
-    @Test
-    public void testDoubleNext() throws Exception {
-        connection.setAutoCommit(false);
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
-            assertTrue("Should find at least one row", rs.next());
-            assertFalse("Should find only one row", rs.next());
-            assertFalse("Should not throw when after next", rs.next());
-        }
-        connection.setAutoCommit(true);
-    }
-
-    @Test
-    public void testInsertUpdatableCursor() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-                // rs.next();
-                rs.moveToInsertRow();
-                rs.updateInt("id", 1);
-                rs.updateString("blob_str", "test");
-                rs.updateString("CamelStr", "quoted string");
-                try {
-                    rs.updateRow();
-                    fail("Should fail, since updateRow() is used to update rows.");
-                } catch (SQLException ex) {
-                    // ok, let's try to insert row
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableResultSet(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            final int recordCount = 10;
+            createTestData(recordCount, id -> "oldString" + id, connection, "long_str");
+
+            connection.clearWarnings();
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                assertNull(connection.getWarnings(), "No warnings should be added");
+
+                try (ResultSet rs = stmt.executeQuery(
+                        "SELECT id, long_str, str, \"CamelStr\" FROM test_table ORDER BY id")) {
+                    int counter = 1;
+                    while (rs.next()) {
+                        int id = rs.getInt(1);
+                        assertEquals(counter, id);
+
+                        String longStr = rs.getString(2);
+                        assertEquals("oldString" + counter, longStr);
+
+                        rs.updateString(2, "newString" + counter);
+
+                        assertEquals(counter, rs.getInt(1));
+                        assertEquals("newString" + counter, rs.getString(2));
+
+                        assertNull(rs.getString(3));
+                        rs.updateString(3, "str" + counter);
+
+                        assertNull(rs.getString(4));
+                        rs.updateString(4, "str" + counter);
+
+                        // check whether row can be updated
+                        rs.updateRow();
+
+                        // visibility of updates without refresh
+                        assertEquals(counter, rs.getInt(1));
+                        assertEquals("newString" + counter, rs.getString(2));
+                        assertEquals("str" + counter, rs.getString(3));
+                        assertEquals("str" + counter, rs.getString(4));
+
+                        // check whether row can be refreshed
+                        rs.refreshRow();
+
+                        // visibility of updates after refresh
+                        assertEquals(counter, rs.getInt(1));
+                        assertEquals("newString" + counter, rs.getString(2));
+                        assertEquals("str" + counter, rs.getString(3));
+                        assertEquals("str" + counter, rs.getString(4));
+
+                        counter++;
+                    }
+
+                    assertEquals(counter - 1, recordCount, "Should process " + recordCount + " rows");
+
+                    // check the insertRow() feature
+                    int newId = recordCount + 1;
+                    rs.moveToInsertRow();
+                    rs.updateInt(1, newId);
+                    rs.updateString(2, "newString" + newId);
+                    rs.updateString(3, "bug");
+                    rs.updateString(4, "quoted column");
                     rs.insertRow();
+                    rs.moveToCurrentRow();
+
+                    // check whether newly inserted row can be updated
+                    rs.last();
+                    rs.updateString(3, "str" + newId);
+                    rs.updateRow();
                 }
-            }
 
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-                assertTrue("Should have at least one row", rs.next());
-                assertEquals("First record should have ID=1", 1, rs.getInt("id"));
-                assertEquals("BLOB should be also saved", "test", rs.getString("blob_str"));
-                assertFalse("Should have only one row.", rs.next());
-            }
-        }
-    }
+                try (ResultSet rs = stmt.executeQuery("SELECT id, long_str, str FROM test_table ORDER BY id")) {
+                    int counter = 1;
+                    while (rs.next()) {
+                        int id = rs.getInt(1);
+                        assertEquals(counter, id);
 
-    @Test
-    public void testMetaDataQueryShouldKeepRsOpen() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+                        String longStr = rs.getString(2);
+                        assertEquals("newString" + counter, longStr);
+                        assertEquals("str" + counter, rs.getString(3));
+                        counter++;
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
-             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-            try (ResultSet bestRowId = connection.getMetaData().getBestRowIdentifier(null, null, "TEST_TABLE", 1,
-                    false)) {
-                assertTrue("Should have row ID", bestRowId.next());
-            }
+                        if (counter == recordCount + 1) rs.deleteRow();
+                    }
 
-            rs.next();
-        } catch (SQLException ex) {
-            fail("Should throw no exception that result set is closed.");
-        }
-    }
-
-    @Test
-    public void testUpdatableResultSetMultipleStatements() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        int recordCount = 10;
-
-        try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO test_table(id, long_str) VALUES (?, ?)")) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
-            }
-        }
-
-        connection.setAutoCommit(true);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-             ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
-
-            rs.first();
-
-            try (PreparedStatement anotherStmt = stmt.getConnection().prepareStatement("SELECT * FROM rdb$database")) {
-                try (ResultSet anotherRs = anotherStmt.executeQuery()) {
-                    while (anotherRs.next()) {
-                        anotherRs.getObject(1);
+                    if (PropertyConstants.SCROLLABLE_CURSOR_SERVER.equals(scrollableCursorPropertyValue)
+                            && isPureJavaType().matches(GDS_TYPE)
+                            && getDefaultSupportInfo().supportsScrollableCursors()) {
+                        assertEquals(counter - 1, recordCount + 1);
+                    } else {
+                        assertEquals(counter - 1, recordCount);
                     }
                 }
 
-                try {
-                    rs.updateInt("id", 1);
-                    rs.updateString("blob_str", "test");
-                    rs.updateNull("str");
-                    rs.updateRow();
-
-                    fail("Should produce exception.");
-                } catch (SQLException ex) {
-                    // everything is ok
+                try (ResultSet rs = stmt.executeQuery("SELECT count(*) FROM test_table")) {
+                    assertTrue(rs.next());
+                    assertEquals(recordCount, rs.getInt(1));
                 }
             }
         }
-        connection.setAutoCommit(true);
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableResultSetNoPK(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            final int recordCount = 10;
+            createTestData(recordCount, id -> "oldString" + id, connection, "long_str");
+            connection.clearWarnings();
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                assertNull(connection.getWarnings(), "No warnings should be added");
+
+                try (ResultSet rs = stmt.executeQuery(
+                        "SELECT rdb$db_key, id, long_str, str, \"CamelStr\" FROM test_table ORDER BY 2")) {
+                    int counter = 1;
+                    while (rs.next()) {
+                        int id = rs.getInt(2);
+                        assertEquals(counter, id);
+
+                        String longStr = rs.getString(3);
+                        assertEquals("oldString" + counter, longStr);
+
+                        rs.updateString(3, "newString" + counter);
+
+                        assertEquals(counter, rs.getInt(2));
+                        assertEquals("newString" + counter, rs.getString(3));
+
+                        assertNull(rs.getString(4));
+                        rs.updateString(4, "str" + counter);
+
+                        assertNull(rs.getString(5));
+                        rs.updateString(5, "str" + counter);
+
+                        // check whether row can be updated
+                        rs.updateRow();
+
+                        // visibility of updates without refresh
+                        assertEquals(counter, rs.getInt(2));
+                        assertEquals("newString" + counter, rs.getString(3));
+                        assertEquals("str" + counter, rs.getString(4));
+                        assertEquals("str" + counter, rs.getString(5));
+
+                        // check whether row can be refreshed
+                        rs.refreshRow();
+
+                        // visibility of updates after refresh
+                        assertEquals(counter, rs.getInt(2));
+                        assertEquals("newString" + counter, rs.getString(3));
+                        assertEquals("str" + counter, rs.getString(4));
+                        assertEquals("str" + counter, rs.getString(5));
+
+                        counter++;
+                    }
+                }
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableStatementResultSetDowngradeToReadOnlyWhenQueryNotUpdatable(
+            String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT2);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery(
+                         "select * from test_table t1 left join test_table2 t2 on t1.id = t2.id")) {
+                SQLWarning warning = stmt.getWarnings();
+                assertThat(warning, allOf(
+                        notNullValue(),
+                        fbMessageStartsWith(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)));
+
+                assertEquals(CONCUR_READ_ONLY, rs.getConcurrency(), "Expected downgrade to CONCUR_READ_ONLY");
+            }
+        }
     }
 
     @Test
-    public void testRelAlias() throws Exception {
-        try (Statement stmt = connection.createStatement();
+    void testGetExecutionPlan() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (Statement stmt = connection.createStatement();
+                 FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
+
+                String execPlan = rs.getExecutionPlan();
+                assertThat("Execution plan should reference test_table",
+                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+            }
+
+            try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
+                 FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
+                String execPlan = rs.getExecutionPlan();
+                assertThat("Execution plan should reference test_table",
+                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+            }
+
+            // Ensure there isn't a crash when attempting to retrieve the
+            // execution plan from a non-statement-based ResultSet
+            java.sql.DatabaseMetaData metaData = connection.getMetaData();
+            try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
+                assertEquals("", rs.getExecutionPlan(), "Non-statement-based result set has no execution plan");
+            }
+        }
+    }
+
+    @Test
+    void testGetExplainedExecutionPlan() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+                "Test requires explained execution plan support");
+
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (Statement stmt = connection.createStatement();
+                 FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
+
+                String execPlan = rs.getExplainedExecutionPlan();
+                assertThat("Detailed execution plan should reference test_table",
+                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+            }
+
+            try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
+                 FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
+                String execPlan = rs.getExplainedExecutionPlan();
+                assertThat("Detailed execution plan should reference test_table",
+                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+            }
+
+            // Ensure there isn't a crash when attempting to retrieve the
+            // detailed execution plan from a non-statement-based ResultSet
+            java.sql.DatabaseMetaData metaData = connection.getMetaData();
+            try (FBResultSet rs = (FBResultSet) metaData.getSchemas()) {
+                assertEquals("", rs.getExplainedExecutionPlan(),
+                        "Non-statement-based result set has no detailed execution plan");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testHoldabilityStatement(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final int recordCount = 10;
+
+            createTestData(recordCount, connection);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY,
+                    HOLD_CURSORS_OVER_COMMIT);
+                 Statement stmt2 = connection.createStatement()) {
+                // execute first query
+                ResultSet rs = stmt.executeQuery(SELECT_TEST_TABLE);
+
+                // now execute another query, causes commit in auto-commit mode
+                stmt2.executeQuery("SELECT * FROM rdb$database");
+
+                // now let's access the result set
+                int actualCount = 0;
+                assertEquals(HOLD_CURSORS_OVER_COMMIT, rs.getHoldability(), "Unexpected holdability");
+                while (rs.next()) {
+                    rs.getString(1);
+                    actualCount++;
+                }
+                assertEquals(recordCount, actualCount, "Unexpected number of reads from holdable result set");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testHoldabilityPreparedStatement(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            final int recordCount = 10;
+
+            createTestData(recordCount, connection);
+
+            try (PreparedStatement stmt = connection.prepareStatement(SELECT_TEST_TABLE, TYPE_SCROLL_INSENSITIVE,
+                    CONCUR_READ_ONLY, HOLD_CURSORS_OVER_COMMIT);
+                 Statement stmt2 = connection.createStatement()) {
+                // execute first query
+                ResultSet rs = stmt.executeQuery();
+
+                // now execute another query, causes commit in auto-commit mode
+                stmt2.executeQuery("SELECT * FROM rdb$database");
+
+                // now let's access the result set
+                int actualCount = 0;
+                assertEquals(HOLD_CURSORS_OVER_COMMIT, rs.getHoldability(), "Unexpected holdability");
+                while (rs.next()) {
+                    rs.getString(1);
+                    actualCount++;
+                }
+                assertEquals(recordCount, actualCount, "Unexpected number of reads from holdable resultset");
+            }
+        }
+    }
+
+    @Test
+    void testFetchSize() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            final int requestedFetchSize = 3;
+            try (Statement stmt = connection.createStatement()) {
+                int fetchSize = stmt.getFetchSize();
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                    assertEquals(fetchSize, rs.getFetchSize(),
+                            "Default stmt fetch size must match ResultSet fetch size");
+                }
+
+                stmt.setFetchSize(requestedFetchSize);
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                    assertEquals(requestedFetchSize, rs.getFetchSize(),
+                            "ResultSet fetchsize must match Statement fetchSize");
+                }
+            }
+        }
+    }
+
+    @Test
+    void testDoubleNext() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM rdb$database");
+                assertTrue(rs.next(), "Should find at least one row");
+                assertFalse(rs.next(), "Should find only one row");
+                assertFalse(rs.next(), "Should not throw when after next");
+            }
+            connection.setAutoCommit(true);
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testInsertUpdatableCursor(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE)) {
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                    // rs.next();
+                    rs.moveToInsertRow();
+                    rs.updateInt("id", 1);
+                    rs.updateString("blob_str", "test");
+                    rs.updateString("CamelStr", "quoted string");
+                    try {
+                        rs.updateRow();
+                        fail("Should fail, since updateRow() is used to update rows");
+                    } catch (SQLException ex) {
+                        // ok, let's try to insert row
+                        rs.insertRow();
+                    }
+                }
+
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                    assertTrue(rs.next(), "Should have at least one row");
+                    assertEquals(1, rs.getInt("id"), "First record should have ID=1");
+                    assertEquals("test", rs.getString("blob_str"), "BLOB should be also saved");
+                    assertFalse(rs.next(), "Should have only one row");
+                }
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testMetaDataQueryShouldKeepRsOpen(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+                try (ResultSet bestRowId = connection.getMetaData()
+                        .getBestRowIdentifier(null, null, "TEST_TABLE", 1, false)) {
+                    assertTrue(bestRowId.next(), "Should have row ID");
+                }
+
+                rs.next();
+            } catch (SQLException ex) {
+                fail("Should throw no exception that result set is closed");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableResultSetMultipleStatements(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            int recordCount = 10;
+            createTestData(recordCount, id -> "oldString" + id, connection, "long_str");
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("SELECT * FROM test_table")) {
+
+                rs.first();
+
+                try (PreparedStatement anotherStmt = stmt.getConnection()
+                        .prepareStatement("SELECT * FROM rdb$database")) {
+                    try (ResultSet anotherRs = anotherStmt.executeQuery()) {
+                        while (anotherRs.next()) {
+                            anotherRs.getObject(1);
+                        }
+                    }
+
+                    assertThrows(SQLException.class, () -> {
+                        rs.updateInt("id", 1);
+                        rs.updateString("blob_str", "test");
+                        rs.updateNull("str");
+                        rs.updateRow();
+                    });
+                }
+            }
+        }
+    }
+
+    @Test
+    void testRelAlias() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              // execute first query
              ResultSet rs = stmt.executeQuery(
                      "SELECT a.rdb$description, b.rdb$character_set_name " +
@@ -1045,317 +976,325 @@ public class FBResultSetTest extends FBJUnit4TestBase {
         }
     }
 
-    @Test
-    public void testUpdatableHoldableResultSet() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableHoldableResultSet(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
-        connection.setAutoCommit(true);
+            int recordCount = 10;
+            createTestData(recordCount, id -> "oldString" + id, connection, "long_str");
 
-        int recordCount = 10;
+            connection.setAutoCommit(false);
 
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO test_table(id, long_str) VALUES (?, ?)")) {
-            for (int i = 0; i < recordCount; i++) {
-                ps.setInt(1, i);
-                ps.setString(2, "oldString" + i);
-                ps.executeUpdate();
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE,
+                    HOLD_CURSORS_OVER_COMMIT)) {
+                try (ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table")) {
+                    while (rs.next()) {
+                        rs.updateString(2, rs.getString(2) + "a");
+                        rs.updateRow();
+                        connection.commit();
+                    }
+                }
+
+                int counter = 1;
+
+                try (ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table")) {
+                    while (rs.next()) {
+                        assertEquals("oldString" + counter + "a", rs.getString(2));
+                        counter++;
+                    }
+                }
             }
         }
+    }
 
-        connection.setAutoCommit(false);
+    @Test
+    void testClosedOnCommit() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+                assertEquals(ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability(), "Unexpected holdability");
+                assertFalse(rs.isClosed(), "Expected result set to be open");
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE,
-                ResultSet.HOLD_CURSORS_OVER_COMMIT)) {
-            try (ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table")) {
-                while (rs.next()) {
-                    rs.updateString(2, rs.getString(2) + "a");
+                connection.commit();
+                assertTrue(rs.isClosed(), "Expected result set to be closed");
+            }
+        }
+    }
+
+    @Test
+    void testClosedOnRollback() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+                assertEquals(ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability(), "Unexpected holdability");
+                assertFalse(rs.isClosed(), "Expected result set to be open");
+
+                connection.rollback();
+                assertTrue(rs.isClosed(), "Expected result set to be closed");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableBinaryStream(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
+
+                byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+                connection.setAutoCommit(false);
+                try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                    assertTrue(rs.next());
+                    ByteArrayInputStream bais = new ByteArrayInputStream(value);
+                    rs.updateBinaryStream(2, bais);
                     rs.updateRow();
-                    connection.commit();
                 }
-            }
 
-            int counter = 0;
+                try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                    assertTrue(rs.next());
 
-            try (ResultSet rs = stmt.executeQuery("SELECT id, long_str FROM test_table")){
-                while (rs.next()) {
-                    assertEquals("oldString" + counter + "a", rs.getString(2));
-                    counter++;
+                    assertArrayEquals(value, rs.getBytes(2));
                 }
             }
         }
     }
 
-    @Test
-    public void testClosedOnCommit() throws Exception {
-        connection.setAutoCommit(false);
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
-            assertFalse("Expected resultset to be open", rs.isClosed());
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableBinaryStream_intLength(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
-            connection.commit();
-            assertTrue("Expected resultset to be closed", rs.isClosed());
-        }
-    }
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
 
-    @Test
-    public void testClosedOnRollback() throws Exception {
-        connection.setAutoCommit(false);
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-            assertEquals("Unexpected holdability", ResultSet.CLOSE_CURSORS_AT_COMMIT, rs.getHoldability());
-            assertFalse("Expected resultset to be open", rs.isClosed());
+                byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+                connection.setAutoCommit(false);
+                try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                    assertTrue(rs.next());
+                    ByteArrayInputStream bais = new ByteArrayInputStream(value);
+                    rs.updateBinaryStream(2, bais, 5);
+                    rs.updateRow();
+                }
 
-            connection.rollback();
-            assertTrue("Expected resultset to be closed", rs.isClosed());
-        }
-    }
+                try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
+                    assertTrue(rs.next());
 
-    @Test
-    public void testUpdatableBinaryStream() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
-
-            byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-            connection.setAutoCommit(false);
-            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
-                assertTrue(rs.next());
-                ByteArrayInputStream bais = new ByteArrayInputStream(value);
-                rs.updateBinaryStream(2, bais);
-                rs.updateRow();
-            }
-
-            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
-                assertTrue(rs.next());
-
-                assertArrayEquals(value, rs.getBytes(2));
+                    assertArrayEquals(new byte[] { 1, 2, 3, 4, 5 }, rs.getBytes(2));
+                }
             }
         }
     }
 
-    @Test
-    public void testUpdatableBinaryStream_intLength() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableCharacterStream(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            stmt.executeUpdate("insert into test_table(id, blob_bin) values (1, null)");
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
 
-            byte[] value = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-            connection.setAutoCommit(false);
-            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
-                assertTrue(rs.next());
-                ByteArrayInputStream bais = new ByteArrayInputStream(value);
-                rs.updateBinaryStream(2, bais, 5);
-                rs.updateRow();
-            }
+                String value = "String for testing";
+                connection.setAutoCommit(false);
+                try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                    assertTrue(rs.next());
+                    StringReader stringReader = new StringReader(value);
+                    rs.updateCharacterStream(2, stringReader);
+                    rs.updateRow();
+                }
 
-            try (ResultSet rs = stmt.executeQuery("select id, blob_bin from test_table")) {
-                assertTrue(rs.next());
+                try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                    assertTrue(rs.next());
 
-                assertArrayEquals(new byte[] { 1, 2, 3, 4, 5 }, rs.getBytes(2));
+                    assertEquals(value, rs.getString(2));
+                }
             }
         }
     }
 
-    @Test
-    public void testUpdatableCharacterStream() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testUpdatableCharacterStream_intLength(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
 
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE)) {
+                stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
 
-            String value = "String for testing";
-            connection.setAutoCommit(false);
-            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
-                assertTrue(rs.next());
-                StringReader stringReader = new StringReader(value);
-                rs.updateCharacterStream(2, stringReader);
-                rs.updateRow();
-            }
+                String value = "String for testing";
+                connection.setAutoCommit(false);
+                try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                    assertTrue(rs.next());
+                    StringReader stringReader = new StringReader(value);
+                    rs.updateCharacterStream(2, stringReader, 6);
+                    rs.updateRow();
+                }
 
-            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
-                assertTrue(rs.next());
+                try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
+                    assertTrue(rs.next());
 
-                assertEquals(value, rs.getString(2));
+                    assertEquals("String", rs.getString(2));
+                }
             }
         }
     }
 
     @Test
-    public void testUpdatableCharacterStream_intLength() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            stmt.executeUpdate("insert into test_table(id, blob_str) values (1, null)");
-
-            String value = "String for testing";
-            connection.setAutoCommit(false);
-            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
-                assertTrue(rs.next());
-                StringReader stringReader = new StringReader(value);
-                rs.updateCharacterStream(2, stringReader, 6);
-                rs.updateRow();
-            }
-
-            try (ResultSet rs = stmt.executeQuery("select id, blob_str from test_table")) {
-                assertTrue(rs.next());
-
-                assertEquals("String", rs.getString(2));
-            }
-        }
-    }
-
-    @Test
-    public void testGetMetaDataThrowsSQLExceptionAfterClose() throws Exception {
-        try (Statement stmt = connection.createStatement()) {
+    void testGetMetaDataThrowsSQLExceptionAfterClose() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             ResultSet rs;
             rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-            assertFalse("Expected result set to be open", rs.isClosed());
+            assertFalse(rs.isClosed(), "Expected result set to be open");
             rs.close();
 
-            assertTrue("Expected result set to be closed", rs.isClosed());
+            assertTrue(rs.isClosed(), "Expected result set to be closed");
 
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
-
-            rs.getMetaData();
+            SQLException exception = assertThrows(SQLException.class, rs::getMetaData);
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
         }
     }
 
     @Test
-    public void testGetMetaDataThrowsSQLExceptionAfterConnectionClose() throws Exception {
-        Statement stmt = connection.createStatement();
-        ResultSet rs;
-        rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
-        assertFalse("Expected result set to be open", rs.isClosed());
-        connection.close();
+    void testGetMetaDataThrowsSQLExceptionAfterConnectionClose() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            ResultSet rs;
+            rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
+            assertFalse(rs.isClosed(), "Expected result set to be open");
+            connection.close();
 
-        assertTrue("Expected result set to be closed", rs.isClosed());
+            assertTrue(rs.isClosed(), "Expected result set to be closed");
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
-
-        rs.getMetaData();
+            SQLException exception = assertThrows(SQLException.class, rs::getMetaData);
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
+        }
     }
 
     @Test
-    public void testInheritsFetchDirectionFromStatement() throws Exception {
-        try (Statement stmt = connection.createStatement()) {
+    void testInheritsFetchDirectionFromStatement() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                assertEquals("Unexpected fetch direction", ResultSet.FETCH_FORWARD, rs.getFetchDirection());
+                assertEquals(FETCH_FORWARD, rs.getFetchDirection(), "Unexpected fetch direction");
             }
 
-            stmt.setFetchDirection(ResultSet.FETCH_REVERSE);
+            stmt.setFetchDirection(FETCH_REVERSE);
 
-            // Note we inherit FETCH_REVERSE event though we are forward only, the JDBC spec is a bit ambiguous here,
+            // Note we inherit FETCH_REVERSE even though we are forward only, the JDBC spec is a bit ambiguous here,
             // because FETCH_REVERSE is allowed to be set on a forward only statement, but not on a forward only result set...
             try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                assertEquals("Unexpected fetch direction", ResultSet.FETCH_REVERSE, rs.getFetchDirection());
+                assertEquals(FETCH_REVERSE, rs.getFetchDirection(), "Unexpected fetch direction");
             }
         }
     }
 
     @Test
-    public void testSetFetchDirection_Forward() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            stmt.setFetchDirection(ResultSet.FETCH_UNKNOWN);
+    void testSetFetchDirection_Forward() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.setFetchDirection(FETCH_UNKNOWN);
 
             try (ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-                rs.setFetchDirection(ResultSet.FETCH_FORWARD);
+                rs.setFetchDirection(FETCH_FORWARD);
 
-                assertEquals("Unexpected fetch direction", ResultSet.FETCH_FORWARD, rs.getFetchDirection());
+                assertEquals(FETCH_FORWARD, rs.getFetchDirection(), "Unexpected fetch direction");
             }
         }
     }
 
     @Test
-    public void testSetFetchDirection_closedResultSet_throwsException() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
+    void testSetFetchDirection_closedResultSet_throwsException() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
             rs.close();
 
-            expectedException.expect(allOf(
-                    instanceOf(SQLException.class),
-                    message(containsString("result set is closed"))
-            ));
-
-            rs.setFetchDirection(ResultSet.FETCH_FORWARD);
+            SQLException sqlException = assertThrows(SQLException.class, () -> rs.setFetchDirection(FETCH_FORWARD));
+            assertThat(sqlException, message(containsString("result set is closed")));
         }
     }
 
     @Test
-    public void testGetFetchDirection_closedResultSet_throwsException() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
+    void testGetFetchDirection_closedResultSet_throwsException() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE");
             rs.close();
 
-            expectedException.expect(allOf(
-                    instanceOf(SQLException.class),
-                    message(containsString("result set is closed"))
-            ));
-
-            rs.getFetchDirection();
+            SQLException sqlException = assertThrows(SQLException.class, rs::getFetchDirection);
+            assertThat(sqlException, message(containsString("result set is closed")));
         }
     }
 
     @Test
-    public void testSetFetchDirection_Reverse_onForwardOnlyThrowsException() throws SQLException {
-        try (Statement stmt = connection.createStatement();
+    void testSetFetchDirection_Reverse_onForwardOnlyThrowsException() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-            expectedException.expect(allOf(
-                    instanceOf(SQLNonTransientException.class),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
 
-            rs.setFetchDirection(ResultSet.FETCH_REVERSE);
+            SQLNonTransientException sqlException =
+                    assertThrows(SQLNonTransientException.class, () -> rs.setFetchDirection(FETCH_REVERSE));
+            assertThat(sqlException, fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly));
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testSetFetchDirection_Reverse_onScrollable(String scrollableCursorPropertyValue) throws SQLException {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue);
+             Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            rs.setFetchDirection(FETCH_REVERSE);
+
+            assertEquals(FETCH_REVERSE, rs.getFetchDirection(), "Unexpected fetch direction");
         }
     }
 
     @Test
-    public void testSetFetchDirection_Reverse_onScrollable() throws SQLException {
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+    void testSetFetchDirection_Unknown_onForwardOnlyThrowsException() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-            rs.setFetchDirection(ResultSet.FETCH_REVERSE);
 
-            assertEquals("Unexpected fetch direction", ResultSet.FETCH_REVERSE, rs.getFetchDirection());
+            SQLNonTransientException sqlException =
+                    assertThrows(SQLNonTransientException.class, () -> rs.setFetchDirection(FETCH_UNKNOWN));
+            assertThat(sqlException, fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly));
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testSetFetchDirection_Unknown_onScrollable(String scrollableCursorPropertyValue) throws SQLException {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue);
+             Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
+            rs.setFetchDirection(FETCH_UNKNOWN);
+
+            assertEquals(FETCH_UNKNOWN, rs.getFetchDirection(), "Unexpected fetch direction");
         }
     }
 
     @Test
-    public void testSetFetchDirection_Unknown_onForwardOnlyThrowsException() throws SQLException {
-        try (Statement stmt = connection.createStatement();
+    void testSetFetchDirection_InvalidValue() throws SQLException {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-            expectedException.expect(allOf(
-                    instanceOf(SQLNonTransientException.class),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)));
-
-            rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
-        }
-    }
-
-    @Test
-    public void testSetFetchDirection_Unknown_onScrollable() throws SQLException {
-        try (Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-            rs.setFetchDirection(ResultSet.FETCH_UNKNOWN);
-
-            assertEquals("Unexpected fetch direction", ResultSet.FETCH_UNKNOWN, rs.getFetchDirection());
-        }
-    }
-
-    @Test
-    public void testSetFetchDirection_InvalidValue() throws SQLException {
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM RDB$DATABASE")) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    not(isA(SQLFeatureNotSupportedException.class)),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
-                    sqlState(equalTo("HY106"))
-            ));
 
             //noinspection MagicConstant
-            rs.setFetchDirection(-1);
+            SQLException sqlException = assertThrows(SQLException.class, () -> rs.setFetchDirection(-1));
+            assertThat(sqlException, allOf(
+                    not(instanceOf(SQLFeatureNotSupportedException.class)),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
+                    sqlState(equalTo("HY106"))));
         }
     }
 
@@ -1363,16 +1302,18 @@ public class FBResultSetTest extends FBJUnit4TestBase {
      * Rationale: rdb$db_key column is actually identified as DB_KEY in result set
      */
     @Test
-    public void testRetrievalOfDbKeyByRDB$DB_KEY() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        createTestData(1);
+    void testRetrievalOfDbKeyByRDB$DB_KEY() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
 
-        try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
-             ResultSet rs = pstmt.executeQuery()) {
-            assertTrue("Expected a row", rs.next());
+            try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
+                 ResultSet rs = pstmt.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
 
-            RowId rowId = rs.getRowId("RDB$DB_KEY");
-            assertNotNull(rowId);
+                RowId rowId = rs.getRowId("RDB$DB_KEY");
+                assertNotNull(rowId);
+            }
         }
     }
 
@@ -1380,51 +1321,55 @@ public class FBResultSetTest extends FBJUnit4TestBase {
      * Rationale: rdb$db_key column is actually identified as DB_KEY in result set
      */
     @Test
-    public void testRetrievalOfDbKeyByDB_KEY() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        createTestData(1);
+    void testRetrievalOfDbKeyByDB_KEY() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager()) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            createTestData(1, connection);
 
-        try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
-             ResultSet rs = pstmt.executeQuery()) {
-            assertTrue("Expected a row", rs.next());
+            try (PreparedStatement pstmt = connection.prepareStatement("select rdb$db_key, id from test_table");
+                 ResultSet rs = pstmt.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
 
-            RowId rowId = rs.getRowId("DB_KEY");
-            assertNotNull(rowId);
+                RowId rowId = rs.getRowId("DB_KEY");
+                assertNotNull(rowId);
+            }
         }
     }
 
     /**
      * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-623">JDBC-623</a>.
      */
-    @Test
-    public void testResultSetUpdateDoesNotNullUntouchedBlob() throws Exception {
-        executeCreateTable(connection, CREATE_TABLE_STATEMENT);
-        final String blob_str_value = "blob_str_value";
-        final byte[] blob_bin_value = "blob_bin_value".getBytes(StandardCharsets.US_ASCII);
-        try (PreparedStatement pstmt = connection.prepareStatement(
-                "insert into test_table (id, long_str, blob_str, blob_bin) values (?, ?, ?, ?)")) {
-            pstmt.setInt(1 ,1);
-            pstmt.setString(2, "long_str_initial");
-            pstmt.setString(3, blob_str_value);
-            pstmt.setBytes(4, blob_bin_value);
-            pstmt.execute();
-        }
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testResultSetUpdateDoesNotNullUntouchedBlob(String scrollableCursorPropertyValue) throws Exception {
+        try (Connection connection = createConnection(scrollableCursorPropertyValue)) {
+            executeCreateTable(connection, CREATE_TABLE_STATEMENT);
+            final String blob_str_value = "blob_str_value";
+            final byte[] blob_bin_value = "blob_bin_value".getBytes(StandardCharsets.US_ASCII);
+            try (PreparedStatement pstmt = connection.prepareStatement(
+                    "insert into test_table (id, long_str, blob_str, blob_bin) values (?, ?, ?, ?)")) {
+                pstmt.setInt(1, 1);
+                pstmt.setString(2, "long_str_initial");
+                pstmt.setString(3, blob_str_value);
+                pstmt.setBytes(4, blob_bin_value);
+                pstmt.execute();
+            }
 
-        try (Statement stmt = connection.createStatement(
-                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-             ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
-            assertTrue("expected a row", rs.next());
-            rs.updateString("long_str", "long_str_updated");
-            rs.updateRow();
-        }
+            try (Statement stmt = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_UPDATABLE);
+                 ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
+                assertTrue(rs.next(), "expected a row");
+                rs.updateString("long_str", "long_str_updated");
+                rs.updateRow();
+            }
 
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
-            assertTrue("expected a row", rs.next());
-            assertEquals("id", 1, rs.getInt("id"));
-            assertEquals("long_str", "long_str_updated", rs.getString("long_str"));
-            assertEquals("blob_str", blob_str_value, rs.getString("blob_str"));
-            assertArrayEquals("blob_bin", blob_bin_value, rs.getBytes("blob_bin"));
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery("select id, long_str, blob_str, blob_bin from test_table")) {
+                assertTrue(rs.next(), "expected a row");
+                assertEquals(1, rs.getInt("id"), "id");
+                assertEquals("long_str_updated", rs.getString("long_str"), "long_str");
+                assertEquals(blob_str_value, rs.getString("blob_str"), "blob_str");
+                assertArrayEquals(blob_bin_value, rs.getBytes("blob_bin"), "blob_bin");
+            }
         }
     }
 
@@ -1432,26 +1377,52 @@ public class FBResultSetTest extends FBJUnit4TestBase {
      * Rationale: see <a href="https://github.com/FirebirdSQL/jaybird/issues/689">jaybird#689</a>
      */
     @Test
-    public void testIsAfterLast_bug689() throws Exception {
-        try (Statement stmt = connection.createStatement();
+    void testIsAfterLast_bug689() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement();
              ResultSet resultSet = stmt.executeQuery("select * from RDB$DATABASE")) {
 
             while (resultSet.next()) {
-                assertFalse("Should not be after last", resultSet.isAfterLast());
+                assertFalse(resultSet.isAfterLast(), "Should not be after last");
             }
 
-            expectedException.expect(SQLException.class);
-            expectedException.expectMessage("The result set is closed");
-            resultSet.isAfterLast();
+            SQLException sqlException = assertThrows(SQLException.class, resultSet::isAfterLast);
+            assertThat(sqlException, message(is("The result set is closed")));
         }
     }
 
-    private void createTestData(int recordCount) throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_INTO_TABLE_STATEMENT)) {
-            for (int i = 0; i < recordCount; i++) {
+    static Stream<String> scrollableCursorPropertyValues() {
+        // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
+        // not support server-side scrollable cursors
+        return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
+    }
+
+    private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
+        return DriverManager.getConnection(getUrl(), props);
+    }
+
+    private void createTestData(int recordCount, Connection connection) throws SQLException {
+        createTestData(recordCount, String::valueOf, connection, "str");
+    }
+
+    private void createTestData(int recordCount, IntFunction<String> strValueFunction, Connection connection,
+            String stringColumn) throws SQLException {
+        boolean currentAutoCommit = connection.getAutoCommit();
+        if (currentAutoCommit) {
+            connection.setAutoCommit(false);
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO test_table (id, " + stringColumn + ") VALUES(?, ?)")) {
+            for (int i = 1; i <= recordCount; i++) {
                 ps.setInt(1, i);
-                ps.setInt(2, i);
-                ps.executeUpdate();
+                ps.setString(2, strValueFunction.apply(i));
+                ps.execute();
+            }
+        } finally {
+            if (currentAutoCommit) {
+                connection.setAutoCommit(true);
             }
         }
     }

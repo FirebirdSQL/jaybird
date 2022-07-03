@@ -162,16 +162,16 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     void execute(RowValue parameters) throws SQLException;
 
     /**
-     * Requests this statement to fetch the next <code>fetchSize</code> rows.
+     * Requests this statement to fetch the next {@code fetchSize} rows.
      * <p>
      * Fetched rows are not returned from this method, but sent to the registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances.
      * </p>
      *
      * @param fetchSize
-     *         Number of rows to fetch (must be <code>&gt; 0</code>)
+     *         Number of rows to fetch (must be greater than {@code 0})
      * @throws SQLException
      *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
-     *         size is not <code>&gt; 0</code>.
+     *         size is not greater than {@code 0}.
      */
     void fetchRows(int fetchSize) throws SQLException;
 
@@ -445,10 +445,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      *
      * @param flag
      *         Cursor flag to set
-     * @throws SQLException
-     *         If this statement is closed, or the specified flag is not supported
      */
-    default void setCursorFlag(CursorFlag flag) throws SQLException {
+    default void setCursorFlag(CursorFlag flag) {
         // do nothing
     }
 
@@ -463,10 +461,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      *
      * @param flag
      *         Cursor flag to clear
-     * @throws SQLException
-     *         If this statement is closed
      */
-    default void clearCursorFlag(CursorFlag flag) throws SQLException {
+    default void clearCursorFlag(CursorFlag flag) {
         // do nothing
     }
 
@@ -479,10 +475,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * @param flag
      *         Cursor flag
      * @return {@code true} when set, {@code false} otherwise
-     * @throws SQLException
-     *         If this statement is closed
      */
-    default boolean isCursorFlagSet(CursorFlag flag) throws SQLException {
+    default boolean isCursorFlagSet(CursorFlag flag) {
         return false;
     }
 }

@@ -32,6 +32,7 @@ import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -69,7 +70,8 @@ class FBServerScrollFetcherTest {
     static RequireProtocolExtension requireProtocolExtension = requireProtocolVersion(18);
 
     @RegisterExtension
-    static UsesDatabaseExtension usesDatabase = usesDatabaseForAll("create table scrolltest (id integer primary key)");
+    static UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = usesDatabaseForAll(
+            "create table scrolltest (id integer primary key)");
 
     private FbWireDatabase db;
     private final SimpleFetcherListener listener = new SimpleFetcherListener();
@@ -92,6 +94,8 @@ class FBServerScrollFetcherTest {
     @ValueSource(booleans = { false, true })
     void firstNoRows(boolean withMaxRows) throws Throwable {
         executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             assertFalse(fetcher.first(), "expected no first row");
             assertAfterLast(fetcher);
             assertRowToNull(0);
@@ -107,6 +111,8 @@ class FBServerScrollFetcherTest {
         int numberOfRows = Math.max(5, initialRow);
         int initialCount = withMaxRows ? numberOfRows + 5 : numberOfRows;
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? numberOfRows : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             if (initialRow != 0) {
                 assertTrue(fetcher.absolute(initialRow), "expected move to row");
                 assertAtRow(fetcher, initialRow);
@@ -125,6 +131,8 @@ class FBServerScrollFetcherTest {
     @ValueSource(booleans = { false, true })
     void lastNoRows(boolean withMaxRows) throws Throwable {
         executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             assertFalse(fetcher.last(), "expected no last row");
             assertAfterLast(fetcher);
             assertRowToNull(0);
@@ -140,6 +148,8 @@ class FBServerScrollFetcherTest {
         int numberOfRows = Math.max(5, initialRow);
         int createdRows = withMaxRows ? numberOfRows + 5 : numberOfRows;
         executeScrollTest(createdRows, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? numberOfRows : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             if (initialRow != 0) {
                 assertTrue(fetcher.absolute(initialRow), "expected move to row");
                 assertAtRow(fetcher, initialRow);
@@ -159,6 +169,8 @@ class FBServerScrollFetcherTest {
     void firstLastFirst_singleRow(boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 5 : 1;
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 1 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             assertTrue(fetcher.first(), "expected first row");
             assertAtRow(fetcher, 1);
             assertTrue(fetcher.isFirst(), "expected first");
@@ -183,6 +195,8 @@ class FBServerScrollFetcherTest {
     @ValueSource(booleans = { false, true })
     void nextNoRows(boolean withMaxRows) throws Throwable {
         executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             assertFalse(fetcher.next(), "expected no next row");
             assertAfterLast(fetcher);
             assertRowToNull(0);
@@ -194,6 +208,8 @@ class FBServerScrollFetcherTest {
     void nextToEnd(int fetchSize, boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 10 : 5;
         executeScrollTest(initialCount, fetchSize, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             IntStream.rangeClosed(1, 5)
                     .forEach(row -> {
                         try {
@@ -213,10 +229,38 @@ class FBServerScrollFetcherTest {
         });
     }
 
+    /**
+     * Rationale: during implementation a logic error surfaced which caused {@code next()} as the first operation
+     * to misbehave when max rows was non-zero. The "normal" tests didn't find this because {@code assertBeforeFirst}
+     * hid this problem.
+     */
+    @Test
+    void nextOnlyWithMaxRows_findsRow() throws Throwable {
+        executeScrollTest(5, 5, 2, (stmt, fetcher) -> {
+            assertTrue(fetcher.next(), "expected row 1");
+            assertAtRow(fetcher, 1);
+            assertTrue(fetcher.isFirst(), "expected first for row = 1");
+            assertFalse(fetcher.isLast(), "expected not last for row = 1");
+            assertRowValue(0, 1);
+
+            assertTrue(fetcher.next(), "expected row 2");
+            assertAtRow(fetcher, 2);
+            assertFalse(fetcher.isFirst(), "expected not first for row = 2");
+            assertTrue(fetcher.isLast(), "expected last for row = 2");
+            assertRowValue(1, 2);
+
+            assertFalse(fetcher.next(), "expected no more rows");
+            assertAfterLast(fetcher);
+            assertRowToNull(2);
+        });
+    }
+
     @ParameterizedTest(name = "[{index}] withMaxRows = {0}")
     @ValueSource(booleans = { false, true })
     void previousFromEnd_noRows(boolean withMaxRows) throws Throwable {
         executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             fetcher.afterLast();
             assertAfterLast(fetcher);
             assertRowToNull(0);
@@ -232,6 +276,8 @@ class FBServerScrollFetcherTest {
     void previousFromEndToStart(int fetchSize, boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 10 : 5;
         executeScrollTest(initialCount, fetchSize, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             fetcher.afterLast();
             assertAfterLast(fetcher);
             assertRowToNull(0);
@@ -264,6 +310,8 @@ class FBServerScrollFetcherTest {
     void nextPreviousCombinations(int fetchSize, boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 30 : 20;
         executeScrollTest(initialCount, fetchSize, withMaxRows ? 20 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             int receivedRow = -1;
             int row = 0;
             do {
@@ -308,6 +356,8 @@ class FBServerScrollFetcherTest {
     void absolute_variousPositions(boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 20 : 10;
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 10 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             assertTrue(fetcher.absolute(5), "expected absolute row 5");
             assertAtRow(fetcher, 5);
             int receivedRow;
@@ -340,6 +390,8 @@ class FBServerScrollFetcherTest {
     void relative_variousPositions(boolean withMaxRows) throws Throwable {
         int initialCount = withMaxRows ? 20 : 10;
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 10 : 0, (stmt, fetcher) -> {
+            assertBeforeFirst(fetcher);
+
             fetcher.relative(0);
             assertBeforeFirst(fetcher);
             int receivedRow;
@@ -385,6 +437,8 @@ class FBServerScrollFetcherTest {
         int initialCount = rowCount + (withMaxRows && rowCount != 0 ? 5 : 0);
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? Math.max(1, rowCount) : 0,
                 (stmt, fetcher) -> {
+                    assertBeforeFirst(fetcher);
+
                     fetcher.next();
                     assertFalse(fetcher.isBeforeFirst(), "should not be before-first");
 
@@ -399,6 +453,8 @@ class FBServerScrollFetcherTest {
         int initialCount = rowCount + (withMaxRows && rowCount != 0 ? 5 : 0);
         executeScrollTest(initialCount, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? Math.max(1, rowCount) : 0,
                 (stmt, fetcher) -> {
+                    assertBeforeFirst(fetcher);
+
                     fetcher.afterLast();
                     assertAfterLast(fetcher);
 
@@ -410,8 +466,10 @@ class FBServerScrollFetcherTest {
     @ParameterizedTest(name = "[{index}] withMaxRows = {0}")
     @ValueSource(booleans = { false, true })
     void isEmpty_noRows(boolean withMaxRows) throws Throwable {
-        executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) ->
-                assertTrue(fetcher.isEmpty(), "expected empty"));
+        executeScrollTest(0, FETCH_SIZE_NOT_IMPORTANT, withMaxRows ? 5 : 0, (stmt, fetcher) -> {
+                assertBeforeFirst(fetcher);
+                assertTrue(fetcher.isEmpty(), "expected empty");
+        });
     }
 
     @ParameterizedTest(name = "[{index}] rowCount = {0}, withMaxRows = {1}")
@@ -436,8 +494,6 @@ class FBServerScrollFetcherTest {
             stmt.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             stmt.execute(RowValue.EMPTY_ROW_VALUE);
             FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchSize, maxRows, stmt, () -> db, listener);
-
-            assertBeforeFirst(fetcher);
 
             exceptionalConsumer.accept(stmt, fetcher);
         } finally {

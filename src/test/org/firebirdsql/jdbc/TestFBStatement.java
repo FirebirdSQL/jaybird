@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,20 +20,29 @@ package org.firebirdsql.jdbc;
 
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Properties;
+import java.util.stream.Stream;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.firebirdsql.common.DdlHelper.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.common.JdbcResourceHelper.*;
+import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
@@ -41,16 +50,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBStatement}.
  */
-public class TestFBStatement extends FBJUnit4TestBase {
+class TestFBStatement {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private Connection con;
 
@@ -59,13 +68,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
     private static final String INSERT_DATA = "INSERT INTO test(col1) VALUES(?)";
     private static final String SELECT_DATA = "SELECT col1 FROM test ORDER BY col1";
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         con = getConnectionViaDriverManager();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         closeQuietly(con);
     }
 
@@ -73,7 +82,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Closing a statement twice should not result in an Exception.
      */
     @Test
-    public void testDoubleClose() throws SQLException {
+    void testDoubleClose() throws SQLException {
         Statement stmt = con.createStatement();
         stmt.close();
         stmt.close();
@@ -86,11 +95,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testIsCloseOnCompletion_initial() throws SQLException {
-        // Cast so it also works under JDBC 3.0 and 4.0
-        FBStatement stmt = (FBStatement) con.createStatement();
-        assertFalse("Initial value of isCloseOnCompletion expected to be false",
-                stmt.isCloseOnCompletion());
+    void testIsCloseOnCompletion_initial() throws SQLException {
+        Statement stmt = con.createStatement();
+        assertFalse(stmt.isCloseOnCompletion(),
+                "Initial value of isCloseOnCompletion expected to be false");
     }
 
     /**
@@ -101,12 +109,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testIsCloseOnCompletion_afterCloseOnCompletion() throws SQLException {
-        // Cast so it also works under JDBC 3.0 and 4.0
-        FBStatement stmt = (FBStatement) con.createStatement();
+    void testIsCloseOnCompletion_afterCloseOnCompletion() throws SQLException {
+        Statement stmt = con.createStatement();
         stmt.closeOnCompletion();
-        assertTrue("Value of isCloseOnCompletion after closeOnCompletion expected to be true",
-                stmt.isCloseOnCompletion());
+        assertTrue(stmt.isCloseOnCompletion(),
+                "Value of isCloseOnCompletion after closeOnCompletion expected to be true");
     }
 
     /**
@@ -117,118 +124,117 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testIsCloseOnCompletion_multipleCloseOnCompletion() throws SQLException {
-        // Cast so it also works under JDBC 3.0 and 4.0
-        FBStatement stmt = (FBStatement) con.createStatement();
+    void testIsCloseOnCompletion_multipleCloseOnCompletion() throws SQLException {
+        Statement stmt = con.createStatement();
         stmt.closeOnCompletion();
         stmt.closeOnCompletion();
-        assertTrue("Value of isCloseOnCompletion after closeOnCompletion expected to be true",
-                stmt.isCloseOnCompletion());
+        assertTrue(stmt.isCloseOnCompletion(),
+                "Value of isCloseOnCompletion after closeOnCompletion expected to be true");
     }
 
     /**
-     * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is false, will not close
+     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is false, will not close
      * the statement.
      */
     @Test
-    public void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
+    void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(SELECT_DATA);
             ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
-                assertFalse("Resultset should be open", rs.isClosed());
-                assertFalse("Statement should be open", stmt.isClosed());
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
                 assertEquals(count, rs.getInt(1));
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
-            assertFalse("Statement should be open", stmt.isClosed());
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.isClosed(), "Statement should be open");
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is false, will not close
      * the statement.
      */
     @Test
-    public void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
+    void testNoCloseOnCompletion_StatementOpen_afterExplicitResultSetClose() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(SELECT_DATA);
             ResultSet rs = stmt.getResultSet();
-            assertFalse("Resultset should be open", rs.isClosed());
-            assertFalse("Statement should be open", stmt.isClosed());
+            assertFalse(rs.isClosed(), "Result set should be open");
+            assertFalse(stmt.isClosed(), "Statement should be open");
 
             rs.close();
 
-            assertTrue("Resultset should be closed", rs.isClosed());
-            assertFalse("Statement should be open", stmt.isClosed());
+            assertTrue(rs.isClosed(), "Result set should be closed");
+            assertFalse(stmt.isClosed(), "Statement should be open");
         }
     }
-    
+
     /**
-     * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
+     * Test if an implicit close (by fully reading the result set) while closeOnCompletion is true, will close
      * the statement.
      */
     @Test
-    public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
+    void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
-                assertFalse("Resultset should be open", rs.isClosed());
-                assertFalse("Statement should be open", stmt.isClosed());
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
                 assertEquals(count, rs.getInt(1));
                 count++;
             }
             assertEquals(DATA_ITEMS, count);
-            assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
-            assertTrue("Statement should be closed", stmt.isClosed());
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertTrue(stmt.isClosed(), "Statement should be closed");
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is true, will close
      * the statement.
      */
     @Test
-    public void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
+    void testCloseOnCompletion_StatementClosed_afterExplicitResultSetClose() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.execute(SELECT_DATA);
             stmt.closeOnCompletion();
             ResultSet rs = stmt.getResultSet();
-            assertFalse("Resultset should be open", rs.isClosed());
-            assertFalse("Statement should be open", stmt.isClosed());
+            assertFalse(rs.isClosed(), "Result set should be open");
+            assertFalse(stmt.isClosed(), "Statement should be open");
 
             rs.close();
 
-            assertTrue("Resultset should be closed", rs.isClosed());
-            assertTrue("Statement should be closed", stmt.isClosed());
+            assertTrue(rs.isClosed(), "Result set should be closed");
+            assertTrue(stmt.isClosed(), "Statement should be closed");
         }
     }
-    
+
     /**
-     * Test if a executing a query which does not produce a resultset (eg an INSERT without generated keys) will not close the
-     * statement.
+     * Test if executing a query which does not produce a result set (e.g. an INSERT without generated keys) will not
+     * close the statement.
      */
     @Test
-    public void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
+    void testCloseOnCompletion_StatementOpen_afterNonResultSetQuery() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
-        try (FBStatement stmt = (FBStatement) con.createStatement()) {
+        try (Statement stmt = con.createStatement()) {
             stmt.closeOnCompletion();
             stmt.execute("INSERT INTO test(col1) VALUES(" + DATA_ITEMS + ")");
 
-            assertFalse("Statement should be open", stmt.isClosed());
+            assertFalse(stmt.isClosed(), "Statement should be open");
         }
     }
 
@@ -239,14 +245,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testExecuteQuery_NonQuery() throws SQLException {
+    void testExecuteQuery_NonQuery() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
-
-            stmt.executeQuery("INSERT INTO test(col1) VALUES(6)");
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> stmt.executeQuery("INSERT INTO test(col1) VALUES(6)"));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_NO_RESULT_SET));
         }
     }
 
@@ -257,9 +262,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testMaxFieldSize_default() throws SQLException {
+    void testMaxFieldSize_default() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertEquals("Unexpected default value for maxFieldSize", 0, stmt.getMaxFieldSize());
+            assertEquals(0, stmt.getMaxFieldSize(), "Unexpected default value for maxFieldSize");
         }
     }
 
@@ -270,12 +275,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetMaxFieldSize_negativeValue() throws SQLException {
+    void testSetMaxFieldSize_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
-
-            stmt.setMaxFieldSize(-1);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.setMaxFieldSize(-1));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
         }
     }
 
@@ -283,12 +286,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if value of maxFieldSize set is also value retrieved with get.
      */
     @Test
-    public void testSetMaxFieldSize() throws SQLException {
+    void testSetMaxFieldSize() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             final int maxFieldSize = 513;
             stmt.setMaxFieldSize(maxFieldSize);
 
-            assertEquals("Unexpected value for maxFieldSize", maxFieldSize, stmt.getMaxFieldSize());
+            assertEquals(maxFieldSize, stmt.getMaxFieldSize(), "Unexpected value for maxFieldSize");
         }
     }
 
@@ -299,9 +302,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testMaxRows_default() throws SQLException {
+    void testMaxRows_default() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertEquals("Unexpected default value for maxRows", 0, stmt.getMaxRows());
+            assertEquals(0, stmt.getMaxRows(), "Unexpected default value for maxRows");
         }
     }
 
@@ -312,12 +315,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetMaxRows_negativeValue() throws SQLException {
+    void testSetMaxRows_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
-
-            stmt.setMaxRows(-1);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.setMaxRows(-1));
+            assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
         }
     }
 
@@ -325,12 +326,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if value of maxRows set is also value retrieved with get.
      */
     @Test
-    public void testSetMaxRows() throws SQLException {
+    void testSetMaxRows() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             final int maxRows = 513;
             stmt.setMaxRows(maxRows);
 
-            assertEquals("Unexpected value for maxRows", maxRows, stmt.getMaxRows());
+            assertEquals(maxRows, stmt.getMaxRows(), "Unexpected value for maxRows");
         }
     }
 
@@ -345,11 +346,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
         try (Statement stmt = con.createStatement(resultSetType, resultSetConcurrency)) {
             stmt.setMaxRows(2);
             try (ResultSet rs = stmt.executeQuery(SELECT_DATA)) {
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Unexpected value for first row", 0, rs.getInt(1));
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Unexpected value for second row", 1, rs.getInt(1));
-                assertFalse("Expected only two rows in ResultSet", rs.next());
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(0, rs.getInt(1), "Unexpected value for first row");
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(1, rs.getInt(1), "Unexpected value for second row");
+                assertFalse(rs.next(), "Expected only two rows in ResultSet");
             }
         }
     }
@@ -358,7 +359,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if the maxRows property is correctly applied when retrieving rows for a forward only, readonly result set.
      */
     @Test
-    public void testMaxRows_ForwardOnly_ReadOnly() throws SQLException {
+    void testMaxRows_ForwardOnly_ReadOnly() throws SQLException {
         checkMaxRows(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -366,23 +367,29 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if the maxRows property is correctly applied when retrieving rows for a forward only, updatable result set.
      */
     @Test
-    public void testMaxRows_ForwardOnly_Updatable() throws SQLException {
+    void testMaxRows_ForwardOnly_Updatable() throws SQLException {
         checkMaxRows(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
     }
 
     /**
      * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, readonly result set.
      */
-    @Test
-    public void testMaxRows_ScrollInsensitive_ReadOnly() throws SQLException {
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testMaxRows_ScrollInsensitive_ReadOnly(String scrollableCursorPropertyValue) throws SQLException {
+        con.close();
+        con = createConnection(scrollableCursorPropertyValue);
         checkMaxRows(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
     }
 
     /**
      * Tests if the maxRows property is correctly applied when retrieving rows for a scroll insensitive, updatable result set.
      */
-    @Test
-    public void testMaxRows_ScrollInsensitive_Updatable() throws SQLException {
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testMaxRows_ScrollInsensitive_Updatable(String scrollableCursorPropertyValue) throws SQLException {
+        con.close();
+        con = createConnection(scrollableCursorPropertyValue);
         checkMaxRows(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
     }
 
@@ -393,9 +400,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testQueryTimeout_default() throws SQLException {
+    void testQueryTimeout_default() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertEquals("Unexpected default value for queryTimeout", 0, stmt.getQueryTimeout());
+            assertEquals(0, stmt.getQueryTimeout(), "Unexpected default value for queryTimeout");
         }
     }
 
@@ -406,12 +413,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetQueryTimeout_negativeValue() throws SQLException {
+    void testSetQueryTimeout_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(SQLNonTransientException.class);
-            expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
-
-            stmt.setQueryTimeout(-1);
+            SQLNonTransientException exception = assertThrows(SQLNonTransientException.class,
+                    () -> stmt.setQueryTimeout(-1));
+            assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
         }
     }
 
@@ -419,12 +425,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if value of queryTimeout set is also value retrieved with get.
      */
     @Test
-    public void testSetQueryTimeout() throws SQLException {
+    void testSetQueryTimeout() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             final int queryTimeout = 513;
             stmt.setQueryTimeout(queryTimeout);
 
-            assertEquals("Unexpected value for queryTimeout", queryTimeout, stmt.getQueryTimeout());
+            assertEquals(queryTimeout, stmt.getQueryTimeout(), "Unexpected value for queryTimeout");
         }
     }
 
@@ -435,7 +441,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testEscapeProcessingDisabled() throws SQLException {
+    void testEscapeProcessingDisabled() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             final String testQuery = "SELECT {fn CURDATE} FROM RDB$DATABASE";
             // First test validity of query with escape processing enabled (default)
@@ -444,11 +450,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
 
             stmt.setEscapeProcessing(false);
 
-            expectedException.expect(SQLException.class);
-            expectedException.expect(sqlStateEquals("42S22"));
-            expectedException.expectMessage(containsString("Column unknown; {FN"));
-
-            stmt.executeQuery(testQuery);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(testQuery));
+            assertThat(exception, allOf(
+                    message(containsString("Column unknown; {FN")),
+                    sqlStateEquals("42S22")));
         }
     }
 
@@ -456,7 +461,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
      */
     @Test
-    public void testGetLastExecutionPlan_select() throws SQLException {
+    void testGetLastExecutionPlan_select() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
@@ -475,14 +480,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testGetLastExecutionPlan_noStatement() throws SQLException {
+    void testGetLastExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    message(equalTo("No statement was executed, plan cannot be obtained."))
-            ));
-
-            stmt.getLastExecutionPlan();
+            SQLException exception = assertThrows(SQLException.class, stmt::getLastExecutionPlan);
+            assertThat(exception, message(equalTo("No statement was executed, plan cannot be obtained.")));
         }
     }
 
@@ -490,10 +491,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Test retrieval of execution plan ({@link FBStatement#getLastExecutionPlan()}) of a simple select is non-empty
      */
     @Test
-    public void testGetLastExplainedExecutionPlan_select() throws SQLException {
-        assumeTrue("Test requires explained execution plan support",
-                getDefaultSupportInfo().supportsExplainedExecutionPlan());
-        
+    void testGetLastExplainedExecutionPlan_select() throws SQLException {
+        assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+                "Test requires explained execution plan support");
+
         executeCreateTable(con, CREATE_TABLE);
 
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
@@ -513,14 +514,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
+    void testGetLastExplainedExecutionPlan_noStatement() throws SQLException {
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    message(equalTo("No statement was executed, detailed plan cannot be obtained."))
-            ));
-
-            stmt.getLastExplainedExecutionPlan();
+            SQLException exception = assertThrows(SQLException.class, stmt::getLastExplainedExecutionPlan);
+            assertThat(exception, message(equalTo("No statement was executed, detailed plan cannot be obtained.")));
         }
     }
 
@@ -528,9 +525,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Test that {@link FBStatement#getConnection()} returns the expected {@link java.sql.Connection}.
      */
     @Test
-    public void testGetConnection() throws SQLException {
+    void testGetConnection() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertSame("Unexpected result for getConnection()", con, stmt.getConnection());
+            assertSame(con, stmt.getConnection(), "Unexpected result for getConnection()");
         }
     }
 
@@ -538,12 +535,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Test that {@link FBStatement#getConnection()} throws an exception when called on a closed connection.
      */
     @Test
-    public void testGetConnection_closedStatement() throws SQLException {
+    void testGetConnection_closedStatement() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             stmt.close();
-            expectedException.expect(fbStatementClosedException());
 
-            stmt.getConnection();
+            assertThrowsFbStatementClosed(stmt::getConnection);
         }
     }
 
@@ -551,7 +547,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Test the batch update facility with insert statements.
      */
     @Test
-    public void testBatch_Insert() throws SQLException {
+    void testBatch_Insert() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
         try (Statement stmt = con.createStatement()) {
@@ -569,20 +565,20 @@ public class TestFBStatement extends FBJUnit4TestBase {
                 while (rs.next()) {
                     expectedItem++;
                     int actualItem = rs.getInt(1);
-                    assertEquals("Unexpected data item in SELECT", expectedItem, actualItem);
+                    assertEquals(expectedItem, actualItem, "Unexpected data item in SELECT");
                 }
-                assertEquals("Unexpected data item in SELECT", DATA_ITEMS, expectedItem);
+                assertEquals(DATA_ITEMS, expectedItem, "Unexpected data item in SELECT");
             }
         }
     }
 
     /**
-     * Tests if the default value of {@link FBStatement#getFetchSize()} is <code>0</code>.
+     * Tests if the default value of {@link FBStatement#getFetchSize()} is {@code 0}.
      */
     @Test
-    public void testGetFetchSize_default() throws SQLException {
+    void testGetFetchSize_default() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertEquals("Default getFetchSize value should be 0", 0, stmt.getFetchSize());
+            assertEquals(0, stmt.getFetchSize(), "Default getFetchSize value should be 0");
         }
     }
 
@@ -593,12 +589,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testGetFetchSize_statementClosed() throws SQLException {
+    void testGetFetchSize_statementClosed() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             stmt.close();
-            expectedException.expect(fbStatementClosedException());
 
-            stmt.setFetchSize(10);
+            assertThrowsFbStatementClosed(stmt::getFetchSize);
         }
     }
 
@@ -609,12 +604,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetFetchSize() throws SQLException {
+    void testSetFetchSize() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             final int testSize = 132;
             stmt.setFetchSize(testSize);
 
-            assertEquals("getFetchSize value should be equal to value set", testSize, stmt.getFetchSize());
+            assertEquals(testSize, stmt.getFetchSize(), "getFetchSize value should be equal to value set");
         }
     }
 
@@ -625,12 +620,11 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetFetchSize_statementClosed() throws SQLException {
+    void testSetFetchSize_statementClosed() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             stmt.close();
-            expectedException.expect(fbStatementClosedException());
 
-            stmt.setFetchSize(10);
+            assertThrowsFbStatementClosed(() -> stmt.setFetchSize(10));
         }
     }
 
@@ -641,91 +635,67 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetFetchSize_negativeValue() throws SQLException {
+    void testSetFetchSize_negativeValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))
-            ));
-
-            stmt.setFetchSize(-1);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.setFetchSize(-1));
+            assertThat(exception, sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)));
         }
     }
 
     @Test
-    public void testGetFetchDirection_DefaultForward() throws SQLException {
+    void testGetFetchDirection_DefaultForward() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_FORWARD, stmt.getFetchDirection());
+            assertEquals(ResultSet.FETCH_FORWARD, stmt.getFetchDirection(), "Unexpected value for fetchDirection");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { ResultSet.FETCH_FORWARD, ResultSet.FETCH_REVERSE, ResultSet.FETCH_REVERSE })
+    void testSetFetchDirection_validValue(int fetchDirection) throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.setFetchDirection(fetchDirection);
+
+            assertEquals(fetchDirection, stmt.getFetchDirection(), "Unexpected value for fetchDirection");
         }
     }
 
     @Test
-    public void testSetFetchDirection_Forward() throws SQLException {
+    void testSetFetchDirection_invalidValue() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
-
-            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_FORWARD, stmt.getFetchDirection());
-        }
-    }
-
-    @Test
-    public void testSetFetchDirection_Reverse() throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            stmt.setFetchDirection(ResultSet.FETCH_REVERSE);
-
-            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_REVERSE, stmt.getFetchDirection());
-        }
-    }
-
-    @Test
-    public void testSetFetchDirection_Unknown() throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            stmt.setFetchDirection(ResultSet.FETCH_UNKNOWN);
-
-            assertEquals("Unexpected value for fetchDirection", ResultSet.FETCH_UNKNOWN, stmt.getFetchDirection());
-        }
-    }
-
-    @Test
-    public void testSetFetchDirection_InvalidValue() throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    not(isA(SQLFeatureNotSupportedException.class)),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
-                    sqlState(equalTo("HY106"))
-            ));
-
             //noinspection MagicConstant
-            stmt.setFetchDirection(-1);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.setFetchDirection(-1));
+            assertThat(exception, allOf(
+                    not(instanceOf(SQLFeatureNotSupportedException.class)),
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_invalidFetchDirection, "-1"),
+                    sqlState(equalTo("HY106"))));
         }
     }
 
     @Test
-    public void testSetFetchDirection_statementClosed_throwsException() throws SQLException {
-        Statement stmt = con.createStatement();
-        stmt.close();
-        expectedException.expect(fbStatementClosedException());
+    void testSetFetchDirection_statementClosed_throwsException() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.close();
 
-        stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+            assertThrowsFbStatementClosed(() -> stmt.setFetchDirection(ResultSet.FETCH_FORWARD));
+        }
     }
 
     @Test
-    public void testGetFetchDirection_statementClosed_throwsException() throws SQLException {
-        Statement stmt = con.createStatement();
-        stmt.close();
-        expectedException.expect(fbStatementClosedException());
+    void testGetFetchDirection_statementClosed_throwsException() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.close();
 
-        stmt.getFetchDirection();
+            assertThrowsFbStatementClosed(stmt::getFetchDirection);
+        }
     }
 
     /**
-     * Tests if default value of {@link FBStatement#isPoolable()} is <code>false</code>.
+     * Tests if default value of {@link FBStatement#isPoolable()} is {@code false}.
      */
     @Test
-    public void testIsPoolable_default() throws SQLException {
+    void testIsPoolable_default() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertFalse("Unexpected value for isPoolable()", stmt.isPoolable());
+            assertFalse(stmt.isPoolable(), "Unexpected value for isPoolable()");
         }
     }
 
@@ -736,23 +706,23 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testIsPoolable_statementClosed() throws SQLException {
-        Statement stmt = con.createStatement();
-        stmt.close();
-        expectedException.expect(fbStatementClosedException());
+    void testIsPoolable_statementClosed() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.close();
 
-        stmt.isPoolable();
+            assertThrowsFbStatementClosed(stmt::isPoolable);
+        }
     }
 
     /**
      * Tests if calls to {@link org.firebirdsql.jdbc.FBStatement#setPoolable(boolean)} are ignored.
      */
     @Test
-    public void testSetPoolable_ignored() throws SQLException {
+    void testSetPoolable_ignored() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             stmt.setPoolable(true);
 
-            assertFalse("Expected isPoolable() to remain false", stmt.isPoolable());
+            assertFalse(stmt.isPoolable(), "Expected isPoolable() to remain false");
         }
     }
 
@@ -763,33 +733,33 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testSetPoolable_statementClosed() throws SQLException {
-        Statement stmt = con.createStatement();
-        stmt.close();
-        expectedException.expect(fbStatementClosedException());
+    void testSetPoolable_statementClosed() throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            stmt.close();
 
-        stmt.setPoolable(true);
+            assertThrowsFbStatementClosed(() -> stmt.setPoolable(true));
+        }
     }
 
     /**
      * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link org.firebirdsql.jdbc.FirebirdStatement}
-     * returns <code>true</code>.
+     * returns {@code true}.
      */
     @Test
-    public void testIsWrapperFor_FirebirdStatement() throws SQLException {
+    void testIsWrapperFor_FirebirdStatement() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertTrue("Expected to be wrapper for FirebirdStatement", stmt.isWrapperFor(FirebirdStatement.class));
+            assertTrue(stmt.isWrapperFor(FirebirdStatement.class), "Expected to be wrapper for FirebirdStatement");
         }
     }
 
     /**
      * Tests if {@link org.firebirdsql.jdbc.FBStatement#isWrapperFor(Class)} with {@link ResultSet}
-     * returns <code>false</code>.
+     * returns {@code false}.
      */
     @Test
-    public void testIsWrapperFor_ResultSet() throws SQLException {
+    void testIsWrapperFor_ResultSet() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            assertFalse("Expected not to be wrapper for ResultSet", stmt.isWrapperFor(ResultSet.class));
+            assertFalse(stmt.isWrapperFor(ResultSet.class), "Expected not to be wrapper for ResultSet");
         }
     }
 
@@ -798,7 +768,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * successfully unwraps.
      */
     @Test
-    public void testUnwrap_FirebirdStatement() throws SQLException {
+    void testUnwrap_FirebirdStatement() throws SQLException {
         try (Statement stmt = con.createStatement()) {
             FirebirdStatement firebirdStatement = stmt.unwrap(FirebirdStatement.class);
 
@@ -814,14 +784,10 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * throws an Exception.
      */
     @Test
-    public void testUnwrap_ResultSet() throws SQLException {
+    void testUnwrap_ResultSet() throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    message(equalTo("Unable to unwrap to class java.sql.ResultSet"))
-            ));
-
-            stmt.unwrap(ResultSet.class);
+            SQLException exception = assertThrows(SQLException.class, () -> stmt.unwrap(ResultSet.class));
+            assertThat(exception, message(equalTo("Unable to unwrap to class java.sql.ResultSet")));
         }
     }
 
@@ -829,8 +795,8 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if Firebird 1.5+ custom exception messages work.
      */
     @Test
-    public void testCustomExceptionMessage() throws Exception {
-        assumeTrue("Test requires custom exception messages", supportInfoFor(con).supportsCustomExceptionMessages());
+    void testCustomExceptionMessage() throws Exception {
+        assumeTrue(supportInfoFor(con).supportsCustomExceptionMessages(), "Test requires custom exception messages");
 
         //@formatter:off
         executeDDL(con, "CREATE EXCEPTION simple_exception 'Standard message'");
@@ -843,12 +809,9 @@ public class TestFBStatement extends FBJUnit4TestBase {
         //@formatter:on
 
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    message(containsString("; Custom message; "))
-            ));
-
-            stmt.execute("EXECUTE PROCEDURE testexception");
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> stmt.execute("EXECUTE PROCEDURE testexception"));
+            assertThat(exception, message(containsString("; Custom message; ")));
         }
     }
 
@@ -856,108 +819,102 @@ public class TestFBStatement extends FBJUnit4TestBase {
      * Tests if Firebird 3 parametrized exceptions are correctly rendered.
      */
     @Test
-    public void testParametrizedExceptions() throws Exception {
-        assumeTrue("Test requires parametrized exceptions", supportInfoFor(con).supportsParametrizedExceptions());
+    void testParametrizedExceptions() throws Exception {
+        assumeTrue(supportInfoFor(con).supportsParametrizedExceptions(), "Test requires parametrized exceptions");
         executeDDL(con, "CREATE EXCEPTION two_param_exception 'Param 1 ''@1'', Param 2 ''@2'''");
 
         try (Statement stmt = con.createStatement()) {
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    message(containsString("; Param 1 'value_1', Param 2 'value2'; "))
-            ));
-
-            //@formatter:off
-            stmt.execute(
-                "EXECUTE BLOCK AS " +
-                "BEGIN " +
-                "  EXCEPTION two_param_exception USING ('value_1', 'value2'); " +
-                "END"
+            SQLException exception = assertThrows(SQLException.class, () ->
+                    //@formatter:off
+                    stmt.execute(
+                        "EXECUTE BLOCK AS " +
+                        "BEGIN " +
+                        "  EXCEPTION two_param_exception USING ('value_1', 'value2'); " +
+                        "END"
+                    )
+                    //@formatter:on
             );
-            //@formatter:on
+            assertThat(exception, message(containsString("; Param 1 'value_1', Param 2 'value2'; ")));
         }
     }
 
     @Test
-    public void testRetrievingUpdateCountAndResultSet() throws Exception {
-        assumeTrue("Test requires UPDATE .. RETURNING .. support", supportInfoFor(con).supportsUpdateReturning());
+    void testRetrievingUpdateCountAndResultSet() throws Exception {
+        assumeTrue(supportInfoFor(con).supportsUpdateReturning(), "Test requires UPDATE .. RETURNING .. support");
         executeDDL(con, CREATE_TABLE);
 
         try (Statement stmt = con.createStatement()) {
             boolean isResultSet = stmt.execute("INSERT INTO test(col1) VALUES(5) RETURNING col1");
 
-            assertTrue("Expected first result to be a result set", isResultSet);
+            assertTrue(isResultSet, "Expected first result to be a result set");
             ResultSet rs = stmt.getResultSet();
-            assertNotNull("Result set should not be null", rs);
-            assertTrue("Expected a row in the result set", rs.next());
-            assertEquals("Unexpected value in result set", 5, rs.getInt(1));
-            assertFalse("Expected only one row", rs.next());
-            assertEquals("Update count should be -1 before first call to getMoreResults", -1, stmt.getUpdateCount());
+            assertNotNull(rs, "Result set should not be null");
+            assertTrue(rs.next(), "Expected a row in the result set");
+            assertEquals(5, rs.getInt(1), "Unexpected value in result set");
+            assertFalse(rs.next(), "Expected only one row");
+            assertEquals(-1, stmt.getUpdateCount(), "Update count should be -1 before first call to getMoreResults");
 
-            assertFalse("Next result should not be a result set", stmt.getMoreResults());
-            assertNull("Expected null result set", stmt.getResultSet());
-            assertEquals("Update count should be 1 after first call to getMoreResults", 1, stmt.getUpdateCount());
+            assertFalse(stmt.getMoreResults(), "Next result should not be a result set");
+            assertNull(stmt.getResultSet(), "Expected null result set");
+            assertEquals(1, stmt.getUpdateCount(), "Update count should be 1 after first call to getMoreResults");
 
-            assertFalse("Next result should not be a result set", stmt.getMoreResults());
-            assertNull("Expected null result set", stmt.getResultSet());
-            assertEquals("Update count should be -1 after second call to getMoreResults", -1, stmt.getUpdateCount());
+            assertFalse(stmt.getMoreResults(), "Next result should not be a result set");
+            assertNull(stmt.getResultSet(), "Expected null result set");
+            assertEquals(-1, stmt.getUpdateCount(), "Update count should be -1 after second call to getMoreResults");
         }
     }
 
     @Test
-    public void testEnquoteLiteral() throws Exception {
+    void testEnquoteLiteral() throws Exception {
         // Only testing dialect 3
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
-            assertEquals("No quotes", "'no quotes'", stmt.enquoteLiteral("no quotes"));
-            assertEquals("With quotes", "'with''quotes'", stmt.enquoteLiteral("with'quotes"));
+            assertEquals("'no quotes'", stmt.enquoteLiteral("no quotes"), "No quotes");
+            assertEquals("'with''quotes'", stmt.enquoteLiteral("with'quotes"), "With quotes");
         }
     }
 
     @Test
-    public void testIsSimpleIdentifier() throws Exception {
+    void testIsSimpleIdentifier() throws Exception {
         // Only testing dialect 3
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
-            assertTrue("Simple$Identifier_", stmt.isSimpleIdentifier("Simple$Identifier_"));
-            assertFalse("1Simple$Identifier_", stmt.isSimpleIdentifier("1Simple$Identifier_"));
-            assertFalse("", stmt.isSimpleIdentifier(""));
-            assertTrue("A234567890123456789012345678901", stmt.isSimpleIdentifier("A234567890123456789012345678901"));
+            assertTrue(stmt.isSimpleIdentifier("Simple$Identifier_"), "Simple$Identifier_");
+            assertFalse(stmt.isSimpleIdentifier("1Simple$Identifier_"), "1Simple$Identifier_");
+            assertFalse(stmt.isSimpleIdentifier(""), "(empty string)");
+            assertTrue(stmt.isSimpleIdentifier("A234567890123456789012345678901"), "A234567890123456789012345678901");
             FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
 
             String maxLengthIdentifier = generateIdentifier(supportInfo.maxIdentifierLengthCharacters());
-            assertTrue(maxLengthIdentifier, stmt.isSimpleIdentifier(maxLengthIdentifier));
+            assertTrue(stmt.isSimpleIdentifier(maxLengthIdentifier), maxLengthIdentifier);
 
             String tooLongIdentifier = generateIdentifier(supportInfo.maxIdentifierLengthCharacters() + 1);
-            assertFalse(tooLongIdentifier, stmt.isSimpleIdentifier(tooLongIdentifier));
+            assertFalse(stmt.isSimpleIdentifier(tooLongIdentifier), tooLongIdentifier);
         }
     }
 
     @Test
-    public void testEnquoteIdentifier() throws Exception {
+    void testEnquoteIdentifier() throws Exception {
         // Only testing dialect 3
         try (FBStatement stmt = (FBStatement) con.createStatement()) {
-            assertEquals("simple, alwaysQuote:false",
-                    "simple$identifier_", stmt.enquoteIdentifier("simple$identifier_", false));
-            assertEquals("simple, alwaysQuote:true",
-                    "\"simple$identifier_\"", stmt.enquoteIdentifier("simple$identifier_", true));
-            assertEquals("already quoted", "\"already quoted\"", stmt.enquoteIdentifier("\"already quoted\"", false));
-            assertEquals("needs quotes", "\"has space\"", stmt.enquoteIdentifier("has space", false));
-            assertEquals("needs quotes", "\"has\"\"quote\"", stmt.enquoteIdentifier("has\"quote", false));
+            assertEquals("simple$identifier_", stmt.enquoteIdentifier("simple$identifier_", false),
+                    "simple, alwaysQuote:false");
+            assertEquals("\"simple$identifier_\"", stmt.enquoteIdentifier("simple$identifier_", true),
+                    "simple, alwaysQuote:true");
+            assertEquals("\"already quoted\"", stmt.enquoteIdentifier("\"already quoted\"", false), "already quoted");
+            assertEquals("\"has space\"", stmt.enquoteIdentifier("has space", false), "needs quotes");
+            assertEquals("\"has\"\"quote\"", stmt.enquoteIdentifier("has\"quote", false), "needs quotes");
         }
     }
 
     @Test
-    public void verifySingletonStatementWithException() throws Exception {
-// @formatting:off
+    void verifySingletonStatementWithException() throws Exception {
+        // @formatting:off
         executeDDL(con, "create procedure singleton_error returns (intresult int) as "
                 + "begin "
                 + "  execute statement 'select cast(''x'' as integer) from rdb$database' into intresult;"
                 + "end");
-// @formatting:on
+        // @formatting:on
         try (Statement stmt = con.createStatement()) {
-            try {
-                stmt.execute("execute procedure singleton_error");
-            } catch (SQLException e) {
-                // expected
-            }
+            assertThrows(SQLException.class, () -> stmt.execute("execute procedure singleton_error"));
 
             stmt.getMoreResults();
             assertEquals(0, stmt.getUpdateCount());
@@ -965,12 +922,12 @@ public class TestFBStatement extends FBJUnit4TestBase {
     }
 
     @Test
-    public void verifyMultipleResultsWithUpdateCount_autocommit() throws Exception {
-        assumeTrue("Test requires execute block support", getDefaultSupportInfo().supportsExecuteBlock());
+    void verifyMultipleResultsWithUpdateCount_autocommit() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires execute block support");
         executeDDL(con, CREATE_TABLE);
         try (Statement stmt = con.createStatement()) {
             boolean hasResultSet = stmt.execute(
-// @formatter:off
+                    // @formatter:off
                     "execute block returns (intresult integer) as "
                     + "BEGIN "
                     + "  insert into test (col1) VALUES (1) returning col1 into intresult;"
@@ -978,17 +935,17 @@ public class TestFBStatement extends FBJUnit4TestBase {
                     + "  insert into test (col1) VALUES (2) returning col1 into intresult;"
                     + "  suspend;"
                     + "end"
-// @formatter:on
+                    // @formatter:on
             );
             assertTrue(hasResultSet);
 
             ResultSet rs = stmt.getResultSet();
             assertNotNull(rs);
-            assertTrue("first result", rs.next());
+            assertTrue(rs.next(), "first result");
             assertEquals(1, rs.getInt(1));
-            assertTrue("second result", rs.next());
+            assertTrue(rs.next(), "second result");
             assertEquals(2, rs.getInt(1));
-            assertFalse("no more results", rs.next());
+            assertFalse(rs.next(), "no more results");
 
             assertFalse(stmt.getMoreResults());
             assertEquals(2, stmt.getUpdateCount());
@@ -996,13 +953,13 @@ public class TestFBStatement extends FBJUnit4TestBase {
     }
 
     @Test
-    public void verifyMultipleResultsWithUpdateCount_noAutocommit() throws Exception {
-        assumeTrue("Test requires execute block support", getDefaultSupportInfo().supportsExecuteBlock());
+    void verifyMultipleResultsWithUpdateCount_noAutocommit() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires execute block support");
         executeDDL(con, CREATE_TABLE);
         con.setAutoCommit(false);
         try (Statement stmt = con.createStatement()) {
             boolean hasResultSet = stmt.execute(
-// @formatter:off
+                    // @formatter:off
                     "execute block returns (intresult integer) as "
                     + "BEGIN "
                     + "  insert into test (col1) VALUES (1) returning col1 into intresult;"
@@ -1010,17 +967,17 @@ public class TestFBStatement extends FBJUnit4TestBase {
                     + "  insert into test (col1) VALUES (2) returning col1 into intresult;"
                     + "  suspend;"
                     + "end"
-// @formatter:on
+                    // @formatter:on
             );
             assertTrue(hasResultSet);
 
             ResultSet rs = stmt.getResultSet();
             assertNotNull(rs);
-            assertTrue("first result", rs.next());
+            assertTrue(rs.next(), "first result");
             assertEquals(1, rs.getInt(1));
-            assertTrue("second result", rs.next());
+            assertTrue(rs.next(), "second result");
             assertEquals(2, rs.getInt(1));
-            assertFalse("no more results", rs.next());
+            assertFalse(rs.next(), "no more results");
 
             assertFalse(stmt.getMoreResults());
             assertEquals(2, stmt.getUpdateCount());
@@ -1035,7 +992,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
-                pstmt.executeUpdate();
+                pstmt.execute();
             }
         }
     }
@@ -1049,4 +1006,17 @@ public class TestFBStatement extends FBJUnit4TestBase {
         assert sb.length() == length;
         return sb.toString();
     }
+
+    static Stream<String> scrollableCursorPropertyValues() {
+        // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
+        // not support server-side scrollable cursors
+        return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
+    }
+
+    private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
+        return DriverManager.getConnection(getUrl(), props);
+    }
+
 }

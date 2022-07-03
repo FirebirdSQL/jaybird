@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DatabaseUrlFormatsTest {
 
     @RegisterExtension
-    static UsesDatabaseExtension usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+    static UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @ParameterizedTest
     @MethodSource

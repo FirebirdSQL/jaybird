@@ -58,7 +58,7 @@ class FBStatementFetcher implements FBFetcher {
     private int rowPosition;
 
     private boolean isEmpty;
-    private boolean isBeforeFirst;
+    private boolean isBeforeFirst = true;
     private boolean isFirst;
     private boolean isLast;
     private boolean isAfterLast;

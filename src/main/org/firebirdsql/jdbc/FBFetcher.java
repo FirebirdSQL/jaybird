@@ -190,4 +190,31 @@ interface FBFetcher {
      */
     void setFetcherListener(FBObjectListener.FetcherListener fetcherListener);
 
+    /**
+     * Is the current row a newly inserted row (through the owning result set)?
+     *
+     * @return {@code true} if the row is newly inserted, {@code false} otherwise
+     */
+    default boolean rowInserted() throws SQLException {
+        return false;
+    }
+
+    /**
+     * Is the current row a deleted row (through the owning result set)?
+     *
+     * @return {@code true} if the row is deleted, {@code false} otherwise
+     */
+    default boolean rowDeleted() throws SQLException {
+        return false;
+    }
+
+    /**
+     * Is the current row an updated row (through the owning result set)?
+     *
+     * @return {@code true} if the row is updated, {@code false} otherwise
+     */
+    default boolean rowUpdated() throws SQLException {
+        return false;
+    }
+
 }

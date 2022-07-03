@@ -70,12 +70,12 @@ class FBUpdatableFetcherTest {
     static RequireProtocolExtension requireProtocolExtension = requireProtocolVersion(18);
 
     @RegisterExtension
-    static UsesDatabaseExtension usesDatabase = usesDatabaseForAll(
+    static UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = usesDatabaseForAll(
             "create table scrolltest (id integer primary key, colval varchar(50))");
 
     private FbWireDatabase db;
     private final SimpleFetcherListener listener = new SimpleFetcherListener();
-    private final RowValue deletedRowMarker = RowValue.of((byte[]) null, null);
+    private final RowValue deletedRowMarker = RowValue.deletedRowMarker(2);
 
     @SuppressWarnings("resource")
     @BeforeEach
@@ -229,7 +229,9 @@ class FBUpdatableFetcherTest {
             fetcher.absolute(5);
             assertAtRow(fetcher, 5);
             assertRowValue(row++, TestValue.of(5));
-            fetcher.updateRow(toRowValue(new TestValue(5, "updated")));
+            RowValue updated5 = toRowValue(new TestValue(5, "updated"));
+            fetcher.updateRow(updated5);
+            assertRowValue(row++, updated5);
 
             fetcher.absolute(-1);
             assertAtRow(fetcher, 10);
@@ -243,6 +245,7 @@ class FBUpdatableFetcherTest {
             assertAtRow(fetcher, 2);
             assertRowValue(row++, TestValue.of(2));
             fetcher.deleteRow();
+            assertRowValue(row++, deletedRowMarker);
 
             fetcher.absolute(15);
             assertAfterLast(fetcher);
@@ -277,7 +280,9 @@ class FBUpdatableFetcherTest {
             fetcher.relative(5);
             assertAtRow(fetcher, 5);
             assertRowValue(row++, TestValue.of(5));
-            fetcher.updateRow(toRowValue(new TestValue(5, "updated")));
+            RowValue updated5 = toRowValue(new TestValue(5, "updated"));
+            fetcher.updateRow(updated5);
+            assertRowValue(row++, updated5);
 
             fetcher.relative(5);
             assertAtRow(fetcher, 10);
@@ -291,6 +296,7 @@ class FBUpdatableFetcherTest {
             assertAtRow(fetcher, 2);
             assertRowValue(row++, TestValue.of(2));
             fetcher.deleteRow();
+            assertRowValue(row++, deletedRowMarker);
 
             fetcher.relative(15);
             assertAfterLast(fetcher);
@@ -364,6 +370,7 @@ class FBUpdatableFetcherTest {
         for (int idValue = previousValue + 1; idValue <= endValue; idValue++) {
             fetcher.insertRow(toRowValue(TestValue.of(idValue)));
         }
+        listener.clearRows();
         return endValue;
     }
 

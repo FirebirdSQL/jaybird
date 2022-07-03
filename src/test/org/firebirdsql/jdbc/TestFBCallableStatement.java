@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,23 +18,33 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
+import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementOnlyMethod;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * This test case checks callable statements by executing procedure through
@@ -45,7 +53,11 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class TestFBCallableStatement extends FBJUnit4TestBase {
+class TestFBCallableStatement {
+
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
+
     //@formatter:off
     private static final String CREATE_PROCEDURE =
             "CREATE PROCEDURE factorial( "
@@ -186,25 +198,21 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
     private Connection con;
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         con = getConnectionViaDriverManager();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         closeQuietly(con);
     }
 
     @Test
-    public void testRun() throws Exception {
+    void testRun() throws Exception {
         executeDDL(con, CREATE_PROCEDURE);
 
-        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE)) {
             cstmt.registerOutParameter(3, Types.INTEGER);
             cstmt.registerOutParameter(4, Types.INTEGER);
             ((FirebirdCallableStatement) cstmt).setSelectableProcedure(false);
@@ -212,58 +220,51 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cstmt.setInt(2, 0);
             cstmt.execute();
             int ans = cstmt.getInt(4);
-            assertEquals("Wrong answer", 120, ans);
-        } finally {
-            cstmt.close();
+            assertEquals(120, ans, "Wrong answer");
         }
 
-        PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE);
-        try {
+        try (PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE)) {
             stmt.setInt(1, 5);
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-            int result = rs.getInt(2);
-            assertEquals("Wrong result", 120, result);
+            try (ResultSet rs = stmt.executeQuery()) {
+                assertTrue(rs.next(), "Should have at least one row");
+                int result = rs.getInt(2);
+                assertEquals(120, result, "Wrong result");
 
-            assertFalse("Should have exactly one row.", rs.next());
-            rs.close();
-        } finally {
-            stmt.close();
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
         }
 
-        CallableStatement cs = con.prepareCall(CALL_SELECT_PROCEDURE);
-        try {
+        try (CallableStatement cs = con.prepareCall(CALL_SELECT_PROCEDURE)) {
             ((FirebirdCallableStatement) cs).setSelectableProcedure(true);
             cs.registerOutParameter(2, Types.INTEGER);
             cs.registerOutParameter(3, Types.INTEGER);
             cs.setInt(1, 5);
             cs.execute();
-            ResultSet rs = cs.getResultSet();
-            assertTrue("Should have at least one row", rs.next());
-            int result = cs.getInt(3);
-            assertEquals("Wrong result", 1, result);
+            try (ResultSet rs = cs.getResultSet()) {
+                assertTrue(rs.next(), "Should have at least one row");
+                int result = cs.getInt(3);
+                assertEquals(1, result, "Wrong result");
 
-            int counter = 1;
-            while (rs.next()) {
-                assertEquals(rs.getInt(2), cs.getInt(3));
-                counter++;
+                int counter = 1;
+                while (rs.next()) {
+                    assertEquals(rs.getInt(2), cs.getInt(3));
+                    counter++;
+                }
+
+                assertEquals(6, counter, "Should have 6 rows");
             }
-
-            assertEquals("Should have 6 rows", 6, counter);
-            rs.close();
-        } finally {
-            cs.close();
         }
     }
 
     @Test
-    public void testRun_emp_cs() throws Exception {
+    void testRun_emp_cs() throws Exception {
+        con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
         executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+        con.setAutoCommit(true);
 
-        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
             cstmt.setString(3, "Smith");
@@ -284,69 +285,55 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cstmt.setString(3, "Smith");
             cstmt.setString(4, "Automap");
             cstmt.execute();
-        } finally {
-            cstmt.close();
         }
 
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT)) {
             cstmt.setInt(1, 44);
-            ResultSet rs = cstmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-            assertEquals("First row value must be DGPII", "DGPII", rs.getString(1));
+            try (ResultSet rs = cstmt.executeQuery()) {
+                assertTrue(rs.next(), "Should have at least one row");
+                assertEquals("DGPII", rs.getString(1), "First row value must be DGPII");
+            }
 
             cstmt.setInt(1, 22);
-            rs = cstmt.executeQuery();
-            assertTrue("Should have one row", rs.next());
-            assertEquals("First row value must be OTHER", "OTHER", rs.getString(1));
-            assertFalse("Should have one row", rs.next());
-
-            rs.close();
-        } finally {
-            cstmt.close();
+            try (ResultSet rs = cstmt.executeQuery()) {
+                assertTrue(rs.next(), "Should have one row");
+                assertEquals("OTHER", rs.getString(1), "First row value must be OTHER");
+                assertFalse(rs.next(), "Should have one row");
+            }
         }
 
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT)) {
             cstmt.setInt(1, 44);
             cstmt.execute();
-            assertEquals("First row value must be DGPII", "DGPII", cstmt.getString(1));
+            assertEquals("DGPII", cstmt.getString(1), "First row value must be DGPII");
 
             cstmt.setInt(1, 22);
             cstmt.execute();
-            assertEquals("First row value must be OTHER", "OTHER", cstmt.getString(1));
-
-        } finally {
-            cstmt.close();
+            assertEquals("OTHER", cstmt.getString(1), "First row value must be OTHER");
         }
 
-        con.setAutoCommit(true);
-        PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE_EMP_SELECT);
-        try {
+        try (PreparedStatement stmt = con.prepareStatement(SELECT_PROCEDURE_EMP_SELECT)) {
             stmt.setInt(1, 44);
             stmt.execute();
-            ResultSet rs = stmt.getResultSet();
-            int count = 0;
-            for (String expectedValue : new String[] {"DGPII", "HWRII", "VBASE"}) {
-                count++;
-                assertTrue(String.format("Expected row %d", count), rs.next());
-                assertEquals(String.format("Unexpected value for row %d", count), expectedValue, rs.getString(1));
+            try (ResultSet rs = stmt.getResultSet()) {
+                int count = 0;
+                for (String expectedValue : new String[] { "DGPII", "HWRII", "VBASE" }) {
+                    count++;
+                    assertTrue(rs.next(), String.format("Expected row %d", count));
+                    assertEquals(expectedValue, rs.getString(1), String.format("Unexpected value for row %d", count));
+                }
+                assertFalse(rs.next(), "Should have no more rows");
             }
-            assertFalse("Should have no more rows", rs.next());
 
             stmt.setInt(1, 22);
-            rs = stmt.executeQuery();
-            assertTrue("Should have one row", rs.next());
-            assertEquals("First row value must be OTHER", "OTHER", rs.getString(1));
-            assertFalse("Should have one row", rs.next());
-
-            rs.close();
-        } finally {
-            stmt.close();
+            try (ResultSet rs = stmt.executeQuery()) {
+                assertTrue(rs.next(), "Should have one row");
+                assertEquals("OTHER", rs.getString(1), "First row value must be OTHER");
+                assertFalse(rs.next(), "Should have one row");
+            }
         }
 
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_1)) {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
             cstmt.setString(3, "Smith");
@@ -367,12 +354,9 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cstmt.setString(3, "Smith");
             cstmt.setString(4, "Automap");
             cstmt.execute();
-        } finally {
-            cstmt.close();
         }
 
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT_SPACES)) {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
             cstmt.setString(3, "Smith");
@@ -383,105 +367,85 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cstmt.setString(3, "Jenner");
             cstmt.setString(4, "Video Database");
             cstmt.execute();
-        } finally {
-            cstmt.close();
         }
     }
 
     @Test
-    public void testFatalError() throws Exception {
+    void testFatalError() throws Exception {
         executeDDL(con, CREATE_PROCEDURE);
 
-        PreparedStatement stmt = con.prepareStatement(EXECUTE_PROCEDURE_AS_STMT);
-        try {
+        try (PreparedStatement stmt = con.prepareStatement(EXECUTE_PROCEDURE_AS_STMT)) {
             stmt.setInt(1, 5);
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
-            int result = rs.getInt(2);
-            assertEquals("Wrong result", 120, result);
+            try (ResultSet rs = stmt.executeQuery()) {
+                assertTrue(rs.next(), "Should have at least one row");
+                int result = rs.getInt(2);
+                assertEquals(120, result, "Wrong result");
 
-            assertFalse("Should have exactly one row.", rs.next());
-            rs.close();
-        } finally {
-            stmt.close();
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
         }
     }
 
     @Test
-    public void testOutProcedure() throws Exception {
+    void testOutProcedure() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
             stmt.execute();
-            assertEquals("Should return correct value", 1, stmt.getInt(2));
-        } finally {
-            stmt.close();
+            assertEquals(1, stmt.getInt(2), "Should return correct value");
         }
     }
 
     @Test
-    public void testOutProcedure1() throws Exception {
+    void testOutProcedure1() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_1)) {
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.setInt(2, 1);
             stmt.execute();
-            assertEquals("Should return correct value", 1, stmt.getInt(1));
-        } finally {
-            stmt.close();
+            assertEquals(1, stmt.getInt(1), "Should return correct value");
         }
     }
 
     @Test
-    public void testOutProcedureWithConst() throws Exception {
+    void testOutProcedureWithConst() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST)) {
             stmt.execute();
-            assertEquals("Should return correct value", "test", stmt.getString(1));
-        } finally {
-            stmt.close();
+            assertEquals("test", stmt.getString(1), "Should return correct value");
         }
     }
 
     @Test
-    public void testOutProcedureWithConstWithQuestionMark() throws Exception {
+    void testOutProcedureWithConstWithQuestionMark() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE_CONST_WITH_QUESTION)) {
             stmt.execute();
-            assertEquals("Should return correct value", "test?", stmt.getString(1));
-        } finally {
-            stmt.close();
+            assertEquals("test?", stmt.getString(1), "Should return correct value");
         }
     }
 
     @Test
-    public void testInOutProcedure() throws Exception {
+    void testInOutProcedure() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE)) {
             stmt.clearParameters();
             stmt.setInt(1, 1);
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.execute();
-            assertEquals("Should return correct value", 1, stmt.getInt(1));
+            assertEquals(1, stmt.getInt(1), "Should return correct value");
 
             stmt.clearParameters();
             stmt.setInt(1, 2);
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.execute();
-            assertEquals("Should return correct value", 2, stmt.getInt(1));
-        } finally {
-            stmt.close();
+            assertEquals(2, stmt.getInt(1), "Should return correct value");
         }
     }
 
@@ -490,14 +454,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * parameters. Bug found and reported by Stanislav Bernatsky.
      */
     @Test
-    public void testProcedureWithoutParams() throws Exception {
+    void testProcedureWithoutParams() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS)) {
             stmt.execute();
-        } finally {
-            stmt.close();
         }
     }
 
@@ -506,14 +467,11 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * parameters but with braces in call. Reported by Ben (vmdd_tech).
      */
     @Test
-    public void testProcedureWithoutParams1() throws Exception {
+    void testProcedureWithoutParams1() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_1)) {
             stmt.execute();
-        } finally {
-            stmt.close();
         }
     }
 
@@ -523,30 +481,28 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * name and braces. Reported by Ben (vmdd_tech).
      */
     @Test
-    public void testProcedureWithoutParams2() throws Exception {
+    void testProcedureWithoutParams2() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_WITHOUT_PARAMS);
 
-        CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_2)) {
             stmt.execute();
-        } finally {
-            stmt.close();
         }
 
         // and now test EXECUTE PROCEDURE syntax
-        stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3);
-        try {
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_WITHOUT_PARAMS_3)) {
             stmt.execute();
-        } finally {
-            stmt.close();
         }
-
     }
 
-    @Test
-    public void testBatch() throws Exception {
+    @ParameterizedTest
+    @MethodSource("scrollableCursorPropertyValues")
+    void testBatch(String scrollableCursorPropertyValue) throws Exception {
+        con.close();
+        con = createConnection(scrollableCursorPropertyValue);
+        con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+        con.setAutoCommit(true);
 
         try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
             cstmt.setInt(1, 44);
@@ -575,7 +531,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             try (Statement stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
                 ResultSet rs = stmt.executeQuery("SELECT * FROM employee_project");
                 rs.last();
-                assertEquals("Should find 4 records.", 4, rs.getRow());
+                assertEquals(4, rs.getRow(), "Should find 4 records");
 
                 cstmt.setInt(1, 22);
                 cstmt.setString(2, "VBASE");
@@ -589,31 +545,27 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
                 cstmt.setString(4, "Failure upgrade");
                 cstmt.addBatch();
 
-                try {
-                    cstmt.executeBatch();
-                    fail("Should throw an error.");
-                } catch (SQLException ex) {
-                    // everything is ok
-                }
+                assertThrows(SQLException.class, cstmt::executeBatch);
 
                 rs = stmt.executeQuery("SELECT * FROM employee_project");
                 rs.last();
-                if (((FirebirdConnection) con).isUseFirebirdAutoCommit()) {
-                    assertEquals("Should find 5 records.", 5, rs.getRow());
+                if (con.unwrap(FirebirdConnection.class).isUseFirebirdAutoCommit()) {
+                    assertEquals(5, rs.getRow(), "Should find 5 records");
                 } else {
-                    assertEquals("Should find 4 records.", 4, rs.getRow());
+                    assertEquals(4, rs.getRow(), "Should find 4 records");
                 }
             }
         }
     }
 
     @Test
-    public void testBatchResultSet() throws Exception {
+    void testBatchResultSet() throws Exception {
+        con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+        con.setAutoCommit(true);
 
-        CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
             cstmt.setInt(1, 44);
             cstmt.setString(2, "DGPII");
             cstmt.setString(3, "Smith");
@@ -634,22 +586,14 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cstmt.setString(3, "Smith");
             cstmt.setString(4, "Automap");
             cstmt.execute();
-        } finally {
-            cstmt.close();
         }
 
-        cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
-        try {
+        try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT)) {
             cstmt.setInt(1, 44);
             cstmt.addBatch();
             cstmt.setInt(1, 22);
             cstmt.addBatch();
-            cstmt.executeBatch();
-            fail("Result sets not allowed in batch execution.");
-        } catch (BatchUpdateException e) {
-            //Do nothing.  Exception should be thrown.
-        } finally {
-            cstmt.close();
+            assertThrows(BatchUpdateException.class, cstmt::executeBatch);
         }
     }
 
@@ -657,19 +601,17 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * Test Batch.  IN-OUT parameters are prohibited in batch execution.
      */
     @Test
-    public void testBatchInOut() throws Exception {
-        CallableStatement stmt = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
-        try {
+    void testBatchInOut() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE)) {
             stmt.clearParameters();
             stmt.setInt(1, 1);
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.addBatch();
 
-            expectedException.expect(BatchUpdateException.class);
-
-            stmt.executeBatch();
-        } finally {
-            stmt.close();
+            BatchUpdateException exception = assertThrows(BatchUpdateException.class, stmt::executeBatch);
+            assertThat(exception,
+                    message(containsString("Statements executed as batch should not produce a result set")));
         }
     }
 
@@ -677,18 +619,16 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * Test Batch.  OUT parameters are prohibited in batch execution.
      */
     @Test
-    public void testBatchOut() throws Exception {
-        CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
+    void testBatchOut() throws Exception {
+        executeDDL(con, CREATE_SIMPLE_OUT_PROC);
+        try (CallableStatement stmt = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
             stmt.setInt(1, 1);
             stmt.registerOutParameter(2, Types.INTEGER);
             stmt.addBatch();
 
-            expectedException.expect(BatchUpdateException.class);
-
-            stmt.executeBatch();
-        } finally {
-            stmt.close();
+            BatchUpdateException exception = assertThrows(BatchUpdateException.class, stmt::executeBatch);
+            assertThat(exception,
+                    message(containsString("Statements executed as batch should not produce a result set")));
         }
     }
 
@@ -697,15 +637,13 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * RDB$PROCEDURE_TYPE field. This test is only run starting from Firebird 2.1.
      */
     @Test
-    public void testAutomaticSetSelectableProcedure_Selectable() throws SQLException {
-        assumeTrue("Firebird version does not support RDB$PROCEDURE_TYPE", databaseEngineHasSelectabilityInfo());
+    void testAutomaticSetSelectableProcedure_Selectable() throws SQLException {
+        assumeTrue(getDefaultSupportInfo().hasProcedureTypeColumn(),
+                "Firebird version does not support RDB$PROCEDURE_TYPE");
         executeDDL(con, CREATE_PROCEDURE);
 
-        FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE);
-        try {
-            assertTrue("Expected selectable procedure", cs.isSelectableProcedure());
-        } finally {
-            cs.close();
+        try (FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(CALL_SELECT_PROCEDURE)) {
+            assertTrue(cs.isSelectableProcedure(), "Expected selectable procedure");
         }
     }
 
@@ -714,63 +652,51 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * RDB$PROCEDURE_TYPE field. This test is only run starting from Firebird 2.1.
      */
     @Test
-    public void testAutomaticSetSelectableProcedure_Executable() throws SQLException {
-        assumeTrue("Firebird version does not support RDB$PROCEDURE_TYPE", databaseEngineHasSelectabilityInfo());
-
-        FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
-        try {
-            assertFalse("Expected executable procedure (not-selectable)", cs.isSelectableProcedure());
-        } finally {
-            cs.close();
+    void testAutomaticSetSelectableProcedure_Executable() throws SQLException {
+        assumeTrue(getDefaultSupportInfo().hasProcedureTypeColumn(),
+                "Firebird version does not support RDB$PROCEDURE_TYPE");
+        con.setAutoCommit(false);
+        executeDDL(con, CREATE_EMPLOYEE_PROJECT);
+        executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
+        con.setAutoCommit(true);
+        try (FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
+            assertFalse(cs.isSelectableProcedure(), "Expected executable procedure (not-selectable)");
         }
     }
 
     @Test
-    public void testAutomaticSetSelectableProcedureAfterMetaUpdate() throws SQLException {
-        assumeTrue("Firebird version does not support RDB$PROCEDURE_TYPE", databaseEngineHasSelectabilityInfo());
-
+    void testAutomaticSetSelectableProcedureAfterMetaUpdate() throws SQLException {
+        assumeTrue(getDefaultSupportInfo().hasProcedureTypeColumn(),
+                "Firebird version does not support RDB$PROCEDURE_TYPE");
+        executeDDL(con, CREATE_PROCEDURE);
+        //@formatter:off
         final String CREATE_SIMPLE_PROC =
                 "CREATE PROCEDURE MULT (A INTEGER, B INTEGER) RETURNS (C INTEGER)"
                 + "AS BEGIN "
                 + "    C = A * B;"
                 + "    SUSPEND;"
                 + "END";
+        //@formatter:on
 
         con.setAutoCommit(false);
         CallableStatement callableStatement = con.prepareCall(CALL_SELECT_PROCEDURE);
         callableStatement.close();
 
-        Statement stmt = con.createStatement();
-
-        stmt.execute(CREATE_SIMPLE_PROC);
+        try (Statement stmt = con.createStatement()) {
+            stmt.execute(CREATE_SIMPLE_PROC);
+        }
         con.commit();
 
-        try {
-            FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall("{call mult(?, ?)}");
-            try {
-                assertTrue("Expected selectable procedure", cs.isSelectableProcedure());
-            } finally {
-                cs.close();
-            }
-        } finally {
-            stmt.close();
+        try (FirebirdCallableStatement cs = (FirebirdCallableStatement) con.prepareCall("{call mult(?, ?)}")) {
+            assertTrue(cs.isSelectableProcedure(), "Expected selectable procedure");
         }
     }
 
-    private boolean databaseEngineHasSelectabilityInfo() throws SQLException {
-        DatabaseMetaData metaData = con.getMetaData();
-        int majorVersion = metaData.getDatabaseMajorVersion();
-        int minorVersion = metaData.getDatabaseMinorVersion();
-
-        return majorVersion > 2 || majorVersion == 2 && minorVersion >= 1;
-    }
-
     @Test
-    public void testJdbc181() throws Exception {
+    void testJdbc181() throws Exception {
         executeDDL(con, CREATE_PROCEDURE);
 
-        CallableStatement cs = con.prepareCall("{call factorial(?, ?)}"); //con.prepareStatement("EXECUTE PROCEDURE factorial(?, ?)");
-        try {
+        try (CallableStatement cs = con.prepareCall("{call factorial(?, ?)}")) {
             cs.setInt(1, 5);
             cs.setInt(2, 1);
             ResultSet rs = cs.executeQuery();
@@ -783,18 +709,14 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
                 if (counter > 0)
                     factorial *= counter;
             }
-        } finally {
-            cs.close();
         }
     }
 
     /**
      * Closing a statement twice should not result in an Exception.
-     *
-     * @throws SQLException
      */
     @Test
-    public void testDoubleClose() throws SQLException {
+    void testDoubleClose() throws SQLException {
         CallableStatement stmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT);
         stmt.close();
         stmt.close();
@@ -806,15 +728,12 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * <p>
      * JDBC 4.1 feature
      * </p>
-     *
-     * @throws SQLException
      */
     @Test
-    public void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
+    void testCloseOnCompletion_StatementClosed_afterImplicitResultSetClose() throws SQLException {
         executeDDL(con, CREATE_PROCEDURE);
 
-        FBCallableStatement stmt = (FBCallableStatement) con.prepareCall("{call factorial(?, ?)}");
-        try {
+        try (FBCallableStatement stmt = (FBCallableStatement) con.prepareCall("{call factorial(?, ?)}")) {
             stmt.closeOnCompletion();
             stmt.setInt(1, 5);
             stmt.setInt(2, 1);
@@ -826,147 +745,101 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
                 assertEquals(count, rs.getInt(1));
                 count++;
             }
-            assertTrue("Resultset should be closed (automatically closed after last result read)", rs.isClosed());
-            assertTrue("Statement should be closed", stmt.isClosed());
-        } finally {
-            stmt.close();
+            assertTrue(rs.isClosed(), "Resultset should be closed (automatically closed after last result read)");
+            assertTrue(stmt.isClosed(), "Statement should be closed");
         }
     }
 
     // Other closeOnCompletion behavior considered to be sufficiently tested in TestFBStatement
 
     /**
-     * The method {@link java.sql.Statement#executeQuery(String)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#executeQuery(String)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecuteQuery_String() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.executeQuery("SELECT * FROM test_blob");
-        } finally {
-            cs.close();
+    void testUnsupportedExecuteQuery_String() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.executeQuery("SELECT * FROM test_blob"));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#executeUpdate(String)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#executeUpdate(String)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecuteUpdate_String() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.executeUpdate("SELECT * FROM test_blob");
-        } finally {
-            cs.close();
+    void testUnsupportedExecuteUpdate_String() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.executeUpdate("SELECT * FROM test_blob"));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#execute(String)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#execute(String)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecute_String() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.execute("SELECT * FROM test_blob");
-        } finally {
-            cs.close();
+    void testUnsupportedExecute_String() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.execute("SELECT * FROM test_blob"));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#addBatch(String)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#addBatch(String)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedAddBatch_String() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.addBatch("SELECT * FROM test_blob");
-        } finally {
-            cs.close();
+    void testUnsupportedAddBatch_String() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.addBatch("SELECT * FROM test_blob"));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#executeUpdate(String, int)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#executeUpdate(String, int)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecuteUpdate_String_int() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
-        } finally {
-            cs.close();
+    void testUnsupportedExecuteUpdate_String_int() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.executeUpdate("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.executeUpdate("SELECT * FROM test_blob", new int[] { 1 });
-        } finally {
-            cs.close();
+    void testUnsupportedExecuteUpdate_String_intArr() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.executeUpdate("SELECT * FROM test_blob", new int[] { 1 }));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#executeUpdate(String, String[])} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#executeUpdate(String, String[])} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.executeUpdate("SELECT * FROM test_blob", new String[] { "col" });
-        } finally {
-            cs.close();
+    void testUnsupportedExecuteUpdate_String_StringArr() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(
+                    () -> cs.executeUpdate("SELECT * FROM test_blob", new String[] { "col" }));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#execute(String, int)} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#execute(String, int)} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecute_String_int() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS);
-        } finally {
-            cs.close();
+    void testUnsupportedExecute_String_int() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.execute("SELECT * FROM test_blob", Statement.NO_GENERATED_KEYS));
         }
     }
 
     /**
-     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallabeStatement.
+     * The method {@link java.sql.Statement#execute(String, int[])} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecute_String_intArr() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.execute("SELECT * FROM test_blob", new int[] { 1 });
-        } finally {
-            cs.close();
+    void testUnsupportedExecute_String_intArr() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.execute("SELECT * FROM test_blob", new int[] { 1 }));
         }
     }
 
@@ -974,14 +847,9 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * The method {@link java.sql.Statement#execute(String, String[])} should not work on CallableStatement.
      */
     @Test
-    public void testUnsupportedExecute_String_StringArr() throws Exception {
-        CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
-        try {
-            expectedException.expect(fbStatementOnlyMethodException());
-
-            cs.execute("SELECT * FROM test_blob", new String[] { "col" });
-        } finally {
-            cs.close();
+    void testUnsupportedExecute_String_StringArr() throws Exception {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE)) {
+            assertThrowsFbStatementOnlyMethod(() -> cs.execute("SELECT * FROM test_blob", new String[] { "col" }));
         }
     }
 
@@ -989,20 +857,19 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * Basic test of {@link FBCallableStatement#getMetaData()}.
      */
     @Test
-    public void testGetMetaData() throws Exception {
+    void testGetMetaData() throws Exception {
+        con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+        con.setAutoCommit(true);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT);
-        try {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_EMP_SELECT)) {
             ResultSetMetaData metaData = cs.getMetaData();
 
-            assertEquals("columnCount", 1, metaData.getColumnCount());
-            assertEquals("columnLabel", "PROJ_ID", metaData.getColumnLabel(1));
-            assertEquals("columnName", "PROJ_ID", metaData.getColumnName(1));
+            assertEquals(1, metaData.getColumnCount(), "columnCount");
+            assertEquals("PROJ_ID", metaData.getColumnLabel(1), "columnLabel");
+            assertEquals("PROJ_ID", metaData.getColumnName(1), "columnName");
             // Basic checking, rest should be covered by TestFBResultSetMetaData.
-        } finally {
-            cs.close();
         }
     }
 
@@ -1010,60 +877,49 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * Calling {@link java.sql.CallableStatement#getMetaData()} on a closed statement should throw an exception.
      */
     @Test
-    public void testGetMetaData_statementClosed() throws Exception {
+    void testGetMetaData_statementClosed() throws Exception {
         CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_PROCEDURE);
         cs.close();
 
-        expectedException.expect(fbStatementClosedException());
-
-        cs.getMetaData();
+        assertThrowsFbStatementClosed(cs::getMetaData);
     }
 
     @Test
-    public void testExecuteSelectableProcedureNoParameters_call_noBraces() throws Exception {
+    void testExecuteSelectableProcedureNoParameters_call_noBraces() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS);
-        try {
-            assertTrue("Expected ResultSet", cs.execute());
+        try (CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS)) {
+            assertTrue(cs.execute(), "Expected ResultSet");
             ResultSet rs = cs.getResultSet();
-            assertNotNull("Expected ResultSet", rs);
-            assertTrue("Expected at least one row", rs.next());
+            assertNotNull(rs, "Expected ResultSet");
+            assertTrue(rs.next(), "Expected at least one row");
             assertEquals("abc", rs.getString("proj_id"));
-        } finally {
-            cs.close();
         }
     }
 
     @Test
-    public void testExecuteSelectableProcedureNoParameters_call_emptyBraces() throws Exception {
+    void testExecuteSelectableProcedureNoParameters_call_emptyBraces() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1);
-        try {
-            assertTrue("Expected ResultSet", cs.execute());
+        try (CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_1)) {
+            assertTrue(cs.execute(), "Expected ResultSet");
             ResultSet rs = cs.getResultSet();
-            assertNotNull("Expected ResultSet", rs);
-            assertTrue("Expected at least one row", rs.next());
+            assertNotNull(rs, "Expected ResultSet");
+            assertTrue(rs.next(), "Expected at least one row");
             assertEquals("abc", rs.getString("proj_id"));
-        } finally {
-            cs.close();
         }
     }
 
     @Test
-     public void testExecuteSelectableProcedureNoParameters_call_emptyBraces_withWhitespace() throws Exception {
+    void testExecuteSelectableProcedureNoParameters_call_emptyBraces_withWhitespace() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_SELECT_WITHOUT_PARAMS);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2);
-        try {
-            assertTrue("Expected ResultSet", cs.execute());
+        try (CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_SELECT_WITHOUT_PARAMS_2)) {
+            assertTrue(cs.execute(), "Expected ResultSet");
             ResultSet rs = cs.getResultSet();
-            assertNotNull("Expected ResultSet", rs);
-            assertTrue("Expected at least one row", rs.next());
+            assertNotNull(rs, "Expected ResultSet");
+            assertTrue(rs.next(), "Expected at least one row");
             assertEquals("abc", rs.getString("proj_id"));
-        } finally {
-            cs.close();
         }
     }
 
@@ -1079,22 +935,19 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testExecutableProcedureAccessResultSetFirst_thenGetter_shouldWork() throws Exception {
+    void testExecutableProcedureAccessResultSetFirst_thenGetter_shouldWork() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE);
-        try {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_IN_OUT_PROCEDURE)) {
             cs.setString(1, "paramvalue");
-            assertTrue("Expected ResultSet", cs.execute());
+            assertTrue(cs.execute(), "Expected ResultSet");
             ResultSet rs = cs.getResultSet();
-            assertNotNull("Expected ResultSet", rs);
-            assertTrue("Expected at least one row", rs.next());
+            assertNotNull(rs, "Expected ResultSet");
+            assertTrue(rs.next(), "Expected at least one row");
             assertEquals("paramvalue", rs.getString("outParam"));
             rs.close();
 
             assertEquals("paramvalue", cs.getString(1));
-        } finally {
-            cs.close();
         }
     }
 
@@ -1105,22 +958,19 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testExecutableProcedureBlobResult_shouldGetNonEmptyValue() throws Exception {
+    void testExecutableProcedureBlobResult_shouldGetNonEmptyValue() throws Exception {
         executeDDL(con, CREATE_PROCEDURE_BLOB_RESULT);
 
-        CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_BLOB_RESULT);
-        try {
+        try (CallableStatement cs = con.prepareCall(EXECUTE_PROCEDURE_BLOB_RESULT)) {
             cs.execute();
             String value = cs.getString(1);
-            assertNotNull("Expected non-null value", value);
-            assertTrue("Expected non-empty value", value.trim().length() > 0);
-        } finally {
-            cs.close();
+            assertNotNull(value, "Expected non-null value");
+            assertThat("Expected non-empty value", value.trim(), not(emptyString()));
         }
     }
 
     @Test
-    public void testExecutableProcedureGetMetaDataOutParameterSpecifiedValueNotSet() throws Exception {
+    void testExecutableProcedureGetMetaDataOutParameterSpecifiedValueNotSet() throws Exception {
         executeDDL(con, CREATE_SIMPLE_OUT_PROC);
 
         try (CallableStatement cs = con.prepareCall(EXECUTE_SIMPLE_OUT_WITH_OUT_PARAM)) {
@@ -1133,10 +983,12 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testIgnoreProcedureType() throws Exception{
+    void testIgnoreProcedureType() throws Exception {
+        con.setAutoCommit(false);
         executeCreateTable(con, CREATE_EMPLOYEE_PROJECT);
         executeDDL(con, CREATE_PROCEDURE_EMP_INSERT);
         executeDDL(con, CREATE_PROCEDURE_EMP_SELECT);
+        con.setAutoCommit(true);
 
         try (CallableStatement cstmt = con.prepareCall(EXECUTE_PROCEDURE_EMP_INSERT)) {
             cstmt.setInt(1, 44);
@@ -1154,14 +1006,14 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
 
         // First verify with default connection that procedure is selectable
         try (CallableStatement cstmt = con.prepareCall("{call get_emp_proj(?)}")) {
-            assertTrue("Expected procedure inferred as selectable",
-                    cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure());
+            assertTrue(cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure(),
+                    "Expected procedure inferred as selectable");
             cstmt.setInt(1, 44);
             try (ResultSet rs = cstmt.executeQuery()) {
-                assertTrue("Should have at least one row", rs.next());
-                assertEquals("First row value must be DGPII", "DGPII", rs.getString(1));
-                assertTrue("Should have at least a second row", rs.next());
-                assertEquals("Second row value must be VBASE", "VBASE", rs.getString(1));
+                assertTrue(rs.next(), "Should have at least one row");
+                assertEquals("DGPII", rs.getString(1), "First row value must be DGPII");
+                assertTrue(rs.next(), "Should have at least a second row");
+                assertEquals("VBASE", rs.getString(1), "Second row value must be VBASE");
             }
         }
 
@@ -1170,18 +1022,30 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
         props.setProperty("ignoreProcedureType", "true");
         try (Connection conn2 = DriverManager.getConnection(getUrl(), props);
              CallableStatement cstmt = conn2.prepareCall("{call get_emp_proj(?)}")) {
-            assertFalse("Expected procedure inferred as executable",
-                    cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure());
+            assertFalse(cstmt.unwrap(FirebirdCallableStatement.class).isSelectableProcedure(),
+                    "Expected procedure inferred as executable");
             cstmt.setInt(1, 44);
             cstmt.execute();
-            assertEquals("Value must be DGPII", "DGPII", cstmt.getString(1));
+            assertEquals("DGPII", cstmt.getString(1), "Value must be DGPII");
 
             // re-check via non-standard result set if it has a single row (executable should end after first result)
             try (ResultSet rs = cstmt.executeQuery()) {
-                assertTrue("Should have at least one row", rs.next());
-                assertEquals("First row value must be DGPII", "DGPII", rs.getString(1));
-                assertFalse("Should not have a second row", rs.next());
+                assertTrue(rs.next(), "Should have at least one row");
+                assertEquals("DGPII", rs.getString(1), "First row value must be DGPII");
+                assertFalse(rs.next(), "Should not have a second row");
             }
         }
+    }
+
+    static Stream<String> scrollableCursorPropertyValues() {
+        // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
+        // not support server-side scrollable cursors
+        return Stream.of(PropertyConstants.SCROLLABLE_CURSOR_EMULATED, PropertyConstants.SCROLLABLE_CURSOR_SERVER);
+    }
+
+    private static Connection createConnection(String scrollableCursorPropertyValue) throws SQLException {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.scrollableCursor, scrollableCursorPropertyValue);
+        return DriverManager.getConnection(getUrl(), props);
     }
 }

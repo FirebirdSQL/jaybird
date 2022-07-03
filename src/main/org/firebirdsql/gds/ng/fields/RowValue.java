@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,7 +26,7 @@ import java.util.Arrays;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public final class RowValue {
+public class RowValue {
 
     /**
      * Marker array object for uninitialized fields
@@ -58,7 +58,7 @@ public final class RowValue {
     /**
      * @return The number of fields.
      */
-    public int getCount() {
+    public final int getCount() {
         return fieldData.length;
     }
 
@@ -89,7 +89,7 @@ public final class RowValue {
      * @throws java.lang.IndexOutOfBoundsException
      *         if index is not {@code 0 <= index > getCount()}
      */
-    public byte[] getFieldData(int index) {
+    public final byte[] getFieldData(int index) {
         byte[] data = fieldData[index];
         return data != NOT_INITIALIZED ? data : null;
     }
@@ -102,9 +102,21 @@ public final class RowValue {
     }
 
     /**
+     * Does this row value serve as a deleted row marker.
+     * <p>
+     * This is not general purpose functionality, but exists solely to detect deleted rows in updatable result sets.
+     * </p>
+     *
+     * @return {@code true} if this a deleted row marker, {@code false} otherwise
+     */
+    public boolean isDeletedRowMarker() {
+        return false;
+    }
+
+    /**
      * Initializes uninitialized fields with {@code null}.
      */
-    void initializeFields() {
+    final void initializeFields() {
         for (int idx = 0; idx < fieldData.length; idx++) {
             if (fieldData[idx] == NOT_INITIALIZED) {
                 fieldData[idx] = null;
@@ -121,7 +133,7 @@ public final class RowValue {
      * @throws IndexOutOfBoundsException
      *         if index is not {@code 0 <= index > getCount()}
      */
-    public boolean isInitialized(int index) {
+    public final boolean isInitialized(int index) {
         return fieldData[index] != NOT_INITIALIZED;
     }
 
@@ -176,6 +188,19 @@ public final class RowValue {
     }
 
     /**
+     * Creates a row value that can serve as a deleted row marker.
+     * <p>
+     * All fields have a value of {@code null}, and updates will fail with an {@link UnsupportedOperationException}.
+     * </p>
+     *
+     * @param count The number of columns
+     * @return {@code RowValue} object
+     */
+    public static RowValue deletedRowMarker(int count) {
+        return new DeletedRowMarker(count);
+    }
+
+    /**
      * Convenience method for populating a row value from byte arrays.
      * <p>
      * This method is mainly intended for use with direct manipulation in the low-level gds-ng API.
@@ -208,11 +233,14 @@ public final class RowValue {
      *
      * @return Copy of this object with cloned field values, for empty rows (count is 0) {@link #EMPTY_ROW_VALUE}.
      */
-    public RowValue deepCopy() {
+    public final RowValue deepCopy() {
         final int size = getCount();
-        if (size == 0) {
+        if (this instanceof DeletedRowMarker) {
+            return new DeletedRowMarker(size);
+        } else if (size == 0) {
             return EMPTY_ROW_VALUE;
         }
+
         // Implementation note: I decided not to override clone here because it didn't "feel right"
         RowValue newRowValue = new RowValue(size, false);
         for (int idx = 0; idx < size; idx++) {
@@ -223,6 +251,31 @@ public final class RowValue {
             newRowValue.fieldData[idx] = value;
         }
         return newRowValue;
+    }
+
+    /**
+     * Marks a deleted row.
+     */
+    private static final class DeletedRowMarker extends RowValue {
+
+        private DeletedRowMarker(int size) {
+            super(size, false);
+        }
+
+        @Override
+        public void setFieldData(int index, byte[] data) {
+            throw new UnsupportedOperationException("Deleted row marker should not be updated");
+        }
+
+        @Override
+        public void reset() {
+            // do nothing
+        }
+
+        @Override
+        public boolean isDeletedRowMarker() {
+            return true;
+        }
     }
 
 }

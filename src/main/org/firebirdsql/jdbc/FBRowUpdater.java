@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -572,21 +572,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         }
 
         stmt.execute(RowValue.of(params.toArray(EMPTY_2D_BYTES)));
-    }
-
-    @Override
-    public boolean rowInserted() throws SQLException {
-        return false;
-    }
-
-    @Override
-    public boolean rowDeleted() throws SQLException {
-        return false;
-    }
-
-    @Override
-    public boolean rowUpdated() throws SQLException {
-        return false;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -164,6 +164,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             if (metaDataQuery && standaloneStatement)
                 close();
         }
+    }
+
+    @Override
+    protected boolean needsScrollableCursorEnabled() {
+        return !metaDataQuery && super.needsScrollableCursorEnabled();
     }
 
     @Override
@@ -555,8 +560,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * 
      * @param sendOutParams Determines if the XSQLDA structure should be sent to the
      *            database
-     * @return <code>true</code> if the statement has more result sets. 
-     * @throws SQLException
+     * @return {@code true} if the statement has more result sets.
      */
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
         checkAllParametersSet();

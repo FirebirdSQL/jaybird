@@ -2,8 +2,8 @@
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 5
+- Published: 2022-07-03
+- Implemented in: Jaybird 5
 
 ## Type
 
@@ -92,16 +92,26 @@ be enabled explicitly.
 Jaybird supports server-side scrollable cursor behind a configuration property.
 The default behaviour continues to use emulated scrollable cursors.
 
-Jaybird adds a connection property `scrollableCursors` with values `emulated` 
+Jaybird adds a connection property `scrollableCursor` with values `emulated` 
 (default) and `server` (values are case-insensitive), in JDBC properties
 and data sources. If `server` is specified, but the server does not support
-server-side scrollable cursors, behaviour automatically falls back to `emulated`. 
+server-side scrollable cursors, behaviour automatically falls back to `emulated`.
+
+When holdable cursors are requested, server-side scrollable cursors are not 
+used, as Jaybird doesn't use commit retain in this situation, so we need to rely
+on a locally cached result set (i.e. `emulated` behaviour).
 
 When server-side scrollable and updatable cursors are used, there are some
 differences in behaviour compared to the emulated scrollable cursors:
 
 - New rows are inserted at the end of the cursor
 - Deleted rows are visible with an all-null marker row
+- Result sets report `true` for `rowUpdated()`, `rowDeleted()` and 
+`rowInserted()` for rows updated, deleted or inserted through the result set.
+
+  This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()`
+and `insertsAreDetected()` of `DatabaseMetaData`. This will be corrected when we
+retrofit the new behaviour for _emulated_ (see below).
 
 These differences may be resolved in a future JDP or Jaybird version, likely by 
 changing the behaviour of emulated scrollable cursors.

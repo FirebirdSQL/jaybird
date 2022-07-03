@@ -19,6 +19,7 @@
 package org.firebirdsql.common.rules;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension.UsesDatabaseForEach;
 import org.junit.rules.ExternalResource;
 
 import java.util.List;
@@ -34,9 +35,9 @@ import java.util.List;
  */
 public final class UsesDatabase extends ExternalResource {
 
-    private final UsesDatabaseExtension usesDatabaseExtension;
+    private final UsesDatabaseForEach usesDatabaseExtension;
 
-    private UsesDatabase(UsesDatabaseExtension usesDatabaseExtension) {
+    private UsesDatabase(UsesDatabaseForEach usesDatabaseExtension) {
         this.usesDatabaseExtension = usesDatabaseExtension;
     }
 
