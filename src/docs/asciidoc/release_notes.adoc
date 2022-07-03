@@ -443,7 +443,7 @@ So, if the statement inserts, updates or deletes a significant number of rows, t
 [#scrollable-cursors]
 === Firebird 5 scrollable cursor support
 
-Jaybird supports scrollable cursors introduced in Firebird 5.0.
+Jaybird supports server-side scrollable cursors introduced in Firebird 5.0.
 
 This feature is only available on pure-java connections, and only when explicitly enabled with connection property `scrollableCursor`.
 Support is only available in pure-java, as the bindings for native and embedded use the legacy fbclient API, and scrollable cursors are not exposed in the legacy fbclient API.
