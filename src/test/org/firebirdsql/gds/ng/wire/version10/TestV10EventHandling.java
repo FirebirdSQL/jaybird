@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,21 +26,30 @@ import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.*;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.util.Unstable;
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
@@ -84,6 +93,8 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 
+    private static ExecutorService executorService;
+
     private final V10CommonConnectionInfo commonConnectionInfo;
     private AbstractFbWireDatabase db;
 
@@ -109,6 +120,20 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
     protected final Class<? extends FbWireDatabase> getExpectedDatabaseType() {
         return commonConnectionInfo.getExpectedDatabaseType();
+    }
+
+    @BeforeClass
+    public static void setupAll() {
+        executorService = Executors.newCachedThreadPool();
+    }
+
+    @AfterClass
+    public static void tearDownAll() {
+        try {
+            executorService.shutdown();
+        } finally {
+            executorService = null;
+        }
     }
 
     @After
@@ -181,31 +206,31 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     @Test
     public void testAsynchronousDelivery_fullEvent() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        try (SimpleServer simpleServer = new SimpleServer()) {
-            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            channel.addChannelListener(listener);
-            Thread establishChannel = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        channel.connect("localhost", simpleServer.getPort(), 1);
-                    } catch (SQLException e) {
-                        // suppress
-                    }
-                }
-            });
-            establishChannel.start();
-            simpleServer.acceptConnection();
-            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.join(500);
-            assertTrue("Expected connected channel", channel.isConnected());
-
-            final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
+        // Using preallocated message to spend as little time on send as possible
+        byte[] eventMessage = generateXdr(out -> {
             out.writeInt(op_event);
             out.writeInt(513);
             out.writeBuffer(new byte[] { 1, 3, 69, 86, 84, 3, 0, 0, 0 });
             out.writeLong(0);
             out.writeInt(7);
+        });
+        try (SimpleServer simpleServer = new SimpleServer()) {
+            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
+            channel.addChannelListener(listener);
+            Future<?> establishChannel = executorService.submit(() -> {
+                try {
+                    channel.connect("localhost", simpleServer.getPort(), 1);
+                } catch (SQLException e) {
+                    // suppress
+                }
+            });
+            simpleServer.acceptConnection();
+            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
+            establishChannel.get(500, TimeUnit.MILLISECONDS);
+            assertTrue("Expected connected channel", channel.isConnected());
+
+            OutputStream out = simpleServer.getOutputStream();
+            out.write(eventMessage);
             out.flush();
 
             Thread.sleep(500);
@@ -221,30 +246,34 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     @Test
     public void testAsynchronousDelivery_partialEvent() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        try (SimpleServer simpleServer = new SimpleServer()) {
-            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            channel.addChannelListener(listener);
-            Thread establishChannel = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        channel.connect("localhost", simpleServer.getPort(), 1);
-                    } catch (SQLException e) {
-                        // suppress
-                    }
-                }
-            });
-            establishChannel.start();
-            simpleServer.acceptConnection();
-            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.join(500);
-            assertTrue("Expected connected channel", channel.isConnected());
-
-            final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
+        // Using preallocated message parts to spend as little time on send as possible
+        byte[] messagePart1 = generateXdr(out -> {
             out.writeInt(op_dummy);
             out.writeInt(op_event);
             out.writeInt(513);
             out.writeBuffer(new byte[] { 1, 3, 69, 86, 84, 3, 0, 0, 0 });
+        });
+        byte[] messagePart2 = generateXdr(out -> {
+            out.writeLong(0);
+            out.writeInt(7);
+        });
+        try (SimpleServer simpleServer = new SimpleServer()) {
+            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
+            channel.addChannelListener(listener);
+            Future<?> establishChannel = executorService.submit(() -> {
+                try {
+                    channel.connect("localhost", simpleServer.getPort(), 1);
+                } catch (SQLException e) {
+                    // suppress
+                }
+            });
+            simpleServer.acceptConnection();
+            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
+            establishChannel.get(500, TimeUnit.MILLISECONDS);
+            assertTrue("Expected connected channel", channel.isConnected());
+
+            OutputStream out = simpleServer.getOutputStream();
+            out.write(messagePart1);
             // Flushing partial event to test if processing works as expected
             out.flush();
 
@@ -253,8 +282,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
             List<AsynchronousChannelListener.Event> receivedEvents = listener.getReceivedEvents();
             assertEquals("Unexpected number of events", 0, receivedEvents.size());
 
-            out.writeLong(0);
-            out.writeInt(7);
+            out.write(messagePart2);
             out.flush();
 
             Thread.sleep(500);
@@ -268,30 +296,13 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     }
 
     @Test
+    @Unstable("Can spuriously fail on slow computers or when using power saver")
     public void testAsynchronousDelivery_largeNumberOfEvents() throws Exception {
         final SimpleChannelListener listener = new SimpleChannelListener();
-        try (SimpleServer simpleServer = new SimpleServer()) {
-            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            channel.addChannelListener(listener);
-            Thread establishChannel = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        channel.connect("localhost", simpleServer.getPort(), 1);
-                    } catch (SQLException e) {
-                        // suppress
-                    }
-                }
-            });
-            establishChannel.start();
-            simpleServer.acceptConnection();
-            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-
-            assertTrue("Expected connected channel", channel.isConnected());
-
-            final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
-            // Write a large number of events
-            final int testEventCount = 1024;
+        // Write a large number of events
+        final int testEventCount = 1024;
+        // Using preallocated message to spend as little time on send as possible
+        byte[] eventMessages = generateXdr(out -> {
             for (int count = 1; count <= testEventCount; count++) {
                 out.writeInt(op_event);
                 out.writeInt(513);
@@ -300,6 +311,24 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
                 out.writeLong(0);
                 out.writeInt(7);
             }
+        });
+        try (SimpleServer simpleServer = new SimpleServer()) {
+            final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
+            channel.addChannelListener(listener);
+            Future<?> establishChannel = executorService.submit(() -> {
+                try {
+                    channel.connect("localhost", simpleServer.getPort(), 1);
+                } catch (SQLException e) {
+                    // suppress
+                }
+            });
+            simpleServer.acceptConnection();
+            AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
+            establishChannel.get(500, TimeUnit.MILLISECONDS);
+            assertTrue("Expected connected channel", channel.isConnected());
+
+            OutputStream out = simpleServer.getOutputStream();
+            out.write(eventMessages);
             out.flush();
 
             // Need to sleep for thread to process all events, might still fail on slower computers
@@ -370,20 +399,16 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
     private void checkAsynchronousDisconnection(int disconnectOperation) throws Exception {
         try (SimpleServer simpleServer = new SimpleServer()) {
             final FbWireAsynchronousChannel channel = new V10AsynchronousChannel(createDummyDatabase());
-            Thread establishChannel = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        channel.connect("localhost", simpleServer.getPort(), 1);
-                    } catch (SQLException e) {
-                        // suppress
-                    }
+            Future<?> establishChannel = executorService.submit(() -> {
+                try {
+                    channel.connect("localhost", simpleServer.getPort(), 1);
+                } catch (SQLException e) {
+                    // suppress
                 }
             });
-            establishChannel.start();
             simpleServer.acceptConnection();
             AsynchronousProcessor.getInstance().registerAsynchronousChannel(channel);
-            establishChannel.join(500);
+            establishChannel.get(500, TimeUnit.MILLISECONDS);
             assertTrue("Expected connected channel", channel.isConnected());
 
             final XdrOutputStream out = new XdrOutputStream(simpleServer.getOutputStream());
@@ -396,6 +421,7 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
         }
     }
 
+    @SuppressWarnings("resource")
     private AbstractFbWireDatabase createAndAttachDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(getConnectionInfo(),
                 EncodingFactory.getPlatformDefault(), getProtocolCollection());
@@ -408,10 +434,29 @@ public class TestV10EventHandling extends FBJUnit4TestBase {
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
         TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
         return db.startTransaction(tpb);
+    }
+
+    private byte[] generateXdr(ThrowableConsumer<XdrOutputStream> generator) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            XdrOutputStream xdrOut = new XdrOutputStream(baos);
+            generator.accept(xdrOut);
+            xdrOut.flush();
+            return baos.toByteArray();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowableConsumer<T> {
+        void accept(T t) throws Throwable;
     }
 }
