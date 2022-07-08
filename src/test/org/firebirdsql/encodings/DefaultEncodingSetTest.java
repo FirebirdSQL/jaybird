@@ -18,9 +18,9 @@
  */
 package org.firebirdsql.encodings;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Additional tests for {@link DefaultEncodingSet}. Note that most of this class is tested through
@@ -29,18 +29,18 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class DefaultEncodingSetTest {
+class DefaultEncodingSetTest {
 
     /**
      * Test if an encoding is loaded as an informationOnly {@link EncodingDefinition} if
      * the charset is unsupported (ie does not exist).
      */
     @Test
-    public void testDefinitionWithUnsupportedCharset() {
+    void testDefinitionWithUnsupportedCharset() {
         final EncodingDefinition encodingDefinition = new DefaultEncodingDefinition("INVALID", "INVALID", 1, 132, false);
-        assertNotNull("Expected a non-null EncodingDefinition", encodingDefinition);
-        assertEquals("Unexpected firebirdEncodingName", "INVALID", encodingDefinition.getFirebirdEncodingName());
-        assertNull("Expected javaCharset to be null", encodingDefinition.getJavaCharset());
-        assertTrue("Expected informationOnly EncodingDefinition", encodingDefinition.isInformationOnly());
+        assertNotNull(encodingDefinition, "Expected a non-null EncodingDefinition");
+        assertEquals("INVALID", encodingDefinition.getFirebirdEncodingName(), "Unexpected firebirdEncodingName");
+        assertNull(encodingDefinition.getJavaCharset(), "Expected javaCharset to be null");
+        assertTrue(encodingDefinition.isInformationOnly(), "Expected informationOnly EncodingDefinition");
     }
 }

@@ -19,68 +19,59 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
-import org.firebirdsql.common.rules.RunEnvironmentRule;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * This test assumes it is run against localhost
  */
-public class FBBackupManagerTest {
+class FBBackupManagerTest {
 
-    @ClassRule
-    public static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+    @RegisterExtension
+    static final RunEnvironmentExtension runEnvironment = RunEnvironmentExtension.builder()
             .requiresDbOnLocalFileSystem()
-            .build()
-            .toRule();
+            .build();
 
-    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @Rule
-    public final RuleChain ruleChain = RuleChain.outerRule(temporaryFolder)
-            .around(usesDatabase);
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
     private BackupManager backupManager;
-    private File tempFolder;
+    @TempDir
+    Path tempFolder;
 
     private static final String TEST_TABLE = "CREATE TABLE TEST (A INT)";
 
-    @Before
-    public void setUp() throws Exception {
-        tempFolder = temporaryFolder.newFolder();
-        System.out.println(tempFolder);
+    @BeforeEach
+    void setUp() {
         backupManager = new FBBackupManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
-            assumeTrue("Test needs to run on localhost for proper clean up", isLocalHost(DB_SERVER_URL));
+            assumeTrue(isLocalHost(DB_SERVER_URL), "Test needs to run on localhost for proper clean up");
             backupManager.setServerName(DB_SERVER_URL);
             backupManager.setPortNumber(DB_SERVER_PORT);
         }
@@ -93,7 +84,7 @@ public class FBBackupManagerTest {
     }
 
     private String getBackupPath() {
-        final Path backupPath = Paths.get(tempFolder.getAbsolutePath(), "testbackup.fbk");
+        final Path backupPath = tempFolder.resolve("testbackup.fbk");
         return backupPath.toString();
     }
 
@@ -105,11 +96,11 @@ public class FBBackupManagerTest {
     }
 
     @Test
-    public void testBackup() throws Exception {
+    void testBackup() throws Exception {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
-        final Path restorePath = Paths.get(tempFolder.getAbsolutePath(), "testrestore.fdb");
+        final Path restorePath = tempFolder.resolve("testrestore.fdb");
 
         backupManager.clearRestorePaths();
         usesDatabase.addDatabase(restorePath.toString());
@@ -122,33 +113,29 @@ public class FBBackupManagerTest {
     }
 
     @Test
-    public void testSetBadBufferCount() {
-        expectedException.reportMissingExceptionWithMessage("Page buffer count must be a positive value")
-                .expect(IllegalArgumentException.class);
-        backupManager.setRestorePageBufferCount(-1);
+    void testSetBadBufferCount() {
+        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageBufferCount(-1),
+                "Page buffer count must be a positive value");
     }
 
     @Test
-    public void testSetBadPageSize() {
-        expectedException.reportMissingExceptionWithMessage("Page size must be one of 1024, 2048, 4196, 8192, 16384 or 32768)")
-                .expect(IllegalArgumentException.class);
-        backupManager.setRestorePageSize(4000);
+    void testSetBadPageSize() {
+        assertThrows(IllegalArgumentException.class, () -> backupManager.setRestorePageSize(4000),
+                "Page size must be one of 1024, 2048, 4196, 8192, 16384 or 32768)");
     }
 
     /**
      * Tests the valid page sizes expected to be accepted by the BackupManager
      */
-    @Test
-    public void testValidPageSizes() {
-        final int[] pageSizes = { PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K, PageSizeConstants.SIZE_4K,
-                PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K, PageSizeConstants.SIZE_32K };
-        for (int pageSize : pageSizes) {
-            backupManager.setRestorePageSize(pageSize);
-        }
+    @ParameterizedTest
+    @ValueSource(ints = { PageSizeConstants.SIZE_1K, PageSizeConstants.SIZE_2K, PageSizeConstants.SIZE_4K,
+            PageSizeConstants.SIZE_8K, PageSizeConstants.SIZE_16K, PageSizeConstants.SIZE_32K })
+    void testValidPageSizes(int pageSize) {
+        backupManager.setRestorePageSize(pageSize);
     }
 
     @Test
-    public void testRestoreReadOnly() throws Exception {
+    void testRestoreReadOnly() throws Exception {
         usesDatabase.createDefaultDatabase();
         createTestTable();
         try (Connection conn = getConnectionViaDriverManager();
@@ -157,7 +144,7 @@ public class FBBackupManagerTest {
         }
 
         backupManager.backupDatabase();
-        final Path restorePath1 = Paths.get(tempFolder.getAbsolutePath(), "testrestore1.fdb");
+        final Path restorePath1 = tempFolder.resolve("testrestore1.fdb");
         backupManager.clearRestorePaths();
         usesDatabase.addDatabase(restorePath1.toString());
         backupManager.setDatabase(restorePath1.toString());
@@ -166,13 +153,13 @@ public class FBBackupManagerTest {
 
         try (Connection conn = DriverManager.getConnection(getUrl(restorePath1.toString()), getDefaultPropertiesForConnection());
              Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("INSERT INTO TEST VALUES (2)");
-            fail("Not possible to insert data in a read-only database");
-        } catch (SQLException e) {
-            // Ignore
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> stmt.executeUpdate("INSERT INTO TEST VALUES (2)"),
+                    "Not possible to insert data in a read-only database");
+            assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_database));
         }
 
-        final Path restorePath2 = Paths.get(tempFolder.getAbsolutePath(), "testrestore2.fdb");
+        final Path restorePath2 = tempFolder.resolve("testrestore2.fdb");
         backupManager.clearRestorePaths();
         usesDatabase.addDatabase(restorePath2.toString());
         backupManager.setDatabase(restorePath2.toString());
@@ -187,16 +174,11 @@ public class FBBackupManagerTest {
     }
 
     @Test
-    public void testBackupReplace() throws Exception {
+    void testBackupReplace() throws Exception {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
         backupManager.setRestoreReplace(false);
-        try {
-            backupManager.restoreDatabase();
-            fail("Can't restore-create an existing database");
-        } catch (SQLException e) {
-            // Ignore
-        }
+        assertThrows(SQLException.class, backupManager::restoreDatabase, "Can't restore-create an existing database");
 
         backupManager.setRestoreReplace(true);
         backupManager.restoreDatabase();
@@ -206,7 +188,7 @@ public class FBBackupManagerTest {
      * Test if restoring a database to page size 16384 works.
      */
     @Test
-    public void testRestorePageSize16384() throws Exception {
+    void testRestorePageSize16384() throws Exception {
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
@@ -219,10 +201,10 @@ public class FBBackupManagerTest {
             final FbDatabase currentDatabase = gdsHelper.getCurrentDatabase();
             final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
                     new byte[] { ISCConstants.isc_info_page_size }, 10);
-            assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+            assertEquals(ISCConstants.isc_info_page_size, databaseInfo[0], "Unexpected info item");
             int length = iscVaxInteger2(databaseInfo, 1);
             int pageSize = iscVaxInteger(databaseInfo, 3, length);
-            assertEquals("Unexpected page size", 16384, pageSize);
+            assertEquals(16384, pageSize, "Unexpected page size");
         }
     }
 
@@ -230,9 +212,9 @@ public class FBBackupManagerTest {
      * Test if restoring a database to page size 32768 works.
      */
     @Test
-    public void testRestorePageSize32768() throws Exception {
-        assumeTrue("Test requires 32K page size support",
-                getDefaultSupportInfo().supportsPageSize(PageSizeConstants.SIZE_32K));
+    void testRestorePageSize32768() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPageSize(PageSizeConstants.SIZE_32K),
+                "Test requires 32K page size support");
         usesDatabase.createDefaultDatabase();
         backupManager.backupDatabase();
 
@@ -245,24 +227,23 @@ public class FBBackupManagerTest {
             final FbDatabase currentDatabase = gdsHelper.getCurrentDatabase();
             final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
                     new byte[] { ISCConstants.isc_info_page_size }, 10);
-            assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+            assertEquals(ISCConstants.isc_info_page_size, databaseInfo[0], "Unexpected info item");
             int length = iscVaxInteger2(databaseInfo, 1);
             int pageSize = iscVaxInteger(databaseInfo, 3, length);
-            assertEquals("Unexpected page size", 32768, pageSize);
+            assertEquals(32768, pageSize, "Unexpected page size");
         }
     }
 
     @Test
-    public void testBackupMultiple() throws Exception {
-        // Note broken in current Firebird 4 versions, see CORE-5976
+    void testBackupMultiple() throws Exception {
         usesDatabase.createDefaultDatabase();
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();
 
 
-        final Path backupPath1Path = Paths.get(tempFolder.getAbsolutePath(), "testbackup1.fbk");
+        final Path backupPath1Path = tempFolder.resolve("testbackup1.fbk");
         String backupPath1 = backupPath1Path.toString();
-        final Path backupPath2Path = Paths.get(tempFolder.getAbsolutePath(), "testbackup2.fbk");
+        final Path backupPath2Path = tempFolder.resolve("testbackup2.fbk");
         String backupPath2 = backupPath2Path.toString();
 
         backupManager.addBackupPath(backupPath1, 2048);
@@ -270,10 +251,8 @@ public class FBBackupManagerTest {
 
         backupManager.backupDatabase();
 
-        File file1 = new File(backupPath1);
-        assertTrue("File " + backupPath1 + " should exist.", file1.exists());
-        File file2 = new File(backupPath2);
-        assertTrue("File " + backupPath2 + " should exist.", file2.exists());
+        assertTrue(Files.exists(backupPath1Path), () -> format("File %s should exist", backupPath1));
+        assertTrue(Files.exists(backupPath2Path), () -> format("File %s should exist", backupPath2));
 
         backupManager.clearBackupPaths();
 
@@ -281,9 +260,9 @@ public class FBBackupManagerTest {
         backupManager.addBackupPath(backupPath2);
 
 
-        final Path restorePath1Path = Paths.get(tempFolder.getAbsolutePath(), "testrestore1.fdb");
+        final Path restorePath1Path = tempFolder.resolve("testrestore1.fdb");
         String restorePath1 = restorePath1Path.toString();
-        final Path restorePath2Path = Paths.get(tempFolder.getAbsolutePath(), "testrestore2.fdb");
+        final Path restorePath2Path = tempFolder.resolve("testrestore2.fdb");
         String restorePath2 = restorePath2Path.toString();
 
         backupManager.addRestorePath(restorePath1, 10);
@@ -292,10 +271,8 @@ public class FBBackupManagerTest {
         backupManager.restoreDatabase();
 
         //Remove test files from filesystem.
-        File file3 = new File(restorePath1);
-        assertTrue("File " + restorePath1 + " should exist.", file3.exists());
-        File file4 = new File(restorePath2);
-        assertTrue("File " + restorePath2 + " should exist.", file4.exists());
+        assertTrue(Files.exists(restorePath1Path), () -> format("File %s should exist", restorePath1));
+        assertTrue(Files.exists(restorePath2Path), () -> format("File %s should exist.", restorePath2));
    }
 
     private static boolean isLocalHost(String hostName) {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,25 +18,24 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for support of the scalar numeric function escapes as defined in
@@ -44,52 +43,33 @@ import static org.junit.Assert.*;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@RunWith(Parameterized.class)
-public class TestScalarNumericFunctions {
+class TestScalarNumericFunctions {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private static Connection con;
     private static Statement stmt;
 
-    private final String functionCall;
-    private final double expectedResult;
-    private final boolean supported;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setupAll() throws Exception {
         // We create a connection and statement for all tests executed for performance reasons
         con = getConnectionViaDriverManager();
         stmt = con.createStatement();
     }
 
-    @AfterClass
-    public static void tearDown() {
-        closeQuietly(stmt);
-        closeQuietly(con);
+    @AfterAll
+    static void tearDownAll() {
+        try {
+            closeQuietly(stmt, con);
+        } finally {
+            stmt = null;
+            con = null;
+        }
     }
 
-    /**
-     * Testcase
-     *
-     * @param functionCall
-     *            JDBC function call (without {fn .. })
-     * @param expectedResult
-     *            Expected value as result of using the function against the
-     *            database
-     * @param supported
-     *            <code>true</code> function is supported, <code>false</code> when not supported
-     */
-    public TestScalarNumericFunctions(String functionCall, Double expectedResult, Boolean supported) {
-        this.functionCall = functionCall;
-        this.expectedResult = expectedResult;
-        this.supported = supported;
-    }
-
-    @Parameters(name = "{index}: value {0} ({1})")
-    public static Collection<Object[]> numericFunctionTestcases() {
-        return Arrays.asList(
+    static Stream<Arguments> numericFunctionTestcases() {
+        return Stream.of(
 //@formatter:off
         /* 0*/  testcase("ABS(-513)", 513),
         /* 1*/  testcase("ACOS(-1)", Math.PI),
@@ -121,49 +101,54 @@ public class TestScalarNumericFunctions {
         );
     }
 
-    @Test
-    public void testScalarFunction() throws Exception {
-        try (ResultSet rs = stmt.executeQuery(createQuery())) {
-            if (!supported) {
-                fail(String.format("Expected function call %s to be unsupported", functionCall));
-            } else {
-                assertTrue("Expected at least one row", rs.next());
-                assertEquals(failureMessage(), expectedResult, rs.getDouble(1), 0.00001);
-            }
+    /**
+     * Testcase
+     *
+     * @param functionCall
+     *         JDBC function call (without {fn .. })
+     * @param expectedResult
+     *         Expected value as result of using the function against the database
+     * @param supported
+     *         {@code true} function is supported, {@code false} when not supported
+     */
+    @ParameterizedTest(name = "{index}: value {0} ({1})")
+    @MethodSource("numericFunctionTestcases")
+    void testScalarFunction(String functionCall, Double expectedResult, Boolean supported) throws Exception {
+        try (ResultSet rs = stmt.executeQuery(createQuery(functionCall))) {
+            assertTrue(supported, () -> format("Expected function call %s to be unsupported", functionCall));
+            assertTrue(rs.next(), "Expected at least one row");
+            assertEquals(expectedResult, rs.getDouble(1), 0.00001, failureMessage(functionCall));
         } catch (SQLException ex) {
             if (supported) {
                 throw ex;
-            } else {
-                // TODO validate exception?
-                //fail("Validation of unsupported functions not yet implemented");
             }
+            // TODO validate exception?
         }
     }
 
-    private String failureMessage() {
-        return String.format("Unexpected result for function escape %s", functionCall);
+    private String failureMessage(String functionCall) {
+        return format("Unexpected result for function escape %s", functionCall);
     }
 
-    private String createQuery() {
-        return String.format("SELECT {fn %s} FROM RDB$DATABASE", functionCall);
+    private String createQuery(String functionCall) {
+        return format("SELECT {fn %s} FROM RDB$DATABASE", functionCall);
     }
 
     /**
-     * Convenience method to create object array for testcase (ensures correct
-     * types).
+     * Convenience method to create object array for testcase (ensures correct types).
      *
      * @param functionCall
      *         JDBC function call (with out {fn .. })
      * @param expectedResult
-     *         Expected value as result of using the function against the
-     *         database
-     * @return Object[] testcase
+     *         Expected value as result of using the function against the database
+     * @return testcase
      */
-    private static Object[] testcase(String functionCall, double expectedResult) {
-        return new Object[] { functionCall, expectedResult, true };
+    private static Arguments testcase(String functionCall, double expectedResult) {
+        return Arguments.of(functionCall, expectedResult, true);
     }
 
-    private static Object[] unsupported(String functionCall) {
-        return new Object[] { functionCall, Double.NaN, false };
+    @SuppressWarnings("SameParameterValue")
+    private static Arguments unsupported(String functionCall) {
+        return Arguments.of(functionCall, Double.NaN, false);
     }
 }

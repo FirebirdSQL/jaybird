@@ -19,15 +19,14 @@
 package org.firebirdsql.event;
 
 import org.firebirdsql.common.extension.RunEnvironmentExtension;
-import org.firebirdsql.common.rules.RunEnvironmentRule;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.util.Unstable;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
 import java.sql.Connection;
@@ -35,59 +34,46 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
-import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** 
  * Test the FBEventManager class
  */
-public class FBEventManagerTest {
+class FBEventManagerTest {
 
-    private static final RunEnvironmentRule runEnvironmentRule = RunEnvironmentExtension.builder()
+    private static final String TABLE_DEF = ""
+            + "CREATE TABLE TEST ("
+            + "     TESTVAL INTEGER NOT NULL"
+            + ")";
+
+    private static final String TRIGGER_DEF = ""
+            + "CREATE TRIGGER INSERT_TRIG "
+            + "     FOR TEST AFTER INSERT "
+            + "AS BEGIN "
+            + "     POST_EVENT 'TEST_EVENT_A';"
+            + "     POST_EVENT 'TEST_EVENT_B';"
+            + "     POST_EVENT 'TEST_EVENT_A';"
+            + "END";
+
+    @RegisterExtension
+    @Order(1)
+    static final RunEnvironmentExtension runEnvironmentRule = RunEnvironmentExtension.builder()
             .requiresEventPortAvailable()
-            .build()
-            .toRule();
+            .build();
 
-    private static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
-
-    @ClassRule
-    public static final TestRule classRules = RuleChain
-            .outerRule(runEnvironmentRule)
-            .around(usesDatabase);
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            TABLE_DEF,
+            TRIGGER_DEF);
 
     private EventManager eventManager;
-
-    public static final String TABLE_DEF = ""
-        + "CREATE TABLE TEST ("
-        + "     TESTVAL INTEGER NOT NULL"
-        + ")";
-
-    public static final String TRIGGER_DEF = ""
-        + "CREATE TRIGGER INSERT_TRIG "
-        + "     FOR TEST AFTER INSERT "
-        + "AS BEGIN "
-        + "     POST_EVENT 'TEST_EVENT_A';"
-        + "     POST_EVENT 'TEST_EVENT_B';"
-        + "     POST_EVENT 'TEST_EVENT_A';"
-        + "END";
 
     // Delay to wait after registering an event listener before testing
     private static final int SHORT_DELAY = 100;
     private static final int LONG_DELAY = 1000;
-
-    @BeforeClass
-    public static void setUpTables() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            executeCreateTable(connection, TABLE_DEF);
-            executeDDL(connection, TRIGGER_DEF);
-        }
-    }
 
     private void setupDefaultEventManager() throws SQLException {
         eventManager = new FBEventManager(getGdsType());
@@ -106,27 +92,27 @@ public class FBEventManagerTest {
     }
 
     private void executeSql(String sql) throws SQLException {
-        try (Connection conn = getConnectionViaDriverManager()) {
-            Statement stmt = conn.createStatement();
+        try (Connection conn = getConnectionViaDriverManager();
+             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (eventManager != null && eventManager.isConnected()) {
             eventManager.disconnect();
         }
     }
 
     @Test
-    public void testWaitForEventNoEvent() throws Exception {
+    void testWaitForEventNoEvent() throws Exception {
         setupDefaultEventManager();
         assertEquals(-1, eventManager.waitForEvent("TEST_EVENT_B", 500));
     }
 
     @Test
-    public void testWaitForEventIndefinitely() throws Exception {
+    void testWaitForEventIndefinitely() throws Exception {
         setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_B", 0);
         Thread waitThread = new Thread(eventWait);
@@ -137,7 +123,7 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testWaitForEventWithOccurrence() throws Exception {
+    void testWaitForEventWithOccurrence() throws Exception {
         setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_B", 10000);
         Thread waitThread = new Thread(eventWait);
@@ -149,7 +135,7 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testWaitForEventWithOccurrenceNoTimeout() throws Exception {
+    void testWaitForEventWithOccurrenceNoTimeout() throws Exception {
         setupDefaultEventManager();
         EventWait eventWait = new EventWait("TEST_EVENT_A", 0);
         Thread waitThread = new Thread(eventWait);
@@ -161,7 +147,7 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testBasicEventMechanism() throws Exception {
+    void testBasicEventMechanism() throws Exception {
         setupDefaultEventManager();
         AccumulatingEventListener ael = new AccumulatingEventListener();
         eventManager.addEventListener("TEST_EVENT_B", ael);
@@ -170,15 +156,14 @@ public class FBEventManagerTest {
         Thread.sleep(SHORT_DELAY);
         eventManager.removeEventListener("TEST_EVENT_B", ael);
         int totalEvents = ael.getTotalEvents();
-        assertEquals("Assert that all events were recorded", 1, totalEvents);
+        assertEquals(1, totalEvents, "Assert that all events were recorded");
         executeSql("INSERT INTO TEST VALUES (3)");
         Thread.sleep(SHORT_DELAY);
-        assertEquals("No notification for events after removal of listener", 
-                totalEvents, ael.getTotalEvents());
+        assertEquals(totalEvents, ael.getTotalEvents(), "No notification for events after removal of listener");
     }
 
     @Test
-    public void testMultipleListenersOnOneEvent() throws Exception {
+    void testMultipleListenersOnOneEvent() throws Exception {
         setupDefaultEventManager();
         AccumulatingEventListener ael1 = new AccumulatingEventListener();
         AccumulatingEventListener ael2 = new AccumulatingEventListener();
@@ -199,7 +184,7 @@ public class FBEventManagerTest {
 
     @Test
     @Unstable("Performance/timing dependent, may need tweaking LONG_DELAY")
-    public void testLargeMultiLoad() throws Exception {
+    void testLargeMultiLoad() throws Exception {
         setupDefaultEventManager();
         final int THREAD_COUNT = 5;
         final int REP_COUNT = 100;
@@ -213,7 +198,7 @@ public class FBEventManagerTest {
         eventManager.addEventListener("TEST_EVENT_B", ael3);
         Thread.sleep(SHORT_DELAY);
         for (int i = 0; i < THREAD_COUNT; i++){
-            final Thread t = new EventProducerThread(REP_COUNT);
+            final Thread t = new Thread(new EventProducer(REP_COUNT));
             producerThreads[i] = t;
             t.start();
         }
@@ -231,7 +216,7 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testSlowCallback() throws Exception {
+    void testSlowCallback() throws Exception {
         setupDefaultEventManager();
         final int REP_COUNT = 5;
         AccumulatingEventListener ael = new AccumulatingEventListener(){
@@ -255,7 +240,7 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testMultipleManagersOnExistingConnectionOnOneEvent() throws Exception {
+    void testMultipleManagersOnExistingConnectionOnOneEvent() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             EventManager eventManager1 = FBEventManager.createFor(connection);
             EventManager eventManager2 = FBEventManager.createFor(connection);
@@ -297,65 +282,53 @@ public class FBEventManagerTest {
     }
 
     @Test
-    public void testEventManagerOnExistingConnectionDisconnectsOnConnectionClose() throws Exception {
+    void testEventManagerOnExistingConnectionDisconnectsOnConnectionClose() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             eventManager = FBEventManager.createFor(connection);
             eventManager.connect();
-            assertTrue("Expected connected event manager", eventManager.isConnected());
+            assertTrue(eventManager.isConnected(), "Expected connected event manager");
 
             connection.close();
 
-            assertFalse("Expected disconnected event manager after connection close", eventManager.isConnected());
+            assertFalse(eventManager.isConnected(), "Expected disconnected event manager after connection close");
         }
     }
 
     @Test
-    public void testEventManagerOnExistingConnectionThrowsExceptionOnSetter() throws Exception {
+    void testEventManagerOnExistingConnectionThrowsExceptionOnSetter() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             eventManager = FBEventManager.createFor(connection);
 
             // setting waitTimeout should work
             eventManager.setWaitTimeout(1001);
 
-            try {
-                eventManager.setUser("abc");
-                fail("should not allow setUser");
-            } catch (UnsupportedOperationException e) {
-                // expected
-            }
-
-            try {
-                eventManager.setServerName("abc");
-                fail("should not allow setHost");
-            } catch (UnsupportedOperationException e) {
-                // expected
-            }
-
+            assertThrows(UnsupportedOperationException.class, () -> eventManager.setUser("abc"),
+                    "should not allow setUser");
+            assertThrows(UnsupportedOperationException.class, () -> eventManager.setServerName("abc"),
+                    "should not allow setHost");
             // not testing other props as that would be testing the immutable implementation of IConnectionProperties
         }
     }
 
     @Test
-    public void testEventManagerOnExistingException_connectThrowsException_afterConnectionClose() throws Exception {
+    void testEventManagerOnExistingException_connectThrowsException_afterConnectionClose() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             eventManager = FBEventManager.createFor(connection);
 
             connection.close();
 
-            expectedException.expect(SQLException.class);
-            expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_notConnectedToServer));
-
-            eventManager.connect();
+            SQLException exception = assertThrows(SQLException.class, eventManager::connect);
+            assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_notConnectedToServer));
         }
     }
 
-    class EventWait implements Runnable {
+    private class EventWait implements Runnable {
         
         private final String eventName;
         private int eventCount;
         private final int timeout;
 
-        public EventWait(String eventName, int timeout){
+        EventWait(String eventName, int timeout){
             this.eventName = eventName;
             this.timeout = timeout;
         }
@@ -370,32 +343,34 @@ public class FBEventManagerTest {
             }
         }
 
-        public int getEventCount(){
+        int getEventCount(){
             return this.eventCount;
         }
     }
 
-    static class AccumulatingEventListener implements EventListener {
+    private static class AccumulatingEventListener implements EventListener {
 
         private volatile int eventCount = 0;
        
-        public int getTotalEvents(){
+        int getTotalEvents(){
            return eventCount;
         } 
         
+        @Override
         public synchronized void eventOccurred(DatabaseEvent event){
             eventCount += event.getEventCount();
         }
     }
 
-    static class EventProducerThread extends Thread {
+    private static class EventProducer implements Runnable {
 
-        private int count;
+        private final int count;
 
-        public EventProducerThread(int count){
+        EventProducer(int count){
             this.count = count;
         }
 
+        @Override
         public void run(){
             try (Connection conn = getConnectionViaDriverManager();
                  PreparedStatement stmt = conn.prepareStatement("INSERT INTO TEST VALUES (?)")) {

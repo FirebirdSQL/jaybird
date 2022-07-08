@@ -21,74 +21,68 @@ package org.firebirdsql.ds;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import javax.sql.PooledConnection;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import javax.sql.PooledConnection;
-
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBConnectionPoolDataSource}
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
+class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
 
     /**
      * Tests if the ConnectionPoolDataSource can create a PooledConnection
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testDataSource_start() throws SQLException {
+    void testDataSource_start() throws SQLException {
         getPooledConnection();
     }
 
     /**
      * Tests if the connection obtained from the PooledConnection can be used
      * and has expected defaults.
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testConnection() throws SQLException {
+    void testConnection() throws SQLException {
         PooledConnection pc = getPooledConnection();
 
         Connection con = pc.getConnection();
-
-        assertTrue("Autocommit should be true", con.getAutoCommit());
-        assertFalse("Read-only should be false", con.isReadOnly());
-        assertEquals("Tx isolation level should be read committed.",
-                Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation());
-
-        Statement stmt = con.createStatement();
-
+        //noinspection TryFinallyCanBeTryWithResources
         try {
-            ResultSet rs = stmt.executeQuery("SELECT cast(1 AS INTEGER) FROM rdb$database");
+            assertTrue(con.getAutoCommit(), "Autocommit should be true");
+            assertFalse(con.isReadOnly(), "Read-only should be false");
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, con.getTransactionIsolation(),
+                    "Tx isolation level should be read committed");
 
-            assertTrue("Should select one row", rs.next());
-            assertEquals("Selected value should be 1.", 1, rs.getInt(1));
+            try (Statement stmt = con.createStatement()) {
+                ResultSet rs = stmt.executeQuery("SELECT cast(1 AS INTEGER) FROM rdb$database");
+
+                assertTrue(rs.next(), "Should select one row");
+                assertEquals(1, rs.getInt(1), "Selected value should be 1");
+            }
         } finally {
-            stmt.close();
+            con.close();
         }
-        con.close();
-        assertTrue("Connection should report as being closed.", con.isClosed());
+        assertTrue(con.isClosed(), "Connection should report as being closed");
     }
     
     /**
      * Test if a property stored with {@link FBConnectionPoolDataSource#setNonStandardProperty(String)} is retrievable.
      */
     @Test
-    public void testSetNonStandardProperty_singleParam() {
+    void testSetNonStandardProperty_singleParam() {
         ds.setNonStandardProperty("someProperty=someValue");
         
         assertEquals("someValue", ds.getProperty("someProperty"));
@@ -99,16 +93,16 @@ public class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void testSetNonStandardProperty_twoParam() {
+    void testSetNonStandardProperty_twoParam() {
         ds.setNonStandardProperty("someProperty", "someValue");
         
         assertEquals("someValue", ds.getProperty("someProperty"));
     }
 
     @Test
-    public void enableWireCompression() throws Exception {
+    void enableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
-        assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
+        assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
         ds.setWireCompression(true);
 
         PooledConnection pooledConnection = ds.getPooledConnection();
@@ -116,7 +110,7 @@ public class FBConnectionPoolDataSourceTest extends FBConnectionPoolTestBase {
             assertTrue(connection.isValid(0));
             GDSServerVersion serverVersion =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
-            assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+            assertTrue(serverVersion.isWireCompressionUsed(), "expected wire compression in use");
         } finally {
             pooledConnection.close();
         }

@@ -19,38 +19,41 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
-import org.firebirdsql.common.rules.DatabaseUserRule;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.wire.auth.legacy.LegacyAuthenticationPluginSpi;
 import org.firebirdsql.gds.ng.wire.auth.srp.*;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Test suite for the FBDriver class implementation.
@@ -58,36 +61,33 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDriverTest {
+class FBDriverTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-    @Rule
-    public final DatabaseUserRule databaseUserRule = DatabaseUserRule.withDatabaseUser();
+    @RegisterExtension
+    final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
     @Test
-    public void testAcceptsURL() throws Exception {
+    void testAcceptsURL() throws Exception {
         Driver driver = DriverManager.getDriver(getUrl());
 
         assertTrue(driver.acceptsURL(getUrl()));
     }
 
     @Test
-    public void testConnect() throws Exception {
+    void testConnect() throws Exception {
         Driver driver = DriverManager.getDriver(getUrl());
         try (Connection connection = driver.connect(getUrl(), getDefaultPropertiesForConnection())) {
-            assertNotNull("Connection is null", connection);
+            assertNotNull(connection, "Connection is null");
         }
     }
 
     @Test
-    public void testJdbcCompliant() throws Exception {
+    void testJdbcCompliant() throws Exception {
         Driver driver = DriverManager.getDriver(getUrl());
 
-        // current driver is not JDBC compliant.
         assertTrue(driver.jdbcCompliant());
     }
 
@@ -97,7 +97,7 @@ public class FBDriverTest {
      * make server return us a warning.
      */
     @Test
-    public void testWarnings() throws Exception {
+    void testWarnings() throws Exception {
         Properties info = getDefaultPropertiesForConnection();
         info.setProperty("set_db_sql_dialect", "1");
 
@@ -105,7 +105,7 @@ public class FBDriverTest {
         try (Connection connection = DriverManager.getConnection(getUrl(), info)) {
             SQLWarning warning = connection.getWarnings();
 
-            assertNotNull("Connection should have at least one warning.", warning);
+            assertNotNull(warning, "Connection should have at least one warning");
             assertThat(warning, allOf(
                     isA(SQLWarning.class),
                     errorCodeEquals(ISCConstants.isc_dialect_reset_warning),
@@ -114,7 +114,7 @@ public class FBDriverTest {
 
             connection.clearWarnings();
 
-            assertNull("After clearing no warnings should be present.", connection.getWarnings());
+            assertNull(connection.getWarnings(), "After clearing no warnings should be present");
         } finally {
             // Reset db dialect back to 3 to avoid issues with following tests
             info.setProperty("set_db_sql_dialect", "3");
@@ -125,7 +125,7 @@ public class FBDriverTest {
     }
 
     @Test
-    public void testDialect1() throws Exception {
+    void testDialect1() throws Exception {
         Properties info = getDefaultPropertiesForConnection();
         info.setProperty("isc_dpb_sql_dialect", "1");
 
@@ -134,37 +134,36 @@ public class FBDriverTest {
             // Dialect 1 allows double quotes in strings
             ResultSet rs = stmt.executeQuery("SELECT  cast(\"today\" as date) - 7 FROM rdb$database");
 
-            assertTrue("Should have at least one row.", rs.next());
+            assertTrue(rs.next(), "Should have at least one row");
         }
     }
 
     @Test
-    public void testGetSQLState() throws Exception {
+    void testGetSQLState() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
-            expectedException.expect(SQLSyntaxErrorException.class);
-            expectedException.expect(sqlState(is(SQLStateConstants.SQL_STATE_SYNTAX_ERROR)));
-
-            stmt.executeQuery("select * from");
+            SQLException exception = assertThrows(SQLSyntaxErrorException.class,
+                    () -> stmt.executeQuery("select * from"));
+            assertThat(exception, sqlState(is(SQLStateConstants.SQL_STATE_SYNTAX_ERROR)));
         }
     }
 
     @Test
-    public void testLongRange() throws Exception {
+    void testLongRange() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement s = connection.createStatement()) {
             s.execute("CREATE TABLE LONGTEST (LONGID DECIMAL(18) NOT NULL PRIMARY KEY)");
             s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MAX_VALUE + ")");
             try (ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST")) {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", Long.MAX_VALUE, rs.getLong(1));
+                assertTrue(rs.next(), "Should have one row");
+                assertEquals(Long.MAX_VALUE, rs.getLong(1), "Retrieved wrong value");
             }
 
             s.execute("DELETE FROM LONGTEST");
             s.execute("INSERT INTO LONGTEST (LONGID) VALUES (" + Long.MIN_VALUE + ")");
             try (ResultSet rs = s.executeQuery("SELECT LONGID FROM LONGTEST")) {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", Long.MIN_VALUE, rs.getLong(1));
+                assertTrue(rs.next(), "Should have one row");
+                assertEquals(Long.MIN_VALUE, rs.getLong(1), "Retrieved wrong value");
             }
         }
     }
@@ -172,7 +171,7 @@ public class FBDriverTest {
     private static final TimeZone timeZoneUTC = TimeZone.getTimeZone("UTC");
 
     @Test
-    public void testDate() throws Exception {
+    void testDate() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement s = connection.createStatement()) {
             s.execute("CREATE TABLE DATETEST (DATEID INTEGER NOT NULL PRIMARY KEY, TESTDATE TIMESTAMP)");
@@ -186,8 +185,8 @@ public class FBDriverTest {
             }
 
             try (ResultSet rs = s.executeQuery("SELECT TESTDATE FROM DATETEST WHERE DATEID=1")) {
-                assertTrue("Should have one row!", rs.next());
-                assertEquals("Retrieved wrong value!", x, rs.getTimestamp(1, cal));
+                assertTrue(rs.next(), "Should have one row");
+                assertEquals(x, rs.getTimestamp(1, cal), "Retrieved wrong value");
             }
         }
     }
@@ -200,7 +199,7 @@ public class FBDriverTest {
      *         if something went wrong.
      */
     @Test
-    public void testRollbackOnClose() throws Exception {
+    void testRollbackOnClose() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("CREATE TABLE test(id INTEGER, test_value INTEGER)");
@@ -212,21 +211,21 @@ public class FBDriverTest {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             try (ResultSet rs = stmt.executeQuery("SELECT test_value FROM test WHERE id = 1")) {
-                assertTrue("Should have at least one row", rs.next());
-                assertEquals("Value should be 1.", 1, rs.getInt(1));
-                assertFalse("Should have only one row.", rs.next());
+                assertTrue(rs.next(), "Should have at least one row");
+                assertEquals(1, rs.getInt(1), "Value should be 1");
+                assertFalse(rs.next(), "Should have only one row");
             }
         }
     }
 
     @Test
-    public void testDummyPacketIntervalConnect() throws Exception {
+    void testDummyPacketIntervalConnect() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("soTimeout", "2000");
 
         Driver driver = DriverManager.getDriver(getUrl());
         try (Connection connection = driver.connect(getUrl(), props)) {
-            assertNotNull("Connection is null", connection);
+            assertNotNull(connection, "Connection is null");
         }
     }
 
@@ -234,19 +233,23 @@ public class FBDriverTest {
      * Connection url parsing itself is tested in {@code DbAttachInfoTest}.
      */
     @Test
-    public void testInvalidConnectionUrl() throws Exception {
+    void testInvalidConnectionUrl() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         Driver driver = DriverManager.getDriver("jdbc:firebirdsql://localhost:c:/data/db/test.fdb");
-        expectedException.expect(SQLNonTransientConnectionException.class);
-        expectedException.expect(allOf(
+
+        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignore = driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props)) {
+                // just in case we do create a connection
+            }
+        });
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
                 message(containsString("Bad port: 'c:' is not a number"))));
-
-        driver.connect("jdbc:firebirdsql://localhost:c:/data/db/test.fdb", props);
     }
 
     @Test
-    public void testTransactionConfigThroughPropertiesObject() throws Exception {
+    void testTransactionConfigThroughPropertiesObject() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
         props.setProperty("TRANSACTION_READ_COMMITTED",
@@ -257,15 +260,15 @@ public class FBDriverTest {
                     fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
             assertEquals(4, tpb.size());
-            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(isc_tpb_read_committed));
-            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(isc_tpb_no_rec_version));
-            assertTrue("expected isc_tpb_write", tpb.hasArgument(isc_tpb_write));
-            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(isc_tpb_nowait));
+            assertTrue(tpb.hasArgument(isc_tpb_read_committed), "expected isc_tpb_read_committed");
+            assertTrue(tpb.hasArgument(isc_tpb_no_rec_version), "expected isc_tpb_no_rec_version");
+            assertTrue(tpb.hasArgument(isc_tpb_write), "expected isc_tpb_write");
+            assertTrue(tpb.hasArgument(isc_tpb_nowait), "expected isc_tpb_nowait");
         }
     }
 
     @Test
-    public void testTransactionConfigThroughConnectionString() throws Exception {
+    void testTransactionConfigThroughConnectionString() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         // Note that for proper testing this needs to be different from the mapping in isc_tpb_mapping.properties
         String jdbcUrl = getUrl() + "?TRANSACTION_READ_COMMITTED=isc_tpb_read_committed,isc_tpb_no_rec_version,isc_tpb_write,isc_tpb_nowait";
@@ -275,56 +278,33 @@ public class FBDriverTest {
                     fbConnection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
             assertEquals(4, tpb.size());
-            assertTrue("expected isc_tpb_read_committed", tpb.hasArgument(isc_tpb_read_committed));
-            assertTrue("expected isc_tpb_no_rec_version", tpb.hasArgument(isc_tpb_no_rec_version));
-            assertTrue("expected isc_tpb_write", tpb.hasArgument(isc_tpb_write));
-            assertTrue("expected isc_tpb_nowait", tpb.hasArgument(isc_tpb_nowait));
+            assertTrue(tpb.hasArgument(isc_tpb_read_committed), "expected isc_tpb_read_committed");
+            assertTrue(tpb.hasArgument(isc_tpb_no_rec_version), "expected isc_tpb_no_rec_version");
+            assertTrue(tpb.hasArgument(isc_tpb_write), "expected isc_tpb_write");
+            assertTrue(tpb.hasArgument(isc_tpb_nowait), "expected isc_tpb_nowait");
         }
     }
 
-    @Test
-    public void testConnectionLegacy_Auth() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME);
+    static Stream<String> testConnectionAuthenticationPlugin() {
+        return Stream.of(
+                LegacyAuthenticationPluginSpi.LEGACY_AUTH_NAME,
+                SrpAuthenticationPluginSpi.SRP_AUTH_NAME,
+                Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME,
+                Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME,
+                Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME,
+                Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME);
     }
 
-    @Test
-    public void testConnectionSrp() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(SrpAuthenticationPluginSpi.SRP_AUTH_NAME);
-    }
-
-    @Test
-    public void testConnectionSrp224() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(Srp224AuthenticationPluginSpi.SRP_224_AUTH_NAME);
-    }
-
-    @Test
-    public void testConnectionSrp256() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(Srp256AuthenticationPluginSpi.SRP_256_AUTH_NAME);
-    }
-
-    @Test
-    public void testConnectionSrp384() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(Srp384AuthenticationPluginSpi.SRP_384_AUTH_NAME);
-    }
-
-    @Test
-    public void testConnectionSrp512() throws Exception {
-        // Might fail if plugin not enabled
-        checkAuthenticationPlugin(Srp512AuthenticationPluginSpi.SRP_512_AUTH_NAME);
-    }
-
-    private void checkAuthenticationPlugin(String pluginName) throws Exception {
+    // Test might fail if plugin not enabled
+    @ParameterizedTest
+    @MethodSource
+    void testConnectionAuthenticationPlugin(String pluginName) throws Exception {
         assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
-        assumeTrue("Requires " + pluginName, EnvironmentRequirement.ALL_SRP_PLUGINS.isMet());
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(3, 0), "Requires Firebird 3 or higher");
+        assumeTrue(EnvironmentRequirement.ALL_SRP_PLUGINS.isMet(), "Requires " + pluginName);
         // NOTE: If the test still fails, then this plugin is not enabled in the Firebird AuthServer config
-        assumeTrue("Test requires support for authentication plugin " + pluginName,
-                getDefaultSupportInfo().supportsAuthenticationPlugin(pluginName));
+        assumeTrue(getDefaultSupportInfo().supportsAuthenticationPlugin(pluginName),
+                "Test requires support for authentication plugin " + pluginName);
 
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("authPlugins", pluginName);
@@ -338,41 +318,35 @@ public class FBDriverTest {
              Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(
                      "select mon$auth_method from mon$attachments where mon$attachment_id = current_connection")) {
-            assertTrue("expected row", rs.next());
-            assertEquals("Unexpected authentication method", pluginName, rs.getString(1));
+            assertTrue(rs.next(), "expected row");
+            assertEquals(pluginName, rs.getString(1), "Unexpected authentication method");
         }
     }
 
     @Test
-    public void testAuthPluginsUnknown_pureJava() throws Exception {
+    void testAuthPluginsUnknown_pureJava() {
         assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE, isPureJavaType());
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("authPlugins", "flup");
 
-        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_noKnownAuthPlugins));
-
-        try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
-            // ignore
-        }
+        SQLException exception = assertThrows(SQLException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
+                // just in case we do create a connection
+            }
+        });
+        assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_noKnownAuthPlugins));
     }
 
-    @Test
-    public void authenticateDatabaseUsingCaseSensitiveSrpAccount() throws Exception {
-        checkCaseSensitiveLogin("Srp");
-    }
-
-    @Test
-    public void authenticateDatabaseUsingCaseSensitiveLegacyAccount() throws Exception {
-        checkCaseSensitiveLogin("Legacy_Auth");
-    }
-
-    private void checkCaseSensitiveLogin(String authPlugin) throws SQLException {
+    @ParameterizedTest
+    @ValueSource(strings = { "Srp", "Legacy_Auth" })
+    void testAuthenticateDatabaseUsingCaseSensitive(String authPlugin) throws SQLException {
         assumeThat("Test requires GDS type that performs real authentication", GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Test requires case sensitive user name support",
-                getDefaultSupportInfo().supportsCaseSensitiveUserNames());
+        assumeTrue(getDefaultSupportInfo().supportsCaseSensitiveUserNames(),
+                "Test requires case sensitive user name support");
         final String username = "\"CaseSensitiveUser\"";
         final String password = "password";
-        databaseUserRule.createUser(username, password,
+        databaseUser.createUser(username, password,
                 authPlugin.equalsIgnoreCase("Legacy_Auth") ? "Legacy_UserManager" : authPlugin);
         Properties connectionProperties = getDefaultPropertiesForConnection();
         connectionProperties.setProperty("user", username);
@@ -385,14 +359,14 @@ public class FBDriverTest {
                              + "from MON$ATTACHMENTS "
                              + "where MON$ATTACHMENT_ID = CURRENT_CONNECTION")
         ) {
-            assertTrue("Expected a row with attachment information", resultSet.next());
-            assertEquals("Unexpected authentication method", authPlugin, resultSet.getString(1));
-            assertEquals("Unexpected user name", "CaseSensitiveUser", resultSet.getString(2).trim());
+            assertTrue(resultSet.next(), "Expected a row with attachment information");
+            assertEquals(authPlugin, resultSet.getString(1), "Unexpected authentication method");
+            assertEquals("CaseSensitiveUser", resultSet.getString(2).trim(), "Unexpected user name");
         }
     }
 
     @Test
-    public void testUrlEncodedPropertiesDecode()
+    void testUrlEncodedPropertiesDecode()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Using reflection to access internal implementation
         Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Map.class);
@@ -406,19 +380,19 @@ public class FBDriverTest {
 
         convertUrlParams.invoke(null, url, props);
 
-        assertEquals("key", "value", props.get("key"));
-        assertEquals("key semicolon", "value;semicolon", props.get("key semicolon"));
-        assertEquals("key percent", "value%percent", props.get("key percent"));
-        assertEquals("key plus", "value+plus", props.get("key plus"));
-        assertEquals("key ampersand", "value&ampersand", props.get("key ampersand"));
-        assertEquals("key equals_unescaped", "value=equals", props.get("key equals_unescaped"));
-        assertEquals("key equals_escaped", "value=equals", props.get("key equals_escaped"));
-        assertEquals("key euro", "value\u20aceuro", props.get("key euro"));
-        assertEquals("key space", "value space", props.get("key space"));
+        assertEquals("value", props.get("key"), "key");
+        assertEquals("value;semicolon", props.get("key semicolon"), "key semicolon");
+        assertEquals("value%percent", props.get("key percent"), "key percent");
+        assertEquals("value+plus", props.get("key plus"), "key plus");
+        assertEquals("value&ampersand", props.get("key ampersand"), "key ampersand");
+        assertEquals("value=equals", props.get("key equals_unescaped"), "key equals_unescaped");
+        assertEquals("value=equals", props.get("key equals_escaped"), "key equals_escaped");
+        assertEquals("value\u20aceuro", props.get("key euro"), "key euro");
+        assertEquals("value space", props.get("key space"), "key space");
     }
 
     @Test
-    public void testUrlEncodedPropertiesDecode_illegalEscape() throws Throwable {
+    void testUrlEncodedPropertiesDecode_illegalEscape() throws Throwable {
         // Using reflection to access internal implementation
         Method convertUrlParams = FBDriver.class.getDeclaredMethod("convertUrlParams", String.class, Map.class);
         convertUrlParams.setAccessible(true);
@@ -426,21 +400,21 @@ public class FBDriverTest {
         String url = "jdbc:firebird://localhost/database?key+invalid_escape=value%xyinvalid";
         Map<String, String> props = new HashMap<>();
 
-        expectedException.expect(SQLNonTransientConnectionException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
+            try {
+                convertUrlParams.invoke(null, url, props);
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        });
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionString),
                 message(containsString(url)),
                 message(containsString("java.lang.IllegalArgumentException"))));
-
-        try {
-            convertUrlParams.invoke(null, url, props);
-        } catch (InvocationTargetException e) {
-            throw e.getCause();
-        }
     }
 
     @Test
-    public void testNormalizeProperties() throws Exception {
+    void testNormalizeProperties() throws Exception {
         Properties props = new Properties();
         props.put("socket_buffer_size", "8192");
         props.put("blob_buffer_size", "16384");
@@ -453,43 +427,41 @@ public class FBDriverTest {
 
         Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
 
-        assertEquals("size", 9, mergedProps.size());
+        assertEquals(9, mergedProps.size(), "size");
         // NOTE: actual property name resulting from normalization should be considered an implementation detail
         // This might change in a future version
-        assertEquals("socketBufferSize", "32767", mergedProps.get("socketBufferSize"));
-        assertEquals("blobBufferSize", "16384", mergedProps.get("blobBufferSize"));
-        assertEquals("TRANSACTION_READ_COMMITTED", "read_committed,no_rec_version,write,wait",
-                mergedProps.get("TRANSACTION_READ_COMMITTED"));
-        assertEquals("TRANSACTION_REPEATABLE_READ", "concurrency,write,no_wait",
-                mergedProps.get("TRANSACTION_REPEATABLE_READ"));
-        assertEquals("columnLabelForName", "", mergedProps.get("columnLabelForName"));
-        assertEquals("soTimeout", "1000", mergedProps.get("soTimeout"));
-        assertEquals("nonStandard1", "value1", mergedProps.get("nonStandard1"));
-        assertEquals("nonStandard2", "value2", mergedProps.get("nonStandard2"));
-        assertEquals("attachObjectName (database)", "xyz", mergedProps.get("attachObjectName"));
+        assertEquals("32767", mergedProps.get("socketBufferSize"), "socketBufferSize");
+        assertEquals("16384", mergedProps.get("blobBufferSize"), "blobBufferSize");
+        assertEquals("read_committed,no_rec_version,write,wait", mergedProps.get("TRANSACTION_READ_COMMITTED"),
+                "TRANSACTION_READ_COMMITTED");
+        assertEquals("concurrency,write,no_wait", mergedProps.get("TRANSACTION_REPEATABLE_READ"),
+                "TRANSACTION_REPEATABLE_READ");
+        assertEquals("", mergedProps.get("columnLabelForName"), "columnLabelForName");
+        assertEquals("1000", mergedProps.get("soTimeout"), "soTimeout");
+        assertEquals("value1", mergedProps.get("nonStandard1"), "nonStandard1");
+        assertEquals("value2", mergedProps.get("nonStandard2"), "nonStandard2");
+        assertEquals("xyz", mergedProps.get("attachObjectName"), "attachObjectName (database)");
     }
 
     @Test
-    public void testNormalizeProperties_dpbShortAliasAndLongAlias_merged() throws Exception {
+    void testNormalizeProperties_dpbShortAliasAndLongAlias_merged() throws Exception {
         Properties props = new Properties();
         props.put("socket_buffer_size", "1024");
         String url = "jdbc:firebirdsql://localhost/database?socket_buffer_size=32767";
 
         Map<String, String> mergedProps = FBDriver.normalizeProperties(url, props);
 
-        assertEquals("size", 1, mergedProps.size());
-        assertTrue("socketBufferSize", mergedProps.containsKey("socketBufferSize"));
+        assertEquals(1, mergedProps.size(), "size");
+        assertTrue(mergedProps.containsKey("socketBufferSize"), "socketBufferSize");
     }
 
     @Test
-    public void testNormalizeProperties_multipleAliases_throwsException() throws Exception {
+    void testNormalizeProperties_multipleAliases_throwsException() {
         Properties props = new Properties();
         props.put("socket_buffer_size", "1024");
         String url = "jdbc:firebirdsql://localhost/database?socketBufferSize=32767";
 
-        expectedException.expect(SQLException.class);
-
-        FBDriver.normalizeProperties(url, props);
+        assertThrows(SQLException.class, () -> FBDriver.normalizeProperties(url, props));
     }
 
     /**
@@ -499,12 +471,12 @@ public class FBDriverTest {
      * </p>
      */
     @Test
-    public void testProblematicUserAccount_DAVIDS() throws Exception {
-        assumeTrue("Requires Firebird 3 or higher", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
-        assumeTrue("Requires Srp256", EnvironmentRequirement.ALL_SRP_PLUGINS.isMet());
+    void testProblematicUserAccount_DAVIDS() throws Exception {
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(3, 0), "Requires Firebird 3 or higher");
+        assumeTrue(EnvironmentRequirement.ALL_SRP_PLUGINS.isMet(), "Requires Srp256");
         String username = "DAVIDS";
         String password = "aaa123";
-        databaseUserRule.createUser(username, password, "Srp");
+        databaseUser.createUser(username, password, "Srp");
 
         Properties connectionProperties = getDefaultPropertiesForConnection();
         connectionProperties.setProperty("user", username);

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,44 +18,34 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.jdbc.escape.EscapeFunctionAsserts.assertParseException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LocateFunctionTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class LocateFunctionTest {
 
     private static final LocateFunction function = new LocateFunction();
 
     @Test
-    public void testTwoArgument() throws Exception {
+    void testTwoArgument() throws Exception {
         assertEquals("POSITION(a,b)", function.apply("a", "b"));
     }
 
     @Test
-    public void testThreeArgument() throws Exception {
+    void testThreeArgument() throws Exception {
         assertEquals("POSITION(a,b,c)", function.apply("a", "b", "c"));
     }
 
     @Test
-    public void testSingleArgument_throwsException() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-        expectedException.expectMessage(
-                "Expected 2 or 3 parameters for LOCATE, received 1");
-
-        function.apply("a");
+    void testSingleArgument_throwsException() {
+        assertParseException(() -> function.apply("a"), "Expected 2 or 3 parameters for LOCATE, received 1");
     }
 
     @Test
-    public void testFourArgument_throwsException() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-        expectedException.expectMessage(
+    public void testFourArgument_throwsException() {
+        assertParseException(() -> function.apply("a", "b", "c", "d"),
                 "Expected 2 or 3 parameters for LOCATE, received 4");
-
-        function.apply("a", "b", "c", "d");
     }
+
 }

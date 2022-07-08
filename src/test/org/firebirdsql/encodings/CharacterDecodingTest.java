@@ -18,18 +18,18 @@
  */
 package org.firebirdsql.encodings;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CharacterDecodingTest {
+class CharacterDecodingTest {
 
     @Test
-    public void testOriginal() {
+    void testOriginal() {
         IEncodingFactory factory = EncodingFactory.getPlatformDefault();
         Encoding encoding = factory.getEncodingForFirebirdName("ISO8859_1");
         String testStr = encoding.decodeFromCharset(new byte[] { 0x61, 0x62, 0x63 });
-        assertEquals("Strings should be equal", "\u0061\u0062\u0063", testStr);
+        assertEquals("\u0061\u0062\u0063", testStr, "Strings should be equal");
     }
 
 }

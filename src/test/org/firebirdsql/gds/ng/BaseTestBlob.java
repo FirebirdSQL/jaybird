@@ -216,7 +216,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param blobContent Blob content
      * @param baseContent Base content
      * @param requiredSize Required size
-     * @return <code>true</code> content matches, <code>false</code> otherwise
+     * @return {@code true} content matches, {@code false} otherwise
      */
     protected boolean validateBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
         if (blobContent.length != requiredSize) return false;
@@ -244,8 +244,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
             cstmt.execute();
         } finally {
-            closeQuietly(cstmt);
-            closeQuietly(con);
+            closeQuietly(cstmt, con);
         }
     }
 
@@ -334,7 +333,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param id ID of the record in blob_table
      * @param baseContent Base content
      * @param requiredSize Required (expected) size
-     * @return <code>true</code> when the content matches.
+     * @return {@code true} when the content matches.
      */
     protected boolean validateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         try (Connection con = getConnectionViaDriverManager();

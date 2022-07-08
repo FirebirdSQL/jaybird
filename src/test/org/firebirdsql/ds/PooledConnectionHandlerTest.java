@@ -18,22 +18,23 @@
  */
 package org.firebirdsql.ds;
 
+import org.firebirdsql.jdbc.FirebirdStatement;
+import org.junit.jupiter.api.Test;
+
+import javax.sql.PooledConnection;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.sql.PooledConnection;
-
-import org.firebirdsql.jdbc.FirebirdStatement;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link PooledConnectionHandler} and its proxy object (obtained from {@link FBConnectionPoolDataSource}).
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
+class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
 
     /**
      * Test if closing the logical connection does not produce errors when 
@@ -43,15 +44,15 @@ public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
      * </p>
      */
     @Test
-    public void testStatementOnConnectionClose() throws SQLException {
+    void testStatementOnConnectionClose() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
         // Cast to FirebirdStatement to make this work with Java 5 / JDBC 3
         FirebirdStatement stmt = (FirebirdStatement)con.createStatement();
         
         con.close();
-        assertTrue("Statement should be closed", stmt.isClosed());
-        assertTrue("Connection should be closed", con.isClosed());
+        assertTrue(stmt.isClosed(), "Statement should be closed");
+        assertTrue(con.isClosed(), "Connection should be closed");
     }
     
     /**
@@ -62,31 +63,31 @@ public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
      * </p>
      */
     @Test
-    public void testStatementOnConnectionReuse() throws SQLException {
+    void testStatementOnConnectionReuse() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
         // Cast to FirebirdStatement to make this work with Java 5 / JDBC 3
         FirebirdStatement stmt = (FirebirdStatement)con.createStatement();
 
         pc.getConnection();
-        assertTrue("Statement should be closed", stmt.isClosed());
-        assertTrue("Connection should be closed", con.isClosed());
+        assertTrue(stmt.isClosed(), "Statement should be closed");
+        assertTrue(con.isClosed(), "Connection should be closed");
     }
     
     /**
      * Tests for equals() on connections. 
      */
     @Test
-    public void testConnectionEquals() throws SQLException {
+    void testConnectionEquals() throws SQLException {
         PooledConnection pc1 = getPooledConnection();
         PooledConnection pc2 = getPooledConnection();
         Connection con1 = pc1.getConnection();
         Connection con2 = pc2.getConnection();
-        
-        assertTrue("A connection should be equal to itself", con1.equals(con1));
-        assertFalse("A connection should not be equal to a different connection", con1.equals(con2));
+
+        assertEquals(con1, con1, "A connection should be equal to itself");
+        assertNotEquals(con1, con2, "A connection should not be equal to a different connection");
         Connection con1_2 = pc1.getConnection();
-        assertFalse("A connection from the same pooled connection should be different", con1.equals(con1_2));
+        assertNotEquals(con1, con1_2, "A connection from the same pooled connection should be different");
     }
     
     /**
@@ -96,7 +97,7 @@ public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
      * </p>
      */
     @Test
-    public void testConnectionHashCode() throws SQLException {
+    void testConnectionHashCode() throws SQLException {
         PooledConnection pc1 = getPooledConnection();
         PooledConnection pc2 = getPooledConnection();
         Connection con1 = pc1.getConnection();
@@ -105,24 +106,25 @@ public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
         // Test for implementation detail!
         assertEquals(con1.hashCode(), System.identityHashCode(con1));
         // Warning: tests below might occasionally fail (no 100% guarantee that the hashCode() result is different)
-        assertFalse("Expected two connections to have different hashCode()", con1.hashCode() == con2.hashCode());
+        assertNotEquals(con1.hashCode(), con2.hashCode(), "Expected two connections to have different hashCode()");
         Connection con1_2 = pc1.getConnection();
-        assertFalse("Expected two connections from same PooledConnection to have different hashCode()", con1.hashCode() == con1_2.hashCode());
+        assertNotEquals(con1.hashCode(), con1_2.hashCode(),
+                "Expected two connections from same PooledConnection to have different hashCode()");
     }
     
     /**
      * Test closing a connection twice should not throw an error.
      */
     @Test
-    public void testConnectionDoubleClose() throws SQLException {
+    void testConnectionDoubleClose() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
         
-        assertFalse("Connection should be open", con.isClosed());
+        assertFalse(con.isClosed(), "Connection should be open");
         con.close();
-        assertTrue("Connection should be closed", con.isClosed());
+        assertTrue(con.isClosed(), "Connection should be closed");
         con.close();
-        assertTrue("Connection should be closed", con.isClosed());
+        assertTrue(con.isClosed(), "Connection should be closed");
     }
     
     /**
@@ -132,11 +134,11 @@ public class PooledConnectionHandlerTest extends FBConnectionPoolTestBase {
      * </p>
      */
     @Test
-    public void testConnectionToString() throws SQLException {
+    void testConnectionToString() throws SQLException {
         PooledConnection pc = getPooledConnection();
         Connection con = pc.getConnection();
         
         // Test for implementation detail!
-        assertTrue(con.toString().startsWith("Proxy for org.firebirdsql.jdbc.FBConnection"));
+        assertThat(con.toString(), startsWith("Proxy for org.firebirdsql.jdbc.FBConnection"));
     }
 }

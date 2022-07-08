@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,58 +18,40 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
-public class TimeZoneByNameMappingTest {
-
-    @Rule
-    @SuppressWarnings("deprecation")
-    public final ExpectedException expectedException = ExpectedException.none();
+class TimeZoneByNameMappingTest {
 
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
 
-    private final int firebirdZoneId;
-    private final String zoneName;
-    private final int resolvedFirebirdZoneId;
-    private final String jtZoneId;
-
-    public TimeZoneByNameMappingTest(int firebirdZoneId, String zoneName, String jtZoneId, int resolvedFirebirdZoneId) {
-        this.firebirdZoneId = firebirdZoneId;
-        this.zoneName = zoneName;
-        this.resolvedFirebirdZoneId = resolvedFirebirdZoneId;
-        this.jtZoneId = jtZoneId != null ? jtZoneId : zoneName;
-    }
-
-    @Test
-    public void mapsToJavaTimeZoneId() {
+    @ParameterizedTest(name = "{0} => {2})")
+    @MethodSource("getTestCases")
+    void mapsToJavaTimeZoneId(int firebirdZoneId, String zoneName, String jtZoneId) {
         ZoneId zoneId = mapping.timeZoneById(firebirdZoneId);
 
-        assertEquals(zoneName + ": " + zoneId, jtZoneId, zoneId.getId());
+        assertEquals(jtZoneId, zoneId.getId(), zoneName + ": " + zoneId);
     }
 
-    @Test
-    public void mapsJavaZoneIdToFirebirdId() {
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{2} => {3})")
+    @MethodSource("getTestCases")
+    void mapsJavaZoneIdToFirebirdId(int firebirdZoneId, String zoneName, String jtZoneId, int resolvedFirebirdZoneId) {
         ZoneId zoneId = ZoneId.of(jtZoneId);
 
         int resolvedId = mapping.toTimeZoneId(zoneId);
 
-        assertEquals(jtZoneId + ": " + resolvedId, resolvedFirebirdZoneId, resolvedId);
+        assertEquals(resolvedFirebirdZoneId, resolvedId, jtZoneId + ": " + resolvedId);
     }
 
-    @Parameterized.Parameters(name = "{0} => {1})")
-    public static Collection<Object[]> getTestCases() {
-        return Arrays.asList(
+    static Stream<Arguments> getTestCases() {
+        return Stream.of(
                 testCase(65535, "GMT"),
                 testCase(65534, "ACT", "Australia/Darwin", 65180),
                 testCase(65533, "AET", "Australia/Sydney", 65168),
@@ -707,7 +689,7 @@ public class TimeZoneByNameMappingTest {
         );
     }
 
-    private static Object[] testCase(int zoneId, String zoneName) {
+    private static Arguments testCase(int zoneId, String zoneName) {
         return testCase(zoneId, zoneName, null, zoneId);
     }
 
@@ -720,7 +702,7 @@ public class TimeZoneByNameMappingTest {
      * @param resolvedFirebirdId Expected Firebird zone id
      * @return Test case
      */
-    private static Object[] testCase(int zoneId, String zoneName, String jtZoneId, int resolvedFirebirdId) {
-        return new Object[] { zoneId, zoneName, jtZoneId, resolvedFirebirdId };
+    private static Arguments testCase(int zoneId, String zoneName, String jtZoneId, int resolvedFirebirdId) {
+        return Arguments.of(zoneId, zoneName, jtZoneId != null ? jtZoneId : zoneName, resolvedFirebirdId);
     }
 }

@@ -94,7 +94,9 @@ public abstract class UsesDatabaseExtension {
             ex.printStackTrace();
         } finally {
             try {
-                fbManager.stop();
+                if (fbManager != null) {
+                    fbManager.stop();
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -120,7 +122,7 @@ public abstract class UsesDatabaseExtension {
         databasesToDrop.add(databasePath);
     }
 
-    // TODO Consider implementing a way to have a non-standard initialization (eg as in TestResultSetDialect1)
+    // TODO Consider implementing a way to have a non-standard initialization (e.g. as in TestResultSetDialect1)
 
     /**
      * Creates a rule to initialize (and drop) a test database with the default configuration.

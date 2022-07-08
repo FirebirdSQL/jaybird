@@ -27,7 +27,7 @@ import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
 import org.firebirdsql.gds.ng.wire.version15.Version15Descriptor;
 import org.firebirdsql.gds.ng.wire.version16.Version16Descriptor;
 import org.firebirdsql.gds.ng.wire.version18.Version18Descriptor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -35,13 +35,13 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class ProtocolCollectionTest {
+class ProtocolCollectionTest {
 
     /**
      * Tests if the default collection contains the expected classes.
@@ -52,7 +52,7 @@ public class ProtocolCollectionTest {
      * </p>
      */
     @Test
-    public void testGetDefaultCollection() {
+    void testGetDefaultCollection() {
         assertProtocolCollection(ProtocolCollection.getDefaultCollection(),
                 Arrays.asList(
                         Version10Descriptor.class,
@@ -69,7 +69,7 @@ public class ProtocolCollectionTest {
      * a collection with the supplied descriptors.
      */
     @Test
-    public void testCreate() {
+    void testCreate() {
         // Version 10 with weight 3, type 1
         ProtocolDescriptor alternativeDescriptorV10Weight3_1 = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
@@ -96,7 +96,7 @@ public class ProtocolCollectionTest {
      * ProtocolDescriptors with the same version.
      */
     @Test
-    public void testCreateSameVersion() {
+    void testCreateSameVersion() {
         ProtocolDescriptor alternativeDescriptor = new EmptyProtocolDescriptor(
                 WireProtocolConstants.PROTOCOL_VERSION10, WireProtocolConstants.arch_generic,
                 WireProtocolConstants.ptype_rpc, WireProtocolConstants.ptype_batch_send, 2);
@@ -110,12 +110,12 @@ public class ProtocolCollectionTest {
      * retrieves the descriptor based on its version.
      */
     @Test
-    public void testGetProtocolDescriptor_existingVersion() {
+    void testGetProtocolDescriptor_existingVersion() {
         ProtocolDescriptor descriptor = new Version10Descriptor();
         ProtocolCollection collection = ProtocolCollection.create(descriptor);
 
-        assertSame("Unexpected ProtocolDescriptor returned", descriptor,
-                collection.getProtocolDescriptor(descriptor.getVersion()));
+        assertSame(descriptor, collection.getProtocolDescriptor(descriptor.getVersion()),
+                "Unexpected ProtocolDescriptor returned");
     }
 
     /**
@@ -124,11 +124,11 @@ public class ProtocolCollectionTest {
      * collection.
      */
     @Test
-    public void testGetProtocolDescriptor_nonExistentVersion() {
+    void testGetProtocolDescriptor_nonExistentVersion() {
         ProtocolDescriptor descriptor = new Version10Descriptor();
         ProtocolCollection collection = ProtocolCollection.create(descriptor);
 
-        assertNull("Unexpected ProtocolDescriptor returned", collection.getProtocolDescriptor(-1));
+        assertNull(collection.getProtocolDescriptor(-1), "Unexpected ProtocolDescriptor returned");
     }
 
     private void assertProtocolCollection(ProtocolCollection collection,
@@ -143,7 +143,9 @@ public class ProtocolCollectionTest {
             }
         }
 
-        assertTrue("One or more expected descriptors not found: " + expectedProtocols, expectedProtocols.isEmpty());
-        assertTrue("One or more unexpected descriptors found: " + unexpectedProtocols, unexpectedProtocols.isEmpty());
+        assertTrue(expectedProtocols.isEmpty(),
+                () -> "One or more expected descriptors not found: " + expectedProtocols);
+        assertTrue(unexpectedProtocols.isEmpty(),
+                () -> "One or more unexpected descriptors found: " + unexpectedProtocols);
     }
 }

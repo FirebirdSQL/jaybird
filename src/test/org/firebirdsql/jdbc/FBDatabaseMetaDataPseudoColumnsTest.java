@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
@@ -30,10 +30,10 @@ import java.util.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class FBDatabaseMetaDataPseudoColumnsTest {
+class FBDatabaseMetaDataPseudoColumnsTest {
 
     //@formatter:off
     private static final String NORMAL_TABLE_NAME = "NORMAL_TABLE";
@@ -71,8 +71,8 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     private static final MetaDataTestSupport<PseudoColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(PseudoColumnMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             CREATE_NORMAL_TABLE,
             CREATE_NORMAL_TABLE2,
             CREATE_SINGLE_VIEW,
@@ -81,20 +81,20 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
             CREATE_GTT_PRESERVE,
             CREATE_GTT_DELETE);
 
-    private boolean supportsRecordVersion = getDefaultSupportInfo()
+    private static final boolean supportsRecordVersion = getDefaultSupportInfo()
             .supportsRecordVersionPseudoColumn();
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -107,14 +107,14 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
      * Tests the ordinal positions and types for the metadata columns of getPseudoColumns().
      */
     @Test
-    public void testPseudoColumnsMetaDataColumns() throws Exception {
+    void testPseudoColumnsMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getPseudoColumns(null, null, "doesnotexist", null)) {
             metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
     @Test
-    public void testNormalTable_allPseudoColumns() throws Exception {
+    void testNormalTable_allPseudoColumns() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(NORMAL_TABLE_NAME, "NO");
 
@@ -123,16 +123,15 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testSingleView_allPseudoColumns() throws Exception {
-        List<Map<PseudoColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(SINGLE_VIEW_NAME, "NO");
+    void testSingleView_allPseudoColumns() throws Exception {
+        List<Map<PseudoColumnMetaData, Object>> validationRules = createStandardValidationRules(SINGLE_VIEW_NAME, "NO");
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, SINGLE_VIEW_NAME, "%");
         validate(pseudoColumns, validationRules);
     }
 
     @Test
-    public void testMultiView_allPseudoColumns() throws Exception {
+    void testMultiView_allPseudoColumns() throws Exception {
         // Multi-table view has no record version
         List<Map<PseudoColumnMetaData, Object>> validationRules = Collections.singletonList(
                 createDbkeyValidationRules(MULTI_VIEW_NAME, 16));
@@ -142,7 +141,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testExternalTable_allPseudoColumns() throws Exception {
+    void testExternalTable_allPseudoColumns() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(EXTERNAL_TABLE_NAME, "YES");
 
@@ -151,17 +150,16 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testMonitoringTable_allPseudoColumns() throws Exception {
-        assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
-        List<Map<PseudoColumnMetaData, Object>> validationRules =
-                createStandardValidationRules("MON$DATABASE", "YES");
+    void testMonitoringTable_allPseudoColumns() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
+        List<Map<PseudoColumnMetaData, Object>> validationRules = createStandardValidationRules("MON$DATABASE", "YES");
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "MON$DATABASE", "%");
         validate(pseudoColumns, validationRules);
     }
 
     @Test
-    public void testGttPreserve_allPseudoColumns() throws Exception {
+    void testGttPreserve_allPseudoColumns() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(GTT_PRESERVE_NAME, "NO");
 
@@ -170,16 +168,15 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testGttDelete_allPseudoColumns() throws Exception {
-        List<Map<PseudoColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(GTT_DELETE_NAME, "NO");
+    void testGttDelete_allPseudoColumns() throws Exception {
+        List<Map<PseudoColumnMetaData, Object>> validationRules = createStandardValidationRules(GTT_DELETE_NAME, "NO");
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, GTT_DELETE_NAME, "%");
         validate(pseudoColumns, validationRules);
     }
 
     @Test
-    public void testPattern_nullColumn_allPseudoColumns() throws Exception {
+    void testPattern_nullColumn_allPseudoColumns() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(NORMAL_TABLE_NAME, "NO");
 
@@ -188,19 +185,19 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testPattern_noMatchingColumns() throws Exception {
+    void testPattern_noMatchingColumns() throws Exception {
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "ABC");
-        validate(pseudoColumns, Collections.<Map<PseudoColumnMetaData, Object>>emptyList());
+        validate(pseudoColumns, Collections.emptyList());
     }
 
     @Test
-    public void testPattern_noMatchingTables() throws Exception {
+    void testPattern_noMatchingTables() throws Exception {
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "ABC", "%");
-        validate(pseudoColumns, Collections.<Map<PseudoColumnMetaData, Object>>emptyList());
+        validate(pseudoColumns, Collections.emptyList());
     }
 
     @Test
-    public void testPattern_usingWildcard_allColumns() throws Exception {
+    void testPattern_usingWildcard_allColumns() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules =
                 createStandardValidationRules(NORMAL_TABLE_NAME, "NO");
 
@@ -209,7 +206,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testPattern_usingEscape_dbKeyOnly() throws Exception {
+    void testPattern_usingEscape_dbKeyOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = Collections.singletonList(
                 createDbkeyValidationRules(NORMAL_TABLE_NAME, 8));
 
@@ -218,7 +215,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testPattern_singleWildCard_dbKeyOnly() throws Exception {
+    void testPattern_singleWildCard_dbKeyOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = Collections.singletonList(
                 createDbkeyValidationRules(NORMAL_TABLE_NAME, 8));
 
@@ -227,63 +224,64 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
     }
 
     @Test
-    public void testPattern_usingEscape_recordVersionOnly() throws Exception {
+    void testPattern_usingEscape_recordVersionOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = supportsRecordVersion
-                ? Collections.<Map<PseudoColumnMetaData, Object>>singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
-                : Collections.<Map<PseudoColumnMetaData, Object>>emptyList();
+                ? Collections.singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
+                : Collections.emptyList();
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "RDB$RECORD\\_VERSION");
         validate(pseudoColumns, validationRules);
     }
 
     @Test
-    public void testPattern_singleWildCard_recordVersionOnly() throws Exception {
+    void testPattern_singleWildCard_recordVersionOnly() throws Exception {
         List<Map<PseudoColumnMetaData, Object>> validationRules = supportsRecordVersion
-                ? Collections.<Map<PseudoColumnMetaData, Object>>singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
-                : Collections.<Map<PseudoColumnMetaData, Object>>emptyList();
+                ? Collections.singletonList(createRecordVersionValidationRules(NORMAL_TABLE_NAME, "NO"))
+                : Collections.emptyList();
 
         ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "RDB$RECORD_VERSION");
         validate(pseudoColumns, validationRules);
     }
 
     @Test
-    public void testPattern_emptyStringColumn() throws Exception {
+    void testPattern_emptyStringColumn() throws Exception {
         try (ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, NORMAL_TABLE_NAME, "")) {
-            assertFalse("expected empty result set", pseudoColumns.next());
+            assertFalse(pseudoColumns.next(), "expected empty result set");
         }
     }
 
     @Test
-    public void testPattern_emptyStringTable() throws Exception {
+    void testPattern_emptyStringTable() throws Exception {
         try (ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "", "%")) {
-            assertFalse("expected empty result set", pseudoColumns.next());
+            assertFalse(pseudoColumns.next(), "expected empty result set");
         }
     }
 
     @Test
-    public void testPattern_wildCardTable() throws Exception {
+    void testPattern_wildCardTable() throws Exception {
         try (ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, "%", "RDB$DB\\_KEY")) {
             int tableCount = 0;
             while (pseudoColumns.next()) {
                 tableCount += 1;
             }
 
-            assertEquals("Unexpected number of pseudo columns",
-                    getDefaultSupportInfo().getSystemTableCount() + 7, tableCount);
+            // System tables + the 7 tables created for this test
+            assertEquals(getDefaultSupportInfo().getSystemTableCount() + 7, tableCount,
+                    "Unexpected number of pseudo columns");
         }
     }
 
     @Test
-    public void testPattern_nullTable() throws Exception {
+    void testPattern_nullTable() throws Exception {
         try (ResultSet pseudoColumns = dbmd.getPseudoColumns(null, null, null, "RDB$DB\\_KEY")) {
             int tableCount = 0;
             while (pseudoColumns.next()) {
                 tableCount += 1;
             }
 
-            assertEquals("Unexpected number of pseudo columns",
-                    // System tables + the 7 tables created for this test
-                    getDefaultSupportInfo().getSystemTableCount() + 7, tableCount);
+            // System tables + the 7 tables created for this test
+            assertEquals(getDefaultSupportInfo().getSystemTableCount() + 7, tableCount,
+                    "Unexpected number of pseudo columns");
         }
     }
 
@@ -309,7 +307,7 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
                 }
                 columnCount++;
             }
-            assertEquals("Unexpected number of columns", expectedPseudoColumns.size(), columnCount);
+            assertEquals(expectedPseudoColumns.size(), columnCount, "Unexpected number of columns");
         } finally {
             closeQuietly(pseudoColumns);
         }
@@ -377,9 +375,9 @@ public class FBDatabaseMetaDataPseudoColumnsTest {
                     public void assertColumnValue(ResultSet rs, Object expectedValue) throws SQLException {
                         String remarkValue = rs.getString(getPosition());
                         if (expectedValue == null) {
-                            assertNull("Expected null remark value", remarkValue);
+                            assertNull(remarkValue, "Expected null remark value");
                         } else {
-                            assertNotNull("Expected non-null remark value", remarkValue);
+                            assertNotNull(remarkValue, "Expected non-null remark value");
                         }
                     }
                 };

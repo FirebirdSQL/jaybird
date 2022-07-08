@@ -24,16 +24,16 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class GDSServerVersionTest {
+class GDSServerVersionTest {
 
     private static final String[] TEST_VERSION_15 =
             { "WI-V1.5.2.4731 Firebird 1.5" , "WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10" };
@@ -57,7 +57,7 @@ public class GDSServerVersionTest {
             { "UI-V2.5.8.27089-1 Firebird 2.5", "UI-V2.5.8.27089-1 Firebird 2.5/tcp (MacBook-Air-de-Ulises.local)/P10" };
 
     @Test
-    public void testParse15() throws Exception {
+    void testParse15() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_15);
 
         assertEquals("WI", version.getPlatform());
@@ -67,8 +67,7 @@ public class GDSServerVersionTest {
         assertEquals(2, version.getVariant());
         assertEquals(4731, version.getBuildNumber());
         assertEquals("Firebird 1.5", version.getServerName());
-        assertEquals("WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10",
-                version.getExtendedServerName());
+        assertEquals("WI-V1.5.2.4731 Firebird 1.5/tcp (PCRORO)/P10", version.getExtendedServerName());
         assertEquals("WI-V1.5.2.4731", version.getFullVersion());
         assertEquals(10, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
@@ -77,7 +76,7 @@ public class GDSServerVersionTest {
     }
 
     @Test
-    public void testParse21() throws Exception {
+    void testParse21() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_21);
 
         assertEquals("WI", version.getPlatform());
@@ -87,8 +86,7 @@ public class GDSServerVersionTest {
         assertEquals(3, version.getVariant());
         assertEquals(18185, version.getBuildNumber());
         assertEquals("Firebird 2.1", version.getServerName());
-        assertEquals("WI-V2.1.3.18185 Firebird 2.1/tcp (Ramona)/P10",
-                version.getExtendedServerName());
+        assertEquals("WI-V2.1.3.18185 Firebird 2.1/tcp (Ramona)/P10", version.getExtendedServerName());
         assertEquals("WI-V2.1.3.18185", version.getFullVersion());
         assertEquals(10, version.getProtocolVersion());
         assertFalse(version.isWireEncryptionUsed());
@@ -97,7 +95,7 @@ public class GDSServerVersionTest {
     }
 
     @Test
-    public void testParse30() throws Exception {
+    void testParse30() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_30);
 
         assertEquals("WI", version.getPlatform());
@@ -107,8 +105,7 @@ public class GDSServerVersionTest {
         assertEquals(2, version.getVariant());
         assertEquals(32703, version.getBuildNumber());
         assertEquals("Firebird 3.0", version.getServerName());
-        assertEquals("WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:C",
-                version.getExtendedServerName());
+        assertEquals("WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:C", version.getExtendedServerName());
         assertEquals("WI-V3.0.2.32703", version.getFullVersion());
         assertEquals(13, version.getProtocolVersion());
         assertTrue(version.isWireEncryptionUsed());
@@ -118,7 +115,7 @@ public class GDSServerVersionTest {
     }
 
     @Test
-    public void testParse30WithCompression() throws Exception {
+    void testParse30WithCompression() throws Exception {
         String[] testVersionCompression = TEST_VERSION_30.clone();
         testVersionCompression[1] = testVersionCompression[1] + "Z";
         GDSServerVersion version = GDSServerVersion.parseRawVersion(testVersionCompression);
@@ -130,8 +127,7 @@ public class GDSServerVersionTest {
         assertEquals(2, version.getVariant());
         assertEquals(32703, version.getBuildNumber());
         assertEquals("Firebird 3.0", version.getServerName());
-        assertEquals("WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:CZ",
-                version.getExtendedServerName());
+        assertEquals("WI-V3.0.2.32703 Firebird 3.0/tcp (Ramona)/P13:CZ", version.getExtendedServerName());
         assertEquals("WI-V3.0.2.32703", version.getFullVersion());
         assertEquals(13, version.getProtocolVersion());
         assertTrue(version.isWireEncryptionUsed());
@@ -141,7 +137,7 @@ public class GDSServerVersionTest {
     }
 
     @Test
-    public void testParseNoExtendedInfo() throws Exception {
+    void testParseNoExtendedInfo() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_NO_EXTENDED_INFO);
 
         assertEquals("WI", version.getPlatform());
@@ -162,7 +158,7 @@ public class GDSServerVersionTest {
      * Check if version with a number in the platform (ie Sparc 4) is correctly parsed
      */
     @Test
-    public void testParseSparcVersion() throws Exception {
+    void testParseSparcVersion() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_NO_EXTENDED_INFO_SPARC);
 
         assertEquals("S4", version.getPlatform());
@@ -178,7 +174,7 @@ public class GDSServerVersionTest {
     }
 
     @Test
-    public void testMacWithRevision() throws Exception {
+    void testMacWithRevision() throws Exception {
         GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_MAC_WITH_REVISION);
 
         assertEquals("UI", version.getPlatform());
@@ -196,13 +192,13 @@ public class GDSServerVersionTest {
                 version.toString());
     }
 
-    @Test(expected = GDSServerVersionException.class)
-    public void testIncorrectFormat() throws Exception {
-        GDSServerVersion.parseRawVersion(TEST_INCORRECT_FORMAT);
+    @Test
+    void testIncorrectFormat() {
+        assertThrows(GDSServerVersionException.class, () -> GDSServerVersion.parseRawVersion(TEST_INCORRECT_FORMAT));
     }
 
     @Test
-    public void testSerializable() throws Exception {
+    void testSerializable() throws Exception {
         final GDSServerVersion version = GDSServerVersion.parseRawVersion(TEST_VERSION_21);
 
         // Serialize object
@@ -216,24 +212,24 @@ public class GDSServerVersionTest {
 
         GDSServerVersion serializedVersion = (GDSServerVersion) objectIn.readObject();
 
-        assertEquals("Serialized version should be equal to original", version, serializedVersion);
+        assertEquals(version, serializedVersion, "Serialized version should be equal to original");
     }
 
     @Test
-    public void testIsEqualOrAbove() throws Exception {
+    void testIsEqualOrAbove() throws Exception {
         GDSServerVersion fb258Version = GDSServerVersion.parseRawVersion("WI-V2.5.8.1 Firebird 2.5");
         GDSServerVersion fb303Version = GDSServerVersion.parseRawVersion("WI-V3.0.3.1 Firebird 3.0");
         GDSServerVersion fb304Version = GDSServerVersion.parseRawVersion("WI-V3.0.4.1 Firebird 3.0");
         GDSServerVersion fb400Version = GDSServerVersion.parseRawVersion("WI-V4.0.0.0 Firebird 4.0");
 
-        assertFalse("2.5.8 >= 3.0", fb258Version.isEqualOrAbove(3, 0));
-        assertTrue("3.0.3 >= 3.0", fb303Version.isEqualOrAbove(3, 0));
-        assertTrue("3.0.4 >= 3.0", fb304Version.isEqualOrAbove(3, 0));
-        assertTrue("4.0.0 >= 3.0", fb400Version.isEqualOrAbove(3, 0));
+        assertFalse(fb258Version.isEqualOrAbove(3, 0), "2.5.8 >= 3.0");
+        assertTrue(fb303Version.isEqualOrAbove(3, 0), "3.0.3 >= 3.0");
+        assertTrue(fb304Version.isEqualOrAbove(3, 0), "3.0.4 >= 3.0");
+        assertTrue(fb400Version.isEqualOrAbove(3, 0), "4.0.0 >= 3.0");
         
-        assertFalse("2.5.8 >= 3.0.4", fb258Version.isEqualOrAbove(3, 0, 4));
-        assertFalse("3.0.3 >= 3.0.4", fb303Version.isEqualOrAbove(3, 0, 4));
-        assertTrue("3.0.4 >= 3.0.4", fb304Version.isEqualOrAbove(3, 0, 4));
-        assertTrue("4.0.0 >= 3.0.4", fb400Version.isEqualOrAbove(3, 0, 4));
+        assertFalse(fb258Version.isEqualOrAbove(3, 0, 4), "2.5.8 >= 3.0.4");
+        assertFalse(fb303Version.isEqualOrAbove(3, 0, 4), "3.0.3 >= 3.0.4");
+        assertTrue(fb304Version.isEqualOrAbove(3, 0, 4), "3.0.4 >= 3.0.4");
+        assertTrue(fb400Version.isEqualOrAbove(3, 0, 4), "4.0.0 >= 3.0.4");
     }
 }

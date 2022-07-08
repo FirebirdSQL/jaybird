@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,9 +19,11 @@
 package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -29,11 +31,12 @@ import java.sql.Statement;
 import java.util.Locale;
 
 import static org.firebirdsql.common.FBTestProperties.DB_NAME;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for support of the scalar system function escapes as defined in
@@ -41,41 +44,51 @@ import static org.junit.Assert.assertTrue;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TestScalarSystemFunctions {
+class TestScalarSystemFunctions {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    @Test
-    public void testDatabase() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
-            assertTrue("Expected at least one row", rs.next());
-            assertThat("Unexpected result for function escape DATABASE()",
-                    rs.getString(1), anyOf(endsWith(DB_NAME.toUpperCase(Locale.ROOT)), endsWith(DB_NAME)));
+    private static Connection con;
+    private static Statement stmt;
+
+    @BeforeAll
+    static void setupAll() throws Exception {
+        con = FBTestProperties.getConnectionViaDriverManager();
+        stmt = con.createStatement();
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+        try {
+            closeQuietly(stmt, con);
+        } finally {
+            stmt = null;
+            con = null;
         }
     }
 
     @Test
-    public void testIfNull() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT {fn IFNULL(NULL, 'abcd')} FROM RDB$DATABASE");
-            assertTrue("Expected at least one row", rs.next());
-            assertEquals("Unexpected result for function escape IFNULL(NULL, 'abcd')", "abcd", rs.getString(1));
-        }
+    void testDatabase() throws Exception {
+        ResultSet rs = stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
+        assertTrue(rs.next(), "Expected at least one row");
+        assertThat("Unexpected result for function escape DATABASE()",
+                rs.getString(1), anyOf(endsWith(DB_NAME.toUpperCase(Locale.ROOT)), endsWith(DB_NAME)));
     }
 
     @Test
-    public void testUser() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT {fn USER()} FROM RDB$DATABASE");
-            assertTrue("Expected at least one row", rs.next());
-            assertEquals("Unexpected result for function escape USER()",
-                    FBTestProperties.DB_USER.toUpperCase(), rs.getString(1));
-        }
+    void testIfNull() throws Exception {
+        ResultSet rs = stmt.executeQuery("SELECT {fn IFNULL(NULL, 'abcd')} FROM RDB$DATABASE");
+        assertTrue(rs.next(), "Expected at least one row");
+        assertEquals("abcd", rs.getString(1), "Unexpected result for function escape IFNULL(NULL, 'abcd')");
+    }
+
+    @Test
+    void testUser() throws Exception {
+        ResultSet rs = stmt.executeQuery("SELECT {fn USER()} FROM RDB$DATABASE");
+        assertTrue(rs.next(), "Expected at least one row");
+        assertEquals(FBTestProperties.DB_USER.toUpperCase(), rs.getString(1),
+                "Unexpected result for function escape USER()");
     }
 
 }

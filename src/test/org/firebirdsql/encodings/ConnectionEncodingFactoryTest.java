@@ -19,41 +19,36 @@
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests for {@link ConnectionEncodingFactory}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class ConnectionEncodingFactoryTest {
+class ConnectionEncodingFactoryTest {
 
     private final EncodingFactory standardFactory = EncodingFactory.getRootEncodingFactory();
     // We use US_ASCII as it is unlikely to be a real default on a system, so we know it was correctly applied
     private final EncodingDefinition defaultEncodingDefinition =
             standardFactory.getEncodingDefinitionByCharset(StandardCharsets.US_ASCII);
-    private ConnectionEncodingFactory factory;
-
-    @Before
-    public void setUp() {
-        factory = new ConnectionEncodingFactory(standardFactory, defaultEncodingDefinition);
-    }
+    private final ConnectionEncodingFactory factory =
+            new ConnectionEncodingFactory(standardFactory, defaultEncodingDefinition);
 
     @Test
-    public void defaultEncodingMustMatchEncodingDefinition() {
+    void defaultEncodingMustMatchEncodingDefinition() {
         assertSame(defaultEncodingDefinition, factory.getDefaultEncodingDefinition());
         assertSame(defaultEncodingDefinition.getEncoding(), factory.getDefaultEncoding());
     }
 
     @Test
-    public void noneEncodingDefinitionUsesCharsetOfDefaultEncoding() {
+    void noneEncodingDefinitionUsesCharsetOfDefaultEncoding() {
         EncodingDefinition noneEncodingDefinition =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_NONE);
 
@@ -63,7 +58,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void octetsEncodingDefinitionUsesCharsetOfDefaultEncoding() {
+    void octetsEncodingDefinitionUsesCharsetOfDefaultEncoding() {
         EncodingDefinition octetsEncoding =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_OCTETS);
 
@@ -73,7 +68,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void getDefaultEncodingDefinitionForDynamicCharacterSetId() {
+    void getDefaultEncodingDefinitionForDynamicCharacterSetId() {
         EncodingDefinition defaultEncodingDefinition = factory.getDefaultEncodingDefinition();
 
         assertSame(defaultEncodingDefinition, factory.getEncodingDefinitionByCharacterSetId(ISCConstants.CS_dynamic));
@@ -82,7 +77,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void getNoneEncodingDefinitionByCharacterSetId() {
+    void getNoneEncodingDefinitionByCharacterSetId() {
         EncodingDefinition noneEncodingDefinition =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_NONE);
 
@@ -92,7 +87,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void getOctetsEncodingDefinitionByCharacterSetId() {
+    void getOctetsEncodingDefinitionByCharacterSetId() {
         EncodingDefinition octetsEncodingDefinition =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_OCTETS);
 
@@ -102,7 +97,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void getNoneEncodingByFirebirdName() {
+    void getNoneEncodingByFirebirdName() {
         EncodingDefinition noneEncodingDefinition =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_NONE);
 
@@ -111,7 +106,7 @@ public class ConnectionEncodingFactoryTest {
     }
 
     @Test
-    public void getOctetsEncodingByFirebirdName() {
+    void getOctetsEncodingByFirebirdName() {
         EncodingDefinition octetsEncodingDefinition =
                 factory.getEncodingDefinitionByFirebirdName(EncodingFactory.ENCODING_NAME_OCTETS);
 

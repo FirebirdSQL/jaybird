@@ -18,26 +18,34 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link GDSFactory}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GDSFactoryTest {
+class GDSFactoryTest {
 
-    @Test
-    public void testGetTypeForProtocol() {
-        assertEquals("PURE_JAVA", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql://localhost/mydb")));
-        assertEquals("PURE_JAVA", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:localhost:mydb")));
-        assertEquals("PURE_JAVA", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:java://localhost/mydb")));
-        assertEquals("OOREMOTE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:oo://localhost/mydb")));
-        assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:native://localhost/mydb")));
-        assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:native:localhost:mydb")));
-        assertEquals("EMBEDDED", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:embedded:mydb")));
-        assertEquals("NATIVE", String.valueOf(GDSFactory.getTypeForProtocol("jdbc:firebirdsql:local:mydb")));
+    @ParameterizedTest
+    @CsvSource({
+            "jdbc:firebirdsql://localhost/mydb,        PURE_JAVA",
+            "jdbc:firebird://localhost/mydb,           PURE_JAVA",
+            "jdbc:firebirdsql:localhost:mydb,          PURE_JAVA",
+            "jdbc:firebirdsql:java://localhost/mydb,   PURE_JAVA",
+            "jdbc:firebirdsql:oo://localhost/mydb,     OOREMOTE",
+            "jdbc:firebird:oo://localhost/mydb,        OOREMOTE",
+            "jdbc:firebirdsql:native://localhost/mydb, NATIVE",
+            "jdbc:firebird:native://localhost/mydb,    NATIVE",
+            "jdbc:firebirdsql:native:localhost:mydb,   NATIVE",
+            "jdbc:firebirdsql:embedded:mydb,           EMBEDDED",
+            "jdbc:firebird:embedded:mydb,              EMBEDDED",
+            "jdbc:firebirdsql:local:mydb,              NATIVE"
+    })
+    void testGetTypeForProtocol(String url, String expectedType) {
+        assertEquals(expectedType, String.valueOf(GDSFactory.getTypeForProtocol(url)));
     }
 }

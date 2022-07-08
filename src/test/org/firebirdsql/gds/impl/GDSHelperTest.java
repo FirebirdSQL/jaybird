@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,33 +18,37 @@
  */
 package org.firebirdsql.gds.impl;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GDSHelperTest extends FBJUnit4TestBase {
+class GDSHelperTest {
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void testCompareToVersion() throws Exception {
+    void testCompareToVersion() throws Exception {
         try (FBConnection connection = (FBConnection) getConnectionViaDriverManager()) {
             GDSHelper gdsHelper = connection.getGDSHelper();
             int actualMajor = gdsHelper.getDatabaseProductMajorVersion();
             int actualMinor = gdsHelper.getDatabaseProductMinorVersion();
 
-            assertEquals("compareToVersion should return 0 for identical versions", 0,
-                    gdsHelper.compareToVersion(actualMajor, actualMinor));
-            assertTrue("compareToVersion should return negative value for comparison with same major and bigger minor",
-                    gdsHelper.compareToVersion(actualMajor, actualMinor + 1) < 0);
-            assertTrue("compareToVersion should return positive value for comparison with same major and smaller minor",
-                    gdsHelper.compareToVersion(actualMajor, actualMinor - 1) > 0);
-            assertTrue("compareToVersion should return negative value for comparison with bigger major",
-                    gdsHelper.compareToVersion(actualMajor + 1, 0) < 0);
-            assertTrue("compareToVersion should return positive value for comparison with smaller major",
-                    gdsHelper.compareToVersion(actualMajor - 1, 999999) > 0);
+            assertEquals(0, gdsHelper.compareToVersion(actualMajor, actualMinor),
+                    "compareToVersion should return 0 for identical versions");
+            assertTrue(gdsHelper.compareToVersion(actualMajor, actualMinor + 1) < 0,
+                    "compareToVersion should return negative value for comparison with same major and bigger minor");
+            assertTrue(gdsHelper.compareToVersion(actualMajor, actualMinor - 1) > 0,
+                    "compareToVersion should return positive value for comparison with same major and smaller minor");
+            assertTrue(gdsHelper.compareToVersion(actualMajor + 1, 0) < 0,
+                    "compareToVersion should return negative value for comparison with bigger major");
+            assertTrue(gdsHelper.compareToVersion(actualMajor - 1, 999999) > 0,
+                    "compareToVersion should return positive value for comparison with smaller major");
         }
     }
 

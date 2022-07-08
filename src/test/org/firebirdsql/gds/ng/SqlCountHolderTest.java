@@ -18,11 +18,9 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.SqlCountHolder}.
@@ -30,154 +28,149 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class SqlCountHolderTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class SqlCountHolderTest {
 
     @Test
-    public void testLongUpdateCount_basic() {
+    void testLongUpdateCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected long update count", 7, counts.getLongUpdateCount());
+        assertEquals(7, counts.getLongUpdateCount(), "Unexpected long update count");
     }
 
     @Test
-    public void testLongUpdateCount_LongMax() {
+    void testLongUpdateCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(Long.MAX_VALUE, 8, 9, 10);
 
         assertEquals(Long.MAX_VALUE, counts.getLongUpdateCount());
     }
 
     @Test
-    public void testIntegerUpdateCount_basic() {
+    void testIntegerUpdateCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected integer update count", 7, counts.getIntegerUpdateCount());
+        assertEquals(7, counts.getIntegerUpdateCount(), "Unexpected integer update count");
     }
 
     @Test
-    public void testIntegerUpdateCount_IntegerMax() {
+    void testIntegerUpdateCount_IntegerMax() {
         final SqlCountHolder counts = new SqlCountHolder(Integer.MAX_VALUE, 8, 9, 10);
 
-        assertEquals("Unexpected integer update count", Integer.MAX_VALUE, counts.getIntegerUpdateCount());
+        assertEquals(Integer.MAX_VALUE, counts.getIntegerUpdateCount(), "Unexpected integer update count");
     }
 
     @Test
-    public void testIntegerUpdateCount_IntegerMaxPlusOne_returnsZero() {
+    void testIntegerUpdateCount_IntegerMaxPlusOne_returnsZero() {
         final SqlCountHolder counts = new SqlCountHolder(Integer.MAX_VALUE + 1L, 8, 9, 10);
 
-        assertEquals("Integer update count for value larger than Integer.MAX_VALUE should be 0",
-                0, counts.getIntegerUpdateCount());
+        assertEquals(0, counts.getIntegerUpdateCount(),
+                "Integer update count for value larger than Integer.MAX_VALUE should be 0");
     }
 
     @Test
-    public void testLongDeleteCount_basic() {
+    void testLongDeleteCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected long delete count", 8, counts.getLongDeleteCount());
+        assertEquals(8, counts.getLongDeleteCount(), "Unexpected long delete count");
     }
 
     @Test
-    public void testLongDeleteCount_LongMax() {
+    void testLongDeleteCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, Long.MAX_VALUE, 9, 10);
 
-        assertEquals("Unexpected long delete count", Long.MAX_VALUE, counts.getLongDeleteCount());
+        assertEquals(Long.MAX_VALUE, counts.getLongDeleteCount(), "Unexpected long delete count");
     }
 
     @Test
-    public void testIntegerDeleteCount_basic() {
+    void testIntegerDeleteCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected integer delete count", 8, counts.getIntegerDeleteCount());
+        assertEquals(8, counts.getIntegerDeleteCount(), "Unexpected integer delete count");
     }
 
     @Test
-    public void testIntegerDeleteCount_IntegerMax() {
+    void testIntegerDeleteCount_IntegerMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, Integer.MAX_VALUE, 9, 10);
 
-        assertEquals("Unexpected integer delete count", Integer.MAX_VALUE, counts.getIntegerDeleteCount());
+        assertEquals(Integer.MAX_VALUE, counts.getIntegerDeleteCount(), "Unexpected integer delete count");
     }
 
     @Test
-    public void testIntegerDeleteCount_IntegerMaxPlusOne_returnsZero() {
+    void testIntegerDeleteCount_IntegerMaxPlusOne_returnsZero() {
         final SqlCountHolder counts = new SqlCountHolder(7, Integer.MAX_VALUE + 1L, 9, 10);
 
-        assertEquals("Integer delete count for value larger than Integer.MAX_VALUE should be 0",
-                0, counts.getIntegerDeleteCount());
+        assertEquals(0, counts.getIntegerDeleteCount(),
+                "Integer delete count for value larger than Integer.MAX_VALUE should be 0");
     }
 
     @Test
-    public void testLongInsertCount_basic() {
+    void testLongInsertCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected long insert count", 9, counts.getLongInsertCount());
+        assertEquals(9, counts.getLongInsertCount(), "Unexpected long insert count");
     }
 
     @Test
-    public void testLongInsertCount_LongMax() {
+    void testLongInsertCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, Long.MAX_VALUE, 10);
 
-        assertEquals("Unexpected long insert count", Long.MAX_VALUE, counts.getLongInsertCount());
+        assertEquals(Long.MAX_VALUE, counts.getLongInsertCount(), "Unexpected long insert count");
     }
 
     @Test
-    public void testIntegerInsertCount_basic() {
+    void testIntegerInsertCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected integer insert count", 9, counts.getIntegerInsertCount());
+        assertEquals(9, counts.getIntegerInsertCount(), "Unexpected integer insert count");
     }
 
     @Test
-    public void testIntegerInsertCount_IntegerMax() {
+    void testIntegerInsertCount_IntegerMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, Integer.MAX_VALUE, 10);
 
-        assertEquals("Unexpected integer insert count", Integer.MAX_VALUE, counts.getIntegerInsertCount());
+        assertEquals(Integer.MAX_VALUE, counts.getIntegerInsertCount(), "Unexpected integer insert count");
     }
 
     @Test
-    public void testIntegerInsertCount_IntegerMaxPlusOne_returnsZero() {
+    void testIntegerInsertCount_IntegerMaxPlusOne_returnsZero() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, Integer.MAX_VALUE + 1L, 10);
 
-        assertEquals("Integer insert count for value larger than Integer.MAX_VALUE should be 0",
-                0, counts.getIntegerInsertCount());
+        assertEquals(0, counts.getIntegerInsertCount(),
+                "Integer insert count for value larger than Integer.MAX_VALUE should be 0");
     }
 
-    //
-
     @Test
-    public void testLongSelectCount_basic() {
+    void testLongSelectCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected long select count", 10, counts.getLongSelectCount());
+        assertEquals(10, counts.getLongSelectCount(), "Unexpected long select count");
     }
 
     @Test
-    public void testLongSelectCount_LongMax() {
+    void testLongSelectCount_LongMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, Long.MAX_VALUE);
 
-        assertEquals("Unexpected long select count", Long.MAX_VALUE, counts.getLongSelectCount());
+        assertEquals(Long.MAX_VALUE, counts.getLongSelectCount(), "Unexpected long select count");
     }
 
     @Test
-    public void testIntegerSelectCount_basic() {
+    void testIntegerSelectCount_basic() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, 10);
 
-        assertEquals("Unexpected integer select count", 10, counts.getIntegerSelectCount());
+        assertEquals(10, counts.getIntegerSelectCount(), "Unexpected integer select count");
     }
 
     @Test
-    public void testIntegerSelectCount_IntegerMax() {
+    void testIntegerSelectCount_IntegerMax() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, Integer.MAX_VALUE);
 
-        assertEquals("Unexpected integer select count", Integer.MAX_VALUE, counts.getIntegerSelectCount());
+        assertEquals(Integer.MAX_VALUE, counts.getIntegerSelectCount(), "Unexpected integer select count");
     }
 
     @Test
-    public void testIntegerSelectCount_IntegerMaxPlusOne_returnsZero() {
+    void testIntegerSelectCount_IntegerMaxPlusOne_returnsZero() {
         final SqlCountHolder counts = new SqlCountHolder(7, 8, 9, Integer.MAX_VALUE + 1L);
 
-        assertEquals("Integer select count for value larger than Integer.MAX_VALUE should be 0",
-                0, counts.getIntegerSelectCount());
+        assertEquals(0, counts.getIntegerSelectCount(),
+                "Integer select count for value larger than Integer.MAX_VALUE should be 0");
     }
 }

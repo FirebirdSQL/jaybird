@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,45 +16,39 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.common.rules;
+package org.firebirdsql.common.extension;
 
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.management.FBStatisticsManager;
-import org.junit.AssumptionViolatedException;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.TestAbortedException;
 
 import java.sql.SQLException;
 
 /**
- * JUnit rule that checks if a database exists.
+ * JUnit extension that checks if a database exists.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 5
  */
-public class DatabaseExistsRule implements TestRule {
+public class DatabaseExistsExtension implements BeforeAllCallback {
 
     private final String databaseName;
     private final CheckType checkType;
 
-    public static DatabaseExistsRule requireExistence(String databaseName) {
-        return new DatabaseExistsRule(databaseName, CheckType.REQUIRE_EXISTENCE);
+    public static DatabaseExistsExtension requireExistence(String databaseName) {
+        return new DatabaseExistsExtension(databaseName, CheckType.REQUIRE_EXISTENCE);
     }
 
-    private DatabaseExistsRule(String databaseName, CheckType checkType) {
+    private DatabaseExistsExtension(String databaseName, CheckType checkType) {
         this.databaseName = databaseName;
         this.checkType = checkType;
     }
 
     @Override
-    public Statement apply(final Statement statement, Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                checkDatabaseExists();
-                statement.evaluate();
-            }
-        };
+    public void beforeAll(ExtensionContext context) {
+        checkDatabaseExists();
     }
 
     private void checkDatabaseExists() {
@@ -75,21 +69,20 @@ public class DatabaseExistsRule implements TestRule {
     private enum CheckType {
         REQUIRE_EXISTENCE {
             @Override
-            void onExists(String databaseName) {
-                // do nothing
-            }
-
-            @Override
-            void onConnectFailure(String databaseName,SQLException e) {
-                throw new AssumptionViolatedException("Expected database " + databaseName + " to exist, error was: " +
-                        e.getMessage());
+            void onConnectFailure(String databaseName, SQLException e) {
+                throw new TestAbortedException(
+                        "Expected database " + databaseName + " to exist, error was: " + e.getMessage());
             }
         }
         ;
 
-        abstract void onExists(String databaseName);
+        void onExists(String databaseName) {
+            // default do nothing
+        }
 
-        abstract void onConnectFailure(String databaseName, SQLException e);
+        void onConnectFailure(String databaseName, SQLException e) {
+            // default do nothing
+        }
     }
 
 }

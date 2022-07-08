@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,18 +18,18 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.ZoneOffset;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * See also {@link TimeZoneByNameMappingTest} and {@link TimeZoneOffsetMappingTest}.
  */
-public class TimeZoneMappingTest {
+class TimeZoneMappingTest {
 
     private static final int CURRENT_MIN_ZONE_ID;
     static {
@@ -43,37 +43,37 @@ public class TimeZoneMappingTest {
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
 
     @Test
-    public void invalidZoneIdYieldsUTC() {
+    void invalidZoneIdYieldsUTC() {
         assertEquals(ZoneOffset.UTC, mapping.timeZoneById(CURRENT_MIN_ZONE_ID - 1));
     }
 
     @Test
-    public void timeZoneById_outOfRangeZoneIdYieldsUTC_negativeOne() {
+    void timeZoneById_outOfRangeZoneIdYieldsUTC_negativeOne() {
         assertEquals(ZoneOffset.UTC, mapping.timeZoneById(-1));
     }
 
     @Test
-    public void timeZoneById_outOfRangeZoneIdYieldsUTC_exceeds0xFFFF() {
+    void timeZoneById_outOfRangeZoneIdYieldsUTC_exceeds0xFFFF() {
         assertEquals(ZoneOffset.UTC, mapping.timeZoneById(0xFFFF + 1));
     }
 
     @Test
-    public void toOffsetMinutes_outOfRangeZoneIdYieldsZero_lowerLimit() {
+    void toOffsetMinutes_outOfRangeZoneIdYieldsZero_lowerLimit() {
         assertEquals(0, mapping.toOffsetMinutes(-1));
     }
 
     @Test
-    public void toOffsetMinutes_outOfRangeZoneIdYieldsZero_upperLimit() {
+    void toOffsetMinutes_outOfRangeZoneIdYieldsZero_upperLimit() {
         assertEquals(0, mapping.toOffsetMinutes(2879));
     }
 
     @Test
-    public void toTimeZoneId_outOfRangeOffsetYieldsEncodedZeroOffset_lowerLimit() {
+    void toTimeZoneId_outOfRangeOffsetYieldsEncodedZeroOffset_lowerLimit() {
         assertEquals(1439, mapping.toTimeZoneId(-1440));
     }
 
     @Test
-    public void toTimeZoneId_outOfRangeOffsetYieldsEncodedZeroOffset_upperLimit() {
+    void toTimeZoneId_outOfRangeOffsetYieldsEncodedZeroOffset_upperLimit() {
         assertEquals(1439, mapping.toTimeZoneId(1440));
     }
 

@@ -162,8 +162,7 @@ public class TestFBResultSetMetaDataParametrized {
     @AfterClass
     public static void tearDown() throws Exception {
         try {
-            closeQuietly(pstmt);
-            closeQuietly(connection);
+            closeQuietly(pstmt, connection);
             defaultDatabaseTearDown(fbManager);
         } finally {
             rsmd = null;

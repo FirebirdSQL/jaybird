@@ -18,48 +18,57 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
-import org.junit.*;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests the UserManager class which uses the Services API to display, add,
- * delete, and modify users.
+ * Tests the UserManager class which uses the Services API to display, add, delete, and modify users.
  * 
  * @author <a href="mailto:sjardine@users.sourceforge.net">Steven Jardine</a>
  */
-public class FBUserManagerTest extends FBJUnit4TestBase {
+class FBUserManagerTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.excludes(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension gdsType = GdsTypeExtension.excludes(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+
+    @RegisterExtension
+    @Order(2)
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsSqlUserManagement, "Test requires DROP USER support")
+            .build();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private static final String USER_NAME = "TESTUSER123";
 
-    @BeforeClass
-    public static void checkDropUserSupport() {
-        assumeTrue("Test requires DROP USER support", getDefaultSupportInfo().supportsSqlUserManagement());
-    }
-
-    @Before
-    @After
-    public void ensureTestUserDoesNotExist() throws SQLException {
+    @BeforeEach
+    @AfterEach
+    void ensureTestUserDoesNotExist() throws SQLException {
         try (Connection connection = getConnectionViaDriverManager()) {
             executeDDL(connection, "DROP USER " + USER_NAME, ISCConstants.isc_gsec_err_rec_not_found);
         }
     }
 
     @Test
-    public void testUsers() throws Exception {
+    void testUsers() throws Exception {
         // Initialize the UserManager.
         UserManager userManager = new FBUserManager(getGdsType());
         userManager.setServerName(DB_SERVER_URL);
@@ -79,17 +88,13 @@ public class FBUserManagerTest extends FBJUnit4TestBase {
         user1.setUserId(supportsUserAndGroupId ? 222 : 0);
         user1.setGroupId(supportsUserAndGroupId ? 222 : 0);
 
-        try {
-            userManager.add(user1);
-        } catch(SQLException ex) {
-            // ignore
-        }
+        userManager.add(user1);
         
         // Check to make sure the user was added.
         User user2 = userManager.getUsers().get(user1.getUserName());
 
-        assertNotNull("User 2 should not be null.", user2);
-        assertEquals("user1 should equal user2", user1, user2);
+        assertNotNull(user2, "User 2 should not be null");
+        assertEquals(user1, user2, "user1 should equal user2");
 
         user1.setPassword("123test");
         user1.setFirstName("Name First");
@@ -102,12 +107,12 @@ public class FBUserManagerTest extends FBJUnit4TestBase {
 
         user2 = userManager.getUsers().get(user1.getUserName());
 
-        assertEquals("user1 should equal user2", user1, user2);
+        assertEquals(user1, user2, "user1 should equal user2");
 
         userManager.delete(user1);
 
         user2 = userManager.getUsers().get(user1.getUserName());
 
-        assertNull("User 2 should be null", user2);
+        assertNull(user2, "User 2 should be null");
     }
 }

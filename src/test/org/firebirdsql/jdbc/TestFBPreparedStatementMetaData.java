@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -166,8 +164,7 @@ public class TestFBPreparedStatementMetaData {
     @AfterClass
     public static void tearDown() throws Exception {
         try {
-            closeQuietly(pstmt);
-            closeQuietly(connection);
+            closeQuietly(pstmt, connection);
             defaultDatabaseTearDown(fbManager);
         } finally {
             parameterMetaData = null;

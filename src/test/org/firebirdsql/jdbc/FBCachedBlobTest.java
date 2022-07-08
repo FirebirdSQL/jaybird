@@ -20,19 +20,18 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.hamcrest.Matcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBCachedBlob}.
@@ -40,119 +39,111 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FBCachedBlobTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class FBCachedBlobTest {
 
     /**
      * Test if {@link FBCachedBlob#detach()} does not return itself.
      */
     @Test
-    public void testDetach() throws Exception {
+    void testDetach() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[0]);
 
-        assertNotSame("FBCachedBlob.detach() should not return itself", blob, blob.detach());
+        assertNotSame(blob, blob.detach(), "FBCachedBlob.detach() should not return itself");
     }
 
     /**
-     * Test if {@link FBCachedBlob#isSegmented()} return <code>false</code>.
+     * Test if {@link FBCachedBlob#isSegmented()} return {@code false}.
      */
     @Test
-    public void testIsSegmented() throws Exception {
+    void testIsSegmented() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[0]);
 
-        assertFalse("FBCachedBlob.isSegmented() should return false", blob.isSegmented());
+        assertFalse(blob.isSegmented(), "FBCachedBlob.isSegmented() should return false");
     }
 
     /**
-     * Test if {@link FBCachedBlob#length()} returns <code>-1</code> if data is <code>null</code>.
+     * Test if {@link FBCachedBlob#length()} returns {@code -1} if data is {@code null}.
      */
     @Test
-    public void testLength_null() throws Exception {
+    void testLength_null() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(null);
 
-        assertEquals("Unexpected length for null data", -1, blob.length());
+        assertEquals(-1, blob.length(), "Unexpected length for null data");
     }
 
     /**
-     * Test if {@link FBCachedBlob#length()} returns <code>0</code> if data is an empty array.
+     * Test if {@link FBCachedBlob#length()} returns {@code 0} if data is an empty array.
      */
     @Test
-    public void testLength_0() throws Exception {
+    void testLength_0() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[0]);
 
-        assertEquals("Unexpected length for empty data", 0, blob.length());
+        assertEquals(0, blob.length(), "Unexpected length for empty data");
     }
 
     /**
-     * Test if {@link FBCachedBlob#length()} returns <code>10</code> if data is a 10 byte array.
+     * Test if {@link FBCachedBlob#length()} returns {@code 10} if data is a 10 byte array.
      */
     @Test
-    public void testLength_10() throws Exception {
+    void testLength_10() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[10]);
 
-        assertEquals("Unexpected length for data", 10, blob.length());
+        assertEquals(10, blob.length(), "Unexpected length for data");
     }
 
     /**
-     * Test {@link FBCachedBlob#getBytes(long, int)} with <code>pos = 0</code>.
+     * Test {@link FBCachedBlob#getBytes(long, int)} with {@code pos = 0}.
      * <p>
      * Expected: SQLException.
      * </p>
      */
     @Test
-    public void testGetBytes_pos0() throws Exception {
+    void testGetBytes_pos0() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(allOf(
-                isA(SQLException.class),
+        SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(0, 0));
+        assertThat(exception, allOf(
                 message(equalTo("Expected value of pos > 0, got 0")),
                 sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
-
-        blob.getBytes(0, 0);
     }
 
     /**
-     * Test {@link FBCachedBlob#getBytes(long, int)} with <code>length</code> negative.
+     * Test {@link FBCachedBlob#getBytes(long, int)} with {@code length} negative.
      * <p>
      * Expected: SQLException.
      * </p>
      */
     @Test
-    public void testGetBytes_lengthNegative() throws Exception {
+    void testGetBytes_lengthNegative() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(allOf(
-                        isA(SQLException.class),
-                        message(equalTo("Expected value of length >= 0, got -1")),
-                        sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE)))
-        );
-
-        blob.getBytes(1, -1);
+        SQLException exception = assertThrows(SQLException.class, () -> blob.getBytes(1, -1));
+        assertThat(exception, allOf(
+                message(equalTo("Expected value of length >= 0, got -1")),
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE))));
     }
 
     /**
-     * Test {@link FBCachedBlob#getBytes(long, int)} with <code>length = 0</code>.
+     * Test {@link FBCachedBlob#getBytes(long, int)} with {@code length = 0}.
      */
     @Test
-    public void testGetBytes_length0() throws Exception {
+    void testGetBytes_length0() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         byte[] data = blob.getBytes(1, 0);
 
-        assertNotNull("Expected non-null array", data);
-        assertEquals("Expected empty (zero-length) array", 0, data.length);
+        assertNotNull(data, "Expected non-null array");
+        assertEquals(0, data.length, "Expected empty (zero-length) array");
     }
 
     /**
-     * Test if {@link FBCachedBlob#getBytes(long, int)} returns <code>null</code> if data is null.
+     * Test if {@link FBCachedBlob#getBytes(long, int)} returns {@code null} if data is null.
      * <p>
      * TODO: Not certain if this behavior is allowed!
      * </p>
      */
     @Test
-    public void testGetBytes_null() throws Exception {
+    void testGetBytes_null() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(null);
 
         assertNull(blob.getBytes(1, 1));
@@ -162,44 +153,40 @@ public class FBCachedBlobTest {
      * Test {@link FBCachedBlob#getBytes(long, int)}.
      */
     @Test
-    public void testGetBytes() throws Exception {
+    void testGetBytes() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         byte[] data = blob.getBytes(5, 5);
 
-        assertNotNull("Expected non-null array", data);
-        assertArrayEquals("Unexpected data", new byte[] { 5, 6, 7, 8, 9 }, data);
+        assertNotNull(data, "Expected non-null array");
+        assertArrayEquals(new byte[] { 5, 6, 7, 8, 9 }, data, "Unexpected data");
     }
 
     /**
      * Test if {@link FBCachedBlob#position(byte[], long)} throws SQLFeatureNotSupportedException.
      */
     @Test
-    public void testPosition_byteArr_long() throws Exception {
+    void testPosition_byteArr_long() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-
-        blob.position(new byte[] { 3, 4 }, 1);
+        assertThrows(SQLFeatureNotSupportedException.class, () -> blob.position(new byte[] { 3, 4 }, 1));
     }
 
     /**
      * Test if {@link FBCachedBlob#position(java.sql.Blob, long)} throws SQLFeatureNotSupportedException.
      */
     @Test
-    public void testPosition_Blob_long() throws Exception {
+    void testPosition_Blob_long() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-
-        blob.position(blob, 1);
+        assertThrows(SQLFeatureNotSupportedException.class, () -> blob.position(blob, 1));
     }
 
     /**
-     * Test if {@link FBCachedBlob#getBinaryStream()} returns <code>null</code> when data is <code>null</code>.
+     * Test if {@link FBCachedBlob#getBinaryStream()} returns {@code null} when data is {@code null}.
      */
     @Test
-    public void testGetBinaryStream_null() throws Exception {
+    void testGetBinaryStream_null() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(null);
 
         assertNull(blob.getBinaryStream());
@@ -209,7 +196,7 @@ public class FBCachedBlobTest {
      * Test if {@link FBCachedBlob#getBinaryStream()} returns stream with all data.
      */
     @Test
-    public void testGetBinaryStream() throws Exception {
+    void testGetBinaryStream() throws Exception {
         final byte[] data = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         FBCachedBlob blob = new FBCachedBlob(data);
 
@@ -222,107 +209,95 @@ public class FBCachedBlobTest {
         }
         byte[] receivedData = bos.toByteArray();
 
-        assertArrayEquals("Expected data and received data to be identical", data, receivedData);
+        assertArrayEquals(data, receivedData, "Expected data and received data to be identical");
     }
 
     /**
      * Tests if {@link FBCachedBlob#getBinaryStream(long, long)} throws SQLFeatureNotSupportedException
      */
     @Test
-    public void testGetBinaryStream_long_long() throws Exception {
+    void testGetBinaryStream_long_long() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-
-        blob.getBinaryStream(1, 1);
+        assertThrows(SQLFeatureNotSupportedException.class, () -> blob.getBinaryStream(1, 1));
     }
 
     /**
      * Test if {@link FBCachedBlob#setBytes(long, byte[])} throws an SQLException (read only).
      */
     @Test
-    public void testSetBytes_long_byteArr() throws Exception {
+    void testSetBytes_long_byteArr() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(blobReadOnlySQLException());
-
-        blob.setBytes(1, new byte[] { 2 });
+        SQLException exception = assertThrows(SQLException.class, () -> blob.setBytes(1, new byte[] { 2 }));
+        assertThat(exception, blobReadOnlySQLException());
     }
 
     /**
      * Test if {@link FBCachedBlob#setBytes(long, byte[], int, int)} throws an SQLException (read only).
      */
     @Test
-    public void testSetBytes_long_byteArr_int_int() throws Exception {
+    void testSetBytes_long_byteArr_int_int() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(blobReadOnlySQLException());
-
-        blob.setBytes(1, new byte[] { 2 }, 0, 1);
+        SQLException exception = assertThrows(SQLException.class, () -> blob.setBytes(1, new byte[] { 2 }, 0, 1));
+        assertThat(exception, blobReadOnlySQLException());
     }
 
     /**
      * Test if {@link FBCachedBlob#setBinaryStream(long)} throws an SQLException (read only).
      */
     @Test
-    public void testSetBinaryStream() throws Exception {
+    void testSetBinaryStream() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(blobReadOnlySQLException());
-
-        blob.setBinaryStream(1);
+        //noinspection resource
+        SQLException exception = assertThrows(SQLException.class, () -> blob.setBinaryStream(1));
+        assertThat(exception, blobReadOnlySQLException());
     }
 
     /**
      * Test if {@link FBCachedBlob#truncate(long)} throws SQLFeatureNotSupportedException.
      */
     @Test
-    public void testTruncate() throws Exception {
+    void testTruncate() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-
-        blob.truncate(1);
+        assertThrows(SQLFeatureNotSupportedException.class, () -> blob.truncate(1));
     }
 
     /**
      * Test if repeated calls to {@link FBCachedBlob#getSynchronizationObject()} return the same object.
      */
     @Test
-    public void testGetSynchronizationObject() throws Exception {
+    void testGetSynchronizationObject() {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         final Object sync1 = blob.getSynchronizationObject();
-        assertSame("Invocations of getSynchronizationObject() should return same object",
-                sync1, blob.getSynchronizationObject());
+        assertSame(sync1, blob.getSynchronizationObject(),
+                "Invocations of getSynchronizationObject() should return same object");
     }
 
     /**
      * Test if {@link FBCachedBlob#free()} releases the data held internally.
      */
     @Test
-    public void testFree() throws Exception {
+    void testFree() throws Exception {
         FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 
         assumeThat("Blob should have a length of 10", blob.length(), equalTo(10L));
 
         blob.free();
 
-        expectedException.expect(blobFreedSQLException());
-        blob.length();
+        SQLException exception = assertThrows(SQLException.class, blob::length);
+        assertThat(exception, blobFreedSQLException());
     }
 
     private Matcher<SQLException> blobReadOnlySQLException() {
-        return allOf(
-                isA(SQLException.class),
-                message(equalTo(FBCachedBlob.BLOB_READ_ONLY))
-        );
+        return message(equalTo(FBCachedBlob.BLOB_READ_ONLY));
     }
 
     private Matcher<SQLException> blobFreedSQLException() {
-        return allOf(
-                isA(SQLException.class),
-                fbMessageStartsWith(JaybirdErrorCodes.jb_blobClosed)
-        );
+        return fbMessageStartsWith(JaybirdErrorCodes.jb_blobClosed);
     }
 }

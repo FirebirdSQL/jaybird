@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,34 +18,24 @@
  */
 package org.firebirdsql.gds.ng.wire.auth;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(Parameterized.class)
-public class ClientAuthBlockNormalizeLoginTest {
+class ClientAuthBlockNormalizeLoginTest {
 
-    private final String login;
-    private final String expectedNormalizedLogin;
-
-    public ClientAuthBlockNormalizeLoginTest(String login, String expectedNormalizedLogin) {
-        this.login = login;
-        this.expectedNormalizedLogin = expectedNormalizedLogin;
-    }
-
-    @Parameterized.Parameters(name = "{0} => {1}")
-    public static Collection<Object[]> testData() {
-        return Arrays.asList(
+    static Stream<Arguments> testData() {
+        return Stream.of(
                 testCase("sysdba", "SYSDBA"),
                 testCase("s", "S"),
                 testCase("\"CaseSensitive\"", "CaseSensitive"),
                 testCase("\"s\"", "s"),
                 testCase("\"With\"\"EscapedQuote\"", "With\"EscapedQuote"),
+                // NOTE: This is the behaviour as also done by Firebird before 3.0.10 / 4.0.2
                 testCase("\"Invalid\"Escape\"", "Invalid"),
                 testCase("\"DanglingInvalidEscape\"\"", "DanglingInvalidEscape"),
                 testCase("\"EscapedQuoteAtEnd\"\"\"", "EscapedQuoteAtEnd\""),
@@ -55,13 +45,14 @@ public class ClientAuthBlockNormalizeLoginTest {
                 testCase(null, null));
     }
 
-    @Test
-    public void testNormalizeLogin() {
+    @ParameterizedTest(name = "{0} => {1}")
+    @MethodSource("testData")
+    void testNormalizeLogin(String login, String expectedNormalizedLogin) {
         assertEquals(expectedNormalizedLogin, ClientAuthBlock.normalizeLogin(login));
     }
 
-    private static Object[] testCase(String login, String normalizedLogin) {
-        return new Object[] { login, normalizedLogin };
+    private static Arguments testCase(String login, String normalizedLogin) {
+        return Arguments.of(login, normalizedLogin);
     }
 
 }

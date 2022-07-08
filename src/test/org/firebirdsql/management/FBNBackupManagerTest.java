@@ -59,9 +59,8 @@ class FBNBackupManagerTest {
             .requiresDbOnLocalFileSystem()
             .build();
 
-    @SuppressWarnings("JUnit5MalformedExtensions")
     @RegisterExtension
-    UsesDatabaseExtension usesDatabase = UsesDatabaseExtension.usesDatabase(
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
             "create table data (id integer, val varchar(50))",
             "commit retain",
             "insert into data (id, val) values (1, 'first')");

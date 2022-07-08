@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,32 +20,32 @@ package org.firebirdsql.gds.ng.dbcrypt.simple;
 
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class StaticValueDbCryptCallbackTest {
+class StaticValueDbCryptCallbackTest {
 
     @Test
-    public void returnsReplyWithFixedResponseValue_nonNull() {
+    void returnsReplyWithFixedResponseValue_nonNull() {
         final byte[] responseData = { 2, 3, 4, 5, 6 };
         DbCryptCallback callback = new StaticValueDbCryptCallback(responseData);
 
         DbCryptData dbCryptData = callback.handleCallback(DbCryptData.EMPTY_DATA);
-        assertSame("pluginData", responseData, dbCryptData.getPluginData());
-        assertEquals("replySize", 0, dbCryptData.getReplySize());
+        assertSame(responseData, dbCryptData.getPluginData(), "pluginData");
+        assertEquals(0, dbCryptData.getReplySize(), "replySize");
     }
 
     @Test
-    public void returnsReplyWithFixedResponseValue_null() {
+    void returnsReplyWithFixedResponseValue_null() {
         DbCryptCallback callback = new StaticValueDbCryptCallback(null);
 
         DbCryptData dbCryptData = callback.handleCallback(DbCryptData.EMPTY_DATA);
-        assertNull("pluginData", dbCryptData.getPluginData());
-        assertEquals("replySize", 0, dbCryptData.getReplySize());
+        assertNull(dbCryptData.getPluginData(), "pluginData");
+        assertEquals(0, dbCryptData.getReplySize(), "replySize");
     }
 
 }

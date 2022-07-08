@@ -20,32 +20,38 @@ package org.firebirdsql.gds.ng.wire;
 
 import org.firebirdsql.common.BlackholeServer;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.wire.version10.Version10Descriptor;
 import org.firebirdsql.gds.ng.wire.version13.Version13Descriptor;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class WireDatabaseConnectionTest {
+class WireDatabaseConnectionTest {
 
-    @ClassRule
-    public static final RuleChain ruleChain = RuleChain
-            .outerRule(GdsTypeRule.excludesNativeOnly())
-            .around(UsesDatabase.usesDatabase());
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension gdsType = GdsTypeExtension.excludesNativeOnly();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     /**
      * IP address which does not exist (we simply assume that this site local
@@ -66,9 +72,10 @@ public class WireDatabaseConnectionTest {
      * established yet.
      */
     @Test
-    public void testIsConnectedNoConnection() throws SQLException {
-        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
-        assertFalse("Not connected, isConnected() should return false", gdsConnection.isConnected());
+    void testIsConnectedNoConnection() throws Exception {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            assertFalse(gdsConnection.isConnected(), "Not connected, isConnected() should return false");
+        }
     }
 
     /**
@@ -76,10 +83,10 @@ public class WireDatabaseConnectionTest {
      * established.
      */
     @Test
-    public void testIsConnectedWithConnection() throws Exception {
+    void testIsConnectedWithConnection() throws Exception {
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
             gdsConnection.socketConnect();
-            assertTrue("Connected to existing server, isConnected() should return true", gdsConnection.isConnected());
+            assertTrue(gdsConnection.isConnected(), "Connected to existing server, isConnected() should return true");
         }
     }
 
@@ -88,19 +95,19 @@ public class WireDatabaseConnectionTest {
      * established and closed.
      */
     @Test
-    public void testIsConnectedAfterDisconnect() throws Exception {
+    void testIsConnectedAfterDisconnect() throws Exception {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         gdsConnection.socketConnect();
         gdsConnection.close();
         
-        assertFalse("Disconnected, isConnected() should return false", gdsConnection.isConnected());
+        assertFalse(gdsConnection.isConnected(), "Disconnected, isConnected() should return false");
     }
 
     /**
      * Tests a successful connection identification phase.
      */
     @Test
-    public void testIdentifyExistingDb() throws Exception {
+    void testIdentifyExistingDb() throws Exception {
         ProtocolDescriptor expectedProtocol = new Version10Descriptor();
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
                 EncodingFactory.getPlatformDefault(), ProtocolCollection.create(expectedProtocol))) {
@@ -109,12 +116,12 @@ public class WireDatabaseConnectionTest {
 
             FbWireDatabase database = gdsConnection.identify();
 
-            assertEquals("Unexpected FbWireDatabase implementation",
-                    org.firebirdsql.gds.ng.wire.version10.V10Database.class, database.getClass());
-            assertEquals("Unexpected architecture", expectedProtocol.getArchitecture(),
-                    gdsConnection.getProtocolArchitecture());
-            assertEquals("Unexpected type", expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType());
-            assertEquals("Unexpected version", expectedProtocol.getVersion(), gdsConnection.getProtocolVersion());
+            assertEquals(org.firebirdsql.gds.ng.wire.version10.V10Database.class,
+                    database.getClass(), "Unexpected FbWireDatabase implementation");
+            assertEquals(expectedProtocol.getArchitecture(), gdsConnection.getProtocolArchitecture(),
+                    "Unexpected architecture");
+            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType(), "Unexpected type");
+            assertEquals(expectedProtocol.getVersion(), gdsConnection.getProtocolVersion(), "Unexpected version");
         }
     }
 
@@ -122,8 +129,8 @@ public class WireDatabaseConnectionTest {
      * Tests a successful connection identification phase.
      */
     @Test
-    public void testIdentifyExistingDb_v13() throws Exception {
-        assumeTrue("Requires protocol v13 support", FBTestProperties.getDefaultSupportInfo().supportsProtocol(13));
+    void testIdentifyExistingDb_v13() throws Exception {
+        assumeTrue(FBTestProperties.getDefaultSupportInfo().supportsProtocol(13), "Requires protocol v13 support");
         ProtocolDescriptor expectedProtocol = new Version13Descriptor();
         try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,
                 EncodingFactory.getPlatformDefault(), ProtocolCollection.create(expectedProtocol))) {
@@ -132,12 +139,12 @@ public class WireDatabaseConnectionTest {
 
             FbWireDatabase database = gdsConnection.identify();
 
-            assertEquals("Unexpected FbWireDatabase implementation",
-                    org.firebirdsql.gds.ng.wire.version13.V13Database.class, database.getClass());
-            assertEquals("Unexpected architecture", expectedProtocol.getArchitecture(),
-                    gdsConnection.getProtocolArchitecture());
-            assertEquals("Unexpected type", expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType());
-            assertEquals("Unexpected version", expectedProtocol.getVersion(), gdsConnection.getProtocolVersion());
+            assertEquals(org.firebirdsql.gds.ng.wire.version13.V13Database.class, database.getClass(),
+                    "Unexpected FbWireDatabase implementation");
+            assertEquals(expectedProtocol.getArchitecture(), gdsConnection.getProtocolArchitecture(),
+                    "Unexpected architecture");
+            assertEquals(expectedProtocol.getMaximumType(), gdsConnection.getProtocolMinimumType(), "Unexpected type");
+            assertEquals(expectedProtocol.getVersion(), gdsConnection.getProtocolVersion(), "Unexpected version");
         }
     }
 
@@ -145,26 +152,19 @@ public class WireDatabaseConnectionTest {
      * Tests the connect timeout when connecting to a non-existent server.
      */
     @Test
-    public void testConnectTimeout_nonExistentServer() {
+    @Timeout(5)
+    void testConnectTimeout_nonExistentServer() throws Exception {
+        connectionInfo.setServerName(NON_EXISTENT_IP);
+        connectionInfo.setConnectTimeout(2);
         long startTime = System.currentTimeMillis();
-        try {
-            connectionInfo.setServerName(NON_EXISTENT_IP);
-            connectionInfo.setConnectTimeout(2);
-            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
-            gdsConnection.socketConnect();
-            
-            fail("Expected connection to fail");
-        } catch (SQLTimeoutException e) {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            SQLException exception = assertThrows(SQLTimeoutException.class, gdsConnection::socketConnect);
             long endTime = System.currentTimeMillis();
+            assertThat("Expected error code for \"Unable to complete network request\"",
+                    exception, errorCodeEquals(ISCConstants.isc_network_error));
+
             long difference = endTime - startTime;
-            
-            assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getErrorCode());
-            assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            
-            fail("Expected SQLTimeoutException to be thrown");
+            assertEquals(2000, difference, TIMEOUT_DELTA_MS, "Unexpected timeout duration (in ms)");
         }
     }
 
@@ -172,32 +172,25 @@ public class WireDatabaseConnectionTest {
      * Tests the connect timeout if the server does not respond.
      */
     @Test
-    public void testConnectTimeout_noResponse() throws Exception {
+    @Timeout(5)
+    void testConnectTimeout_noResponse() throws Exception {
         BlackholeServer server = new BlackholeServer();
         Thread thread = new Thread(server);
         thread.start();
 
+        connectionInfo.setPortNumber(server.getPort());
+        connectionInfo.setDatabaseName("somedb");
+        connectionInfo.setConnectTimeout(2);
         long startTime = System.currentTimeMillis();
-        try {
-            connectionInfo.setPortNumber(server.getPort());
-            connectionInfo.setDatabaseName("somedb");
-            connectionInfo.setConnectTimeout(2);
-            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
             gdsConnection.socketConnect();
-            gdsConnection.identify();
-            
-            fail("Expected connection to fail");
-        } catch (SQLTimeoutException e) {
+            SQLException exception = assertThrows(SQLTimeoutException.class, gdsConnection::identify);
             long endTime = System.currentTimeMillis();
+            assertThat("Expected error code for \"Unable to complete network request\"",
+                    exception, errorCodeEquals(ISCConstants.isc_network_error));
+
             long difference = endTime - startTime;
-            
-            assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getErrorCode());
-            assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            
-            fail("Expected SQLTimeoutException to be thrown");
+            assertEquals(2000, difference, TIMEOUT_DELTA_MS, "Unexpected timeout duration (in ms)");
         } finally {
             server.stop();
             thread.join();
@@ -208,32 +201,25 @@ public class WireDatabaseConnectionTest {
      * Tests the connect timeout if the server does not respond.
      */
     @Test
-    public void testSocketTimeout_noResponse() throws Exception {
+    @Timeout(5)
+    void testSocketTimeout_noResponse() throws Exception {
         BlackholeServer server = new BlackholeServer();
         Thread thread = new Thread(server);
         thread.start();
 
+        connectionInfo.setPortNumber(server.getPort());
+        connectionInfo.setDatabaseName("somedb");
+        connectionInfo.setSoTimeout(2000);
         long startTime = System.currentTimeMillis();
-        try {
-            connectionInfo.setPortNumber(server.getPort());
-            connectionInfo.setDatabaseName("somedb");
-            connectionInfo.setSoTimeout(2000);
-            WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
             gdsConnection.socketConnect();
-            gdsConnection.identify();
-            
-            fail("Expected connection to fail");
-        } catch (SQLTimeoutException e) {
+            SQLException exception = assertThrows(SQLTimeoutException.class, gdsConnection::identify);
             long endTime = System.currentTimeMillis();
+            assertThat("Expected error code for \"Unable to complete network request\"",
+                    exception, errorCodeEquals(ISCConstants.isc_network_error));
+
             long difference = endTime - startTime;
-            
-            assertEquals("Expected error code for \"Unable to complete network request\"", 335544721,
-                    e.getErrorCode());
-            assertEquals("Unexpected timeout duration (in ms)", 2000, difference, TIMEOUT_DELTA_MS);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            
-            fail("Expected SQLTimeoutException to be thrown");
+            assertEquals(2000, difference, TIMEOUT_DELTA_MS, "Unexpected timeout duration (in ms)");
         } finally {
             server.stop();
             thread.join();
@@ -241,23 +227,25 @@ public class WireDatabaseConnectionTest {
     }
 
     /**
-     * Tests if calling {@link XdrStreamAccess#getXdrIn()} obtained from {@link WireConnection#getXdrStreamAccess()} throws an
-     * SQLException when not connected.
+     * Tests if calling {@link XdrStreamAccess#getXdrIn()} obtained from {@link WireConnection#getXdrStreamAccess()}
+     * throws an SQLException when not connected.
      */
-    @Test(expected = SQLException.class)
-    public void testUnconnected_CreateXdrIn() throws Exception {
-        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
-        gdsConnection.getXdrStreamAccess().getXdrIn();
+    @Test
+    void testUnconnected_CreateXdrIn() throws Exception {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            assertThrows(SQLException.class, () -> gdsConnection.getXdrStreamAccess().getXdrIn());
+        }
     }
 
     /**
-     * Tests if calling {@link XdrStreamAccess#getXdrOut()} obtained from {@link WireConnection#getXdrStreamAccess()} throws an
-     * SQLException when not connected.
+     * Tests if calling {@link XdrStreamAccess#getXdrOut()} obtained from {@link WireConnection#getXdrStreamAccess()}
+     * throws an SQLException when not connected.
      */
-    @Test(expected = SQLException.class)
-    public void testUnconnected_CreateXdrOut() throws Exception {
-        WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
-        gdsConnection.getXdrStreamAccess().getXdrOut();
+    @Test
+    void testUnconnected_CreateXdrOut() throws Exception {
+        try (WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo)) {
+            assertThrows(SQLException.class, () -> gdsConnection.getXdrStreamAccess().getXdrOut());
+        }
     }
 
     /**
@@ -265,7 +253,7 @@ public class WireDatabaseConnectionTest {
      * exception when not connected.
      */
     @Test
-    public void testUnconnected_Disconnect() throws Exception {
+    void testUnconnected_Disconnect() throws Exception {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo);
         gdsConnection.close();
     }

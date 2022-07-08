@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,17 +20,17 @@ package org.firebirdsql.gds.ng.dbcrypt.simple;
 
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptData;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class StaticValueDbCryptCallbackSpiTest {
+class StaticValueDbCryptCallbackSpiTest {
 
     @Test
-    public void fixedResponseWithNullConfig() {
+    void fixedResponseWithNullConfig() {
         final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()
                 .createDbCryptCallback(null);
 
@@ -40,7 +40,7 @@ public class StaticValueDbCryptCallbackSpiTest {
     }
 
     @Test
-    public void fixedResponseWithBase64Config() {
+    void fixedResponseWithBase64Config() {
         final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()
                 .createDbCryptCallback("base64:ZWFzdXJlLg==");
 
@@ -50,7 +50,7 @@ public class StaticValueDbCryptCallbackSpiTest {
     }
 
     @Test
-    public void fixedResponseWithBase64urlConfig() {
+    void fixedResponseWithBase64urlConfig() {
         final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()
                 .createDbCryptCallback("base64url:PDw_Pz8-Pg==");
 
@@ -60,7 +60,7 @@ public class StaticValueDbCryptCallbackSpiTest {
     }
 
     @Test
-    public void fixedResponseWithStringConfig() {
+    void fixedResponseWithStringConfig() {
         final String dbCryptConfig = "abc\u02a5\u0b2c\u1d38\u213b";
         final DbCryptCallback dbCryptCallback = new StaticValueDbCryptCallbackSpi()
                 .createDbCryptCallback(dbCryptConfig);

@@ -19,14 +19,13 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import javax.naming.Reference;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.naming.Reference;
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link DataSourceFactory} and - indirectly - the correctness of the getReference() method of
@@ -35,7 +34,7 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class DataSourceFactoryTest {
+class DataSourceFactoryTest {
     
     private static final String ROLE_NAME = "someRoleName";
     private static final int LOGIN_TIMEOUT = 513;
@@ -99,17 +98,17 @@ public class DataSourceFactoryTest {
      * </p>
      */
     @Test
-    public void testBuildFBConnectionPoolDataSource_basicProperties() throws Exception {
+    void testBuildFBConnectionPoolDataSource_basicProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
         fillFBAbstractCommonDataSourceProperties(originalDS);
         Reference ref = originalDS.getReference();
         
-        assertEquals("Unexpected factory name", DataSourceFactory.class.getName(), ref.getFactoryClassName());
-        assertEquals("Unexpected class name", FBConnectionPoolDataSource.class.getName(), ref.getClassName());
+        assertEquals(DataSourceFactory.class.getName(), ref.getFactoryClassName(), "Unexpected factory name");
+        assertEquals(FBConnectionPoolDataSource.class.getName(), ref.getClassName(), "Unexpected class name");
         
-        FBConnectionPoolDataSource newDS = (FBConnectionPoolDataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);
-        assertNotSame("Expected distinct new object", originalDS, newDS);
+        FBConnectionPoolDataSource newDS = (FBConnectionPoolDataSource) new DataSourceFactory().getObjectInstance(ref, null, null, null);
+        assertNotSame(originalDS, newDS, "Expected distinct new object");
         assertFBAbstractCommonDataSourceProperties(newDS);
     }
     
@@ -126,16 +125,16 @@ public class DataSourceFactoryTest {
      * </p>
      */
     @Test
-    public void testBuildFBXADataSource_basicProperties() throws Exception {
+    void testBuildFBXADataSource_basicProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
         fillFBAbstractCommonDataSourceProperties(originalDS);
         Reference ref = originalDS.getReference();
         
-        assertEquals("Unexpected factory name", DataSourceFactory.class.getName(), ref.getFactoryClassName());
-        assertEquals("Unexpected class name", FBXADataSource.class.getName(), ref.getClassName());
+        assertEquals(DataSourceFactory.class.getName(), ref.getFactoryClassName(), "Unexpected factory name");
+        assertEquals(FBXADataSource.class.getName(), ref.getClassName(), "Unexpected class name");
         
-        FBXADataSource newDS = (FBXADataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);
+        FBXADataSource newDS = (FBXADataSource) new DataSourceFactory().getObjectInstance(ref, null, null, null);
         assertFBAbstractCommonDataSourceProperties(newDS);
     }
     
@@ -154,7 +153,7 @@ public class DataSourceFactoryTest {
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
+    void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
@@ -186,7 +185,7 @@ public class DataSourceFactoryTest {
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void testBuildFBXADataSource_nonStandardProperties() throws Exception {
+    void testBuildFBXADataSource_nonStandardProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
@@ -204,7 +203,7 @@ public class DataSourceFactoryTest {
     }
 
     @Test
-    public void testBuildFBSimpleDataSource() throws Exception {
+    void testBuildFBSimpleDataSource() throws Exception {
         final FBSimpleDataSource originalDS = new FBSimpleDataSource();
         originalDS.setDescription(DESCRIPTION);
         originalDS.setType(TYPE);
@@ -220,8 +219,8 @@ public class DataSourceFactoryTest {
         originalDS.setProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
 
-        assertEquals("Unexpected factory name", DataSourceFactory.class.getName(), ref.getFactoryClassName());
-        assertEquals("Unexpected class name", FBSimpleDataSource.class.getName(), ref.getClassName());
+        assertEquals(DataSourceFactory.class.getName(), ref.getFactoryClassName(), "Unexpected factory name");
+        assertEquals(FBSimpleDataSource.class.getName(), ref.getClassName(), "Unexpected class name");
 
         FBSimpleDataSource newDS =
                 (FBSimpleDataSource) new DataSourceFactory().getObjectInstance(ref, null, null, null);

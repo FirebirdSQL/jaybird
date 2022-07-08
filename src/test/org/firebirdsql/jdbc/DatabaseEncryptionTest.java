@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,10 +19,10 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.DatabaseExistsExtension;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.matchers.SQLExceptionMatchers;
-import org.firebirdsql.common.rules.DatabaseExistsRule;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
 import org.firebirdsql.ds.FBConnectionPoolDataSource;
 import org.firebirdsql.ds.FBSimpleDataSource;
 import org.firebirdsql.ds.FBXADataSource;
@@ -31,13 +31,10 @@ import org.firebirdsql.management.FBMaintenanceManager;
 import org.firebirdsql.management.FBStatisticsManager;
 import org.firebirdsql.management.MaintenanceManager;
 import org.firebirdsql.management.StatisticsManager;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.PooledConnection;
 import javax.sql.XAConnection;
@@ -45,9 +42,11 @@ import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests related to database encryption.
@@ -68,7 +67,7 @@ import static org.junit.Assume.assumeTrue;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class DatabaseEncryptionTest {
+class DatabaseEncryptionTest {
 
     private static final String CRYPTTEST_DB = "crypttest";
     private static final String CRYPTSEC_DB = "cryptsec";
@@ -76,17 +75,19 @@ public class DatabaseEncryptionTest {
     private static final String ENCRYPTION_KEY = "TestKey";
     private static final String BASE64_ENCRYPTION_KEY = "VGVzdEtleQ==";
 
-    @ClassRule
-    public static final TestRule requiresCryptTestDB = RuleChain
-            .outerRule(GdsTypeRule.excludesNativeOnly())
-            .around(RequireProtocol.requireProtocolVersion(13))
-            .around(DatabaseExistsRule.requireExistence(CRYPTTEST_DB));
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension gdsType = GdsTypeExtension.excludesNativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    @Order(2)
+    static final RequireProtocolExtension requireProtocol = RequireProtocolExtension.requireProtocolVersion(13);
+
+    @RegisterExtension
+    static final DatabaseExistsExtension databaseExists = DatabaseExistsExtension.requireExistence(CRYPTTEST_DB);
 
     @Test
-    public void testEncryptedDatabaseConnection() throws Exception {
+    void testEncryptedDatabaseConnection() throws Exception {
         String url = FBTestProperties.getUrl(CRYPTTEST_DB);
         System.out.println(url);
         Properties props = FBTestProperties.getDefaultPropertiesForConnection();
@@ -100,7 +101,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testEncryptedDatabaseConnection_base64Value() throws Exception {
+    void testEncryptedDatabaseConnection_base64Value() throws Exception {
         String url = FBTestProperties.getUrl(CRYPTTEST_DB);
         System.out.println(url);
         Properties props = FBTestProperties.getDefaultPropertiesForConnection();
@@ -114,7 +115,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testEncryptedDatabaseConnection_base64ValueInURL() throws Exception {
+    void testEncryptedDatabaseConnection_base64ValueInURL() throws Exception {
         String url = FBTestProperties.getUrl(CRYPTTEST_DB) + "?dbCryptConfig=base64:" + BASE64_ENCRYPTION_KEY;
         System.out.println(url);
         try (Connection connection = DriverManager.getConnection(url, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
@@ -126,7 +127,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testEncryptedDatabaseConnection_base64urlValue() throws Exception {
+    void testEncryptedDatabaseConnection_base64urlValue() throws Exception {
         String url = FBTestProperties.getUrl(CRYPTTEST_DB);
         System.out.println(url);
         Properties props = FBTestProperties.getDefaultPropertiesForConnection();
@@ -140,7 +141,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testEncryptedDatabaseConnection_base64urlValueInURL() throws Exception {
+    void testEncryptedDatabaseConnection_base64urlValueInURL() throws Exception {
         String url = FBTestProperties.getUrl(CRYPTTEST_DB) + "?dbCryptConfig=base64url:" + BASE64_ENCRYPTION_KEY;
         System.out.println(url);
         try (Connection connection = DriverManager.getConnection(url, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);
@@ -152,7 +153,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testFBSimpleDataSource() throws Exception {
+    void testFBSimpleDataSource() throws Exception {
         final FBSimpleDataSource ds = new FBSimpleDataSource();
         ds.setDatabaseName(getUrlWithoutProtocol(CRYPTTEST_DB));
         ds.setUser(FBTestProperties.DB_USER);
@@ -168,7 +169,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testFBConnectionPoolDataSource() throws Exception {
+    void testFBConnectionPoolDataSource() throws Exception {
         final FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
         ds.setDatabaseName(CRYPTTEST_DB);
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
@@ -191,7 +192,7 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    public void testFBXADataSource() throws Exception {
+    void testFBXADataSource() throws Exception {
         final FBXADataSource ds = new FBXADataSource();
         ds.setDatabaseName(CRYPTTEST_DB);
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
@@ -214,8 +215,8 @@ public class DatabaseEncryptionTest {
     }
 
     @Test
-    @Ignore("Requires global KeyHolderPlugin configuration")
-    public void testServiceManagerConnection_gstatException() throws Exception {
+    @Disabled("Requires global KeyHolderPlugin configuration")
+    void testServiceManagerConnection_gstatException() {
         FBStatisticsManager statManager = new FBStatisticsManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             statManager.setServerName(DB_SERVER_URL);
@@ -226,18 +227,18 @@ public class DatabaseEncryptionTest {
         statManager.setDatabase(CRYPTTEST_DB);
         statManager.setDbCryptConfig(ENCRYPTION_KEY);
 
-        expectedException.expect(SQLException.class);
         // TODO Update ISCConstants with missing error constants
         final int errorCodeGstatEncryptedDb = 336920631;
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class,
+                () -> statManager.getDatabaseStatistics(StatisticsManager.SYSTEM_TABLE_STATISTICS));
+        assertThat(exception, allOf(
                 SQLExceptionMatchers.errorCodeEquals(errorCodeGstatEncryptedDb),
                 SQLExceptionMatchers.fbMessageStartsWith(errorCodeGstatEncryptedDb)));
-        statManager.getDatabaseStatistics(StatisticsManager.SYSTEM_TABLE_STATISTICS);
     }
 
     @Test
-    @Ignore("Requires global KeyHolderPlugin configuration")
-    public void testDatabaseValidation() throws Exception {
+    @Disabled("Requires global KeyHolderPlugin configuration")
+    void testDatabaseValidation() throws Exception {
         FBMaintenanceManager maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             maintenanceManager.setServerName(DB_SERVER_URL);
@@ -252,9 +253,9 @@ public class DatabaseEncryptionTest {
    }
 
    @Test
-   public void testEncryptedSelfSecurityDb() throws Exception {
-       assumeTrue("Protocol version 15 is required for encrypted security database with callback, but not supported",
-               getDefaultSupportInfo().supportsProtocol(15));
+   void testEncryptedSelfSecurityDb() throws Exception {
+       assumeTrue(getDefaultSupportInfo().supportsProtocol(15),
+               "Protocol version 15 is required for encrypted security database with callback, but not supported");
        String url = FBTestProperties.getUrl(CRYPTSEC_DB);
        System.out.println(url);
        Properties props = new Properties();
@@ -270,6 +271,7 @@ public class DatabaseEncryptionTest {
        }
    }
 
+    @SuppressWarnings("SameParameterValue")
     private static String getUrlWithoutProtocol(String dbPath) {
         if ("EMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE)) {
             return dbPath;

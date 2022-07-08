@@ -18,16 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This method tests correctness of {@link FBParameterMetaData} class.
@@ -35,10 +35,10 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:skidder@users.sourceforge.net">Nickolay Samofatov</a>
  * @version 1.0
  */
-public class FBParameterMetaDataTest extends FBJUnit4TestBase {
+class FBParameterMetaDataTest {
 
     //@formatter:off
-    public static String CREATE_EXECUTABLE_SP =
+    private static final String CREATE_EXECUTABLE_SP =
             "CREATE PROCEDURE sp_executable(" +
             "  int_field INTEGER," +
             "  varchar_field VARCHAR(35)" +
@@ -51,34 +51,28 @@ public class FBParameterMetaDataTest extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
+            CREATE_EXECUTABLE_SP);
+
     @Test
-    public void testParameterMetaData_callableStatement() throws SQLException {
+    void testParameterMetaData_callableStatement() throws SQLException {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
 
-        Connection connection = DriverManager.getConnection(getUrl(), props);
-        try {
-            DdlHelper.executeDDL(connection, CREATE_EXECUTABLE_SP);
+        try (Connection connection = DriverManager.getConnection(getUrl(), props);
+             CallableStatement stmt = connection.prepareCall("{call sp_executable(?, ?)}")) {
+            ParameterMetaData metaData = stmt.getParameterMetaData();
 
-            CallableStatement stmt = connection.prepareCall("{call sp_executable(?, ?)}");
-            try {
-                ParameterMetaData metaData = stmt.getParameterMetaData();
+            assertEquals(2, metaData.getParameterCount(), "parameterCount");
+            // Checks for parameter 1
+            assertEquals(ParameterMetaData.parameterModeIn, metaData.getParameterMode(1), "1:parameterMode");
+            assertEquals(Types.INTEGER, metaData.getParameterType(1), "1:parameterType");
 
-                assertEquals("parameterCount", 2, metaData.getParameterCount());
-                // Checks for parameter 1
-                assertEquals("1:parameterMode", ParameterMetaData.parameterModeIn, metaData.getParameterMode(1));
-                assertEquals("1:parameterType", Types.INTEGER, metaData.getParameterType(1));
-
-                // Checks for parameter 2
-                assertEquals("2:parameterMode", ParameterMetaData.parameterModeIn, metaData.getParameterMode(2));
-                assertEquals("2:parameterType", Types.VARCHAR, metaData.getParameterType(2));
-
-            } finally {
-                stmt.close();
-            }
-        } finally {
-            connection.close();
+            // Checks for parameter 2
+            assertEquals(ParameterMetaData.parameterModeIn, metaData.getParameterMode(2), "2:parameterMode");
+            assertEquals(Types.VARCHAR, metaData.getParameterType(2), "2:parameterType");
         }
     }
 }

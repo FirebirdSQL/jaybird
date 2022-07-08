@@ -16,19 +16,18 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.management;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -38,17 +37,21 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Test the FBMaintenanceManager class
  */
-public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
+class FBMaintenanceManagerTest {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private FBMaintenanceManager maintenanceManager;
 
@@ -64,8 +67,8 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
             + ")";
     // @formatter:on
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         maintenanceManager = new FBMaintenanceManager(getGdsType());
         if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
             maintenanceManager.setServerName(DB_SERVER_URL);
@@ -90,80 +93,65 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSetModeReadOnly() throws Exception {
+    void testSetModeReadOnly() throws Exception {
         createTestTable();
-        Connection conn = getConnectionViaDriverManager();
-        try {
-            Statement stmt = conn.createStatement();
 
+        try (Connection conn = getConnectionViaDriverManager()) {
+            Statement stmt = conn.createStatement();
             // In read-write mode by default
             stmt.executeUpdate("INSERT INTO TEST VALUES (1)");
-            conn.close();
+        }
 
-            // Try read-only mode
-            maintenanceManager.setDatabaseAccessMode(
-                    MaintenanceManager.ACCESS_MODE_READ_ONLY);
+        // Try read-only mode
+        maintenanceManager.setDatabaseAccessMode(MaintenanceManager.ACCESS_MODE_READ_ONLY);
 
-            conn = getConnectionViaDriverManager();
-            stmt = conn.createStatement();
+        try (Connection conn = getConnectionViaDriverManager()) {
+            Statement stmt = conn.createStatement();
             ResultSet resultSet = stmt.executeQuery("SELECT * FROM TEST");
-            assertTrue("SELECT should succeed while in read-only mode",
-                    resultSet.next());
+            assertTrue(resultSet.next(), "SELECT should succeed while in read-only mode");
 
-            expectedException.expect(SQLException.class);
-
-            stmt.executeUpdate("INSERT INTO TEST VALUES (2)");
-        } finally {
-            closeQuietly(conn);
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> stmt.executeUpdate("INSERT INTO TEST VALUES (2)"));
+            assertThat(exception, errorCodeEquals(ISCConstants.isc_read_only_database));
         }
     }
 
     @Test
-    public void testSetModeReadWrite() throws Exception {
+    void testSetModeReadWrite() throws Exception {
         createTestTable();
 
-        Connection conn = null;
-        try {
-            maintenanceManager.setDatabaseAccessMode(
-                    MaintenanceManager.ACCESS_MODE_READ_ONLY);
+        maintenanceManager.setDatabaseAccessMode(MaintenanceManager.ACCESS_MODE_READ_ONLY);
+        maintenanceManager.setDatabaseAccessMode(MaintenanceManager.ACCESS_MODE_READ_WRITE);
 
-            maintenanceManager.setDatabaseAccessMode(
-                    MaintenanceManager.ACCESS_MODE_READ_WRITE);
-
-            conn = getConnectionViaDriverManager();
+        try(Connection conn = getConnectionViaDriverManager()) {
             Statement stmt = conn.createStatement();
 
             // This has to fail unless the db is read-write
             stmt.executeUpdate("INSERT INTO TEST VALUES (3)");
-        } finally {
-            closeQuietly(conn);
         }
     }
 
     @Test
-    public void testSetAccessModeWithBadMode() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDatabaseAccessMode(
-                MaintenanceManager.ACCESS_MODE_READ_ONLY
-                        | MaintenanceManager.ACCESS_MODE_READ_WRITE);
+    void testSetAccessModeWithBadMode() {
+        assertThrows(IllegalArgumentException.class, () ->
+                maintenanceManager.setDatabaseAccessMode(
+                        MaintenanceManager.ACCESS_MODE_READ_ONLY | MaintenanceManager.ACCESS_MODE_READ_WRITE));
     }
 
     /**
      * Dialect-3 table must fail if the dialect is 1
      */
     @Test
-    public void testSetDialectOne() throws Exception {
+    void testSetDialectOne() throws Exception {
         createTestTable();
         maintenanceManager.setDatabaseDialect(1);
 
-        expectedException.expect(SQLException.class);
-
-        createTestTable(DIALECT3_TABLE);
+        SQLException exception = assertThrows(SQLException.class, () -> createTestTable(DIALECT3_TABLE));
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_sql_db_dialect_dtype_unsupport));
     }
 
     @Test
-    public void testSetDialectThree() throws Exception {
+    void testSetDialectThree() throws Exception {
         maintenanceManager.setDatabaseDialect(1);
         maintenanceManager.setDatabaseDialect(3);
 
@@ -175,28 +163,30 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
      * Database dialect must be either 1 or 3
      */
     @Test
-    public void testSetBadDialect() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDatabaseDialect(5);
+    void testSetBadDialect() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.setDatabaseDialect(5));
     }
 
     /**
      * Query must fail on an offline database
      */
     @Test
-    public void testForcedShutdown() throws Exception {
+    void testForcedShutdown() throws Exception {
         try (Connection conn = getConnectionViaDriverManager()) {
             createTestTable();
 
-            try (Statement stmt = conn.createStatement()) {
+            Statement stmt = conn.createStatement();
+            try {
                 String sql = "SELECT * FROM TEST";
                 stmt.executeQuery(sql);
                 maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
 
-                expectedException.expect(SQLException.class);
-
-                stmt.executeQuery(sql);
+                SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(sql));
+                assertThat(exception, anyOf(
+                        errorCodeEquals(ISCConstants.isc_shutdown),
+                        errorCodeEquals(ISCConstants.isc_att_shutdown)));
+            } finally {
+                closeQuietly(stmt);
             }
         }
     }
@@ -205,33 +195,31 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
      * A transaction shutdown fails with open transactions at the end of the timeout
      */
     @Test
-    public void testTransactionalShutdown() throws Exception {
-        Connection conn = getConnectionViaDriverManager();
+    void testTransactionalShutdown() throws Exception {
         String sql = "UPDATE TEST SET TESTVAL = 5";
-        createTestTable();
-        try {
+        try (Connection conn = getConnectionViaDriverManager()) {
+            createTestTable();
             conn.setAutoCommit(false);
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
             conn.commit();
-            conn.close();
+        }
 
-            // Shutting down when no transactions are active should work
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
-            Thread.sleep(100);
-            maintenanceManager.bringDatabaseOnline();
-            Thread.sleep(100);
-            conn = getConnectionViaDriverManager();
+        // Shutting down when no transactions are active should work
+        maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
+        Thread.sleep(100);
+        maintenanceManager.bringDatabaseOnline();
+        Thread.sleep(100);
+        
+        try (Connection conn = getConnectionViaDriverManager()) {
             conn.setAutoCommit(false);
 
-            stmt = conn.createStatement();
+            Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
 
-            expectedException.expect(SQLException.class);
-
-            maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0);
-        } finally {
-            closeQuietly(conn);
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_TRANSACTIONAL, 0));
+            assertThat(exception, errorCodeEquals(ISCConstants.isc_shutfail));
         }
     }
 
@@ -239,56 +227,48 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
      * Shutdown mode must be one of: SHUTDOWN_ATTACH, SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE
      */
     @Test
-    public void testShutdownWithBadMode_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.shutdownDatabase(
-                MaintenanceManager.SHUTDOWN_ATTACH
-                        | MaintenanceManager.SHUTDOWN_TRANSACTIONAL
-                        | MaintenanceManager.SHUTDOWN_FORCE,
-                0);
+    void testShutdownWithBadMode_1() {
+        assertThrows(IllegalArgumentException.class, () ->
+                maintenanceManager.shutdownDatabase(
+                        MaintenanceManager.SHUTDOWN_ATTACH
+                                | MaintenanceManager.SHUTDOWN_TRANSACTIONAL
+                                | MaintenanceManager.SHUTDOWN_FORCE,
+                        0));
     }
 
     /**
      * Shutdown mode must be one of: SHUTDOWN_ATTACH, SHUTDOWN_TRANSACTIONAL, SHUTDOWN_FORCE
      */
     @Test
-    public void testShutdownWithBadMode_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.shutdownDatabase(0, 0);
+    void testShutdownWithBadMode_2() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.shutdownDatabase(0, 0));
     }
 
     /**
      * Shutdown timeout must be >= 0
      */
     @Test
-    public void testShutdownWithBadTimeout() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, -1);
+    void testShutdownWithBadTimeout() {
+        assertThrows(IllegalArgumentException.class,
+                () -> maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, -1));
     }
 
     /**
      * Default cache buffer must not be a negative integer
      */
     @Test
-    public void testSetDefaultCacheBufferNegativeCount() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDefaultCacheBuffer(-1);
+    void testSetDefaultCacheBufferNegativeCount() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.setDefaultCacheBuffer(-1));
     }
 
     @Test
-    public void testSetDefaultCacheBufferTooLow() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setDefaultCacheBuffer(49);
+    public void testSetDefaultCacheBufferTooLow() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.setDefaultCacheBuffer(49));
     }
 
     @Test
-    public void testSetDefaultCacheBuffer() throws Exception {
-        assumeTrue("Test needs access to monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+    void testSetDefaultCacheBuffer() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test needs access to monitoring tables");
 
         final int bufferSize = 50;
         maintenanceManager.setDefaultCacheBuffer(bufferSize);
@@ -297,8 +277,8 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSetDefaultCacheBufferZeroResetsValue() throws Exception {
-        assumeTrue("Test needs access to monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+    void testSetDefaultCacheBufferZeroResetsValue() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test needs access to monitoring tables");
 
         final int systemDefaultBuffer;
         try (Connection connection = getConnectionViaDriverManager();
@@ -326,7 +306,7 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSetForcedWrites() throws Exception {
+    void testSetForcedWrites() throws Exception {
         // No test we can really do other than make sure it doesn't just fail
         maintenanceManager.setForcedWrites(true);
         maintenanceManager.setForcedWrites(false);
@@ -336,145 +316,113 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
      * page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE
      */
     @Test
-    public void testSetPageFillBadParam_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setPageFill(
-                MaintenanceManager.PAGE_FILL_FULL
-                        | MaintenanceManager.PAGE_FILL_RESERVE);
+    void testSetPageFillBadParam_1() {
+        assertThrows(IllegalArgumentException.class,
+                () -> maintenanceManager.setPageFill(
+                        MaintenanceManager.PAGE_FILL_FULL | MaintenanceManager.PAGE_FILL_RESERVE));
     }
 
     /**
      * page fill must be PAGE_FILL_FULL or PAGE_FILL_RESERVE
      */
     @Test
-    public void testSetPageFillBadParam_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setPageFill(
-                Math.min(MaintenanceManager.PAGE_FILL_FULL,
-                        MaintenanceManager.PAGE_FILL_RESERVE) - 1);
+    void testSetPageFillBadParam_2() {
+        assertThrows(IllegalArgumentException.class,
+                () -> maintenanceManager.setPageFill(
+                        Math.min(MaintenanceManager.PAGE_FILL_FULL, MaintenanceManager.PAGE_FILL_RESERVE) - 1));
     }
 
     @Test
-    public void testSetPageFill() throws Exception {
+    void testSetPageFill() throws Exception {
         // Just make sure it runs without an exception
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_FULL);
         maintenanceManager.setPageFill(MaintenanceManager.PAGE_FILL_RESERVE);
     }
 
     @Test
-    public void testMarkCorruptRecords() throws Exception {
-        // ensure that our maintenance manager has exclusive connection
-        fbManager.stop();
-        try {
-            // Just make sure it runs without an exception
-            maintenanceManager.markCorruptRecords();
-        } finally {
-            fbManager.start();
-        }
+    void testMarkCorruptRecords() throws Exception {
+        // Just make sure it runs without an exception
+        maintenanceManager.markCorruptRecords();
     }
 
     @Test
-    public void testValidateDatabase() throws Exception {
-        // ensure that our maintenance manager has exclusive connection
-        fbManager.stop();
-        try {
-            // Just make sure it runs without an exception
-            maintenanceManager.validateDatabase();
-        } finally {
-            fbManager.start();
-        }
+    void testValidateDatabase() throws Exception {
+        // Just make sure it runs without an exception
+        maintenanceManager.validateDatabase();
     }
 
     /**
      * Validation must be either 0, read-only, or full
      */
     @Test
-    public void testValidateDatabaseBadParam_1() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(
+    void testValidateDatabaseBadParam_1() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.validateDatabase(
                 (MaintenanceManager.VALIDATE_READ_ONLY
                         | MaintenanceManager.VALIDATE_FULL
-                        | MaintenanceManager.VALIDATE_IGNORE_CHECKSUM) * 2);
+                        | MaintenanceManager.VALIDATE_IGNORE_CHECKSUM) * 2));
     }
 
     /**
      * Validation must be either 0, read-only, or full
      */
     @Test
-    public void testValidateDatabaseBadParam_2() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(
-                MaintenanceManager.VALIDATE_READ_ONLY
-                        | MaintenanceManager.VALIDATE_FULL);
+    void testValidateDatabaseBadParam_2() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.validateDatabase(
+                MaintenanceManager.VALIDATE_READ_ONLY | MaintenanceManager.VALIDATE_FULL));
     }
 
     /**
      * Validation must be either 0, read-only, or full
      */
     @Test
-    public void testValidateDatabaseBadParam_3() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL / 2);
+    void testValidateDatabaseBadParam_3() {
+        assertThrows(IllegalArgumentException.class,
+                () -> maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL / 2));
     }
 
     /**
      * Validation must be either 0, read-only, or full
      */
     @Test
-    public void testValidateDatabaseBadParam_4() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.validateDatabase(-1);
+    void testValidateDatabaseBadParam_4() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.validateDatabase(-1));
     }
 
     @Test
-    public void testValidateDatabaseFull() throws Exception {
-        // ensure that our maintenance manager has exclusive connection
-        fbManager.stop();
-        try {
-            // Just run to make sure it doesn't fail
-            maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL);
-        } finally {
-            fbManager.start();
-        }
+    void testValidateDatabaseFull() throws Exception {
+        // Just run to make sure it doesn't fail
+        maintenanceManager.validateDatabase(MaintenanceManager.VALIDATE_FULL);
     }
 
     /**
      * Sweep threshold must be positive
      */
     @Test
-    public void testSetSweepThresholdBadParams() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-
-        maintenanceManager.setSweepThreshold(-1);
+    void testSetSweepThresholdBadParams() {
+        assertThrows(IllegalArgumentException.class, () -> maintenanceManager.setSweepThreshold(-1));
     }
 
     @Test
-    public void testSetSweepThreshold() throws Exception {
+    void testSetSweepThreshold() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.setSweepThreshold(0);
         maintenanceManager.setSweepThreshold(2000);
     }
 
     @Test
-    public void testSweepDatabase() throws Exception {
-        // Just run it to see if it throws an exception 
+    void testSweepDatabase() throws Exception {
+        // Just run it to see if it throws an exception
         maintenanceManager.sweepDatabase();
     }
 
     @Test
-    public void testActivateShadowFile() throws Exception {
+    void testActivateShadowFile() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.activateShadowFile();
     }
 
     @Test
-    public void testKillUnavailableShadows() throws Exception {
+    void testKillUnavailableShadows() throws Exception {
         // Just run it to see if it throws an exception
         maintenanceManager.killUnavailableShadows();
     }
@@ -488,7 +436,7 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testRollbackLimboTransaction() throws Exception {
+    void testRollbackLimboTransaction() throws Exception {
         List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
 
@@ -505,7 +453,7 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testRollbackLimboTransactionAsInt() throws Exception {
+    void testRollbackLimboTransactionAsInt() throws Exception {
         long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(0, limboTransactions.length);
 
@@ -522,7 +470,7 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testCommitLimboTransaction() throws Exception {
+    void testCommitLimboTransaction() throws Exception {
         List<Long> limboTransactions = maintenanceManager.limboTransactionsAsList();
         assertEquals(0, limboTransactions.size());
 
@@ -539,7 +487,7 @@ public class FBMaintenanceManagerTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testCommitLimboTransactionAsInt() throws Exception {
+    void testCommitLimboTransactionAsInt() throws Exception {
         long[] limboTransactions = maintenanceManager.getLimboTransactions();
         assertEquals(0, limboTransactions.length);
 

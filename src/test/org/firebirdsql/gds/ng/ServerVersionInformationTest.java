@@ -18,11 +18,13 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.ServerVersionInformation}.
@@ -30,56 +32,32 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class ServerVersionInformationTest {
+class ServerVersionInformationTest {
 
-    @Test
-    public void testGetForVersion_versionTooLow_VERSION_1_0() {
-        assertSame("Expected VERSION_1_0",
-                ServerVersionInformation.VERSION_1_0, ServerVersionInformation.getForVersion(0, 9));
+    @ParameterizedTest
+    @CsvSource({
+            // Too low version "upgrades" to 1.0
+            "0, 9, VERSION_1_0",
+            "1, 0, VERSION_1_0",
+            // 1.5 uses same as 1.0
+            "1, 5, VERSION_1_0",
+            "2, 0, VERSION_2_0",
+            // Higher versions use same as 2.0
+            "2, 5, VERSION_2_0",
+            "3, 0, VERSION_2_0",
+            "4, 0, VERSION_2_0",
+            "5, 0, VERSION_2_0",
+    })
+    void testGetForVersion(int major, int minor, ServerVersionInformation expectedServerVersionInformation) {
+        assertSame(expectedServerVersionInformation, ServerVersionInformation.getForVersion(major, minor));
     }
 
     @Test
-    public void testGetForVersion_version1_0_VERSION_1_0() {
-        assertSame("Expected VERSION_1_0",
-                ServerVersionInformation.VERSION_1_0, ServerVersionInformation.getForVersion(1, 0));
-    }
-
-    @Test
-    public void testGetForVersion_version1_5_VERSION_1_0() {
-        assertSame("Expected VERSION_1_0",
-                ServerVersionInformation.VERSION_1_0, ServerVersionInformation.getForVersion(1, 5));
-    }
-
-    @Test
-    public void testGetForVersion_version2_0_VERSION_2_0() {
-        assertSame("Expected VERSION_2_0",
-                ServerVersionInformation.VERSION_2_0, ServerVersionInformation.getForVersion(2, 0));
-    }
-
-    @Test
-    public void testGetForVersion_version2_1_VERSION_2_0() {
-        assertSame("Expected VERSION_2_0",
-                ServerVersionInformation.VERSION_2_0, ServerVersionInformation.getForVersion(2, 1));
-    }
-
-    @Test
-    public void testGetForVersion_version2_5_VERSION_2_0() {
-        assertSame("Expected VERSION_2_0",
-                ServerVersionInformation.VERSION_2_0, ServerVersionInformation.getForVersion(2, 5));
-    }
-
-    @Test
-    public void testGetForVersion_version3_0_VERSION_2_0() {
-        assertSame("Expected VERSION_2_0",
-                ServerVersionInformation.VERSION_2_0, ServerVersionInformation.getForVersion(3, 0));
-    }
-
-    @Test
-    public void testGetForVersion_versionTooHigh_VERSION_2_0() {
+    void testGetForVersion_versionTooHigh_VERSION_2_0() {
         final ServerVersionInformation[] values = ServerVersionInformation.values();
         assumeThat("Expected VERSION_2_0 to be the highest version",
                 values[values.length - 1], sameInstance(ServerVersionInformation.VERSION_2_0));
-        assertSame("Expected VERSION_2_0",
-                ServerVersionInformation.VERSION_2_0, ServerVersionInformation.getForVersion(99, 0));
+        assertSame(ServerVersionInformation.VERSION_2_0,
+                ServerVersionInformation.getForVersion(99, 0), "Expected VERSION_2_0");
     }
 }

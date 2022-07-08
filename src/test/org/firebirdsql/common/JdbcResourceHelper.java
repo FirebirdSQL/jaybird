@@ -1,6 +1,5 @@
 /*
- * $Id$
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -13,22 +12,19 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.common;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import javax.sql.PooledConnection;
 
 /**
  * Helper class for closing JDBC resources, ignoring all SQLExceptions.
- * 
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public final class JdbcResourceHelper {
@@ -37,61 +33,39 @@ public final class JdbcResourceHelper {
     }
 
     /**
-     * Helper method to quietly close statements.
-     * 
-     * @param stmt
-     *            Statement object
+     * Helper method to quietly close a resource.
+     *
+     * @param resource
+     *         resource to close
      */
-    public static void closeQuietly(Statement stmt) {
-        if (stmt == null) {
+    public static void closeQuietly(AutoCloseable resource) {
+        if (resource == null) {
             return;
         }
         try {
-            stmt.close();
-        } catch (SQLException ex) {
+            resource.close();
+        } catch (Exception e) {
             // ignore
         }
     }
 
     /**
-     * Helper method to quietly close connections.
-     * 
-     * @param con
-     *            Connection object
+     * Helper method to quietly close multiple resources.
+     *
+     * @param resources
+     *         resources to close
      */
-    public static void closeQuietly(Connection con) {
-        if (con == null) {
-            return;
-        }
-        try {
-            con.close();
-        } catch (SQLException ex) {
-            // ignore
-        }
-    }
-
-    /**
-     * Helper method to quietly close resultsets.
-     * 
-     * @param rs
-     *            ResultSet object
-     */
-    public static void closeQuietly(ResultSet rs) {
-        if (rs == null) {
-            return;
-        }
-        try {
-            rs.close();
-        } catch (SQLException ex) {
-            // ignore
+    public static void closeQuietly(AutoCloseable... resources) {
+        for (AutoCloseable resource : resources) {
+            closeQuietly(resource);
         }
     }
 
     /**
      * Helper method to quietly close pooled connections.
-     * 
+     *
      * @param con
-     *            PooledConnection object
+     *         PooledConnection object
      */
     public static void closeQuietly(PooledConnection con) {
         if (con == null) {

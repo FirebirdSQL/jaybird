@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
@@ -34,7 +35,6 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
@@ -452,7 +452,7 @@ class FBResultSetTest {
             System.out.println("Inserting...");
             int recordCount = 1;
 
-            IntFunction<String> rowData = id -> new String(createRandomByteString(19000));
+            IntFunction<String> rowData = id -> new String(DataGenerator.createRandomAsciiBytes(19000));
             createTestData(recordCount, rowData, connection, "very_long_str");
 
             connection.commit();
@@ -499,7 +499,7 @@ class FBResultSetTest {
             connection.setAutoCommit(false);
 
             final int recordCount = 1;
-            IntFunction<String> rowData = id -> new String(createRandomByteString(19000));
+            IntFunction<String> rowData = id -> new String(DataGenerator.createRandomAsciiBytes(19000));
             createTestData(recordCount, rowData, connection, "very_long_str");
             connection.commit();
 
@@ -517,16 +517,6 @@ class FBResultSetTest {
                 }
             }
         }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private byte[] createRandomByteString(int length) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        byte[] string = new byte[length];
-        for (int i = 0; i < length; i++) {
-            string[i] = (byte) random.nextInt(128);
-        }
-        return string;
     }
 
     @ParameterizedTest

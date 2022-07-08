@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,20 +19,20 @@
 package org.firebirdsql.gds.ng.wire.auth.srp;
 
 import org.firebirdsql.util.ByteArrayHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link SrpClient}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class SrpClientTest {
+class SrpClientTest {
     @Test
-    public void testSessionKey() throws SQLException {
+    void testSessionKey() throws SQLException {
         String user = "SYSDBA";
         String password = "masterkey";
 

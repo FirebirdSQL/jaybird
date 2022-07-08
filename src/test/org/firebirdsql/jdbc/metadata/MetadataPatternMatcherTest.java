@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,37 +21,28 @@ package org.firebirdsql.jdbc.metadata;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(Parameterized.class)
-public class MetadataPatternMatcherParameterizedTest {
+class MetadataPatternMatcherTest {
 
-    private final String metadataPattern;
-    private final String expectedRegexPattern;
-    private final List<String> expectedMatches;
-
-    public MetadataPatternMatcherParameterizedTest(String metadataPattern, String expectedRegexPattern,
-            List<String> expectedMatches) {
-        this.metadataPattern = metadataPattern;
-        this.expectedRegexPattern = expectedRegexPattern;
-        this.expectedMatches = expectedMatches;
-    }
-
-    @Parameterized.Parameters(name = "{index}: {0} => {1}")
-    public static List<Object[]> parameters() {
-        return asList(
+    static Stream<Arguments> parameters() {
+        return Stream.of(
                 testCase(null, null, asList("", "a", "XYZ", "a_x")),
                 testCase("%", ".*", asList("", "a", "XYZ", "a_x")),
                 testCase("abc", "\\Qabc\\E", singletonList("abc")),
@@ -72,15 +63,17 @@ public class MetadataPatternMatcherParameterizedTest {
         );
     }
 
-    @Test
-    public void testPatternToRegex() {
+    @ParameterizedTest(name = "{index}: {0} => {1}")
+    @MethodSource("parameters")
+    public void testPatternToRegex(String metadataPattern, String expectedRegexPattern) {
         assumeThat("patternToRegex not supported for this pattern", metadataPattern, is(notNullValue()));
-        assertEquals("Unexpected regex pattern for '" + metadataPattern + "'",
-                expectedRegexPattern, MetadataPatternMatcher.patternToRegex(metadataPattern));
+        assertEquals(expectedRegexPattern, MetadataPatternMatcher.patternToRegex(metadataPattern),
+                "Unexpected regex pattern for '" + metadataPattern + "'");
     }
 
-    @Test
-    public void testMetadataPatternMatcher() {
+    @ParameterizedTest(name = "{index}: {0} => {2}")
+    @MethodSource("parameters")
+    public void testMetadataPatternMatcher(String metadataPattern, String ignored, List<String> expectedMatches) {
         final MetadataPatternMatcher metadataPatternMatcher =
                 MetadataPattern.compile(metadataPattern).toMetadataPatternMatcher();
         Matcher<String> matchesMetadataPattern = new TypeSafeMatcher<String>() {
@@ -97,13 +90,13 @@ public class MetadataPatternMatcherParameterizedTest {
 
         assertThat(expectedMatches, everyItem(matchesMetadataPattern));
         if (metadataPattern == null || "%".equals(metadataPattern)) {
-            assertTrue("All pattern should match null", metadataPatternMatcher.matches(null));
+            assertTrue(metadataPatternMatcher.matches(null), "All pattern should match null");
         } else {
-            assertFalse("Pattern should not match null", metadataPatternMatcher.matches(null));
+            assertFalse(metadataPatternMatcher.matches(null), "Pattern should not match null");
         }
     }
 
-    private static Object[] testCase(String likePattern, String expectedRegexPattern, List<String> expectedMatches) {
-        return new Object[] { likePattern, expectedRegexPattern, expectedMatches };
+    private static Arguments testCase(String likePattern, String expectedRegexPattern, List<String> expectedMatches) {
+        return Arguments.of(likePattern, expectedRegexPattern, expectedMatches);
     }
 }

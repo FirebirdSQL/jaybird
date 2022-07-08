@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,9 +22,9 @@ import org.firebirdsql.common.StringHelper;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -35,31 +35,28 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.management.PageSizeConstants.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Describe class <code>TestFBManager</code> here.
+ * Tests for {@link FBManager}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBManagerTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class FBManagerTest {
 
     @Test
-    public void testStart() throws Exception {
-        FBManager m = createFBManager();
-        m.setServer(DB_SERVER_URL);
-        m.setPort(DB_SERVER_PORT);
-        m.start();
-        m.stop();
+    void testStart() throws Exception {
+        try (FBManager m = createFBManager()) {
+            m.setServer(DB_SERVER_URL);
+            m.setPort(DB_SERVER_PORT);
+            m.start();
+        }
     }
 
     @Test
-    public void testCreateDrop() throws Exception {
+    void testCreateDrop() throws Exception {
         try (FBManager m = createFBManager()) {
             m.setServer(DB_SERVER_URL);
             m.setPort(DB_SERVER_PORT);
@@ -74,25 +71,25 @@ public class FBManagerTest {
             m.setForceCreate(true);
             m.createDatabase(databasePath, DB_USER, DB_PASSWORD);
 
-            assertTrue("Must report that database exists", m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD));
+            assertTrue(m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD), "Must report that database exists");
 
             // check drop
             m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
 
-            assertFalse("Must report that database does not exist",
-                    m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD));
+            assertFalse(m.isDatabaseExists(databasePath, DB_USER, DB_PASSWORD),
+                    "Must report that database does not exist");
         }
     }
 
     @Test
-    public void testSetPageSize_createdDatabaseHasSize() throws Exception {
+    void testSetPageSize_createdDatabaseHasSize() throws Exception {
         checkPageSizeCreated(PageSizeConstants.SIZE_16K);
     }
 
     @Test
-    public void testSetPageSize32K() throws Exception {
-        assumeTrue("requires 32k page size support",
-                getDefaultSupportInfo().supportsPageSize(PageSizeConstants.SIZE_32K));
+    void testSetPageSize32K() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPageSize(PageSizeConstants.SIZE_32K),
+                "requires 32k page size support");
         checkPageSizeCreated(PageSizeConstants.SIZE_32K);
     }
 
@@ -114,36 +111,35 @@ public class FBManagerTest {
                 final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
                 final byte[] databaseInfo = currentDatabase.getDatabaseInfo(
                         new byte[] { ISCConstants.isc_info_page_size }, 10);
-                assertEquals("Unexpected info item", ISCConstants.isc_info_page_size, databaseInfo[0]);
+                assertEquals(ISCConstants.isc_info_page_size, databaseInfo[0], "Unexpected info item");
                 int length = iscVaxInteger2(databaseInfo, 1);
                 int actualPageSize = iscVaxInteger(databaseInfo, 3, length);
-                assertEquals("Unexpected page size", requestedPageSize, actualPageSize);
+                assertEquals(requestedPageSize, actualPageSize, "Unexpected page size");
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
         }
     }
 
+    @SuppressWarnings("resource")
     @Test
-    public void testSetPageSize_Invalid_throwsIllegalArgumentException() {
+    void testSetPageSize_Invalid_throwsIllegalArgumentException() {
         FBManager m = createFBManager();
-        expectedException.expect(IllegalArgumentException.class);
 
-        m.setPageSize(4000);
+        assertThrows(IllegalArgumentException.class, () -> m.setPageSize(4000));
+    }
+
+    @SuppressWarnings("resource")
+    @ParameterizedTest
+    @ValueSource(ints = { SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K })
+    void testSetPageSize_ValidValues(int pageSize) {
+        FBManager m = createFBManager();
+
+        m.setPageSize(pageSize);
     }
 
     @Test
-    public void testSetPageSize_ValidValues() {
-        FBManager m = createFBManager();
-
-        final int[] pageSizes = { SIZE_1K, SIZE_2K, SIZE_4K, SIZE_8K, SIZE_16K, SIZE_32K };
-        for (int pageSize : pageSizes) {
-            m.setPageSize(pageSize);
-        }
-    }
-
-    @Test
-    public void testDialect3_dbCreatedWithRightDialect() throws Exception {
+    void testDialect3_dbCreatedWithRightDialect() throws Exception {
         try (FBManager m = createFBManager()) {
             m.setServer(DB_SERVER_URL);
             m.setPort(DB_SERVER_PORT);
@@ -159,7 +155,7 @@ public class FBManagerTest {
             try (FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
                     getDefaultPropertiesForConnection())) {
                 final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
-                assertEquals("Unexpected database dialect", 3, currentDatabase.getDatabaseDialect());
+                assertEquals(3, currentDatabase.getDatabaseDialect(), "Unexpected database dialect");
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
@@ -167,7 +163,7 @@ public class FBManagerTest {
     }
 
     @Test
-    public void testDialect1_dbCreatedWithRightDialect() throws Exception {
+    void testDialect1_dbCreatedWithRightDialect() throws Exception {
         try (FBManager m = createFBManager()) {
             m.setServer(DB_SERVER_URL);
             m.setPort(DB_SERVER_PORT);
@@ -183,7 +179,7 @@ public class FBManagerTest {
             try (FBConnection connection = (FBConnection) DriverManager.getConnection(getUrl() + ".fdb",
                     getDefaultPropertiesForConnection())) {
                 final FbDatabase currentDatabase = connection.getGDSHelper().getCurrentDatabase();
-                assertEquals("Unexpected database dialect", 1, currentDatabase.getDatabaseDialect());
+                assertEquals(1, currentDatabase.getDatabaseDialect(), "Unexpected database dialect");
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
             }
@@ -191,7 +187,7 @@ public class FBManagerTest {
     }
 
     @Test
-    public void testCreate_withDefaultCharacterSet() throws Exception {
+    void testCreate_withDefaultCharacterSet() throws Exception {
         try (FBManager m = createFBManager()) {
             m.setServer(DB_SERVER_URL);
             m.setPort(DB_SERVER_PORT);
@@ -208,8 +204,8 @@ public class FBManagerTest {
                      Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery("select RDB$CHARACTER_SET_NAME from rdb$database")) {
 
-                    assertTrue("expected a row", rs.next());
-                    assertEquals("Unexpected default character set", "UTF8", StringHelper.trim(rs.getString(1)));
+                    assertTrue(rs.next(), "expected a row");
+                    assertEquals("UTF8", StringHelper.trim(rs.getString(1)), "Unexpected default character set");
                 }
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);
@@ -218,17 +214,17 @@ public class FBManagerTest {
     }
 
     @Test
-    public void testCreate_forceWrite_null() throws Exception {
+    void testCreate_forceWrite_null() throws Exception {
         checkForceWrite(null, 1);
     }
 
     @Test
-    public void testCreate_forceWrite_true() throws Exception {
+    void testCreate_forceWrite_true() throws Exception {
         checkForceWrite(true, 1);
     }
 
     @Test
-    public void testCreate_forceWrite_false() throws Exception {
+    void testCreate_forceWrite_false() throws Exception {
         checkForceWrite(false, 0);
     }
 
@@ -249,8 +245,8 @@ public class FBManagerTest {
                      Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery("select MON$FORCED_WRITES from mon$database")) {
 
-                    assertTrue("expected a row", rs.next());
-                    assertEquals("Unexpected default character set", expectedValue, rs.getInt(1));
+                    assertTrue(rs.next(), "expected a row");
+                    assertEquals(expectedValue, rs.getInt(1), "Unexpected default character set");
                 }
             } finally {
                 m.dropDatabase(databasePath, DB_USER, DB_PASSWORD);

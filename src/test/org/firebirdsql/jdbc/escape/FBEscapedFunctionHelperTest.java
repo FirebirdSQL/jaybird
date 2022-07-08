@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,19 +18,18 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FBEscapedFunctionHelperTest {
+class FBEscapedFunctionHelperTest {
 
     /**
-     * Test function call that contains quoted identifiers as well as
-     * commas and double quotes in string literals.
+     * Test function call that contains quoted identifiers as well as commas and double quotes in string literals.
      */
     private static final String ESCAPED_FUNCTION_CALL = "test(\"arg1\", 12, ',\"')";
     private static final String ESCAPED_FUNCTION_NAME = "test";
@@ -39,28 +38,26 @@ public class FBEscapedFunctionHelperTest {
     private static final String UCASE_FUNCTION_TEST = "UPPER(some_identifier)";
 
     @Test
-    public void testParseArguments() throws SQLException {
+    void testParseArguments() throws SQLException {
         List<String> parsedParams = FBEscapedFunctionHelper.parseArguments(ESCAPED_FUNCTION_CALL);
 
-        assertEquals("Parsed params should be equal to the test ones.",
-                ESCAPED_FUNCTION_PARAMS, parsedParams);
+        assertEquals(ESCAPED_FUNCTION_PARAMS, parsedParams, "Parsed params should be equal to the test ones");
     }
 
     /**
      * Test if function name is parsed correctly.
      */
     @Test
-    public void testParseName() throws SQLException {
+    void testParseName() throws SQLException {
         String name = FBEscapedFunctionHelper.parseFunction(ESCAPED_FUNCTION_CALL);
 
-        assertEquals("Parsed function name should be equal to the test one.",
-                ESCAPED_FUNCTION_NAME, name);
+        assertEquals(ESCAPED_FUNCTION_NAME, name, "Parsed function name should be equal to the test one");
     }
 
     @Test
-    public void testEscapedFunctionCall() throws SQLException {
+    void testEscapedFunctionCall() throws SQLException {
         String ucaseTest = FBEscapedParser.toNativeSql(UCASE_FUNCTION_CALL);
-        assertEquals("ucase function parsing should be correct",
-                UCASE_FUNCTION_TEST, ucaseTest);
+
+        assertEquals(UCASE_FUNCTION_TEST, ucaseTest, "ucase function parsing should be correct");
     }
 }

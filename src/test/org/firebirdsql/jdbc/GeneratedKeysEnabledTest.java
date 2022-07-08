@@ -19,31 +19,39 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests configuration property {@code generatedKeysEnabled}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GeneratedKeysEnabledTest {
+class GeneratedKeysEnabledTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(
+    @RegisterExtension
+    @Order(1)
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsInsertReturning,
+                    "Test requires INSERT .. RETURNING .. support")
+            .build();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             "CREATE TABLE TABLE_WITH_TRIGGER (\n"
                     + " ID Integer NOT NULL,\n"
                     + " TEXT Varchar(200),\n"
@@ -66,78 +74,68 @@ public class GeneratedKeysEnabledTest {
                     "END"
     );
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-    
     private static final String TEST_INSERT_QUERY = "INSERT INTO TABLE_WITH_TRIGGER(TEXT) VALUES (?)";
     private static final String TEST_UPDATE_QUERY = "UPDATE TABLE_WITH_TRIGGER SET TEXT = ? WHERE ID = ?";
 
-    @BeforeClass
-    public static void checkReturningSupport() {
-        assumeTrue("test requires INSERT .. RETURNING .. support",
-                FBTestProperties.getDefaultSupportInfo().supportsInsertReturning());
-    }
-
     @Test
-    public void test_generatedKeysEnabled_notSpecified_insertWorks() throws SQLException {
+    void test_generatedKeysEnabled_notSpecified_insertWorks() throws SQLException {
         Properties props = FBTestProperties.getDefaultPropertiesForConnection();
         try (Connection connection = DriverManager.getConnection(FBTestProperties.getUrl(), props);
              PreparedStatement pstmt = connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, "value");
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                assertTrue("expected a row", rs.next());
+                assertTrue(rs.next(), "expected a row");
                 assertThat("non-zero id", rs.getInt("id"), greaterThan(0));
             }
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_default_insertWorks() throws SQLException {
+    void test_generatedKeysEnabled_default_insertWorks() throws SQLException {
         try (Connection connection = getConnection("default");
              PreparedStatement pstmt = connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, "value");
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                assertTrue("expected a row", rs.next());
+                assertTrue(rs.next(), "expected a row");
                 assertThat("non-zero id", rs.getInt("id"), greaterThan(0));
             }
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_disabled_throwsFeatureNotSupported() throws SQLException {
+    void test_generatedKeysEnabled_disabled_throwsFeatureNotSupported() throws SQLException {
         try (Connection connection = getConnection("disabled")) {
-            expectedException.expect(allOf(
-                    isA(SQLFeatureNotSupportedException.class),
+            SQLException exception = assertThrows(SQLFeatureNotSupportedException.class,
+                    () -> connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS));
+            assertThat(exception, allOf(
                     errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable),
-                    fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable, GeneratedKeysSupportFactory.REASON_EXPLICITLY_DISABLED)
-            ));
-            connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+                    fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable, GeneratedKeysSupportFactory.REASON_EXPLICITLY_DISABLED)));
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_ignored_insert_noGeneratedKeys() throws SQLException {
+    void test_generatedKeysEnabled_ignored_insert_noGeneratedKeys() throws SQLException {
         try (Connection connection = getConnection("ignored");
              PreparedStatement pstmt = connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, "value");
             pstmt.executeUpdate();
             try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                assertFalse("expected no row", rs.next());
+                assertFalse(rs.next(), "expected no row");
             }
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_insert_insertWorks_updateNoGeneratedKeys() throws SQLException {
+    void test_generatedKeysEnabled_insert_insertWorks_updateNoGeneratedKeys() throws SQLException {
         try (Connection connection = getConnection("insert")) {
             int insertedId;
             try (PreparedStatement pstmt = connection.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
                 pstmt.setString(1, "value");
                 pstmt.executeUpdate();
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    assertTrue("expected a row for insert", rs.next());
+                    assertTrue(rs.next(), "expected a row for insert");
                     insertedId = rs.getInt("id");
                     assertThat("non-zero id", insertedId, greaterThan(0));
                 }
@@ -149,16 +147,16 @@ public class GeneratedKeysEnabledTest {
                 pstmt.executeUpdate();
 
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    assertFalse("expected no row for update", rs.next());
+                    assertFalse(rs.next(), "expected no row for update");
                 }
             }
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_insert_update_insertWorks_updateWorks() throws SQLException {
-        assumeTrue("test requires UPDATE .. RETURNING .. support",
-                FBTestProperties.getDefaultSupportInfo().supportsUpdateReturning());
+    void test_generatedKeysEnabled_insert_update_insertWorks_updateWorks() throws SQLException {
+        assumeTrue(FBTestProperties.getDefaultSupportInfo().supportsUpdateReturning(),
+                "test requires UPDATE .. RETURNING .. support");
 
         try (Connection connection = getConnection("insert,update")) {
             int insertedId;
@@ -166,7 +164,7 @@ public class GeneratedKeysEnabledTest {
                 pstmt.setString(1, "value");
                 pstmt.executeUpdate();
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    assertTrue("expected a row for insert", rs.next());
+                    assertTrue(rs.next(), "expected a row for insert");
                     insertedId = rs.getInt("id");
                     assertThat("non-zero id", insertedId, greaterThan(0));
                 }
@@ -178,47 +176,47 @@ public class GeneratedKeysEnabledTest {
                 pstmt.executeUpdate();
 
                 try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    assertTrue("expected a row for update", rs.next());
+                    assertTrue(rs.next(), "expected a row for update");
                     int updatedId = rs.getInt("id");
-                    assertEquals("same id", insertedId, updatedId);
+                    assertEquals(insertedId, updatedId, "same id");
                 }
             }
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_default_databaseMetaData_supportsGetGeneratedKeys_true() throws SQLException {
+    void test_generatedKeysEnabled_default_databaseMetaData_supportsGetGeneratedKeys_true() throws SQLException {
         try (Connection connection = getConnection("default")) {
             DatabaseMetaData dbmd = connection.getMetaData();
 
-            assertTrue("expected supportsGetGeneratedKeys to report true", dbmd.supportsGetGeneratedKeys());
+            assertTrue(dbmd.supportsGetGeneratedKeys(), "expected supportsGetGeneratedKeys to report true");
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_insert_databaseMetaData_supportsGetGeneratedKeys_true() throws SQLException {
+    void test_generatedKeysEnabled_insert_databaseMetaData_supportsGetGeneratedKeys_true() throws SQLException {
         try (Connection connection = getConnection("insert")) {
             DatabaseMetaData dbmd = connection.getMetaData();
 
-            assertTrue("expected supportsGetGeneratedKeys to report true", dbmd.supportsGetGeneratedKeys());
+            assertTrue(dbmd.supportsGetGeneratedKeys(), "expected supportsGetGeneratedKeys to report true");
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_disabled_databaseMetaData_supportsGetGeneratedKeys_false() throws SQLException {
+    void test_generatedKeysEnabled_disabled_databaseMetaData_supportsGetGeneratedKeys_false() throws SQLException {
         try (Connection connection = getConnection("disabled")) {
             DatabaseMetaData dbmd = connection.getMetaData();
 
-            assertFalse("expected supportsGetGeneratedKeys to report false", dbmd.supportsGetGeneratedKeys());
+            assertFalse(dbmd.supportsGetGeneratedKeys(), "expected supportsGetGeneratedKeys to report false");
         }
     }
 
     @Test
-    public void test_generatedKeysEnabled_ignored_databaseMetaData_supportsGetGeneratedKeys_false() throws SQLException {
+    void test_generatedKeysEnabled_ignored_databaseMetaData_supportsGetGeneratedKeys_false() throws SQLException {
         try (Connection connection = getConnection("ignored")) {
             DatabaseMetaData dbmd = connection.getMetaData();
 
-            assertFalse("expected supportsGetGeneratedKeys to report false", dbmd.supportsGetGeneratedKeys());
+            assertFalse(dbmd.supportsGetGeneratedKeys(), "expected supportsGetGeneratedKeys to report false");
         }
     }
 

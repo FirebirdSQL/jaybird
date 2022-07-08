@@ -18,22 +18,26 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.JdbcResourceHelper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class FBClobTest extends FBJUnit4TestBase {
+class FBClobTest {
 
     private static final String PLAIN_BLOB = "plain_blob";
     private static final String TEXT_BLOB = "text_blob";
@@ -47,6 +51,10 @@ public class FBClobTest extends FBJUnit4TestBase {
                     PLAIN_BLOB + " BLOB, " +
                     UTF8_BLOB + " BLOB SUB_TYPE TEXT CHARACTER SET UTF8, " +
                     ISO8859_1_BLOB + " BLOB SUB_TYPE TEXT CHARACTER SET ISO8859_1 )";
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
 
     private static final byte[] LATIN1_BYTES = new byte[] { (byte) 0xC8,
             (byte) 0xC9, (byte) 0xCA, (byte) 0xCB };
@@ -73,21 +81,33 @@ public class FBClobTest extends FBJUnit4TestBase {
         }
     }
 
-    private Connection con;
+    private static Connection con;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    static void setupAll() throws Exception {
         con = getConnectionViaDriverManager();
-        DdlHelper.executeCreateTable(con, CREATE_TABLE);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        JdbcResourceHelper.closeQuietly(con);
+    @BeforeEach
+    void setup() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            stmt.execute("delete from test_clob");
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    @AfterAll
+    static void tearDownAll() throws Exception {
+        try {
+            con.close();
+        } finally {
+            con = null;
+        }
     }
 
     @Test
-    public void testSimpleGetAsciiStream() throws SQLException {
+    void testSimpleGetAsciiStream() throws Exception {
         final String TEST_VALUE = "TEST_VALUE";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
 
@@ -103,7 +123,7 @@ public class FBClobTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testNullClob() throws SQLException {
+    void testNullClob() throws SQLException {
         addTestValues(con, 1, null, PLAIN_BLOB);
         try (Statement stmt = con.createStatement();
              ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
@@ -115,7 +135,7 @@ public class FBClobTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testCachedNullClob() throws SQLException {
+    void testCachedNullClob() throws SQLException {
         addTestValues(con, 1, null, PLAIN_BLOB);
         try (PreparedStatement stmt = con.prepareStatement("SELECT " + PLAIN_BLOB + " FROM test_clob",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -127,7 +147,7 @@ public class FBClobTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSimpleGetCharacterStream() throws Exception {
+    void testSimpleGetCharacterStream() throws Exception {
         final String TEST_VALUE = "TEST_STRING";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
         try (Statement stmt = con.createStatement();
@@ -141,7 +161,7 @@ public class FBClobTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSimpleGetCharacterStreamAsNClob() throws Exception {
+    void testSimpleGetCharacterStreamAsNClob() throws Exception {
         final String TEST_VALUE = "TEST_STRING";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
         try (Statement stmt = con.createStatement();
@@ -155,7 +175,7 @@ public class FBClobTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testGetSubString() throws SQLException {
+    void testGetSubString() throws SQLException {
         final String TEST_VALUE = "TEST_STRING";
         addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
         try (Statement stmt = con.createStatement();
@@ -174,47 +194,9 @@ public class FBClobTest extends FBJUnit4TestBase {
         }
     }
 
-    @Test
-    public void testReadMultiByteCharacterClobUtfLatin1() throws Exception {
-        runMultibyteReadTest(LATIN1_TEST_STRING, "UNICODE_FSS", TEXT_BLOB, "UTF-8");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobUtfCp1251() throws Exception {
-        runMultibyteReadTest(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobNoSubtypeUtfLatin1() throws Exception {
-        runMultibyteReadTest(LATIN1_TEST_STRING, "UNICODE_FSS", PLAIN_BLOB, "UTF-8");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobNoSubtypeUtfCp1251() throws Exception {
-        runMultibyteReadTest(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobLatin1() throws Exception {
-        runMultibyteReadTest(LATIN1_TEST_STRING, "ISO8859_1", TEXT_BLOB, "ISO-8859-1");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobCp1251() throws Exception {
-        runMultibyteReadTest(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobNoSubtypeLatin1() throws Exception {
-        runMultibyteReadTest(LATIN1_TEST_STRING, "ISO8859_1", PLAIN_BLOB, "ISO-8859-1");
-    }
-
-    @Test
-    public void testReadMultiByteCharacterClobNoSubtypeCp1251() throws Exception {
-        runMultibyteReadTest(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251");
-    }
-
-    private void runMultibyteReadTest(String testString, String fbEncoding, String colName, String javaEncoding)
+    @ParameterizedTest
+    @MethodSource
+    void testMultibyteRead(String testString, String fbEncoding, String colName, String javaEncoding)
             throws Exception {
         try (Connection con = getEncodedConnection(fbEncoding)) {
             insertStringBytesViaBlobWithEncoding(con, testString, colName, javaEncoding);
@@ -225,156 +207,46 @@ public class FBClobTest extends FBJUnit4TestBase {
         }
     }
 
-    @Test
-    public void testWriteMultiByteCharacterClobUtfLatin1() throws Exception {
-        runMultibyteWriteTest(LATIN1_TEST_STRING, "UNICODE_FSS", TEXT_BLOB, "UTF-8");
+    static Stream<Arguments> testMultibyteRead() {
+        return Stream.of(
+                Arguments.of(LATIN1_TEST_STRING, "UNICODE_FSS", TEXT_BLOB, "UTF-8"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "UNICODE_FSS", PLAIN_BLOB, "UTF-8"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "ISO8859_1", TEXT_BLOB, "ISO-8859-1"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "ISO8859_1", PLAIN_BLOB, "ISO-8859-1"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251"));
     }
 
-    @Test
-    public void testWriteMultiByteCharacterClobUtfCp1251() throws Exception {
-        runMultibyteWriteTest(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251");
-    }
+    @ParameterizedTest
+    @MethodSource
+    void testMultibyteWrite(String testString, String fbEncoding, String colName, String javaEncoding)
+            throws Exception {
+        try (Connection con = getEncodedConnection(fbEncoding)) {
+            insertStringViaClobCharacterStream(con, testString, colName);
 
-    @Test
-    public void testWriteMultiByteCharacterClobPlainBlobUtfLatin1() throws Exception {
-        runMultibyteWriteTest(LATIN1_TEST_STRING, "UNICODE_FSS", PLAIN_BLOB, "UTF-8");
-    }
+            String selectString = readStringViaGetBytes(con, colName, javaEncoding);
 
-    @Test
-    public void testWriteMultiByteCharacterClobPlainBlobUtfCp1251() throws Exception {
-        runMultibyteWriteTest(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testWriteMultiByteCharacterClobLatin1() throws Exception {
-        runMultibyteWriteTest(LATIN1_TEST_STRING, "ISO8859_1", TEXT_BLOB, "ISO-8859-1");
-    }
-
-    @Test
-    public void testWriteMultiByteCharacterClobCp1251() throws Exception {
-        runMultibyteWriteTest(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testWriteMultiByteCharacterClobPlainBlobLatin1() throws Exception {
-        runMultibyteWriteTest(LATIN1_TEST_STRING, "ISO8859_1", PLAIN_BLOB, "ISO-8859-1");
-    }
-
-    @Test
-    public void testWriteMultiByteCharacterClobPlainBlobCp1251() throws Exception {
-        runMultibyteWriteTest(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251");
-    }
-
-    @Test
-    public void testHoldableClobFromPlainBlob() throws Exception {
-        runHoldableClobTest(PLAIN_BLOB, LATIN1_TEST_STRING, "UTF-8", "UNICODE_FSS");
-    }
-
-    @Test
-    public void testHoldableClobFromBlobSubtypeText() throws Exception {
-        runHoldableClobTest(TEXT_BLOB, LATIN1_TEST_STRING, "ISO-8859-1", "ISO8859_1");
-    }
-
-    @Test
-    public void testWriteClobUsingReader() throws Exception {
-        try (Connection con = getEncodedConnection("ISO8859_1")) {
-            try (PreparedStatement insertStmt = con.prepareStatement(
-                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
-                insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
-                insertStmt.execute();
-            }
-
-            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-                 ResultSet rs = selStatement.executeQuery()) {
-                if (rs.next()) {
-                    String result = rs.getString(1);
-                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-                } else {
-                    fail("Expected a row");
-                }
-            }
+            assertEquals(testString, selectString);
         }
     }
 
-    @Test
-    public void testWriteClobUsingReaderAsNClob() throws Exception {
-        try (Connection con = getEncodedConnection("ISO8859_1")) {
-            try (PreparedStatement insertStmt = con.prepareStatement(
-                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
-                insertStmt.setNClob(1, new StringReader(LATIN1_TEST_STRING));
-                insertStmt.execute();
-            }
-
-            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-                 ResultSet rs = selStatement.executeQuery()) {
-                if (rs.next()) {
-                    String result = rs.getString(1);
-                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-                } else {
-                    fail("Expected a row");
-                }
-            }
-        }
+    static Stream<Arguments> testMultibyteWrite() {
+        return Stream.of(
+                Arguments.of(LATIN1_TEST_STRING, "UNICODE_FSS", TEXT_BLOB, "UTF-8"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "UNICODE_FSS", PLAIN_BLOB, "UTF-8"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "ISO8859_1", TEXT_BLOB, "ISO-8859-1"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", TEXT_BLOB, "Cp1251"),
+                Arguments.of(LATIN1_TEST_STRING, "ISO8859_1", PLAIN_BLOB, "ISO-8859-1"),
+                Arguments.of(CP1251_TEST_STRING, "WIN1251", PLAIN_BLOB, "Cp1251"));
     }
 
-    @Test
-    public void testWriteClobUsingNonFBClob() throws Exception {
-        try (Connection con = getEncodedConnection("ISO8859_1")) {
-            try (PreparedStatement insertStmt = con.prepareStatement(
-                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
-                insertStmt.setClob(1, new StringClob(LATIN1_TEST_STRING));
-                insertStmt.execute();
-            }
-
-            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
-                 ResultSet rs = selStatement.executeQuery()) {
-                if (rs.next()) {
-                    String result = rs.getString(1);
-                    assertEquals("Unexpected value for clob roundtrip", LATIN1_TEST_STRING, result);
-                } else {
-                    fail("Expected a row");
-                }
-            }
-        }
-    }
-
-    @Test
-    public void testReadClob_utf8_win1252() throws Exception {
-        try (Connection con = getEncodedConnection("UTF8");
-             PreparedStatement pstmt = con.prepareStatement("insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
-            pstmt.setBytes(1, LATIN1_TEST_STRING.getBytes(StandardCharsets.UTF_8));
-            pstmt.executeUpdate();
-            pstmt.setString(1, "A");
-            pstmt.executeUpdate();
-        }
-
-        try (Connection con = getEncodedConnection("WIN1252");
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
-            assertTrue(rs.next());
-            assertEquals(LATIN1_TEST_STRING, rs.getString(1));
-        }
-    }
-
-    @Test
-    public void testReadClob_utf8_none() throws Exception {
-        try (Connection con = getEncodedConnection("UTF8");
-             PreparedStatement pstmt = con.prepareStatement("insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
-            pstmt.setBytes(1, UTF8_BYTES);
-            pstmt.executeUpdate();
-            pstmt.setString(1, "A");
-            pstmt.executeUpdate();
-        }
-
-        try (Connection con = getEncodedConnection("NONE");
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
-            assertTrue(rs.next());
-            assertEquals(UTF8_TEST_STRING, rs.getString(1));
-        }
-    }
-
-    private void runHoldableClobTest(String colName, String testString, String javaEncoding, String fbEncoding)
+    @ParameterizedTest
+    @MethodSource
+    void testHoldableClob(String colName, String testString, String javaEncoding, String fbEncoding)
             throws Exception {
         Clob clob;
         try (Connection con = getEncodedConnection(fbEncoding)) {
@@ -388,22 +260,106 @@ public class FBClobTest extends FBJUnit4TestBase {
             }
         }
 
-        char[] buffer = new char[testString.length()];
+        String receivedValue;
         try (Reader reader = clob.getCharacterStream()) {
-            reader.read(buffer);
+            receivedValue = slurpString(reader);
         }
 
-        assertEquals(testString, new String(buffer));
+        assertEquals(testString, receivedValue);
     }
 
-    private void runMultibyteWriteTest(String testString, String fbEncoding, String colName, String javaEncoding)
-            throws Exception {
-        try (Connection con = getEncodedConnection(fbEncoding)) {
-            insertStringViaClobCharacterStream(con, testString, colName);
+    static Stream<Arguments> testHoldableClob() {
+        return Stream.of(
+                Arguments.of(PLAIN_BLOB, LATIN1_TEST_STRING, "UTF-8", "UNICODE_FSS"),
+                Arguments.of(TEXT_BLOB, LATIN1_TEST_STRING, "ISO-8859-1", "ISO8859_1"));
+    }
 
-            String selectString = readStringViaGetBytes(con, colName, javaEncoding);
+    @Test
+    void testWriteClobUsingReader() throws Exception {
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setClob(1, new StringReader(LATIN1_TEST_STRING));
+                insertStmt.execute();
+            }
 
-            assertEquals(testString, selectString);
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(LATIN1_TEST_STRING, rs.getString(1), "Unexpected value for clob roundtrip");
+            }
+        }
+    }
+
+    @Test
+    void testWriteClobUsingReaderAsNClob() throws Exception {
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setNClob(1, new StringReader(LATIN1_TEST_STRING));
+                insertStmt.execute();
+            }
+
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(LATIN1_TEST_STRING, rs.getString(1), "Unexpected value for clob roundtrip");
+            }
+        }
+    }
+
+    @Test
+    void testWriteClobUsingNonFBClob() throws Exception {
+        try (Connection con = getEncodedConnection("ISO8859_1")) {
+            try (PreparedStatement insertStmt = con.prepareStatement(
+                    "INSERT INTO test_clob (" + TEXT_BLOB + ") VALUES (?)")) {
+                insertStmt.setClob(1, new StringClob(LATIN1_TEST_STRING));
+                insertStmt.execute();
+            }
+
+            try (PreparedStatement selStatement = con.prepareStatement("SELECT " + TEXT_BLOB + " FROM test_clob");
+                 ResultSet rs = selStatement.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(LATIN1_TEST_STRING, rs.getString(1), "Unexpected value for clob roundtrip");
+            }
+        }
+    }
+
+    @Test
+    void testReadClob_utf8_win1252() throws Exception {
+        try (Connection con = getEncodedConnection("UTF8");
+             PreparedStatement pstmt = con.prepareStatement(
+                     "insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
+            pstmt.setBytes(1, LATIN1_TEST_STRING.getBytes(StandardCharsets.UTF_8));
+            pstmt.execute();
+            pstmt.setString(1, "A");
+            pstmt.execute();
+        }
+
+        try (Connection con = getEncodedConnection("WIN1252");
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
+            assertTrue(rs.next());
+            assertEquals(LATIN1_TEST_STRING, rs.getString(1));
+        }
+    }
+
+    @Test
+    void testReadClob_utf8_none() throws Exception {
+        try (Connection con = getEncodedConnection("UTF8");
+             PreparedStatement pstmt = con.prepareStatement(
+                     "insert into test_clob (id, " + UTF8_BLOB + ") values (1, ?)")) {
+            pstmt.setBytes(1, UTF8_BYTES);
+            pstmt.execute();
+            pstmt.setString(1, "A");
+            pstmt.execute();
+        }
+
+        try (Connection con = getEncodedConnection("NONE");
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("select " + UTF8_BLOB + " from test_clob where id = 1")) {
+            assertTrue(rs.next());
+            assertEquals(UTF8_TEST_STRING, rs.getString(1));
         }
     }
 
@@ -430,6 +386,7 @@ public class FBClobTest extends FBJUnit4TestBase {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private char[] readClobViaCharacterStream(Connection con, String colName, int expectedLength) throws SQLException,
             IOException {
         try (PreparedStatement selectStmt = con.prepareStatement("SELECT " + colName + " FROM test_clob")) {
@@ -464,25 +421,23 @@ public class FBClobTest extends FBJUnit4TestBase {
         return (FBConnection) connection;
     }
 
-    private String slurpString(InputStream inputStream) {
+    private String slurpString(InputStream inputStream) throws IOException {
         return slurpString(new InputStreamReader(inputStream));
     }
 
-    private String slurpString(Reader reader) {
+    private String slurpString(Reader reader) throws IOException {
         StringBuilder sb = new StringBuilder();
         char[] buffer = new char[1024];
         int n;
-        try {
-            while ((n = reader.read(buffer)) != -1) {
+        try (Reader temp = reader) {
+            while ((n = temp.read(buffer)) != -1) {
                 sb.append(buffer, 0, n);
             }
-            reader.close();
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
+        } 
         return sb.toString();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void addTestValues(Connection con, int id, String value, String colName) throws SQLException {
         try (PreparedStatement stmt = con.prepareStatement(
                 "INSERT INTO test_clob (id, " + colName + ") VALUES (?, ?)")) {

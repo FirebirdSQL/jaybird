@@ -18,37 +18,37 @@
  */
 package org.firebirdsql.gds;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link org.firebirdsql.gds.GDSExceptionHelper.GDSMessage}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GDSMessageTest {
+class GDSMessageTest {
 
     @Test
-    public void getParamCount_templateWithoutPlaceholders() {
+    void getParamCount_templateWithoutPlaceholders() {
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage("Template without placeholders");
 
         assertEquals(0, message.getParamCount());
     }
 
     @Test
-    public void getParamCount_templateSinglePlaceholder() {
+    void getParamCount_templateSinglePlaceholder() {
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage("Template with {0} placeholders");
 
         assertEquals(1, message.getParamCount());
     }
 
     @Test
-    public void getParamCount_templateMultiplePlaceholders() {
+    void getParamCount_templateMultiplePlaceholders() {
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(
                 "Template with {0} placeholders in {1}");
 
@@ -56,7 +56,7 @@ public class GDSMessageTest {
     }
 
     @Test
-    public void toString_noParametersSet() {
+    void toString_noParametersSet() {
         final String template = "Template with {0} placeholders";
         final String expected = "Template with (null) placeholders";
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(template);
@@ -65,7 +65,7 @@ public class GDSMessageTest {
     }
 
     @Test
-    public void toString_parameterSet() {
+    void toString_parameterSet() {
         final String template = "Template with {0} placeholders";
         final String expected = "Template with xyz placeholders";
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(template);
@@ -75,7 +75,7 @@ public class GDSMessageTest {
     }
 
     @Test
-    public void toString_multiParam_Extra() {
+    void toString_multiParam_Extra() {
         final String template = "Template with {0} placeholders in {1}";
         final String expected = "Template with abc placeholders in def; ghi; jkl";
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(template);
@@ -85,7 +85,7 @@ public class GDSMessageTest {
     }
 
     @Test
-    public void parameterValuesWithSlashesAndDollarSign() {
+    void parameterValuesWithSlashesAndDollarSign() {
         final String template = "Template with {0} and {1} trailing text";
         final String expected = "Template with D:\\value and $1 trailing text";
         GDSExceptionHelper.GDSMessage message = new GDSExceptionHelper.GDSMessage(template);

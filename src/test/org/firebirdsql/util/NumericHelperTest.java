@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link NumericHelper}
@@ -30,10 +30,10 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class NumericHelperTest {
+class NumericHelperTest {
 
     @Test
-    public void testToUnsignedLong() {
+    void testToUnsignedLong() {
         assertEquals(Integer.MAX_VALUE, NumericHelper.toUnsignedLong(Integer.MAX_VALUE));
         assertEquals(0xffffffffL, NumericHelper.toUnsignedLong(-1));
         assertEquals(0x80000000L, NumericHelper.toUnsignedLong(Integer.MIN_VALUE));
@@ -41,7 +41,7 @@ public class NumericHelperTest {
     }
 
     @Test
-    public void testFitsUnsigned32BitInteger() {
+    void testFitsUnsigned32BitInteger() {
         assertTrue(NumericHelper.fitsUnsigned32BitInteger(0));
         assertTrue(NumericHelper.fitsUnsigned32BitInteger(0xffffffffL)); // equivalent of int -1 'unsigned'
         assertTrue(NumericHelper.fitsUnsigned32BitInteger(0x80000000L)); // equivalent of Integer.MIN_VALUE 'unsigned'

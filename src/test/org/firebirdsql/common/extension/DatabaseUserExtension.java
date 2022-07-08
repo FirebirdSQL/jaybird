@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -16,11 +16,12 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.common.rules;
+package org.firebirdsql.common.extension;
 
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -31,27 +32,27 @@ import java.util.List;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 
 /**
- * JUnit test rule to create a user and drop it again after completion of the test.
+ * JUnit extension to create a user and drop it again after completion of the test.
  * <p>
- * NOTE: This rule only works for Firebird versions that support user management through SQL
- * (ie Firebird 2.5 and higher).
+ * NOTE: This extension only works for Firebird versions that support user management through SQL
+ * (i.e. Firebird 2.5 and higher).
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 5
  */
-public class DatabaseUserRule extends ExternalResource {
+public class DatabaseUserExtension implements AfterEachCallback {
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseUserRule.class);
+    private static final Logger log = LoggerFactory.getLogger(DatabaseUserExtension.class);
 
     private final List<User> createdUsers = new ArrayList<>();
 
-    private DatabaseUserRule() {
+    private DatabaseUserExtension() {
         // No direct instantiation
     }
 
-    public static DatabaseUserRule withDatabaseUser() {
-        return new DatabaseUserRule();
+    public static DatabaseUserExtension withDatabaseUser() {
+        return new DatabaseUserExtension();
     }
 
     /**
@@ -70,7 +71,7 @@ public class DatabaseUserRule extends ExternalResource {
     }
 
     /**
-     * Create a database user with the specified user name and plugin.
+     * Create a database user with the specified username and plugin.
      * <p>
      * For non-null plugins, this method will only work on Firebird 3 or higher.
      * </p>
@@ -98,14 +99,18 @@ public class DatabaseUserRule extends ExternalResource {
     }
 
     @Override
-    public void after() {
+    public void afterEach(ExtensionContext context) {
         if (createdUsers.isEmpty()) {
             return;
         }
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement statement = connection.createStatement()) {
-            for (User user : createdUsers) {
-                dropUser(statement, user);
+        try (Connection connection = getConnectionViaDriverManager()) {
+            connection.setAutoCommit(false);
+            try (Statement statement = connection.createStatement()) {
+                for (User user : createdUsers) {
+                    dropUser(statement, user);
+                }
+            } finally {
+                connection.commit();
             }
         } catch (SQLException e) {
             log.error("Can't drop users", e);
@@ -114,9 +119,9 @@ public class DatabaseUserRule extends ExternalResource {
 
     private void dropUser(Statement statement, User user) {
         try {
-            StringBuilder dropUserSql = new StringBuilder("DROP USER ").append(user.getName());
-            if (user.getPlugin() != null) {
-                dropUserSql.append(" USING PLUGIN ").append(user.getPlugin());
+            StringBuilder dropUserSql = new StringBuilder("DROP USER ").append(user.name);
+            if (user.plugin != null) {
+                dropUserSql.append(" USING PLUGIN ").append(user.plugin);
             }
             statement.execute(dropUserSql.toString());
         } catch (SQLException e) {
@@ -131,14 +136,6 @@ public class DatabaseUserRule extends ExternalResource {
         private User(String name, String plugin) {
             this.name = name;
             this.plugin = plugin;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getPlugin() {
-            return plugin;
         }
 
         @Override

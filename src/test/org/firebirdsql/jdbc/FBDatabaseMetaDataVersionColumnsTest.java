@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
@@ -30,10 +30,10 @@ import java.util.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class FBDatabaseMetaDataVersionColumnsTest {
+class FBDatabaseMetaDataVersionColumnsTest {
 
     //@formatter:off
     private static final String NORMAL_TABLE_NAME = "NORMAL_TABLE";
@@ -71,8 +71,8 @@ public class FBDatabaseMetaDataVersionColumnsTest {
     private static final MetaDataTestSupport<VersionColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(VersionColumnMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
             CREATE_NORMAL_TABLE,
             CREATE_NORMAL_TABLE2,
             CREATE_SINGLE_VIEW,
@@ -81,20 +81,19 @@ public class FBDatabaseMetaDataVersionColumnsTest {
             CREATE_GTT_PRESERVE,
             CREATE_GTT_DELETE);
 
-    private boolean supportsRecordVersion = getDefaultSupportInfo()
-            .supportsRecordVersionPseudoColumn();
+    private static final boolean supportsRecordVersion = getDefaultSupportInfo().supportsRecordVersionPseudoColumn();
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -107,32 +106,30 @@ public class FBDatabaseMetaDataVersionColumnsTest {
      * Tests the ordinal positions and types for the metadata columns of getVersionColumns().
      */
     @Test
-    public void testPseudoColumnsMetaDataColumns() throws Exception {
+    void testPseudoColumnsMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getVersionColumns(null, null, "doesnotexist")) {
             metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
     @Test
-    public void testNormalTable() throws Exception {
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(NORMAL_TABLE_NAME);
+    void testNormalTable() throws Exception {
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules(NORMAL_TABLE_NAME);
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, NORMAL_TABLE_NAME);
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testSingleView() throws Exception {
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(SINGLE_VIEW_NAME);
+    void testSingleView() throws Exception {
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules(SINGLE_VIEW_NAME);
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, SINGLE_VIEW_NAME);
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testMultiView() throws Exception {
+    void testMultiView() throws Exception {
         // Multi-table view has no record version
         List<Map<VersionColumnMetaData, Object>> validationRules = Collections.singletonList(
                 createDbkeyValidationRules(16));
@@ -142,58 +139,54 @@ public class FBDatabaseMetaDataVersionColumnsTest {
     }
 
     @Test
-    public void testExternalTable() throws Exception {
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(EXTERNAL_TABLE_NAME);
+    void testExternalTable() throws Exception {
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules(EXTERNAL_TABLE_NAME);
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, EXTERNAL_TABLE_NAME);
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testMonitoringTable() throws Exception {
-        assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules("MON$DATABASE");
+    void testMonitoringTable() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules("MON$DATABASE");
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, "MON$DATABASE");
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testGttPreserve() throws Exception {
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(GTT_PRESERVE_NAME);
+    void testGttPreserve() throws Exception {
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules(GTT_PRESERVE_NAME);
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, GTT_PRESERVE_NAME);
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testGttDelete_allPseudoColumns() throws Exception {
-        List<Map<VersionColumnMetaData, Object>> validationRules =
-                createStandardValidationRules(GTT_DELETE_NAME);
+    void testGttDelete_allPseudoColumns() throws Exception {
+        List<Map<VersionColumnMetaData, Object>> validationRules = createStandardValidationRules(GTT_DELETE_NAME);
 
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, GTT_DELETE_NAME);
         validate(versionColumns, validationRules);
     }
 
     @Test
-    public void testNoMatchingTables() throws Exception {
+    void testNoMatchingTables() throws Exception {
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, "ABC");
-        validate(versionColumns, Collections.<Map<VersionColumnMetaData, Object>>emptyList());
+        validate(versionColumns, Collections.emptyList());
     }
 
     @Test
-    public void testNullTable() throws Exception {
+    void testNullTable() throws Exception {
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, null);
-        validate(versionColumns, Collections.<Map<VersionColumnMetaData, Object>>emptyList());
+        validate(versionColumns, Collections.emptyList());
     }
 
     @Test
-    public void testEmptyStringTable() throws Exception {
+    void testEmptyStringTable() throws Exception {
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, "");
-        validate(versionColumns, Collections.<Map<VersionColumnMetaData, Object>>emptyList());
+        validate(versionColumns, Collections.emptyList());
     }
 
     /**
@@ -204,11 +197,12 @@ public class FBDatabaseMetaDataVersionColumnsTest {
      * </p>
      */
     @Test
-    public void testPatternIsEscaped() throws Exception {
+    void testPatternIsEscaped() throws Exception {
         ResultSet versionColumns = dbmd.getVersionColumns(null, null, "NORMAL%");
-        validate(versionColumns, Collections.<Map<VersionColumnMetaData, Object>>emptyList());
+        validate(versionColumns, Collections.emptyList());
     }
 
+    @SuppressWarnings("unused")
     private List<Map<VersionColumnMetaData, Object>> createStandardValidationRules(String tableName) {
         List<Map<VersionColumnMetaData, Object>> validationRules = new ArrayList<>();
         validationRules.add(createDbkeyValidationRules(8));
@@ -230,7 +224,7 @@ public class FBDatabaseMetaDataVersionColumnsTest {
                 }
                 columnCount++;
             }
-            assertEquals("Unexpected number of columns", expectedPseudoColumns.size(), columnCount);
+            assertEquals(expectedPseudoColumns.size(), columnCount, "Unexpected number of columns");
         } finally {
             closeQuietly(pseudoColumns);
         }

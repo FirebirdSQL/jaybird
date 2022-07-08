@@ -19,19 +19,20 @@
 package org.firebirdsql.encodings;
 
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNotNull;
-import static org.junit.Assume.assumeTrue;
+import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link EncodingFactory}
@@ -39,7 +40,7 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("deprecation")
-public class EncodingFactoryTest {
+class EncodingFactoryTest {
 
     /**
      * Java alias for FIREBIRD_TEST_CHARSET
@@ -50,15 +51,12 @@ public class EncodingFactoryTest {
      */
     private static final String FIREBIRD_TEST_CHARSET = "ISO8859_7";
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
     /**
-     * Tests if all aliases of a supported Java characterset are mapped
-     * to the same Firebird characterset.
+     * Tests if all aliases of a supported Java character set are mapped
+     * to the same Firebird character set.
      */
     @Test
-    public void javaCharsetAliasMapping() {
+    void javaCharsetAliasMapping() {
         Charset charset = Charset.forName(JAVA_TEST_CHARSET);
         Set<String> allJavaAliases = new HashSet<>();
         allJavaAliases.add(JAVA_TEST_CHARSET);
@@ -75,18 +73,18 @@ public class EncodingFactoryTest {
             }
         }
 
-        assertEquals(String.format("One or more aliases of %s did not match expected Firebird characterset %s", JAVA_TEST_CHARSET, FIREBIRD_TEST_CHARSET),
-                allJavaAliases, aliasesMatched);
+        assertEquals(allJavaAliases, aliasesMatched,
+                format("One or more aliases of %s did not match expected Firebird character set %s", JAVA_TEST_CHARSET, FIREBIRD_TEST_CHARSET));
     }
 
-    // TODO Add test which checks like above for all charactersets specified in isc_encodings.properties
+    // TODO Add test which checks like above for all character sets specified in isc_encodings.properties
     // TODO Note exception if looking up java alias for fb alias and java alias matches file.encoding property : maps to null
 
     /**
      * Tests if the alias mapping is case-insensitive.
      */
     @Test
-    public void aliasMappingJavaToFbCaseInsensitive() {
+    void aliasMappingJavaToFbCaseInsensitive() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         assumeTrue(FIREBIRD_TEST_CHARSET.equals(factory
                 .getEncodingDefinitionByCharsetAlias(JAVA_TEST_CHARSET).getFirebirdEncodingName()));
@@ -96,13 +94,13 @@ public class EncodingFactoryTest {
             differentCasedJavaAlias = JAVA_TEST_CHARSET.toLowerCase();
         }
 
-        assertEquals("Unexpected FB characterset for differently cased Java alias",
-                FIREBIRD_TEST_CHARSET,
-                factory.getEncodingDefinitionByCharsetAlias(differentCasedJavaAlias).getFirebirdEncodingName());
+        assertEquals(FIREBIRD_TEST_CHARSET,
+                factory.getEncodingDefinitionByCharsetAlias(differentCasedJavaAlias).getFirebirdEncodingName(),
+                "Unexpected FB character set for differently cased Java alias");
     }
 
     @Test
-    public void aliasMappingFbToJavaCaseInsensitive() {
+    void aliasMappingFbToJavaCaseInsensitive() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         assumeTrue(JAVA_TEST_CHARSET.equals(factory.getEncodingDefinitionByFirebirdName(FIREBIRD_TEST_CHARSET)
                 .getJavaEncodingName()));
@@ -112,13 +110,13 @@ public class EncodingFactoryTest {
             differentCasedFbAlias = FIREBIRD_TEST_CHARSET.toLowerCase();
         }
 
-        assertEquals("Unexpected Java character set for differently cased FB alias",
-                JAVA_TEST_CHARSET, factory.getEncodingDefinitionByFirebirdName(differentCasedFbAlias)
-                        .getJavaEncodingName());
+        assertEquals(JAVA_TEST_CHARSET,
+                factory.getEncodingDefinitionByFirebirdName(differentCasedFbAlias).getJavaEncodingName(),
+                "Unexpected Java character set for differently cased FB alias");
     }
 
     @Test
-    public void testCreateInstance_Custom() {
+    void testCreateInstance_Custom() {
         final String dos866Firebird = "DOS866";
         final int dos866Id = 48;
         final String dos866Java = "Cp866";
@@ -130,36 +128,36 @@ public class EncodingFactoryTest {
 
         EncodingFactory factory = EncodingFactory.createInstance(encodingSet);
 
-        assertSame("Unexpected EncodingDefinition by firebird name",
-                testEncodingDefinition, factory.getEncodingDefinitionByFirebirdName(dos866Firebird));
-        assertSame("Unexpected encoding by firebird name",
-                testEncoding, factory.getEncodingForFirebirdName(dos866Firebird));
-        assertSame("Unexpected EncodingDefinition by character set id",
-                testEncodingDefinition, factory.getEncodingDefinitionByCharacterSetId(dos866Id));
-        assertSame("Unexpected encoding by character set id",
-                testEncoding, factory.getEncodingForCharacterSetId(dos866Id));
-        assertSame("Unexpected EncodingDefinition by charset",
-                testEncodingDefinition, factory.getEncodingDefinitionByCharset(dos866Charset));
-        assertSame("Unexpected encoding by charset",
-                testEncoding, factory.getOrCreateEncodingForCharset(dos866Charset));
-        assertSame("Unexpected encoding by charset",
-                testEncoding, factory.getEncodingForCharset(dos866Charset));
-        assertSame("Unexpected EncodingDefinition by java charset alias",
-                testEncodingDefinition, factory.getEncodingDefinitionByCharsetAlias(dos866Java));
-        assertSame("Unexpected encoding by java charset alias",
-                testEncoding, factory.getEncodingForCharsetAlias(dos866Java));
+        assertSame(testEncodingDefinition, factory.getEncodingDefinitionByFirebirdName(dos866Firebird),
+                "Unexpected EncodingDefinition by firebird name");
+        assertSame(testEncoding, factory.getEncodingForFirebirdName(dos866Firebird),
+                "Unexpected encoding by firebird name");
+        assertSame(testEncodingDefinition, factory.getEncodingDefinitionByCharacterSetId(dos866Id),
+                "Unexpected EncodingDefinition by character set id");
+        assertSame(testEncoding, factory.getEncodingForCharacterSetId(dos866Id),
+                "Unexpected encoding by character set id");
+        assertSame(testEncodingDefinition, factory.getEncodingDefinitionByCharset(dos866Charset),
+                "Unexpected EncodingDefinition by charset");
+        assertSame(testEncoding, factory.getOrCreateEncodingForCharset(dos866Charset),
+                "Unexpected encoding by charset");
+        assertSame(testEncoding, factory.getEncodingForCharset(dos866Charset), "Unexpected encoding by charset");
+        assertSame(testEncodingDefinition, factory.getEncodingDefinitionByCharsetAlias(dos866Java),
+                "Unexpected EncodingDefinition by java charset alias");
+        assertSame(testEncoding, factory.getEncodingForCharsetAlias(dos866Java),
+                "Unexpected encoding by java charset alias");
     }
 
     /**
      * Tests if retrieving info for {@link ISCConstants#CS_dynamic} returns the right result.
      */
     @Test
-    public void testCharacterSetId_CS_dynamic() {
+    void testCharacterSetId_CS_dynamic() {
         IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
 
-        assertNull("Expected null EncodingDefinition for CS_dynamic (127)", factory.getEncodingDefinitionByCharacterSetId(ISCConstants.CS_dynamic));
-        assertSame("Expected the default encoding for CS_dynamic (127)",
-                factory.getDefaultEncoding(), factory.getEncodingForCharacterSetId(ISCConstants.CS_dynamic));
+        assertNull(factory.getEncodingDefinitionByCharacterSetId(ISCConstants.CS_dynamic),
+                "Expected null EncodingDefinition for CS_dynamic (127)");
+        assertSame(factory.getDefaultEncoding(), factory.getEncodingForCharacterSetId(ISCConstants.CS_dynamic),
+                "Expected the default encoding for CS_dynamic (127)");
     }
 
     /**
@@ -168,54 +166,61 @@ public class EncodingFactoryTest {
      * factory.
      */
     @Test
-    public void testDefinition_CS_dynamic_skipped() {
+    void testDefinition_CS_dynamic_skipped() {
         final EncodingSet encodingSet = createEncodingSet(0,
                 new DefaultEncodingDefinition("TEST1", (Charset) null, 1, 10, true),
                 new DefaultEncodingDefinition("TEST2", (Charset) null, 1, ISCConstants.CS_dynamic, true));
         final IEncodingFactory factory = EncodingFactory.createInstance(encodingSet);
 
-        assertNotNull("Expected EncodingDefinition for TEST1 to be returned", factory.getEncodingDefinitionByFirebirdName("TEST1"));
-        assertNull("Expected EncodingDefinition for TEST2 to be null (as it was declared with character set id 127)",
-                factory.getEncodingDefinitionByFirebirdName("TEST2"));
+        assertNotNull(factory.getEncodingDefinitionByFirebirdName("TEST1"),
+                "Expected EncodingDefinition for TEST1 to be returned");
+        assertNull(factory.getEncodingDefinitionByFirebirdName("TEST2"),
+                "Expected EncodingDefinition for TEST2 to be null (as it was declared with character set id 127)");
     }
 
     @Test
-    public void testCreateInstance_MultipleEncodingSets() {
+    void testCreateInstance_MultipleEncodingSets() {
         final EncodingDefinition test0_1 = new DefaultEncodingDefinition("TEST1", Charset.forName("Cp1255"), 1, 5, false);
         final EncodingDefinition test0_2 = new DefaultEncodingDefinition("TEST2", (Charset) null, 1, 6, true);
         final EncodingDefinition test1_1 = new DefaultEncodingDefinition("TEST1", (Charset) null, 1, 5, true);
         final EncodingDefinition test1_3 = new DefaultEncodingDefinition("TEST3", Charset.forName("Cp1256"), 1, 7, false);
         // Uses same Charset as test1_3, both are firebirdOnly = false
         final EncodingDefinition test0_4 = new DefaultEncodingDefinition("TEST4", Charset.forName("Cp1256"), 1, 8, false);
-        final EncodingDefinition test1_5 = new DefaultEncodingDefinition("TEST5", Charset.forName("UTF8"), 1, 9, true);
+        final EncodingDefinition test1_5 = new DefaultEncodingDefinition("TEST5", StandardCharsets.UTF_8, 1, 9, true);
         // Uses same Charset as test1_5, but 1_5 is firebirdOnly = true
-        final EncodingDefinition test0_6 = new DefaultEncodingDefinition("TEST6", Charset.forName("UTF8"), 1, 10, false);
-        final EncodingDefinition test0_7 = new DefaultEncodingDefinition("TEST7", Charset.forName("US-ASCII"), 1, 11, true);
+        final EncodingDefinition test0_6 = new DefaultEncodingDefinition("TEST6", StandardCharsets.UTF_8, 1, 10, false);
+        final EncodingDefinition test0_7 = new DefaultEncodingDefinition("TEST7", StandardCharsets.US_ASCII, 1, 11, true);
         final EncodingSet encodingSet0 = createEncodingSet(0, test0_1, test0_2, test0_4, test0_6, test0_7);
         final EncodingSet encodingSet1 = createEncodingSet(1, test1_1, test1_3, test1_5);
 
         final IEncodingFactory factory = EncodingFactory.createInstance(encodingSet0, encodingSet1);
 
-        assertSame("Expected EncodingDefinition 1 from set 1 for name TEST1", test1_1, factory.getEncodingDefinitionByFirebirdName("TEST1"));
-        assertSame("Expected EncodingDefinition 2 from set 0 for name TEST2", test0_2, factory.getEncodingDefinitionByFirebirdName("TEST2"));
-        assertSame("Expected EncodingDefinition 3 from set 1 for name TEST3", test1_3, factory.getEncodingDefinitionByFirebirdName("TEST3"));
-        assertSame("Expected EncodingDefinition 4 from set 0 for name TEST4", test0_4, factory.getEncodingDefinitionByFirebirdName("TEST4"));
-        assertSame("Expected EncodingDefinition 5 from set 1 for name TEST5", test1_5, factory.getEncodingDefinitionByFirebirdName("TEST5"));
-        assertSame("Expected EncodingDefinition 6 from set 0 for name TEST4", test0_6, factory.getEncodingDefinitionByFirebirdName("TEST6"));
-        assertSame("Expected EncodingDefinition 7 from set 0 for name TEST4", test0_7, factory.getEncodingDefinitionByFirebirdName("TEST7"));
-        assertNull("Expected no EncodingDefinition for Charset Cp1255, as the definition from set 0 should not be loaded",
-                factory.getEncodingDefinitionByCharset(Charset.forName("Cp1255")));
-        assertSame("Expected EncodingDefinition 3 from set 1 for Charset Cp1256 as it was loaded before EncodingDefinition 4 from set 0 (and both are firebirdOnly = false)",
-                test1_3, factory.getEncodingDefinitionByCharset(Charset.forName("Cp1256")));
-        assertSame("Expected EncodingDefinition 6 from set 0 for Charset UTF8 as it is firebirdOnly=false, while def 5 from set 1 was firebirdOnly=true",
-                test0_6, factory.getEncodingDefinitionByCharset(Charset.forName("UTF8")));
-        assertNull("Expected no EncodingDefinition for Charset US-ASCII, as the definition was firebirdOnly=true",
-                factory.getEncodingDefinitionByCharset(Charset.forName("US-ASCII")));
-
+        assertSame(test1_1, factory.getEncodingDefinitionByFirebirdName("TEST1"),
+                "Expected EncodingDefinition 1 from set 1 for name TEST1");
+        assertSame(test0_2, factory.getEncodingDefinitionByFirebirdName("TEST2"),
+                "Expected EncodingDefinition 2 from set 0 for name TEST2");
+        assertSame(test1_3, factory.getEncodingDefinitionByFirebirdName("TEST3"),
+                "Expected EncodingDefinition 3 from set 1 for name TEST3");
+        assertSame(test0_4, factory.getEncodingDefinitionByFirebirdName("TEST4"),
+                "Expected EncodingDefinition 4 from set 0 for name TEST4");
+        assertSame(test1_5, factory.getEncodingDefinitionByFirebirdName("TEST5"),
+                "Expected EncodingDefinition 5 from set 1 for name TEST5");
+        assertSame(test0_6, factory.getEncodingDefinitionByFirebirdName("TEST6"),
+                "Expected EncodingDefinition 6 from set 0 for name TEST4");
+        assertSame(test0_7, factory.getEncodingDefinitionByFirebirdName("TEST7"),
+                "Expected EncodingDefinition 7 from set 0 for name TEST4");
+        assertNull(factory.getEncodingDefinitionByCharset(Charset.forName("Cp1255")),
+                "Expected no EncodingDefinition for Charset Cp1255, as the definition from set 0 should not be loaded");
+        assertSame(test1_3, factory.getEncodingDefinitionByCharset(Charset.forName("Cp1256")),
+                "Expected EncodingDefinition 3 from set 1 for Charset Cp1256 as it was loaded before EncodingDefinition 4 from set 0 (and both are firebirdOnly = false)");
+        assertSame(test0_6, factory.getEncodingDefinitionByCharset(StandardCharsets.UTF_8),
+                "Expected EncodingDefinition 6 from set 0 for Charset UTF8 as it is firebirdOnly=false, while def 5 from set 1 was firebirdOnly=true");
+        assertNull(factory.getEncodingDefinitionByCharset(StandardCharsets.US_ASCII),
+                "Expected no EncodingDefinition for Charset US-ASCII, as the definition was firebirdOnly=true");
     }
 
     @Test
-    public void testGetEncodingForFirebirdName_fallbackNull() {
+    void testGetEncodingForFirebirdName_fallbackNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding defaultEncoding = factory.getDefaultEncoding();
 
@@ -223,7 +228,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForFirebirdName_fallbackNotNull() {
+    void testGetEncodingForFirebirdName_fallbackNotNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding fallbackEncoding = new EncodingGeneric(Charset.forName("Cp861"));
 
@@ -231,7 +236,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForCharacterSetId_fallbackNull() {
+    void testGetEncodingForCharacterSetId_fallbackNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding defaultEncoding = factory.getDefaultEncoding();
 
@@ -239,7 +244,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForCharacterSetId_fallbackNotNull() {
+    void testGetEncodingForCharacterSetId_fallbackNotNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding fallbackEncoding = new EncodingGeneric(Charset.forName("Cp861"));
 
@@ -247,7 +252,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-     public void testGetEncodingForCharset_fallbackNull() {
+    void testGetEncodingForCharset_fallbackNull() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         // Character set not included in firebird / default-firebird-encodings.xml
         final Charset unsupportedCharset = Charset.forName("ISO-8859-15");
@@ -257,7 +262,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForCharset_fallbackNotNull() {
+    void testGetEncodingForCharset_fallbackNotNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         // Character set not included in firebird / default-firebird-encodings.xml
         final Charset unsupportedCharset = Charset.forName("ISO-8859-15");
@@ -267,7 +272,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForCharsetAlias_fallbackNull() {
+    void testGetEncodingForCharsetAlias_fallbackNull() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         // Character set not included in firebird / default-firebird-encodings.xml
         final String unsupportedCharset = "ISO-8859-15";
@@ -277,7 +282,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncodingForCharsetAlias_fallbackNotNull() {
+    void testGetEncodingForCharsetAlias_fallbackNotNull() {
         final EncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         // Character set not included in firebird / default-firebird-encodings.xml
         final String unsupportedCharset = "ISO-8859-15";
@@ -286,32 +291,20 @@ public class EncodingFactoryTest {
         assertSame(fallbackEncoding, factory.getEncodingForCharsetAlias(unsupportedCharset, fallbackEncoding));
     }
 
-    @Test
-    public void testGetCharacterSetSize_SingleByte() {
-        final int ISO8859_1_ID = 21;
-        assertEquals("Expected CharacterSetSize 1 for single byte encoding (ISO8859_1, id=21)", 1, EncodingFactory.getCharacterSetSize(ISO8859_1_ID));
+    @ParameterizedTest
+    @CsvSource({
+            "21,  1, ISO8859_1",
+            "513, 1, (unknown charset)",
+            "4,   4, UTF8",
+            "3,   3, UNICODE_FSS"
+    })
+    void testGetCharacterSetSize(int charsetId, int expectedSize, String charsetName) {
+        assertEquals(expectedSize, EncodingFactory.getCharacterSetSize(charsetId),
+                format("Expected CharacterSetSize %d for encoding (%s, id=%d)", expectedSize, charsetName, charsetId));
     }
 
     @Test
-    public void testGetCharacterSetSize_DoesNotExist() {
-        final int DOES_NOT_EXIST = 513;
-        assertEquals("Expected CharacterSetSize 1 for unknown id (513)", 1, EncodingFactory.getCharacterSetSize(DOES_NOT_EXIST));
-    }
-
-    @Test
-    public void testGetCharacterSetSize_MultiByte() {
-        final int UTF8_ID = 4;
-        assertEquals("Expected CharacterSetSize 4 for multi-byte encoding (UTF8, id=4)", 4, EncodingFactory.getCharacterSetSize(UTF8_ID));
-    }
-
-    @Test
-    public void testGetCharacterSetSize_MultiByte_FirebirdOnly() {
-        final int UNICODE_FSS_ID = 3;
-        assertEquals("Expected CharacterSetSize 3 for multi-byte, firebirdOnly encoding (UNICODE_FSS, id=3)", 3, EncodingFactory.getCharacterSetSize(UNICODE_FSS_ID));
-    }
-
-    @Test
-     public void testGetEncoding_alias_Exists() {
+    void testGetEncoding_alias_Exists() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding expectedEncoding = factory.getEncodingForFirebirdName("UTF8");
 
@@ -319,7 +312,7 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncoding_alias_DoesNotExist() {
+    void testGetEncoding_alias_DoesNotExist() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding expectedEncoding = factory.getDefaultEncoding();
 
@@ -327,15 +320,15 @@ public class EncodingFactoryTest {
     }
 
     @Test
-    public void testGetEncoding_charset_Exists() {
+    void testGetEncoding_charset_Exists() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
-        final Encoding expectedEncoding = factory.getEncodingForCharset(Charset.forName("UTF-8"));
+        final Encoding expectedEncoding = factory.getEncodingForCharset(StandardCharsets.UTF_8);
 
-        assertSame(expectedEncoding, EncodingFactory.getEncoding(Charset.forName("UTF-8")));
+        assertSame(expectedEncoding, EncodingFactory.getEncoding(StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testGetEncoding_charset_DoesNotExist() {
+    void testGetEncoding_charset_DoesNotExist() {
         final IEncodingFactory factory = EncodingFactory.getRootEncodingFactory();
         final Encoding defaultEncoding = factory.getDefaultEncoding();
 
@@ -344,107 +337,106 @@ public class EncodingFactoryTest {
     }
 
     @Test
-      public void testGetIscEncoding_alias_Exists() {
-        assertEquals("Unexpected Firebird encoding name", "WIN1252", EncodingFactory.getIscEncoding("CP1252"));
+    void testGetIscEncoding_alias_Exists() {
+        assertEquals("WIN1252", EncodingFactory.getIscEncoding("CP1252"), "Unexpected Firebird encoding name");
     }
 
     @Test
-    public void testGetIscEncoding_alias_DoesNotExist() {
-        assertNull("Expected null for unknown charset alias", EncodingFactory.getIscEncoding("DoesNotExist"));
+    void testGetIscEncoding_alias_DoesNotExist() {
+        assertNull(EncodingFactory.getIscEncoding("DoesNotExist"), "Expected null for unknown charset alias");
     }
 
     @Test
     public void testGetIscEncoding_charset_Exists() {
-        assertEquals("Unexpected Firebird encoding name", "WIN1252", EncodingFactory.getIscEncoding(Charset.forName("Cp1252")));
+        assertEquals("WIN1252", EncodingFactory.getIscEncoding(Charset.forName("Cp1252")),
+                "Unexpected Firebird encoding name");
     }
 
     @Test
-     public void testWithDefaultEncodingDefinition_null() {
+    void testWithDefaultEncodingDefinition_null() {
         final EncodingFactory defaultInstance = EncodingFactory.getRootEncodingFactory();
         final IEncodingFactory alternativeInstance = defaultInstance
                 .withDefaultEncodingDefinition((EncodingDefinition) null);
 
-        assertNotNull("Expected non-null instance", alternativeInstance);
-        assertSame("Unexpected default encoding", defaultInstance.getDefaultEncoding(), alternativeInstance.getDefaultEncoding());
-        assertSame("Unexpected default encoding definition", defaultInstance.getDefaultEncodingDefinition(), alternativeInstance.getDefaultEncodingDefinition());
+        assertNotNull(alternativeInstance, "Expected non-null instance");
+        assertSame(defaultInstance.getDefaultEncoding(), alternativeInstance.getDefaultEncoding(),
+                "Unexpected default encoding");
+        assertSame(defaultInstance.getDefaultEncodingDefinition(), alternativeInstance.getDefaultEncodingDefinition(),
+                "Unexpected default encoding definition");
     }
 
     @Test
-    public void testWithDefaultEncodingDefinition_notNull() {
+    void testWithDefaultEncodingDefinition_notNull() {
         final EncodingFactory defaultInstance = EncodingFactory.getRootEncodingFactory();
         final EncodingDefinition dos860 = defaultInstance.getEncodingDefinitionByFirebirdName("DOS860");
         final IEncodingFactory alternativeInstance = defaultInstance.withDefaultEncodingDefinition(dos860);
 
-        assertNotNull("Expected non-null instance", alternativeInstance);
-        assertSame("Unexpected default encoding", dos860.getEncoding(), alternativeInstance.getDefaultEncoding());
-        assertSame("Unexpected default encoding definition", dos860, alternativeInstance.getDefaultEncodingDefinition());
+        assertNotNull(alternativeInstance, "Expected non-null instance");
+        assertSame(dos860.getEncoding(), alternativeInstance.getDefaultEncoding(), "Unexpected default encoding");
+        assertSame(dos860, alternativeInstance.getDefaultEncodingDefinition(),
+                "Unexpected default encoding definition");
     }
 
     @Test
-    public void testGetIscEncoding_charset_NotLoaded() {
+    void testGetIscEncoding_charset_NotLoaded() {
         // ISO-8859-15 is not supported/loaded
-        assertNull("Expected null for charset alias that isn't loaded", EncodingFactory.getIscEncoding(Charset.forName("iso-8859-15")));
+        assertNull(EncodingFactory.getIscEncoding(Charset.forName("iso-8859-15")),
+                "Expected null for charset alias that isn't loaded");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            ",             1",
+            "WIN1250,      1",
+            "UTF8,         4",
+            "DoesNotExist, 1"
+    })
+    void testGetIscEncodingSize(String charsetName, int expectedSize) {
+        assertEquals(expectedSize, EncodingFactory.getIscEncodingSize(charsetName),
+                format("Expected size %d for character set (%s)", expectedSize, charsetName));
     }
 
     @Test
-    public void testGetIscEncodingSize_null() {
-        assertEquals("Expected size 1 for null encoding", 1, EncodingFactory.getIscEncodingSize(null));
+    void testGetJavaEncoding_null() {
+        assertNull(EncodingFactory.getJavaEncoding(null), "Expected null for null Firebird encoding name");
     }
 
     @Test
-    public void testGetIscEncodingSize_singleByte() {
-        assertEquals("Expected size 1 for a known single byte character set (win1250)", 1, EncodingFactory.getIscEncodingSize("WIN1250"));
-    }
-
-    @Test
-    public void testGetIscEncodingSize_multiByte() {
-        assertEquals("Expected size 5 for a known multi byte character set (utf8)", 4, EncodingFactory.getIscEncodingSize("UTF8"));
-    }
-
-    @Test
-    public void testGetIscEncodingSize_unknown() {
-        assertEquals("Expected size 1 for an unknown character set", 1, EncodingFactory.getIscEncodingSize("DoesNotExist"));
-    }
-
-    @Test
-    public void testGetJavaEncoding_null() {
-        assertNull("Expected null for null Firebird encoding name", EncodingFactory.getJavaEncoding(null));
-    }
-
-    @Test
-    public void testGetJavaEncoding_defaultEncoding() {
+    void testGetJavaEncoding_defaultEncoding() {
         final EncodingDefinition defaultEncodingDefinition = EncodingFactory.getRootEncodingFactory().getEncodingDefinitionByCharset(Charset.defaultCharset());
-        assumeNotNull(defaultEncodingDefinition);
+        assumeTrue(defaultEncodingDefinition != null);
 
-        assertNull("Expected null for Firebird encoding name of default character set", EncodingFactory.getJavaEncoding(defaultEncodingDefinition.getFirebirdEncodingName()));
+        assertNull(EncodingFactory.getJavaEncoding(defaultEncodingDefinition.getFirebirdEncodingName()),
+                "Expected null for Firebird encoding name of default character set");
     }
 
     @Test
-    public void testGetJavaEncoding_notDefaultEncoding() {
+    void testGetJavaEncoding_notDefaultEncoding() {
         // We assume that we won't run this test on a JVM that has DOS860 as the default encoding.
         final Charset cp860 = Charset.forName("Cp860");
         assumeTrue(!cp860.equals(Charset.defaultCharset()));
         final String expectedName = "Cp860"; // alias used in DefaultEncodingSet
 
-        assertEquals("Unexpected java encoding name for Firebird encoding DOS860", expectedName, EncodingFactory.getJavaEncoding("DOS860"));
+        assertEquals(expectedName, EncodingFactory.getJavaEncoding("DOS860"), "Unexpected java encoding name for Firebird encoding DOS860");
     }
 
     @Test
-    public void testGetJavaEncodingForAlias_defaultEncoding() {
+    void testGetJavaEncodingForAlias_defaultEncoding() {
         final EncodingDefinition defaultEncodingDefinition = EncodingFactory.getRootEncodingFactory().getEncodingDefinitionByCharset(Charset.defaultCharset());
-        assumeNotNull(defaultEncodingDefinition);
+        assumeTrue(defaultEncodingDefinition != null);
 
-        assertNull("Expected null for default encoding", EncodingFactory.getJavaEncodingForAlias(defaultEncodingDefinition.getJavaEncodingName()));
+        assertNull(EncodingFactory.getJavaEncodingForAlias(defaultEncodingDefinition.getJavaEncodingName()),
+                "Expected null for default encoding");
     }
 
     @Test
-    public void testGetJavaEncodingForAlias_notDefaultEncoding() {
+    void testGetJavaEncodingForAlias_notDefaultEncoding() {
         // We assume that we won't run this test on a JVM that has DOS860 as the default encoding.
         final Charset cp860 = Charset.forName("Cp860");
         assumeTrue(!cp860.equals(Charset.defaultCharset()));
         final String expectedName = "Cp860"; // alias used in DefaultEncodingSet
 
-        assertEquals("Unexpected java encoding name for encoding alias Cp860", expectedName, EncodingFactory.getJavaEncodingForAlias(expectedName));
+        assertEquals(expectedName, EncodingFactory.getJavaEncodingForAlias(expectedName), "Unexpected java encoding name for encoding alias Cp860");
     }
 
     /**

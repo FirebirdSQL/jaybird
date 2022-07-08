@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,25 +18,24 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Properties;
+import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for support of the scalar time and date function escapes as defined in
@@ -44,21 +43,16 @@ import static org.junit.Assert.fail;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@RunWith(Parameterized.class)
-public class TestScalarTimeDateFunctions {
+class TestScalarTimeDateFunctions {
     
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private static Connection con;
     private static Statement stmt;
 
-    private final String functionCall;
-    private final Validator validator;
-    private final boolean supported;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setupAll() throws Exception {
         // We create a connection and statement for all tests executed for performance reasons
         Properties props = getDefaultPropertiesForConnection();
         if (getDefaultSupportInfo().supportsTimeZones()) {
@@ -69,32 +63,18 @@ public class TestScalarTimeDateFunctions {
         stmt = con.createStatement();
     }
 
-    @AfterClass
-    public static void tearDown() {
-        closeQuietly(stmt);
-        closeQuietly(con);
+    @AfterAll
+    static void tearDownAll() {
+        try {
+            closeQuietly(stmt, con);
+        } finally {
+            stmt = null;
+            con = null;
+        }
     }
 
-    /**
-     * Testcase
-     *
-     * @param functionCall
-     *         JDBC function call (without {fn .. })
-     * @param validator
-     *         {@link Validator} to test the result of using the function against the
-     *         database
-     * @param supported
-     *         <code>true</code> function is supported, <code>false</code> when not supported
-     */
-    public TestScalarTimeDateFunctions(String functionCall, Validator validator, Boolean supported) {
-        this.functionCall = functionCall;
-        this.validator = validator;
-        this.supported = supported;
-    }
-
-    @Parameters(name = "{index}: value {0}")
-    public static Collection<Object[]> timeDateFunctionTestcases() {
-        return Arrays.asList(
+    static Stream<Arguments> timeDateFunctionTestcases() {
+        return Stream.of(
 //@formatter:off
         /* 0*/ testcase("CURRENT_DATE", new CurrentDateValidator()),
         /* 1*/ testcase("CURRENT_DATE()", new CurrentDateValidator()),
@@ -207,56 +187,56 @@ public class TestScalarTimeDateFunctions {
         );
     }
 
-    @Test
-    public void testScalarFunction() throws Exception {
-        try (ResultSet rs = stmt.executeQuery(createQuery())) {
-            if (!supported) {
-                fail(String.format("Expected function call %s to be unsupported", functionCall));
-            } else {
-                assertTrue("Expected at least one row", rs.next());
-                String validationResult = validator.validate(rs.getObject(1), functionCall);
-                if (validationResult != null) {
-                    fail(validationResult);
-                }
-            }
+    /**
+     * Testcase
+     *
+     * @param functionCall
+     *         JDBC function call (without {fn .. })
+     * @param validator
+     *         {@link Validator} to test the result of using the function against the database
+     * @param supported
+     *         {@code true} function is supported, {@code false} when not supported
+     */
+    @ParameterizedTest(name = "{index}: value {0}")
+    @MethodSource("timeDateFunctionTestcases")
+    void testScalarFunction(String functionCall, Validator validator, Boolean supported) throws Exception {
+        try (ResultSet rs = stmt.executeQuery(createQuery(functionCall))) {
+            assertTrue(supported, () -> format("Expected function call %s to be unsupported", functionCall));
+            assertTrue(rs.next(), "Expected at least one row");
+            String validationResult = validator.validate(rs.getObject(1), functionCall);
+            assertNull(validationResult, validationResult);
         } catch (SQLException ex) {
             if (supported) {
                 throw ex;
-            } else {
-                // TODO validate exception?
-                //fail("Validation of unsupported functions not yet implemented");
             }
+            // TODO validate exception?
         }
     }
 
-    private String createQuery() {
-        return String.format("SELECT {fn %s} FROM RDB$DATABASE", functionCall);
+    private String createQuery(String functionCall) {
+        return format("SELECT {fn %s} FROM RDB$DATABASE", functionCall);
     }
 
     /**
-     * Convenience method to create object array for testcase (ensures correct
-     * types).
+     * Convenience method to create object array for testcase (ensures correct types).
      *
      * @param functionCall
      *         JDBC function call (with out {fn .. })
      * @param validator
-     *         {@link Validator} to test the result of using the function against the
-     *         database
+     *         {@link Validator} to test the result of using the function against the database
      * @return Object[] testcase
      */
-    private static Object[] testcase(final String functionCall, final Validator validator) {
-        return new Object[] { functionCall, validator, true };
+    private static Arguments testcase(final String functionCall, final Validator validator) {
+        return Arguments.of(functionCall, validator, true);
     }
 
-    private static Object[] unsupported(final String functionCall) {
-        return new Object[] { functionCall, new Validator() {
-            @Override
-            public String validate(Object objectToValidate, String functionCall) {
-                return String.format("Escape function %s not supported", functionCall);
-            }
-        }, false };
+    @SuppressWarnings("unused")
+    private static Arguments unsupported(final String functionCall) {
+        return Arguments.of(functionCall,
+                (Validator) (objectToValidate, fn) -> format("Escape function %s not supported", fn), false);
     }
 
+    @FunctionalInterface
     private interface Validator {
 
         /**
@@ -282,7 +262,7 @@ public class TestScalarTimeDateFunctions {
                 if (dateAsString.equals(currentDateAsString)) {
                     return null;
                 } else {
-                    return String.format("Expected current date %s, received %s", currentDateAsString, dateAsString);
+                    return format("Expected current date %s, received %s", currentDateAsString, dateAsString);
                 }
             } else {
                 return "Expected result of type java.sql.Date";
@@ -301,7 +281,7 @@ public class TestScalarTimeDateFunctions {
                 if (timeAsString.equals(currentTimeAsString)) {
                     return null;
                 } else {
-                    return String.format("Expected current time %s, received %s", currentTimeAsString, timeAsString);
+                    return format("Expected current time %s, received %s", currentTimeAsString, timeAsString);
                 }
             } else {
                 return "Expected result of type java.sql.Time";
@@ -321,7 +301,7 @@ public class TestScalarTimeDateFunctions {
                 if (timestampAsString.equals(currentTimestampAsString)) {
                     return null;
                 }
-                return String.format("Expected current timestamp %s, received %s", currentTimestampAsString,
+                return format("Expected current timestamp %s, received %s", currentTimestampAsString,
                         timestampAsString);
             }
             return "Expected result of type java.sql.Timestamp";
@@ -341,7 +321,7 @@ public class TestScalarTimeDateFunctions {
             if (equals(expectedValue, objectToValidate)) {
                 return null;
             }
-            return String.format("Unexpected value %s, expected %s for function call %s", objectToValidate,
+            return format("Unexpected value %s, expected %s for function call %s", objectToValidate,
                     expectedValue, functionCall);
         }
 
