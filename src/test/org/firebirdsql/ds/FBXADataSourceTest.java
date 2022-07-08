@@ -23,7 +23,7 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jaybird.xca.FBXAResourceTest;
-import org.firebirdsql.jaybird.xca.TestXABase.XidImpl;
+import org.firebirdsql.jaybird.xca.XATestBase.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.AfterEach;

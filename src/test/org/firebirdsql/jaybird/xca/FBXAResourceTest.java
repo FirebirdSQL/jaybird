@@ -30,7 +30,7 @@ import java.sql.Statement;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.junit.Assert.*;
 
-public class FBXAResourceTest extends TestXABase {
+public class FBXAResourceTest extends XATestBase {
 
     @Test
     public void testGetXAResource() throws Exception {

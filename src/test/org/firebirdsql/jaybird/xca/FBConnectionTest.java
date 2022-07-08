@@ -27,7 +27,7 @@ import java.sql.Statement;
 
 import static org.junit.Assert.assertNotNull;
 
-public class FBConnectionTest extends TestXABase {
+public class FBConnectionTest extends XATestBase {
 
     @Test
     public void testCreateC() throws Exception {

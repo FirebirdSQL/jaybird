@@ -19,7 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.gds.ng.wire.version16.TestV16OutputBlob;
+import org.firebirdsql.gds.ng.wire.version16.V16OutputBlobTest;
 import org.junit.ClassRule;
 
 import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
@@ -31,7 +31,7 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V18OutputBlobTest extends TestV16OutputBlob {
+public class V18OutputBlobTest extends V16OutputBlobTest {
 
     @ClassRule
     public static final RequireProtocol requireProtocol = requireProtocolVersion(18);

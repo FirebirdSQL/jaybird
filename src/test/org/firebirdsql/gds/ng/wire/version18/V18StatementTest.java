@@ -26,7 +26,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.firebirdsql.gds.ng.wire.version16.TestV16Statement;
+import org.firebirdsql.gds.ng.wire.version16.V16StatementTest;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -59,7 +59,7 @@ import static org.junit.Assert.fail;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class V18StatementTest extends TestV16Statement {
+public class V18StatementTest extends V16StatementTest {
 
     protected static final String CURSOR_NAME = "SOME_CURSOR";
 

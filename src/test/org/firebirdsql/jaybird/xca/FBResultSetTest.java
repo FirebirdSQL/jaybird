@@ -29,7 +29,7 @@ import java.sql.*;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.junit.Assert.*;
 
-public class FBResultSetTest extends TestXABase {
+public class FBResultSetTest extends XATestBase {
 
     @Test
     public void testUseResultSet() throws Exception {

@@ -34,7 +34,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
-public class FBBlobTest extends TestXABase {
+public class FBBlobTest extends XATestBase {
 
     private FBConnection c;
     private FBLocalTransaction t;

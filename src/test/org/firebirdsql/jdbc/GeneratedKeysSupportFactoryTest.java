@@ -46,7 +46,7 @@ import static org.junit.Assert.*;
 /**
  * Tests for {@link GeneratedKeysSupportFactory}.
  * <p>
- * The normal 'default' generated keys behavior is tested in more detail in {@link TestGeneratedKeysQuery}.
+ * The normal 'default' generated keys behavior is tested in more detail in {@link GeneratedKeysQueryTest}.
  * </p>
  */
 public class GeneratedKeysSupportFactoryTest {

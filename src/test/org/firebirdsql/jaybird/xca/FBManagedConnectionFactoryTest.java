@@ -26,7 +26,7 @@ import java.sql.Connection;
 
 import static org.junit.Assert.assertEquals;
 
-public class FBManagedConnectionFactoryTest extends TestXABase {
+public class FBManagedConnectionFactoryTest extends XATestBase {
 
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();

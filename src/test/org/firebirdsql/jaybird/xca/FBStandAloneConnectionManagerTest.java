@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBStandAloneConnectionManagerTest extends TestXABase {
+public class FBStandAloneConnectionManagerTest extends XATestBase {
 
     @Test
     public void testCreateDCM() throws Exception {
