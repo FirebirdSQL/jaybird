@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class BDatabaseMetaDataProceduresTest {
+public class FBDatabaseMetaDataProceduresTest {
 
     // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
     private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
