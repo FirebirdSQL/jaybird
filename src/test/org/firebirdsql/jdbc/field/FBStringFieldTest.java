@@ -23,9 +23,9 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.util.IOUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -41,14 +41,14 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FBStringField}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, String> {
+class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
 
     static short TEST_STRING_SIZE = 40;
 
@@ -60,9 +60,9 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
 
     private static final Encoding encoding = EncodingFactory.getPlatformEncoding();
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
@@ -73,16 +73,16 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
     }
 
     @Test
-    public void getString() throws SQLException {
+    void getString() throws SQLException {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
-        assertEquals("String does not equal to assigned one.", TEST_STRING_SHORT, field.getString().trim());
+        assertEquals(TEST_STRING_SHORT, field.getString().trim(), "String does not equal to assigned one.");
         /*
         // Commented out by R.Rokytskyy: FBStringField was changed to allow
         // server complain about data truncation, not the driver. This was done
         // in order to avoid problems in case of multi-byte character fields.
         try {
             field.setString(TEST_STRING_LONG);
-            assertTrue("String longer than available space should not be allowed", false);
+            assertTrue(false, "String longer than available space should not be allowed");
         } catch(SQLException sqlex) {
             // everything is ok
         }
@@ -90,671 +90,673 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
     }
 
    @Test
-    public void getBigDecimalNull() throws SQLException {
+    void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getBigDecimal", field.getBigDecimal());
+        assertNull(field.getBigDecimal(), "Expected null for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
         toReturnStringExpectations("837.47394", encoding);
 
-        assertEquals("Unexpected value for getBigDecimal", new BigDecimal("837.47394"), field.getBigDecimal());
+        assertEquals(new BigDecimal("837.47394"), field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         toReturnStringExpectations("837.47394", encoding);
 
-        assertEquals("Unexpected value for getObject(BigDecimal.class)",
-                new BigDecimal("837.47394"), field.getObject(BigDecimal.class));
+        assertEquals(new BigDecimal("837.47394"), field.getObject(BigDecimal.class),
+                "Unexpected value for getObject(BigDecimal.class)");
     }
 
     @Test
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
-        setStringExpectations("5.381093", encoding);
-
+    void setBigDecimalNonNull() throws SQLException {
         field.setBigDecimal(new BigDecimal("5.381093"));
+
+        verifySetString("5.381093", encoding);
     }
 
-    @Ignore
+    @Disabled
     @Test
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
         // TODO Build suitable test
     }
 
     @Test
-    public void getBinaryStreamNull() throws SQLException {
+    void getBinaryStreamNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getBinaryStream", field.getBinaryStream());
+        assertNull(field.getBinaryStream(), "Expected null for getBinaryStream");
     }
 
     @Test
     @Override
-    public void getBinaryStreamNonNull() throws Exception {
+    void getBinaryStreamNonNull() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
         String fromStream = new String(IOUtils.toBytes(field.getBinaryStream(), Integer.MAX_VALUE));
 
-        assertEquals("Binary stream values test failure", TEST_STRING_SHORT, fromStream.trim());
+        assertEquals(TEST_STRING_SHORT, fromStream.trim(), "Binary stream values test failure");
     }
 
     @Test
     @Override
-    public void getObject_InputStream() throws Exception {
+    void getObject_InputStream() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
         String fromStream = new String(IOUtils.toBytes(field.getObject(InputStream.class), Integer.MAX_VALUE));
 
-        assertEquals("Binary stream values test failure", TEST_STRING_SHORT, fromStream.trim());
+        assertEquals(TEST_STRING_SHORT, fromStream.trim(), "Binary stream values test failure");
     }
 
     @Test
     @Override
-    public void setBinaryStreamNonNull() throws Exception {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
+    void setBinaryStreamNonNull() throws Exception {
         byte[] bytes = TEST_STRING_SHORT.getBytes();
 
         field.setBinaryStream(new ByteArrayInputStream(bytes), bytes.length);
+        
+        verifySetString(TEST_STRING_SHORT, encoding);
     }
 
     @Test
-    public void setBinaryStream_tooLong() throws Exception {
-        expectedException.expect(java.sql.DataTruncation.class);
+    void setBinaryStream_tooLong() {
         byte[] bytes = TEST_STRING_LONG.getBytes();
-        field.setBinaryStream(new ByteArrayInputStream(bytes), bytes.length);
+
+        assertThrows(java.sql.DataTruncation.class,
+                () -> field.setBinaryStream(new ByteArrayInputStream(bytes), bytes.length));
     }
 
     @Test
-    public void getBooleanNull() throws Exception {
+    void getBooleanNull() throws Exception {
         toReturnNullExpectations();
 
-        assertFalse("Expected false for getBoolean on null", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean on null");
     }
 
     @Test
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
         toReturnStringExpectations(FBStringField.LONG_TRUE, encoding);
 
-        assertTrue("Unexpected value for getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         toReturnStringExpectations(FBStringField.LONG_TRUE, encoding);
 
-        assertTrue("Unexpected value for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Unexpected value for getObject(Boolean.class)");
     }
 
     @Test
-    public void getBoolean_shortTrue() throws SQLException {
+    void getBoolean_shortTrue() throws SQLException {
         toReturnStringExpectations(FBStringField.SHORT_TRUE, encoding);
 
-        assertTrue("Unexpected value for getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBoolean_shortTrue2() throws SQLException {
+    void getBoolean_shortTrue2() throws SQLException {
         toReturnStringExpectations(FBStringField.SHORT_TRUE_2, encoding);
 
-        assertTrue("Unexpected value for getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBoolean_shortTrue3() throws SQLException {
+    void getBoolean_shortTrue3() throws SQLException {
         toReturnStringExpectations(FBStringField.SHORT_TRUE_3, encoding);
 
-        assertTrue("Unexpected value for getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBoolean_longFalse() throws SQLException {
+    void getBoolean_longFalse() throws SQLException {
         toReturnStringExpectations(FBStringField.LONG_FALSE, encoding);
 
-        assertFalse("Unexpected value for getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBoolean_shortFalse() throws SQLException {
+    void getBoolean_shortFalse() throws SQLException {
         toReturnStringExpectations(FBStringField.SHORT_FALSE, encoding);
 
-        assertFalse("Unexpected value for getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBoolean_otherValueIsFalse() throws SQLException {
+    void getBoolean_otherValueIsFalse() throws SQLException {
         toReturnStringExpectations("jdsd", encoding);
 
-        assertFalse("Unexpected value for getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
     @Override
-    public void setBoolean() throws SQLException {
-        setStringExpectations(FBStringField.LONG_TRUE, encoding);
-
+    void setBoolean() throws SQLException {
         field.setBoolean(true);
+
+        verifySetString(FBStringField.LONG_TRUE, encoding);
     }
 
     @Test
-    public void setBoolean_false() throws SQLException {
-        setStringExpectations(FBStringField.LONG_FALSE, encoding);
-
+    void setBoolean_false() throws SQLException {
         field.setBoolean(false);
+
+        verifySetString(FBStringField.LONG_FALSE, encoding);
     }
 
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         toReturnStringExpectations("89", encoding);
 
-        assertEquals("Unexpected value for getByte", 89, field.getByte());
+        assertEquals(89, field.getByte(), "Unexpected value for getByte");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         toReturnStringExpectations("89", encoding);
 
-        assertEquals("Unexpected value for getByte", 89, (byte) field.getObject(Byte.class));
+        assertEquals(89, (byte) field.getObject(Byte.class), "Unexpected value for getByte");
     }
 
     @Test
     @Override
-    public void setByte() throws SQLException {
-        setStringExpectations("-128", encoding);
-
+    void setByte() throws SQLException {
         field.setByte(Byte.MIN_VALUE);
+
+        verifySetString("-128", encoding);
     }
 
     @Test
     @Override
-    public void getBytesNonNull() throws SQLException {
+    void getBytesNonNull() throws SQLException {
         toReturnValueExpectations(TEST_STRING_SHORT.getBytes());
         String fromBytes = new String(field.getBytes());
-        assertEquals("Bytes stream values test failure", TEST_STRING_SHORT, fromBytes.trim());
+        assertEquals(TEST_STRING_SHORT, fromBytes.trim(), "Bytes stream values test failure");
     }
 
     @Test
     @Override
-    public void getObject_byteArray() throws SQLException {
+    void getObject_byteArray() throws SQLException {
         toReturnValueExpectations(TEST_STRING_SHORT.getBytes());
         String fromBytes = new String(field.getObject(byte[].class));
-        assertEquals("Bytes value test failure", TEST_STRING_SHORT, fromBytes.trim());
+        assertEquals(TEST_STRING_SHORT, fromBytes.trim(), "Bytes value test failure");
     }
 
     @Test
     @Override
-    public void setBytesNonNull() throws SQLException {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
-
+    void setBytesNonNull() throws SQLException {
         field.setBytes(TEST_STRING_SHORT.getBytes());
+
+        verifySetString(TEST_STRING_SHORT, encoding);
     }
 
     @Test
-    public void setBytes_TooLong() throws SQLException {
-        expectedException.expect(java.sql.DataTruncation.class);
-        field.setBytes(TEST_STRING_LONG.getBytes());
+    void setBytes_TooLong() {
+        assertThrows(java.sql.DataTruncation.class, () -> field.setBytes(TEST_STRING_LONG.getBytes()));
     }
 
     @Test
-    public void getCharacterStreamNull() throws SQLException {
+    void getCharacterStreamNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getCharacterStream", field.getCharacterStream());
+        assertNull(field.getCharacterStream(), "Expected null for getCharacterStream");
     }
 
     @Test
     @Override
-    public void getCharacterStreamNonNull() throws Exception {
+    void getCharacterStreamNonNull() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
         String value = IOUtils.toString(field.getCharacterStream(), Integer.MAX_VALUE);
-        assertEquals("Unexpected value from getCharacterStream", TEST_STRING_SHORT, value);
+        assertEquals(TEST_STRING_SHORT, value, "Unexpected value from getCharacterStream");
     }
 
     @Test
     @Override
-    public void getObject_Reader() throws Exception {
+    void getObject_Reader() throws Exception {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
         String value = IOUtils.toString(field.getObject(Reader.class), Integer.MAX_VALUE);
-        assertEquals("Unexpected value from getCharacterStream", TEST_STRING_SHORT, value);
+        assertEquals(TEST_STRING_SHORT, value, "Unexpected value from getCharacterStream");
     }
 
     @Test
     @Override
-    public void setCharacterStreamNonNull() throws Exception {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
-
+    void setCharacterStreamNonNull() throws Exception {
         field.setCharacterStream(new StringReader(TEST_STRING_SHORT), TEST_STRING_SHORT.length());
+
+        verifySetString(TEST_STRING_SHORT, encoding);
     }
 
     @Test
-    public void setCharacterStream_tooLong() throws Exception {
+    void setCharacterStream_tooLong() throws Exception {
         // TODO: length not validated in current implementation
-        // expectedException.expect(TypeConversionException.class);
-        setStringExpectations(TEST_STRING_LONG, encoding);
-
+        // assertThrows(TypeConversionException.class, () ->
         field.setCharacterStream(new StringReader(TEST_STRING_LONG), TEST_STRING_LONG.length());
+
+        verifySetString(TEST_STRING_LONG, encoding);
     }
 
     @Test
-    public void getDateNull() throws SQLException {
+    void getDateNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getDate", field.getDate());
+        assertNull(field.getDate(), "Expected null for getDate");
     }
 
     @Test
     @Override
-    public void getDateNonNull() throws SQLException {
+    void getDateNonNull() throws SQLException {
         toReturnStringExpectations("2016-04-24", encoding);
 
-        assertEquals("Unexpected value for getDate", java.sql.Date.valueOf("2016-04-24"), field.getDate());
+        assertEquals(java.sql.Date.valueOf("2016-04-24"), field.getDate(), "Unexpected value for getDate");
     }
 
     @Test
     @Override
-    public void getDateCalendarNonNull() throws SQLException {
+    void getDateCalendarNonNull() throws SQLException {
         toReturnStringExpectations("2016-04-24", encoding);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
-        assertEquals("Unexpected value for getDate(Calendar)", "2016-04-24", field.getDate(calendar).toString());
+        assertEquals("2016-04-24", field.getDate(calendar).toString(), "Unexpected value for getDate(Calendar)");
     }
 
     @Test
     @Override
-    public void setDateCalendarNonNull() throws SQLException {
-        setStringExpectations("2016-04-24", encoding);
+    void setDateCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setDate(java.sql.Date.valueOf("2016-04-24"), calendar);
+        
+        verifySetString("2016-04-24", encoding);
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Date() throws SQLException {
+    void getObject_java_sql_Date() throws SQLException {
         toReturnStringExpectations("2016-04-24", encoding);
 
-        assertEquals("Unexpected value for getObject(java.sql.Date.class)",
-                java.sql.Date.valueOf("2016-04-24"), field.getObject(java.sql.Date.class));
+        assertEquals(java.sql.Date.valueOf("2016-04-24"), field.getObject(java.sql.Date.class),
+                "Unexpected value for getObject(java.sql.Date.class)");
     }
 
     @Test
     @Override
-    public void setDateNonNull() throws SQLException {
-        setStringExpectations("2016-04-24", encoding);
-
+    void setDateNonNull() throws SQLException {
         field.setDate(java.sql.Date.valueOf("2016-04-24"));
+
+        verifySetString("2016-04-24", encoding);
     }
 
     @Test
-    public void getDoubleNull() throws SQLException {
+    void getDoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected 0 for null getDouble", 0, field.getDouble(), 0);
+        assertEquals(0, field.getDouble(), 0, "Expected 0 for null getDouble");
     }
 
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         toReturnStringExpectations("9.32892", encoding);
 
-        assertEquals("Unexpected value for getDouble", 9.32892, field.getDouble(), 0);
+        assertEquals(9.32892, field.getDouble(), 0, "Unexpected value for getDouble");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         toReturnStringExpectations("9.32892", encoding);
 
-        assertEquals("Unexpected value for getObject(Double.class)", 9.32892, field.getObject(Double.class), 0);
+        assertEquals(9.32892, field.getObject(Double.class), 0, "Unexpected value for getObject(Double.class)");
     }
 
     @Test
     @Override
-    public void setDouble() throws SQLException {
-        setStringExpectations(Double.toString(739.389932), encoding);
-
+    void setDouble() throws SQLException {
         field.setDouble(739.389932);
+
+        verifySetString(Double.toString(739.389932), encoding);
     }
 
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         toReturnStringExpectations("9.32892", encoding);
 
-        assertEquals("Unexpected value for getFloat", 9.32892, field.getFloat(), 0.0001);
+        assertEquals(9.32892, field.getFloat(), 0.0001, "Unexpected value for getFloat");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         toReturnStringExpectations("9.32892", encoding);
 
-        assertEquals("Unexpected value for getObject(Float.class)", 9.32892, field.getObject(Float.class), 0.0001);
+        assertEquals(9.32892, field.getObject(Float.class), 0.0001, "Unexpected value for getObject(Float.class)");
     }
 
     @Test
     @Override
-    public void setFloat() throws SQLException {
-        setStringExpectations(Float.toString(3.472f), encoding);
-
+    void setFloat() throws SQLException {
         field.setFloat(3.472f);
+
+        verifySetString(Float.toString(3.472f), encoding);
     }
 
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         toReturnStringExpectations("734823", encoding);
 
-        assertEquals("Unexpected value for getInt", 734823, field.getInt());
+        assertEquals(734823, field.getInt(), "Unexpected value for getInt");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         toReturnStringExpectations("734823", encoding);
 
-        assertEquals("Unexpected value for getObject(Integer.class)", 734823, field.getObject(Integer.class).intValue());
+        assertEquals(734823, field.getObject(Integer.class).intValue(), "Unexpected value for getObject(Integer.class)");
     }
 
     @Test
     @Override
-    public void setInteger() throws SQLException {
-        setStringExpectations("-124579", encoding);
-
+    void setInteger() throws SQLException {
         field.setInteger(-124579);
+
+        verifySetString("-124579", encoding);
     }
 
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         toReturnStringExpectations("9378037472243", encoding);
 
-        assertEquals("Unexpected value for getLong", 9378037472243L, field.getLong());
+        assertEquals(9378037472243L, field.getLong(), "Unexpected value for getLong");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         toReturnStringExpectations("9378037472243", encoding);
 
-        assertEquals("Unexpected value for getObject(Long.class)",
-                9378037472243L, field.getObject(Long.class).longValue());
+        assertEquals(9378037472243L, field.getObject(Long.class).longValue(),
+                "Unexpected value for getObject(Long.class)");
     }
 
     @Test
     @Override
-    public void setLong() throws SQLException {
-        setStringExpectations("735987378945", encoding);
-
+    void setLong() throws SQLException {
         field.setLong(735987378945L);
+
+        verifySetString("735987378945", encoding);
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnStringExpectations("some string value", encoding);
 
-        assertEquals("Unexpected value for getObject", "some string value", field.getObject());
+        assertEquals("some string value", field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(TEST_STRING_SHORT);
+
+        verifySetString(TEST_STRING_SHORT, encoding);
     }
 
     @Test
-    public void setObject_tooLong() throws SQLException {
-        //expectedException.expect(DataTruncation.class);
+    void setObject_tooLong() throws SQLException {
+        // assertThrows(DataTruncation.class, () -> 
         //TODO Current implementation will accept too long values and leave error to server
-        setStringExpectations(TEST_STRING_LONG, encoding);
-
         field.setObject(TEST_STRING_LONG);
+        
+        verifySetString(TEST_STRING_LONG, encoding);
     }
 
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         toReturnStringExpectations("840", encoding);
 
-        assertEquals("Unexpected value for getShort", 840, field.getShort());
+        assertEquals(840, field.getShort(), "Unexpected value for getShort");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         toReturnStringExpectations("840", encoding);
 
-        assertEquals("Unexpected value for getObject(Short.class)", 840, field.getObject(Short.class).shortValue());
+        assertEquals(840, field.getObject(Short.class).shortValue(), "Unexpected value for getObject(Short.class)");
     }
 
     @Test
     @Override
-    public void setShort() throws SQLException {
-        setStringExpectations("7301", encoding);
-
+    void setShort() throws SQLException {
         field.setShort((short) 7301);
+
+        verifySetString("7301", encoding);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
-        assertEquals("Unexpected value for getString", TEST_STRING_SHORT, field.getString());
+        assertEquals(TEST_STRING_SHORT, field.getString(), "Unexpected value for getString");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnStringExpectations(TEST_STRING_SHORT, encoding);
 
-        assertEquals("Unexpected value for getObject(String.class)", TEST_STRING_SHORT, field.getObject(String.class));
+        assertEquals(TEST_STRING_SHORT, field.getObject(String.class), "Unexpected value for getObject(String.class)");
     }
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
-        setStringExpectations(TEST_STRING_SHORT, encoding);
-
+    void setStringNonNull() throws SQLException {
         field.setString(TEST_STRING_SHORT);
+
+        verifySetString(TEST_STRING_SHORT, encoding);
     }
 
     @Test
     @Override
-    public void getTimeNonNull() throws SQLException {
+    void getTimeNonNull() throws SQLException {
         toReturnStringExpectations("10:05:01", encoding);
 
-        assertEquals("Unexpected value for getTime", "10:05:01", field.getTime().toString());
+        assertEquals("10:05:01", field.getTime().toString(), "Unexpected value for getTime");
     }
 
     @Test
-    public void getObject_java_sql_Time() throws SQLException {
+    void getObject_java_sql_Time() throws SQLException {
         toReturnStringExpectations("10:05:01", encoding);
 
-        assertEquals("Unexpected value for getObject(java.sql.Time.class)",
-                "10:05:01", field.getObject(java.sql.Time.class).toString());
+        assertEquals("10:05:01", field.getObject(java.sql.Time.class).toString(),
+                "Unexpected value for getObject(java.sql.Time.class)");
     }
 
     @Test
-    public void setTimeNonNull() throws SQLException {
-        setStringExpectations("10:05:01", encoding);
-
+    void setTimeNonNull() throws SQLException {
         field.setTime(Time.valueOf("10:05:01"));
+
+        verifySetString("10:05:01", encoding);
     }
 
     @Test
     @Override
-    public void getTimeCalendarNonNull() throws SQLException {
+    void getTimeCalendarNonNull() throws SQLException {
         toReturnStringExpectations("10:05:01", encoding);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         // java.sql.Time.toString() will render in the current time zone
-        assertEquals("Unexpected value for getTime", "11:05:01", field.getTime(calendar).toString());
+        assertEquals("11:05:01", field.getTime(calendar).toString(), "Unexpected value for getTime");
     }
 
     @Test
     @Override
-    public void setTimeCalendarNonNull() throws SQLException {
-        setStringExpectations("09:05:01", encoding);
+    void setTimeCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTime(java.sql.Time.valueOf("10:05:01"), calendar);
+        
+        verifySetString("09:05:01", encoding);
     }
 
     @Test
     @Override
-    public void getTimestampNonNull() throws SQLException {
+    void getTimestampNonNull() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
 
-        assertEquals("Unexpected value for getTimestamp", "2016-05-02 10:57:01.0", field.getTimestamp().toString());
+        assertEquals("2016-05-02 10:57:01.0", field.getTimestamp().toString(), "Unexpected value for getTimestamp");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Timestamp() throws SQLException {
+    void getObject_java_sql_Timestamp() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
 
-        assertEquals("Unexpected value for getObject(java.sql.Timestamp.class)",
-                "2016-05-02 10:57:01.0", field.getObject(java.sql.Timestamp.class).toString());
+        assertEquals("2016-05-02 10:57:01.0", field.getObject(java.sql.Timestamp.class).toString(),
+                "Unexpected value for getObject(java.sql.Timestamp.class)");
     }
 
     @Test
     @Override
-    public void getObject_java_util_Date() throws SQLException {
+    void getObject_java_util_Date() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
 
         // Test depends on the fact that we currently return java.sql.Timestamp
-        assertEquals("Unexpected value for getObject(java.util.Date.class)",
-                "2016-05-02 10:57:01.0", field.getObject(java.util.Date.class).toString());
+        assertEquals("2016-05-02 10:57:01.0", field.getObject(java.util.Date.class).toString(),
+                "Unexpected value for getObject(java.util.Date.class)");
     }
 
     @Test
     @Override
-    public void getObject_Calendar() throws SQLException {
+    void getObject_Calendar() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"));
 
-        assertEquals("Unexpected value for getObject(Calendar.class)", calendar, field.getObject(Calendar.class));
+        assertEquals(calendar, field.getObject(Calendar.class), "Unexpected value for getObject(Calendar.class)");
     }
 
     @Test
     @Override
-    public void setTimestampNonNull() throws SQLException {
-        setStringExpectations("2016-05-02 10:57:01.0", encoding);
-
+    void setTimestampNonNull() throws SQLException {
         field.setTimestamp(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"));
+
+        verifySetString("2016-05-02 10:57:01.0", encoding);
     }
 
     @Test
     @Override
-    public void getTimestampCalendarNonNull() throws SQLException {
+    void getTimestampCalendarNonNull() throws SQLException {
         toReturnStringExpectations("2016-05-02 10:57:01", encoding);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         // java.sql.Timestamp.toString() will render in the current time zone
-        assertEquals("Unexpected value for getTimestamp(Calendar)",
-                "2016-05-02 11:57:01.0", field.getTimestamp(calendar).toString());
+        assertEquals("2016-05-02 11:57:01.0", field.getTimestamp(calendar).toString(),
+                "Unexpected value for getTimestamp(Calendar)");
     }
 
     @Test
     @Override
-    public void setTimestampCalendarNonNull() throws SQLException {
-        setStringExpectations("2016-05-02 09:57:01.0", encoding);
+    void setTimestampCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTimestamp(java.sql.Timestamp.valueOf("2016-05-02 10:57:01"), calendar);
+        
+        verifySetString("2016-05-02 09:57:01.0", encoding);
     }
 
     @Test
     @Override
-    public void getObject_BigInteger() throws SQLException {
+    void getObject_BigInteger() throws SQLException {
         toReturnStringExpectations("10", encoding);
 
-        assertEquals("Unexpected value for getObject(BigInteger.class)",
-                BigInteger.TEN, field.getObject(BigInteger.class));
+        assertEquals(BigInteger.TEN, field.getObject(BigInteger.class),
+                "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
-    public void getObject_BigInteger_notANumber() throws SQLException {
+    void getObject_BigInteger_notANumber() {
         toReturnStringExpectations("xyz", encoding);
-        expectedException.expect(TypeConversionException.class);
 
-        field.getObject(BigInteger.class);
+        assertThrows(TypeConversionException.class, () -> field.getObject(BigInteger.class));
     }
 
     @Test
     @Override
-    public void setObject_BigInteger() throws SQLException {
-        setStringExpectations("10", encoding);
-
+    void setObject_BigInteger() throws SQLException {
         field.setObject(BigInteger.TEN);
+
+        verifySetString("10", encoding);
     }
 
     @Test
     @Override
-    public void getDecimalNonNull() throws SQLException {
+    void getDecimalNonNull() throws SQLException {
         toReturnStringExpectations("1.34578", encoding);
 
         Decimal128 expectedValue = Decimal128.valueOf("1.34578");
-        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+        assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 
     @Test
-    public void getDecimalNonNull_notANumber() throws SQLException {
+    void getDecimalNonNull_notANumber() {
         toReturnStringExpectations("xyz", encoding);
-        expectedException.expect(TypeConversionException.class);
 
-        field.getDecimal();
+        assertThrows(TypeConversionException.class, field::getDecimal);
     }
 
     @Test
-    public void getDecimal_null() throws SQLException {
+    void getDecimal_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("expected null for getDecimal", field.getDecimal());
+        assertNull(field.getDecimal(), "expected null for getDecimal");
     }
 
     @Test
     @Override
-    public void setDecimalNonNull() throws SQLException {
-        setStringExpectations("10", encoding);
-
+    void setDecimalNonNull() throws SQLException {
         field.setDecimal(Decimal128.valueOf("10"));
+
+        verifySetString("10", encoding);
     }
 
     @Test
-    public void setDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setDecimalNull() throws SQLException {
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setObject_java_time_OffsetTime() throws SQLException {
+    void setObject_java_time_OffsetTime() throws SQLException {
         String offsetTimeString = "20:58+02:00";
-        setStringExpectations(offsetTimeString, encoding);
-
         OffsetTime offsetTime = OffsetTime.parse(offsetTimeString);
 
         field.setObject(offsetTime);
+        
+        verifySetString(offsetTimeString, encoding);
     }
 
     @Test
-    public void getObject_java_time_OffsetTime() throws SQLException {
+    void getObject_java_time_OffsetTime() throws SQLException {
         String offsetTimeString = "20:58+02:00";
         OffsetTime expectedOffsetTime = OffsetTime.parse(offsetTimeString);
         toReturnStringExpectations(offsetTimeString, encoding);
@@ -763,17 +765,17 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
     }
 
     @Test
-    public void setObject_java_time_OffsetDateTime() throws SQLException {
+    void setObject_java_time_OffsetDateTime() throws SQLException {
         String offsetDateTimeString = "2020-06-02T20:58+02:00";
-        setStringExpectations(offsetDateTimeString, encoding);
-
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(offsetDateTimeString);
 
         field.setObject(offsetDateTime);
+
+        verifySetString(offsetDateTimeString, encoding);
     }
 
     @Test
-    public void getObject_java_time_OffsetDateTime() throws SQLException {
+    void getObject_java_time_OffsetDateTime() throws SQLException {
         String offsetDateTimeString = "2020-06-02T20:58+02:00";
         OffsetDateTime expectedOffsetDateTime = OffsetDateTime.parse(offsetDateTimeString);
         toReturnStringExpectations(offsetDateTimeString, encoding);
@@ -782,17 +784,17 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
     }
 
     @Test
-    public void setObject_java_time_ZonedDateTime() throws SQLException {
+    void setObject_java_time_ZonedDateTime() throws SQLException {
         String zonedDateTimeString = "2020-06-02T20:58+02:00[Europe/Amsterdam]";
-        setStringExpectations(zonedDateTimeString, encoding);
-
         ZonedDateTime zonedDateTime = ZonedDateTime.parse(zonedDateTimeString);
 
         field.setObject(zonedDateTime);
+
+        verifySetString(zonedDateTimeString, encoding);
     }
 
     @Test
-    public void getObject_java_time_ZonedDateTime() throws SQLException {
+    void getObject_java_time_ZonedDateTime() throws SQLException {
         String zonedDateTimeString = "2020-06-02T20:58+02:00[Europe/Amsterdam]";
         ZonedDateTime expectedZonedDateTime = ZonedDateTime.parse(zonedDateTimeString);
         toReturnStringExpectations(zonedDateTimeString, encoding);
@@ -801,7 +803,7 @@ public class FBStringFieldTest extends BaseJUnit4TestFBField<FBStringField, Stri
     }
 
     @Override
-    protected String getNonNullObject() {
+    String getNonNullObject() {
         return TEST_STRING_SHORT;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,22 +23,20 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.jdbc.JaybirdTypeCodes;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Parametrized test for {@link JdbcTypeConverter}.
@@ -46,26 +44,14 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-@RunWith(Parameterized.class)
-public class JdbcTypeConverterTest {
+class JdbcTypeConverterTest {
 
     private static final RowDescriptorBuilder rowDescriptorBuilder = new RowDescriptorBuilder(1,
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8)));
-    private final FieldDescriptor fieldDescriptor;
-    private final int expectedJdbcType;
-    private final int metadataType;
 
-    public JdbcTypeConverterTest(FieldDescriptor fieldDescriptor, Integer metadataType, Integer expectedJdbcType) {
-        this.metadataType = metadataType;
-        assertEquals("Only use non-nullable types", 0, (fieldDescriptor.getType() & 1));
-        this.fieldDescriptor = fieldDescriptor;
-        this.expectedJdbcType = expectedJdbcType;
-    }
-
-    @Parameterized.Parameters(name = "Field: {0}, metadata: {1}; expected: {2}")
-    public static Collection<Object[]> testData() {
+    static Stream<Arguments> testData() {
         // Note: only use non-nullable test cases, nullable is tested through testFromFirebirdToJdbcTypeNullableBitSet
-        return Arrays.asList(
+        return Stream.of(
                 create(SQL_TEXT, CS_NONE, 0, char_type, Types.CHAR),
                 create(SQL_TEXT, CS_BINARY, 0, char_type, Types.BINARY),
                 create(SQL_VARYING, CS_NONE, 0, varchar_type, Types.VARCHAR),
@@ -110,13 +96,16 @@ public class JdbcTypeConverterTest {
         );
     }
 
-    @Test
-    public void testToJdbcType() {
+    @ParameterizedTest(name = "{index}: Field: {0}; expected: {2}")
+    @MethodSource("testData")
+    void testToJdbcType(FieldDescriptor fieldDescriptor, Integer ignored, Integer expectedJdbcType) {
         assertEquals(expectedJdbcType, JdbcTypeConverter.toJdbcType(fieldDescriptor));
     }
 
-    @Test
-    public void testFromFirebirdToJdbcTypeNullableBitSet() {
+    @ParameterizedTest(name = "{index}: Field: {0}; expected: {2}")
+    @MethodSource("testData")
+    void testFromFirebirdToJdbcTypeNullableBitSet(
+            FieldDescriptor fieldDescriptor, Integer ignored, Integer expectedJdbcType) {
         assumeThat("ROWID detection not possible for fromFirebirdToJdbcType",
                 expectedJdbcType, not(equalTo(Types.ROWID)));
 
@@ -128,8 +117,9 @@ public class JdbcTypeConverterTest {
         assertEquals(expectedJdbcType, JdbcTypeConverter.fromFirebirdToJdbcType(nullableFirebirdType, subType, scale));
     }
 
-    @Test
-    public void testFromMetaDataToJdbcType() {
+    @ParameterizedTest(name = "{index}: Field: {0}, metadata: {1}; expected: {2}")
+    @MethodSource("testData")
+    void testFromMetaDataToJdbcType(FieldDescriptor fieldDescriptor, Integer metadataType, Integer expectedJdbcType) {
         assumeThat("Metadata type unknown for Firebird type " + fieldDescriptor.getType(),
                 metadataType, not(equalTo(-1)));
         int subType = fieldDescriptor.getSubType();
@@ -138,8 +128,9 @@ public class JdbcTypeConverterTest {
         assertEquals(expectedJdbcType, JdbcTypeConverter.fromMetaDataToJdbcType(metadataType, subType, scale));
     }
 
-    @Test
-    public void testFromMetaDataToFirebirdType() {
+    @ParameterizedTest(name = "{index}: Field: {0}, expected: {1}")
+    @MethodSource("testData")
+    void testFromMetaDataToFirebirdType(FieldDescriptor fieldDescriptor, Integer metadataType, Integer ignored) {
         assumeThat("Metadata type unknown for Firebird type " + fieldDescriptor.getType(),
                 metadataType, not(equalTo(-1)));
 
@@ -155,22 +146,25 @@ public class JdbcTypeConverterTest {
      * @param jdbcType Expected JDBC type
      * @return Test data
      */
-    private static Object[] create(int type, int subtype, int scale, int metadataType, int jdbcType) {
+    private static Arguments create(int type, int subtype, int scale, int metadataType, int jdbcType) {
+        assertEquals(0, (type & 1), "Only use non-nullable types");
         FieldDescriptor fieldDescriptor = rowDescriptorBuilder
                 .setType(type)
                 .setSubType(subtype)
                 .setScale(scale)
+                .setOriginalName("DUMMY")
                 .toFieldDescriptor();
-        return new Object[] { fieldDescriptor, metadataType, jdbcType };
+        return Arguments.of(fieldDescriptor, metadataType, jdbcType);
     }
 
-    private static Object[] createDbKey(int jdbcType) {
+    @SuppressWarnings("SameParameterValue")
+    private static Arguments createDbKey(int jdbcType) {
         FieldDescriptor fieldDescriptor = rowDescriptorBuilder
                 .setType(ISCConstants.SQL_TEXT)
                 .setSubType(ISCConstants.CS_BINARY)
                 .setOriginalName("DB_KEY")
                 .toFieldDescriptor();
-        return new Object[] { fieldDescriptor, -1, jdbcType };
+        return Arguments.of(fieldDescriptor, -1, jdbcType);
     }
 
 }

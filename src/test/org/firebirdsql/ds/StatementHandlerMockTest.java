@@ -24,199 +24,118 @@ import java.sql.Statement;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.jmock.Expectations;
-import org.jmock.Sequence;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.lib.concurrent.Synchroniser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
- * Tests for {@link StatementHandler} using jMock.
+ * Tests for {@link StatementHandler} using mocks.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class StatementHandlerMockTest {
+@ExtendWith(MockitoExtension.class)
+class StatementHandlerMockTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    {
-        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-        context.setThreadingPolicy(new Synchroniser());
-    }
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @Mock
+    private PooledConnectionHandler conHandler;
+    @Mock
+    private Statement statement;
+    @InjectMocks
+    private StatementHandler handler;
 
     /**
-     * Closing the statement proxy for a second time should not throw an
-     * exception.
-     * 
-     * @throws SQLException
+     * Closing the statement proxy for a second time should not throw an exception.
      */
     @Test
-    public void testProxyDoubleClose_allowed() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(conHandler);
-                ignoring(statement);
-            }
-        });
-
+    void testProxyDoubleClose_allowed() throws SQLException {
         Statement proxy = handler.getProxy();
         proxy.close();
         // Expectation: no exception for double close
-        proxy.close();
+        assertDoesNotThrow(proxy::close);
     }
 
     /**
      * Calling any Statement method (except isClosed() and close()) on a proxy
      * that was closed itself should throw an SQLException mentioning the
      * statement was closed; the owner should not be notified of the exception.
-     * 
+     *
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosedProxy_throwsException() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-
-        context.checking(new Expectations() {
-            {
-                oneOf(statement).close();
-                oneOf(conHandler).forgetStatement(handler);
-                never(conHandler).statementErrorOccurred(with(equal(handler)),
-                        with(any(SQLException.class)));
-            }
-        });
-
+    void testClosedProxy_throwsException() throws SQLException {
         Statement proxy = handler.getProxy();
         proxy.close();
+        verify(statement).close();
+        verify(conHandler).forgetStatement(handler);
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID));
-
-        proxy.getFetchSize();
+        SQLException exception = assertThrows(SQLException.class, proxy::getFetchSize);
+        assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_STATEMENT_ID));
+        verify(conHandler, never()).statementErrorOccurred(eq(handler), any(SQLException.class));
     }
 
     /**
-     * Calling a Statement method on an open proxy should notify the owner of
-     * the occurrence of an exception.
-     * 
-     * @throws SQLException
+     * Calling a Statement method on an open proxy should notify the owner of the occurrence of an exception.
      */
     @Test
-    public void testException_notify() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-        final Sequence exceptionSequence = context.sequence("exceptionSequence");
-
-        context.checking(new Expectations() {
-            {
-                SQLException ex = new FBSQLException("Mock Exception");
-                oneOf(statement).getFetchSize();
-                will(throwException(ex));
-                inSequence(exceptionSequence);
-                oneOf(conHandler).statementErrorOccurred(handler, ex);
-                inSequence(exceptionSequence);
-            }
-        });
-
+    void testException_notify() throws SQLException {
         Statement proxy = handler.getProxy();
+        SQLException testException = new FBSQLException("Mock Exception");
+        when(statement.getFetchSize()).thenThrow(testException);
 
-        expectedException.expect(SQLException.class);
-
-        proxy.getFetchSize();
+        SQLException exception = assertThrows(SQLException.class, proxy::getFetchSize);
+        assertSame(testException, exception);
+        verify(conHandler).statementErrorOccurred(handler, testException);
     }
 
     @Test
-    public void testStatementGetConnection_IsProxyConnection() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final Connection connectionProxy = context.mock(Connection.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-        
-        context.checking(new Expectations() {
-            {
-                oneOf(conHandler).getProxy(); will(returnValue(connectionProxy));
-            }
-        });
-        
+    void testStatementGetConnection_IsProxyConnection(@Mock Connection connectionProxy) throws SQLException {
         Statement proxy = handler.getProxy();
-        
+        when(conHandler.getProxy()).thenReturn(connectionProxy);
+
         Connection con = proxy.getConnection();
-        assertSame("Statement.getConnection should return the Connection-proxy of the PooledConnectionHandler", connectionProxy, con);
+        assertSame(connectionProxy, con,
+                "Statement.getConnection should return the Connection-proxy of the PooledConnectionHandler");
     }
-    
+
     /**
-     * The isClosed() method of the StatementHandler and its proxy should return
-     * <code>true</code> after closing the Handler.
+     * The isClosed() method of the StatementHandler and its proxy should return {@code true} after closing the Handler.
      * <p>
-     * As a secondary test, checks 1) if the wrapped statement is closed and 2)
-     * if owner is notified of statement close.
+     * As a secondary test, checks 1) if the wrapped statement is closed and 2) if owner is notified of statement close.
      * </p>
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testHandlerClose_IsClosed() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-
-        context.checking(new Expectations() {
-            {
-                oneOf(statement).close();
-                oneOf(conHandler).forgetStatement(handler);
-            }
-        });
-
+    void testHandlerClose_IsClosed() throws SQLException {
         Statement proxy = handler.getProxy();
         handler.close();
-        assertTrue("Closed handler should report isClosed() true", handler.isClosed());
-        assertTrue("Proxy of closed handler should report isClosed() true", proxy.isClosed());
+        assertTrue(handler.isClosed(), "Closed handler should report isClosed() true");
+        assertTrue(proxy.isClosed(), "Proxy of closed handler should report isClosed() true");
+        verify(statement).close();
+        verify(conHandler).forgetStatement(handler);
     }
 
     /**
-     * The isClosed() method of the StatementHandler and its proxy should return
-     * <code>true</code> after closing the proxy.
+     * The isClosed() method of the StatementHandler and its proxy should return {@code true} after closing the proxy.
      * <p>
-     * As a secondary test, checks 1) if the wrapped statement is closed and 2)
-     * if owner is notified of statement close.
+     * As a secondary test, checks 1) if the wrapped statement is closed and 2) if owner is notified of statement close.
      * </p>
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testProxyClose_IsClosed() throws SQLException {
-        final PooledConnectionHandler conHandler = context.mock(PooledConnectionHandler.class);
-        final Statement statement = context.mock(Statement.class);
-        final StatementHandler handler = new StatementHandler(conHandler, statement);
-
-        context.checking(new Expectations() {
-            {
-                oneOf(statement).close();
-                oneOf(conHandler).forgetStatement(handler);
-            }
-        });
-
+    void testProxyClose_IsClosed() throws SQLException {
         Statement proxy = handler.getProxy();
         proxy.close();
-        assertTrue("Handler of closed proxy should report isClosed() true", handler.isClosed());
-        assertTrue("Closed proxy should report isClosed() true", proxy.isClosed());
+        assertTrue(handler.isClosed(), "Handler of closed proxy should report isClosed() true");
+        assertTrue(proxy.isClosed(), "Closed proxy should report isClosed() true");
+        verify(statement).close();
+        verify(conHandler).forgetStatement(handler);
     }
 
 }

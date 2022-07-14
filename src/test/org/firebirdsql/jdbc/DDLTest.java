@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,14 +28,15 @@ import java.sql.Statement;
 
 import static org.firebirdsql.common.DdlHelper.executeDropTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * This test case checks if DDL statements are executed correctly.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class DDLTest extends FBJUnit4TestBase {
+class DDLTest {
+
     private static final String CREATE_MAIN_TABLE = ""
             + "CREATE TABLE main_table ("
             + "  id INTEGER NOT NULL PRIMARY KEY"
@@ -56,6 +58,9 @@ public class DDLTest extends FBJUnit4TestBase {
     private static final String DROP_MAIN_TABLE =
             "DROP TABLE main_table";
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
+
     private static void executeUpdate(Connection connection, String sql) throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate(sql);
@@ -63,7 +68,7 @@ public class DDLTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testFKWithAutoCommit() throws Exception {
+    void testFKWithAutoCommit() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             executeDropTable(connection, DROP_DETAIL_TABLE);
             executeDropTable(connection, DROP_MAIN_TABLE);
@@ -71,12 +76,7 @@ public class DDLTest extends FBJUnit4TestBase {
             executeUpdate(connection, CREATE_MAIN_TABLE);
             executeUpdate(connection, CREATE_DETAIL_TABLE);
 
-            try {
-                executeUpdate(connection, ADD_FOREIGN_KEY);
-            } catch (SQLException sqlex) {
-                sqlex.printStackTrace();
-                fail("Should add foreign key constraint.");
-            }
+            assertDoesNotThrow(() -> executeUpdate(connection, ADD_FOREIGN_KEY), "Should add foreign key constraint");
 
             executeDropTable(connection, DROP_DETAIL_TABLE);
             executeDropTable(connection, DROP_MAIN_TABLE);
@@ -84,7 +84,7 @@ public class DDLTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testFKWithTx() throws Exception {
+    void testFKWithTx() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(false);
 
@@ -100,13 +100,10 @@ public class DDLTest extends FBJUnit4TestBase {
             executeUpdate(connection, CREATE_DETAIL_TABLE);
             connection.commit();
 
-            try {
+            assertDoesNotThrow(() -> {
                 executeUpdate(connection, ADD_FOREIGN_KEY);
                 connection.commit();
-            } catch (SQLException sqlex) {
-                sqlex.printStackTrace();
-                fail("Should add foreign key constraint.");
-            }
+            }, "Should add foreign key constraint");
 
             connection.setAutoCommit(true);
 
@@ -116,7 +113,7 @@ public class DDLTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testFKMixed() throws Exception {
+    void testFKMixed() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             executeDropTable(connection, DROP_DETAIL_TABLE);
             executeDropTable(connection, DROP_MAIN_TABLE);
@@ -124,12 +121,7 @@ public class DDLTest extends FBJUnit4TestBase {
             executeUpdate(connection, CREATE_MAIN_TABLE);
             executeUpdate(connection, CREATE_DETAIL_TABLE);
 
-            try {
-                executeUpdate(connection, ADD_FOREIGN_KEY);
-            } catch (SQLException sqlex) {
-                sqlex.printStackTrace();
-                fail("Should add foreign key constraint.");
-            }
+            assertDoesNotThrow(() -> executeUpdate(connection, ADD_FOREIGN_KEY), "Should add foreign key constraint");
 
             connection.setAutoCommit(false);
 

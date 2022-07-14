@@ -20,27 +20,27 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FBShortField}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short> {
+class FBShortFieldTest extends BaseJUnit5TestFBField<FBShortField, Short> {
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_SHORT);
@@ -50,101 +50,99 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
 
     @Test
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
         toReturnShortExpectations(4);
 
         BigDecimal expectedValue = new BigDecimal(4);
-        assertEquals("Unexpected value for getBigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         toReturnShortExpectations(4);
 
         BigDecimal expectedValue = new BigDecimal(4);
-        assertEquals("Unexpected value for getObject(BigDecimal.class)",
-                expectedValue, field.getObject(BigDecimal.class));
+        assertEquals(expectedValue, field.getObject(BigDecimal.class),
+                "Unexpected value for getObject(BigDecimal.class)");
     }
 
     @Test
-    public void getBigDecimalNull() throws SQLException {
+    void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result", field.getBigDecimal());
+        assertNull(field.getBigDecimal(), "Expected null result");
     }
 
     @Test
-    public void getObject_BigDecimalNull() throws SQLException {
+    void getObject_BigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result for getObject(BigDecimal.class)", field.getObject(BigDecimal.class));
+        assertNull(field.getObject(BigDecimal.class), "Expected null result for getObject(BigDecimal.class)");
     }
 
     @Test
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
-        setShortExpectations(10);
-
+    void setBigDecimalNonNull() throws SQLException {
         field.setBigDecimal(BigDecimal.TEN);
+
+        verifySetShort(10);
     }
 
     /**
      * Test at maximum allowed value (Integer.MAX_VALUE)
      */
     @Test
-    public void setBigDecimal_MAX() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setBigDecimal_MAX() throws SQLException {
         field.setBigDecimal(new BigDecimal(Short.MAX_VALUE));
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     /**
      * Test at maximum allowed value (Integer.MAX_VALUE) plus fraction
      */
     @Test
-    public void setBigDecimal_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        BigDecimal testValue = new BigDecimal(Short.MAX_VALUE);
-        testValue = testValue.add(testValue.ulp());
+    void setBigDecimal_MAX_plus_fraction() {
+        BigDecimal maxValue = new BigDecimal(Short.MAX_VALUE);
+        BigDecimal testValue = maxValue.add(maxValue.ulp());
 
-        field.setBigDecimal(testValue);
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(testValue));
     }
 
     /**
      * Test at minimum allowed value (Integer.MIN_VALUE)
      */
     @Test
-    public void setBigDecimal_MIN() throws SQLException {
-        setShortExpectations(Short.MIN_VALUE);
-
+    void setBigDecimal_MIN() throws SQLException {
         field.setBigDecimal(new BigDecimal(Short.MIN_VALUE));
+
+        verifySetShort(Short.MIN_VALUE);
     }
 
     /**
      * Test at minimum allowed value (Integer.MIN_VALUE) minus fraction
      */
     @Test
-    public void setBigDecimal_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        BigDecimal testValue = new BigDecimal(Short.MIN_VALUE);
-        testValue = testValue.subtract(testValue.ulp());
+    void setBigDecimal_MIN_minus_fraction() {
+        BigDecimal minValue = new BigDecimal(Short.MIN_VALUE);
+        BigDecimal testValue = minValue.subtract(minValue.ulp());
 
-        field.setBigDecimal(testValue);
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(testValue));
     }
 
     @Test
-    @Ignore
+    @Disabled
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
         // TODO: Implement test for getBigDecimal(int)
     }
 
     @Test
-    public void setBigDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setBigDecimalNull() throws SQLException {
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
 
     /**
@@ -152,28 +150,28 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
         toReturnShortExpectations(1);
 
-        assertTrue("Expected true for getBoolean with field value 1", field.getBoolean());
+        assertTrue(field.getBoolean(), "Expected true for getBoolean with field value 1");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         toReturnShortExpectations(1);
 
-        assertTrue("Expected true for getObject(Boolean.class) with field value 1", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Expected true for getObject(Boolean.class) with field value 1");
     }
 
     /**
      * Test for value for false with value zero
      */
     @Test
-    public void getBooleanNonNull_false_zero() throws SQLException {
+    void getBooleanNonNull_false_zero() throws SQLException {
         toReturnShortExpectations(0);
 
-        assertFalse("Expected false for getBoolean with field value 0", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value 0");
     }
 
     /**
@@ -181,24 +179,24 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      * TODO: Check if this is according to spec
      */
     @Test
-    public void getBooleanNonNull_false_other() throws SQLException {
+    void getBooleanNonNull_false_other() throws SQLException {
         toReturnShortExpectations(513);
 
-        assertFalse("Expected false for getBoolean with field value other than 1 or 0", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value other than 1 or 0");
     }
 
     @Test
-    public void getBooleanNull() throws SQLException {
+    void getBooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertFalse("Expected false for getBoolean with field value null", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value null");
     }
 
     @Test
-    public void getObject_BooleanNull() throws SQLException {
+    void getObject_BooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertNull(field.getObject(Boolean.class), "Expected null for getObject(Boolean.class)");
     }
 
     /**
@@ -206,20 +204,20 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void setBoolean() throws SQLException {
-        setShortExpectations(1);
-
+    void setBoolean() throws SQLException {
         field.setBoolean(true);
+
+        verifySetShort(1);
     }
 
     /**
      * Tests with setting false
      */
     @Test
-    public void setBoolean_false() throws SQLException {
-        setShortExpectations(0);
-
+    void setBoolean_false() throws SQLException {
         field.setBoolean(false);
+
+        verifySetShort(0);
     }
 
     /**
@@ -227,256 +225,238 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         toReturnShortExpectations(114);
 
-        assertEquals("Unexpected value for getByte", 114, field.getByte());
+        assertEquals(114, field.getByte(), "Unexpected value for getByte");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         toReturnShortExpectations(114);
 
-        assertEquals("Unexpected value for getObject(Byte.class)", 114, (byte) field.getObject(Byte.class));
+        assertEquals(114, (byte) field.getObject(Byte.class), "Unexpected value for getObject(Byte.class)");
     }
 
     /**
      * Tests getByte with maximum value allowed (Byte.MAX_VALUE).
      */
     @Test
-    public void getByte_MAX() throws SQLException {
+    void getByte_MAX() throws SQLException {
         toReturnShortExpectations(Byte.MAX_VALUE);
 
-        assertEquals("Unexpected value for getByte", 127, field.getByte());
+        assertEquals(127, field.getByte(), "Unexpected value for getByte");
     }
 
     /**
      * Tests getByte with maximum value allowed (Byte.MAX_VALUE) plus one.
      */
     @Test
-    public void getByte_MAX_plus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByte_MAX_plus_one() {
         toReturnShortExpectations(Byte.MAX_VALUE + 1);
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     /**
      * Tests getByte with minimum value allowed (Byte.MIN_VALUE).
      */
     @Test
-    public void getByte_MIN() throws SQLException {
+    void getByte_MIN() throws SQLException {
         toReturnShortExpectations(Byte.MIN_VALUE);
 
-        assertEquals("Unexpected value for getByte", -128, field.getByte());
+        assertEquals(-128, field.getByte(), "Unexpected value for getByte");
     }
 
     /**
      * Tests getByte with minimum value allowed (Byte.MIN_VALUE) minus one.
      */
     @Test
-    public void getByte_MIN_minus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByte_MIN_minus_one() {
         toReturnShortExpectations(Byte.MIN_VALUE - 1);
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     @Test
-    public void getByteNull() throws SQLException {
+    void getByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getByte for null", 0, field.getByte());
+        assertEquals(0, field.getByte(), "Unexpected value for getByte for null");
     }
 
     @Test
-    public void getObject_ByteNull() throws SQLException {
+    void getObject_ByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Byte.class)", field.getObject(Byte.class));
+        assertNull(field.getObject(Byte.class), "Expected null for getObject(Byte.class)");
     }
 
     @Test
     @Override
-    public void setByte() throws SQLException {
-        setShortExpectations(-54);
-
+    void setByte() throws SQLException {
         field.setByte((byte)-54);
+
+        verifySetShort(-54);
     }
 
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         toReturnShortExpectations(2);
 
-        assertEquals("Unexpected value for getDouble", 2.0, field.getDouble(), 0);
+        assertEquals(2.0, field.getDouble(), 0, "Unexpected value for getDouble");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         toReturnShortExpectations(2);
 
-        assertEquals("Unexpected value for getObject(Double.class)", 2.0, field.getObject(Double.class), 0);
+        assertEquals(2.0, field.getObject(Double.class), 0, "Unexpected value for getObject(Double.class)");
     }
 
     @Test
-    public void getDoubleNull() throws SQLException {
+    void getDoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getDouble for null", 0, field.getDouble(), 0);
+        assertEquals(0, field.getDouble(), 0, "Unexpected value for getDouble for null");
     }
 
     @Test
-    public void getObject_DoubleNull() throws SQLException {
+    void getObject_DoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Double.class)", field.getObject(Double.class));
+        assertNull(field.getObject(Double.class), "Expected null for getObject(Double.class)");
     }
 
     @Test
     @Override
-    public void setDouble() throws SQLException {
-        setShortExpectations(915);
-
+    void setDouble() throws SQLException {
         field.setDouble(915.1245785);
+
+        verifySetShort(915);
     }
 
     @Test
-    public void setDouble_MAX() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setDouble_MAX() throws SQLException {
         field.setDouble(Short.MAX_VALUE);
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     @Test
-    public void setDouble_MIN() throws SQLException {
-        setShortExpectations(Short.MIN_VALUE);
-
+    void setDouble_MIN() throws SQLException {
         field.setDouble(Short.MIN_VALUE);
+
+        verifySetShort(Short.MIN_VALUE);
     }
 
     @Test
-    public void setDouble_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setDouble(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE));
+    void setDouble_MAX_plus_fraction() {
+        assertThrows(TypeConversionException.class, () -> field.setDouble(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE)));
     }
 
     @Test
-    public void setDouble_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setDouble(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE));
+    void setDouble_MIN_minus_fraction() {
+        assertThrows(TypeConversionException.class, () -> field.setDouble(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE)));
     }
 
     @Test
-    public void setDouble_NaN() throws SQLException {
-        setShortExpectations(0);
-
+    void setDouble_NaN() throws SQLException {
         field.setDouble(Double.NaN);
+
+        verifySetShort(0);
     }
 
     @Test
-    public void setDouble_posInf() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setDouble(Double.POSITIVE_INFINITY);
+    void setDouble_posInf() {
+        assertThrows(TypeConversionException.class, () -> field.setDouble(Double.POSITIVE_INFINITY));
     }
 
     @Test
-    public void setDouble_negInf() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setDouble(Double.NEGATIVE_INFINITY);
+    void setDouble_negInf() {
+        assertThrows(TypeConversionException.class, () -> field.setDouble(Double.NEGATIVE_INFINITY));
     }
 
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         toReturnShortExpectations(1247);
 
-        assertEquals("Unexpected value for getFloat", 1247f, field.getFloat(), 0);
+        assertEquals(1247f, field.getFloat(), 0, "Unexpected value for getFloat");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         toReturnShortExpectations(1247);
 
-        assertEquals("Unexpected value for getObject(Float.class)", 1247f, field.getObject(Float.class), 0);
+        assertEquals(1247f, field.getObject(Float.class), 0, "Unexpected value for getObject(Float.class)");
     }
 
     @Test
-    public void getFloatNull() throws SQLException {
+    void getFloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getFloat for null", 0, field.getFloat(), 0);
+        assertEquals(0, field.getFloat(), 0, "Unexpected value for getFloat for null");
     }
 
     @Test
-    public void getObject_FloatNull() throws SQLException {
+    void getObject_FloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Float.class)", field.getObject(Float.class));
+        assertNull(field.getObject(Float.class), "Expected null for getObject(Float.class)");
     }
 
     @Test
     @Override
-    public void setFloat() throws SQLException {
-        setShortExpectations(15);
-
+    void setFloat() throws SQLException {
         field.setFloat(15f);
+
+        verifySetShort(15);
     }
 
     @Test
-    public void setFloat_MAX() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setFloat_MAX() throws SQLException {
         field.setFloat(Short.MAX_VALUE);
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     @Test
-    public void setFloat_MIN() throws SQLException {
-        setShortExpectations(Short.MIN_VALUE);
-
+    void setFloat_MIN() throws SQLException {
         field.setFloat(Short.MIN_VALUE);
+
+        verifySetShort(Short.MIN_VALUE);
     }
 
     @Test
-    public void setFloat_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setFloat(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE));
+    void setFloat_MAX_plus_fraction() {
+        assertThrows(TypeConversionException.class, () -> field.setFloat(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE)));
     }
 
     @Test
-    public void setFloat_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setFloat(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE));
+    void setFloat_MIN_minus_fraction() {
+        assertThrows(TypeConversionException.class, () -> field.setFloat(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE)));
     }
 
     @Test
-    public void setFloat_NaN() throws SQLException {
-        setShortExpectations(0);
-
+    void setFloat_NaN() throws SQLException {
         field.setFloat(Float.NaN);
+
+        verifySetShort(0);
     }
 
     @Test
-    public void setFloat_posInf() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setFloat(Float.POSITIVE_INFINITY);
+    void setFloat_posInf() {
+        assertThrows(TypeConversionException.class, () -> field.setFloat(Float.POSITIVE_INFINITY));
     }
 
     @Test
-    public void setFloat_negInf() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setFloat(Float.NEGATIVE_INFINITY);
+    void setFloat_negInf() {
+        assertThrows(TypeConversionException.class, () -> field.setFloat(Float.NEGATIVE_INFINITY));
     }
 
     /**
@@ -484,81 +464,77 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         toReturnShortExpectations(12457);
 
-        assertEquals("Unexpected value for getInt", 12457, field.getInt());
+        assertEquals(12457, field.getInt(), "Unexpected value for getInt");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         toReturnShortExpectations(12457);
 
-        assertEquals("Unexpected value for getObject(Integer.class)", 12457, (int) field.getObject(Integer.class));
+        assertEquals(12457, (int) field.getObject(Integer.class), "Unexpected value for getObject(Integer.class)");
     }
 
     /**
      * Tests value at maximum allowed (Integer.MAX_VALUE).
      */
     @Test
-    public void getInt_MAX() throws SQLException {
+    void getInt_MAX() throws SQLException {
         toReturnShortExpectations(Short.MAX_VALUE);
 
-        assertEquals("Unexpected value for getInt", Short.MAX_VALUE, field.getInt());
+        assertEquals(Short.MAX_VALUE, field.getInt(), "Unexpected value for getInt");
     }
 
     /**
      * Tests value at minimum allowed (Integer.MIN_VALUE).
      */
     @Test
-    public void getInt_MIN() throws SQLException {
+    void getInt_MIN() throws SQLException {
         toReturnShortExpectations(Short.MIN_VALUE);
 
-        assertEquals("Unexpected value for getInt", Short.MIN_VALUE, field.getInt());
+        assertEquals(Short.MIN_VALUE, field.getInt(), "Unexpected value for getInt");
     }
 
     @Test
-    public void getIntNull() throws SQLException {
+    void getIntNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getInt for null", 0, field.getInt());
+        assertEquals(0, field.getInt(), "Unexpected value for getInt for null");
     }
 
     @Test
-    public void getObject_IntegerNull() throws SQLException {
+    void getObject_IntegerNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Integer.class)", field.getObject(Integer.class));
+        assertNull(field.getObject(Integer.class), "Expected null for getObject(Integer.class)");
     }
 
     @Test
     @Override
-    public void setInteger() throws SQLException {
-        setShortExpectations(5323);
-
+    void setInteger() throws SQLException {
         field.setInteger(5323);
+
+        verifySetShort(5323);
     }
 
     @Test
-    public void setInteger_MAX() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setInteger_MAX() throws SQLException {
         field.setInteger(Short.MAX_VALUE);
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     @Test
-    public void setInteger_MAX_plus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setInteger(Short.MAX_VALUE + 1);
+    void setInteger_MAX_plus_one() {
+        assertThrows(TypeConversionException.class, () -> field.setInteger(Short.MAX_VALUE + 1));
     }
 
     @Test
-    public void setInteger_MIN_minus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setInteger(Short.MIN_VALUE - 1);
+    void setInteger_MIN_minus_one() {
+        assertThrows(TypeConversionException.class, () -> field.setInteger(Short.MIN_VALUE - 1));
     }
 
     /**
@@ -566,75 +542,72 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         toReturnShortExpectations(Short.MAX_VALUE);
 
         long expectedValue = Short.MAX_VALUE;
-        assertEquals("Unexpected value for getLong", expectedValue, field.getLong());
+        assertEquals(expectedValue, field.getLong(), "Unexpected value for getLong");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         toReturnShortExpectations(Short.MAX_VALUE);
 
         long expectedValue = Short.MAX_VALUE;
-        assertEquals("Unexpected value for getLong", expectedValue, (long) field.getObject(Long.class));
+        assertEquals(expectedValue, (long) field.getObject(Long.class), "Unexpected value for getLong");
     }
 
     @Test
-    public void getLongNull() throws SQLException {
+    void getLongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getLong for null", 0, field.getLong());
+        assertEquals(0, field.getLong(), "Unexpected value for getLong for null");
     }
 
     @Test
-    public void getObject_LongNull() throws SQLException {
+    void getObject_LongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Long.class)", field.getObject(Long.class));
+        assertNull(field.getObject(Long.class), "Expected null for getObject(Long.class)");
     }
 
     @Test
     @Override
-    public void setLong() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setLong() throws SQLException {
         field.setLong(Short.MAX_VALUE);
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     @Test
-    public void setLong_MAX_plus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setLong(Short.MAX_VALUE + 1L);
+    void setLong_MAX_plus_one() {
+        assertThrows(TypeConversionException.class, () -> field.setLong(Short.MAX_VALUE + 1L));
     }
 
     @Test
-    public void setLong_MIN_minus_one() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setLong(Short.MIN_VALUE - 1L);
+    void setLong_MIN_minus_one() {
+        assertThrows(TypeConversionException.class, () -> field.setLong(Short.MIN_VALUE - 1L));
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnShortExpectations(Short.MIN_VALUE);
 
         // JDBC expects type Integer for Types.SMALLINT
         Integer expectedValue = (int) Short.MIN_VALUE;
-        assertEquals("Unexpected value for getObject", expectedValue, field.getObject());
+        assertEquals(expectedValue, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setShortExpectations(4534);
+    void setObjectNonNull() throws SQLException {
         Integer setValue = 4534;
 
         field.setObject(setValue);
+        
+        verifySetShort(4534);
     }
 
     // TODO Add additional object tests (eg with Integer, Long, Float, BigDecimal etc objects).
@@ -644,92 +617,92 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         toReturnShortExpectations(-14578);
 
-        assertEquals("Unexpected value for getShort", -14578, field.getShort());
+        assertEquals(-14578, field.getShort(), "Unexpected value for getShort");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         toReturnShortExpectations(-14578);
 
-        assertEquals("Unexpected value for getShort", -14578, (short) field.getObject(Short.class));
+        assertEquals(-14578, (short) field.getObject(Short.class), "Unexpected value for getShort");
     }
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE).
      */
     @Test
-    public void getShort_MAX() throws SQLException {
+    void getShort_MAX() throws SQLException {
         toReturnShortExpectations(Short.MAX_VALUE);
 
-        assertEquals("Unexpected value for getShort", Short.MAX_VALUE, field.getShort());
+        assertEquals(Short.MAX_VALUE, field.getShort(), "Unexpected value for getShort");
     }
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE).
      */
     @Test
-    public void getShort_MIN() throws SQLException {
+    void getShort_MIN() throws SQLException {
         toReturnShortExpectations(Short.MIN_VALUE);
 
-        assertEquals("Unexpected value for getShort", Short.MIN_VALUE, field.getShort());
+        assertEquals(Short.MIN_VALUE, field.getShort(), "Unexpected value for getShort");
     }
 
     @Test
-    public void getShortNull() throws SQLException {
+    void getShortNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getShort for null", 0, field.getShort());
+        assertEquals(0, field.getShort(), "Unexpected value for getShort for null");
     }
 
     @Test
-    public void getObject_ShortNull() throws SQLException {
+    void getObject_ShortNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Short.class)", field.getObject(Short.class));
+        assertNull(field.getObject(Short.class), "Expected null for getObject(Short.class)");
     }
 
     @Test
     @Override
-    public void setShort() throws SQLException {
-        setShortExpectations(Short.MIN_VALUE);
-
+    void setShort() throws SQLException {
         field.setShort(Short.MIN_VALUE);
+
+        verifySetShort(Short.MIN_VALUE);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnShortExpectations(-14578);
 
         String expectedValue = String.valueOf(-14578);
-        assertEquals("Unexpected value for getString", expectedValue, field.getString());
+        assertEquals(expectedValue, field.getString(), "Unexpected value for getString");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnShortExpectations(-14578);
 
         String expectedValue = String.valueOf(-14578);
-        assertEquals("Unexpected value for getString", expectedValue, field.getObject(String.class));
+        assertEquals(expectedValue, field.getObject(String.class), "Unexpected value for getString");
     }
 
     @Test
-    public void getStringNull() throws SQLException {
+    void getStringNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getString for null", field.getString());
+        assertNull(field.getString(), "Unexpected value for getString for null");
     }
 
     @Test
-    public void getObject_StringNull() throws SQLException {
+    void getObject_StringNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(String.class)", field.getObject(String.class));
+        assertNull(field.getObject(String.class), "Expected null for getObject(String.class)");
     }
 
     /**
@@ -737,118 +710,115 @@ public class FBShortFieldTest extends BaseJUnit4TestFBField<FBShortField, Short>
      */
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
-        setShortExpectations(5145);
-
+    void setStringNonNull() throws SQLException {
         field.setString("5145");
+
+        verifySetShort(5145);
     }
 
     @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-
+    void setStringNull() throws SQLException {
         field.setString(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setString_noShort() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        field.setString("no short");
+    void setString_noShort() {
+        assertThrows(TypeConversionException.class, () -> field.setString("no short"));
     }
 
     @Test
     @Override
-    public void getObject_BigInteger() throws SQLException {
+    void getObject_BigInteger() throws SQLException {
         final short testValue = -14578;
         toReturnShortExpectations(testValue);
 
-        assertEquals("Unexpected value for getObject(BigInteger.class)",
-                BigInteger.valueOf(testValue), field.getObject(BigInteger.class));
+        assertEquals(BigInteger.valueOf(testValue), field.getObject(BigInteger.class),
+                "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
-    public void getObject_BigInteger_null() throws SQLException {
+    void getObject_BigInteger_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+        assertNull(field.getObject(BigInteger.class), "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
     @Override
-    public void setObject_BigInteger() throws SQLException {
-        setShortExpectations(10);
-
+    void setObject_BigInteger() throws SQLException {
         field.setObject(BigInteger.TEN);
+
+        verifySetShort(10);
     }
 
     @Test
-    public void setObject_BigInteger_MAX() throws SQLException {
-        setShortExpectations(Short.MAX_VALUE);
-
+    void setObject_BigInteger_MAX() throws SQLException {
         field.setObject(BigInteger.valueOf(Short.MAX_VALUE));
+
+        verifySetShort(Short.MAX_VALUE);
     }
 
     @Test
-    public void setObject_BigInteger_MAX_plus_1() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE));
+    void setObject_BigInteger_MAX_plus_1() {
+        assertThrows(TypeConversionException.class,
+                () -> field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)));
     }
 
     @Test
-    public void setObject_BigInteger_MIN() throws SQLException {
-        setShortExpectations(Short.MIN_VALUE);
-
+    void setObject_BigInteger_MIN() throws SQLException {
         field.setObject(BigInteger.valueOf(Short.MIN_VALUE));
+
+        verifySetShort(Short.MIN_VALUE);
     }
 
     @Test
-    public void setObject_BigInteger_MIN_minus_1() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
+    void setObject_BigInteger_MIN_minus_1() {
+        assertThrows(TypeConversionException.class,
+                () -> field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE)));
     }
 
     @Test
-    public void setBigInteger_null() throws SQLException {
-        setNullExpectations();
-
+    void setBigInteger_null() throws SQLException {
         field.setBigInteger(null);
+
+        verifySetNull();
     }
 
     @Test
     @Override
-    public void getDecimalNonNull() throws SQLException {
+    void getDecimalNonNull() throws SQLException {
         toReturnShortExpectations(14278);
 
         Decimal128 expectedValue = Decimal128.valueOf("14278");
-        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+        assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 
     @Test
-    public void getDecimal_null() throws SQLException {
+    void getDecimal_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("expected null for getDecimal", field.getDecimal());
+        assertNull(field.getDecimal(), "expected null for getDecimal");
     }
 
     @Test
     @Override
-    public void setDecimalNonNull() throws SQLException {
-        setShortExpectations(10);
-
+    void setDecimalNonNull() throws SQLException {
         field.setDecimal(Decimal128.valueOf("10"));
+
+        verifySetShort(10);
     }
 
     @Test
-    public void setDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setDecimalNull() throws SQLException {
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Override
-    protected Short getNonNullObject() {
+    Short getNonNullObject() {
         return 1;
     }
 }

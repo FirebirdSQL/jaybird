@@ -26,78 +26,61 @@ import javax.sql.ConnectionEventListener;
 
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.sqlStateEquals;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link FBPooledConnection} using jMock.
+ * Tests for {@link FBPooledConnection} using mocks.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBPooledConnectionMockTest {
+@ExtendWith(MockitoExtension.class)
+class FBPooledConnectionMockTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
+    @Mock
+    private Connection physical;
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @InjectMocks
+    private FBPooledConnection pooled;
 
     /**
-     * Two logical connections obtained from a PooledConnection should be
-     * distinct.
-     * 
-     * @throws SQLException
+     * Two logical connections obtained from a PooledConnection should be distinct.
      */
     @Test
-    public void testLogicalConnectionDistinct() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-            }
-        });
-
+    void testLogicalConnectionDistinct() throws SQLException {
         Connection logical1 = pooled.getConnection();
         Connection logical2 = pooled.getConnection();
 
-        assertNotSame("Logical connections returned by FBPooledConnection should be different",
-                logical1, logical2);
+        assertNotSame(logical1, logical2, "Logical connections returned by FBPooledConnection should be different");
     }
 
     /**
-     * Obtaining a new logical connection should close the old logical
-     * connection.
-     * 
-     * @throws SQLException
+     * Obtaining a new logical connection should close the old logical connection.
      */
     @Test
-    public void testLogicalConnectionClosedOnNew() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-            }
-        });
-
+    void testLogicalConnectionClosedOnNew() throws SQLException {
         Connection logical1 = pooled.getConnection();
         // Precondition: logical1 is open
-        assertFalse("Logical connection should be open", logical1.isClosed());
+        assertFalse(logical1.isClosed(), "Logical connection should be open");
 
         // Obtaining new connection, should close logical1
         Connection logical2 = pooled.getConnection();
         // Postcondition: logical1 closed, logical2 open
-        assertTrue("Logical connection should be closed after obtaining new connection",
-                logical1.isClosed());
+        assertTrue(logical1.isClosed(), "Logical connection should be closed after obtaining new connection");
         assertFalse(logical2.isClosed());
 
         logical2.close();
@@ -106,195 +89,105 @@ public class FBPooledConnectionMockTest {
 
     /**
      * Closing the PooledConnection should close the logical connection
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosingPooledClosesLogical() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-            }
-        });
-
+    void testClosingPooledClosesLogical() throws SQLException {
         Connection logical = pooled.getConnection();
         // Precondition: logical is open
-        assertFalse("Logical connection should be open", logical.isClosed());
+        assertFalse(logical.isClosed(), "Logical connection should be open");
 
         pooled.close();
         // Postcondition: logical is closed
-        assertTrue("Logical connection should be closed if pooled connection is closed",
-                logical.isClosed());
+        assertTrue(logical.isClosed(), "Logical connection should be closed if pooled connection is closed");
     }
 
     /**
      * Closing the PooledConnection should close the physical connection
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosingPooledClosesPhysical() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                oneOf(physical).close();
-            }
-        });
-
+    void testClosingPooledClosesPhysical() throws SQLException {
         pooled.close();
+
+        verify(physical).close();
     }
 
     /**
      * Explicitly closing a logical connection should fire a connectionClosed to
      * the listener with the PooledConnection as source.
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosingLogicalFiresConnectionClosed() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        final FBPooledConnection pooled = new FBPooledConnection(physical);
-        final ConnectionEventListener cel = context.mock(ConnectionEventListener.class);
+    void testClosingLogicalFiresConnectionClosed(@Mock ConnectionEventListener cel) throws SQLException {
         pooled.addConnectionEventListener(cel);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-                oneOf(cel).connectionClosed(
-                        with(new ConnectionEventMatcher(pooled, aNull(SQLException.class))));
-            }
-        });
 
         Connection logical = pooled.getConnection();
         logical.close();
+
+        verify(cel).connectionClosed(argThat(new ConnectionEventMatcher(pooled, nullValue(SQLException.class))));
     }
 
     /**
      * Closing a logical connection by obtaining a new logical connection should
      * not fire a connectionClosed to the listener
-     * 
-     * @throws SQLException
      */
     @SuppressWarnings("unused")
     @Test
-    public void testClosingLogicalByObtainingNewDoesNotFireConnectionClosed() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        final FBPooledConnection pooled = new FBPooledConnection(physical);
-        final ConnectionEventListener cel = context.mock(ConnectionEventListener.class);
+    void testClosingLogicalByObtainingNewDoesNotFireConnectionClosed(@Mock ConnectionEventListener cel)
+            throws SQLException {
         pooled.addConnectionEventListener(cel);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-                never(cel).connectionClosed(with(any(ConnectionEvent.class)));
-            }
-        });
 
         Connection logical1 = pooled.getConnection();
         Connection logical2 = pooled.getConnection();
+        verify(cel, never()).connectionClosed(any(ConnectionEvent.class));
     }
 
     /**
-     * Closing the PooledConnection should not fire a connectionClosed to the
-     * listener.
-     * 
-     * @throws SQLException
+     * Closing the PooledConnection should not fire a connectionClosed to the listener.
      */
     @SuppressWarnings("unused")
     @Test
-    public void testClosingPooledDoesNotFireConnectionClosed() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        final FBPooledConnection pooled = new FBPooledConnection(physical);
-        final ConnectionEventListener cel = context.mock(ConnectionEventListener.class);
+    void testClosingPooledDoesNotFireConnectionClosed(@Mock ConnectionEventListener cel) throws SQLException {
         pooled.addConnectionEventListener(cel);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-                never(cel).connectionClosed(with(any(ConnectionEvent.class)));
-            }
-        });
 
         Connection logical = pooled.getConnection();
         pooled.close();
+        verify(cel, never()).connectionClosed(any(ConnectionEvent.class));
     }
 
     /**
-     * A fatal SQLException thrown during getConnection should fire a
-     * connectionErrorOccurred event.
-     * 
-     * @throws SQLException
+     * A fatal SQLException thrown during getConnection should fire a connectionErrorOccurred event.
      */
     @Test
-    public void testFatalExceptionFiresConnectionErrorOccurred() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        final FBPooledConnection pooled = new FBPooledConnection(physical);
-        final ConnectionEventListener cel = context.mock(ConnectionEventListener.class);
+    void testFatalExceptionFiresConnectionErrorOccurred(@Mock ConnectionEventListener cel) throws SQLException {
         pooled.addConnectionEventListener(cel);
 
-        context.checking(new Expectations() {
-            {
-                oneOf(physical).setAutoCommit(true);
-                will(throwException(new FBSQLException("Mock Exception",
-                        SQLStateConstants.SQL_STATE_CONNECTION_FAILURE)));
-                oneOf(cel).connectionErrorOccurred(
-                        with(new ConnectionEventMatcher(pooled, aNonNull(SQLException.class))));
-            }
-        });
+        doThrow(new FBSQLException("Mock Exception", SQLStateConstants.SQL_STATE_CONNECTION_FAILURE))
+                .when(physical).setAutoCommit(true);
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
+        SQLException exception = assertThrows(SQLException.class, () -> pooled.getConnection());
+        assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_FAILURE));
 
-        pooled.getConnection();
+        verify(cel).connectionErrorOccurred(argThat(new ConnectionEventMatcher(pooled, instanceOf(SQLException.class))));
     }
 
     /**
      * Obtaining a logical connection when the PooledConnection has been closed
      * should throw an SQLException with SQLstate 08003.
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testGetConnectionWhenClosed() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physical);
-            }
-        });
-
+    void testGetConnectionWhenClosed() throws SQLException {
         pooled.close();
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
-
-        pooled.getConnection();
+        SQLException exception = assertThrows(SQLException.class, () -> pooled.getConnection());
+        assertThat(exception, sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
     }
 
     /**
-     * When a logical connection is obtained, the physical connection should be
-     * reset to auto commit.
-     * 
-     * @throws SQLException
+     * When a logical connection is obtained, the physical connection should be reset to auto commit.
      */
     @Test
-    public void testGetConnectionRestoresAutoCommit() throws SQLException {
-        final Connection physical = context.mock(Connection.class);
-        FBPooledConnection pooled = new FBPooledConnection(physical);
-
-        context.checking(new Expectations() {
-            {
-                oneOf(physical).setAutoCommit(true);
-            }
-        });
-
+    void testGetConnectionRestoresAutoCommit() throws SQLException {
         pooled.getConnection();
+
+        verify(physical).setAutoCommit(true);
     }
 }

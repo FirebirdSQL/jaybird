@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,16 +20,13 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.firebirdsql.gds.ng.listeners.DatabaseListener;
-import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -37,119 +34,87 @@ import java.sql.SQLNonTransientException;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
-import static org.jmock.Expectations.returnValue;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob} that don't require
- * a connection to the database.
+ * Tests for {@link V10InputBlob} that don't require a connection to the database.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class V10InputBlobMockTest {
+@ExtendWith(MockitoExtension.class)
+class V10InputBlobMockTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
+    @Mock
     private FbWireDatabase db;
+    @Mock
     private FbWireTransaction transaction;
 
-    @Before
-    public void setUp() {
-        db = context.mock(FbWireDatabase.class);
-        transaction = context.mock(FbWireTransaction.class);
-        context.checking(new Expectations() {{
-            allowing(db).getSynchronizationObject();
-            will(returnValue(new Object()));
-            allowing(transaction).addTransactionListener(with(any(TransactionListener.class)));
-            allowing(transaction).addWeakTransactionListener(with(any(TransactionListener.class)));
-            allowing(db).addDatabaseListener(with(any(DatabaseListener.class)));
-            allowing(db).addWeakDatabaseListener(with(any(DatabaseListener.class)));
-        }});
+    @BeforeEach
+    void setUp() {
+        when(db.getSynchronizationObject()).thenReturn(new Object());
     }
 
-
     /**
-     * Test if calling {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#putSegment(byte[])} throws
-     * a {@link java.sql.SQLNonTransientException} with error {@link org.firebirdsql.gds.ISCConstants#isc_segstr_no_write}.
+     * Test if calling {@link V10InputBlob#putSegment(byte[])} throws a {@link SQLNonTransientException} with
+     * error {@link ISCConstants#isc_segstr_no_write}.
      */
     @Test
-    public void testPutSegment() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
+    void testPutSegment() {
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        SQLException exception = assertThrows(SQLNonTransientException.class,
+                () -> blob.putSegment(new byte[] { 1, 2, 3, 4 }));
+        assertThat(exception, allOf(
                 errorCodeEquals(ISCConstants.isc_segstr_no_write),
-                fbMessageStartsWith(ISCConstants.isc_segstr_no_write)
-        ));
-
-        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
-
-        blob.putSegment(new byte[] { 1, 2, 3, 4 });
+                fbMessageStartsWith(ISCConstants.isc_segstr_no_write)));
     }
 
     /**
-     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} with zero
-     * throws an exception
+     * Test if {@link V10InputBlob#getSegment(int)} with zero throws an exception.
      */
     @Test
-    public void testGetSegment_requestedSizeZero() throws Exception {
-        expectedException.expect(SQLException.class);
-        //noinspection RedundantTypeArguments
-        expectedException.expect(
-                message(startsWith("getSegment called with sizeRequested 0, should be > 0")));
-
+    void testGetSegment_requestedSizeZero() {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
-        blob.getSegment(0);
+        SQLException exception = assertThrows(SQLException.class, () -> blob.getSegment(0));
+        assertThat(exception, message(startsWith("getSegment called with sizeRequested 0, should be > 0")));
     }
 
     /**
-     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} with less than
-     * zero throws an exception
+     * Test if {@link V10InputBlob#getSegment(int)} with less than zero throws an exception.
      */
     @Test
-    public void testGetSegment_requestedSizeLessThanZero() throws Exception {
-        expectedException.expect(SQLException.class);
-        //noinspection RedundantTypeArguments
-        expectedException.expect(
-                message(startsWith("getSegment called with sizeRequested -1, should be > 0")));
-
+    void testGetSegment_requestedSizeLessThanZero() {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
-        blob.getSegment(-1);
+        SQLException exception = assertThrows(SQLException.class, () -> blob.getSegment(-1));
+        assertThat(exception, message(startsWith("getSegment called with sizeRequested -1, should be > 0")));
     }
 
     /**
-     * Test if {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob#getSegment(int)} on closed blob
-     * throws exception
+     * Test if {@link V10InputBlob#getSegment(int)} on closed blob throws exception.
      */
     @Test
-    public void testGetSegment_blobClosed() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
+    void testGetSegment_blobClosed() {
+        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
+
+        when(db.isAttached()).thenReturn(true);
+        when(transaction.getState()).thenReturn(TransactionState.ACTIVE);
+
+        SQLException exception = assertThrows(SQLNonTransientException.class, () -> blob.getSegment(1));
+        assertThat(exception, allOf(
                 errorCodeEquals(ISCConstants.isc_bad_segstr_handle),
-                fbMessageStartsWith(ISCConstants.isc_bad_segstr_handle)
-        ));
-
-        V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
-
-        final Expectations exp = new Expectations();
-        exp.oneOf(db).isAttached();
-        exp.will(returnValue(true));
-        exp.oneOf(transaction).getState();
-        exp.will(returnValue(TransactionState.ACTIVE));
-        context.checking(exp);
-
-        blob.getSegment(1);
+                fbMessageStartsWith(ISCConstants.isc_bad_segstr_handle)));
     }
 
     @Test
-    public void testIsEof_newBlob() {
+    void testIsEof_newBlob() {
         V10InputBlob blob = new V10InputBlob(db, transaction, null, 1);
 
-        assertTrue("Expected new input blob to be EOF", blob.isEof());
+        assertTrue(blob.isEof(), "Expected new input blob to be EOF");
     }
 }

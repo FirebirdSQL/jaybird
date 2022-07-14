@@ -20,17 +20,22 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.jmock.Expectations.returnValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.TransactionHelper}.
@@ -38,162 +43,71 @@ import static org.jmock.Expectations.returnValue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TransactionHelperTest {
+@ExtendWith(MockitoExtension.class)
+class TransactionHelperTest {
 
     private static final int TEST_ERROR_CODE = ISCConstants.isc_dsql_error;
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
     @Test
-    public void testTransactionActiveDefault_Active_noException() throws Exception {
+    void testTransactionActiveDefault_Active_noException() throws Exception {
         final FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
 
         TransactionHelper.checkTransactionActive(transaction);
     }
 
     @Test
-    public void testTransactionActiveDefault_null_exception() throws Exception {
-        expectDefaultNoTransactionException();
+    void testTransactionActiveDefault_null_exception() {
+        //noinspection ConstantConditions
+        assertDefaultNoTransactionException(() -> TransactionHelper.checkTransactionActive(null));
+    }
 
-        TransactionHelper.checkTransactionActive(null);
+    @ParameterizedTest
+    @EnumSource(names = { "ACTIVE" }, mode = EnumSource.Mode.EXCLUDE)
+    void testTransactionActiveDefault_exception(TransactionState transactionState) {
+        final FbTransaction transaction = setupTransaction(transactionState);
+        
+        assertDefaultNoTransactionException(()-> TransactionHelper.checkTransactionActive(transaction));
     }
 
     @Test
-    public void testTransactionActiveDefault_Preparing_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.PREPARING);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveDefault_Prepared_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.PREPARED);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveDefault_Committing_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.COMMITTING);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveDefault_Committed_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.COMMITTED);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveDefault_RollingBack_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ROLLING_BACK);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveDefault_RolledBack_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ROLLED_BACK);
-        expectDefaultNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_Active_noException() throws Exception {
+    void testTransactionActiveErrorCode_Active_noException() throws Exception {
         final FbTransaction transaction = setupTransaction(TransactionState.ACTIVE);
 
         TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
     }
 
     @Test
-    public void testTransactionActiveErrorCode_null_exception() throws Exception {
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(null, TEST_ERROR_CODE);
+    void testTransactionActiveErrorCode_null_exception() {
+        //noinspection ConstantConditions
+        assertErrorCodeNoTransactionException(() -> TransactionHelper.checkTransactionActive(null, TEST_ERROR_CODE));
     }
 
-    @Test
-    public void testTransactionActiveErrorCode_Preparing_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.PREPARING);
-        expectErrorCodeNoTransactionException();
+    @ParameterizedTest
+    @EnumSource(names = { "ACTIVE" }, mode = EnumSource.Mode.EXCLUDE)
+    void testTransactionActiveErrorCode_exception(TransactionState transactionState) {
+        final FbTransaction transaction = setupTransaction(transactionState);
 
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_Prepared_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.PREPARED);
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_Committing_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.COMMITTING);
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_Committed_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.COMMITTED);
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_RollingBack_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ROLLING_BACK);
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
-    }
-
-    @Test
-    public void testTransactionActiveErrorCode_RolledBack_exception() throws Exception {
-        final FbTransaction transaction = setupTransaction(TransactionState.ROLLED_BACK);
-        expectErrorCodeNoTransactionException();
-
-        TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE);
+        assertErrorCodeNoTransactionException(
+                () -> TransactionHelper.checkTransactionActive(transaction, TEST_ERROR_CODE));
     }
 
     private FbTransaction setupTransaction(TransactionState transactionState) {
-        final FbTransaction transaction = context.mock(FbTransaction.class);
-        final Expectations expectations = new Expectations();
-        expectations.oneOf(transaction).getState();
-        expectations.will(returnValue(transactionState));
-        context.checking(expectations);
+        final FbTransaction transaction = mock(FbTransaction.class);
+        when(transaction.getState()).thenReturn(transactionState);
         return transaction;
     }
 
-    private void expectDefaultNoTransactionException() {
-        expectedException.expect(allOf(
-                isA(SQLNonTransientException.class),
+    private void assertDefaultNoTransactionException(Executable executable) {
+        SQLException exception = assertThrows(SQLNonTransientException.class, executable);
+        assertThat(exception, allOf(
                 message(equalTo(TransactionHelper.NO_TRANSACTION_ACTIVE)),
-                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_TX_STATE))
-        ));
+                sqlState(equalTo(SQLStateConstants.SQL_STATE_INVALID_TX_STATE))));
     }
 
-    private void expectErrorCodeNoTransactionException() {
-        expectedException.expect(allOf(
-                isA(SQLNonTransientException.class),
+    private void assertErrorCodeNoTransactionException(Executable executable) {
+        SQLException exception = assertThrows(SQLNonTransientException.class, executable);
+        assertThat(exception, allOf(
                 errorCode(equalTo(TEST_ERROR_CODE)),
-                fbMessageStartsWith(TEST_ERROR_CODE)
-        ));
+                fbMessageStartsWith(TEST_ERROR_CODE)));
     }
 }

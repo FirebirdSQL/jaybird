@@ -19,18 +19,18 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for JNA statement.
@@ -38,10 +38,10 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaStatementTest extends AbstractStatementTest {
+class JnaStatementTest extends AbstractStatementTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
@@ -57,6 +57,7 @@ public class JnaStatementTest extends AbstractStatementTest {
     }
 
     @Test
+    @Override
     public void testSelect_NoParameters_Execute_and_Fetch() throws Exception {
         allocateStatement();
         statement.prepare(
@@ -68,22 +69,22 @@ public class JnaStatementTest extends AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(10);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.fetchRows(1);
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -98,44 +99,44 @@ public class JnaStatementTest extends AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(10);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.fetchRows(1);
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
         final SimpleStatementListener statementListener2 = new SimpleStatementListener();
         statement.addStatementListener(statementListener2);
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(10);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertNotEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
 
         statement.fetchRows(1);
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -150,22 +151,22 @@ public class JnaStatementTest extends AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(10);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.fetchRows(1);
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
 
@@ -177,22 +178,22 @@ public class JnaStatementTest extends AbstractStatementTest {
         statement.addStatementListener(statementListener2);
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(10);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertNotEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
 
         statement.fetchRows(1);
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, statementListener2.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -211,18 +212,18 @@ public class JnaStatementTest extends AbstractStatementTest {
 
         statement.execute(rowValue);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
-        assertNotEquals("Expected afterLast not set yet", Boolean.TRUE, listener.isAfterLast());
-        assertEquals("Expected no rows to be fetched yet", 0, listener.getRows().size());
-        assertNull("Expected no SQL counts yet", listener.getSqlCounts());
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
+        assertNull(listener.getSqlCounts(), "Expected no SQL counts yet");
 
         // JNAStatement only executes a single fetch to prevent problems with positioned updates,
         // so this doesn't get all rows fetched immediately
         statement.fetchRows(100);
 
-        assertNotEquals("Expected afterLast to haven't been called yet", Boolean.TRUE, listener.isAfterLast());
-        assertEquals("Expected a single row to have been fetched", 1, listener.getRows().size());
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to haven't been called yet");
+        assertEquals(1, listener.getRows().size(), "Expected a single row to have been fetched");
 
         // 100 should be sufficient to fetch all character sets; limit to prevent infinite loop with bugs in fetchRows
         int count = 0;
@@ -231,15 +232,15 @@ public class JnaStatementTest extends AbstractStatementTest {
             count++;
         }
 
-        assertEquals("Expected afterLast to be set to true", Boolean.TRUE, listener.isAfterLast());
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
-        assertTrue("Expected more than two rows", listener.getRows().size() > 2);
+        assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
 
-        assertNull("expected no SQL counts immediately after retrieving all rows", listener.getSqlCounts());
+        assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 
         statement.getSqlCounts();
 
-        assertNotNull("Expected SQL counts", listener.getSqlCounts());
-        assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
+        assertNotNull(listener.getSqlCounts(), "Expected SQL counts");
+        assertEquals(listener.getRows().size(), listener.getSqlCounts().getLongSelectCount(), "Unexpected select count");
     }
 }

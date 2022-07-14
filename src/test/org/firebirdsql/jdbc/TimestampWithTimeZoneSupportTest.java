@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.time.OffsetDateTime;
@@ -34,8 +35,7 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests {@code TIMESTAMP WITH TIME ZONE} support, which is only available in Firebird 4 and Jaybird for Java 8 or
@@ -47,7 +47,13 @@ import static org.junit.Assume.assumeTrue;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TimestampWithTimeZoneSupportTest {
+class TimestampWithTimeZoneSupportTest {
+
+    @RegisterExtension
+    // NOTE: For native tests this also requires use of a Firebird 4 client library
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsTimeZones, "Test requires TIMESTAMP WITH TIME ZONE support on server")
+            .build();
 
     private static final String CREATE_TABLE =
             "create table withtimestamptz ("
@@ -73,19 +79,12 @@ public class TimestampWithTimeZoneSupportTest {
     private static final ZonedDateTime VALUE_3_ZONED = ZonedDateTime.parse("2019-12-31T23:59:59.9999+13:59");
     private static final Collection<String> BINDS = unmodifiableCollection(asList(null, "TIME ZONE TO EXTENDED"));
 
-    @Rule
-    public final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
             Stream.concat(Stream.of(CREATE_TABLE, "COMMIT WORK"), Stream.of(TEST_DATA)).collect(Collectors.toList()));
 
-    @BeforeClass
-    public static void checkTimestampWithTimeZoneSupport() {
-        // NOTE: For native tests this also requires use of a Firebird 4 client library
-        assumeTrue("Test requires TIMESTAMP WITH TIME ZONE support on server",
-                getDefaultSupportInfo().supportsTimeZones());
-    }
-
     @Test
-    public void testSimpleSelect() throws Exception {
+    void testSimpleSelect() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -94,25 +93,25 @@ public class TimestampWithTimeZoneSupportTest {
             try (Connection connection = DriverManager.getConnection(getUrl(), props);
                  Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery(SELECT + " order by id")) {
-                assertTrue("Expected row 1", rs.next());
-                assertEquals("Unexpected value row 1", VALUE_1, rs.getObject(2));
+                assertTrue(rs.next(), "Expected row 1");
+                assertEquals(VALUE_1, rs.getObject(2), "Unexpected value row 1");
 
-                assertTrue("Expected row 2", rs.next());
-                assertEquals("Unexpected value row 2", VALUE_2, rs.getObject(2));
+                assertTrue(rs.next(), "Expected row 2");
+                assertEquals(VALUE_2, rs.getObject(2), "Unexpected value row 2");
 
-                assertTrue("Expected row 3", rs.next());
-                assertEquals("Unexpected value row 3", VALUE_3, rs.getObject(2));
+                assertTrue(rs.next(), "Expected row 3");
+                assertEquals(VALUE_3, rs.getObject(2), "Unexpected value row 3");
 
-                assertTrue("Expected row 4", rs.next());
-                assertNull("Unexpected value for row 4", rs.getObject(2));
+                assertTrue(rs.next(), "Expected row 4");
+                assertNull(rs.getObject(2), "Unexpected value for row 4");
 
-                assertFalse("Expected no more rows", rs.next());
+                assertFalse(rs.next(), "Expected no more rows");
             }
         }
     }
 
     @Test
-    public void testSimpleSelect_ZonedDateTime() throws Exception {
+    void testSimpleSelect_ZonedDateTime() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -121,19 +120,19 @@ public class TimestampWithTimeZoneSupportTest {
             try (Connection connection = DriverManager.getConnection(getUrl(), props);
                  Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery(SELECT + " order by id")) {
-                assertTrue("Expected row 1", rs.next());
-                assertEquals("Unexpected value row 1", VALUE_1_ZONED, rs.getObject(2, ZonedDateTime.class));
+                assertTrue(rs.next(), "Expected row 1");
+                assertEquals(VALUE_1_ZONED, rs.getObject(2, ZonedDateTime.class), "Unexpected value row 1");
 
-                assertTrue("Expected row 2", rs.next());
-                assertEquals("Unexpected value row 2", VALUE_2_ZONED, rs.getObject(2, ZonedDateTime.class));
+                assertTrue(rs.next(), "Expected row 2");
+                assertEquals(VALUE_2_ZONED, rs.getObject(2, ZonedDateTime.class), "Unexpected value row 2");
 
-                assertTrue("Expected row 3", rs.next());
-                assertEquals("Unexpected value row 3", VALUE_3_ZONED, rs.getObject(2, ZonedDateTime.class));
+                assertTrue(rs.next(), "Expected row 3");
+                assertEquals(VALUE_3_ZONED, rs.getObject(2, ZonedDateTime.class), "Unexpected value row 3");
 
-                assertTrue("Expected row 4", rs.next());
-                assertNull("Unexpected value for row 4", rs.getObject(2));
+                assertTrue(rs.next(), "Expected row 4");
+                assertNull(rs.getObject(2), "Unexpected value for row 4");
 
-                assertFalse("Expected no more rows", rs.next());
+                assertFalse(rs.next(), "Expected no more rows");
             }
         }
     }
@@ -142,7 +141,7 @@ public class TimestampWithTimeZoneSupportTest {
      * Tests if the ResultSetMetaData contains the right information on TIMESTAMP WITH TIME ZONE columns.
      */
     @Test
-    public void testSimpleSelect_ResultSetMetaData() throws Exception {
+    void testSimpleSelect_ResultSetMetaData() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -152,19 +151,18 @@ public class TimestampWithTimeZoneSupportTest {
                  Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery(SELECT)) {
                 final ResultSetMetaData rsmd = rs.getMetaData();
-                assertEquals("Unexpected type for TIMESTAMP WITH TIME ZONE column",
-                        Types.TIMESTAMP_WITH_TIMEZONE, rsmd.getColumnType(2));
-                assertEquals("Unexpected type name for TIMESTAMP WITH TIME ZONE column",
-                        "TIMESTAMP WITH TIME ZONE", rsmd.getColumnTypeName(2));
-                assertEquals("Unexpected precision for TIMESTAMP WITH TIME ZONE column",
-                        30, rsmd.getPrecision(2));
+                assertEquals(Types.TIMESTAMP_WITH_TIMEZONE, rsmd.getColumnType(2),
+                        "Unexpected type for TIMESTAMP WITH TIME ZONE column");
+                assertEquals("TIMESTAMP WITH TIME ZONE", rsmd.getColumnTypeName(2),
+                        "Unexpected type name for TIMESTAMP WITH TIME ZONE column");
+                assertEquals(30, rsmd.getPrecision(2), "Unexpected precision for TIMESTAMP WITH TIME ZONE column");
                 // Not testing other values
             }
         }
     }
 
     @Test
-    public void testParameterizedInsert() throws Exception {
+    void testParameterizedInsert() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -192,16 +190,16 @@ public class TimestampWithTimeZoneSupportTest {
 
                     try (Statement stmt = connection.createStatement();
                          ResultSet rs = stmt.executeQuery(SELECT + " where id > 4 order by id")) {
-                        assertTrue("Expected row 1", rs.next());
+                        assertTrue(rs.next(), "Expected row 1");
                         assertEquals(value5, rs.getObject(2, OffsetDateTime.class));
 
-                        assertTrue("Expected row 2", rs.next());
+                        assertTrue(rs.next(), "Expected row 2");
                         assertEquals(value6, rs.getObject(2, OffsetDateTime.class));
 
-                        assertTrue("Expected row 3", rs.next());
+                        assertTrue(rs.next(), "Expected row 3");
                         assertNull(rs.getObject(2, OffsetDateTime.class));
 
-                        assertFalse("Expected no more rows", rs.next());
+                        assertFalse(rs.next(), "Expected no more rows");
                     }
                 }
             }
@@ -209,7 +207,7 @@ public class TimestampWithTimeZoneSupportTest {
     }
 
     @Test
-    public void testParameterizedInsert_ZonedDateTime() throws Exception {
+    void testParameterizedInsert_ZonedDateTime() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -249,22 +247,22 @@ public class TimestampWithTimeZoneSupportTest {
 
                     try (Statement stmt = connection.createStatement();
                          ResultSet rs = stmt.executeQuery(SELECT + " where id > 4 order by id")) {
-                        assertTrue("Expected row 1", rs.next());
+                        assertTrue(rs.next(), "Expected row 1");
                         assertEquals(value5Zoned, rs.getObject(2, ZonedDateTime.class));
 
-                        assertTrue("Expected row 2", rs.next());
+                        assertTrue(rs.next(), "Expected row 2");
                         assertEquals(value6Zoned, rs.getObject(2, ZonedDateTime.class));
 
-                        assertTrue("Expected row 3", rs.next());
+                        assertTrue(rs.next(), "Expected row 3");
                         assertNull(rs.getObject(2, OffsetDateTime.class));
 
-                        assertTrue("Expected row 4", rs.next());
+                        assertTrue(rs.next(), "Expected row 4");
                         assertEquals(value8Zoned, rs.getObject(2, ZonedDateTime.class));
 
-                        assertTrue("Expected row 5", rs.next());
+                        assertTrue(rs.next(), "Expected row 5");
                         assertEquals(value9Zoned, rs.getObject(2, ZonedDateTime.class));
 
-                        assertFalse("Expected no more rows", rs.next());
+                        assertFalse(rs.next(), "Expected no more rows");
                     }
                 }
             }
@@ -275,7 +273,7 @@ public class TimestampWithTimeZoneSupportTest {
      * Tests if the ParameterMetaData contains the right information on TIMESTAMP WITH TIME ZONE columns.
      */
     @Test
-    public void testParametrizedInsert_ParameterMetaData() throws Exception {
+    void testParametrizedInsert_ParameterMetaData() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -284,19 +282,19 @@ public class TimestampWithTimeZoneSupportTest {
             try (Connection connection = DriverManager.getConnection(getUrl(), props);
                  PreparedStatement pstmt = connection.prepareStatement(INSERT)) {
                 final ParameterMetaData parameterMetaData = pstmt.getParameterMetaData();
-                assertEquals("Unexpected type for TIMESTAMP WITH TIME ZONE column",
-                        Types.TIMESTAMP_WITH_TIMEZONE, parameterMetaData.getParameterType(2));
-                assertEquals("Unexpected type name for TIMESTAMP WITH TIME ZONE column",
-                        "TIMESTAMP WITH TIME ZONE", parameterMetaData.getParameterTypeName(2));
-                assertEquals("Unexpected precision for TIMESTAMP WITH TIME ZONE column",
-                        30, parameterMetaData.getPrecision(2));
+                assertEquals(Types.TIMESTAMP_WITH_TIMEZONE, parameterMetaData.getParameterType(2),
+                        "Unexpected type for TIMESTAMP WITH TIME ZONE column");
+                assertEquals("TIMESTAMP WITH TIME ZONE", parameterMetaData.getParameterTypeName(2),
+                        "Unexpected type name for TIMESTAMP WITH TIME ZONE column");
+                assertEquals(30, parameterMetaData.getPrecision(2),
+                        "Unexpected precision for TIMESTAMP WITH TIME ZONE column");
                 // Not testing other values
             }
         }
     }
 
     @Test
-    public void testSelectCondition() throws Exception {
+    void testSelectCondition() throws Exception {
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
             if (dataTypeBind != null) {
@@ -308,15 +306,15 @@ public class TimestampWithTimeZoneSupportTest {
                 pstmt.setObject(1, VALUE_1);
 
                 try (ResultSet rs = pstmt.executeQuery()) {
-                    assertTrue("Expected row 1", rs.next());
-                    assertEquals("Expected id 1", 1, rs.getInt(1));
-                    assertEquals("Unexpected value for row 1", VALUE_1, rs.getObject(2));
+                    assertTrue(rs.next(), "Expected row 1");
+                    assertEquals(1, rs.getInt(1), "Expected id 1");
+                    assertEquals(VALUE_1, rs.getObject(2), "Unexpected value for row 1");
 
-                    assertTrue("Expected row 2", rs.next());
-                    assertEquals("Expected id 2", 2, rs.getInt(1));
-                    assertEquals("Unexpected value for row 2", VALUE_2, rs.getObject(2));
+                    assertTrue(rs.next(), "Expected row 2");
+                    assertEquals(2, rs.getInt(1), "Expected id 2");
+                    assertEquals(VALUE_2, rs.getObject(2), "Unexpected value for row 2");
 
-                    assertFalse("Expected no more rows", rs.next());
+                    assertFalse(rs.next(), "Expected no more rows");
                 }
             }
         }
@@ -326,7 +324,7 @@ public class TimestampWithTimeZoneSupportTest {
      * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for TIMESTAMP WITH TIME ZONE).
      */
     @Test
-    public void testMetaData_TypeInfo() throws Exception {
+    void testMetaData_TypeInfo() throws Exception {
         // TODO Create separate test for all typeinfo information
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
@@ -343,18 +341,18 @@ public class TimestampWithTimeZoneSupportTest {
                             continue;
                         }
                         foundTimestampWithTimeZoneType = true;
-                        assertEquals("Unexpected DATA_TYPE", Types.TIMESTAMP_WITH_TIMEZONE, rs.getInt("DATA_TYPE"));
-                        assertEquals("Unexpected PRECISION", 30, rs.getInt("PRECISION"));
-                        assertEquals("Unexpected NULLABLE", DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"));
-                        assertFalse("Unexpected CASE_SENSITIVE", rs.getBoolean("CASE_SENSITIVE"));
-                        assertEquals("Unexpected SEARCHABLE", DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"));
-                        assertTrue("Unexpected UNSIGNED_ATTRIBUTE", rs.getBoolean("UNSIGNED_ATTRIBUTE"));
-                        assertTrue("Unexpected FIXED_PREC_SCALE", rs.getBoolean("FIXED_PREC_SCALE"));
-                        assertFalse("Unexpected AUTO_INCREMENT", rs.getBoolean("AUTO_INCREMENT"));
-                        assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
+                        assertEquals(Types.TIMESTAMP_WITH_TIMEZONE, rs.getInt("DATA_TYPE"), "Unexpected DATA_TYPE");
+                        assertEquals(30, rs.getInt("PRECISION"), "Unexpected PRECISION");
+                        assertEquals(DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"), "Unexpected NULLABLE");
+                        assertFalse(rs.getBoolean("CASE_SENSITIVE"), "Unexpected CASE_SENSITIVE");
+                        assertEquals(DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"), "Unexpected SEARCHABLE");
+                        assertTrue(rs.getBoolean("UNSIGNED_ATTRIBUTE"), "Unexpected UNSIGNED_ATTRIBUTE");
+                        assertTrue(rs.getBoolean("FIXED_PREC_SCALE"), "Unexpected FIXED_PREC_SCALE");
+                        assertFalse(rs.getBoolean("AUTO_INCREMENT"), "Unexpected AUTO_INCREMENT");
+                        assertEquals(10, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
                         // Not testing other values
                     }
-                    assertTrue("Expected to find TIMESTAMP WITH TIME ZONE type in typeInfo", foundTimestampWithTimeZoneType);
+                    assertTrue(foundTimestampWithTimeZoneType, "Expected to find TIMESTAMP WITH TIME ZONE type in typeInfo");
                 }
             }
         }
@@ -364,7 +362,7 @@ public class TimestampWithTimeZoneSupportTest {
      * Test {@link FBDatabaseMetaData#getColumns(String, String, String, String)} for a TIMESTAMP WITH TIME ZONE column.
      */
     @Test
-    public void testMetaData_getColumns() throws Exception {
+    void testMetaData_getColumns() throws Exception {
         // TODO Consider moving to TestFBDatabaseMetaDataColumns
         for (String dataTypeBind : BINDS) {
             Properties props = getDefaultPropertiesForConnection();
@@ -374,16 +372,16 @@ public class TimestampWithTimeZoneSupportTest {
             try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
                 DatabaseMetaData dbmd = connection.getMetaData();
                 try (ResultSet rs = dbmd.getColumns(null, null, "WITHTIMESTAMPTZ", "TIMESTAMPTZ")) {
-                    assertTrue("Expected a row", rs.next());
-                    assertEquals("Unexpected COLUMN_NAME", "TIMESTAMPTZ", rs.getString("COLUMN_NAME"));
-                    assertEquals("Unexpected DATA_TYPE", Types.TIMESTAMP_WITH_TIMEZONE, rs.getInt("DATA_TYPE"));
-                    assertEquals("Unexpected TYPE_NAME", "TIMESTAMP WITH TIME ZONE", rs.getString("TYPE_NAME"));
-                    assertEquals("Unexpected COLUMN_SIZE", 30, rs.getInt("COLUMN_SIZE"));
-                    assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
-                    assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"));
-                    assertEquals("Unexpected IS_AUTOINCREMENT", "NO", rs.getString("IS_AUTOINCREMENT"));
+                    assertTrue(rs.next(), "Expected a row");
+                    assertEquals("TIMESTAMPTZ", rs.getString("COLUMN_NAME"), "Unexpected COLUMN_NAME");
+                    assertEquals(Types.TIMESTAMP_WITH_TIMEZONE, rs.getInt("DATA_TYPE"), "Unexpected DATA_TYPE");
+                    assertEquals("TIMESTAMP WITH TIME ZONE", rs.getString("TYPE_NAME"), "Unexpected TYPE_NAME");
+                    assertEquals(30, rs.getInt("COLUMN_SIZE"), "Unexpected COLUMN_SIZE");
+                    assertEquals(10, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
+                    assertEquals(DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"), "Unexpected NULLABLE");
+                    assertEquals("NO", rs.getString("IS_AUTOINCREMENT"), "Unexpected IS_AUTOINCREMENT");
 
-                    assertFalse("Expected no second row", rs.next());
+                    assertFalse(rs.next(), "Expected no second row");
                 }
             }
         }

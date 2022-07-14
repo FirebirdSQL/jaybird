@@ -18,9 +18,13 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.After;
-import org.junit.Test;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
@@ -32,59 +36,58 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FBBlobTest extends XATestBase {
+class FBBlobTest {
+
+    private final Logger log = LoggerFactory.getLogger(FBBlobTest.class);
+
+    private static final int BLOB_LENGTH = 40960 * 10;
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private FBConnection c;
     private FBLocalTransaction t;
-    private Exception ex = null;
 
-    private int bloblength = 40960 * 10;
-
-    protected void setupTable(String name) throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    private void setupTable(String name) throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         DataSource ds = mcf.createConnectionFactory();
         c = (FBConnection) ds.getConnection();
         Statement s = c.createStatement();
         t = c.getLocalTransaction();
         t.begin();
-        try {
-            s.execute("CREATE TABLE " + name + " ( C1 INTEGER not null primary key, C2 BLOB)");
-        } catch (Exception e) {
-            ex = e;
-        }
+        s.execute("CREATE TABLE " + name + " ( C1 INTEGER not null primary key, C2 BLOB)");
         t.commit();
     }
 
-    @After
-    public void cleanUp() throws Exception {
+    @AfterEach
+    void cleanUp() throws Exception {
         c.close();
-        if (ex != null) {
-            throw ex;
-        }
     }
 
-    protected void checkReadBlob(String name) throws Exception {
+    private void checkReadBlob(String name) throws Exception {
         PreparedStatement p = c.prepareStatement("select * from " + name + " where C1 = ?");
         p.setInt(1, 1);
         ResultSet rs = p.executeQuery();
         while (rs.next()) {
-            if (log != null) log.info("C1: " + rs.getInt(1));
+            log.info("C1: " + rs.getInt(1));
             Blob blobRead = rs.getBlob(2);
             InputStream is = blobRead.getBinaryStream();
             int count = 0;
             while (is.read() != -1) {
                 count++;
             }
-            if (log != null) log.info("C2 count: " + count);
-            assertEquals("retrieved wrong length blob: expecting " + bloblength + ", retrieved: " + count, bloblength, count);
+            log.info("C2 count: " + count);
+            assertEquals(BLOB_LENGTH, count,
+                    "retrieved wrong length blob: expecting " + BLOB_LENGTH + ", retrieved: " + count);
         }
         p.close();
     }
 
     @Test
-    public void testUseBlob() throws Exception {
+    void testUseBlob() throws Exception {
         setupTable("T1");
 
         t.begin();
@@ -92,14 +95,14 @@ public class FBBlobTest extends XATestBase {
         Blob blob = c.createBlob();
         OutputStream os = blob.setBinaryStream(1);
         byte[] a = "a".getBytes();
-        byte[] testbuf = new byte[bloblength];
+        byte[] testbuf = new byte[BLOB_LENGTH];
         Arrays.fill(testbuf, a[0]);
         os.write(testbuf);
         os.close();
 
         p.setInt(1, 1);
         p.setBlob(2, blob);
-        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+        assertEquals(1, p.executeUpdate(), "executeUpdate count != 1");
 
         p.close();
         checkReadBlob("T1");
@@ -108,19 +111,19 @@ public class FBBlobTest extends XATestBase {
     }
 
     @Test
-    public void testUseBlobViapsSetBinaryStream() throws Exception {
+    void testUseBlobViapsSetBinaryStream() throws Exception {
         setupTable("T2");
 
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T2 values (?, ?)");
         byte[] a = "a".getBytes();
-        byte[] testbuf = new byte[bloblength];
+        byte[] testbuf = new byte[BLOB_LENGTH];
         Arrays.fill(testbuf, a[0]);
         InputStream bais = new ByteArrayInputStream(testbuf);
-        p.setBinaryStream(2, bais, bloblength);
+        p.setBinaryStream(2, bais, BLOB_LENGTH);
 
         p.setInt(1, 1);
-        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+        assertEquals(1, p.executeUpdate(), "executeUpdate count != 1");
 
         p.close();
         checkReadBlob("T2");
@@ -128,18 +131,18 @@ public class FBBlobTest extends XATestBase {
     }
 
     @Test
-    public void testUseBlobViapsSetBytes() throws Exception {
+    void testUseBlobViapsSetBytes() throws Exception {
         setupTable("T3");
 
         t.begin();
         PreparedStatement p = c.prepareStatement("insert into T3 values (?, ?)");
         byte[] a = "a".getBytes();
-        byte[] testbuf = new byte[bloblength];
+        byte[] testbuf = new byte[BLOB_LENGTH];
         Arrays.fill(testbuf, a[0]);
         p.setBytes(2, testbuf);
 
         p.setInt(1, 1);
-        assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+        assertEquals(1, p.executeUpdate(), "executeUpdate count != 1");
 
         p.close();
         checkReadBlob("T3");

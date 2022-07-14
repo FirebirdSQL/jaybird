@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -33,14 +33,14 @@ import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for index info related metadata.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataIndexInfoTest {
+class FBDatabaseMetaDataIndexInfoTest {
     
     //@formatter:off
     private static final String CREATE_INDEX_TEST_TABLE_1 =
@@ -86,8 +86,9 @@ public class FBDatabaseMetaDataIndexInfoTest {
     private static final MetaDataTestSupport<IndexInfoMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(IndexInfoMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(CREATE_INDEX_TEST_TABLE_1,
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_INDEX_TEST_TABLE_1,
             CREATE_INDEX_TEST_TABLE_2,
             CREATE_COMPUTED_IDX_TBL_1,
             CREATE_UQ_COMPUTED_IDX_TBL_1,
@@ -100,14 +101,14 @@ public class FBDatabaseMetaDataIndexInfoTest {
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -135,7 +136,7 @@ public class FBDatabaseMetaDataIndexInfoTest {
      * </p>
      */
     @Test
-    public void testIndexInfo_table1_all() throws Exception {
+    void testIndexInfo_table1_all() throws Exception {
         List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(5);
         String tableName = "INDEX_TEST_TABLE_1";
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_TEST_TABLE_1", "(UPPER(column1))", 1, true));
@@ -155,7 +156,7 @@ public class FBDatabaseMetaDataIndexInfoTest {
      * </p>
      */
     @Test
-    public void testIndexInfo_table1_unique() throws Exception {
+    void testIndexInfo_table1_unique() throws Exception {
         List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(3);
         String tableName = "INDEX_TEST_TABLE_1";
         expectedIndexInfo.add(createRule(tableName, false, "PK_IDX_TEST_1_ID", "ID", 1, true));
@@ -174,7 +175,7 @@ public class FBDatabaseMetaDataIndexInfoTest {
      * </p>
      */
     @Test
-    public void testIndexInfo_table2_all() throws Exception {
+    void testIndexInfo_table2_all() throws Exception {
         List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(8);
         String tableName = "INDEX_TEST_TABLE_2";
         expectedIndexInfo.add(createRule(tableName, true, "CMP_IDX_DESC_TEST_TABLE2", "(UPPER(column1))", 1, false));
@@ -198,7 +199,7 @@ public class FBDatabaseMetaDataIndexInfoTest {
      * </p>
      */
     @Test
-    public void testIndexInfo_table2_unique() throws Exception {
+    void testIndexInfo_table2_unique() throws Exception {
         List<Map<IndexInfoMetaData, Object>> expectedIndexInfo = new ArrayList<>(8);
         String tableName = "INDEX_TEST_TABLE_2";
         expectedIndexInfo.add(createRule(tableName, false, "PK_IDX_TEST_2_ID", "ID", 1, true));
@@ -223,7 +224,7 @@ public class FBDatabaseMetaDataIndexInfoTest {
                 }
                 columnCount++;
             }
-            assertEquals("Unexpected number of columns", expectedIndexInfo.size(), columnCount);
+            assertEquals(expectedIndexInfo.size(), columnCount, "Unexpected number of columns");
         } finally {
             closeQuietly(indexInfo);
         }

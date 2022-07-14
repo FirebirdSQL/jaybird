@@ -18,25 +18,28 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TableReservationTest extends FBJUnit4TestBase {
+class TableReservationTest {
 
     private static final String CREATE_TABLE_1 = ""
             + "CREATE TABLE table_1("
@@ -54,32 +57,37 @@ public class TableReservationTest extends FBJUnit4TestBase {
     private static final String SELECT_TABLE_1 =
             "SELECT id FROM table_1 WHERE id = ?";
 
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE_1,
+            CREATE_TABLE_2);
+
     private FirebirdConnection connection1;
     private FirebirdConnection connection2;
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            executeCreateTable(connection, CREATE_TABLE_1);
-            executeCreateTable(connection, CREATE_TABLE_2);
-        }
-
+    @BeforeEach
+    void setUp() throws Exception {
         connection1 = getConnectionViaDriverManager();
+        try (Statement stmt = connection1.createStatement()) {
+            stmt.execute("delete from table_1");
+            stmt.execute("delete from table_2");
+        }
         connection1.setAutoCommit(false);
 
         connection2 = getConnectionViaDriverManager();
         connection2.setAutoCommit(false);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
+        //noinspection EmptyTryBlock
         try (Connection ignored1 = connection1;
              Connection ignored2 = connection2) {
-            log.debug("closing connections");
+            // closing connections
         }
     }
 
-    protected void execute(Connection connection, String sql, Object[] params) throws SQLException {
+    private void execute(Connection connection, String sql, Object[] params) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
@@ -95,7 +103,8 @@ public class TableReservationTest extends FBJUnit4TestBase {
         }
     }
 
-    protected void prepareTPB(FirebirdConnection connection,
+    @SuppressWarnings("SameParameterValue")
+    private void prepareTPB(FirebirdConnection connection,
             int isolationLevel, int lockMode, String tableName, int lockType, boolean readOnly)
             throws SQLException {
         TransactionParameterBuffer tpb = connection.createTransactionParameterBuffer();
@@ -115,87 +124,53 @@ public class TableReservationTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedWriteProtectedWrite() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+    void testProtectedWriteProtectedWrite() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
 
-            execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+        execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
 
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testProtectedWriteProtectedRead() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
+    void testProtectedWriteProtectedRead() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
-            execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
-
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testProtectedWriteSharedWrite() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+    void testProtectedWriteSharedWrite() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
 
-            execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
-
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testProtectedWriteSharedRead() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
+    void testProtectedWriteSharedRead() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_protected, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
-            execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
-
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testSharedWriteSharedRead() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
+    void testSharedWriteSharedRead() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
-            execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
-
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        execute(connection1, INSERT_TABLE_1, new Object[] { 1 });
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testSharedReadSharedRead() throws SQLException {
+    void testSharedReadSharedRead() throws Exception {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
@@ -204,7 +179,7 @@ public class TableReservationTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testProtectedReadSharedRead() throws SQLException {
+    void testProtectedReadSharedRead() throws Exception {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_shared, false);
 
@@ -213,7 +188,7 @@ public class TableReservationTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSharedWriteSharedWrite() throws SQLException {
+    void testSharedWriteSharedWrite() throws Exception {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
 
@@ -222,28 +197,26 @@ public class TableReservationTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testSharedWriteProtectedRead() {
-        try {
-            prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
-            prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
+    void testSharedWriteProtectedRead() throws Exception {
+        prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_write, "TABLE_1", isc_tpb_shared, false);
+        prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
-            execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
-            execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
-
-            fail();
-        } catch (SQLException ex) {
-            int fbErrorCode = ex.getErrorCode();
-            assertEquals(ISCConstants.isc_lock_conflict, fbErrorCode);
-        }
+        execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
+        assertLockConflict(() -> execute(connection2, SELECT_TABLE_1, new Object[] { 1 }));
     }
 
     @Test
-    public void testProtectedReadProtectedRead() throws SQLException {
+    void testProtectedReadProtectedRead() throws Exception {
         prepareTPB(connection1, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
         prepareTPB(connection2, isc_tpb_consistency, isc_tpb_lock_read, "TABLE_1", isc_tpb_protected, false);
 
         execute(connection1, SELECT_TABLE_1, new Object[] { 1 });
         execute(connection2, SELECT_TABLE_1, new Object[] { 1 });
+    }
+
+    private void assertLockConflict(Executable executable) {
+        SQLException exception = assertThrows(SQLException.class, executable);
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_lock_conflict));
     }
 
 }

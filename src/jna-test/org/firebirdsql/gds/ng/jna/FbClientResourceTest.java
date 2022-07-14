@@ -19,25 +19,26 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static java.util.Objects.requireNonNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-public class FbClientResourceTest {
+class FbClientResourceTest {
 
-    @ClassRule
-    public static final GdsTypeRule typeRule = GdsTypeRule.supportsNativeOnly();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
     /**
      * Rationale: due to code changes, the dispose implementation didn't work but instead logged an exception
      */
     @Test
-    public void testDisposeImplementation() throws Exception {
+    void testDisposeImplementation() throws Exception {
         AbstractNativeDatabaseFactory factory = (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
         // Call to ensure resource is initialized
         factory.getClientLibrary();
@@ -48,7 +49,6 @@ public class FbClientResourceTest {
         Method disposeImpl = FbClientResource.class.getDeclaredMethod("disposeImpl");
         disposeImpl.setAccessible(true);
 
-        // Should not throw an exception
-        disposeImpl.invoke(resource);
+        assertDoesNotThrow(() -> disposeImpl.invoke(resource));
     }
 }

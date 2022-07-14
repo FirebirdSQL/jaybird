@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,16 +19,17 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.AbstractStatementTimeoutTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.util.Unstable;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for statement timeouts with JNA statement.
@@ -36,18 +37,19 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @Unstable("Will fail when the test is run with a Firebird 3 or earlier fbclient")
-public class JnaStatementTimeoutTest extends AbstractStatementTimeoutTest {
+class JnaStatementTimeoutTest extends AbstractStatementTimeoutTest {
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.supportsNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
-    @Before
-    public void checkClientTimeoutSupport() {
-        assumeTrue("Requires native client statement timeout support",
-                ((JnaDatabase) db).hasFeature(FbClientFeature.STATEMENT_TIMEOUT));
+    @BeforeEach
+    void checkClientTimeoutSupport() {
+        assumeTrue(((JnaDatabase) db).hasFeature(FbClientFeature.STATEMENT_TIMEOUT),
+                "Requires native client statement timeout support");
     }
 
     @Override

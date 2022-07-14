@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,22 +18,26 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.StringReader;
 import java.sql.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class BatchUpdatesTest extends FBJUnit4TestBase {
+class BatchUpdatesTest {
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private static final String CREATE_TABLE = ""
-            + "CREATE TABLE batch_updates("
+            + "RECREATE TABLE batch_updates("
             + "  id INTEGER, "
             + "  str_value BLOB, "
             + "  clob_value BLOB SUB_TYPE 1"
@@ -41,14 +45,14 @@ public class BatchUpdatesTest extends FBJUnit4TestBase {
 
     private Connection connection;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
         executeCreateTable(connection, CREATE_TABLE);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         connection.close();
     }
 
@@ -56,7 +60,7 @@ public class BatchUpdatesTest extends FBJUnit4TestBase {
      * Test if batch updates in {@link Statement} implementation works correctly.
      */
     @Test
-    public void testStatementBatch() throws SQLException {
+    void testStatementBatch() throws SQLException {
         try (Statement stmt = connection.createStatement()) {
             stmt.addBatch("INSERT INTO batch_updates(id, str_value) VALUES (1, 'test')");
             stmt.addBatch("INSERT INTO batch_updates(id, str_value) VALUES (2, 'another')");
@@ -64,21 +68,21 @@ public class BatchUpdatesTest extends FBJUnit4TestBase {
 
             int[] updates = stmt.executeBatch();
 
-            assertEquals("Should contain 3 results.", 3, updates.length);
-            assertArrayEquals("Should update one row each time", new int[] { 1, 1, 1 }, updates);
+            assertEquals(3, updates.length, "Should contain 3 results");
+            assertArrayEquals(new int[] { 1, 1, 1 }, updates, "Should update one row each time");
 
             ResultSet rs = stmt.executeQuery("SELECT * FROM batch_updates");
             int counter = 0;
             while (rs.next())
                 counter++;
 
-            assertEquals("Should insert 2 rows", 2, counter);
+            assertEquals(2, counter, "Should insert 2 rows");
 
             stmt.addBatch("DELETE FROM batch_updates");
             stmt.clearBatch();
             updates = stmt.executeBatch();
 
-            assertEquals("No updates should have been made.", 0, updates.length);
+            assertEquals(0, updates.length, "No updates should have been made");
         }
     }
 
@@ -86,7 +90,7 @@ public class BatchUpdatesTest extends FBJUnit4TestBase {
      * Test if batch updates work correctly with prepared statement.
      */
     @Test
-    public void testPreparedStatementBatch() throws SQLException {
+    void testPreparedStatementBatch() throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO batch_updates(id, str_value, clob_value) VALUES (?, ?, ?)")) {
             ps.setInt(1, 1);
@@ -108,17 +112,17 @@ public class BatchUpdatesTest extends FBJUnit4TestBase {
 
             try (Statement stmt = connection.createStatement()) {
                 ResultSet rs = stmt.executeQuery("SELECT * FROM batch_updates order by id");
-                assertTrue("expected row 1", rs.next());
-                assertEquals("id=1", rs.getInt(1), 1);
-                assertEquals("id=1 str_value", "test", rs.getString(2));
-                assertTrue("expected row 2", rs.next());
-                assertEquals("id=2", rs.getInt(1), 2);
-                assertEquals("id=2 str_value", "another", rs.getString(2));
-                assertTrue("expected row 3", rs.next());
-                assertEquals("id=3", rs.getInt(1), 3);
-                assertEquals("id=3 str_value", "stream", rs.getString(2));
-                assertEquals("id=3 clob_value", "string", rs.getString(3));
-                assertFalse("no more rows", rs.next());
+                assertTrue(rs.next(), "expected row 1");
+                assertEquals(rs.getInt(1), 1, "id=1");
+                assertEquals("test", rs.getString(2), "id=1 str_value");
+                assertTrue(rs.next(), "expected row 2");
+                assertEquals(rs.getInt(1), 2, "id=2");
+                assertEquals("another", rs.getString(2), "id=2 str_value");
+                assertTrue(rs.next(), "expected row 3");
+                assertEquals(rs.getInt(1), 3, "id=3");
+                assertEquals("stream", rs.getString(2), "id=3 str_value");
+                assertEquals("string", rs.getString(3), "id=3 clob_value");
+                assertFalse(rs.next(), "no more rows");
             }
         }
     }

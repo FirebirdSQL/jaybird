@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,20 +19,25 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.jmock.Expectations;
-import org.jmock.auto.Mock;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link GeneratedKeysSupport} and related classes.
@@ -42,14 +47,10 @@ import static org.junit.Assert.*;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GeneratedKeysQueryTest {
+@ExtendWith(MockitoExtension.class)
+class GeneratedKeysQueryTest {
 
     private static final String TEST_INSERT_QUERY = "INSERT INTO GENERATED_KEYS_TBL(NAME, TEXT_VALUE) VALUES (?, ?)";
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private FirebirdDatabaseMetaData dbMetadata;
@@ -67,16 +68,16 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_noGeneratedKeys() throws SQLException {
+    void testGeneratedKeys_noGeneratedKeys() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // In combination with NO_GENERATED_KEYS the column metadata should not be retrieved
-        expectNoGetColumnsCall();
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
 
-        assertFalse("Query with NO_GENERATED_KEYS should not generate keys", query.generatesKeys());
-        assertEquals("Query string should not be modified", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Query with NO_GENERATED_KEYS should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Query string should not be modified");
+        // In combination with NO_GENERATED_KEYS the column metadata should not be retrieved
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -89,19 +90,19 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_noGeneratedKeys_withReturning() throws SQLException {
+    void testGeneratedKeys_noGeneratedKeys_withReturning() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // In combination with NO_GENERATED_KEYS the metadata should not be retrieved
-        expectNoGetColumnsCall();
 
         String testQuery = TEST_INSERT_QUERY + " RETURNING id";
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, Statement.NO_GENERATED_KEYS);
 
-        assertTrue("Query with NO_GENERATED_KEYS, but with RETURNING clause should generate keys",
-                query.generatesKeys());
-        assertEquals("Query string should not be modified", testQuery, query.getQueryString());
+        assertTrue(query.generatesKeys(),
+                "Query with NO_GENERATED_KEYS, but with RETURNING clause should generate keys");
+        assertEquals(testQuery, query.getQueryString(), "Query string should not be modified");
+        // In combination with NO_GENERATED_KEYS the metadata should not be retrieved
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -115,21 +116,15 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_returnGeneratedKeys() throws SQLException {
+    void testGeneratedKeys_returnGeneratedKeys() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(3);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true), returnValue(false)));
-            // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
-            exactly(3).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"), returnValue("TEXT_VALUE")));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(3);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
+        when(columnRs.getString(4)).thenReturn("ID", "NAME", "TEXT_VALUE");
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING \"ID\",\"NAME\",\"TEXT_VALUE\"";
@@ -137,11 +132,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -154,9 +150,8 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_returnGeneratedKeys_firebird4() throws SQLException {
+    void testGeneratedKeys_returnGeneratedKeys_firebird4() throws SQLException {
         initDefaultGeneratedKeysSupport(4, 0);
-        expectNoGetColumnsCall();
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING *";
@@ -164,11 +159,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
         assertThat("Query has RETURNING * clause added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -182,21 +178,15 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_returnGeneratedKeys_dialect1() throws SQLException {
+    void testGeneratedKeys_returnGeneratedKeys_dialect1() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(1);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true), returnValue(false)));
-            // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
-            exactly(3).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"), returnValue("TEXT_VALUE")));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(1);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
+        when(columnRs.getString(4)).thenReturn("ID", "NAME", "TEXT_VALUE");
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING ID,NAME,TEXT_VALUE";
@@ -204,11 +194,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -223,21 +214,15 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_returnGeneratedKeys_tableName_with_whitespace() throws SQLException {
+    void testGeneratedKeys_returnGeneratedKeys_tableName_with_whitespace() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(3);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED KEYS TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true), returnValue(false)));
-            // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
-            exactly(3).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME"), returnValue("TEXT_VALUE")));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(3);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED KEYS TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this only calls getString for column 4 (COLUMN_NAME)
+        when(columnRs.getString(4)).thenReturn("ID", "NAME", "TEXT_VALUE");
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING \"ID\",\"NAME\",\"TEXT_VALUE\"";
@@ -246,11 +231,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, Statement.RETURN_GENERATED_KEYS);
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(testQuery)),
                 startsWith(testQuery),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -264,19 +250,19 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_returnGeneratedKeys_withReturning() throws SQLException {
+    void testGeneratedKeys_returnGeneratedKeys_withReturning() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // Metadata should never be requested, as the query already has a RETURNING clause
-        expectNoGetColumnsCall();
 
         String testQuery = TEST_INSERT_QUERY + " RETURNING id";
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, Statement.RETURN_GENERATED_KEYS);
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
-        assertEquals("Query string should not be modified as it already includes RETURNING clause",
-                testQuery, query.getQueryString());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
+        assertEquals(testQuery, query.getQueryString(),
+                "Query string should not be modified as it already includes RETURNING clause");
+        // Metadata should never be requested, as the query already has a RETURNING clause
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -289,16 +275,16 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_invalidAutoGeneratedKeys_value() throws SQLException {
+    void testGeneratedKeys_invalidAutoGeneratedKeys_value() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // In combination with invalid value for autoGeneratedKeys parameter the metadata should not be retrieved
-        expectNoGetColumnsCall();
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLNonTransientException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, 3));
+        assertThat(exception, allOf(
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidGeneratedKeysOption),
                 sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_OPTION_IDENTIFIER)));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, 3);
+        // In combination with invalid value for autoGeneratedKeys parameter the metadata should not be retrieved
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -311,25 +297,17 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnIndexes() throws SQLException {
+    void testGeneratedKeys_columnIndexes() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(3);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true),
-                    returnValue(false)));
-            // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
-            exactly(2).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME")));
-            // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
-            exactly(3).of(columnRs).getInt(17);
-            will(onConsecutiveCalls(returnValue(1), returnValue(2), returnValue(3)));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(3);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
+        when(columnRs.getString(4)).thenReturn("ID", "NAME");
+        // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
+        when(columnRs.getInt(17)).thenReturn(1, 2, 3);
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING \"ID\",\"NAME\"";
@@ -337,11 +315,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2 });
 
-        assertTrue("Query with columnIndexes should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with columnIndexes should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -354,25 +333,17 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_dialect1() throws SQLException {
+    void testGeneratedKeys_columnIndexes_dialect1() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(1);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true),
-                    returnValue(false)));
-            // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
-            exactly(2).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME")));
-            // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
-            exactly(3).of(columnRs).getInt(17);
-            will(onConsecutiveCalls(returnValue(1), returnValue(2), returnValue(3)));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(1);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
+        when(columnRs.getString(4)).thenReturn("ID", "NAME");
+        // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
+        when(columnRs.getInt(17)).thenReturn(1, 2, 3);
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING ID,NAME";
@@ -380,11 +351,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2 });
 
-        assertTrue("Query with columnIndexes should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with columnIndexes should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -398,33 +370,25 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_includingNonExistentIndex() throws SQLException {
+    void testGeneratedKeys_columnIndexes_includingNonExistentIndex() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(3);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true),
-                    returnValue(false)));
-            // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
-            exactly(2).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME")));
-            // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
-            exactly(3).of(columnRs).getInt(17);
-            will(onConsecutiveCalls(returnValue(1), returnValue(2), returnValue(3)));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(3);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
+        when(columnRs.getString(4)).thenReturn("ID", "NAME");
+        // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
+        when(columnRs.getInt(17)).thenReturn(1, 2, 3);
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLNonTransientException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2, 5 }));
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition, "5", "GENERATED_KEYS_TBL"),
-                sqlStateEquals("22023")
-        ));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2, 5 });
+                sqlStateEquals("22023")));
+        verify(columnRs).close();
     }
 
     /**
@@ -439,25 +403,17 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_unOrdered() throws SQLException {
+    void testGeneratedKeys_columnIndexes_unOrdered() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        expectConnectionDialectCheck(3);
-        context.checking(new Expectations() {{
-            // Metadata for table in query will be retrieved
-            oneOf(dbMetadata).getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null);
-            will(returnValue(columnRs));
-            // We want to return three columns, so for next() three return true, fourth returns false
-            exactly(4).of(columnRs).next();
-            will(onConsecutiveCalls(returnValue(true), returnValue(true), returnValue(true),
-                    returnValue(false)));
-            // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
-            exactly(2).of(columnRs).getString(4);
-            will(onConsecutiveCalls(returnValue("ID"), returnValue("NAME")));
-            // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
-            exactly(3).of(columnRs).getInt(17);
-            will(onConsecutiveCalls(returnValue(1), returnValue(2), returnValue(3)));
-            oneOf(columnRs).close();
-        }});
+        prepareConnectionDialectCheck(3);
+        // Metadata for table in query will be retrieved
+        when(dbMetadata.getColumns(null, null, "GENERATED\\_KEYS\\_TBL", null)).thenReturn(columnRs);
+        // We want to return three columns, so for next() three return true, fourth returns false
+        when(columnRs.next()).thenReturn(true, true, true, false);
+        // NOTE: Implementation detail that this calls getString for column 4 (COLUMN_NAME) twice
+        when(columnRs.getString(4)).thenReturn("ID", "NAME");
+        // NOTE: Implementation detail that this calls getInt for column 17 (ORDINAL_POSITION)
+        when(columnRs.getInt(17)).thenReturn(1, 2, 3);
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING \"NAME\",\"ID\"";
@@ -465,11 +421,12 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new int[] { 2, 1 });
 
-        assertTrue("Query with columnIndexes should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with columnIndexes should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        verify(columnRs).close();
     }
 
     /**
@@ -482,55 +439,53 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_withReturning() throws SQLException {
+    void testGeneratedKeys_columnIndexes_withReturning() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // Metadata should never be requested, as the query already has a RETURNING clause
-        expectNoGetColumnsCall();
 
         String testQuery = TEST_INSERT_QUERY + " RETURNING id";
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, new int[] { 1, 2, 3 });
 
-        assertTrue("Query with columnIndexes should generate keys", query.generatesKeys());
-        assertEquals("Query string should not be modified as it already includes RETURNING clause",
-                testQuery, query.getQueryString());
+        assertTrue(query.generatesKeys(), "Query with columnIndexes should generate keys");
+        assertEquals(testQuery, query.getQueryString(),
+                "Query string should not be modified as it already includes RETURNING clause");
+        // Metadata should never be requested, as the query already has a RETURNING clause
+        verifyNoGetColumnsCall();
     }
 
     /**
      * Test generated keys for the case of passing an INSERT and a null columnIndexes array should throw exception
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_nullColumns() throws SQLException {
+    void testGeneratedKeys_columnIndexes_nullColumns() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // Metadata should never be requested, as no columns have been specified
-        expectNoGetColumnsCall();
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, (int[]) null));
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull, "columnIndexes"),
-                sqlStateEquals("22023")
-        ));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, (int[]) null);
+                sqlStateEquals("22023")));
+        // Metadata should never be requested, as no columns have been specified
+        verifyNoGetColumnsCall();
     }
 
     /**
      * Test generated keys for the case of passing an INSERT and a empty columnIndexes array should throw exception
      */
     @Test
-    public void testGeneratedKeys_columnIndexes_emptyColumns() throws SQLException {
+    void testGeneratedKeys_columnIndexes_emptyColumns() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // Metadata should never be requested, as no columns have been specified
-        expectNoGetColumnsCall();
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[0]));
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull, "columnIndexes"),
-                sqlStateEquals("22023")
-        ));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[0]);
+                sqlStateEquals("22023")));
+        // Metadata should never be requested, as no columns have been specified
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -543,10 +498,8 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnNames() throws SQLException {
+    void testGeneratedKeys_columnNames() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // dbMetaData getColumns will not be accessed for using columnNames
-        expectNoGetColumnsCall();
 
         // NOTE Implementation detail
         final String expectedSuffix = "\nRETURNING NAME,ID";
@@ -554,11 +507,13 @@ public class GeneratedKeysQueryTest {
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new String[] { "NAME", "ID" });
 
-        assertTrue("Query with columnNames should generate keys", query.generatesKeys());
+        assertTrue(query.generatesKeys(), "Query with columnNames should generate keys");
         assertThat("Query has RETURNING clauses added", query.getQueryString(), allOf(
                 not(equalTo(TEST_INSERT_QUERY)),
                 startsWith(TEST_INSERT_QUERY),
                 endsWith(expectedSuffix)));
+        // dbMetaData getColumns will not be accessed for using columnNames
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -571,55 +526,53 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_columnNames_withReturning() throws SQLException {
+    void testGeneratedKeys_columnNames_withReturning() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // dbMetaData getColumns will not be accessed for using columnNames
-        expectNoGetColumnsCall();
 
         String testQuery = TEST_INSERT_QUERY + " RETURNING id";
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, new String[] { "ID", "NAME" });
 
-        assertTrue("Query with RETURN_GENERATED_KEYS should generate keys", query.generatesKeys());
-        assertEquals("Query string should not be modified as it already includes RETURNING clause",
-                testQuery, query.getQueryString());
+        assertTrue(query.generatesKeys(), "Query with RETURN_GENERATED_KEYS should generate keys");
+        assertEquals(testQuery, query.getQueryString(),
+                "Query string should not be modified as it already includes RETURNING clause");
+        // dbMetaData getColumns will not be accessed for using columnNames
+        verifyNoGetColumnsCall();
     }
 
     /**
      * Test generated keys for the case of passing an INSERT and a null columnNames array should throw exception
      */
     @Test
-    public void testGeneratedKeys_columnNames_nullColumns() throws SQLException {
+    void testGeneratedKeys_columnNames_nullColumns() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // dbMetaData getColumns will not be accessed for using columnNames
-        expectNoGetColumnsCall();
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, (String[]) null));
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull, "columnNames"),
-                sqlStateEquals("22023")
-        ));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, (String[]) null);
+                sqlStateEquals("22023")));
+        // dbMetaData getColumns will not be accessed for using columnNames
+        verifyNoGetColumnsCall();
     }
 
     /**
      * Test generated keys for the case of passing an INSERT and a empty columnNames array should throw exception
      */
     @Test
-    public void testGeneratedKeys_columnNames_emptyColumns() throws SQLException {
+    void testGeneratedKeys_columnNames_emptyColumns() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // dbMetaData getColumns will not be accessed for using columnNames
-        expectNoGetColumnsCall();
 
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new String[0]));
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull, "columnNames"),
-                sqlStateEquals("22023")
-        ));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new String[0]);
+                sqlStateEquals("22023")));
+        // dbMetaData getColumns will not be accessed for using columnNames
+        verifyNoGetColumnsCall();
     }
 
     /**
@@ -632,45 +585,35 @@ public class GeneratedKeysQueryTest {
      * </p>
      */
     @Test
-    public void testGeneratedKeys_select_returnGeneratedKeys() throws SQLException {
+    void testGeneratedKeys_select_returnGeneratedKeys() throws SQLException {
         initDefaultGeneratedKeysSupport(3, 0);
-        // In combination with SELECT the metadata should not be retrieved
-        expectNoGetColumnsCall();
 
         String testQuery = "select * from rdb$database";
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(testQuery, Statement.NO_GENERATED_KEYS);
 
-        assertFalse("Query with SELECT, should not generate keys", query.generatesKeys());
-        assertEquals("Query string should not be modified", testQuery, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Query with SELECT, should not generate keys");
+        assertEquals(testQuery, query.getQueryString(), "Query string should not be modified");
+        // In combination with SELECT the metadata should not be retrieved
+        verifyNoGetColumnsCall();
     }
 
     // TODO Consider including tests for DELETE, UPDATE, UPDATE OR INSERT and SELECT
 
+    @SuppressWarnings("SameParameterValue")
     private void initDefaultGeneratedKeysSupport(int major, int minor) throws SQLException {
-        expectDatabaseVersionCheck(major, minor);
+        when(dbMetadata.getDatabaseMajorVersion()).thenReturn(major);
+        when(dbMetadata.getDatabaseMinorVersion()).thenReturn(minor);
         generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("default", dbMetadata);
     }
 
-    private void expectDatabaseVersionCheck(final int major, final int minor) throws SQLException {
-        context.checking(new Expectations() {{
-            atLeast(1).of(dbMetadata).getDatabaseMajorVersion(); will(returnValue(major));
-            oneOf(dbMetadata).getDatabaseMinorVersion(); will(returnValue(minor));
-        }});
+    private void prepareConnectionDialectCheck(final int connectionDialect) throws SQLException {
+        lenient().when(dbMetadata.getConnectionDialect()).thenReturn(connectionDialect);
     }
 
-    private void expectConnectionDialectCheck(final int connectionDialect) throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(dbMetadata).getConnectionDialect(); will(returnValue(connectionDialect));
-        }});
-    }
-
-    private void expectNoGetColumnsCall() throws SQLException {
-        context.checking(new Expectations() {{
-            never(dbMetadata).getColumns(with(any(String.class)), with(any(String.class)),
-                    with(any(String.class)), with(any(String.class)));
-        }});
+    private void verifyNoGetColumnsCall() throws SQLException {
+        verify(dbMetadata, never()).getColumns(anyString(), anyString(), anyString(), anyString());
     }
 }

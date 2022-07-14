@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,10 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -30,10 +31,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FBDecimalConversionsTest extends FBJUnit4TestBase {
+class FBDecimalConversionsTest {
+
     //@formatter:off
     private static final String CREATE_TABLE =
             "CREATE TABLE decimal_test (" +
@@ -61,67 +63,71 @@ public class FBDecimalConversionsTest extends FBJUnit4TestBase {
     private static final String UPDATE_RECORD =
             "UPDATE decimal_test SET col_64bit = ? where id = 2";
 
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
+
     private Connection connection;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
 
         try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(CREATE_TABLE);
+            stmt.executeUpdate("delete from decimal_test");
             stmt.executeUpdate(INSERT_RECORD_1);
             stmt.executeUpdate(INSERT_RECORD_2);
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         connection.close();
     }
 
     @Test
-    public void testFloat() throws Exception {
+    void testFloat() throws Exception {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(SELECT_RECORD_1)) {
 
-            assertTrue("ResultSet should not be empty.", rs.next());
+            assertTrue(rs.next(), "ResultSet should not be empty.");
 
             float decimalFloat = rs.getFloat(2);
-            assertEquals("DECIMAL(18,2) of 10.0/3.0 should be exactly 3.33 instead of " + decimalFloat,
-                    (float) 3.33, decimalFloat, 0.0);
+            assertEquals((float) 3.33, decimalFloat, 0.0,
+                    () -> "DECIMAL(18,2) of 10.0/3.0 should be exactly 3.33 instead of " + decimalFloat);
 
             float numeric32Float = rs.getFloat(3);
-            assertEquals("NUMERIC(8,2) of 10.0/3.0 should be exactly 3.33 instead of " + numeric32Float,
-                    (float) 3.33, numeric32Float, 0.0);
+            assertEquals((float) 3.33, numeric32Float, 0.0,
+                    () -> "NUMERIC(8,2) of 10.0/3.0 should be exactly 3.33 instead of " + numeric32Float);
 
             float numeric16Float = rs.getFloat(4);
-            assertEquals("NUMERIC(2,2) of 10.0/3.0 should be exactly 3.33 instead of " + numeric16Float,
-                    (float) 3.33, numeric16Float, 0.0);
+            assertEquals((float) 3.33, numeric16Float, 0.0,
+                    () -> "NUMERIC(2,2) of 10.0/3.0 should be exactly 3.33 instead of " + numeric16Float);
 
             float floatFloat = rs.getFloat(5);
-            assertEquals("FLOAT of 10.0/3.0 should be the same to 3.33 instead of " + floatFloat,
-                    (float) 3.33, floatFloat, 0.0);
+            assertEquals((float) 3.33, floatFloat, 0.0,
+                    () -> "FLOAT of 10.0/3.0 should be the same to 3.33 instead of " + floatFloat);
 
             float doubleFloat = rs.getFloat(6);
-            assertEquals("DOUBLE PRECISION of 10.0/3.0 should be the same to 3.33 instead of " + doubleFloat,
-                    (float) 3.33, doubleFloat, 0.0);
+            assertEquals((float) 3.33, doubleFloat, 0.0,
+                    () -> "DOUBLE PRECISION of 10.0/3.0 should be the same to 3.33 instead of " + doubleFloat);
         }
     }
 
     @Test
-    public void testDecimal() throws Exception {
+    void testDecimal() throws Exception {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(SELECT_RECORD_2)) {
-            assertTrue("ResultSet should not be empty.", rs.next());
+            assertTrue(rs.next(), "ResultSet should not be empty.");
 
             BigDecimal bigDecimal = rs.getBigDecimal(2);
-            assertEquals("DECIMAL(18,2) of 5840813343806525.49 should be exact instead of " + bigDecimal,
-                    new BigDecimal("5840813343806525.49"), bigDecimal);
+            assertEquals(new BigDecimal("5840813343806525.49"), bigDecimal,
+                    () -> "DECIMAL(18,2) of 5840813343806525.49 should be exact instead of " + bigDecimal);
         }
     }
 
     @Test
-    public void testSetDecimal() throws Exception {
+    void testSetDecimal() throws Exception {
         BigDecimal test = new BigDecimal("5840813343806525.49");
         try (PreparedStatement ps = connection.prepareStatement(UPDATE_RECORD)) {
             ps.setBigDecimal(1, test);
@@ -130,10 +136,11 @@ public class FBDecimalConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(SELECT_RECORD_2)) {
-            assertTrue("ResultSet should not be empty.", rs.next());
+            assertTrue(rs.next(), "ResultSet should not be empty.");
 
             BigDecimal bigDecimal = rs.getBigDecimal(2);
-            assertEquals("DECIMAL(18,2) of " + test + " should be exact instead of " + bigDecimal, bigDecimal, test);
+            assertEquals(bigDecimal, test,
+                    () -> "DECIMAL(18,2) of " + test + " should be exact instead of " + bigDecimal);
         }
     }
 

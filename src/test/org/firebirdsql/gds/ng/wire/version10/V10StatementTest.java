@@ -18,19 +18,20 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.AbstractStatementTest;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Statement}. This test class can
@@ -41,20 +42,18 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V10StatementTest extends AbstractStatementTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V10StatementTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10StatementTest(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     protected final ProtocolCollection getProtocolCollection() {

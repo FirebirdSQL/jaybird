@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,11 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -33,13 +33,15 @@ import java.util.Map;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FBUnmanagedConnectionTest {
+class FBUnmanagedConnectionTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     //@formatter:off
     private static final String CREATE_TEST_TABLE =
@@ -54,18 +56,18 @@ public class FBUnmanagedConnectionTest {
 
     private Connection connection;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         closeQuietly(connection);
     }
 
     @Test
-    public void testCommit() throws Exception {
+    void testCommit() throws Exception {
         connection.setAutoCommit(false);
         executeCreateTable(connection, CREATE_TEST_TABLE);
         connection.commit();
@@ -73,55 +75,51 @@ public class FBUnmanagedConnectionTest {
             statement.executeUpdate(INSERT_TEST_TABLE);
             connection.commit();
             try (ResultSet rs = statement.executeQuery(SELECT_TEST_TABLE)) {
-                assertTrue("ResultSet is empty", rs.next());
+                assertTrue(rs.next(), "ResultSet is empty");
                 int value = rs.getInt(1);
-                assertEquals("Commit failed", 1, value);
+                assertEquals(1, value, "Commit failed");
             }
         }
         connection.commit();
     }
 
     @Test
-    public void testCreateStatement() throws Exception {
+    void testCreateStatement() throws Exception {
         Statement statement = connection.createStatement();
-        assertTrue("Statement is null", statement != null);
+        assertNotNull(statement, "Statement is null");
     }
 
     @Test
-    public void testGetAutoCommit() throws Exception {
+    void testGetAutoCommit() throws Exception {
         connection.setAutoCommit(true);
-        assertTrue("AutoCommit is false", connection.getAutoCommit());
+        assertTrue(connection.getAutoCommit(), "AutoCommit is false");
         connection.setAutoCommit(false);
-        assertTrue("AutoCommit is true", !connection.getAutoCommit());
+        assertFalse(connection.getAutoCommit(), "AutoCommit is true");
     }
 
     @Test
-    public void testGetMetaData() throws Exception {
+    void testGetMetaData() throws Exception {
         DatabaseMetaData metaData = connection.getMetaData();
-        assertTrue("Metadata is null", metaData != null);
+        assertNotNull(metaData, "Metadata is null");
     }
 
     @Test
-    public void testGetTypeMap() throws Exception {
+    void testGetTypeMap() throws Exception {
         Map<String, Class<?>> typeMap = connection.getTypeMap();
-        assertTrue("TypeMap is null", typeMap != null);
+        assertNotNull(typeMap, "TypeMap is null");
     }
 
     @Test
-    public void testNativeSQL() throws Exception {
+    void testNativeSQL() throws Exception {
         String nativeSQL = connection.nativeSQL("SELECT * FROM RDB$DATABASE");
-        assertTrue("NativeSQL is null", nativeSQL != null);
+        assertNotNull(nativeSQL, "NativeSQL is null");
     }
 
     /**
-     * Describe <code>testCommitsWithNoWork</code> method here.
      * Make sure commit can be called repeatedly with no work done.
-     *
-     * @throws Exception
-     *         if an error occurs
      */
     @Test
-    public void testCommitsWithNoWork() throws Exception {
+    void testCommitsWithNoWork() throws Exception {
         connection.setAutoCommit(false);
         connection.commit();
         connection.commit();

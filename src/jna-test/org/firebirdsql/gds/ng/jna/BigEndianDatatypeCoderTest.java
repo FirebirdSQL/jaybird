@@ -21,12 +21,12 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test numeric conversion in big endian
@@ -34,13 +34,13 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class BigEndianDatatypeCoderTest {
+class BigEndianDatatypeCoderTest {
 
     private final BigEndianDatatypeCoder datatypeCoder =
             new BigEndianDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Test
-    public void encodeShort() {
+    void encodeShort() {
         short testValue = 0b0110_1011_1010_1001;
         byte[] result = datatypeCoder.encodeShort(testValue);
 
@@ -48,7 +48,7 @@ public class BigEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeShort() {
+    void decodeShort() {
         byte[] testValue = { 0b0110_1001, 0b0011_1100 };
         short result = datatypeCoder.decodeShort(testValue);
 
@@ -56,7 +56,7 @@ public class BigEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDecimal64() {
+    void decodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
@@ -64,7 +64,7 @@ public class BigEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal64() {
+    void encodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
@@ -72,7 +72,7 @@ public class BigEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDecimal128() {
+    void decodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 
@@ -80,7 +80,7 @@ public class BigEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal128() {
+    void encodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,14 +18,16 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.management.FBManager;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,26 +35,26 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Ryan Baldwin
  */
-public class SpecialEmbeddedServerUrlsTest {
+class SpecialEmbeddedServerUrlsTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    private Path tempDir;
 
     private String mRelativeDatabasePath;
     private String mAbsoluteDatabasePath;
     private FBManager fbManager;
     private GDSType gdsType;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
         gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
         fbManager = new FBManager(gdsType);
@@ -61,16 +63,17 @@ public class SpecialEmbeddedServerUrlsTest {
         fbManager.setPort(5066);
         fbManager.start();
 
-        File dbFolder = temporaryFolder.newFolder("db");
+        Path dbFolder = tempDir.resolve("db");
+        Files.createDirectories(dbFolder);
 
         mRelativeDatabasePath = "testES01874.fdb";
-        mAbsoluteDatabasePath = new File(dbFolder, mRelativeDatabasePath).getAbsolutePath();
+        mAbsoluteDatabasePath = dbFolder.resolve(mRelativeDatabasePath).toString();
 
         fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
         fbManager = null;
@@ -79,59 +82,49 @@ public class SpecialEmbeddedServerUrlsTest {
     }
 
     @Test
-    public void testFBManagerWithoutSettingServerAndPort() throws Exception {
-        FBManager testFBManager = new FBManager(gdsType);
-        testFBManager.start();
-
-        testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        testFBManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-
-        testFBManager.stop();
-    }
-
-    @Test
-    public void testFBManagerWithRelativeDatabaseFile() throws Exception {
-        FBManager testFBManager = new FBManager(gdsType);
-        testFBManager.setDropOnStop(true);
-        try {
+    void testFBManagerWithoutSettingServerAndPort() throws Exception {
+        try (FBManager testFBManager = new FBManager(gdsType)) {
             testFBManager.start();
 
-            testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
-        } finally {
-            testFBManager.stop();
+            testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+            testFBManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         }
     }
 
     @Test
-    public void testDriverManagerGetConnectionWithoutServerAndPortInUrl() throws Exception {
-        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath +"?encoding=NONE",
-                "SYSDBA", "masterkey");
+    void testFBManagerWithRelativeDatabaseFile() throws Exception {
+        try (FBManager testFBManager = new FBManager(gdsType)) {
+            testFBManager.setDropOnStop(true);
+            testFBManager.start();
+
+            testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
+        }
+    }
+
+    @Test
+    void testDriverManagerGetConnectionWithoutServerAndPortInUrl() throws Exception {
+        Connection connection = DriverManager.getConnection(
+                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath +"?encoding=NONE", "SYSDBA", "masterkey");
         connection.close();
     }
 
     @Test
-    public void testDriverManagerGetConnectionWithoutServerAndPortInUrlWithRelativeDatabasePath() throws Exception {
-        FBManager testFBManager = new FBManager(gdsType);
-        testFBManager.setDropOnStop(true);
-        try {
+    void testDriverManagerGetConnectionWithoutServerAndPortInUrlWithRelativeDatabasePath() throws Exception {
+        try (FBManager testFBManager = new FBManager(gdsType)) {
+            testFBManager.setDropOnStop(true);
             testFBManager.start();
 
             testFBManager.createDatabase(mRelativeDatabasePath, "SYSDBA", "masterkey");
 
             try (Connection connection = DriverManager.getConnection(
-                    "jdbc:firebirdsql:embedded:" + mRelativeDatabasePath + "?encoding=NONE",
-                    "SYSDBA", "masterkey")) {
+                    "jdbc:firebirdsql:embedded:" + mRelativeDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
                 assertTrue(connection.isValid(1000));
             }
-        } finally {
-            testFBManager.stop();
         }
     }
 
     private static void cleanUpFile(String path) throws IOException {
         Path filePath = Paths.get(path);
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);;
-        }
+        Files.deleteIfExists(filePath);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,23 +18,33 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.Random;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 
-public class ReconnectTest extends FBJUnit4TestBase {
+class ReconnectTest {
+
+    // TODO It is unclear what this class actually tests (there is no reconnect involved)
+
+    private final Logger log = LoggerFactory.getLogger(ReconnectTest.class);
+
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     private static final int TABLE_COUNT = 10;
 
     private Connection con;
 
-    @After
-    public void tearDown() throws SQLException {
+    @AfterEach
+    void tearDown() throws SQLException {
         if (con != null) {
             con.close();
         }
@@ -47,14 +57,10 @@ public class ReconnectTest extends FBJUnit4TestBase {
     private void execute(String sql) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            if (log != null) {
-                log.info("Error executing:" + sql);
-            }
-            throw e;
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void execute(String sql, boolean retryOnError) throws SQLException {
         if (retryOnError) {
             try {
@@ -197,6 +203,7 @@ public class ReconnectTest extends FBJUnit4TestBase {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void populateTestTables(int rowCount) throws SQLException {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
@@ -215,19 +222,19 @@ public class ReconnectTest extends FBJUnit4TestBase {
             if (i > 1)
                 sql.append(",?");
             sql.append(")");
-            PreparedStatement stmt = con.prepareStatement(sql.toString());
-            for (int row = 1; row <= rowCount; row++) {
-                int rndValue = random.nextInt(1000);
-                stmt.setInt(1, row);
-                stmt.setInt(2, rndValue);
-                stmt.setString(3, "X1." + row + "." + rndValue);
-                stmt.setString(4, "X2." + row + "." + rndValue);
-                stmt.setString(5, "X3." + row + "." + rndValue);
-                if (i > 1)
-                    stmt.setInt(6, row);
-                stmt.executeUpdate();
+            try (PreparedStatement stmt = con.prepareStatement(sql.toString())) {
+                for (int row = 1; row <= rowCount; row++) {
+                    int rndValue = random.nextInt(1000);
+                    stmt.setInt(1, row);
+                    stmt.setInt(2, rndValue);
+                    stmt.setString(3, "X1." + row + "." + rndValue);
+                    stmt.setString(4, "X2." + row + "." + rndValue);
+                    stmt.setString(5, "X3." + row + "." + rndValue);
+                    if (i > 1)
+                        stmt.setInt(6, row);
+                    stmt.execute();
+                }
             }
-            stmt.close();
             con.commit();
         }
     }
@@ -283,7 +290,7 @@ public class ReconnectTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testReconnect() throws Exception {
+    void testReconnect() throws Exception {
         openConnection();
         dropTestTables();
         createTestTables();

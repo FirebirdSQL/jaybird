@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,25 +18,30 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link org.firebirdsql.jdbc.FBPreparedStatement} specifically involving UTF-8.
@@ -46,15 +49,18 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FBPreparedStatementUTF8Test extends FBJUnit4TestBase {
+class FBPreparedStatementUTF8Test {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    @Order(1)
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsUtf8, "Test requires UTF8 support")
+            .build();
 
     //@formatter:off
     private static final String CREATE_TABLE =
             "CREATE TABLE utf8table (" +
-            " id INTEGER," +
+            " id INTEGER PRIMARY KEY," +
             " char_1_none CHAR(1) CHARACTER SET NONE," +
             " char_1_utf8 CHAR(1) CHARACTER SET UTF8," +
             " char_1_win1252 CHAR(1) CHARACTER SET WIN1252," +
@@ -74,114 +80,96 @@ public class FBPreparedStatementUTF8Test extends FBJUnit4TestBase {
     private static final String SELECT_FORMAT = "SELECT %s FROM utf8table WHERE id = ?";
     //@formatter:on
 
-    private static final int DEFAULT_ID = 1;
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
 
-    @Before
-    public void setUp() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            assumeTrue(supportInfoFor(connection).supportsUtf8());
-            executeCreateTable(connection, CREATE_TABLE);
-        } finally {
-            connection.close();
+    private static final AtomicInteger idGenerator = new AtomicInteger();
+
+    /**
+     * Test the basic success scenario.
+     *
+     * @param connectionEncoding
+     *         Connection encoding
+     * @param columnName
+     *         Column name
+     * @param testInput
+     *         String to insert
+     * @param expectedOutput
+     *         Expected result of select
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "UTF8, char_1_none, W, W",
+            "UTF8, char_5_none, W, 'W    '",
+            // multi-byte UTF-8 char, expectation padded up to length 4 not 5 (due to NONE encoding!)
+            "UTF8, char_5_none, \u00e0, '\u00e0   '",
+            "UTF8, char_1_win1252, W, W",
+            // multi-byte UTF-8 char that exists in WIN1252
+            "UTF8, char_1_win1252, \u00e0, \u00e0",
+            "UTF8, char_5_win1252, W, 'W    '",
+            // mix of multi-byte and single byte UTF-8 that exist in WIN1252
+            "UTF8, char_5_win1252, '\u00FE\u00A3a\u0160,', '\u00FE\u00A3a\u0160,'",
+            // mix of multi-byte and single byte UTF-8 that exist in WIN1252
+            "UTF8, varchar_5_win1252, '\u00FE\u00A3a\u0160,', '\u00FE\u00A3a\u0160,'",
+            // mix of multi-byte and single byte UTF-8 that exist in WIN1252, less than max length
+            "UTF8, varchar_5_win1252, '\u00FE\u00A3a,', '\u00FE\u00A3a,'",
+            "UTF8, char_1_utf8, W, W",
+            // multi-byte UTF-8 char
+            "UTF8, char_1_utf8, \u00e0, \u00e0",
+            "UTF8, char_5_utf8, W, 'W    '",
+            // multi-byte UTF-8 char
+            "UTF8, char_5_utf8, \u00e0, '\u00e0    '",
+            // mix of multi-byte and single byte UTF-8
+            "UTF8, char_5_utf8, '\u00FE\u00A3a\u0160,', '\u00FE\u00A3a\u0160,'",
+            // mix of multi-byte and single byte UTF-8
+            "UTF8, varchar_5_utf8, '\u00FE\u00A3a\u0160,', '\u00FE\u00A3a\u0160,'",
+            // mix of multi-byte and single byte UTF-8, less than max length
+            "UTF8, varchar_5_utf8, '\u00FEa\u0160,', '\u00FEa\u0160,'",
+    })
+    void basicSuccessTest(String connectionEncoding, String columnName, String testInput, String expectedOutput)
+            throws Exception {
+        try (Connection connection = getConnection(connectionEncoding)) {
+            int id = nextId();
+            insertString(connection, columnName, testInput, id);
+
+            assertEquals(expectedOutput, selectString(connection, columnName, id));
         }
     }
 
-    @Test
-    public void connectionUtf8_insertSingleByte_char_1_none_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_1_none", "W", "W");
+    /**
+     * Test the basic failure scenario.
+     *
+     * @param connectionEncoding
+     *         Connection encoding
+     * @param columnName
+     *         Column name
+     * @param testInput
+     *         String to insert
+     * @param exceptionExpectation
+     *         Expected exception matcher
+     */
+    @ParameterizedTest
+    @MethodSource
+    void basicFailureTest(String connectionEncoding, String columnName, String testInput,
+            Matcher<SQLException> exceptionExpectation) throws Exception {
+        try (Connection connection = getConnection(connectionEncoding)) {
+            int id = nextId();
+
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> insertString(connection, columnName, testInput, id));
+            assertThat(exception, exceptionExpectation);
+        }
     }
 
-    @Test
-    public void connectionUtf8_insertMultiByte_char_1_none_fails() throws Exception {
-        basicFailureTest("UTF8", "char_1_none", "\u00e0", isA(DataTruncation.class));
-    }
-
-    @Test
-    public void connectionUtf8_insertSingleByte_char_5_none_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_none", "W", "W    ");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiByte_char_5_none_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_none", "\u00e0", "\u00e0   "); // expectation padded up to length 4 not 5 (due to NONE encoding!)
-    }
-
-    @Test
-    public void connectionUtf8_insertSingleByte_char_1_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_1_win1252", "W", "W");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiByte_inWin1252_char_1_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_1_win1252", "\u00e0", "\u00e0");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiByte_notInWin1252_char_1_win1252_fails() throws Exception {
-        // TODO Might be fixed once we apply correct encoding
-        basicFailureTest("UTF8", "char_1_win1252", "\u0157", getTransliterationFailedMatcher());
-    }
-
-    @Test
-    public void connectionUtf8_insertSingleByte_char_5_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_win1252", "W", "W    ");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultipleInWin1252_char_5_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_win1252", "\u00FE\u00A3a\u0160,", "\u00FE\u00A3a\u0160,");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultipleInWin1252_varchar_5_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "varchar_5_win1252", "\u00FE\u00A3a\u0160,", "\u00FE\u00A3a\u0160,");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultipleInWin1252_lessThanMax_varchar_5_win1252_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "varchar_5_win1252", "\u00FE\u00A3a,", "\u00FE\u00A3a,");
-    }
-
-    @Test
-    public void connectionUtf8_insertSingleByte_char_1_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_1_utf8", "W", "W");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiByte_char_1_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_1_utf8", "\u00e0", "\u00e0");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultipleSingleByte_char_1_utf8_fails() throws Exception {
-        // TODO: expect DataTruncation.class instead?
-        basicFailureTest("UTF8", "char_1_utf8", "ab", getStringTruncationMatcher());
-    }
-
-    @Test
-    public void connectionUtf8_insertSingleByte_char_5_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_utf8", "W", "W    ");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiByte_char_5_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_utf8", "\u00e0", "\u00e0    ");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiple_char_5_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "char_5_utf8", "\u00FE\u00A3a\u0160,", "\u00FE\u00A3a\u0160,");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiple_varchar_5_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "varchar_5_utf8", "\u00FE\u00A3a\u0160,", "\u00FE\u00A3a\u0160,");
-    }
-
-    @Test
-    public void connectionUtf8_insertMultiple_lessThanMax_varchar_5_utf8_succeeds() throws Exception {
-        basicSuccessTest("UTF8", "varchar_5_utf8", "\u00FEa\u0160,", "\u00FEa\u0160,");
+    static Stream<Arguments> basicFailureTest() {
+        return Stream.of(
+                // multi-byte char
+                Arguments.of("UTF8", "char_1_none", "\u00e0", instanceOf(DataTruncation.class)),
+                // TODO Might be fixed once we apply correct encoding
+                Arguments.of("UTF8", "char_1_win1252", "\u0157", getTransliterationFailedMatcher()),
+                // TODO: expect DataTruncation.class instead?
+                Arguments.of("UTF8", "char_1_utf8", "ab", getStringTruncationMatcher()));
     }
 
     /**
@@ -190,7 +178,6 @@ public class FBPreparedStatementUTF8Test extends FBJUnit4TestBase {
      * @param fbCharacterSet
      *         Firebird encoding name
      * @return Connection
-     * @throws SQLException
      */
     private Connection getConnection(String fbCharacterSet) throws SQLException {
         Properties props = new Properties();
@@ -211,16 +198,12 @@ public class FBPreparedStatementUTF8Test extends FBJUnit4TestBase {
      *         String value to insert
      * @param id
      *         ID of the record
-     * @throws SQLException
      */
     private void insertString(Connection connection, String columnName, String testString, int id) throws SQLException {
-        PreparedStatement insert = connection.prepareStatement(String.format(INSERT_FORMAT, columnName));
-        try {
+        try (PreparedStatement insert = connection.prepareStatement(String.format(INSERT_FORMAT, columnName))) {
             insert.setInt(1, id);
             insert.setString(2, testString);
             insert.executeUpdate();
-        } finally {
-            insert.close();
         }
     }
 
@@ -237,93 +220,36 @@ public class FBPreparedStatementUTF8Test extends FBJUnit4TestBase {
      * @param id
      *         ID of the record
      * @return Selected String value
-     * @throws SQLException
      */
     private String selectString(Connection connection, String columnName, int id) throws SQLException {
-        PreparedStatement select = connection.prepareStatement(String.format(SELECT_FORMAT, columnName));
-        try {
+        try (PreparedStatement select = connection.prepareStatement(String.format(SELECT_FORMAT, columnName))) {
             select.setInt(1, id);
-            ResultSet rs = select.executeQuery();
-            try {
-                assertTrue("Expected a row", rs.next());
+            try (ResultSet rs = select.executeQuery()) {
+                assertTrue(rs.next(), "Expected a row");
                 return rs.getString(1);
-            } finally {
-                rs.close();
             }
-        } finally {
-            select.close();
         }
     }
 
-    /**
-     * Test the basic success scenario.
-     *
-     * @param connectionEncoding
-     *         Connection encoding
-     * @param columnName
-     *         Column name
-     * @param testInput
-     *         String to insert
-     * @param expectedOutput
-     *         Expected result of select
-     * @throws Exception
-     */
-    private void basicSuccessTest(String connectionEncoding, String columnName, String testInput,
-            String expectedOutput) throws Exception {
-        Connection connection = getConnection(connectionEncoding);
-        try {
-            insertString(connection, columnName, testInput, DEFAULT_ID);
-
-            assertEquals(expectedOutput, selectString(connection, columnName, DEFAULT_ID));
-        } finally {
-            connection.close();
-        }
-    }
-
-    /**
-     * Test the basic failure scenario.
-     *
-     * @param connectionEncoding
-     *         Connection encoding
-     * @param columnName
-     *         Column name
-     * @param testInput
-     *         String to insert
-     * @param exceptionExpectation
-     *         Expected exception matcher
-     * @throws Exception
-     */
-    private void basicFailureTest(String connectionEncoding, String columnName, String testInput,
-            Matcher<?> exceptionExpectation) throws Exception {
-        Connection connection = getConnection(connectionEncoding);
-        try {
-            expectedException.expect(exceptionExpectation);
-
-            insertString(connection, columnName, testInput, DEFAULT_ID);
-        } finally {
-            connection.close();
-        }
+    private static int nextId() {
+        return idGenerator.incrementAndGet();
     }
 
     /**
      * @return Matcher for the Firebird string truncation error.
      */
-    private Matcher<SQLException> getStringTruncationMatcher() {
+    private static Matcher<SQLException> getStringTruncationMatcher() {
         return allOf(
-                isA(SQLException.class),
                 errorCodeEquals(ISCConstants.isc_string_truncation),
-                message(containsString(getFbMessage(ISCConstants.isc_string_truncation)))
-        );
+                message(containsString(getFbMessage(ISCConstants.isc_string_truncation))));
     }
 
     /**
      * @return Matcher for the Firebird transliteration failed error.
      */
-    private Matcher<SQLException> getTransliterationFailedMatcher() {
+    private static Matcher<SQLException> getTransliterationFailedMatcher() {
         return allOf(
-                isA(SQLException.class),
                 errorCodeEquals(ISCConstants.isc_transliteration_failed),
-                message(containsString(getFbMessage(ISCConstants.isc_transliteration_failed)))
-        );
+                message(containsString(getFbMessage(ISCConstants.isc_transliteration_failed))));
     }
 }

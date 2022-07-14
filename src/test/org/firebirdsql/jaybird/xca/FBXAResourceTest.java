@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
@@ -26,33 +28,42 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class FBXAResourceTest extends XATestBase {
+class FBXAResourceTest {
+
+    // TODO Ideally, we'd like to share the database for all tests, but testRecover() fails in NATIVE when we do that
+    //  investigate why this happens
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     @Test
-    public void testGetXAResource() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testGetXAResource() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {
             XAResource xa1 = mc.getXAResource();
             XAResource xa2 = mc.getXAResource();
-            assertSame("XAResources from same mc should be identical", xa1, xa2);
+            assertSame(xa1, xa2, "XAResources from same mc should be identical");
         } finally {
             mc.destroy();
         }
     }
 
     @Test
-    public void testIsSameRM() throws Exception {
-        FBManagedConnectionFactory mcf1 = initMcf();
+    void testIsSameRM() throws Exception {
+        FBManagedConnectionFactory mcf1 = createDefaultMcf();
         FBManagedConnection mc1 = mcf1.createManagedConnection();
         XAResource xa1 = mc1.getXAResource();
         FBManagedConnection mc2 = mcf1.createManagedConnection();
         XAResource xa2 = mc2.getXAResource();
-        FBManagedConnectionFactory mcf3 = initMcf();
+        FBManagedConnectionFactory mcf3 = createDefaultMcf();
         FBManagedConnection mc3 = mcf3.createManagedConnection();
         XAResource xa3 = mc3.getXAResource();
         if (xa1.isSameRM(xa2)) {
@@ -67,39 +78,39 @@ public class FBXAResourceTest extends XATestBase {
     }
 
     @Test
-    public void testStartXATrans() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testStartXATrans() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         xa.end(xid, XAResource.TMSUCCESS);
         xa.commit(xid, true);
         mc.destroy();
     }
 
     @Test
-    public void testRollbackXATrans() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testRollbackXATrans() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         xa.end(xid, XAResource.TMSUCCESS);
         xa.rollback(xid);
         mc.destroy();
     }
 
     @Test
-    public void test2PCXATrans() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void test2PCXATrans() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.commit(xid, false);
@@ -107,13 +118,13 @@ public class FBXAResourceTest extends XATestBase {
     }
 
     @Test
-    public void testRollback2PCXATrans() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testRollback2PCXATrans() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         XAResource xa = mc.getXAResource();
         Xid xid = new XidImpl();
         xa.start(xid, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         xa.end(xid, XAResource.TMSUCCESS);
         xa.prepare(xid);
         xa.rollback(xid);
@@ -121,18 +132,18 @@ public class FBXAResourceTest extends XATestBase {
     }
 
     @Test
-    public void testDo2XATrans() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testDo2XATrans() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc1 = mcf.createManagedConnection();
         XAResource xa1 = mc1.getXAResource();
         Xid xid1 = new XidImpl();
         xa1.start(xid1, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc1.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc1.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         FBManagedConnection mc2 = mcf.createManagedConnection();
         XAResource xa2 = mc2.getXAResource();
         Xid xid2 = new XidImpl();
         xa2.start(xid2, XAResource.TMNOFLAGS);
-        assertNotNull("no db handle after start xid", mc2.getGDSHelper().getCurrentDatabase());
+        assertNotNull(mc2.getGDSHelper().getCurrentDatabase(), "no db handle after start xid");
         //commit each tr on other xares
         xa1.end(xid1, XAResource.TMSUCCESS);
         xa2.commit(xid1, true);
@@ -143,7 +154,7 @@ public class FBXAResourceTest extends XATestBase {
     }
 
     @Test
-    public void testRecover() throws Exception {
+    void testRecover() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             try {
@@ -155,7 +166,7 @@ public class FBXAResourceTest extends XATestBase {
             stmt.execute("CREATE TABLE test_reconnect(id INTEGER)");
         }
 
-        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnectionFactory mcf = createDefaultMcf();
 
         Xid xid1 = new XidImpl();
 
@@ -177,7 +188,7 @@ public class FBXAResourceTest extends XATestBase {
             mc1.destroy();
         }
 
-        FBManagedConnectionFactory mcf2 = initMcf();
+        FBManagedConnectionFactory mcf2 = createDefaultMcf();
 
         FBManagedConnection mc2 = mcf2.createManagedConnection();
         try {
@@ -191,18 +202,10 @@ public class FBXAResourceTest extends XATestBase {
             xa2.end(xid2, XAResource.TMSUCCESS);
             xa2.commit(xid2, true);
 
-            assertNotNull("Should recover non-null array", xids);
-            assertTrue("Should recover at least one transaction", xids.length > 0);
+            assertNotNull(xids, "Should recover non-null array");
+            assertTrue(xids.length > 0, "Should recover at least one transaction");
 
-            boolean found = false;
-            for (Xid xid : xids) {
-                if (xid.equals(xid1)) {
-                    found = true;
-                    break;
-                }
-            }
-
-            assertTrue("Should find our transaction", found);
+            assertThat(Arrays.asList(xids), hasItem(xid1));
 
             xa2.commit(xid1, false);
         } finally {
@@ -212,9 +215,9 @@ public class FBXAResourceTest extends XATestBase {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT * FROM test_reconnect");
-            assertTrue("Should find at least one row.", rs.next());
-            assertEquals("Should read correct value", 1, rs.getInt(1));
-            assertFalse("Should select only one row", rs.next());
+            assertTrue(rs.next(), "Should find at least one row.");
+            assertEquals(1, rs.getInt(1), "Should read correct value");
+            assertFalse(rs.next(), "Should select only one row");
         }
     }
 
@@ -226,7 +229,7 @@ public class FBXAResourceTest extends XATestBase {
      */
     @Test
     public void testXAMultipleStatements() throws Throwable {
-        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {
             XAResource xa = mc.getXAResource();
@@ -237,12 +240,12 @@ public class FBXAResourceTest extends XATestBase {
             try (Statement stmt1 = con.createStatement();
                  Statement stmt2 = con.createStatement()) {
                 ResultSet rs1 = stmt1.executeQuery("SELECT RDB$CHARACTER_SET_NAME FROM RDB$CHARACTER_SETS");
-                assertTrue("Expected rs1 row 1", rs1.next());
-                assertNotNull("Expected rs1 value for row 1, column 1", rs1.getString(1));
+                assertTrue(rs1.next(), "Expected rs1 row 1");
+                assertNotNull(rs1.getString(1), "Expected rs1 value for row 1, column 1");
                 ResultSet rs2 = stmt2.executeQuery("SELECT 1 FROM RDB$DATABASE");
-                assertTrue("Expected rs2 row 1", rs2.next());
-                assertEquals("Expected value 1 for rs2 row 1, column 1", 1, rs2.getInt(1));
-                assertFalse("Expected rs1 to be open as the resultset shouldn't have been closed by interleaved execution of stmt2", rs1.isClosed());
+                assertTrue(rs2.next(), "Expected rs2 row 1");
+                assertEquals(1, rs2.getInt(1), "Expected value 1 for rs2 row 1, column 1");
+                assertFalse(rs1.isClosed(), "Expected rs1 to be open as the resultset shouldn't have been closed by interleaved execution of stmt2");
 
                 rs1.close();
                 rs2.close();
@@ -266,7 +269,7 @@ public class FBXAResourceTest extends XATestBase {
      */
     @Test
     public void testCloseConnectionDuringXA() throws Throwable {
-        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {
             XAResource xa = mc.getXAResource();

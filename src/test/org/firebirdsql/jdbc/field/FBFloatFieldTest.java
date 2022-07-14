@@ -20,26 +20,26 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FBFloatField}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float> {
+class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_FLOAT);
@@ -49,101 +49,99 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
 
     @Test
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
         BigDecimal expectedValue = new BigDecimal(1.34578f);
-        assertEquals("Unexpected value for getBigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
         BigDecimal expectedValue = new BigDecimal(1.34578f);
-        assertEquals("Unexpected value for getObject(BigDecimal.class)",
-                expectedValue, field.getObject(BigDecimal.class));
+        assertEquals(expectedValue, field.getObject(BigDecimal.class),
+                "Unexpected value for getObject(BigDecimal.class)");
     }
 
     @Test
-    public void getBigDecimalNull() throws SQLException {
+    void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result", field.getBigDecimal());
+        assertNull(field.getBigDecimal(), "Expected null result");
     }
 
     @Test
-    public void getObject_BigDecimalNull() throws SQLException {
+    void getObject_BigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result for getObject(BigDecimal.class)", field.getObject(BigDecimal.class));
+        assertNull(field.getObject(BigDecimal.class), "Expected null result for getObject(BigDecimal.class)");
     }
 
     @Test
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
-        setFloatExpectations(10);
-
+    void setBigDecimalNonNull() throws SQLException {
         field.setBigDecimal(BigDecimal.TEN);
+
+        verifySetFloat(10);
     }
 
     /**
      * Test at maximum allowed value (Float.MAX_VALUE)
      */
     @Test
-    public void setBigDecimal_MAX() throws SQLException {
-        setFloatExpectations(Float.MAX_VALUE);
-
+    void setBigDecimal_MAX() throws SQLException {
         field.setBigDecimal(new BigDecimal(Float.MAX_VALUE));
+
+        verifySetFloat(Float.MAX_VALUE);
     }
 
     /**
      * Test at maximum allowed value (Float.MAX_VALUE) plus fraction
      */
     @Test
-    public void setBigDecimal_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        BigDecimal testValue = new BigDecimal(Float.MAX_VALUE);
-        testValue = testValue.add(testValue.ulp());
+    void setBigDecimal_MAX_plus_fraction() {
+        BigDecimal maxValue = new BigDecimal(Float.MAX_VALUE);
+        BigDecimal testValue = maxValue.add(maxValue.ulp());
 
-        field.setBigDecimal(testValue);
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(testValue));
     }
 
     /**
      * Test at minimum allowed value (-1 * Float.MAX_VALUE)
      */
     @Test
-    public void setBigDecimal_MIN() throws SQLException {
-        setFloatExpectations(-1 * Float.MAX_VALUE);
-
+    void setBigDecimal_MIN() throws SQLException {
         field.setBigDecimal(new BigDecimal(-1* Float.MAX_VALUE));
+
+        verifySetFloat(-1 * Float.MAX_VALUE);
     }
 
     /**
      * Test at minimum allowed value (-1 * Float.MAX_VALUE) minus fraction
      */
     @Test
-    public void setBigDecimal_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        BigDecimal testValue = new BigDecimal(-1 * Float.MAX_VALUE);
-        testValue = testValue.subtract(testValue.ulp());
+    void setBigDecimal_MIN_minus_fraction() {
+        BigDecimal maxValue = new BigDecimal(-1 * Float.MAX_VALUE);
+        BigDecimal testValue = maxValue.subtract(maxValue.ulp());
 
-        field.setBigDecimal(testValue);
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(testValue));
     }
 
     @Test
-    @Ignore
+    @Disabled
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
         // TODO: Implement test for getBigDecimal(int)
     }
 
     @Test
-    public void setBigDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setBigDecimalNull() throws SQLException {
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
 
     /**
@@ -151,28 +149,28 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
         toReturnFloatExpectations(1);
 
-        assertTrue("Expected true for getBoolean with field value 1", field.getBoolean());
+        assertTrue(field.getBoolean(), "Expected true for getBoolean with field value 1");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         toReturnFloatExpectations(1);
 
-        assertTrue("Expected true for getObject(Boolean.class) with field value 1", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Expected true for getObject(Boolean.class) with field value 1");
     }
 
     /**
      * Test for value for false with value zero
      */
     @Test
-    public void getBooleanNonNull_false_zero() throws SQLException {
+    void getBooleanNonNull_false_zero() throws SQLException {
         toReturnFloatExpectations(0);
 
-        assertFalse("Expected false for getBoolean with field value 0", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value 0");
     }
 
     /**
@@ -180,24 +178,24 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      * TODO: Check if this is according to spec
      */
     @Test
-    public void getBooleanNonNull_false_other() throws SQLException {
+    void getBooleanNonNull_false_other() throws SQLException {
         toReturnFloatExpectations(513);
 
-        assertFalse("Expected false for getBoolean with field value other than 1 or 0", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value other than 1 or 0");
     }
 
     @Test
-    public void getBooleanNull() throws SQLException {
+    void getBooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertFalse("Expected false for getBoolean with field value null", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false for getBoolean with field value null");
     }
 
     @Test
-    public void getObject_BooleanNull() throws SQLException {
+    void getObject_BooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertNull(field.getObject(Boolean.class), "Expected null for getObject(Boolean.class)");
     }
 
     /**
@@ -205,20 +203,20 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void setBoolean() throws SQLException {
-        setFloatExpectations(1);
-
+    void setBoolean() throws SQLException {
         field.setBoolean(true);
+
+        verifySetFloat(1);
     }
 
     /**
      * Tests with setting false
      */
     @Test
-    public void setBoolean_false() throws SQLException {
-        setFloatExpectations(0);
-
+    void setBoolean_false() throws SQLException {
         field.setBoolean(false);
+
+        verifySetFloat(0);
     }
 
     /**
@@ -226,212 +224,210 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         toReturnFloatExpectations(114.123f);
 
-        assertEquals("Unexpected value for getByte", 114, field.getByte());
+        assertEquals(114, field.getByte(), "Unexpected value for getByte");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         toReturnFloatExpectations(114.123f);
 
-        assertEquals("Unexpected value for getObject(Byte.class)", 114, (byte) field.getObject(Byte.class));
+        assertEquals(114, (byte) field.getObject(Byte.class), "Unexpected value for getObject(Byte.class)");
     }
 
     /**
      * Tests getByte with maximum value allowed (Byte.MAX_VALUE).
      */
     @Test
-    public void getByte_MAX() throws SQLException {
+    void getByte_MAX() throws SQLException {
         toReturnFloatExpectations(Byte.MAX_VALUE);
 
-        assertEquals("Unexpected value for getByte", 127, field.getByte());
+        assertEquals(127, field.getByte(), "Unexpected value for getByte");
     }
 
     /**
      * Tests getByte with maximum value allowed (Byte.MAX_VALUE) plus a fraction.
      */
     @Test
-    public void getByte_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByte_MAX_plus_fraction() {
         toReturnFloatExpectations(Byte.MAX_VALUE + Math.ulp(Byte.MAX_VALUE));
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     /**
      * Tests getByte with minimum value allowed (Byte.MIN_VALUE).
      */
     @Test
-    public void getByte_MIN() throws SQLException {
+    void getByte_MIN() throws SQLException {
         toReturnFloatExpectations(Byte.MIN_VALUE);
 
-        assertEquals("Unexpected value for getByte", -128, field.getByte());
+        assertEquals(-128, field.getByte(), "Unexpected value for getByte");
     }
 
     /**
      * Tests getByte with minimum value allowed (Byte.MIN_VALUE) minus a fraction.
      */
     @Test
-    public void getByte_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByte_MIN_minus_fraction() {
         toReturnFloatExpectations(Byte.MIN_VALUE - Math.ulp(Byte.MIN_VALUE));
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     @Test
-    public void getByteNull() throws SQLException {
+    void getByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getByte for null", 0, field.getByte());
+        assertEquals(0, field.getByte(), "Unexpected value for getByte for null");
     }
 
     @Test
-    public void getObject_ByteNull() throws SQLException {
+    void getObject_ByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Byte.class)", field.getObject(Byte.class));
+        assertNull(field.getObject(Byte.class), "Expected null for getObject(Byte.class)");
     }
 
     @Test
     @Override
-    public void setByte() throws SQLException {
-        setFloatExpectations(-54);
-
+    void setByte() throws SQLException {
         field.setByte((byte)-54);
+
+        verifySetFloat(-54);
     }
 
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
-        assertEquals("Unexpected value for getDouble", 1.34578f, field.getDouble(), 0);
+        assertEquals(1.34578f, field.getDouble(), 0, "Unexpected value for getDouble");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
-        assertEquals("Unexpected value for getObject(Double.class)", 1.34578f, field.getObject(Double.class), 0);
+        assertEquals(1.34578f, field.getObject(Double.class), 0, "Unexpected value for getObject(Double.class)");
     }
 
     @Test
-    public void getDoubleNull() throws SQLException {
+    void getDoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getDouble for null", 0, field.getDouble(), 0);
+        assertEquals(0, field.getDouble(), 0, "Unexpected value for getDouble for null");
     }
 
     @Test
-    public void getObject_DoubleNull() throws SQLException {
+    void getObject_DoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Double.class)", field.getObject(Double.class));
+        assertNull(field.getObject(Double.class), "Expected null for getObject(Double.class)");
     }
 
     @Test
     @Override
-    public void setDouble() throws SQLException {
-        setFloatExpectations(9157824.1245785f);
-
+    void setDouble() throws SQLException {
         field.setDouble(9157824.1245785f);
+
+        verifySetFloat(9157824.1245785f);
     }
 
     @Test
-    public void setDouble_NaN() throws SQLException {
-        setFloatExpectations(Float.NaN);
-
+    void setDouble_NaN() throws SQLException {
         field.setDouble(Double.NaN);
+
+        verifySetFloat(Float.NaN);
     }
 
     @Test
-    public void setDouble_posInf() throws SQLException {
-        setFloatExpectations(Float.POSITIVE_INFINITY);
-
+    void setDouble_posInf() throws SQLException {
         field.setDouble(Double.POSITIVE_INFINITY);
+
+        verifySetFloat(Float.POSITIVE_INFINITY);
     }
 
     @Test
-    public void setDouble_negInf() throws SQLException {
-        setFloatExpectations(Float.NEGATIVE_INFINITY);
-
+    void setDouble_negInf() throws SQLException {
         field.setDouble(Double.NEGATIVE_INFINITY);
+
+        verifySetFloat(Float.NEGATIVE_INFINITY);
     }
 
     @Test
-    public void setDouble_OutOfRange_high() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        field.setDouble(Float.MAX_VALUE + (double)Math.ulp(Float.MAX_VALUE));
+    void setDouble_OutOfRange_high() {
+        assertThrows(TypeConversionException.class,
+                () -> field.setDouble(Float.MAX_VALUE + (double)Math.ulp(Float.MAX_VALUE)));
     }
 
     @Test
-    public void setDouble_OutOfRange_low() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        field.setDouble(-1 * Float.MAX_VALUE - (double)Math.ulp(Float.MAX_VALUE));
+    void setDouble_OutOfRange_low() {
+        assertThrows(TypeConversionException.class,
+                () -> field.setDouble(-1 * Float.MAX_VALUE - (double)Math.ulp(Float.MAX_VALUE)));
     }
 
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         toReturnFloatExpectations(1247.25898f);
 
-        assertEquals("Unexpected value for getFloat", 1247.25898f, field.getFloat(), 0);
+        assertEquals(1247.25898f, field.getFloat(), 0, "Unexpected value for getFloat");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         toReturnFloatExpectations(1247.25898f);
 
-        assertEquals("Unexpected value for getObject(Float.class)", 1247.25898f, field.getObject(Float.class), 0);
+        assertEquals(1247.25898f, field.getObject(Float.class), 0, "Unexpected value for getObject(Float.class)");
     }
 
     @Test
-    public void getFloatNull() throws SQLException {
+    void getFloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getFloat for null", 0, field.getFloat(), 0);
+        assertEquals(0, field.getFloat(), 0, "Unexpected value for getFloat for null");
     }
 
     @Test
-    public void getObject_FloatNull() throws SQLException {
+    void getObject_FloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Float.class)", field.getObject(Float.class));
+        assertNull(field.getObject(Float.class), "Expected null for getObject(Float.class)");
     }
 
     @Test
     @Override
-    public void setFloat() throws SQLException {
-        setFloatExpectations(Float.MAX_VALUE);
-
+    void setFloat() throws SQLException {
         field.setFloat(Float.MAX_VALUE);
+
+        verifySetFloat(Float.MAX_VALUE);
     }
 
     @Test
-    public void setFloat_NaN() throws SQLException {
-        setFloatExpectations(Float.NaN);
-
+    void setFloat_NaN() throws SQLException {
         field.setFloat(Float.NaN);
+
+        verifySetFloat(Float.NaN);
     }
 
     @Test
-    public void setFloat_posInf() throws SQLException {
-        setFloatExpectations(Float.POSITIVE_INFINITY);
-
+    void setFloat_posInf() throws SQLException {
         field.setFloat(Float.POSITIVE_INFINITY);
+
+        verifySetFloat(Float.POSITIVE_INFINITY);
     }
 
     @Test
-    public void setFloat_negInf() throws SQLException {
-        setFloatExpectations(Float.NEGATIVE_INFINITY);
-
+    void setFloat_negInf() throws SQLException {
         field.setFloat(Float.NEGATIVE_INFINITY);
+
+        verifySetFloat(Float.NEGATIVE_INFINITY);
     }
 
     /**
@@ -439,82 +435,80 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         toReturnFloatExpectations(124578.124578f);
 
-        assertEquals("Unexpected value for getInt", 124578, field.getInt());
+        assertEquals(124578, field.getInt(), "Unexpected value for getInt");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         toReturnFloatExpectations(124578.124578f);
 
-        assertEquals("Unexpected value for getObject(Integer.class)", 124578, (int) field.getObject(Integer.class));
+        assertEquals(124578, (int) field.getObject(Integer.class), "Unexpected value for getObject(Integer.class)");
     }
 
     /**
      * Tests value at maximum allowed (Integer.MAX_VALUE).
      */
     @Test
-    public void getInt_MAX() throws SQLException {
+    void getInt_MAX() throws SQLException {
         toReturnFloatExpectations(Integer.MAX_VALUE);
 
-        assertEquals("Unexpected value for getInt", Integer.MAX_VALUE, field.getInt());
+        assertEquals(Integer.MAX_VALUE, field.getInt(), "Unexpected value for getInt");
     }
 
     /**
      * Tests value at maximum allowed (Integer.MAX_VALUE) plus a fraction
      */
     @Test
-    public void getInt_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getInt_MAX_plus_fraction() {
         toReturnFloatExpectations(Integer.MAX_VALUE + Math.ulp(Integer.MAX_VALUE));
 
-        field.getInt();
+        assertThrows(TypeConversionException.class, field::getInt);
     }
 
     /**
      * Tests value at minimum allowed (Integer.MIN_VALUE).
      */
     @Test
-    public void getInt_MIN() throws SQLException {
+    void getInt_MIN() throws SQLException {
         toReturnFloatExpectations(Integer.MIN_VALUE);
 
-        assertEquals("Unexpected value for getInt", Integer.MIN_VALUE, field.getInt());
+        assertEquals(Integer.MIN_VALUE, field.getInt(), "Unexpected value for getInt");
     }
 
     /**
      * Tests value at minimum allowed (Integer.MIN_VALUE) minus a fraction
      */
     @Test
-    public void getInt_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getInt_MIN_minus_fraction() {
         toReturnFloatExpectations(Integer.MIN_VALUE - Math.ulp(Integer.MIN_VALUE));
 
-        field.getInt();
+        assertThrows(TypeConversionException.class, field::getInt);
     }
 
     @Test
-    public void getIntNull() throws SQLException {
+    void getIntNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getInt for null", 0, field.getInt());
+        assertEquals(0, field.getInt(), "Unexpected value for getInt for null");
     }
 
     @Test
-    public void getObject_IntegerNull() throws SQLException {
+    void getObject_IntegerNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Integer.class)", field.getObject(Integer.class));
+        assertNull(field.getObject(Integer.class), "Expected null for getObject(Integer.class)");
     }
 
     @Test
     @Override
-    public void setInteger() throws SQLException {
-        setFloatExpectations(Integer.MAX_VALUE);
-
+    void setInteger() throws SQLException {
         field.setInteger(Integer.MAX_VALUE);
+
+        verifySetFloat(Integer.MAX_VALUE);
     }
 
 
@@ -523,103 +517,102 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         toReturnFloatExpectations(2.132457f * Integer.MAX_VALUE);
 
         long expectedValue = (long)(2.132457f * Integer.MAX_VALUE);
-        assertEquals("Unexpected value for getLong", expectedValue, field.getLong());
+        assertEquals(expectedValue, field.getLong(), "Unexpected value for getLong");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         toReturnFloatExpectations(2.132457f * Integer.MAX_VALUE);
 
         long expectedValue = (long)(2.132457f * Integer.MAX_VALUE);
-        assertEquals("Unexpected value for getLong", expectedValue, (long) field.getObject(Long.class));
+        assertEquals(expectedValue, (long) field.getObject(Long.class), "Unexpected value for getLong");
     }
 
     /**
      * Tests value at maximum allowed (Long.MAX_VALUE).
      */
     @Test
-    public void getLong_MAX() throws SQLException {
+    void getLong_MAX() throws SQLException {
         toReturnFloatExpectations(Long.MAX_VALUE);
 
-        assertEquals("Unexpected value for getLong", Long.MAX_VALUE, field.getLong());
+        assertEquals(Long.MAX_VALUE, field.getLong(), "Unexpected value for getLong");
     }
 
     /**
      * Tests value at maximum allowed (Long.MAX_VALUE) plus a fraction.
      */
     @Test
-    public void getLong_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getLong_MAX_plus_fraction() {
         toReturnFloatExpectations(Long.MAX_VALUE + Math.ulp(Long.MAX_VALUE));
 
-        field.getLong();
+        assertThrows(TypeConversionException.class, field::getLong);
     }
 
     /**
      * Tests value at minimum allowed (Long.MIN_VALUE).
      */
     @Test
-    public void getLong_MIN() throws SQLException {
+    void getLong_MIN() throws SQLException {
         toReturnFloatExpectations(Long.MIN_VALUE);
 
-        assertEquals("Unexpected value for getLong", Long.MIN_VALUE, field.getLong());
+        assertEquals(Long.MIN_VALUE, field.getLong(), "Unexpected value for getLong");
     }
 
     /**
      * Tests value at minimum allowed (Long.MIN_VALUE) minus a fraction.
      */
     @Test
-    public void getLong_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getLong_MIN_minus_fraction() {
         toReturnFloatExpectations(Long.MIN_VALUE - Math.ulp(Long.MIN_VALUE));
 
-        field.getLong();
+        assertThrows(TypeConversionException.class, field::getLong);
     }
 
     @Test
-    public void getLongNull() throws SQLException {
+    void getLongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getLong for null", 0, field.getLong());
+        assertEquals(0, field.getLong(), "Unexpected value for getLong for null");
     }
 
     @Test
-    public void getObject_LongNull() throws SQLException {
+    void getObject_LongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Long.class)", field.getObject(Long.class));
+        assertNull(field.getObject(Long.class), "Expected null for getObject(Long.class)");
     }
 
     @Test
     @Override
-    public void setLong() throws SQLException {
-        setFloatExpectations(Long.MAX_VALUE);
-
+    void setLong() throws SQLException {
         field.setLong(Long.MAX_VALUE);
+
+        verifySetFloat(Long.MAX_VALUE);
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnFloatExpectations(-1 * Float.MAX_VALUE);
 
         // JDBC expected return type for getObject on Types.FLOAT is java.lang.Double
         Double expectedValue = (double) (-1 * Float.MAX_VALUE);
-        assertEquals("Unexpected value for getObject", expectedValue, field.getObject());
+        assertEquals(expectedValue, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setFloatExpectations(-1 * Float.MAX_VALUE);
+    void setObjectNonNull() throws SQLException {
         Float setValue = -1 * Float.MAX_VALUE;
 
         field.setObject(setValue);
+
+        verifySetFloat(-1 * Float.MAX_VALUE);
     }
 
     // TODO Add additional object tests (eg with Integer, Long, Float, BigDecimal etc objects).
@@ -629,114 +622,112 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         toReturnFloatExpectations(-14578.124f);
 
-        assertEquals("Unexpected value for getShort", -14578, field.getShort());
+        assertEquals(-14578, field.getShort(), "Unexpected value for getShort");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         toReturnFloatExpectations(-14578.124f);
 
-        assertEquals("Unexpected value for getShort", -14578, (short) field.getObject(Short.class));
+        assertEquals(-14578, (short) field.getObject(Short.class), "Unexpected value for getShort");
     }
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE).
      */
     @Test
-    public void getShort_MAX() throws SQLException {
+    void getShort_MAX() throws SQLException {
         toReturnFloatExpectations(Short.MAX_VALUE);
 
-        assertEquals("Unexpected value for getShort", Short.MAX_VALUE, field.getShort());
+        assertEquals(Short.MAX_VALUE, field.getShort(), "Unexpected value for getShort");
     }
 
     /**
      * Tests value at maximum allowed (Short.MAX_VALUE) plus a fraction
      */
     @Test
-    public void getShort_MAX_plus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShort_MAX_plus_fraction() {
         toReturnFloatExpectations(Short.MAX_VALUE + Math.ulp(Short.MAX_VALUE));
 
-        field.getShort();
+        assertThrows(TypeConversionException.class, field::getShort);
     }
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE).
      */
     @Test
-    public void getShort_MIN() throws SQLException {
+    void getShort_MIN() throws SQLException {
         toReturnFloatExpectations(Short.MIN_VALUE);
 
-        assertEquals("Unexpected value for getShort", Short.MIN_VALUE, field.getShort());
+        assertEquals(Short.MIN_VALUE, field.getShort(), "Unexpected value for getShort");
     }
 
     /**
      * Tests value at minimum allowed (Short.MIN_VALUE) minus a fraction
      */
     @Test
-    public void getShort_MIN_minus_fraction() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShort_MIN_minus_fraction() {
         toReturnFloatExpectations(Short.MIN_VALUE - Math.ulp(Short.MIN_VALUE));
 
-        field.getShort();
+        assertThrows(TypeConversionException.class, field::getShort);
     }
 
     @Test
-    public void getShortNull() throws SQLException {
+    void getShortNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Unexpected value for getShort for null", 0, field.getShort());
+        assertEquals(0, field.getShort(), "Unexpected value for getShort for null");
     }
 
     @Test
-    public void getObject_ShortNull() throws SQLException {
+    void getObject_ShortNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Short.class)", field.getObject(Short.class));
+        assertNull(field.getObject(Short.class), "Expected null for getObject(Short.class)");
     }
 
     @Test
     @Override
-    public void setShort() throws SQLException {
-        setFloatExpectations(Short.MIN_VALUE);
-
+    void setShort() throws SQLException {
         field.setShort(Short.MIN_VALUE);
+
+        verifySetFloat(Short.MIN_VALUE);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnFloatExpectations(-14578.124f);
 
         String expectedValue = String.valueOf(-14578.124f);
-        assertEquals("Unexpected value for getString", expectedValue, field.getString());
+        assertEquals(expectedValue, field.getString(), "Unexpected value for getString");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnFloatExpectations(-14578.124f);
 
         String expectedValue = String.valueOf(-14578.124f);
-        assertEquals("Unexpected value for getString", expectedValue, field.getObject(String.class));
+        assertEquals(expectedValue, field.getObject(String.class), "Unexpected value for getString");
     }
 
     @Test
-    public void getStringNull() throws SQLException {
+    void getStringNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getString for null", field.getString());
+        assertNull(field.getString(), "Unexpected value for getString for null");
     }
 
     @Test
-    public void getObject_StringNull() throws SQLException {
+    void getObject_StringNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(String.class)", field.getObject(String.class));
+        assertNull(field.getObject(String.class), "Expected null for getObject(String.class)");
     }
 
     /**
@@ -744,58 +735,57 @@ public class FBFloatFieldTest extends BaseJUnit4TestFBField<FBFloatField, Float>
      */
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
-        setFloatExpectations(5145789.12457f);
-
+    void setStringNonNull() throws SQLException {
         field.setString("5145789.12457");
+
+        verifySetFloat(5145789.12457f);
     }
 
     @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-
+    void setStringNull() throws SQLException {
         field.setString(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setString_noFloat() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-        field.setString("no float");
+    void setString_noFloat() {
+        assertThrows(TypeConversionException.class, () -> field.setString("no float"));
     }
 
     @Test
     @Override
-    public void getDecimalNonNull() throws SQLException {
+    void getDecimalNonNull() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
         Decimal128 expectedValue = Decimal128.valueOf(new BigDecimal(1.34578f));
-        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+        assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 
     @Test
-    public void getDecimal_null() throws SQLException {
+    void getDecimal_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("expected null for getDecimal", field.getDecimal());
+        assertNull(field.getDecimal(), "expected null for getDecimal");
     }
 
     @Test
     @Override
-    public void setDecimalNonNull() throws SQLException {
-        setFloatExpectations(10);
-
+    void setDecimalNonNull() throws SQLException {
         field.setDecimal(Decimal128.valueOf("10"));
+
+        verifySetFloat(10);
     }
 
     @Test
-    public void setDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setDecimalNull() throws SQLException {
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Override
-    protected Float getNonNullObject() {
+    Float getNonNullObject() {
         return 1f;
     }
 }

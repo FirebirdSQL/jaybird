@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.sql.Time;
@@ -30,14 +30,14 @@ import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link FBTimestampField}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBTimestampFieldTest extends BaseJUnit4TestFBField<FBTimestampField, Timestamp> {
+class FBTimestampFieldTest extends BaseJUnit5TestFBField<FBTimestampField, Timestamp> {
 
     private static final String TEST_DATE = "2016-01-01";
     private static final String TEST_TIMESTAMP = "2016-01-01 13:37:59";
@@ -45,9 +45,9 @@ public class FBTimestampFieldTest extends BaseJUnit4TestFBField<FBTimestampField
     private static final LocalDateTime TEST_LOCAL_DATE_TIME = LocalDateTime.parse(TEST_TIMESTAMP.replace(' ', 'T'));
     private static final Timestamp TEST_SQL_TIMESTAMP = Timestamp.valueOf(TEST_TIMESTAMP);
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_TIMESTAMP);
@@ -57,273 +57,272 @@ public class FBTimestampFieldTest extends BaseJUnit4TestFBField<FBTimestampField
 
     @Test
     @Override
-    public void getDateNonNull() throws SQLException {
+    void getDateNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         // TODO Conversion doesn't correctly handle time zone
-        //assertEquals("Unexpected value for getDate", java.sql.Date.valueOf(TEST_DATE), field.getDate());
-        assertEquals("Unexpected value for getDate", TEST_DATE, field.getDate().toString());
+        //assertEquals(java.sql.Date.valueOf(TEST_DATE), field.getDate(), "Unexpected value for getDate");
+        assertEquals(TEST_DATE, field.getDate().toString(), "Unexpected value for getDate");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Date() throws SQLException {
+    void getObject_java_sql_Date() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         // TODO Conversion doesn't correctly handle time zone
         //assertEquals("Unexpected value for getObject(java.sql.Date.class)",
         //        java.sql.Date.valueOf(TEST_DATE), field.getObject(java.sql.Date.class));
-        assertEquals("Unexpected value for getObject(java.sql.Date.class)",
-                TEST_DATE, field.getObject(java.sql.Date.class).toString());
+        assertEquals(TEST_DATE, field.getObject(java.sql.Date.class).toString(),
+                "Unexpected value for getObject(java.sql.Date.class)");
     }
 
     @Test
     @Override
-    public void setDateNonNull() throws SQLException {
-        setTimestampExpectations(LocalDateTime.parse(TEST_DATE + "T00:00:00"));
-
+    void setDateNonNull() throws SQLException {
         field.setDate(java.sql.Date.valueOf(TEST_DATE));
+
+        verifySetTimestamp(LocalDateTime.parse(TEST_DATE + "T00:00:00"));
     }
 
     @Test
-    public void setObject_java_sql_Date() throws SQLException {
-        setTimestampExpectations(LocalDateTime.parse(TEST_DATE + "T00:00:00"));
-
+    void setObject_java_sql_Date() throws SQLException {
         field.setObject(java.sql.Date.valueOf(TEST_DATE));
+
+        verifySetTimestamp(LocalDateTime.parse(TEST_DATE + "T00:00:00"));
     }
 
     @Test
     @Override
-    public void getDateCalendarNonNull() throws SQLException {
+    void getDateCalendarNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         // TODO Conversion doesn't correctly handle time zone
 //        assertEquals("Unexpected value for getDate(Calendar)",
 //                java.sql.Date.valueOf(TEST_DATE), field.getDate(calendar));
-        assertEquals("Unexpected value for getDate(Calendar)",
-                TEST_DATE, field.getDate(calendar).toString());
+        assertEquals(TEST_DATE, field.getDate(calendar).toString(), "Unexpected value for getDate(Calendar)");
     }
 
     @Test
     @Override
-    public void setDateCalendarNonNull() throws SQLException {
-        // TODO Conversion seems wrong
-        setTimestampExpectations(LocalDateTime.parse("2015-12-31T23:00:00"));
+    void setDateCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setDate(java.sql.Date.valueOf(TEST_DATE), calendar);
+
+        // TODO Conversion seems wrong
+        verifySetTimestamp(LocalDateTime.parse("2015-12-31T23:00:00"));
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals("Unexpected value for getObject", TEST_SQL_TIMESTAMP, field.getObject());
+        assertEquals(TEST_SQL_TIMESTAMP, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(TEST_SQL_TIMESTAMP);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals("Unexpected value for getString", TEST_TIMESTAMP + ".0", field.getString());
+        assertEquals(TEST_TIMESTAMP + ".0", field.getString(), "Unexpected value for getString");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals("Unexpected value for getObject(String.class)", TEST_TIMESTAMP + ".0", field.getObject(String.class));
+        assertEquals(TEST_TIMESTAMP + ".0", field.getObject(String.class), "Unexpected value for getObject(String.class)");
     }
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setStringNonNull() throws SQLException {
         field.setString(TEST_TIMESTAMP);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Test
-    public void setObject_String() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setObject_String() throws SQLException {
         field.setObject(TEST_TIMESTAMP);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Test
     @Override
-    public void getTimeNonNull() throws SQLException {
+    void getTimeNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         // TODO Doesn't seem to handle date correctly
-        //assertEquals("Unexpected value for getTime", java.sql.Time.valueOf(TEST_TIME), field.getTime());
-        assertEquals("Unexpected value for getTime",
-                Time.valueOf(TEST_TIME).toString(), field.getTime().toString());
+        //assertEquals(java.sql.Time.valueOf(TEST_TIME), field.getTime(), "Unexpected value for getTime");
+        assertEquals(Time.valueOf(TEST_TIME).toString(), field.getTime().toString(), "Unexpected value for getTime");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Time() throws SQLException {
+    void getObject_java_sql_Time() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         // TODO Doesn't seem to handle date correctly
         //assertEquals("Unexpected value for getObject(java.sql.Time.class)",
         //       java.sql.Time.valueOf(TEST_TIME), field.getTime());
-        assertEquals("Unexpected value for getObject(java.sql.Time.class)",
-                Time.valueOf(TEST_TIME).toString(), field.getObject(Time.class).toString());
+        assertEquals(Time.valueOf(TEST_TIME).toString(), field.getObject(Time.class).toString(),
+                "Unexpected value for getObject(java.sql.Time.class)");
     }
 
     @Test
     @Override
-    public void setTimeNonNull() throws SQLException {
-        setTimestampExpectations(LocalDateTime.parse("1970-01-01T" + TEST_TIME));
-
+    void setTimeNonNull() throws SQLException {
         field.setTime(Time.valueOf(TEST_TIME));
+
+        verifySetTimestamp(LocalDateTime.parse("1970-01-01T" + TEST_TIME));
     }
 
     @Test
-    public void setObject_java_sql_Time() throws SQLException {
-        setTimestampExpectations(LocalDateTime.parse("1970-01-01T" + TEST_TIME));
-
+    void setObject_java_sql_Time() throws SQLException {
         field.setObject(Time.valueOf(TEST_TIME));
+
+        verifySetTimestamp(LocalDateTime.parse("1970-01-01T" + TEST_TIME));
     }
 
     @Test
     @Override
-    public void getTimeCalendarNonNull() throws SQLException {
+    void getTimeCalendarNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
-        assertEquals("Unexpected value for getTime(Calendar)",
-                Time.valueOf("14:37:59").toString(), field.getTime(calendar).toString());
+        assertEquals(Time.valueOf("14:37:59").toString(), field.getTime(calendar).toString(),
+                "Unexpected value for getTime(Calendar)");
     }
 
     @Test
     @Override
-    public void setTimeCalendarNonNull() throws SQLException {
-        //TODO Conversion doesn't seem to correctly handle time zone (looks like timezone is inverted)
-        setTimestampExpectations(LocalDateTime.parse("1970-01-01T12:37:59"));
+    void setTimeCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTime(Time.valueOf(TEST_TIME), calendar);
+
+        //TODO Conversion doesn't seem to correctly handle time zone (looks like timezone is inverted)
+        verifySetTimestamp(LocalDateTime.parse("1970-01-01T12:37:59"));
     }
 
     @Test
     @Override
-    public void getTimestampNonNull() throws SQLException {
+    void getTimestampNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals("Unexpected value for getTimestamp", TEST_SQL_TIMESTAMP, field.getTimestamp());
+        assertEquals(TEST_SQL_TIMESTAMP, field.getTimestamp(), "Unexpected value for getTimestamp");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Timestamp() throws SQLException {
+    void getObject_java_sql_Timestamp() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
-        assertEquals("Unexpected value for getObject(java.sql.Timestamp.class)",
-                TEST_SQL_TIMESTAMP, field.getObject(Timestamp.class));
+        assertEquals(TEST_SQL_TIMESTAMP, field.getObject(Timestamp.class),
+                "Unexpected value for getObject(java.sql.Timestamp.class)");
     }
 
     @Test
     @Override
-    public void getObject_java_util_Date() throws SQLException {
+    void getObject_java_util_Date() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         // Test depends on the fact that we currently return java.sql.Timestamp
-        assertEquals("Unexpected value for getObject(java.util.Date.class)",
-                TEST_SQL_TIMESTAMP, field.getObject(java.util.Date.class));
+        assertEquals(TEST_SQL_TIMESTAMP, field.getObject(java.util.Date.class),
+                "Unexpected value for getObject(java.util.Date.class)");
     }
 
     @Test
     @Override
-    public void getObject_Calendar() throws SQLException {
+    void getObject_Calendar() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(TEST_SQL_TIMESTAMP);
 
-        assertEquals("Unexpected value for getObject(Calendar.class)", calendar, field.getObject(Calendar.class));
+        assertEquals(calendar, field.getObject(Calendar.class), "Unexpected value for getObject(Calendar.class)");
     }
 
     @Test
     @Override
-    public void setTimestampNonNull() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setTimestampNonNull() throws SQLException {
         field.setTimestamp(TEST_SQL_TIMESTAMP);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Test
     @Override
-    public void getTimestampCalendarNonNull() throws SQLException {
+    void getTimestampCalendarNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         //TODO Conversion doesn't seem to correctly handle time zone
-        assertEquals("Unexpected value for getTimestamp(Calendar)",
-                Timestamp.valueOf(TEST_DATE + " 14:37:59"), field.getTimestamp(calendar));
+        assertEquals(Timestamp.valueOf(TEST_DATE + " 14:37:59"), field.getTimestamp(calendar),
+                "Unexpected value for getTimestamp(Calendar)");
     }
 
     @Test
     @Override
-    public void setTimestampCalendarNonNull() throws SQLException {
-        //TODO Conversion doesn't seem to correctly handle time zone (looks like timezone is inverted)
-        setTimestampExpectations(LocalDateTime.parse(TEST_DATE + "T12:37:59"));
+    void setTimestampCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTimestamp(TEST_SQL_TIMESTAMP, calendar);
+        
+        //TODO Conversion doesn't seem to correctly handle time zone (looks like timezone is inverted)
+        verifySetTimestamp(LocalDateTime.parse(TEST_DATE + "T12:37:59"));
     }
 
     @Test
     @Override
-    public void getRawDateTimeStructNonNull() throws SQLException {
+    void getRawDateTimeStructNonNull() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = field.getRawDateTimeStruct();
 
-        assertEquals("year", 2016, rawDateTimeStruct.year);
-        assertEquals("month", 1, rawDateTimeStruct.month);
-        assertEquals("day", 1, rawDateTimeStruct.day);
-        assertEquals("hour", 13, rawDateTimeStruct.hour);
-        assertEquals("minute", 37, rawDateTimeStruct.minute);
-        assertEquals("second", 59, rawDateTimeStruct.second);
-        assertEquals("fractions", 0, rawDateTimeStruct.fractions);
+        assertEquals(2016, rawDateTimeStruct.year, "year");
+        assertEquals(1, rawDateTimeStruct.month, "month");
+        assertEquals(1, rawDateTimeStruct.day, "day");
+        assertEquals(13, rawDateTimeStruct.hour, "hour");
+        assertEquals(37, rawDateTimeStruct.minute, "minute");
+        assertEquals(59, rawDateTimeStruct.second, "second");
+        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
     }
 
     @Test
     @Override
-    public void getObject_RawDateTimeStruct() throws SQLException {
+    void getObject_RawDateTimeStruct() throws SQLException {
         toReturnTimestampExpectations(TEST_LOCAL_DATE_TIME);
 
         final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct =
                 field.getObject(DatatypeCoder.RawDateTimeStruct.class);
 
-        assertEquals("year", 2016, rawDateTimeStruct.year);
-        assertEquals("month", 1, rawDateTimeStruct.month);
-        assertEquals("day", 1, rawDateTimeStruct.day);
-        assertEquals("hour", 13, rawDateTimeStruct.hour);
-        assertEquals("minute", 37, rawDateTimeStruct.minute);
-        assertEquals("second", 59, rawDateTimeStruct.second);
-        assertEquals("fractions", 0, rawDateTimeStruct.fractions);
+        assertEquals(2016, rawDateTimeStruct.year, "year");
+        assertEquals(1, rawDateTimeStruct.month, "month");
+        assertEquals(1, rawDateTimeStruct.day, "day");
+        assertEquals(13, rawDateTimeStruct.hour, "hour");
+        assertEquals(37, rawDateTimeStruct.minute, "minute");
+        assertEquals(59, rawDateTimeStruct.second, "second");
+        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
     }
 
     @Test
     @Override
-    public void setRawDateTimeStructNonNull() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setRawDateTimeStructNonNull() throws SQLException {
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.year = 2016;
         raw.month = 1;
@@ -333,13 +332,13 @@ public class FBTimestampFieldTest extends BaseJUnit4TestFBField<FBTimestampField
         raw.second = 59;
 
         field.setRawDateTimeStruct(raw);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Test
     @Override
-    public void setObject_RawDateTimeStruct() throws SQLException {
-        setTimestampExpectations(TEST_LOCAL_DATE_TIME);
-
+    void setObject_RawDateTimeStruct() throws SQLException {
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.year = 2016;
         raw.month = 1;
@@ -349,10 +348,12 @@ public class FBTimestampFieldTest extends BaseJUnit4TestFBField<FBTimestampField
         raw.second = 59;
 
         field.setObject(raw);
+
+        verifySetTimestamp(TEST_LOCAL_DATE_TIME);
     }
 
     @Override
-    protected Timestamp getNonNullObject() {
+    Timestamp getNonNullObject() {
         return  Timestamp.valueOf(TEST_TIMESTAMP);
     }
 }

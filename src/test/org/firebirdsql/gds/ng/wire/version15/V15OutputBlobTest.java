@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version15;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version13.V13OutputBlobTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob} in the version 15 protocol
@@ -33,14 +34,13 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V15OutputBlobTest extends V13OutputBlobTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(15);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(15);
 
-    public V15OutputBlobTest() {
-        this(new V15CommonConnectionInfo());
+    @Override
+    protected V15CommonConnectionInfo commonConnectionInfo() {
+        return new V15CommonConnectionInfo();
     }
 
-    protected V15OutputBlobTest(V15CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
-    }
 }

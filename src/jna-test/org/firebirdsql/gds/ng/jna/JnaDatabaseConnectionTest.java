@@ -19,61 +19,56 @@
 package org.firebirdsql.gds.ng.jna;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaDatabaseConnectionTest {
+class JnaDatabaseConnectionTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Test
-    public void construct_clientLibraryNull_IllegalArgument() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        new JnaDatabaseConnection(null, connectionInfo);
+    void construct_clientLibraryNull_IllegalArgument() {
+        assertThrows(NullPointerException.class, () -> new JnaDatabaseConnection(null, connectionInfo));
     }
 
     @Test
-    public void getClientLibrary_returnsSuppliedLibrary() throws Exception {
+    void getClientLibrary_returnsSuppliedLibrary() throws Exception {
         final FbClientLibrary clientLibrary = factory.getClientLibrary();
         JnaDatabaseConnection connection = new JnaDatabaseConnection(clientLibrary, connectionInfo);
 
-        assertSame("Expected returned client library to be identical", clientLibrary, connection.getClientLibrary());
+        assertSame(clientLibrary, connection.getClientLibrary(), "Expected returned client library to be identical");
     }
 
+    @SuppressWarnings("resource")
     @Test
-    public void identify_unconnected() throws Exception {
+    void identify_unconnected() throws Exception {
         JnaDatabaseConnection connection = new JnaDatabaseConnection(factory.getClientLibrary(), connectionInfo);
 
         FbDatabase db = connection.identify();
 
-        assertFalse("Expected isAttached() to return false", db.isAttached());
+        assertFalse(db.isAttached(), "Expected isAttached() to return false");
         assertThat("Expected zero-valued connection handle", db.getHandle(), equalTo(0));
-        assertNull("Expected version string to be null", db.getServerVersion());
-        assertNull("Expected version should be null", db.getServerVersion());
+        assertNull(db.getServerVersion(), "Expected version string to be null");
+        assertNull(db.getServerVersion(), "Expected version should be null");
     }
 }

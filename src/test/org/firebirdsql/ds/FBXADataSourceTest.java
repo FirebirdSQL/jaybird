@@ -22,8 +22,7 @@ import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.jaybird.xca.FBXAResourceTest;
-import org.firebirdsql.jaybird.xca.XATestBase.XidImpl;
+import org.firebirdsql.jaybird.xca.XidImpl;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Test for XADataSource. Note behavior of XAResource (FBManagedConnection) is tested in {@link FBXAResourceTest}.
+ * Test for XADataSource. Behavior of XAResource (FBManagedConnection) is tested in {@code org.firebirdsql.jaybird.xca.FBXAResourceTest}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2

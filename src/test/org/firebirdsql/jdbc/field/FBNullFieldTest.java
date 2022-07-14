@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -31,41 +31,31 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.jmock.Expectations;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.lib.concurrent.Synchroniser;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link FBNullField}
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBNullFieldTest {
+@ExtendWith(MockitoExtension.class)
+class FBNullFieldTest {
 
     private static final DefaultDatatypeCoder defaultDatatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
-    
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    {
-        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-        context.setThreadingPolicy(new Synchroniser());
-    }
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
+    @Mock
     private FieldDataProvider fieldData;
     private FBNullField field;
     
-    @Before
-    public void setUp() throws Exception {
-        fieldData = context.mock(FieldDataProvider.class);
+    @BeforeEach
+    void setUp() throws Exception {
         FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, defaultDatatypeCoder).toFieldDescriptor();
         field = new FBNullField(fieldDescriptor, fieldData, Types.NULL);
     }
@@ -73,246 +63,240 @@ public class FBNullFieldTest {
     // TODO Investigate necessity to test getters, it looks like FBNullField is only used for parameters and never for ResultSet columns
     
     @Test
-    public void setBigDecimalNull() throws SQLException {
-        setNullExpectations();
-        
+    void setBigDecimalNull() throws SQLException {
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setBigDecimalNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setBigDecimalNonNull() throws SQLException {
         field.setBigDecimal(BigDecimal.TEN);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setBinaryStreamNull() throws SQLException {
-        setNullExpectations();
-        
+    void setBinaryStreamNull() throws SQLException {
         field.setBinaryStream(null, 7);
+
+        verifySetNull();
     }
     
     @Test
-    public void setBinaryStreanNonNull() throws SQLException {
-        setNonNullExpectations();
-        InputStream in = context.mock(InputStream.class);
+    void setBinaryStreanNonNull(@Mock InputStream in) throws SQLException {
         // TODO Read and/or close expectation?
-        
+
         field.setBinaryStream(in, 15);
+        
+        verifySetNonNull();
     }
     
     @Test
-    public void setBoolean() throws SQLException {
-        setNonNullExpectations();
-        
+    void setBoolean() throws SQLException {
         field.setBoolean(false);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setByte() throws SQLException {
-        setNonNullExpectations();
-        
+    void setByte() throws SQLException {
         field.setByte((byte) 6);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setBytesNull() throws SQLException {
-        setNullExpectations();
-        
+    void setBytesNull() throws SQLException {
         field.setBytes(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setBytesNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setBytesNonNull() throws SQLException {
         field.setBytes(new byte[] { 3, 4, 5 });
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setCharacterStreamNull() throws SQLException {
-        setNullExpectations();
-        
+    void setCharacterStreamNull() throws SQLException {
         field.setCharacterStream(null, 7);
+
+        verifySetNull();
     }
     
     @Test
-    public void setCharacterStreamNonNull() throws SQLException {
-        setNonNullExpectations();
+    void setCharacterStreamNonNull() throws SQLException {
         Reader in = new StringReader("test");
         // TODO Read and/or close expectation?
-        
+
         field.setCharacterStream(in, 15);
+        
+        verifySetNonNull();
     }
     
     @Test
-    public void setDateNull() throws SQLException {
-        setNullExpectations();
-        
+    void setDateNull() throws SQLException {
         field.setDate(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setDateNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setDateNonNull() throws SQLException {
         field.setDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis()));
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setDateWithCalendarNull() throws SQLException {
-        setNullExpectations();
-        
+    void setDateWithCalendarNull() throws SQLException {
         field.setDate(null, Calendar.getInstance());
+
+        verifySetNull();
     }
     
     @Test
-    public void setDateWithCalendarNonNull() throws SQLException {
-        setNonNullExpectations();
-        
-        field.setDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis()),
-                Calendar.getInstance());
+    void setDateWithCalendarNonNull() throws SQLException {
+        field.setDate(new java.sql.Date(Calendar.getInstance().getTimeInMillis()), Calendar.getInstance());
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setDouble() throws SQLException {
-        setNonNullExpectations();
-        
+    void setDouble() throws SQLException {
         field.setDouble(18.3);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setFloat() throws SQLException {
-        setNonNullExpectations();
-        
+    void setFloat() throws SQLException {
         field.setFloat(18.3F);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setInteger() throws SQLException {
-        setNonNullExpectations();
-        
+    void setInteger() throws SQLException {
         field.setInteger(513);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setLong() throws SQLException {
-        setNonNullExpectations();
-        
+    void setLong() throws SQLException {
         field.setLong(759745987234958L);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setNull() throws SQLException {
-        setNullExpectations();
-        
+    void setNull() {
         field.setNull();
+
+        verifySetNull();
     }
     
     @Test
-    public void setObjectNull() throws SQLException {
-        setNullExpectations();
-        
+    void setObjectNull() throws SQLException {
         field.setObject(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setObjectNoNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setObjectNoNull() throws SQLException {
         field.setObject(new Object());
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setShort() throws SQLException {
-        setNonNullExpectations();
-        
+    void setShort() throws SQLException {
         field.setShort((short) 132);
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-        
+    void setStringNull() throws SQLException {
         field.setString(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setStringNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setStringNonNull() throws SQLException {
         field.setString("test value");
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setTimeNull() throws SQLException {
-        setNullExpectations();
-        
+    void setTimeNull() throws SQLException {
         field.setTime(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setTimeNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setTimeNonNull() throws SQLException {
         field.setTime(new java.sql.Time(Calendar.getInstance().getTimeInMillis()));
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setTimeWithCalendarNull() throws SQLException {
-        setNullExpectations();
-        
+    void setTimeWithCalendarNull() throws SQLException {
         field.setTime(null, Calendar.getInstance());
+
+        verifySetNull();
     }
     
     @Test
-    public void setTimeWithCalendarNonNull() throws SQLException {
-        setNonNullExpectations();
-        
-        field.setTime(new java.sql.Time(Calendar.getInstance().getTimeInMillis()),
-                Calendar.getInstance());
+    void setTimeWithCalendarNonNull() throws SQLException {
+        field.setTime(new java.sql.Time(Calendar.getInstance().getTimeInMillis()), Calendar.getInstance());
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setTimeStampNull() throws SQLException {
-        setNullExpectations();
-        
+    void setTimeStampNull() throws SQLException {
         field.setTimestamp(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setTimeStampNonNull() throws SQLException {
-        setNonNullExpectations();
-        
+    void setTimeStampNonNull() throws SQLException {
         field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()));
+
+        verifySetNonNull();
     }
     
     @Test
-    public void setTimeStampWithCalendarNull() throws SQLException {
-        setNullExpectations();
-        
+    void setTimeStampWithCalendarNull() throws SQLException {
         field.setTimestamp(null, Calendar.getInstance());
+
+        verifySetNull();
     }
     
     @Test
-    public void setTimeStampWithCalendarNonNull() throws SQLException {
-        setNonNullExpectations();
-        
-        field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()),
-                Calendar.getInstance());
+    void setTimeStampWithCalendarNonNull() throws SQLException {
+        field.setTimestamp(new java.sql.Timestamp(Calendar.getInstance().getTimeInMillis()), Calendar.getInstance());
+
+        verifySetNonNull();
     }
 
-    private void setNullExpectations() {
-        context.checking(new Expectations() {{
-            oneOf(fieldData).setFieldData(null);
-        }});
+    private void verifySetNull() {
+        verify(fieldData).setFieldData(null);
     }
     
-    private void setNonNullExpectations() {
-        context.checking(new Expectations() {{
-            // NOTE: Implementation detail
-            oneOf(fieldData).setFieldData(new byte[0]);
-        }});
+    private void verifySetNonNull() {
+        // NOTE: Implementation detail
+        verify(fieldData).setFieldData(new byte[0]);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,30 +19,29 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for column related metadata.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataColumnsTest {
+class FBDatabaseMetaDataColumnsTest {
 
     private static final String TEST_TABLE = "TEST_COLUMN_METADATA";
 
@@ -108,20 +107,21 @@ public class FBDatabaseMetaDataColumnsTest {
     private static final MetaDataTestSupport<ColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(ColumnMetaData.class, getRequiredMetaData());
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -175,7 +175,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * Tests the ordinal positions and types for the metadata columns of getColumns().
      */
     @Test
-    public void testColumnMetaDataColumns() throws Exception {
+    void testColumnMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getColumns(null, null, "doesnotexist", null)) {
             metaDataTestSupport.validateResultSetColumns(columns);
         }
@@ -186,7 +186,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults, but with an explicit remark.
      */
     @Test
-    public void testIntegerColumn() throws Exception {
+    void testIntegerColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.INTEGER);
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
@@ -205,7 +205,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * NULL
      */
     @Test
-    public void testInteger_DefaultNullColumn() throws Exception {
+    void testInteger_DefaultNullColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.INTEGER);
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
@@ -222,7 +222,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * Tests getColumns() metadata for an INTEGER column with DEFAULT 999
      */
     @Test
-    public void testInteger_Default999Column() throws Exception {
+    void testInteger_Default999Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.INTEGER);
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
@@ -240,7 +240,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraint
      */
     @Test
-    public void testInteger_NotNullColumn() throws Exception {
+    void testInteger_NotNullColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.INTEGER);
         validationRules.put(ColumnMetaData.TYPE_NAME, "INTEGER");
@@ -259,8 +259,8 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testBigintColumn() throws Exception {
-        assumeTrue("Test requires BIGINT support", supportInfoFor(con).supportsBigint());
+    void testBigintColumn() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsBigint(), "Test requires BIGINT support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.BIGINT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BIGINT");
@@ -277,7 +277,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testSmallintColumn() throws Exception {
+    void testSmallintColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.SMALLINT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "SMALLINT");
@@ -294,7 +294,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * further constraints, defaults and remarks.
      */
     @Test
-    public void testDoublePrecisionColumn() throws Exception {
+    void testDoublePrecisionColumn() throws Exception {
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DOUBLE);
@@ -311,7 +311,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testFloatColumn() throws Exception {
+    void testFloatColumn() throws Exception {
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.FLOAT);
@@ -328,7 +328,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testDecimal18_2Column() throws Exception {
+    void testDecimal18_2Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -347,7 +347,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testDecimal18_0Column() throws Exception {
+    void testDecimal18_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -364,7 +364,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testDecimal7_3Column() throws Exception {
+    void testDecimal7_3Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -383,7 +383,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testDecimal7_0Column() throws Exception {
+    void testDecimal7_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -400,7 +400,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testDecimal4_3Column() throws Exception {
+    void testDecimal4_3Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -419,7 +419,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testDecimal4_0Column() throws Exception {
+    void testDecimal4_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -436,7 +436,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testNumeric18_2Column() throws Exception {
+    void testNumeric18_2Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -455,7 +455,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testNumeric18_0Column() throws Exception {
+    void testNumeric18_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -472,7 +472,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testNumeric7_3Column() throws Exception {
+    void testNumeric7_3Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -491,7 +491,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testNumeric7_0Column() throws Exception {
+    void testNumeric7_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -508,7 +508,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testNumeric4_3Column() throws Exception {
+    void testNumeric4_3Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -527,7 +527,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * </p>
      */
     @Test
-    public void testNumeric4_0Column() throws Exception {
+    void testNumeric4_0Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -544,7 +544,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testDateColumn() throws Exception {
+    void testDateColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DATE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DATE");
@@ -560,7 +560,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testTimeColumn() throws Exception {
+    void testTimeColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIME);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIME");
@@ -576,7 +576,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testTimestampColumn() throws Exception {
+    void testTimestampColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIMESTAMP);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIMESTAMP");
@@ -592,7 +592,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * without further constraints, defaults and remarks.
      */
     @Test
-    public void testChar10_UTF8Column() throws Exception {
+    void testChar10_UTF8Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.CHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "CHAR");
@@ -608,7 +608,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * column without further constraints, defaults and remarks.
      */
     @Test
-    public void testChar10_ISO8859_1Column() throws Exception {
+    void testChar10_ISO8859_1Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.CHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "CHAR");
@@ -624,7 +624,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * without further constraints, defaults and remarks.
      */
     @Test
-    public void testChar10_OCTETSColumn() throws Exception {
+    void testChar10_OCTETSColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.BINARY);
         validationRules.put(ColumnMetaData.TYPE_NAME, "CHAR");
@@ -640,7 +640,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * without further constraints, defaults and remarks.
      */
     @Test
-    public void testVarchar10_UTF8Column() throws Exception {
+    void testVarchar10_UTF8Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -656,7 +656,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * column without further constraints, defaults and remarks.
      */
     @Test
-    public void testVarchar10_ISO8859_1Column() throws Exception {
+    void testVarchar10_ISO8859_1Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -672,7 +672,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * column without further constraints, defaults and remarks.
      */
     @Test
-    public void testVarchar10_OCTETSColumn() throws Exception {
+    void testVarchar10_OCTETSColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARBINARY);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -688,7 +688,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * DEFAULT NULL.
      */
     @Test
-    public void testVarchar_DefaultNull() throws Exception {
+    void testVarchar_DefaultNull() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -705,7 +705,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * DEFAULT USER.
      */
     @Test
-    public void testVarchar_DefaultUser() throws Exception {
+    void testVarchar_DefaultUser() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -722,7 +722,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * DEFAULT (DEFAULT 'literal').
      */
     @Test
-    public void testVarchar_DefaultLiteral() throws Exception {
+    void testVarchar_DefaultLiteral() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -738,7 +738,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * Tests getColumns() metadata for a VARCHAR(200) column COMPUTED BY
      */
     @Test
-    public void testVarchar_Generated() throws Exception {
+    void testVarchar_Generated() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -755,7 +755,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraint.
      */
     @Test
-    public void testVarchar_NotNullColumn() throws Exception {
+    void testVarchar_NotNullColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -773,7 +773,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * column without further constraints, defaults and remarks.
      */
     @Test
-    public void testTextBlob_UTF8Column() throws Exception {
+    void testTextBlob_UTF8Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE TEXT");
@@ -788,7 +788,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * ISO8859_1 column without further constraints, defaults and remarks.
      */
     @Test
-    public void testTextBlob_ISO8859_1Column() throws Exception {
+    void testTextBlob_ISO8859_1Column() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE TEXT");
@@ -803,7 +803,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * further constraints, defaults and remarks.
      */
     @Test
-    public void testBlobColumn() throws Exception {
+    void testBlobColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.LONGVARBINARY);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BLOB SUB_TYPE BINARY");
@@ -818,7 +818,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * default (VARCHAR(100) DEFAULT 'this is a default')
      */
     @Test
-    public void testDomainWithDefaultColumn() throws Exception {
+    void testDomainWithDefaultColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -835,7 +835,7 @@ public class FBDatabaseMetaDataColumnsTest {
      * default (VARCHAR(100) DEFAULT 'this is a default') and has its own default.
      */
     @Test
-    public void testDomainWithDefaultOverriddenColumn() throws Exception {
+    void testDomainWithDefaultOverriddenColumn() throws Exception {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.VARCHAR);
         validationRules.put(ColumnMetaData.TYPE_NAME, "VARCHAR");
@@ -848,8 +848,8 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testBooleanColumn() throws Exception {
-        assumeTrue("Test requires BOOLEAN support", supportInfoFor(con).supportsBoolean());
+    void testBooleanColumn() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsBoolean(), "Test requires BOOLEAN support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.BOOLEAN);
         validationRules.put(ColumnMetaData.TYPE_NAME, "BOOLEAN");
@@ -861,8 +861,8 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testDecfloat16Column() throws Exception {
-        assumeTrue("Test requires DECFLOAT(16) support", supportInfoFor(con).supportsDecfloat());
+    void testDecfloat16Column() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsDecfloat(), "Test requires DECFLOAT(16) support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
@@ -873,8 +873,8 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testDecfloat34Column() throws Exception {
-        assumeTrue("Test requires DECFLOAT(34) support", supportInfoFor(con).supportsDecfloat());
+    void testDecfloat34Column() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsDecfloat(), "Test requires DECFLOAT(34) support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, JaybirdTypeCodes.DECFLOAT);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECFLOAT");
@@ -889,9 +889,9 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testNumeric25_20Column() throws Exception {
-        assumeTrue("Test requires extended numeric precision support",
-                supportInfoFor(con).supportsDecimalPrecision(38));
+    void testNumeric25_20Column() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsDecimalPrecision(38),
+                "Test requires extended numeric precision support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "NUMERIC");
@@ -907,9 +907,9 @@ public class FBDatabaseMetaDataColumnsTest {
      * constraints, defaults and remarks.
      */
     @Test
-    public void testDecimal30_5Column() throws Exception {
-        assumeTrue("Test requires extended numeric precision support",
-                supportInfoFor(con).supportsDecimalPrecision(38));
+    void testDecimal30_5Column() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsDecimalPrecision(38),
+                "Test requires extended numeric precision support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.DECIMAL);
         validationRules.put(ColumnMetaData.TYPE_NAME, "DECIMAL");
@@ -921,9 +921,9 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testTimeWithTimezoneColumn() throws Exception {
-        assumeTrue("Test requires time zone support",
-                supportInfoFor(con).supportsTimeZones());
+    void testTimeWithTimezoneColumn() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsTimeZones(),
+                "Test requires time zone support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIME_WITH_TIMEZONE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIME WITH TIME ZONE");
@@ -934,9 +934,9 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testTimestampWithTimezoneColumn() throws Exception {
-        assumeTrue("Test requires time zone support",
-                supportInfoFor(con).supportsTimeZones());
+    void testTimestampWithTimezoneColumn() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsTimeZones(),
+                "Test requires time zone support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIMESTAMP_WITH_TIMEZONE);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIMESTAMP WITH TIME ZONE");
@@ -947,9 +947,9 @@ public class FBDatabaseMetaDataColumnsTest {
     }
 
     @Test
-    public void testInt128Column() throws Exception {
-        assumeTrue("Test requires INT128 support",
-                supportInfoFor(con).supportsInt128());
+    void testInt128Column() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsInt128(),
+                "Test requires INT128 support");
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.NUMERIC);
         validationRules.put(ColumnMetaData.TYPE_NAME, "INT128");
@@ -968,17 +968,17 @@ public class FBDatabaseMetaDataColumnsTest {
      * @param tableName Name of the able
      * @param columnName Name of the column
      * @param validationRules Map of validationRules
-     * @throws SQLException
      */
+    @SuppressWarnings("SameParameterValue")
     private void validate(String tableName, String columnName, Map<ColumnMetaData, Object> validationRules) throws Exception {
         validationRules.put(ColumnMetaData.TABLE_NAME, tableName);
         validationRules.put(ColumnMetaData.COLUMN_NAME, columnName);
         metaDataTestSupport.checkValidationRulesComplete(validationRules);
 
         try (ResultSet columns = dbmd.getColumns(null, null, tableName, columnName)) {
-            assertTrue("Expected row in column metadata", columns.next());
+            assertTrue(columns.next(), "Expected row in column metadata");
             metaDataTestSupport.validateRowValues(columns, validationRules);
-            assertFalse("Expected only one row in resultset", columns.next());
+            assertFalse(columns.next(), "Expected only one row in resultset");
         }
     }
 
@@ -1009,7 +1009,7 @@ public class FBDatabaseMetaDataColumnsTest {
         DEFAULT_COLUMN_VALUES = Collections.unmodifiableMap(defaults);
     }
 
-    private static Map<ColumnMetaData, Object> getDefaultValueValidationRules() throws Exception {
+    private static Map<ColumnMetaData, Object> getDefaultValueValidationRules() {
         return new EnumMap<>(DEFAULT_COLUMN_VALUES);
     }
     

@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.sql.Time;
@@ -31,21 +31,22 @@ import java.time.LocalTime;
 import java.util.Calendar;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for {@link FBTimeField}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBTimeFieldTest extends BaseJUnit4TestFBField<FBTimeField, Time> {
+class FBTimeFieldTest extends BaseJUnit5TestFBField<FBTimeField, Time> {
 
     private static final LocalTime TEST_LOCAL_TIME = LocalTime.parse("13:37:59");
     private static final Time TEST_SQL_TIME = Time.valueOf(TEST_LOCAL_TIME);
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_TYPE_TIME);
@@ -55,234 +56,232 @@ public class FBTimeFieldTest extends BaseJUnit4TestFBField<FBTimeField, Time> {
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject", TEST_SQL_TIME, field.getObject());
+        assertEquals(TEST_SQL_TIME, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
-    public void setObjectNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(TEST_SQL_TIME);
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getString", "13:37:59", field.getString());
+        assertEquals("13:37:59", field.getString(), "Unexpected value for getString");
     }
 
     @Test
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(String.class", "13:37:59", field.getObject(String.class));
+        assertEquals("13:37:59", field.getObject(String.class), "Unexpected value for getObject(String.class");
     }
 
     @Test
-    public void setStringNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setStringNonNull() throws SQLException {
         field.setString("13:37:59");
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
-    public void setObject_String() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setObject_String() throws SQLException {
         field.setObject("13:37:59");
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
-    public void setStringNonTimeValue() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setString("2016-01-1 13:37:59");
+    void setStringNonTimeValue() {
+        assertThrows(TypeConversionException.class, () -> field.setString("2016-01-1 13:37:59"));
     }
 
     @Test
     @Override
-    public void getTimeNonNull() throws SQLException {
+    void getTimeNonNull() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getTime", TEST_SQL_TIME, field.getTime());
+        assertEquals(TEST_SQL_TIME, field.getTime(), "Unexpected value for getTime");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Time() throws SQLException {
+    void getObject_java_sql_Time() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(Time.class)",
-                TEST_SQL_TIME, field.getObject(Time.class));
+        assertEquals(TEST_SQL_TIME, field.getObject(Time.class), "Unexpected value for getObject(Time.class)");
     }
 
     @Test
     @Override
-    public void setTimeNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setTimeNonNull() throws SQLException {
         field.setTime(TEST_SQL_TIME);
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void getTimeCalendarNonNull() throws SQLException {
+    void getTimeCalendarNonNull() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
-        assertEquals("Unexpected value for getTime(Calendar)",
-                Time.valueOf("14:37:59"), field.getTime(calendar));
+        assertEquals(Time.valueOf("14:37:59"), field.getTime(calendar), "Unexpected value for getTime(Calendar)");
     }
 
     @Test
     @Override
-    public void setTimeCalendarNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
+    void setTimeCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTime(Time.valueOf("14:37:59"), calendar);
+        
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void getTimestampNonNull() throws SQLException {
+    void getTimestampNonNull() throws SQLException {
         Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getTimestamp", expectedValue, field.getTimestamp());
+        assertEquals(expectedValue, field.getTimestamp(), "Unexpected value for getTimestamp");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Timestamp() throws SQLException {
+    void getObject_java_sql_Timestamp() throws SQLException {
         Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(Timestamp.class)",
-                expectedValue, field.getObject(Timestamp.class));
+        assertEquals(expectedValue, field.getObject(Timestamp.class),
+                "Unexpected value for getObject(Timestamp.class)");
     }
 
     @Test
     @Override
-    public void getObject_java_util_Date() throws SQLException {
+    void getObject_java_util_Date() throws SQLException {
         Timestamp expectedValue = Timestamp.valueOf("1970-01-01 13:37:59");
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         // Test depends on the fact that we currently return Timestamp
-        assertEquals("Unexpected value for getObject(java.util.Date.class)",
-                expectedValue, field.getObject(java.util.Date.class));
+        assertEquals(expectedValue, field.getObject(java.util.Date.class),
+                "Unexpected value for getObject(java.util.Date.class)");
     }
 
     @Test
     @Override
-    public void getObject_Calendar() throws SQLException {
+    void getObject_Calendar() throws SQLException {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(Timestamp.valueOf("1970-01-01 13:37:59"));
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getObject(Calendar.class)", calendar, field.getObject(Calendar.class));
+        assertEquals(calendar, field.getObject(Calendar.class), "Unexpected value for getObject(Calendar.class)");
     }
 
     @Test
     @Override
-    public void setTimestampNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setTimestampNonNull() throws SQLException {
         field.setTimestamp(Timestamp.valueOf("2016-01-01 13:37:59"));
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
-    public void setObject_Timestamp() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setObject_Timestamp() throws SQLException {
         field.setObject(Timestamp.valueOf("2016-01-01 13:37:59"));
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void getTimestampCalendarNonNull() throws SQLException {
+    void getTimestampCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
-        assertEquals("Unexpected value for getTimestamp(Calendar)",
-                Timestamp.valueOf("1970-01-01 14:37:59"), field.getTimestamp(calendar));
+        assertEquals(Timestamp.valueOf("1970-01-01 14:37:59"), field.getTimestamp(calendar),
+                "Unexpected value for getTimestamp(Calendar)");
     }
 
     @Test
     @Override
-    public void setTimestampCalendarNonNull() throws SQLException {
+    void setTimestampCalendarNonNull() throws SQLException {
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
-        setTimeExpectations(TEST_LOCAL_TIME);
 
         field.setTimestamp(Timestamp.valueOf("2016-01-01 14:37:59"), calendar);
+        
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void getRawDateTimeStructNonNull() throws SQLException {
+    void getRawDateTimeStructNonNull() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = requireNonNull(field.getRawDateTimeStruct());
 
-        assertEquals("year", 0, rawDateTimeStruct.year);
-        assertEquals("month", 0, rawDateTimeStruct.month);
-        assertEquals("day", 0, rawDateTimeStruct.day);
-        assertEquals("hour", 13, rawDateTimeStruct.hour);
-        assertEquals("minute", 37, rawDateTimeStruct.minute);
-        assertEquals("second", 59, rawDateTimeStruct.second);
-        assertEquals("fractions", 0, rawDateTimeStruct.fractions);
+        assertEquals(0, rawDateTimeStruct.year, "year");
+        assertEquals(0, rawDateTimeStruct.month, "month");
+        assertEquals(0, rawDateTimeStruct.day, "day");
+        assertEquals(13, rawDateTimeStruct.hour, "hour");
+        assertEquals(37, rawDateTimeStruct.minute, "minute");
+        assertEquals(59, rawDateTimeStruct.second, "second");
+        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
     }
 
     @Test
     @Override
-    public void getObject_RawDateTimeStruct() throws SQLException {
+    void getObject_RawDateTimeStruct() throws SQLException {
         toReturnTimeExpectations(TEST_LOCAL_TIME);
 
         final DatatypeCoder.RawDateTimeStruct rawDateTimeStruct = 
                 field.getObject(DatatypeCoder.RawDateTimeStruct.class);
 
-        assertEquals("year", 0, rawDateTimeStruct.year);
-        assertEquals("month", 0, rawDateTimeStruct.month);
-        assertEquals("day", 0, rawDateTimeStruct.day);
-        assertEquals("hour", 13, rawDateTimeStruct.hour);
-        assertEquals("minute", 37, rawDateTimeStruct.minute);
-        assertEquals("second", 59, rawDateTimeStruct.second);
-        assertEquals("fractions", 0, rawDateTimeStruct.fractions);
+        assertEquals(0, rawDateTimeStruct.year, "year");
+        assertEquals(0, rawDateTimeStruct.month, "month");
+        assertEquals(0, rawDateTimeStruct.day, "day");
+        assertEquals(13, rawDateTimeStruct.hour, "hour");
+        assertEquals(37, rawDateTimeStruct.minute, "minute");
+        assertEquals(59, rawDateTimeStruct.second, "second");
+        assertEquals(0, rawDateTimeStruct.fractions, "fractions");
     }
 
     @Test
     @Override
-    public void setRawDateTimeStructNonNull() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setRawDateTimeStructNonNull() throws SQLException {
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.hour = 13;
         raw.minute = 37;
         raw.second = 59;
 
         field.setRawDateTimeStruct(raw);
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Test
     @Override
-    public void setObject_RawDateTimeStruct() throws SQLException {
-        setTimeExpectations(TEST_LOCAL_TIME);
-
+    void setObject_RawDateTimeStruct() throws SQLException {
         final DatatypeCoder.RawDateTimeStruct raw = new DatatypeCoder.RawDateTimeStruct();
         raw.hour = 13;
         raw.minute = 37;
         raw.second = 59;
 
         field.setObject(raw);
+
+        verifySetTime(TEST_LOCAL_TIME);
     }
 
     @Override
-    protected Time getNonNullObject() {
+    Time getNonNullObject() {
         return Time.valueOf("13:37:59");
     }
 }

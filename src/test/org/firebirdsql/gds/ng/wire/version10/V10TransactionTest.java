@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,18 +18,19 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction}. This test class can
@@ -40,22 +41,21 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V10TransactionTest extends org.firebirdsql.gds.ng.AbstractTransactionTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V10TransactionTest() {
-        this(new V10CommonConnectionInfo());
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
-    protected V10TransactionTest(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
-    }
-
+    @SuppressWarnings("resource")
     @Override
     protected final FbDatabase createDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,

@@ -20,16 +20,14 @@ package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-
-import static org.jmock.Expectations.throwException;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher}.
@@ -37,37 +35,30 @@ import static org.jmock.Expectations.throwException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class TransactionListenerDispatcherTest {
+@ExtendWith(MockitoExtension.class)
+class TransactionListenerDispatcherTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private TransactionListenerDispatcher dispatcher;
+    private final TransactionListenerDispatcher dispatcher = new TransactionListenerDispatcher();
+    @Mock
     private TransactionListener listener;
+    @Mock
     private FbTransaction transaction;
 
-    @Before
-    public void setUp() {
-        dispatcher = new TransactionListenerDispatcher();
-        listener = context.mock(TransactionListener.class, "listener");
+    @BeforeEach
+    void setUp() {
         dispatcher.addListener(listener);
-        transaction = context.mock(FbTransaction.class);
     }
 
     /**
-     * Tests if calls to {@link org.firebirdsql.gds.ng.listeners.TransactionListenerDispatcher#transactionStateChanged(org.firebirdsql.gds.ng.FbTransaction, org.firebirdsql.gds.ng.TransactionState, org.firebirdsql.gds.ng.TransactionState)}
+     * Tests if calls to {@link TransactionListenerDispatcher#transactionStateChanged(FbTransaction, TransactionState, TransactionState)}
      * are forwarded correctly.
      */
     @Test
-    public void testTransactionStateChanged() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
-        context.checking(expectations);
-
+    void testTransactionStateChanged() {
         dispatcher.transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
+
+        verify(listener)
+                .transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
     }
 
     /**
@@ -75,16 +66,18 @@ public class TransactionListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testTransactionStateChanged_withException() {
-        final TransactionListener listener2 = context.mock(TransactionListener.class, "listener2");
+    void testTransactionStateChanged_withException(@Mock TransactionListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (TransactionListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener)
+                .transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
+        doThrow(new RuntimeException("test")).when(listener2)
+                .transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
 
         dispatcher.transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
+
+        verify(listener)
+                .transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
+        verify(listener2)
+                .transactionStateChanged(transaction, TransactionState.ROLLING_BACK, TransactionState.COMMITTED);
     }
 }

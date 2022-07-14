@@ -18,8 +18,12 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Test;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
 import javax.transaction.xa.XAResource;
@@ -27,13 +31,20 @@ import javax.transaction.xa.Xid;
 import java.sql.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
-import static org.junit.Assert.*;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class FBResultSetTest extends XATestBase {
+class FBResultSetTest {
+
+    private final Logger log = LoggerFactory.getLogger(FBResultSetTest.class);
+
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
+
+    private final FBManagedConnectionFactory mcf = createDefaultMcf();
 
     @Test
-    public void testUseResultSet() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUseResultSet() throws Exception {
         FBManagedConnection mc = mcf.createManagedConnection();
         try (Connection c = mc.getConnection();
              Statement s = c.createStatement()) {
@@ -51,12 +62,13 @@ public class FBResultSetTest extends XATestBase {
 
             xid = new XidImpl();
             xa.start(xid, XAResource.TMNOFLAGS);
-            assertFalse("execute returned true for insert statement", s.execute("insert into T1 values (1, 1)"));
-            assertEquals("executeUpdate did not return 1 for single row insert", 1, s.executeUpdate("insert into T1 values (2, 2)"));
-            assertTrue("execute returned false for select statement", s.execute("select C1, C2 from T1"));
+            assertFalse(s.execute("insert into T1 values (1, 1)"), "execute returned true for insert statement");
+            assertEquals(1, s.executeUpdate("insert into T1 values (2, 2)"),
+                    "executeUpdate did not return 1 for single row insert");
+            assertTrue(s.execute("select C1, C2 from T1"), "execute returned false for select statement");
             ResultSet rs = s.getResultSet();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
+                log.info("C1: " + rs.getShort(1) + " C2: " + rs.getShort(2));
             }
             rs.close();
             xa.end(xid, XAResource.TMSUCCESS);
@@ -76,8 +88,7 @@ public class FBResultSetTest extends XATestBase {
     }
 
     @Test
-    public void testUseResultSetMore() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUseResultSetMore() throws Exception {
         FBManagedConnection mc = mcf.createManagedConnection();
         try (Connection c = mc.getConnection();
              Statement s = c.createStatement()) {
@@ -95,12 +106,14 @@ public class FBResultSetTest extends XATestBase {
 
             xid = new XidImpl();
             xa.start(xid, XAResource.TMNOFLAGS);
-            assertFalse("execute returned true for insert statement",
-                    s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6 8:00:03.1223')"));
-            assertTrue("execute returned false for select statement", s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"));
+            assertFalse(
+                    s.execute("insert into T1 values (1, 1, 1, 1.0, 1.0, 'one', 'one', '8:00:03.1234', '2002-JAN-11', '2001-JAN-6 8:00:03.1223')"),
+                    "execute returned true for insert statement");
+            assertTrue(s.execute("select C1, C2, C3,  C4, C5, C6, C7, C8, C9, C10 from T1"),
+                    "execute returned false for select statement");
             ResultSet rs = s.getResultSet();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getInt(1)
+                log.info("C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -111,7 +124,7 @@ public class FBResultSetTest extends XATestBase {
                         + " C9: " + rs.getDate(9)
                         + " C10: " + rs.getTimestamp(10)
                 );
-                if (log != null) log.info("C1: " + rs.getInt("C1")
+                log.info("C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
@@ -138,8 +151,7 @@ public class FBResultSetTest extends XATestBase {
     }
 
     @Test
-    public void testUseResultSetWithPreparedStatement() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUseResultSetWithPreparedStatement() throws Exception {
         DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
@@ -163,7 +175,7 @@ public class FBResultSetTest extends XATestBase {
             p.setString(6, "one");
             p.setString(7, "one");
 
-            assertFalse("execute returned true for insert statement", p.execute());
+            assertFalse(p.execute(), "execute returned true for insert statement");
             p.setInt(1, 2);
             p.setShort(2, (short) 2);
             p.setLong(3, 2);
@@ -171,14 +183,14 @@ public class FBResultSetTest extends XATestBase {
             p.setDouble(5, 2.0);
             p.setString(6, "two");
             p.setString(7, "two");
-            assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+            assertEquals(1, p.executeUpdate(), "executeUpdate count != 1");
 
             p.close();
             p = c.prepareStatement("select * from T1 where C1 = ?");
             p.setInt(1, 1);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getInt(1)
+                log.info("C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -186,7 +198,7 @@ public class FBResultSetTest extends XATestBase {
                         + " C6: " + rs.getString(6)
                         + " C7: " + rs.getString(7)
                 );
-                if (log != null) log.info("C1: " + rs.getInt("C1")
+                log.info("C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
@@ -198,7 +210,7 @@ public class FBResultSetTest extends XATestBase {
             p.setInt(1, 2);
             rs = p.executeQuery();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getInt(1)
+                log.info("C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -206,7 +218,7 @@ public class FBResultSetTest extends XATestBase {
                         + " C6: " + rs.getString(6)
                         + " C7: " + rs.getString(7)
                 );
-                if (log != null) log.info("C1: " + rs.getInt("C1")
+                log.info("C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
@@ -228,8 +240,7 @@ public class FBResultSetTest extends XATestBase {
     }
 
     @Test
-    public void testUsePreparedStatementAcrossTransactions() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUsePreparedStatementAcrossTransactions() throws Exception {
         DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
@@ -253,7 +264,7 @@ public class FBResultSetTest extends XATestBase {
             p.setString(6, "one");
             p.setString(7, "one");
 
-            assertFalse("execute returned true for insert statement", p.execute());
+            assertFalse(p.execute(), "execute returned true for insert statement");
             p.setInt(1, 2);
             p.setShort(2, (short) 2);
             p.setLong(3, 2);
@@ -261,14 +272,14 @@ public class FBResultSetTest extends XATestBase {
             p.setDouble(5, 2.0);
             p.setString(6, "two");
             p.setString(7, "two");
-            assertEquals("executeUpdate count != 1", 1, p.executeUpdate());
+            assertEquals(1, p.executeUpdate(), "executeUpdate count != 1");
 
             p.close();
             p = c.prepareStatement("select * from T1 where C1 = ?");
             p.setInt(1, 1);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getInt(1)
+                log.info("C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -276,7 +287,7 @@ public class FBResultSetTest extends XATestBase {
                         + " C6: " + rs.getString(6)
                         + " C7: " + rs.getString(7)
                 );
-                if (log != null) log.info("C1: " + rs.getInt("C1")
+                log.info("C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
@@ -291,7 +302,7 @@ public class FBResultSetTest extends XATestBase {
             p.setInt(1, 2);
             rs = p.executeQuery();
             while (rs.next()) {
-                if (log != null) log.info("C1: " + rs.getInt(1)
+                log.info("C1: " + rs.getInt(1)
                         + " C2: " + rs.getShort(2)
                         + " C3: " + rs.getLong(3)
                         + " C4: " + rs.getFloat(4)
@@ -299,7 +310,7 @@ public class FBResultSetTest extends XATestBase {
                         + " C6: " + rs.getString(6)
                         + " C7: " + rs.getString(7)
                 );
-                if (log != null) log.info("C1: " + rs.getInt("C1")
+                log.info("C1: " + rs.getInt("C1")
                         + " C2: " + rs.getShort("C2")
                         + " C3: " + rs.getLong("C3")
                         + " C4: " + rs.getFloat("C4")
@@ -321,8 +332,7 @@ public class FBResultSetTest extends XATestBase {
     }
 
     @Test
-    public void testUseResultSetWithCount() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUseResultSetWithCount() throws Exception {
         DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
@@ -341,10 +351,10 @@ public class FBResultSetTest extends XATestBase {
             p.setString(1, "1");
             p.setString(2, "First Customer");
 
-            assertTrue("execute returned false for select statement", p.execute());
+            assertTrue(p.execute(), "execute returned false for select statement");
             ResultSet rs = p.getResultSet();
             while (rs.next()) {
-                if (log != null) log.info("count: " + rs.getInt(1));
+                log.info("count: " + rs.getInt(1));
             }
             p.close();
             t.commit();
@@ -358,12 +368,11 @@ public class FBResultSetTest extends XATestBase {
         }
     }
 
-    public static final String CREATE_PROCEDURE =
+    private static final String CREATE_PROCEDURE =
             "CREATE PROCEDURE testproc(number INTEGER) RETURNS (result INTEGER) AS BEGIN result = number; END";
 
     @Test
-    public void testExecutableProcedure() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testExecutableProcedure() throws Exception {
         DataSource ds = mcf.createConnectionFactory();
         try (FBConnection c = (FBConnection) ds.getConnection();
              Statement s = c.createStatement()) {
@@ -379,8 +388,8 @@ public class FBResultSetTest extends XATestBase {
             CallableStatement p = c.prepareCall("EXECUTE PROCEDURE testproc(?)");
             p.setInt(1, 5);
 
-            assertTrue("execute returned false for execute procedure statement", p.execute());
-            assertEquals("wrong answer from sp invocation", 5, p.getInt(1));
+            assertTrue(p.execute(), "execute returned false for execute procedure statement");
+            assertEquals(5, p.getInt(1), "wrong answer from sp invocation");
             p.close();
             t.commit();
 

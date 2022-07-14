@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version10.V10TransactionTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Transaction} in the version 11 protocol
@@ -33,14 +34,12 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V11TransactionTest extends V10TransactionTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(11);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(11);
 
-    public V11TransactionTest() {
-        this(new V11CommonConnectionInfo());
+    protected V11CommonConnectionInfo commonConnectionInfo() {
+        return new V11CommonConnectionInfo();
     }
 
-    protected V11TransactionTest(V11CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
-    }
 }

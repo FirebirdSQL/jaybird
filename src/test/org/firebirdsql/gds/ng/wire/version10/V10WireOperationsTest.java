@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,26 +18,26 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.SimpleWarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.AbstractWireOperations;
 import org.firebirdsql.gds.ng.wire.GenericResponse;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.List;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
-import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -45,24 +45,19 @@ import static org.junit.Assert.assertEquals;
  */
 public class V10WireOperationsTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
     protected final SimpleWarningMessageCallback warningCallback = new SimpleWarningMessageCallback();
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V10WireOperationsTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10WireOperationsTest(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     protected final AbstractWireOperations createDummyWireOperations() throws SQLException {
@@ -70,8 +65,7 @@ public class V10WireOperationsTest {
     }
 
     /**
-     * Test if processResponse does not throw an exception if the response does
-     * not contain an exception.
+     * Test if processResponse does not throw an exception if the response does not contain an exception.
      */
     @Test
     public void testProcessResponse_noException() throws Exception {
@@ -82,30 +76,26 @@ public class V10WireOperationsTest {
     }
 
     /**
-     * Test if processResponse throws the exception in the response if the
-     * exception is not a warning.
+     * Test if processResponse throws the exception in the response if the exception is not a warning.
      */
     @Test
     public void testProcessResponse_exception() throws Exception {
         AbstractWireOperations wire = createDummyWireOperations();
-        SQLException exception = new FbExceptionBuilder().exception(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        expectedException.expect(sameInstance(exception));
+        SQLException testException = new SQLException("test");
+        GenericResponse genericResponse = new GenericResponse(-1, -1, null, testException);
 
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
-
-        wire.processResponse(genericResponse);
+        SQLException exception = assertThrows(SQLException.class, () -> wire.processResponse(genericResponse));
+        assertSame(testException, exception);
     }
 
     /**
-     * Test if processResponse does not throw an exception if the response
-     * contains an exception that is warning.
+     * Test if processResponse does not throw an exception if the response contains an exception that is warning.
      */
     @Test
     public void testProcessResponse_warning() throws Exception {
         AbstractWireOperations wire = createDummyWireOperations();
-
-        SQLException exception = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException();
-        GenericResponse genericResponse = new GenericResponse(-1, -1, null, exception);
+        SQLException testException = new SQLWarning("test");
+        GenericResponse genericResponse = new GenericResponse(-1, -1, null, testException);
 
         wire.processResponse(genericResponse);
     }
@@ -122,7 +112,7 @@ public class V10WireOperationsTest {
         wire.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = warningCallback.getWarnings();
-        assertEquals("Expected no warnings to be registered", 0, warnings.size());
+        assertEquals(0, warnings.size(), "Expected no warnings to be registered");
     }
 
     /**
@@ -138,7 +128,7 @@ public class V10WireOperationsTest {
         wire.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = warningCallback.getWarnings();
-        assertEquals("Expected no warnings to be registered", 0, warnings.size());
+        assertEquals(0, warnings.size(), "Expected no warnings to be registered");
     }
 
     /**
@@ -154,7 +144,7 @@ public class V10WireOperationsTest {
         wire.processResponseWarnings(genericResponse, null);
 
         List<SQLWarning> warnings = warningCallback.getWarnings();
-        assertEquals("Unexpected warnings registered or no warnings registered", Collections.singletonList(warning),
-                warnings);
+        assertEquals(Collections.singletonList(warning), warnings,
+                "Unexpected warnings registered or no warnings registered");
     }
 }

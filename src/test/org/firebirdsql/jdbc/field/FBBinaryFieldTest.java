@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.FBRowId;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.sql.RowId;
@@ -29,7 +29,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FBBinaryField}.
@@ -37,13 +38,13 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte[]> {
+class FBBinaryFieldTest extends BaseJUnit5TestFBField<FBBinaryField, byte[]> {
 
     private static final int FIELD_LENGTH = 15;
     
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
@@ -56,7 +57,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getCharacterStreamNonNull() throws Exception {
+    void getCharacterStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -73,7 +74,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getObject_Reader() throws Exception {
+    void getObject_Reader() throws Exception {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -90,7 +91,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -102,7 +103,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -114,17 +115,18 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
+    void setStringNonNull() throws SQLException {
         final String string = "hdgkehgfjdfjdfe";
         final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
 
         field.setString(string);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getBinaryStreamNonNull() throws Exception {
+    void getBinaryStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -135,7 +137,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getObject_InputStream() throws Exception {
+    void getObject_InputStream() throws Exception {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -146,27 +148,29 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void setBinaryStreamNonNull() throws SQLException {
+    void setBinaryStreamNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
         InputStream stream = new ByteArrayInputStream(bytes);
 
         field.setBinaryStream(stream, FIELD_LENGTH);
+
+        verifySetValue(bytes);
     }
 
     @Test
-    public void setCharacterStreamNonNull() throws SQLException {
+    void setCharacterStreamNonNull() throws SQLException {
         final String string = "hdgkehgfjdfjdfe";
         final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
         Reader reader = new StringReader(string);
 
         field.setCharacterStream(reader, FIELD_LENGTH);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -174,11 +178,11 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
         assertThat(value, instanceOf(byte[].class));
         assertArrayEquals(bytes, (byte[]) value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
-    public void getObjectNonNull_typeBinary() throws SQLException {
+    void getObjectNonNull_typeBinary() throws SQLException {
         rowDescriptorBuilder.setType(ISCConstants.SQL_TEXT);
         rowDescriptorBuilder.setSubType(ISCConstants.CS_BINARY);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
@@ -191,55 +195,57 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
         assertThat(value, instanceOf(byte[].class));
         assertArrayEquals(bytes, (byte[]) value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
-    public void setObjectNonNull() throws SQLException {
+    void setObjectNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
 
         field.setObject(bytes);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getBytesNonNull() throws SQLException {
+    void getBytesNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
         byte[] value = field.getBytes();
 
         assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
     @Override
-    public void getObject_byteArray() throws SQLException {
+    void getObject_byteArray() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
         byte[] value = field.getObject(byte[].class);
 
         assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
     @Override
-    public void setBytesNonNull() throws SQLException {
+    void setBytesNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
 
         field.setBytes(bytes);
+
+        verifySetValue(bytes);
     }
 
     // Binary fields supports setting RowId, because Firebird doesn't support detection of row id parameters
 
     @Test
     @Override
-    public void getRowIdNonNull() throws SQLException {
+    void getRowIdNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -250,17 +256,18 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void setRowIdNonNull() throws SQLException {
+    void setRowIdNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final RowId rowId = new FBRowId(bytes);
-        setValueExpectations(bytes);
 
         field.setRowId(rowId);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getObject_RowId() throws SQLException {
+    void getObject_RowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -270,7 +277,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
     }
 
     @Test
-    public void getObject_RowId_null() throws SQLException {
+    void getObject_RowId_null() throws SQLException {
         toReturnNullExpectations();
 
         RowId rowId = field.getObject(RowId.class);
@@ -280,7 +287,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void getObject_FBRowId() throws SQLException {
+    void getObject_FBRowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -290,7 +297,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
     }
 
     @Test
-    public void getObject_FBRowId_null() throws SQLException {
+    void getObject_FBRowId_null() throws SQLException {
         toReturnNullExpectations();
 
         FBRowId rowId = field.getObject(FBRowId.class);
@@ -300,12 +307,13 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
 
     @Test
     @Override
-    public void setObject_RowId() throws SQLException {
+    void setObject_RowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final RowId rowId = new FBRowId(bytes);
-        setValueExpectations(bytes);
 
         field.setObject(rowId);
+
+        verifySetValue(bytes);
     }
 
     private byte[] getRandomBytes() {
@@ -323,7 +331,7 @@ public class FBBinaryFieldTest extends BaseJUnit4TestFBField<FBBinaryField, byte
     }
 
     @Override
-    protected byte[] getNonNullObject() {
+    byte[] getNonNullObject() {
         return new byte[0];
     }
 }

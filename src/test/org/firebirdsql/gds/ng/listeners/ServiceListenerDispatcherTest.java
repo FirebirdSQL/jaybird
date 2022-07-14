@@ -19,19 +19,21 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbService;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLWarning;
-import java.util.Arrays;
 
-import static org.jmock.Expectations.throwException;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Tests for {@link ServiceListenerDispatcher}.
@@ -39,37 +41,27 @@ import static org.junit.Assume.assumeFalse;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class ServiceListenerDispatcherTest {
+@ExtendWith(MockitoExtension.class)
+class ServiceListenerDispatcherTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private ServiceListenerDispatcher dispatcher;
+    private final ServiceListenerDispatcher dispatcher = new ServiceListenerDispatcher();
+    @Mock
     private ServiceListener listener;
+    @Mock
     private FbService service;
 
-    @Before
-    public void setUp() {
-        dispatcher = new ServiceListenerDispatcher();
-        listener = context.mock(ServiceListener.class, "listener");
+    @BeforeEach
+    void setUp() {
         dispatcher.addListener(listener);
-        service = context.mock(FbService.class, "service");
     }
 
     /**
-     * Tests if calls to {@link ServiceListenerDispatcher#detaching(FbService)}
-     * are forwarded correctly.
+     * Tests if calls to {@link ServiceListenerDispatcher#detaching(FbService)} are forwarded correctly.
      */
     @Test
-    public void testDetaching() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).detaching(service);
-        context.checking(expectations);
-
+    void testDetaching() {
         dispatcher.detaching(service);
+        verify(listener).detaching(service);
     }
 
     /**
@@ -77,30 +69,50 @@ public class ServiceListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testDetaching_withException() {
-        final ServiceListener listener2 = context.mock(ServiceListener.class, "listener2");
+    void testDetaching_withException(@Mock ServiceListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).detaching(service);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).detaching(service);
+        doThrow(new RuntimeException("test")).when(listener2).detaching(service);
 
-        dispatcher.detaching(service);
+        assertDoesNotThrow(() -> dispatcher.detaching(service));
+        verify(listener).detaching(service);
+        verify(listener2).detaching(service);
     }
 
     /**
-     * Tests if calls to {@link ServiceListenerDispatcher#detached(FbService)}
+     * Tests if calls to {@link ServiceListenerDispatcher#detached(FbService)} are forwarded correctly.
+     */
+    @Test
+    void testDetached() {
+        dispatcher.detached(service);
+        verify(listener).detached(service);
+    }
+
+    /**
+     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
+     * exceptions thrown to call of the dispatcher.
+     */
+    @Test
+    void testDetached_withException(@Mock ServiceListener listener2) {
+        dispatcher.addListener(listener2);
+        doThrow(new RuntimeException("test")).when(listener).detached(service);
+        doThrow(new RuntimeException("test")).when(listener2).detached(service);
+
+        assertDoesNotThrow(() -> dispatcher.detached(service));
+        verify(listener).detached(service);
+        verify(listener2).detached(service);
+    }
+
+    /**
+     * Tests if calls to {@link ServiceListenerDispatcher#warningReceived(FbService, SQLWarning)} are
      * forwarded correctly.
      */
     @Test
-    public void testDetached() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).detached(service);
-        context.checking(expectations);
+    void testWarningReceived() {
+        final SQLWarning warning = new SQLWarning();
 
-        dispatcher.detached(service);
+        dispatcher.warningReceived(service, warning);
+        verify(listener).warningReceived(service, warning);
     }
 
     /**
@@ -108,50 +120,15 @@ public class ServiceListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testDetached_withException() {
-        final ServiceListener listener2 = context.mock(ServiceListener.class, "listener2");
-        dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).detached(service);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.detached(service);
-    }
-
-    /**
-     * Tests if calls to {@link ServiceListenerDispatcher#warningReceived(FbService, SQLWarning)}
-     * forwarded correctly.
-     */
-    @Test
-    public void testWarningReceived() {
-        final Expectations expectations = new Expectations();
-        final SQLWarning warning = new SQLWarning();
-        expectations.exactly(1).of(listener).warningReceived(service, warning);
-        context.checking(expectations);
-
-        dispatcher.warningReceived(service, warning);
-    }
-
-    /**
-     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
-     * exceptions thrown to call of the dispatcher.
-     */
-    @Test
-    public void testWarningReceived_withException() {
-        final ServiceListener listener2 = context.mock(ServiceListener.class, "listener2");
+    void testWarningReceived_withException(@Mock ServiceListener listener2) {
         dispatcher.addListener(listener2);
         final SQLWarning warning = new SQLWarning();
-        final Expectations expectations = new Expectations();
-        for (ServiceListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).warningReceived(service, warning);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).warningReceived(service, warning);
+        doThrow(new RuntimeException("test")).when(listener2).warningReceived(service, warning);
 
-        dispatcher.warningReceived(service, warning);
+        assertDoesNotThrow(() -> dispatcher.warningReceived(service, warning));
+        verify(listener).warningReceived(service, warning);
+        verify(listener2).warningReceived(service, warning);
     }
 
     /**
@@ -159,14 +136,11 @@ public class ServiceListenerDispatcherTest {
      * {@link ServiceListenerDispatcher#shutdown()}
      */
     @Test
-    public void testNoDispatch_afterShutdown() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(service);
-        context.checking(expectations);
-
+    void testNoDispatch_afterShutdown() {
         dispatcher.shutdown();
 
         dispatcher.detaching(service);
+        verifyNoInteractions(listener);
     }
 
     /**
@@ -174,67 +148,55 @@ public class ServiceListenerDispatcherTest {
      * {@link ServiceListenerDispatcher#shutdown()}
      */
     @Test
-    public void testNoDispatch_afterShutdownAndAdd() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(service);
-        context.checking(expectations);
-
+    void testNoDispatch_afterShutdownAndAdd() {
         dispatcher.shutdown();
         dispatcher.addListener(listener);
 
         dispatcher.detaching(service);
+        verifyNoInteractions(listener);
     }
 
     /**
      * Tests if call to {@link ServiceListenerDispatcher#shutdown()} will make {@link ServiceListenerDispatcher#isShutdown()}
-     * return <code>true</code>
+     * return {@code true}.
      */
     @Test
-    public void testShutdown() {
+    void testShutdown() {
         assumeFalse(dispatcher.isShutdown());
 
         dispatcher.shutdown();
 
-        assertTrue("Expected isShutDown() true after call to shutdown()", dispatcher.isShutdown());
+        assertTrue(dispatcher.isShutdown(), "Expected isShutDown() true after call to shutdown()");
     }
 
     /**
      * Tests if listener does not receive events after it has been removed using
-     * {@link ServiceListenerDispatcher#removeListener(Object)}
+     * {@link ServiceListenerDispatcher#removeListener(ServiceListener)}
      */
     @Test
-    public void testNoDispatch_afterRemove() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(service);
-        context.checking(expectations);
-
+    void testNoDispatch_afterRemove() {
         dispatcher.removeListener(listener);
 
         dispatcher.detaching(service);
+        verifyNoInteractions(listener);
     }
 
     /**
-     * Tests if listener does not receive events after call to
-     * {@link ServiceListenerDispatcher#removeAllListeners()}
+     * Tests if listener does not receive events after call to {@link ServiceListenerDispatcher#removeAllListeners()}.
      */
     @Test
-    public void testNoDispatch_afterRemoveAll() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(service);
-        context.checking(expectations);
-
+    void testNoDispatch_afterRemoveAll() {
         dispatcher.removeAllListeners();
 
         dispatcher.detaching(service);
+        verifyNoInteractions(listener);
     }
 
     /**
      * Tests if a dispatcher cannot be added to itself.
      */
     @Test
-    public void testAddingDispatcherToItself_notAllowed() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        dispatcher.addListener(dispatcher);
+    void testAddingDispatcherToItself_notAllowed() {
+        assertThrows(IllegalArgumentException.class, () -> dispatcher.addListener(dispatcher));
     }
 }

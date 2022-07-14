@@ -45,8 +45,4 @@ abstract class TimeZoneCodecAbstractTimestampTzTest extends TimeZoneCodecAbstrac
     static final String EXTIMESTAMPTZ_AT_2019_07_01_ZONE_NETWORK_HEX = "0000E5290C5E59F0FFFFFE4900000078";
     static final String EXTIMESTAMPTZ_AT_2019_07_01_ZONE_NETWORK_HEX_ENCODED = "0000E5290C5E59F0FFFFFE4900000000";
 
-    TimeZoneCodecAbstractTimestampTzTest(int tzType) {
-        super(tzType);
-    }
-
 }

@@ -19,26 +19,23 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.common.extension.RunEnvironmentExtension.EnvironmentRequirement;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.AbstractFbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.management.FBManager;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -48,12 +45,13 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10Database}. This test class can
@@ -64,23 +62,21 @@ import static org.junit.Assume.assumeTrue;
  */
 public class V10DatabaseTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    public final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V10DatabaseTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10DatabaseTest(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     protected final IConnectionProperties getConnectionInfo() {
@@ -109,11 +105,12 @@ public class V10DatabaseTest {
         SimpleDatabaseListener callback = new SimpleDatabaseListener();
         db.addDatabaseListener(callback);
 
-        SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
+        SQLWarning warning = new SQLWarning("test");
         db.getDatabaseWarningCallback().processWarning(warning);
 
         List<SQLWarning> warnings = callback.getWarnings();
-        assertEquals("Unexpected warnings registered or no warnings registered", Collections.singletonList(warning), warnings);
+        assertEquals(Collections.singletonList(warning), warnings,
+                "Unexpected warnings registered or no warnings registered");
     }
 
     /**
@@ -123,7 +120,7 @@ public class V10DatabaseTest {
     public void testProcessResponseWarnings_warning_noCallback() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
 
-        SQLWarning warning = new FbExceptionBuilder().warning(ISCConstants.isc_numeric_out_of_range).toSQLException(SQLWarning.class);
+        SQLWarning warning = new SQLWarning("test");
 
         db.getDatabaseWarningCallback().processWarning(warning);
     }
@@ -133,44 +130,36 @@ public class V10DatabaseTest {
      */
     @Test
     public void testBasicAttach() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireDatabase db = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
                 db.attach();
                 System.out.println(db.getHandle());
 
-                assertTrue("Expected isAttached() to return true", db.isAttached());
-                assertNotNull("Expected version string to be not null", db.getServerVersion());
-                assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION,
-                        db.getServerVersion());
+                assertTrue(db.isAttached(), "Expected isAttached() to return true");
+                assertNotNull(db.getServerVersion(), "Expected version string to be not null");
+                assertNotEquals(GDSServerVersion.INVALID_VERSION, db.getServerVersion(),
+                        "Expected version should not be invalid");
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
     public void testAttach_DoubleAttach() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("Already attached to a database"));
-
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireDatabase db = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
                 db.attach();
 
-                //Second attach should throw exception
-                db.attach();
+                SQLException exception = assertThrows(SQLException.class, db::attach,
+                        "Second attach should throw exception");
+                assertThat(exception, message(equalTo("Already attached to a database")));
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
@@ -180,21 +169,18 @@ public class V10DatabaseTest {
     @Test
     public void testAttach_NonExistentDatabase() throws Exception {
         try (WireDatabaseConnection gdsConnection = createConnection()) {
-            try {
+            SQLException exception = assertThrows(SQLException.class, () -> {
                 gdsConnection.socketConnect();
                 FbWireDatabase db = gdsConnection.identify();
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
                 db.attach();
-                fail("Expected the attach to fail because the database doesn't exist");
-            } catch (SQLException e) {
-                // NOTE: Not using expectedException because of the final assertion that isConnected is false
-                // TODO Is this actually the right SQLState?
-                assertThat("Expected SQLState for 'Client unable to establish connection' (08001)", e,
-                        sqlStateEquals("08001"));
-                // TODO Seems to be the least specific error, deeper in there is a more specific 335544734 (isc_io_open_err)
-                assertThat("Expected isc_io_error (335544344)", e, errorCodeEquals(ISCConstants.isc_io_error));
-            }
+            }, "Expected the attach to fail because the database doesn't exist");
+            assertThat(exception, allOf(
+                    // TODO Is this actually the right SQLState?
+                    sqlStateEquals("08001"),
+                    // TODO Seems to be the least specific error, deeper in there is a more specific 335544734 (isc_io_open_err)
+                    errorCodeEquals(ISCConstants.isc_io_error)));
             assertFalse(gdsConnection.isConnected());
         }
     }
@@ -204,7 +190,7 @@ public class V10DatabaseTest {
      */
     @Test
     public void testBasicCreateAndDrop() throws Exception {
-        assumeTrue("Requires DB on local file system", EnvironmentRequirement.DB_LOCAL_FS.isMet());
+        assumeTrue(EnvironmentRequirement.DB_LOCAL_FS.isMet(), "Requires DB on local file system");
         IConnectionProperties connectionProperties = getConnectionInfo();
         connectionProperties.setSqlDialect(3);
 
@@ -213,19 +199,20 @@ public class V10DatabaseTest {
                 EncodingFactory.getPlatformDefault(), getProtocolCollection())) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+            assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
             db.createDatabase();
-            assertTrue("Database should be attached after create", db.isAttached());
-            assertTrue("Connection should be connected after create", gdsConnection.isConnected());
-            assertTrue("Expected database file to exist (NOTE: only works on localhost)",
-                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"));
+            assertTrue(db.isAttached(), "Database should be attached after create");
+            assertTrue(gdsConnection.isConnected(), "Connection should be connected after create");
+            assertTrue(dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"),
+                    "Expected database file to exist (NOTE: only works on localhost)");
 
             db.dropDatabase();
             assertFalse(gdsConnection.isConnected());
             assertFalse(dbFile.exists());
         } finally {
             if (dbFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
                 dbFile.delete();
             }
         }
@@ -233,20 +220,16 @@ public class V10DatabaseTest {
 
     @Test
     public void testDrop_NotAttached() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
-
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+            assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
-            db.dropDatabase();
-        } finally {
-            defaultDatabaseTearDown(fbManager);
+            SQLException exception = assertThrows(SQLException.class, db::dropDatabase);
+            assertThat(exception, allOf(
+                    message(startsWith("The connection is not attached to a database")),
+                    sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
         }
     }
 
@@ -254,58 +237,50 @@ public class V10DatabaseTest {
     public void testDetach_NotConnected() throws Exception {
         AbstractFbWireDatabase db = createDummyDatabase();
 
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(startsWith("No connection established to the database server"));
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED));
-
-        db.close();
+        SQLException exception = assertThrows(SQLException.class, db::close);
+        assertThat(exception, allOf(
+                message(startsWith("No connection established to the database server")),
+                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_CLOSED)));
     }
 
     @Test
     public void testDetach_NotAttached() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+            assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
             // Detach for connected but not attached should work
             db.close();
 
-            assertFalse("Expected connection closed after detach", gdsConnection.isConnected());
-        } finally {
-            defaultDatabaseTearDown(fbManager);
+            assertFalse(gdsConnection.isConnected(), "Expected connection closed after detach");
         }
     }
 
     @Test
     public void testBasicDetach() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
             try {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
                 db.attach();
 
                 db.close();
 
-                assertFalse("Expected database not attached", db.isAttached());
-                assertFalse("Expected connection closed", gdsConnection.isConnected());
+                assertFalse(db.isAttached(), "Expected database not attached");
+                assertFalse(gdsConnection.isConnected(), "Expected connection closed");
             } finally {
-                safelyClose(db);
+                closeQuietly(db);
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
     public void testDetach_openTransactions() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireDatabase db = gdsConnection.identify()) {
@@ -314,51 +289,44 @@ public class V10DatabaseTest {
                     SimpleDatabaseListener callback = new SimpleDatabaseListener();
                     db.addDatabaseListener(callback);
 
-                    assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                    assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
                     db.attach();
                     // Starting an active transaction
                     transaction = getTransaction(db);
 
-                    expectedException.expect(allOf(
-                            errorCodeEquals(ISCConstants.isc_open_trans),
-                            message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
-                    ));
-
                     // Triggers exception
-                    db.close();
+                    SQLException exception = assertThrows(SQLException.class, db::close);
+                    assertThat(exception, allOf(
+                            errorCodeEquals(ISCConstants.isc_open_trans),
+                            message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))));
                 } finally {
                     if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                         transaction.commit();
                     }
                 }
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
     public void testCancelOperation_abortSupported() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
             try {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
                 db.attach();
 
-                assumeTrue("expected database attached", db.isAttached());
+                assumeTrue(db.isAttached(), "expected database attached");
 
                 db.cancelOperation(ISCConstants.fb_cancel_abort);
 
-                assertFalse("Expected database not attached after abort", db.isAttached());
-                assertFalse("Expected connection closed after abort", gdsConnection.isConnected());
+                assertFalse(db.isAttached(), "Expected database not attached after abort");
+                assertFalse(gdsConnection.isConnected(), "Expected connection closed after abort");
             } finally {
-                safelyClose(db);
+                closeQuietly(db);
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
@@ -377,45 +345,40 @@ public class V10DatabaseTest {
         checkCancelOperationNotSupported(ISCConstants.fb_cancel_enable);
     }
 
-    // TODO Investigate why this doesn't work in wire protocol, but works in native
-    @Ignore("Test not working")
+    @Disabled("Test not working (create database is translated by fbclient, not server)")
     @Test
     public void testExecuteImmediate_createDatabase() throws Exception {
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             FbWireDatabase db = gdsConnection.identify();
-            assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+            assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
 
             String createDb = String.format("CREATE DATABASE '%s' USER '%s' PASSWORD '%s'",
                     getDatabasePath(), DB_USER, DB_PASSWORD);
             db.executeImmediate(createDb, null);
-            assertTrue("Expected to be attached after create database", db.isAttached());
+            assertTrue(db.isAttached(), "Expected to be attached after create database");
             db.dropDatabase();
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             new File(getDatabasePath()).delete();
         }
     }
 
     private void checkCancelOperationNotSupported(int kind) throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireDatabaseConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireDatabase db = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireDatabase implementation", getExpectedDatabaseType(), db.getClass());
+                assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbWireDatabase implementation");
                 db.attach();
 
-                assertTrue("expected database attached", db.isAttached());
+                assertTrue(db.isAttached(), "expected database attached");
 
-                expectedException.expect(allOf(
-                        isA(SQLFeatureNotSupportedException.class),
-                        message(startsWith("Cancel Operation isn't supported in this version of the wire protocol"))
-                ));
-
-                db.cancelOperation(kind);
+                SQLException exception = assertThrows(SQLFeatureNotSupportedException.class,
+                        () -> db.cancelOperation(kind));
+                assertThat(exception,
+                        message(startsWith("Cancel Operation isn't supported in this version of the wire protocol")));
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 
@@ -425,20 +388,7 @@ public class V10DatabaseTest {
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
-    private static void safelyClose(FbDatabase db) {
-        if (db == null) return;
-        try {
-            db.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
 }

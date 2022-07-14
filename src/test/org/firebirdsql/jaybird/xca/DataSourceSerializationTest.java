@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,34 +18,41 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
 import java.rmi.MarshalledObject;
 import java.sql.Connection;
 
-import static org.junit.Assert.assertNotNull;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * TestDataSourceSerialization.java
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
-public class DataSourceSerializationTest extends XATestBase {
+class DataSourceSerializationTest {
+
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
     @Test
-    public void testDataSourceSerialization() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = (DataSource) mcf.createConnectionFactory();
-        assertNotNull("Could not get DataSource", ds);
+    void testDataSourceSerialization() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
+        DataSource ds = mcf.createConnectionFactory();
+        assertNotNull(ds, "Could not get DataSource");
 
-        Connection c = ds.getConnection();
-        assertNotNull("Could not get Connection", c);
-
-        c.close();
-        MarshalledObject<DataSource> mo = new MarshalledObject<DataSource>(ds);
+        try (Connection c = ds.getConnection()) {
+            assertNotNull(c, "Could not get Connection");
+        }
+        
+        MarshalledObject<DataSource> mo = new MarshalledObject<>(ds);
         ds = mo.get();
-        c = ds.getConnection();
-        c.close();
+        try (Connection c = ds.getConnection()) {
+            assertNotNull(c, "Could not get Connection");
+        }
     }
 }

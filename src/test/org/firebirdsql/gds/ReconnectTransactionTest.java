@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.gds;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -29,17 +29,17 @@ import org.firebirdsql.jaybird.xca.FBTpb;
 import org.firebirdsql.jdbc.FBTpbMapper;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ReconnectTransactionTest extends FBJUnit4TestBase {
+class ReconnectTransactionTest {
 
     private static final byte[] message = new byte[] {
             0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
@@ -49,12 +49,10 @@ public class ReconnectTransactionTest extends FBJUnit4TestBase {
             + "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
             + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE = 1";
 
-    private FBTpb tpb;
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
 
-    @Before
-    public void setUp() throws Exception {
-        tpb = new FBTpb(FBTpbMapper.getDefaultMapper().getDefaultMapping());
-    }
+    private final FBTpb tpb = new FBTpb(FBTpbMapper.getDefaultMapper().getDefaultMapping());
 
     private static class DataProvider implements FieldDataProvider {
 
@@ -81,7 +79,7 @@ public class ReconnectTransactionTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testReconnectTransaction() throws Exception {
+    void testReconnectTransaction() throws Exception {
         FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
         FbDatabaseFactory databaseFactory = FBTestProperties.getFbDatabaseFactory();
@@ -142,9 +140,8 @@ public class ReconnectTransactionTest extends FBJUnit4TestBase {
             stmtHandle2.close();
             trHandle2.commit();
 
-            assertTrue("Should find in-limbo tx.", foundInLimboTx);
+            assertTrue(foundInLimboTx, "Should find in-limbo tx");
         }
-
 
     }
 }

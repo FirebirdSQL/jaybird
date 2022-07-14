@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,27 +12,25 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.ds;
 
-import java.sql.SQLException;
+import org.hamcrest.Matcher;
+import org.mockito.ArgumentMatcher;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.PooledConnection;
-
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
+import java.sql.SQLException;
 
 /**
  * Matcher to check for ConnectionEvents
  *  
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-class ConnectionEventMatcher extends TypeSafeMatcher<ConnectionEvent> {
+class ConnectionEventMatcher implements ArgumentMatcher<ConnectionEvent> {
     private final PooledConnection pooled;
     private final Matcher<SQLException> exceptionMatcher;
 
@@ -43,12 +39,8 @@ class ConnectionEventMatcher extends TypeSafeMatcher<ConnectionEvent> {
         this.exceptionMatcher = exceptionMatcher;
     }
 
-    public void describeTo(Description description) {
-        description.appendText("a ConnectionEvent from ").appendValue(pooled).appendText(" with SQLException ").appendDescriptionOf(exceptionMatcher);
-    }
-
     @Override
-    public boolean matchesSafely(ConnectionEvent item) {
+    public boolean matches(ConnectionEvent item) {
         return item.getSource() == pooled && exceptionMatcher.matches(item.getSQLException());
     }
 }

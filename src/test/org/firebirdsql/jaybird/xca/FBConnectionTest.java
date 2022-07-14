@@ -18,41 +18,53 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import static org.junit.Assert.assertNotNull;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class FBConnectionTest extends XATestBase {
+class FBConnectionTest {
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void testCreateC() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
-        assertNotNull("Could not get FBManagedConnectionFactory", mcf);
+    void testCreateC() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
+        assertNotNull(mcf, "Could not get FBManagedConnectionFactory");
         FBManagedConnection mc = mcf.createManagedConnection();
-        assertNotNull("Could not get FBManagedConnection", mc);
-        Connection c = mc.getConnection();
-        assertNotNull("Could not get Connection", c);
-        mc.destroy();
+        try {
+            assertNotNull(mc, "Could not get FBManagedConnection");
+            Connection c = mc.getConnection();
+            assertNotNull(c, "Could not get Connection");
+        } finally {
+            mc.destroy();
+        }
     }
 
     @Test
-    public void testCreateStatement() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testCreateStatement() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
-        Connection c = mc.getConnection();
-        Statement s = c.createStatement();
-        assertNotNull("Could not create Statement", s);
-        mc.destroy();
+        try {
+            Connection c = mc.getConnection();
+            Statement s = c.createStatement();
+            assertNotNull(s, "Could not create Statement");
+        } finally {
+            mc.destroy();
+        }
     }
 
     @Test
-    public void testUseStatement() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testUseStatement() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         try {
             Connection c = mc.getConnection();

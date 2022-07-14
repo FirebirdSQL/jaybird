@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
@@ -29,19 +29,22 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob}. This test class can
@@ -55,18 +58,17 @@ import static org.junit.Assume.assumeTrue;
  */
 public class V10OutputBlobTest extends BaseTestV10Blob {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    public V10OutputBlobTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10OutputBlobTest(V10CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    @Override
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     /**
@@ -84,7 +86,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             writeBlob(testId, testBytes, db, null);
         }
 
-        assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
+        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
     }
 
     /**
@@ -104,7 +106,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         }
 
-        assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
+        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
     }
 
     /**
@@ -116,10 +118,10 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
 
                 blob.open();
-                assertFalse("Output blob after open should not be eof", blob.isEof());
+                assertFalse(blob.isEof(), "Output blob after open should not be eof");
             } finally {
                 transaction.commit();
             }
@@ -135,11 +137,11 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
                 blob.close();
-                assertTrue("Output blob after close should be eof", blob.isEof());
+                assertTrue(blob.isEof(), "Output blob after close should be eof");
             } finally {
                 transaction.commit();
             }
@@ -155,11 +157,11 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
                 blob.cancel();
-                assertTrue("Output blob after cancel should be eof", blob.isEof());
+                assertTrue(blob.isEof(), "Output blob after cancel should be eof");
             } finally {
                 transaction.commit();
             }
@@ -171,12 +173,6 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
      */
     @Test
     public void testUsingCancelledBlob() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_bad_segstr_id),
-                message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))
-        ));
-
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -206,7 +202,11 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
                 RowValue rowValue = RowValue.of(
                         datatypeCoder.encodeInt(testId),
                         datatypeCoder.encodeLong(blob.getBlobId()));
-                statement.execute(rowValue);
+
+                SQLException exception = assertThrows(SQLException.class, () -> statement.execute(rowValue));
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_bad_segstr_id),
+                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))));
                 statement.close();
             } finally {
                 transaction.commit();
@@ -219,12 +219,6 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
      */
     @Test
     public void testReopen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageStartsWith(ISCConstants.isc_segstr_no_op)
-        ));
-
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
@@ -245,7 +239,10 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
                 blob.close();
 
                 // Reopen
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                        fbMessageStartsWith(ISCConstants.isc_segstr_no_op)));
             } finally {
                 transaction.commit();
             }
@@ -257,18 +254,15 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
      */
     @Test
     public void testDoubleOpen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                fbMessageStartsWith(ISCConstants.isc_no_segstr_close)
-        ));
-
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
                 blob.open();
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                        fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
             } finally {
                 transaction.commit();
             }

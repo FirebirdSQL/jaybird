@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.FBRowId;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.sql.RowId;
@@ -29,20 +29,21 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId> {
+class FBRowIdFieldTest extends BaseJUnit5TestFBField<FBRowIdField, RowId> {
 
-    // Note some of the tests were copied from FBBinaryField to check if the field is (largely) backwards compatible
+    // Note some tests were copied from FBBinaryField to check if the field is (largely) backwards compatible
 
     private static final int FIELD_LENGTH = 8;
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_TEXT);
@@ -55,7 +56,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getRowIdNonNull() throws SQLException {
+    void getRowIdNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -66,17 +67,18 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void setRowIdNonNull() throws SQLException {
+    void setRowIdNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final RowId rowId = new FBRowId(bytes);
-        setValueExpectations(bytes);
 
         field.setRowId(rowId);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getObject_RowId() throws SQLException {
+    void getObject_RowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -86,7 +88,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
     }
 
     @Test
-    public void getObject_RowId_null() throws SQLException {
+    void getObject_RowId_null() throws SQLException {
         toReturnNullExpectations();
 
         RowId rowId = field.getObject(RowId.class);
@@ -96,7 +98,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getObject_FBRowId() throws SQLException {
+    void getObject_FBRowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -106,7 +108,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
     }
 
     @Test
-    public void getObject_FBRowId_null() throws SQLException {
+    void getObject_FBRowId_null() throws SQLException {
         toReturnNullExpectations();
 
         FBRowId rowId = field.getObject(FBRowId.class);
@@ -116,17 +118,18 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void setObject_RowId() throws SQLException {
+    void setObject_RowId() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final RowId rowId = new FBRowId(bytes);
-        setValueExpectations(bytes);
 
         field.setObject(rowId);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getCharacterStreamNonNull() throws Exception {
+    void getCharacterStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -143,7 +146,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getObject_Reader() throws Exception {
+    void getObject_Reader() throws Exception {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -160,7 +163,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -172,7 +175,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         final byte[] bytes = getRandomBytes();
         final String expectedString = datatypeCoder.decodeString(bytes);
         toReturnValueExpectations(bytes);
@@ -184,17 +187,18 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
+    void setStringNonNull() throws SQLException {
         final String string = "hdgkehgf";
         final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
 
         field.setString(string);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getBinaryStreamNonNull() throws Exception {
+    void getBinaryStreamNonNull() throws Exception {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -205,7 +209,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void getObject_InputStream() throws Exception {
+    void getObject_InputStream() throws Exception {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -216,27 +220,29 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
 
     @Test
     @Override
-    public void setBinaryStreamNonNull() throws SQLException {
+    void setBinaryStreamNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
         InputStream stream = new ByteArrayInputStream(bytes);
 
         field.setBinaryStream(stream, FIELD_LENGTH);
+
+        verifySetValue(bytes);
     }
 
     @Test
-    public void setCharacterStreamNonNull() throws SQLException {
+    void setCharacterStreamNonNull() throws SQLException {
         final String string = "hdgkehgf";
         final byte[] bytes = string.getBytes();
-        setValueExpectations(bytes);
         Reader reader = new StringReader(string);
 
         field.setCharacterStream(reader, FIELD_LENGTH);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
@@ -247,52 +253,55 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
     }
 
     @Test
-    public void setObjectNonNull() throws SQLException {
+    void setObjectNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
 
         field.setObject(new FBRowId(bytes));
+
+        verifySetValue(bytes);
     }
 
     @Test
-    public void setObjectNonNull_bytes() throws SQLException {
+    void setObjectNonNull_bytes() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
 
         field.setObject(bytes);
+
+        verifySetValue(bytes);
     }
 
     @Test
     @Override
-    public void getBytesNonNull() throws SQLException {
+    void getBytesNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
         byte[] value = field.getBytes();
 
         assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
     @Override
-    public void getObject_byteArray() throws SQLException {
+    void getObject_byteArray() throws SQLException {
         final byte[] bytes = getRandomBytes();
         toReturnValueExpectations(bytes);
 
         byte[] value = field.getObject(byte[].class);
 
         assertArrayEquals(bytes, value);
-        assertNotSame("Expected a clone of the bytes", bytes, value);
+        assertNotSame(bytes, value, "Expected a clone of the bytes");
     }
 
     @Test
     @Override
-    public void setBytesNonNull() throws SQLException {
+    void setBytesNonNull() throws SQLException {
         final byte[] bytes = getRandomBytes();
-        setValueExpectations(bytes);
 
         field.setBytes(bytes);
+
+        verifySetValue(bytes);
     }
 
     private byte[] getRandomBytes() {
@@ -310,7 +319,7 @@ public class FBRowIdFieldTest extends BaseJUnit4TestFBField<FBRowIdField, RowId>
     }
 
     @Override
-    protected RowId getNonNullObject() {
+    RowId getNonNullObject() {
         return new FBRowId(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
     }
 }

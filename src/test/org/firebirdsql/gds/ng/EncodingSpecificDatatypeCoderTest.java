@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,13 +21,11 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.encodings.IEncodingFactory;
-import org.jmock.Expectations;
-import org.jmock.auto.Mock;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.*;
 import java.sql.Date;
@@ -38,42 +36,33 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Calendar;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link EncodingSpecificDatatypeCoder}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class EncodingSpecificDatatypeCoderTest {
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    {
-        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-    }
+@ExtendWith(MockitoExtension.class)
+class EncodingSpecificDatatypeCoderTest {
 
     @Mock private EncodingDefinition encodingDefinition;
     @Mock private Encoding encoding;
     @Mock private DatatypeCoder parentCoder;
     private EncodingSpecificDatatypeCoder coder;
 
-    @Before
-    public void setup() {
-        context.checking(new Expectations() {{
-            allowing(encodingDefinition).getEncoding(); will(returnValue(encoding));
-        }});
+    @BeforeEach
+    void setup() {
+        when(encodingDefinition.getEncoding()).thenReturn(encoding);
         coder = new EncodingSpecificDatatypeCoder(parentCoder, encodingDefinition);
     }
 
     @Test
-    public void encodeString_delegatesToEncoding() {
+    void encodeString_delegatesToEncoding() {
         final String inputValue = "result value";
         final byte[] resultValue = { 1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).encodeToCharset(inputValue); will(returnValue(resultValue));
-        }});
+        when(encoding.encodeToCharset(inputValue)).thenReturn(resultValue);
 
         byte[] result = coder.encodeString(inputValue);
 
@@ -81,13 +70,9 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void createWriter_delegatesToEncoding() {
-        final OutputStream outputStream = context.mock(OutputStream.class);
+    void createWriter_delegatesToEncoding(@Mock OutputStream outputStream) {
         final Writer writer = new StringWriter();
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).createWriter(outputStream); will(returnValue(writer));
-        }});
+        when(encoding.createWriter(outputStream)).thenReturn(writer);
 
         Writer result = coder.createWriter(outputStream);
 
@@ -95,13 +80,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeString_delegatesToEncoding() {
+    void decodeString_delegatesToEncoding() {
         final byte[] inputValue = { 1, 2, 3, 4};
         final String resultValue = "result value";
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).decodeFromCharset(inputValue); will(returnValue(resultValue));
-        }});
+        when(encoding.decodeFromCharset(inputValue)).thenReturn(resultValue);
 
         String result = coder.decodeString(inputValue);
 
@@ -109,13 +91,9 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void createReader_delegatesToEncoding() {
-        final InputStream inputStream = context.mock(InputStream.class);
+    void createReader_delegatesToEncoding(@Mock InputStream inputStream) {
         final Reader reader = new StringReader("test");
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).createReader(inputStream); will(returnValue(reader));
-        }});
+        when(encoding.createReader(inputStream)).thenReturn(reader);
 
         Reader result = coder.createReader(inputStream);
 
@@ -123,20 +101,16 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void withEncodingDefinition_sameEncodingDefinitionReturnsCurrentInstance() {
+    void withEncodingDefinition_sameEncodingDefinitionReturnsCurrentInstance() {
         DatatypeCoder result = coder.forEncodingDefinition(encodingDefinition);
 
         assertSame(coder, result);
     }
 
     @Test
-    public void withEncodingDefinition_differentEncodingDefinitionDelegatesToParent() {
-        final DatatypeCoder newCoder = context.mock(DatatypeCoder.class, "newCoder");
-        final EncodingDefinition otherEncodingDefinition = context.mock(EncodingDefinition.class, "otherEncodingDefinition");
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).forEncodingDefinition(otherEncodingDefinition); will(returnValue(newCoder));
-        }});
+    void withEncodingDefinition_differentEncodingDefinitionDelegatesToParent(
+            @Mock DatatypeCoder newCoder, @Mock EncodingDefinition otherEncodingDefinition) {
+        when(parentCoder.forEncodingDefinition(otherEncodingDefinition)).thenReturn(newCoder);
 
         DatatypeCoder result = coder.forEncodingDefinition(otherEncodingDefinition);
 
@@ -144,23 +118,20 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void getEncodingDefinition() {
+    void getEncodingDefinition() {
         assertSame(encodingDefinition, coder.getEncodingDefinition());
     }
 
     @Test
-    public void unwrap() {
+    void unwrap() {
         assertSame(parentCoder, coder.unwrap());
     }
 
     @Test
-    public void encodeShort_short() {
+    void encodeShort_short() {
         final short value = 23;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeShort(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeShort(value)).thenReturn(response);
 
         byte[] result = coder.encodeShort(value);
 
@@ -168,13 +139,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeShort_int() {
+    void encodeShort_int() {
         final int value = 23;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeShort(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeShort(value)).thenReturn(response);
 
         byte[] result = coder.encodeShort(value);
 
@@ -182,13 +150,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeShort() {
+    void decodeShort() {
         final byte[] value = {1, 2, 3, 4};
         final short response = 23;
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeShort(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeShort(value)).thenReturn(response);
 
         short result = coder.decodeShort(value);
 
@@ -196,13 +161,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeInt() {
+    void encodeInt() {
         final int value = 23;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeInt(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeInt(value)).thenReturn(response);
 
         byte[] result = coder.encodeInt(value);
 
@@ -210,13 +172,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeInt() {
+    void decodeInt() {
         final byte[] value = {1, 2, 3, 4};
         final int response = 23;
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeInt(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeInt(value)).thenReturn(response);
 
         int result = coder.decodeInt(value);
 
@@ -224,13 +183,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeLong() {
+    void encodeLong() {
         final long value = 23;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLong(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeLong(value)).thenReturn(response);
 
         byte[] result = coder.encodeLong(value);
 
@@ -238,13 +194,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeLong() {
+    void decodeLong() {
         final byte[] value = {1, 2, 3, 4};
         final long response = 23;
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeLong(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeLong(value)).thenReturn(response);
 
         long result = coder.decodeLong(value);
 
@@ -255,10 +208,7 @@ public class EncodingSpecificDatatypeCoderTest {
     public void encodeFloat() {
         final float value = 23.1f;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeFloat(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeFloat(value)).thenReturn(response);
 
         byte[] result = coder.encodeFloat(value);
 
@@ -266,13 +216,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeFloat() {
+    void decodeFloat() {
         final byte[] value = {1, 2, 3, 4};
         final float response = 23.1f;
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeFloat(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeFloat(value)).thenReturn(response);
 
         float result = coder.decodeFloat(value);
 
@@ -280,13 +227,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDouble() {
+    void encodeDouble() {
         final double value = 23.1;
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeDouble(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeDouble(value)).thenReturn(response);
 
         byte[] result = coder.encodeDouble(value);
 
@@ -294,13 +238,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDouble() {
+    void decodeDouble() {
         final byte[] value = {1, 2, 3, 4};
         final double response = 23.1;
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeDouble(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeDouble(value)).thenReturn(response);
 
         double result = coder.decodeDouble(value);
 
@@ -308,16 +249,13 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestamp_calendar_boolean() {
+    void encodeTimestamp_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
         final Timestamp response2 = new Timestamp(System.currentTimeMillis() + 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimestamp(value, calendar, false); will(returnValue(response1));
-            oneOf(parentCoder).encodeTimestamp(value, calendar, true); will(returnValue(response2));
-        }});
+        when(parentCoder.encodeTimestamp(value, calendar, false)).thenReturn(response1);
+        when(parentCoder.encodeTimestamp(value, calendar, true)).thenReturn(response2);
 
         Timestamp result1 = coder.encodeTimestamp(value, calendar, false);
         Timestamp result2 = coder.encodeTimestamp(value, calendar, true);
@@ -327,13 +265,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestampRaw() {
+    void encodeTimestampRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimestampRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeTimestampRaw(value)).thenReturn(response);
 
         byte[] result = coder.encodeTimestampRaw(value);
 
@@ -341,14 +276,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimestampCalendar() {
+    void encodeTimestampCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimestampCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.encodeTimestampCalendar(value, calendar)).thenReturn(response);
 
         byte[] result = coder.encodeTimestampCalendar(value, calendar);
 
@@ -356,16 +288,13 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestamp_calendar_boolean() {
+    void decodeTimestamp_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Timestamp value = new Timestamp(System.currentTimeMillis());
         final Timestamp response1 = new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000);
         final Timestamp response2 = new Timestamp(System.currentTimeMillis() + 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimestamp(value, calendar, false); will(returnValue(response1));
-            oneOf(parentCoder).decodeTimestamp(value, calendar, true); will(returnValue(response2));
-        }});
+        when(parentCoder.decodeTimestamp(value, calendar, false)).thenReturn(response1);
+        when(parentCoder.decodeTimestamp(value, calendar, true)).thenReturn(response2);
 
         Timestamp result1 = coder.decodeTimestamp(value, calendar, false);
         Timestamp result2 = coder.decodeTimestamp(value, calendar, true);
@@ -375,13 +304,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestampRaw() {
+    void decodeTimestampRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimestampRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeTimestampRaw(value)).thenReturn(response);
 
         DatatypeCoder.RawDateTimeStruct result = coder.decodeTimestampRaw(value);
 
@@ -389,14 +315,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimestampCalendar() {
+    void decodeTimestampCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Timestamp response = new Timestamp(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimestampCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.decodeTimestampCalendar(value, calendar)).thenReturn(response);
 
         Timestamp result = coder.decodeTimestampCalendar(value, calendar);
 
@@ -404,16 +327,13 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTime_calendar_boolean() {
+    void encodeTime_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
         final Time response2 = new Time(System.currentTimeMillis() + 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTime(value, calendar, false); will(returnValue(response1));
-            oneOf(parentCoder).encodeTime(value, calendar, true); will(returnValue(response2));
-        }});
+        when(parentCoder.encodeTime(value, calendar, false)).thenReturn(response1);
+        when(parentCoder.encodeTime(value, calendar, true)).thenReturn(response2);
 
         Time result1 = coder.encodeTime(value, calendar, false);
         Time result2 = coder.encodeTime(value, calendar, true);
@@ -423,13 +343,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimeRaw() {
+    void encodeTimeRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimeRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeTimeRaw(value)).thenReturn(response);
 
         byte[] result = coder.encodeTimeRaw(value);
 
@@ -437,14 +354,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeTimeCalendar() {
+    void encodeTimeCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeTimeCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.encodeTimeCalendar(value, calendar)).thenReturn(response);
 
         byte[] result = coder.encodeTimeCalendar(value, calendar);
 
@@ -452,16 +366,13 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTime_calendar_boolean() {
+    void decodeTime_calendar_boolean() {
         final Calendar calendar = Calendar.getInstance();
         final Time value = new Time(System.currentTimeMillis());
         final Time response1 = new Time(System.currentTimeMillis() - 60 * 60 * 1000);
         final Time response2 = new Time(System.currentTimeMillis() + 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTime(value, calendar, false); will(returnValue(response1));
-            oneOf(parentCoder).decodeTime(value, calendar, true); will(returnValue(response2));
-        }});
+        when(parentCoder.decodeTime(value, calendar, false)).thenReturn(response1);
+        when(parentCoder.decodeTime(value, calendar, true)).thenReturn(response2);
 
         Time result1 = coder.decodeTime(value, calendar, false);
         Time result2 = coder.decodeTime(value, calendar, true);
@@ -471,13 +382,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimeRaw() {
+    void decodeTimeRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimeRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeTimeRaw(value)).thenReturn(response);
 
         DatatypeCoder.RawDateTimeStruct result = coder.decodeTimeRaw(value);
 
@@ -485,14 +393,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeTimeCalendar() {
+    void decodeTimeCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Time response = new Time(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeTimeCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.decodeTimeCalendar(value, calendar)).thenReturn(response);
 
         Time result = coder.decodeTimeCalendar(value, calendar);
 
@@ -500,14 +405,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDate_calendar() {
+    void encodeDate_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeDate(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.encodeDate(value, calendar)).thenReturn(response);
 
         Date result = coder.encodeDate(value, calendar);
 
@@ -515,13 +417,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDateRaw() {
+    void encodeDateRaw() {
         final DatatypeCoder.RawDateTimeStruct value = new DatatypeCoder.RawDateTimeStruct();
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeDateRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.encodeDateRaw(value)).thenReturn(response);
 
         byte[] result = coder.encodeDateRaw(value);
 
@@ -529,14 +428,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDateCalendar() {
+    void encodeDateCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final byte[] response = {1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeDateCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.encodeDateCalendar(value, calendar)).thenReturn(response);
 
         byte[] result = coder.encodeDateCalendar(value, calendar);
 
@@ -544,14 +440,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDate_calendar() {
+    void decodeDate_calendar() {
         final Calendar calendar = Calendar.getInstance();
         final Date value = new Date(System.currentTimeMillis());
         final Date response = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeDate(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.decodeDate(value, calendar)).thenReturn(response);
 
         Date result = coder.decodeDate(value, calendar);
 
@@ -559,13 +452,10 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDateRaw() {
+    void decodeDateRaw() {
         final byte[] value = {1, 2, 3, 4};
         final DatatypeCoder.RawDateTimeStruct response = new DatatypeCoder.RawDateTimeStruct();
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeDateRaw(value); will(returnValue(response));
-        }});
+        when(parentCoder.decodeDateRaw(value)).thenReturn(response);
 
         DatatypeCoder.RawDateTimeStruct result = coder.decodeDateRaw(value);
 
@@ -573,14 +463,11 @@ public class EncodingSpecificDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDateCalendar() {
+    void decodeDateCalendar() {
         final Calendar calendar = Calendar.getInstance();
         final byte[] value = {1, 2, 3, 4};
         final Date response = new Date(System.currentTimeMillis());
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeDateCalendar(value, calendar); will(returnValue(response));
-        }});
+        when(parentCoder.decodeDateCalendar(value, calendar)).thenReturn(response);
 
         Date result = coder.decodeDateCalendar(value, calendar);
 
@@ -591,70 +478,54 @@ public class EncodingSpecificDatatypeCoderTest {
     public void decodeBoolean() {
         final byte[] valueTrue = {1, 0};
         final byte[] valueFalse = {0, 0};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).decodeBoolean(valueTrue); will(returnValue(true));
-            oneOf(parentCoder).decodeBoolean(valueFalse); will(returnValue(false));
-        }});
+        when(parentCoder.decodeBoolean(valueTrue)).thenReturn(true);
+        when(parentCoder.decodeBoolean(valueFalse)).thenReturn(false);
 
         assertTrue(coder.decodeBoolean(valueTrue));
         assertFalse(coder.decodeBoolean(valueFalse));
     }
 
     @Test
-    public void encodeBoolean() {
+    void encodeBoolean() {
         final byte[] resultTrue = {1, 0};
         final byte[] resultFalse = {0, 0};
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeBoolean(true); will(returnValue(resultTrue));
-            oneOf(parentCoder).encodeBoolean(false); will(returnValue(resultFalse));
-        }});
+        when(parentCoder.encodeBoolean(true)).thenReturn(resultTrue);
+        when(parentCoder.encodeBoolean(false)).thenReturn(resultFalse);
 
         assertSame(resultTrue, coder.encodeBoolean(true));
         assertSame(resultFalse, coder.encodeBoolean(false));
     }
 
     @Test
-    public void encodeLocalTime() {
+    void encodeLocalTime() {
+        final LocalTime value = LocalTime.of(1, 2, 3, 4);
         final byte[] response = {1, 2, 3, 4};
+        when(parentCoder.encodeLocalTime(value)).thenReturn(response);
 
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalTime(LocalTime.of(1, 2, 3, 4)); will(returnValue(response));
-        }});
-
-        assertSame(response, coder.encodeLocalTime(LocalTime.of(1, 2, 3, 4)));
+        assertSame(response, coder.encodeLocalTime(value));
     }
 
     @Test
-    public void encodeLocalDate() {
+    void encodeLocalDate() {
+        LocalDate value = LocalDate.of(1, 2, 3);
         final byte[] response = {1, 2, 3, 4};
+        when(parentCoder.encodeLocalDate(value)).thenReturn(response);
 
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalDate(LocalDate.of(1, 2, 3)); will(returnValue(response));
-        }});
-
-        assertSame(response, coder.encodeLocalDate(LocalDate.of(1, 2, 3)));
+        assertSame(response, coder.encodeLocalDate(value));
     }
 
     @Test
-    public void encodeLocalDateTime() {
+    void encodeLocalDateTime() {
+        LocalDateTime value = LocalDateTime.of(1, 2, 3, 4, 5, 6, 7);
         final byte[] response = {1, 2, 3, 4};
+        when(parentCoder.encodeLocalDateTime(value)).thenReturn(response);
 
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).encodeLocalDateTime(LocalDateTime.of(1, 2, 3, 4, 5, 6, 7)); will(returnValue(response));
-        }});
-
-        assertSame(response, coder.encodeLocalDateTime(LocalDateTime.of(1, 2, 3, 4, 5, 6, 7)));
+        assertSame(response, coder.encodeLocalDateTime(value));
     }
 
     @Test
-    public void getEncodingFactory() {
-        final IEncodingFactory response = context.mock(IEncodingFactory.class);
-
-        context.checking(new Expectations() {{
-            oneOf(parentCoder).getEncodingFactory(); will(returnValue(response));
-        }});
+    void getEncodingFactory(@Mock IEncodingFactory response) {
+        when(parentCoder.getEncodingFactory()).thenReturn(response);
 
         assertSame(response, coder.getEncodingFactory());
     }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -33,14 +33,14 @@ import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure related metadata.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataProceduresTest {
+class FBDatabaseMetaDataProceduresTest {
 
     // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
     private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
@@ -81,20 +81,21 @@ public class FBDatabaseMetaDataProceduresTest {
     private static final MetaDataTestSupport<ProcedureMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(ProcedureMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -116,7 +117,7 @@ public class FBDatabaseMetaDataProceduresTest {
      * getProcedures().
      */
     @Test
-    public void testProcedureMetaDataColumns() throws Exception {
+    void testProcedureMetaDataColumns() throws Exception {
         try (ResultSet procedures = dbmd.getProcedures(null, null, "doesnotexist")) {
             metaDataTestSupport.validateResultSetColumns(procedures);
         }
@@ -126,7 +127,7 @@ public class FBDatabaseMetaDataProceduresTest {
      * Tests getProcedures() with procedureName null, expecting all procedures to be returned.
      */
     @Test
-    public void testProcedureMetaData_all_procedureName_null() throws Exception {
+    void testProcedureMetaData_all_procedureName_null() throws Exception {
         validateProcedureMetaData_everything(null);
     }
 
@@ -134,7 +135,7 @@ public class FBDatabaseMetaDataProceduresTest {
      * Tests getProcedures() with procedureName all pattern (%), expecting all procedures to be returned.
      */
     @Test
-    public void testProcedureMetaData_all_procedureName_allPattern() throws Exception {
+    void testProcedureMetaData_all_procedureName_allPattern() throws Exception {
         validateProcedureMetaData_everything("%");
     }
 
@@ -155,7 +156,7 @@ public class FBDatabaseMetaDataProceduresTest {
      * Tests getProcedures with specific procedure name, expecting only that specific procedure to be returned.
      */
     @Test
-    public void testProcedureMetaData_specificProcedure() throws Exception {
+    void testProcedureMetaData_specificProcedure() throws Exception {
         List<ProcedureTestData> expectedProcedures =
                 Collections.singletonList(ProcedureTestData.NORMAL_PROC_WITH_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
@@ -166,7 +167,7 @@ public class FBDatabaseMetaDataProceduresTest {
      * Tests getProcedures with specific procedure name (quoted), expecting only that specific procedure to be returned.
      */
     @Test
-    public void testProcedureMetaData_specificProcedureQuoted() throws Exception {
+    void testProcedureMetaData_specificProcedureQuoted() throws Exception {
         List<ProcedureTestData> expectedProcedures = Collections.singletonList(ProcedureTestData.QUOTED_PROC_NO_RETURN);
         ResultSet procedures = dbmd.getProcedures(null, null, expectedProcedures.get(0).getName());
         validateProcedures(procedures, expectedProcedures);
@@ -197,7 +198,7 @@ public class FBDatabaseMetaDataProceduresTest {
                 }
                 procedureCount++;
             }
-            assertEquals("Unexpected number of procedures returned", expectedProcedures.size(), procedureCount);
+            assertEquals(expectedProcedures.size(), procedureCount, "Unexpected number of procedures returned");
         } finally {
             closeQuietly(procedures);
         }

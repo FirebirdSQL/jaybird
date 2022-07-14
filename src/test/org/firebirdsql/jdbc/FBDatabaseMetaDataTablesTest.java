@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,17 +31,26 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.lang.String.format;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for table related metadata.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataTablesTest {
+class FBDatabaseMetaDataTablesTest {
 
     // Valid values for TABLE_TYPE (separate from those defined in FBDatabaseMetaData for testing)
     private static final String VIEW = "VIEW";
@@ -98,20 +107,21 @@ public class FBDatabaseMetaDataTablesTest {
     private static final MetaDataTestSupport<TableMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(TableMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -139,7 +149,7 @@ public class FBDatabaseMetaDataTablesTest {
      * getTables().
      */
     @Test
-    public void testTableMetaDataColumns() throws Exception {
+    void testTableMetaDataColumns() throws Exception {
         try (ResultSet tables = dbmd.getTables(null, null, "doesnotexist", null)) {
             metaDataTestSupport.validateResultSetColumns(tables);
         }
@@ -150,7 +160,7 @@ public class FBDatabaseMetaDataTablesTest {
      * tables of all types to be returned.
      */
     @Test
-    public void testTableMetaData_everything_tableName_null_types_null() throws Exception {
+    void testTableMetaData_everything_tableName_null_types_null() throws Exception {
         validateTableMetaData_everything(null, null);
     }
 
@@ -159,7 +169,7 @@ public class FBDatabaseMetaDataTablesTest {
      * expecting all tables of all types to be returned.
      */
     @Test
-    public void testTableMetaData_everything_tableName_null_allTypes() throws Exception {
+    void testTableMetaData_everything_tableName_null_allTypes() throws Exception {
         validateTableMetaData_everything(null, new String[] { SYSTEM_TABLE, TABLE, VIEW, GLOBAL_TEMPORARY });
     }
 
@@ -168,7 +178,7 @@ public class FBDatabaseMetaDataTablesTest {
      * expecting all tables of all types to be returned.
      */
     @Test
-    public void testTableMetaData_everything_tableName_allPattern_types_null() throws Exception {
+    void testTableMetaData_everything_tableName_allPattern_types_null() throws Exception {
         validateTableMetaData_everything("%", null);
     }
 
@@ -195,8 +205,7 @@ public class FBDatabaseMetaDataTablesTest {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
                 Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
-                assertTrue("TABLE_NAME is not allowed to be null or empty",
-                        tableName != null && tableName.length() > 0);
+                assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 expectedTables.remove(tableName);
 
                 updateTableRules(tableName, rules);
@@ -204,8 +213,7 @@ public class FBDatabaseMetaDataTablesTest {
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertTrue("getTables() did not return some expected tables: " + expectedTables,
-                    expectedTables.isEmpty());
+            assertThat("getTables() did not return some expected tables", expectedTables, is(empty()));
         }
     }
 
@@ -217,7 +225,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allSystemTables_tableName_null() throws Exception {
+    void testTableMetaData_allSystemTables_tableName_null() throws Exception {
         validateTableMetaData_allSystemTables(null);
     }
 
@@ -229,7 +237,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allSystemTables_tableName_allPattern() throws Exception {
+    void testTableMetaData_allSystemTables_tableName_allPattern() throws Exception {
         validateTableMetaData_allSystemTables("%");
     }
 
@@ -248,18 +256,16 @@ public class FBDatabaseMetaDataTablesTest {
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { SYSTEM_TABLE })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty",
-                        tableName != null && tableName.length() > 0);
+                assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 expectedTables.remove(tableName);
 
-                if (!(tableName.startsWith("RDB$") || tableName.startsWith("MON$") || tableName.startsWith("SEC$"))) {
-                    fail("Only expect tablenames starting with RDB$ or MON$, retrieved " + tableName);
-                }
+                assertThat("Only expect table names starting with RDB$, MON$ or SEC$",
+                        tableName, anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$")));
 
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertTrue("getTables() did not return some expected tables: " + expectedTables, expectedTables.isEmpty());
+            assertThat("getTables() did not return some expected tables", expectedTables, is(empty()));
         }
     }
 
@@ -271,7 +277,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allNormalTables_tableName_null() throws Exception {
+    void testTableMetaData_allNormalTables_tableName_null() throws Exception {
         validateTableMetaData_allNormalTables(null);
     }
 
@@ -283,7 +289,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allNormalTables_tableName_allPattern() throws Exception {
+    void testTableMetaData_allNormalTables_tableName_allPattern() throws Exception {
         validateTableMetaData_allNormalTables("%");
     }
 
@@ -302,19 +308,16 @@ public class FBDatabaseMetaDataTablesTest {
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { TABLE })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty",
-                        tableName != null && tableName.length() > 0);
+                assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 retrievedTables.add(tableName);
 
-                if ((tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
-                    fail("Only expect normal tables, not starting with RDB$ or MON$, retrieved " + tableName);
-                }
+                assertThat("Only expect normal tables, not starting with RDB$, MON$ or SEC$",
+                        tableName, not(anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$"))));
 
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return expected tables: ",
-                    expectedNormalTables, retrievedTables);
+            assertEquals(expectedNormalTables, retrievedTables, "getTables() did not return expected tables");
         }
     }
 
@@ -326,7 +329,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allViews_tableName_null() throws Exception {
+    void testTableMetaData_allViews_tableName_null() throws Exception {
         validateTableMetaData_allViews(null);
     }
 
@@ -338,7 +341,7 @@ public class FBDatabaseMetaDataTablesTest {
      * <p>
      */
     @Test
-    public void testTableMetaData_allViews_tableName_allPattern() throws Exception {
+    void testTableMetaData_allViews_tableName_allPattern() throws Exception {
         validateTableMetaData_allViews("%");
     }
 
@@ -356,19 +359,16 @@ public class FBDatabaseMetaDataTablesTest {
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, new String[] { VIEW })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty",
-                        tableName != null && tableName.length() > 0);
+                assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 retrievedTables.add(tableName);
 
-                if ((tableName.startsWith("RDB$") || tableName.startsWith("MON$"))) {
-                    fail("Only expect views, not starting with RDB$ or MON$, retrieved " + tableName);
-                }
+                assertThat("Only expect views, not starting with RDB$, MON$ or SEC$",
+                        tableName, not(anyOf(startsWith("RDB$"), startsWith("MON$"), startsWith("SEC$"))));
 
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return expected tables: ",
-                    expectedViews, retrievedTables);
+            assertEquals(expectedViews, retrievedTables, "getTables() did not return expected tables");
         }
     }
 
@@ -377,12 +377,12 @@ public class FBDatabaseMetaDataTablesTest {
      * its lower case name with types null (should produce no rows)
      */
     @Test
-    public void testTableMetaData_NormalUnquotedTable_lowercase_typesNull() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_lowercase_typesNull() throws Exception {
         validateTableMetaDataNoRow("test_normal_table", null);
     }
 
     @Test
-    public void testTableMetaData_QuotedWithSlash_unescaped() throws Exception {
+    void testTableMetaData_QuotedWithSlash_unescaped() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "testquotedwith\\table");
@@ -391,7 +391,7 @@ public class FBDatabaseMetaDataTablesTest {
     }
 
     @Test
-    public void testTableMetaData_QuotedWithSlash_escaped() throws Exception {
+    void testTableMetaData_QuotedWithSlash_escaped() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "testquotedwith\\table");
@@ -400,7 +400,7 @@ public class FBDatabaseMetaDataTablesTest {
     }
 
     @Test
-    public void testTableMetaData_NormalUnquotedTable_uppercase_typesNull() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_uppercase_typesNull() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
@@ -409,7 +409,7 @@ public class FBDatabaseMetaDataTablesTest {
     }
 
     @Test
-    public void testTableMetaData_NormalUnquotedTable_uppercase_escaped_typesNull() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_uppercase_escaped_typesNull() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
@@ -418,7 +418,7 @@ public class FBDatabaseMetaDataTablesTest {
     }
 
     @Test
-    public void testTableMetaData_NormalUnquotedTable_uppercase_wildcard_typesNull() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_uppercase_wildcard_typesNull() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
@@ -431,7 +431,7 @@ public class FBDatabaseMetaDataTablesTest {
      * its upper case name with types TABLE.
      */
     @Test
-    public void testTableMetaData_NormalUnquotedTable_uppercase_typesTABLE() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_uppercase_typesTABLE() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "TEST_NORMAL_TABLE");
@@ -444,7 +444,7 @@ public class FBDatabaseMetaDataTablesTest {
      * normal case name with all types.
      */
     @Test
-    public void testTableMetaData_NormalQuotedTable_AllTypes() throws Exception {
+    void testTableMetaData_NormalQuotedTable_AllTypes() throws Exception {
         Map<TableMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(TableMetaData.TABLE_TYPE, TABLE);
         validationRules.put(TableMetaData.TABLE_NAME, "test_quoted_normal_table");
@@ -468,9 +468,9 @@ public class FBDatabaseMetaDataTablesTest {
 
         metaDataTestSupport.checkValidationRulesComplete(validationRules);
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
-            assertTrue("Expected row in table metadata", tables.next());
+            assertTrue(tables.next(), "Expected row in table metadata");
             metaDataTestSupport.validateRowValues(tables, validationRules);
-            assertFalse("Expected only one row in result set", tables.next());
+            assertFalse(tables.next(), "Expected only one row in result set");
         }
     }
 
@@ -479,7 +479,7 @@ public class FBDatabaseMetaDataTablesTest {
      * expecting empty resultset
      */
     @Test
-    public void testTableMetaData_NormalUnquotedTable_typesVIEW() throws Exception {
+    void testTableMetaData_NormalUnquotedTable_typesVIEW() throws Exception {
         validateTableMetaDataNoRow("test_normal_table", new String[] { VIEW });
     }
 
@@ -488,7 +488,7 @@ public class FBDatabaseMetaDataTablesTest {
      * table: expecting empty resultset
      */
     @Test
-    public void testTableMetaData_SystemTable_typesTABLE() throws Exception {
+    void testTableMetaData_SystemTable_typesTABLE() throws Exception {
         validateTableMetaDataNoRow("RDB$DATABASE", new String[] { TABLE });
     }
 
@@ -497,14 +497,13 @@ public class FBDatabaseMetaDataTablesTest {
      * expecting empty resultset
      */
     @Test
-    public void testTableMetaData_UnquotedView_typesSYSTEM() throws Exception {
+    void testTableMetaData_UnquotedView_typesSYSTEM() throws Exception {
         validateTableMetaDataNoRow("test_normal_view", new String[] { SYSTEM_TABLE });
     }
 
     @Test
-    public void testTableMetaData_globalTemporaryTables() throws Exception {
-        assumeTrue("Requires global temporary table support",
-                getDefaultSupportInfo().supportsGlobalTemporaryTables());
+    void testTableMetaData_globalTemporaryTables() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsGlobalTemporaryTables(), "Requires global temporary table support");
 
         Set<String> expectedGtt = new HashSet<>(Arrays.asList("TEST_GTT_ON_COMMIT_DELETE", "TEST_GTT_ON_COMMIT_PRESERVE"));
         Set<String> retrievedTables = new HashSet<>();
@@ -513,19 +512,18 @@ public class FBDatabaseMetaDataTablesTest {
         try (ResultSet tables = dbmd.getTables(null, null, null, new String[] { GLOBAL_TEMPORARY })) {
             while (tables.next()) {
                 String tableName = tables.getString(TableMetaData.TABLE_NAME.name());
-                assertTrue("TABLE_NAME is not allowed to be null or empty",
-                        tableName != null && tableName.length() > 0);
+                assertThat("TABLE_NAME is not allowed to be null or empty", tableName, not(emptyString()));
                 retrievedTables.add(tableName);
 
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return expected tables: ", expectedGtt, retrievedTables);
+            assertEquals(expectedGtt, retrievedTables, "getTables() did not return expected tables");
         }
     }
 
     @Test
-    public void testTableMetaData_exceptSystemTable_sorted() throws Exception {
+    void testTableMetaData_exceptSystemTable_sorted() throws Exception {
         List<String> expectedTables = new ArrayList<>();
         if (getDefaultSupportInfo().supportsGlobalTemporaryTables()) {
             expectedTables.add("TEST_GTT_ON_COMMIT_DELETE");
@@ -539,7 +537,7 @@ public class FBDatabaseMetaDataTablesTest {
         int indexExpected = 0;
         try (ResultSet tables = dbmd.getTables(null, null, "%", new String[] { TABLE, VIEW, GLOBAL_TEMPORARY })) {
             while (tables.next()) {
-                assertTrue("More tables than expected", indexExpected < expectedTables.size());
+                assertThat("More tables than expected", indexExpected, lessThan(expectedTables.size()));
                 String expectedTableName = expectedTables.get(indexExpected++);
 
                 Map<TableMetaData, Object> rules = getDefaultValueValidationRules();
@@ -548,7 +546,7 @@ public class FBDatabaseMetaDataTablesTest {
                 metaDataTestSupport.validateRowValues(tables, rules);
             }
 
-            assertEquals("getTables() did not return some expected tables", expectedTables.size(), indexExpected);
+            assertEquals(expectedTables.size(), indexExpected, "getTables() did not return some expected tables");
         }
     }
 
@@ -563,8 +561,8 @@ public class FBDatabaseMetaDataTablesTest {
      */
     private void validateTableMetaDataNoRow(String tableNamePattern, String[] types) throws Exception {
         try (ResultSet tables = dbmd.getTables(null, null, tableNamePattern, types)) {
-            assertFalse(String.format("Expected empty result set for requesting %s with types %s",
-                    tableNamePattern, Arrays.toString(types)), tables.next());
+            assertFalse(tables.next(), () -> format("Expected empty result set for requesting %s with types %s",
+                    tableNamePattern, Arrays.toString(types)));
         }
     }
 

@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.common.extension;
 
-import org.firebirdsql.common.rules.RunEnvironmentRule;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -47,10 +46,6 @@ public class RunEnvironmentExtension implements BeforeAllCallback {
 
     public List<EnvironmentRequirement> getUnmetRequirements() {
         return unmetRequirements;
-    }
-
-    public RunEnvironmentRule toRule() {
-        return new RunEnvironmentRule(this);
     }
 
     public static Builder builder() {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,18 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FBDatabaseMetaDataNullsTest extends FBJUnit4TestBase {
+class FBDatabaseMetaDataNullsTest {
 
     private static final String CREATE_TABLE = ""
             + "CREATE TABLE test_nulls("
@@ -40,12 +40,15 @@ public class FBDatabaseMetaDataNullsTest extends FBJUnit4TestBase {
     private static final String INSERT_VALUES =
             "INSERT INTO test_nulls VALUES(?, ?)";
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
+            CREATE_TABLE);
+
     private Connection connection;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         connection = getConnectionViaDriverManager();
-        executeCreateTable(connection, CREATE_TABLE);
 
         try (PreparedStatement ps = connection.prepareStatement(INSERT_VALUES)) {
             ps.setInt(1, 1);
@@ -58,13 +61,13 @@ public class FBDatabaseMetaDataNullsTest extends FBJUnit4TestBase {
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         connection.close();
     }
 
     @Test
-    public void testNullAreSortedAtStartEnd() throws Exception {
+    void testNullAreSortedAtStartEnd() throws Exception {
         DatabaseMetaData metaData = connection.getMetaData();
         try (Statement stmt = connection.createStatement()) {
             boolean[][] sorting = new boolean[2][2];
@@ -72,36 +75,35 @@ public class FBDatabaseMetaDataNullsTest extends FBJUnit4TestBase {
             ResultSet rs;
 
             rs = stmt.executeQuery("SELECT char_value FROM test_nulls ORDER BY 1 ASC");
-            assertTrue("Should select a record", rs.next());
+            assertTrue(rs.next(), "Should select a record");
             sorting[0][0] = rs.getString(1) == null;
-            assertTrue("Should select a record", rs.next());
+            assertTrue(rs.next(), "Should select a record");
             sorting[0][1] = rs.getString(1) == null;
 
             rs = stmt.executeQuery("SELECT char_value FROM test_nulls ORDER BY 1 DESC");
-            assertTrue("Should select a record", rs.next());
+            assertTrue(rs.next(), "Should select a record");
             sorting[1][0] = rs.getString(1) == null;
-            assertTrue("Should select a record", rs.next());
+            assertTrue(rs.next(), "Should select a record");
             sorting[1][1] = rs.getString(1) == null;
 
-            assertTrue("nullsAreSortedAtEnd is not correct.",
-                    metaData.nullsAreSortedAtEnd() && (sorting[0][1] && sorting[1][1]) ||
-                            !metaData.nullsAreSortedAtEnd() && !(sorting[0][1] && sorting[1][1]));
+            assertTrue(metaData.nullsAreSortedAtEnd() && (sorting[0][1] && sorting[1][1]) ||
+                            !metaData.nullsAreSortedAtEnd() && !(sorting[0][1] && sorting[1][1]),
+                    "nullsAreSortedAtEnd is not correct");
 
-            assertTrue("nullsAreSortedAtStart is not correct.",
-                    metaData.nullsAreSortedAtStart() && (sorting[0][0] && sorting[1][0]) ||
-                            !metaData.nullsAreSortedAtStart() && !(sorting[0][0] && sorting[1][0]));
+            assertTrue(metaData.nullsAreSortedAtStart() && (sorting[0][0] && sorting[1][0]) ||
+                            !metaData.nullsAreSortedAtStart() && !(sorting[0][0] && sorting[1][0]),
+                    "nullsAreSortedAtStart is not correct");
 
-            assertTrue("nullsAreSortedHigh is not correct.",
-                    metaData.nullsAreSortedHigh() && (sorting[0][1] && sorting[1][0]) ||
+            assertTrue(metaData.nullsAreSortedHigh() && (sorting[0][1] && sorting[1][0]) ||
                             !metaData.nullsAreSortedHigh() && (sorting[0][0] && sorting[1][1]) ||
                             (!metaData.nullsAreSortedHigh() && (metaData.nullsAreSortedAtEnd()
-                                    || metaData.nullsAreSortedAtStart()))
-            );
+                                    || metaData.nullsAreSortedAtStart())),
+                    "nullsAreSortedHigh is not correct");
 
-            assertTrue("nullsAreSortedLow is not correct.",
-                    metaData.nullsAreSortedLow() && (sorting[0][0] && sorting[1][1]) ||
+            assertTrue(metaData.nullsAreSortedLow() && (sorting[0][0] && sorting[1][1]) ||
                             !metaData.nullsAreSortedLow() && (metaData.nullsAreSortedAtEnd()
-                                    || metaData.nullsAreSortedAtStart()));
+                                    || metaData.nullsAreSortedAtStart()),
+                    "nullsAreSortedLow is not correct");
         }
     }
 }

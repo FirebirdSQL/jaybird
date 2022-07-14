@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,24 +18,26 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Arrays;
 
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlob}. This test class can
@@ -49,18 +51,17 @@ import static org.junit.Assert.*;
  */
 public class V10InputBlobTest extends BaseTestV10Blob {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    public V10InputBlobTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10InputBlobTest(V10CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    @Override
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     /**
@@ -87,8 +88,8 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 blob.close();
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals("Unexpected length read from blob", requiredSize, result.length);
-                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
+                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -115,13 +116,11 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 blob.open();
                 int offset = baseContent.length / 2;
 
-                expectedException.expect(SQLException.class);
-                expectedException.expect(allOf(
+                SQLException exception = assertThrows(SQLException.class,
+                        () -> blob.seek(offset, FbBlob.SeekMode.ABSOLUTE));
+                assertThat(exception, allOf(
                         errorCodeEquals(ISCConstants.isc_bad_segstr_type),
-                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))
-                ));
-
-                blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))));
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -154,8 +153,8 @@ public class V10InputBlobTest extends BaseTestV10Blob {
 
                 blob.close();
                 statement.close();
-                assertEquals("Unexpected length read from blob", 100, segment.length);
-                assertArrayEquals("Unexpected segment content", expected, segment);
+                assertEquals(100, segment.length, "Unexpected length read from blob");
+                assertArrayEquals(expected, segment, "Unexpected segment content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -193,8 +192,8 @@ public class V10InputBlobTest extends BaseTestV10Blob {
 
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals("Unexpected length read from blob", requiredSize, result.length);
-                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
+                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -206,12 +205,6 @@ public class V10InputBlobTest extends BaseTestV10Blob {
      */
     @Test
     public void testDoubleOpen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                fbMessageStartsWith(ISCConstants.isc_no_segstr_close)
-        ));
-
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -224,7 +217,10 @@ public class V10InputBlobTest extends BaseTestV10Blob {
                 final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
                 blob.open();
                 // Double open
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                        fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
             } finally {
                 if (transaction != null) transaction.commit();
             }

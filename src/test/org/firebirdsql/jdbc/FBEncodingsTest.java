@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,21 +18,23 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class FBEncodingsTest extends FBJUnit4TestBase {
+class FBEncodingsTest {
 
     private static final List<String> ENCODINGS_JAVA;
     private static final List<String> ENCODINGS_FIREBIRD;
@@ -104,6 +106,7 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
         for (int encN = 0; encN < ENCODINGS_JAVA.size(); encN++) {
             sb.append(',').append(ENCODINGS_JAVA.get(encN)).append("_field VARCHAR(50) CHARACTER SET ").append(ENCODINGS_FIREBIRD.get(encN));
         }
+        //noinspection ForLoopReplaceableByForEach
         for (int encN = 0; encN < ENCODINGS_JAVA.size(); encN++) {
             sb.append(", uc_").append(ENCODINGS_JAVA.get(encN)).append("_field VARCHAR(50) CHARACTER SET UNICODE_FSS ");
         }
@@ -141,6 +144,9 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
             ")";
     //@formatter:on
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
+
     protected String getCreateTableStatement() {
         return CREATE_TABLE;
     }
@@ -149,8 +155,8 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
         return CREATE_TABLE_CYRL;
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "NONE");
@@ -159,15 +165,11 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
             List<String> createTableStatements = Arrays.asList(
                     getCreateTableStatement(), getCreateTableStatement_cyrl(), CREATE_TABLE_UNIVERSAL);
             if (!supportInfoFor(connection).supportsUtf8()) {
-                for (int index = 0; index < createTableStatements.size(); index++) {
-                    String original = createTableStatements.get(index);
-                    String modified = original.replace("CHARACTER SET UTF8", "CHARACTER SET UNICODE_FSS");
-                    createTableStatements.set(index, modified);
-                }
+                createTableStatements.replaceAll(s -> s.replace("CHARACTER SET UTF8", "CHARACTER SET UNICODE_FSS"));
             }
-            executeCreateTable(connection, getCreateTableStatement());
-            executeCreateTable(connection, getCreateTableStatement_cyrl());
-            executeCreateTable(connection, CREATE_TABLE_UNIVERSAL);
+            for (String ddlStatement : createTableStatements) {
+                executeCreateTable(connection, ddlStatement);
+            }
         }
     }
 
@@ -178,67 +180,57 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     private static final int UKRAINIAN_TEST_ID = 1;
 
     @Test
-    public void testUkrainian() throws Exception {
+    void testUkrainian() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1251");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
+            try (PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings("
                             + "  id, win1251_field, unicode_field, none_field) "
-                            + "VALUES(?, ?, ?, ?)");
+                            + "VALUES(?, ?, ?, ?)")) {
 
-            stmt.setInt(1, UKRAINIAN_TEST_ID);
-            stmt.setString(2, UKRAINIAN_TEST_STRING);
-            stmt.setString(3, UKRAINIAN_TEST_STRING);
-            stmt.setString(4, UKRAINIAN_TEST_STRING);
+                stmt.setInt(1, UKRAINIAN_TEST_ID);
+                stmt.setString(2, UKRAINIAN_TEST_STRING);
+                stmt.setString(3, UKRAINIAN_TEST_STRING);
+                stmt.setString(4, UKRAINIAN_TEST_STRING);
 
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
-
-            stmt = connection.prepareStatement(
-                    "SELECT win1251_field, unicode_field, "
-                            + "'" + UKRAINIAN_TEST_STRING + "' direct_sql_field "
-                            + "FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, UKRAINIAN_TEST_ID);
-
-            ResultSet rs = stmt.executeQuery();
-
-            assertTrue("Should have at least one row", rs.next());
-
-            String win1251Value = rs.getString(1);
-            assertEquals("win1251_field value should be the same", UKRAINIAN_TEST_STRING, win1251Value);
-
-            String unicodeValue = rs.getString(2);
-            assertEquals("unicode_field value should be the same", UKRAINIAN_TEST_STRING, unicodeValue);
-
-            String directSqlValue = rs.getString(3);
-            assertEquals("direct_sql_field should be the same", UKRAINIAN_TEST_STRING, directSqlValue);
-
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
-
-            stmt = connection.prepareStatement("SELECT none_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, UKRAINIAN_TEST_ID);
-
-            try {
-                rs = stmt.executeQuery();
-
-                rs.getString(1);
-
-                fail("Should not be able to read none_field with special characters");
-            } catch (SQLException sqlex) {
-                // everything is ok
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
             }
 
-            stmt.close();
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT win1251_field, unicode_field, '" + UKRAINIAN_TEST_STRING + "' direct_sql_field "
+                            + "FROM test_encodings WHERE id = ?")) {
+
+                stmt.setInt(1, UKRAINIAN_TEST_ID);
+
+                ResultSet rs = stmt.executeQuery();
+
+                assertTrue(rs.next(), "Should have at least one row");
+
+                String win1251Value = rs.getString(1);
+                assertEquals(UKRAINIAN_TEST_STRING, win1251Value, "win1251_field value should be the same");
+
+                String unicodeValue = rs.getString(2);
+                assertEquals(UKRAINIAN_TEST_STRING, unicodeValue, "unicode_field value should be the same");
+
+                String directSqlValue = rs.getString(3);
+                assertEquals(UKRAINIAN_TEST_STRING, directSqlValue, "direct_sql_field should be the same");
+
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT none_field FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, UKRAINIAN_TEST_ID);
+
+                assertThrows(SQLException.class, () -> {
+                    ResultSet rs = stmt.executeQuery();
+                    rs.getString(1);
+                }, "Should not be able to read none_field with special characters");
+            }
         }
     }
 
@@ -265,7 +257,7 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     };
 
     @Test
-    public void testCyrl() throws Exception {
+    void testCyrl() throws Exception {
         final String cyrlTestString = new String(CYRL_TEST_BYTES, "Cp1251");
         final String cyrlTestStringUpper = new String(CYRL_TEST_BYTES_UPPER, "Cp1251");
         final String cyrlTestStringUpperWrong = new String(CYRL_TEST_BYTES_UPPER_WRONG, "Cp1251");
@@ -275,83 +267,80 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
         props.put("lc_ctype", "WIN1251");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_encodings_cyrl(id, cyrl_field, win1251_field, unicode_field) VALUES(?, ?, ?, ?)");
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "INSERT INTO test_encodings_cyrl(id, cyrl_field, win1251_field, unicode_field) VALUES(?, ?, ?, ?)")) {
 
-            stmt.setInt(1, 1);
-            stmt.setString(2, cyrlTestString);
-            stmt.setString(3, cyrlTestString);
-            stmt.setString(4, cyrlTestString);
+                stmt.setInt(1, 1);
+                stmt.setString(2, cyrlTestString);
+                stmt.setString(3, cyrlTestString);
+                stmt.setString(4, cyrlTestString);
 
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
+            }
             //
             // Select the same case
             //
-            stmt = connection.prepareStatement(
-                    "SELECT cyrl_field, win1251_field, unicode_field FROM test_encodings_cyrl WHERE id = ?");
+            String cyrlValue;
+            String win1251Value;
+            String unicodeValue;
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT cyrl_field, win1251_field, unicode_field FROM test_encodings_cyrl WHERE id = ?")) {
 
-            stmt.setInt(1, 1);
+                stmt.setInt(1, 1);
 
-            ResultSet rs = stmt.executeQuery();
+                ResultSet rs = stmt.executeQuery();
 
-            assertTrue("Should have at least one row", rs.next());
+                assertTrue(rs.next(), "Should have at least one row");
 
-            String cyrlValue = rs.getString(1);
-            String win1251Value = rs.getString(2);
-            String unicodeValue = rs.getString(3);
+                cyrlValue = rs.getString(1);
+                win1251Value = rs.getString(2);
+                unicodeValue = rs.getString(3);
 
-            assertEquals("Cyrl_field and Win1251_field must be equal ", win1251Value, cyrlValue);
-            assertEquals("Win1251_field and Unicode_field must be equal ", win1251Value, unicodeValue);
-            assertEquals("Cyrl_field and Unicode_field must be equal ", cyrlValue, unicodeValue);
+                assertEquals(win1251Value, cyrlValue, "Cyrl_field and Win1251_field must be equal ");
+                assertEquals(win1251Value, unicodeValue, "Win1251_field and Unicode_field must be equal ");
+                assertEquals(cyrlValue, unicodeValue, "Cyrl_field and Unicode_field must be equal ");
 
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
             //
             // Select upper case
             //
-            stmt = connection.prepareStatement(
+            try (PreparedStatement stmt = connection.prepareStatement(
                     "SELECT UPPER(cyrl_field), UPPER(win1251_field), UPPER(unicode_field) "
-                            + "FROM test_encodings_cyrl WHERE id = ?");
+                            + "FROM test_encodings_cyrl WHERE id = ?")) {
 
-            stmt.setInt(1, 1);
+                stmt.setInt(1, 1);
 
-            rs = stmt.executeQuery();
+                ResultSet rs = stmt.executeQuery();
 
-            assertTrue("Should have at least one row", rs.next());
+                assertTrue(rs.next(), "Should have at least one row");
 
-            String cyrlValueUpper = rs.getString(1);
-            String win1251ValueUpper = rs.getString(2);
-            String unicodeValueUpper = rs.getString(3);
+                String cyrlValueUpper = rs.getString(1);
+                String win1251ValueUpper = rs.getString(2);
+                String unicodeValueUpper = rs.getString(3);
 
+                assertNotEquals(cyrlValue, cyrlValueUpper, "Upper(Cyrl_field) must be != Cyrl_field ");
+                assertNotEquals(win1251Value, win1251ValueUpper, "Upper(Win1251_field) must be != Win1251_field ");
+                // Unicode only uppercase ASCII characters (until Firebird 2.0)
+                DatabaseMetaData metaData = connection.getMetaData();
+                if (metaData.getDatabaseMajorVersion() < 2)
+                    assertEquals(unicodeValue, unicodeValueUpper, "Upper(unicode) must be == Unicode_field ");
 
-            assertNotEquals("Upper(Cyrl_field) must be != Cyrl_field ", cyrlValue, cyrlValueUpper);
-            assertNotEquals("Upper(Win1251_field) must be != Win1251_field ", win1251Value, win1251ValueUpper);
-            // Unicode only uppercase ASCII characters (until Firebird 2.0)
-            DatabaseMetaData metaData = connection.getMetaData();
-            if (metaData.getDatabaseMajorVersion() < 2)
-                assertEquals("Upper(unicode) must be == Unicode_field ", unicodeValue, unicodeValueUpper);
+                assertEquals(cyrlTestStringUpper, win1251ValueUpper, "Upper(win1251_field) must == upper test string ");
+                // The CYRL charset fails because the mapping is 1251 and the uppercase
+                // and lowercase functions work as if the charset is CP866
+                assertEquals(cyrlTestStringUpperWrong, cyrlValueUpper,
+                        "Upper(cyrl_field) must be == wrong upper test string");
 
-            assertEquals("Upper(win1251_field) must == upper test string ", cyrlTestStringUpper, win1251ValueUpper);
-            // The CYRL charset fails because the mapping is 1251 and the uppercase
-            // and lowercase functions work as if the charset is CP866
-            assertEquals("Upper(cyrl_field) must be == wrong upper test string ",
-                    cyrlTestStringUpperWrong, cyrlValueUpper);
+                // unicode does not uppercase (until FB 2.0)
 
-            // unicode does not uppercase (until FB 2.0)
+                if (metaData.getDatabaseMajorVersion() < 2)
+                    assertNotEquals("Upper(Unicode_field) must be != upper test string ",
+                            unicodeValueUpper, cyrlTestStringUpper);
 
-            if (metaData.getDatabaseMajorVersion() < 2)
-                assertNotEquals("Upper(Unicode_field) must be != upper test string ",
-                        unicodeValueUpper, cyrlTestStringUpper);
-
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
         }
     }
 
@@ -362,61 +351,51 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     private static final int GERMAN_TEST_ID = 2;
 
     @Test
-    public void testGerman() throws Exception {
+    void testGerman() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "WIN1252");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_encodings(id, win1252_field, unicode_field, none_field) VALUES(?, ?, ?, ?)");
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "INSERT INTO test_encodings(id, win1252_field, unicode_field, none_field) VALUES(?, ?, ?, ?)")) {
+                stmt.setInt(1, GERMAN_TEST_ID);
+                stmt.setString(2, GERMAN_TEST_STRING_WIN1252);
+                stmt.setString(3, GERMAN_TEST_STRING_WIN1252);
+                stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
 
-            stmt.setInt(1, GERMAN_TEST_ID);
-            stmt.setString(2, GERMAN_TEST_STRING_WIN1252);
-            stmt.setString(3, GERMAN_TEST_STRING_WIN1252);
-            stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
-
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
-
-            stmt = connection.prepareStatement(
-                    "SELECT win1252_field, unicode_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, GERMAN_TEST_ID);
-
-            ResultSet rs = stmt.executeQuery();
-
-            assertTrue("Should have at least one row", rs.next());
-
-            String win1252Value = rs.getString(1);
-            assertEquals("win1252_field value should be the same", GERMAN_TEST_STRING_WIN1252, win1252Value);
-
-            String unicodeValue = rs.getString(2);
-            assertEquals("unicode_field value should be the same", GERMAN_TEST_STRING_WIN1252, unicodeValue);
-
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
-
-            stmt = connection.prepareStatement("SELECT none_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, GERMAN_TEST_ID);
-
-            try {
-                rs = stmt.executeQuery();
-
-                rs.getString(1);
-
-                fail("Should not be able to read none_field with special characters");
-            } catch (SQLException sqlex) {
-                // everything is ok
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
             }
 
-            stmt.close();
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT win1252_field, unicode_field FROM test_encodings WHERE id = ?")) {
 
+                stmt.setInt(1, GERMAN_TEST_ID);
+
+                ResultSet rs = stmt.executeQuery();
+
+                assertTrue(rs.next(), "Should have at least one row");
+
+                String win1252Value = rs.getString(1);
+                assertEquals(GERMAN_TEST_STRING_WIN1252, win1252Value, "win1252_field value should be the same");
+
+                String unicodeValue = rs.getString(2);
+                assertEquals(GERMAN_TEST_STRING_WIN1252, unicodeValue, "unicode_field value should be the same");
+
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT none_field FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, GERMAN_TEST_ID);
+
+                assertThrows(SQLException.class, () -> {
+                    ResultSet rs = stmt.executeQuery();
+
+                    rs.getString(1);
+                }, "Should not be able to read none_field with special characters");
+            }
         }
     }
 
@@ -426,72 +405,62 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     private static final int HUNGARIAN_TEST_ID = 3;
 
     @Test
-    public void testHungarian() throws Exception {
+    void testHungarian() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
+            try (PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings("
                             + "  id, win1250_field, win1251_field, win1252_field, "
                             + "  unicode_field, none_field) "
-                            + "VALUES(?, ?, ?, ?, ?, ?)");
+                            + "VALUES(?, ?, ?, ?, ?, ?)")) {
+                stmt.setInt(1, HUNGARIAN_TEST_ID);
+                stmt.setString(2, HUNGARIAN_TEST_STRING);
+                stmt.setString(3, UKRAINIAN_TEST_STRING);
+                stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
+                stmt.setString(5, HUNGARIAN_TEST_STRING);
+                stmt.setString(6, HUNGARIAN_TEST_STRING);
 
-            stmt.setInt(1, HUNGARIAN_TEST_ID);
-            stmt.setString(2, HUNGARIAN_TEST_STRING);
-            stmt.setString(3, UKRAINIAN_TEST_STRING);
-            stmt.setString(4, GERMAN_TEST_STRING_WIN1252);
-            stmt.setString(5, HUNGARIAN_TEST_STRING);
-            stmt.setString(6, HUNGARIAN_TEST_STRING);
-
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
-
-            stmt = connection.prepareStatement(
-                    "SELECT win1250_field, win1251_field, win1252_field, unicode_field "
-                            + "FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, HUNGARIAN_TEST_ID);
-
-            ResultSet rs = stmt.executeQuery();
-
-            assertTrue("Should have at least one row", rs.next());
-
-            String win1250Value = rs.getString(1);
-            assertEquals("win1250_field value should be the same", HUNGARIAN_TEST_STRING, win1250Value);
-
-            String win1251Value = rs.getString(2);
-            assertEquals("win1251_field value should be the same", UKRAINIAN_TEST_STRING, win1251Value);
-
-            String win1252Value = rs.getString(3);
-            assertEquals("win1252_field value should be the same", GERMAN_TEST_STRING_WIN1252, win1252Value);
-
-            String unicodeValue = rs.getString(4);
-            assertEquals("unicode_field value should be the same", HUNGARIAN_TEST_STRING, unicodeValue);
-
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
-
-            stmt = connection.prepareStatement("SELECT none_field FROM test_encodings WHERE id = ?");
-
-            stmt.setInt(1, HUNGARIAN_TEST_ID);
-
-            try {
-                rs = stmt.executeQuery();
-
-                rs.getString(1);
-
-                fail("Should not be able to read none_field with special characters");
-            } catch (SQLException sqlex) {
-                // everything is ok
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
             }
 
-            stmt.close();
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT win1250_field, win1251_field, win1252_field, unicode_field "
+                            + "FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, HUNGARIAN_TEST_ID);
+
+                ResultSet rs = stmt.executeQuery();
+
+                assertTrue(rs.next(), "Should have at least one row");
+
+                String win1250Value = rs.getString(1);
+                assertEquals(HUNGARIAN_TEST_STRING, win1250Value, "win1250_field value should be the same");
+
+                String win1251Value = rs.getString(2);
+                assertEquals(UKRAINIAN_TEST_STRING, win1251Value, "win1251_field value should be the same");
+
+                String win1252Value = rs.getString(3);
+                assertEquals(GERMAN_TEST_STRING_WIN1252, win1252Value, "win1252_field value should be the same");
+
+                String unicodeValue = rs.getString(4);
+                assertEquals(HUNGARIAN_TEST_STRING, unicodeValue, "unicode_field value should be the same");
+
+                assertFalse(rs.next(), "Should have exactly one row");
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT none_field FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, HUNGARIAN_TEST_ID);
+
+                assertThrows(SQLException.class, () -> {
+                    ResultSet rs = stmt.executeQuery();
+
+                    rs.getString(1);
+                }, "Should not be able to read none_field with special characters");
+            }
         }
     }
 
@@ -502,10 +471,10 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
             (byte) 0xEC, (byte) 0xED, (byte) 0xEC, (byte) 0xEF
     };
 
-    public static final int UNIVERSAL_TEST_ID = 1;
+    private static final int UNIVERSAL_TEST_ID = 1;
 
     @Test
-    public void testUniversal() throws Exception {
+    void testUniversal() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UNICODE_FSS");
@@ -516,46 +485,44 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
                 insert.append(", ?");
             }
             insert.append(')');
-            PreparedStatement stmt = connection.prepareStatement(insert.toString());
+            try (PreparedStatement stmt = connection.prepareStatement(insert.toString())) {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
+                for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
+                    String value = new String(UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col));
+                    stmt.setString(col + 2, value);
+                    stmt.setString(col + ENCODINGS_JAVA.size() + 2, value);
+                }
 
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
-                String value = new String(UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col));
-                stmt.setString(col + 2, value);
-                stmt.setString(col + ENCODINGS_JAVA.size() + 2, value);
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
             }
 
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
             //
             // Test each column
             //
-            stmt = connection.prepareStatement("SELECT * FROM test_encodings_universal WHERE id = ?");
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT * FROM test_encodings_universal WHERE id = ?")) {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
 
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
+                ResultSet rs = stmt.executeQuery();
+                assertTrue(rs.next(), "Should have at least one row");
 
-            for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
-                String charsetValue = rs.getString(col + 2);
-                String unicodeValue = rs.getString(col + ENCODINGS_JAVA.size() + 2);
+                for (int col = 0; col < ENCODINGS_JAVA.size(); col++) {
+                    String charsetValue = rs.getString(col + 2);
+                    String unicodeValue = rs.getString(col + ENCODINGS_JAVA.size() + 2);
 
-                assertEquals("charsetValue " + ENCODINGS_JAVA.get(col) + " should be the same that unicode",
-                        unicodeValue, charsetValue);
-                assertEquals("charsetValue " + ENCODINGS_JAVA.get(col) + " should be == string", new String(
-                        UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col)), charsetValue);
+                    assertEquals(unicodeValue, charsetValue,
+                            "charsetValue " + ENCODINGS_JAVA.get(col) + " should be the same that unicode");
+                    assertEquals(new String(UNIVERSAL_TEST_BYTES, ENCODINGS_JAVA.get(col)), charsetValue,
+                            "charsetValue " + ENCODINGS_JAVA.get(col) + " should be == string");
+                }
+                assertFalse(rs.next(), "Should have exactly one row");
             }
-            assertFalse("Should have exactly one row", rs.next());
-
-            rs.close();
-            stmt.close();
         }
     }
 
     @Test
-    public void testPadding() throws Exception {
+    void testPadding() throws Exception {
         final String testString = "test string";
 
         Properties props = new Properties();
@@ -563,35 +530,31 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
         props.put("lc_ctype", "UNICODE_FSS");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO test_encodings("
-                            + "  id, char_field) "
-                            + "VALUES(?, ?)");
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "INSERT INTO test_encodings(id, char_field) VALUES(?, ?)")) {
 
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            stmt.setString(2, testString);
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
+                stmt.setString(2, testString);
 
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
+            }
 
             //
             // Test each column
             //
-            stmt = connection.prepareStatement("SELECT char_field FROM test_encodings WHERE id = ?");
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT char_field FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
 
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
+                ResultSet rs = stmt.executeQuery();
+                assertTrue(rs.next(), "Should have at least one row");
 
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
+                String str = rs.getString(1);
 
-            String str = rs.getString(1);
-
-            assertEquals("Field length should be correct", 50, str.length());
-            assertEquals("Trimmed values should be correct.", testString, str.trim());
-
-            stmt.close();
+                assertEquals(50, str.length(), "Field length should be correct");
+                assertEquals(testString, str.trim(), "Trimmed values should be correct.");
+            }
         }
     }
 
@@ -619,57 +582,53 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testOctets() throws Exception {
+    void testOctets() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("charSet", "Cp1252");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            PreparedStatement stmt = connection.prepareStatement(
+            try (PreparedStatement stmt = connection.prepareStatement(
                     "INSERT INTO test_encodings(id, octets_field, var_octets_field, none_octets_field) "
-                            + "VALUES(?, ?, ?, ?)");
+                            + "VALUES(?, ?, ?, ?)")) {
 
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
-            stmt.setBytes(2, OCTETS_DATA);
-            stmt.setBytes(3, OCTETS_DATA);
-            stmt.setBytes(4, OCTETS_DATA);
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
+                stmt.setBytes(2, OCTETS_DATA);
+                stmt.setBytes(3, OCTETS_DATA);
+                stmt.setBytes(4, OCTETS_DATA);
 
-            int updated = stmt.executeUpdate();
-            stmt.close();
-
-            assertEquals("Should insert one row", 1, updated);
+                int updated = stmt.executeUpdate();
+                assertEquals(1, updated, "Should insert one row");
+            }
 
             //
             // Test each column
             //
-            stmt = connection.prepareStatement("SELECT octets_field, var_octets_field, none_octets_field "
-                    + "FROM test_encodings WHERE id = ?");
+            try (PreparedStatement stmt = connection.prepareStatement(
+                    "SELECT octets_field, var_octets_field, none_octets_field FROM test_encodings WHERE id = ?")) {
+                stmt.setInt(1, UNIVERSAL_TEST_ID);
 
-            stmt.setInt(1, UNIVERSAL_TEST_ID);
+                ResultSet rs = stmt.executeQuery();
+                assertTrue(rs.next(), "Should have at least one row");
 
-            ResultSet rs = stmt.executeQuery();
-            assertTrue("Should have at least one row", rs.next());
+                byte[] charBytes = rs.getBytes(1);
+                byte[] varcharBytes = rs.getBytes(2);
+                byte[] noneBytes = rs.getBytes(3);
 
-            byte[] charBytes = rs.getBytes(1);
-            byte[] varcharBytes = rs.getBytes(2);
-            byte[] noneBytes = rs.getBytes(3);
-
-            assertArrayEquals("CHAR OCTETS value should be correct.", getOctetsFullLength(), charBytes);
-            assertArrayEquals("VARCHAR OCTETS value should be correct.", OCTETS_DATA, varcharBytes);
-            assertArrayEquals("CHAR NONE value should be correct.", getOctetsFullLengthAsNone(), noneBytes);
-
-            stmt.close();
+                assertArrayEquals(getOctetsFullLength(), charBytes, "CHAR OCTETS value should be correct.");
+                assertArrayEquals(OCTETS_DATA, varcharBytes, "VARCHAR OCTETS value should be correct.");
+                assertArrayEquals(getOctetsFullLengthAsNone(), noneBytes, "CHAR NONE value should be correct.");
+            }
         }
     }
 
     @Test
-    public void testExecuteBlock() throws Exception {
+    void testExecuteBlock() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsExecuteBlock(), "Test requires EXECUTE BLOCK support");
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            assumeTrue("Test requires EXECUTE BLOCK support", supportInfoFor(connection).supportsExecuteBlock());
-
             try (Statement stmt = connection.createStatement()) {
                 stmt.execute("INSERT INTO test_encodings(unicode_field) VALUES('" +
                         "0123456789" +
@@ -685,15 +644,13 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
                         + "END ");
 
                 rs.next();
-                System.out.println(rs.getString(1));
-
+                assertEquals("abc", rs.getString(1));
             }
-
         }
     }
 
     @Test
-    public void testCharFieldWithUTF8Encoding() throws Exception {
+    void testCharFieldWithUTF8Encoding() throws Exception {
         Properties props = new Properties();
         props.putAll(getDefaultPropertiesForConnection());
         props.put("lc_ctype", "UTF8");
@@ -709,7 +666,7 @@ public class FBEncodingsTest extends FBJUnit4TestBase {
                 ResultSet rs = statement.executeQuery(sql);
                 if (rs.next()) {
                     String uuidChar = rs.getString("uuid_char");
-                    assertEquals("compare CHAR_LENGTH", rs.getInt(2), rs.getInt(4));
+                    assertEquals(rs.getInt(2), rs.getInt(4), "compare CHAR_LENGTH");
                     assertEquals(randomUUID.length(), rs.getInt(2));
                     assertEquals(randomUUID, rs.getString("uuid_varchar"));
                     // now it fails:

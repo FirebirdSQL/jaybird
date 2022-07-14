@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
- * @see org.firebirdsql.common.rules.RequireProtocol
  */
 public class RequireProtocolExtension implements BeforeAllCallback {
 

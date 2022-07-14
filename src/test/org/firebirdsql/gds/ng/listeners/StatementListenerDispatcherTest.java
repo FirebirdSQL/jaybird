@@ -22,17 +22,16 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.SqlCountHolder;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLWarning;
-import java.util.Arrays;
 
-import static org.jmock.Expectations.throwException;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher}.
@@ -40,37 +39,54 @@ import static org.jmock.Expectations.throwException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class StatementListenerDispatcherTest {
+@ExtendWith(MockitoExtension.class)
+class StatementListenerDispatcherTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private StatementListenerDispatcher dispatcher;
+    private final StatementListenerDispatcher dispatcher = new StatementListenerDispatcher();
+    @Mock
     private StatementListener listener;
+    @Mock
     private FbStatement statement;
 
-    @Before
-    public void setUp() {
-        dispatcher = new StatementListenerDispatcher();
-        listener = context.mock(StatementListener.class, "listener");
+    @BeforeEach
+    void setUp() {
         dispatcher.addListener(listener);
-        statement = context.mock(FbStatement.class, "statement");
     }
 
     /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#receivedRow(org.firebirdsql.gds.ng.FbStatement, org.firebirdsql.gds.ng.fields.RowValue)}
-     * is forwarded correctly.
+     * Test if call to {@link StatementListenerDispatcher#receivedRow(FbStatement, RowValue)} is forwarded correctly.
      */
     @Test
-    public void testReceivedRow() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
-        context.checking(expectations);
+    void testReceivedRow() {
+        dispatcher.receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+
+        verify(listener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+    }
+
+    /**
+     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
+     * exceptions thrown to call of the dispatcher.
+     */
+    @Test
+    void testReceivedRow_withException(@Mock StatementListener listener2) {
+        dispatcher.addListener(listener2);
+        doThrow(new RuntimeException("test")).when(listener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+        doThrow(new RuntimeException("test")).when(listener2).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
 
         dispatcher.receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+
+        verify(listener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+        verify(listener2).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
+    }
+
+    /**
+     * Test if call to {@link StatementListenerDispatcher#beforeFirst(FbStatement)} is forwarded correctly.
+     */
+    @Test
+    void testBeforeFirst() {
+        dispatcher.beforeFirst(statement);
+
+        verify(listener).beforeFirst(statement);
     }
 
     /**
@@ -78,30 +94,25 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testReceivedRow_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testBeforeFirst_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.receivedRow(statement, RowValue.EMPTY_ROW_VALUE);
-    }
-
-    /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#beforeFirst(FbStatement)}
-     * is forwarded correctly.
-     */
-    @Test
-    public void testBeforeFirst() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).beforeFirst(statement);
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).beforeFirst(statement);
+        doThrow(new RuntimeException("test")).when(listener2).beforeFirst(statement);
 
         dispatcher.beforeFirst(statement);
+
+        verify(listener).beforeFirst(statement);
+        verify(listener2).beforeFirst(statement);
+    }
+
+    /**
+     * Test if call to {@link StatementListenerDispatcher#afterLast(FbStatement)} is forwarded correctly.
+     */
+    @Test
+    void testAfterLast() {
+        dispatcher.afterLast(statement);
+
+        verify(listener).afterLast(statement);
     }
 
     /**
@@ -109,30 +120,26 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testBeforeFirst_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testAfterLast_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).beforeFirst(statement);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.beforeFirst(statement);
-    }
-
-    /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#afterLast(FbStatement)}
-     * is forwarded correctly.
-     */
-    @Test
-    public void testAfterLast() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).afterLast(statement);
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).afterLast(statement);
+        doThrow(new RuntimeException("test")).when(listener2).afterLast(statement);
 
         dispatcher.afterLast(statement);
+
+        verify(listener).afterLast(statement);
+        verify(listener2).afterLast(statement);
+    }
+
+    /**
+     * Test if call to {@link StatementListenerDispatcher#statementExecuted(FbStatement, boolean, boolean)}
+     * is forwarded correctly.
+     */
+    @Test
+    void testStatementExecuted() {
+        dispatcher.statementExecuted(statement, true, false);
+
+        verify(listener).statementExecuted(statement, true, false);
     }
 
     /**
@@ -140,30 +147,26 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testAfterLast_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testStatementExecuted_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).afterLast(statement);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.afterLast(statement);
-    }
-
-    /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#statementExecuted(org.firebirdsql.gds.ng.FbStatement, boolean, boolean)}
-     * is forwarded correctly.
-     */
-    @Test
-    public void testStatementExecuted() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).statementExecuted(statement, true, false);
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).statementExecuted(statement, true, false);
+        doThrow(new RuntimeException("test")).when(listener2).statementExecuted(statement, true, false);
 
         dispatcher.statementExecuted(statement, true, false);
+
+        verify(listener).statementExecuted(statement, true, false);
+        verify(listener2).statementExecuted(statement, true, false);
+    }
+
+    /**
+     * Test if call to {@link StatementListenerDispatcher#statementStateChanged(FbStatement, StatementState, StatementState)}
+     * is forwarded correctly.
+     */
+    @Test
+    void testStatementStateChanged() {
+        dispatcher.statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
+
+        verify(listener).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
     }
 
     /**
@@ -171,62 +174,30 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testStatementExecuted_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testStatementStateChanged_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).statementExecuted(statement, true, false);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.statementExecuted(statement, true, false);
-    }
-
-    /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#statementStateChanged(org.firebirdsql.gds.ng.FbStatement, org.firebirdsql.gds.ng.StatementState, org.firebirdsql.gds.ng.StatementState)}
-     * is forwarded correctly.
-     */
-    @Test
-    public void testStatementStateChanged() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener)
+                .statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
+        doThrow(new RuntimeException("test")).when(listener2)
+                .statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
 
         dispatcher.statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
+
+        verify(listener).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
+        verify(listener2).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
     }
 
     /**
-     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
-     * exceptions thrown to call of the dispatcher.
-     */
-    @Test
-    public void testStatementStateChanged_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
-        dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.statementStateChanged(statement, StatementState.CLOSED, StatementState.CLOSING);
-    }
-
-    /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#warningReceived(org.firebirdsql.gds.ng.FbStatement, java.sql.SQLWarning)}
+     * Test if call to {@link StatementListenerDispatcher#warningReceived(FbStatement, SQLWarning)}
      * is forwarded correctly.
      */
     @Test
-    public void testWarningReceived() {
-        final Expectations expectations = new Expectations();
+    void testWarningReceived() {
         final SQLWarning warning = new SQLWarning();
-        expectations.exactly(1).of(listener).warningReceived(statement, warning);
-        context.checking(expectations);
 
         dispatcher.warningReceived(statement, warning);
+
+        verify(listener).warningReceived(statement, warning);
     }
 
     /**
@@ -234,32 +205,29 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testWarningReceived_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testWarningReceived_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
         final SQLWarning warning = new SQLWarning();
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).warningReceived(statement, warning);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).warningReceived(statement, warning);
+        doThrow(new RuntimeException("test")).when(listener2).warningReceived(statement, warning);
 
         dispatcher.warningReceived(statement, warning);
+
+        verify(listener).warningReceived(statement, warning);
+        verify(listener2).warningReceived(statement, warning);
     }
 
     /**
-     * Test if call to {@link org.firebirdsql.gds.ng.listeners.StatementListenerDispatcher#sqlCounts(org.firebirdsql.gds.ng.FbStatement, org.firebirdsql.gds.ng.SqlCountHolder)}
+     * Test if call to {@link StatementListenerDispatcher#sqlCounts(FbStatement, SqlCountHolder)}
      * is forwarded correctly.
      */
     @Test
-    public void testSqlCounts() {
-        final Expectations expectations = new Expectations();
+    void testSqlCounts() {
         final SqlCountHolder count = new SqlCountHolder(1, 2 ,3, 4);
-        expectations.exactly(1).of(listener).sqlCounts(statement, count);
-        context.checking(expectations);
 
         dispatcher.sqlCounts(statement, count);
+
+        verify(listener).sqlCounts(statement, count);
     }
 
     /**
@@ -267,17 +235,15 @@ public class StatementListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testSqlCounts_withException() {
-        final StatementListener listener2 = context.mock(StatementListener.class, "listener2");
+    void testSqlCounts_withException(@Mock StatementListener listener2) {
         dispatcher.addListener(listener2);
         final SqlCountHolder count = new SqlCountHolder(1, 2 ,3, 4);
-        final Expectations expectations = new Expectations();
-        for (StatementListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).sqlCounts(statement, count);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).sqlCounts(statement, count);
+        doThrow(new RuntimeException("test")).when(listener2).sqlCounts(statement, count);
 
         dispatcher.sqlCounts(statement, count);
+
+        verify(listener).sqlCounts(statement, count);
+        verify(listener2).sqlCounts(statement, count);
     }
 }

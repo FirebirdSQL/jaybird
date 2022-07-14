@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,9 @@
  */
 package org.firebirdsql.gds.ng.wire.version10;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
@@ -30,22 +31,22 @@ import org.firebirdsql.gds.ng.wire.AbstractFbWireService;
 import org.firebirdsql.gds.ng.wire.FbWireService;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireServiceConnection;
-import org.firebirdsql.management.FBManager;
+import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.management.FBStatisticsManager;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link V10Service}. This test class can be sub-classed for tests running on newer protocol versions.
@@ -55,23 +56,21 @@ import static org.junit.Assert.*;
  */
 public class V10ServiceTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(10);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(10);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    public final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
 
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V10ServiceTest() {
-        this(new V10CommonConnectionInfo());
-    }
-
-    protected V10ServiceTest(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
+    protected V10CommonConnectionInfo commonConnectionInfo() {
+        return new V10CommonConnectionInfo();
     }
 
     protected final IServiceProperties getConnectionInfo() {
@@ -102,13 +101,13 @@ public class V10ServiceTest {
         try (WireServiceConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
+                assertEquals(getExpectedServiceType(), service.getClass(), "Unexpected FbWireService implementation");
                 service.attach();
 
-                assertTrue("Expected isAttached() to return true", service.isAttached());
-                assertNotNull("Expected version string to be not null", service.getServerVersion());
-                assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION,
-                        service.getServerVersion());
+                assertTrue(service.isAttached(), "Expected isAttached() to return true");
+                assertNotNull(service.getServerVersion(), "Expected version string to be not null");
+                assertNotEquals(GDSServerVersion.INVALID_VERSION, service.getServerVersion(),
+                        "Expected version should not be invalid");
             }
         }
     }
@@ -121,18 +120,17 @@ public class V10ServiceTest {
      */
     @Test
     public void testStartServiceAction() throws Exception {
-        FBManager fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        usesDatabase.createDefaultDatabase();
         try (WireServiceConnection gdsConnection = createConnection()) {
             gdsConnection.socketConnect();
             try (FbWireService service = gdsConnection.identify()) {
-                assertEquals("Unexpected FbWireService implementation", getExpectedServiceType(), service.getClass());
+                assertEquals(getExpectedServiceType(), service.getClass(), "Unexpected FbWireService implementation");
                 service.attach();
 
                 ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
                 actionSrb.addArgument(isc_action_svc_db_stats);
-                actionSrb.addArgument(isc_spb_dbname, getDatabasePath());
-                actionSrb.addArgument(isc_spb_options, isc_spb_sts_hdr_pages);
+                actionSrb.addArgument(SpbItems.isc_spb_dbname, getDatabasePath());
+                actionSrb.addArgument(SpbItems.isc_spb_options, isc_spb_sts_hdr_pages);
 
                 service.startServiceAction(actionSrb);
 
@@ -171,8 +169,6 @@ public class V10ServiceTest {
                         containsString("Database header page information"),
                         containsString("*END*\n")));
             }
-        } finally {
-            defaultDatabaseTearDown(fbManager);
         }
     }
 

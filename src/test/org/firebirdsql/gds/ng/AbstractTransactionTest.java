@@ -18,23 +18,24 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Generic tests for FbTransaction.
@@ -45,7 +46,8 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
+public abstract class AbstractTransactionTest {
+
     //@formatter:off
     protected static final String CREATE_KEY_VALUE_TABLE =
             "CREATE TABLE keyvalue ( " +
@@ -54,27 +56,30 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
             ")";
     //@formatter:on
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    public static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_KEY_VALUE_TABLE);
 
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     protected FbDatabase db;
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
+    @BeforeEach
+    public final void setUp() throws Exception {
+        try (Connection con = FBTestProperties.getConnectionViaDriverManager();
+             Statement stmt = con.createStatement()) {
+            stmt.execute("delete from keyvalue");
         }
 
         db = createDatabase();
-        assertEquals("Unexpected FbDatabase implementation", getExpectedDatabaseType(), db.getClass());
+        assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbDatabase implementation");
 
         db.attach();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public final void tearDown() throws Exception {
         if (db != null) {
             try {
                 db.close();
@@ -152,19 +157,21 @@ public abstract class AbstractTransactionTest extends FBJUnit4TestBase {
         assertValueForKey(key, false, null);
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected final void assertValueForKey(int key, boolean hasRow, String expectedValue) throws SQLException {
         try (Connection connection = getConnectionViaDriverManager();
              PreparedStatement pstmt = connection.prepareStatement("SELECT thevalue FROM keyvalue WHERE thekey = ?")) {
             pstmt.setInt(1, key);
             try (ResultSet rs = pstmt.executeQuery()) {
-                assertEquals("Unexpected value for rs.next()", hasRow, rs.next());
+                assertEquals(hasRow, rs.next(), "Unexpected value for rs.next()");
                 if (hasRow) {
-                    assertEquals("Unexpected value for rs.getString(1)", expectedValue, rs.getString(1));
+                    assertEquals(expectedValue, rs.getString(1), "Unexpected value for rs.getString(1)");
                 }
             }
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void insertKeyValue(FbTransaction transaction, int key, String value) throws SQLException {
         try (FbStatement statement = db.createStatement(transaction)) {
             statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");

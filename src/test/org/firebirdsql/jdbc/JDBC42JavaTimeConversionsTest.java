@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.field.TypeConversionException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.time.*;
@@ -32,11 +32,10 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test the JDBC 4.2 conversions for <code>java.time</code> (JSR 310) types.
@@ -44,12 +43,7 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.2
  */
-public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private Connection connection;
+class JDBC42JavaTimeConversionsTest {
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -63,19 +57,37 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
             ")";
     //@formatter:on
 
-    @Before
-    public void setUp() throws Exception {
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
+
+    private static Connection connection;
+
+    @BeforeAll
+    static void setUpAll() throws Exception {
         connection = getConnectionViaDriverManager();
-        executeCreateTable(connection, CREATE_TABLE);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        closeQuietly(connection);
+    @BeforeEach
+    void setup() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from javatimetest");
+        } finally {
+            connection.setAutoCommit(true);
+        }
+    }
+
+    @AfterAll
+    static void tearDownAll() throws Exception {
+        try {
+            connection.close();
+        } finally {
+            connection = null;
+        }
     }
 
     @Test
-    public void testLocalDate_ToDateColumn_getDate() throws Exception {
+    void testLocalDate_ToDateColumn_getDate() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
@@ -85,16 +97,16 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             Date aDate = rs.getDate(1);
             LocalDate asLocalDate = aDate.toLocalDate();
-            assertEquals("Expected retrieved java.time.LocalDate as DATE to be the same as inserted value",
-                    localDate, asLocalDate);
+            assertEquals(localDate, asLocalDate,
+                    "Expected retrieved java.time.LocalDate as DATE to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDate_ToDateColumn_getObject_LocalDate() throws Exception {
+    void testLocalDate_ToDateColumn_getObject_LocalDate() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
@@ -104,37 +116,35 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDate asLocalDate = rs.getObject(1, LocalDate.class);
-            assertEquals("Expected retrieved java.time.LocalDate as DATE to be the same as inserted value",
-                    localDate, asLocalDate);
+            assertEquals(localDate, asLocalDate,
+                    "Expected retrieved java.time.LocalDate as DATE to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDate_ToTimeColumn() throws Exception {
+    void testLocalDate_ToTimeColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final LocalDate localDate = LocalDate.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, localDate);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localDate));
         }
     }
 
     @Test
-    public void testLocalDate_ToTimestampColumn() throws Exception {
+    void testLocalDate_ToTimestampColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final LocalDate localDate = LocalDate.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, localDate);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localDate));
         }
     }
 
     @Test
-    public void testLocalDate_ToCharColumn() throws Exception {
+    void testLocalDate_ToCharColumn() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -144,15 +154,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aChar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalDate as CHAR to have the same (trimmed) string value as the inserted value",
-                    localDate.toString(), aChar.trim());
+            assertEquals(localDate.toString(), aChar.trim(),
+                    "Expected retrieved java.time.LocalDate as CHAR to have the same (trimmed) string value as the inserted value");
         }
     }
 
     @Test
-    public void testLocalDate_ToCharColumn_getObject_LocalDate() throws Exception {
+    void testLocalDate_ToCharColumn_getObject_LocalDate() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -162,15 +172,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             final LocalDate aCharDate = rs.getObject(1, LocalDate.class);
-            assertEquals("Expected retrieved java.time.LocalDate as CHAR to have the same value as the inserted value",
-                    localDate, aCharDate);
+            assertEquals(localDate, aCharDate,
+                    "Expected retrieved java.time.LocalDate as CHAR to have the same value as the inserted value");
         }
     }
 
     @Test
-    public void testLocalDate_ToVarCharColumn() throws Exception {
+    void testLocalDate_ToVarCharColumn() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -180,15 +190,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aVarchar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalDate as VARCHAR to have the same string value as the inserted value",
-                    localDate.toString(), aVarchar);
+            assertEquals(localDate.toString(), aVarchar,
+                    "Expected retrieved java.time.LocalDate as VARCHAR to have the same string value as the inserted value");
         }
     }
 
     @Test
-    public void testLocalDate_ToVarCharColumn_getObject_LocalDate() throws Exception {
+    void testLocalDate_ToVarCharColumn_getObject_LocalDate() throws Exception {
         final LocalDate localDate = LocalDate.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -198,26 +208,25 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             final LocalDate aVarcharDate = rs.getObject(1, LocalDate.class);
-            assertEquals("Expected retrieved java.time.LocalDate as VARCHAR to have the same value as the inserted value",
-                    localDate, aVarcharDate);
+            assertEquals(localDate, aVarcharDate,
+                    "Expected retrieved java.time.LocalDate as VARCHAR to have the same value as the inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToDateColumn() throws Exception {
+    void testLocalTime_ToDateColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final LocalTime localTime = LocalTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, localTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localTime));
         }
     }
 
     @Test
-    public void testLocalTime_ToTimeColumn() throws Exception {
+    void testLocalTime_ToTimeColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
@@ -227,17 +236,17 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             Time aTime = rs.getTime(1);
             LocalTime asLocalTime = aTime.toLocalTime();
 
-            assertEquals("Expected retrieved java.time.LocalTime as TIME to be the same as inserted value",
-                    localTime.truncatedTo(ChronoUnit.SECONDS), asLocalTime);
+            assertEquals(localTime.truncatedTo(ChronoUnit.SECONDS), asLocalTime,
+                    "Expected retrieved java.time.LocalTime as TIME to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToTimeColumn_getObject_LocalTime() throws Exception {
+    void testLocalTime_ToTimeColumn_getObject_LocalTime() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
@@ -247,26 +256,25 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalTime asLocalTime = rs.getObject(1, LocalTime.class);
-            assertEquals("Expected retrieved java.time.LocalTime as TIME to be the same as inserted value",
-                    localTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalTime);
+            assertEquals(localTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalTime,
+                    "Expected retrieved java.time.LocalTime as TIME to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToTimestampColumn() throws Exception {
+    void testLocalTime_ToTimestampColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final LocalTime localTime = LocalTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, localTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, localTime));
         }
     }
 
     @Test
-    public void testLocalTime_ToCharColumn() throws Exception {
+    void testLocalTime_ToCharColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -276,15 +284,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aChar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalTime as CHAR (trimmed) to be the same as toString of inserted value",
-                    localTime.toString(), aChar.trim());
+            assertEquals(localTime.toString(), aChar.trim(),
+                    "Expected retrieved java.time.LocalTime as CHAR (trimmed) to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToCharColumn_getObject_LocalTime() throws Exception {
+    void testLocalTime_ToCharColumn_getObject_LocalTime() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -294,15 +302,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalTime asLocalTime = rs.getObject(1, LocalTime.class);
-            assertEquals("Expected retrieved java.time.LocalTime as CHAR to be the same as inserted value",
-                    localTime, asLocalTime);
+            assertEquals(localTime, asLocalTime,
+                    "Expected retrieved java.time.LocalTime as CHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToVarcharColumn() throws Exception {
+    void testLocalTime_ToVarcharColumn() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -312,15 +320,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aVarchar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalTime as VARCHAR to be the same as toString of inserted value",
-                    localTime.toString(), aVarchar);
+            assertEquals(localTime.toString(), aVarchar,
+                    "Expected retrieved java.time.LocalTime as VARCHAR to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testLocalTime_ToVarcharColumn_getObject_LocalTime() throws Exception {
+    void testLocalTime_ToVarcharColumn_getObject_LocalTime() throws Exception {
         final LocalTime localTime = LocalTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -330,15 +338,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalTime asLocalTime = rs.getObject(1, LocalTime.class);
-            assertEquals("Expected retrieved java.time.LocalTime as CHAR to be the same as inserted value",
-                    localTime, asLocalTime);
+            assertEquals(localTime, asLocalTime,
+                    "Expected retrieved java.time.LocalTime as CHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToDateColumn() throws Exception {
+    void testLocalDateTime_ToDateColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
@@ -348,16 +356,16 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             Date aDate = rs.getDate(1);
             LocalDateTime asLocalDateTime = aDate.toLocalDate().atStartOfDay();
-            assertEquals("Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days",
-                    localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime);
+            assertEquals(localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToDateColumn_getObject_LocalDateTime() throws Exception {
+    void testLocalDateTime_ToDateColumn_getObject_LocalDateTime() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
@@ -367,15 +375,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aDate FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals("Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days",
-                    localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime);
+            assertEquals(localDateTime.truncatedTo(ChronoUnit.DAYS), asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as DATE to be the same as inserted value truncated to days");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToTimeColumn() throws Exception {
+    void testLocalDateTime_ToTimeColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
@@ -385,16 +393,16 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             Time aTime = rs.getTime(1);
             LocalTime asLocalTime = aTime.toLocalTime();
-            assertEquals("Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value",
-                    localDateTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS), asLocalTime);
+            assertEquals(localDateTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS), asLocalTime,
+                    "Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToTimeColumn_getObject_LocalDateTime() throws Exception {
+    void testLocalDateTime_ToTimeColumn_getObject_LocalDateTime() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
@@ -404,16 +412,17 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTime FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals("Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value",
+            assertEquals(
                     localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE).toLocalTime().atDate(LocalDate.of(1970, 1, 1)),
-                    asLocalDateTime);
+                    asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as TIME to be the same as LocalTime portion of inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToTimestampColumn() throws Exception {
+    void testLocalDateTime_ToTimestampColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
@@ -423,16 +432,16 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             Timestamp aTimestamp = rs.getTimestamp(1);
             LocalDateTime asLocalDateTime = aTimestamp.toLocalDateTime();
-            assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
-                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime);
+            assertEquals(localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToTimestampColumn_getObject_LocalDateTime() throws Exception {
+    void testLocalDateTime_ToTimestampColumn_getObject_LocalDateTime() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
@@ -442,15 +451,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aTimestamp FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals("Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value",
-                    localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime);
+            assertEquals(localDateTime.truncatedTo(MaxFbTimePrecision.INSTANCE), asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as TIMESTAMP to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToCharColumn() throws Exception {
+    void testLocalDateTime_ToCharColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -460,15 +469,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aChar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalDateTime as CHAR (trimmed) to be the same as toString of inserted value",
-                    localDateTime.toString(), aChar.trim());
+            assertEquals(localDateTime.toString(), aChar.trim(),
+                    "Expected retrieved java.time.LocalDateTime as CHAR (trimmed) to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToCharColumn_getObject_LocalDateTime() throws Exception {
+    void testLocalDateTime_ToCharColumn_getObject_LocalDateTime() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -478,15 +487,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals("Expected retrieved java.time.LocalDateTime as CHAR to be the same as inserted value",
-                    localDateTime, asLocalDateTime);
+            assertEquals(localDateTime, asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as CHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToVarcharColumn() throws Exception {
+    void testLocalDateTime_ToVarcharColumn() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -496,15 +505,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aVarchar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as toString of inserted value",
-                    localDateTime.toString(), aVarchar);
+            assertEquals(localDateTime.toString(), aVarchar,
+                    "Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testLocalDateTime_ToVarcharColumn_getObject_LocalDateTime() throws Exception {
+    void testLocalDateTime_ToVarcharColumn_getObject_LocalDateTime() throws Exception {
         final LocalDateTime localDateTime = LocalDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -514,48 +523,45 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             LocalDateTime asLocalDateTime = rs.getObject(1, LocalDateTime.class);
-            assertEquals("Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as inserted value",
-                    localDateTime, asLocalDateTime);
+            assertEquals(localDateTime, asLocalDateTime,
+                    "Expected retrieved java.time.LocalDateTime as VARCHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testOffsetTime_ToDateColumn() throws Exception {
+    void testOffsetTime_ToDateColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetTime));
         }
     }
 
     @Test
-    public void testOffsetTime_ToTimeColumn() throws Exception {
+    void testOffsetTime_ToTimeColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetTime));
         }
     }
 
     @Test
-    public void testOffsetTime_ToTimestampColumn() throws Exception {
+    void testOffsetTime_ToTimestampColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final OffsetTime offsetTime = OffsetTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetTime));
         }
     }
 
     @Test
-    public void testOffsetTime_ToCharColumn() throws Exception {
+    void testOffsetTime_ToCharColumn() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -565,15 +571,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aChar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value",
-                    offsetTime.toString(), aChar.trim());
+            assertEquals(offsetTime.toString(), aChar.trim(),
+                    "Expected retrieved java.time.OffsetTime as CHAR (trimmed) to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testOffsetTime_ToCharColumn_getObject_OffsetTime() throws Exception {
+    void testOffsetTime_ToCharColumn_getObject_OffsetTime() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -583,15 +589,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             OffsetTime asOffsetTime = rs.getObject(1, OffsetTime.class);
-            assertEquals("Expected retrieved java.time.OffsetTime as CHAR to be the same as inserted value",
-                    offsetTime, asOffsetTime);
+            assertEquals(offsetTime, asOffsetTime,
+                    "Expected retrieved java.time.OffsetTime as CHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testOffsetTime_ToVarcharColumn() throws Exception {
+    void testOffsetTime_ToVarcharColumn() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -601,15 +607,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aVarchar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value",
-                    offsetTime.toString(), aVarchar);
+            assertEquals(offsetTime.toString(), aVarchar,
+                    "Expected retrieved java.time.OffsetTime as VARCHAR to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testOffsetTime_ToVarcharColumn_getObject_OffsetTime() throws Exception {
+    void testOffsetTime_ToVarcharColumn_getObject_OffsetTime() throws Exception {
         final OffsetTime offsetTime = OffsetTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -619,48 +625,45 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             OffsetTime asOffsetTime = rs.getObject(1, OffsetTime.class);
-            assertEquals("Expected retrieved java.time.OffsetTime as VARCHAR to be the same as inserted value",
-                    offsetTime, asOffsetTime);
+            assertEquals(offsetTime, asOffsetTime,
+                    "Expected retrieved java.time.OffsetTime as VARCHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToDateColumn() throws Exception {
+    void testOffsetDateTime_ToDateColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aDate) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetDateTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetDateTime));
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToTimeColumn() throws Exception {
+    void testOffsetDateTime_ToTimeColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTime) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetDateTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetDateTime));
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToTimestampColumn() throws Exception {
+    void testOffsetDateTime_ToTimestampColumn() throws Exception {
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aTimestamp) VALUES (1, ?)")) {
             final OffsetDateTime offsetDateTime = OffsetDateTime.now();
-            expectedException.expect(TypeConversionException.class);
 
-            pstmt.setObject(1, offsetDateTime);
+            assertThrows(TypeConversionException.class, () -> pstmt.setObject(1, offsetDateTime));
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToCharColumn() throws Exception {
+    void testOffsetDateTime_ToCharColumn() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -670,15 +673,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aChar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.OffsetDateTime as CHAR (trimmed) to be the same as toString of inserted value",
-                    offsetDateTime.toString(), aChar.trim());
+            assertEquals(offsetDateTime.toString(), aChar.trim(),
+                    "Expected retrieved java.time.OffsetDateTime as CHAR (trimmed) to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToCharColumn_getObject_OffsetDateTime() throws Exception {
+    void testOffsetDateTime_ToCharColumn_getObject_OffsetDateTime() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aChar) VALUES (1, ?)")) {
@@ -688,15 +691,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aChar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             OffsetDateTime asOffsetDateTime = rs.getObject(1, OffsetDateTime.class);
-            assertEquals("Expected retrieved java.time.OffsetDateTime as CHAR to be the same as inserted value",
-                    offsetDateTime, asOffsetDateTime);
+            assertEquals(offsetDateTime, asOffsetDateTime,
+                    "Expected retrieved java.time.OffsetDateTime as CHAR to be the same as inserted value");
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToVarcharColumn() throws Exception {
+    void testOffsetDateTime_ToVarcharColumn() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -706,15 +709,15 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             String aVarchar = rs.getString(1);
-            assertEquals("Expected retrieved java.time.OffsetDateTime as VARCHAR to be the same as toString of inserted value",
-                    offsetDateTime.toString(), aVarchar);
+            assertEquals(offsetDateTime.toString(), aVarchar,
+                    "Expected retrieved java.time.OffsetDateTime as VARCHAR to be the same as toString of inserted value");
         }
     }
 
     @Test
-    public void testOffsetDateTime_ToVarcharColumn_getObject_OffsetDateTime() throws Exception {
+    void testOffsetDateTime_ToVarcharColumn_getObject_OffsetDateTime() throws Exception {
         final OffsetDateTime offsetDateTime = OffsetDateTime.now();
         try (PreparedStatement pstmt = connection.prepareStatement(
                 "INSERT INTO javatimetest (ID, aVarchar) VALUES (1, ?)")) {
@@ -724,10 +727,10 @@ public class JDBC42JavaTimeConversionsTest extends FBJUnit4TestBase {
 
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT aVarchar FROM javatimetest WHERE ID = 1")) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
             OffsetDateTime asOffsetDateTime = rs.getObject(1, OffsetDateTime.class);
-            assertEquals("Expected retrieved java.time.OffsetDateTime as VARCHAR to be the same as inserted value",
-                    offsetDateTime, asOffsetDateTime);
+            assertEquals(offsetDateTime, asOffsetDateTime,
+                    "Expected retrieved java.time.OffsetDateTime as VARCHAR to be the same as inserted value");
         }
     }
 

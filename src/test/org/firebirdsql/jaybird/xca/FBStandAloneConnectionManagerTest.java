@@ -18,14 +18,17 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.FBConnection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import static org.junit.Assert.assertNotNull;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Describe class <code>TestFBStandAloneConnectionManager</code> here.
@@ -33,50 +36,53 @@ import static org.junit.Assert.assertNotNull;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @version 1.0
  */
-public class FBStandAloneConnectionManagerTest extends XATestBase {
+class FBStandAloneConnectionManagerTest {
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void testCreateDCM() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testCreateDCM() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         DataSource ds = mcf.createConnectionFactory();
-        assertNotNull("Could not get DataSource", ds);
-        Connection c = ds.getConnection();
-        assertNotNull("Could not get Connection", c);
-        c.close();
-    }
-
-    @Test
-    public void testCreateStatement() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = mcf.createConnectionFactory();
-        Connection c = ds.getConnection();
-        Statement s = c.createStatement();
-        assertNotNull("Could not get Statement", s);
-        c.close();
-    }
-
-    @Test
-    public void testUseStatement() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf();
-        DataSource ds = mcf.createConnectionFactory();
-        FBConnection c = (FBConnection) ds.getConnection();
-        Statement s = c.createStatement();
-        FBLocalTransaction t = c.getLocalTransaction();
-        assertNotNull("Could not get LocalTransaction", t);
-        Exception ex = null;
-        t.begin();
-        try {
-            s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
-        } catch (Exception e) {
-            ex = e;
+        assertNotNull(ds, "Could not get DataSource");
+        try (Connection c = ds.getConnection()) {
+            assertNotNull(c, "Could not get Connection");
         }
-        t.commit();
+    }
 
-        t.begin();
-        s.execute("DROP TABLE T1");
-        s.close();
-        t.commit();
-        c.close();
+    @Test
+    void testCreateStatement() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
+        DataSource ds = mcf.createConnectionFactory();
+        try (Connection c = ds.getConnection()) {
+            Statement s = c.createStatement();
+            assertNotNull(s, "Could not get Statement");
+        }
+    }
+
+    @Test
+    void testUseStatement() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
+        DataSource ds = mcf.createConnectionFactory();
+        Exception ex = null;
+        try (FBConnection c = (FBConnection) ds.getConnection()) {
+            Statement s = c.createStatement();
+            FBLocalTransaction t = c.getLocalTransaction();
+            assertNotNull(t, "Could not get LocalTransaction");
+            t.begin();
+            try {
+                s.execute("CREATE TABLE T1 ( C1 SMALLINT, C2 SMALLINT)");
+            } catch (Exception e) {
+                ex = e;
+            }
+            t.commit();
+
+            t.begin();
+            s.execute("DROP TABLE T1");
+            s.close();
+            t.commit();
+        }
         if (ex != null) {
             throw ex;
         }

@@ -18,11 +18,10 @@
  */
 package org.firebirdsql.gds.ng.jna;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbStatement;
@@ -31,15 +30,18 @@ import org.firebirdsql.gds.ng.SimpleEventHandler;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for events in {@link JnaDatabase}.
@@ -47,18 +49,21 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class JnaEventsTest extends FBJUnit4TestBase {
+class JnaEventsTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsNativeOnly();
+    private final Logger log = LoggerFactory.getLogger(JnaEventsTest.class);
+
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsNativeOnly();
 
     //@formatter:off
-    public static final String TABLE_DEF =
+    private static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
             "     TESTVAL INTEGER NOT NULL" +
             ")";
 
-    public static final String TRIGGER_DEF =
+    private static final String TRIGGER_DEF =
             "CREATE TRIGGER INSERT_TRIG " +
             "     FOR TEST AFTER INSERT " +
             "AS BEGIN " +
@@ -67,14 +72,19 @@ public class JnaEventsTest extends FBJUnit4TestBase {
             "END";
     //@formatter:on
 
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            TABLE_DEF,
+            TRIGGER_DEF);
+
     private final AbstractNativeDatabaseFactory factory =
             (AbstractNativeDatabaseFactory) FBTestProperties.getFbDatabaseFactory();
     private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     private JnaDatabase db;
 
-    @After
-    public final void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         if (db != null && db.isAttached()) {
             try {
                 db.close();
@@ -85,31 +95,19 @@ public class JnaEventsTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testCreateEventHandle() throws Exception {
+    void testCreateEventHandle() throws Exception {
         db = factory.connect(connectionInfo);
         db.attach();
 
-        JnaEventHandle eventHandle = db.createEventHandle("TEST_EVENT", new EventHandler() {
-            @Override
-            public void eventOccurred(EventHandle eventHandle) {
-            }
-        });
+        JnaEventHandle eventHandle = db.createEventHandle("TEST_EVENT", eventHandle1 -> { });
 
-        assertTrue("Event handle should have a size set", eventHandle.getSize() > 0);
+        assertTrue(eventHandle.getSize() > 0, "Event handle should have a size set");
     }
 
     @Test
-    public void testQueueEvent_andNotification() throws Exception {
+    void testQueueEvent_andNotification() throws Exception {
         db = factory.connect(connectionInfo);
         db.attach();
-
-        FbTransaction transaction = getTransaction(db);
-        final FbStatement statement = db.createStatement(transaction);
-        statement.prepare(TABLE_DEF);
-        statement.execute(RowValue.EMPTY_ROW_VALUE);
-        statement.prepare(TRIGGER_DEF);
-        statement.execute(RowValue.EMPTY_ROW_VALUE);
-        transaction.commit();
 
         SimpleEventHandler eventHandler = new SimpleEventHandler();
 
@@ -134,10 +132,10 @@ public class JnaEventsTest extends FBJUnit4TestBase {
         db.queueEvent(eventHandleB);
 
         Thread.sleep(50);
-        assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
+        assertTrue(eventHandler.getReceivedEventHandles().isEmpty(), "Expected events to not have been triggered");
 
-        transaction = getTransaction(db);
-        statement.setTransaction(transaction);
+        FbTransaction transaction = getTransaction(db);
+        FbStatement statement = db.createStatement(transaction);
         statement.prepare("INSERT INTO TEST VALUES (1)");
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
@@ -148,7 +146,7 @@ public class JnaEventsTest extends FBJUnit4TestBase {
                 && retry++ < 10) {
             Thread.sleep(50);
         }
-        assertEquals("Unexpected number of events received", 2, eventHandler.getReceivedEventHandles().size());
+        assertEquals(2, eventHandler.getReceivedEventHandles().size(), "Unexpected number of events received");
 
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
@@ -166,7 +164,7 @@ public class JnaEventsTest extends FBJUnit4TestBase {
 
 
     @Test
-    public void cancelAfterCallback_directJNA() throws Exception {
+    void cancelAfterCallback_directJNA() throws Exception {
         db = factory.connect(connectionInfo);
         db.attach();
 

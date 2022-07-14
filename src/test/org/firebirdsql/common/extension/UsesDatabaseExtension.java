@@ -42,9 +42,6 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
 /**
  * JUnit 5 extension that creates and deletes a database.
  * <p>
- * This is similar to the JUnit 4 rule {@link org.firebirdsql.common.rules.UsesDatabase}.
- * </p>
- * <p>
  * When used with {@code @ExtendWith}, a default database is created. For more control,
  * use {@code @RegisterExtension}, the static factory methods can be used for configuration.
  * </p>
@@ -94,7 +91,7 @@ public abstract class UsesDatabaseExtension {
             ex.printStackTrace();
         } finally {
             try {
-                if (fbManager != null) {
+                if (!(fbManager == null || fbManager.getState().equals("Stopped"))) {
                     fbManager.stop();
                 }
             } catch (Exception ex) {

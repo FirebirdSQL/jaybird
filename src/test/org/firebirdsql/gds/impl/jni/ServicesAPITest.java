@@ -18,7 +18,7 @@
  */
 package org.firebirdsql.gds.impl.jni;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
@@ -32,28 +32,33 @@ import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Initial tests for Services API. Currently run only against embedded server.
  * TODO: Make run against other types
  */
-public class ServicesAPITest {
+class ServicesAPITest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    private Path tempDir;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -62,10 +67,10 @@ public class ServicesAPITest {
     private FBManager fbManager;
     private GDSType gdsType;
     private FbDatabaseFactory dbFactory;
-    private File logFolder;
+    private Path logFolder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
         gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
@@ -76,39 +81,41 @@ public class ServicesAPITest {
         fbManager.setPort(5066);
         fbManager.start();
 
-        File dbFolder = temporaryFolder.newFolder("db");
-        logFolder = temporaryFolder.newFolder("log");
+        Path dbFolder = tempDir.resolve("db");
+        Files.createDirectories(dbFolder);
+        logFolder = tempDir.resolve("log");
+        Files.createDirectories(logFolder);
 
-        mAbsoluteBackupPath = new File(dbFolder, "testES01344.fbk").getAbsolutePath();
+        mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
 
-        mAbsoluteDatabasePath = new File(dbFolder, "testES01344.fdb").getAbsolutePath();
+        mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
 
         fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         fbManager.stop();
     }
 
     @Test
-    public void testServicesManagerAttachAndDetach() throws SQLException {
+    void testServicesManagerAttachAndDetach() throws SQLException {
         FbService service = dbFactory.serviceConnect(createServiceProperties());
 
-        assertFalse("Handle should be unattached when created.", service.isAttached());
+        assertFalse(service.isAttached(), "Handle should be unattached when created.");
 
         service.attach();
 
-        assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
+        assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally.");
 
         service.close();
 
-        assertFalse("Handle should be detached when isc_service_detach returns normally.", service.isAttached());
+        assertFalse(service.isAttached(), "Handle should be detached when isc_service_detach returns normally.");
     }
 
     @Test
-    public void testBackupAndRestore() throws Exception {
+    void testBackupAndRestore() throws Exception {
         try (FbService service = attachToServiceManager()) {
             backupDatabase(service);
         }
@@ -122,17 +129,17 @@ public class ServicesAPITest {
     }
 
     private void connectToDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE",
-                "SYSDBA", "masterkey");
+        Connection connection = DriverManager.getConnection(
+                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey");
         connection.close();
     }
 
     private void restoreDatabase(FbService service) throws Exception {
         startRestore(service);
 
-        queryService(service, new File(logFolder, "restoretest.log").getAbsolutePath());
+        queryService(service, logFolder.resolve("restoretest.log").toString());
 
-        assertTrue("Database file doesn't exist after restore !", new File(mAbsoluteDatabasePath).exists());
+        assertTrue(new File(mAbsoluteDatabasePath).exists(), "Database file doesn't exist after restore !");
         if (!new File(mAbsoluteBackupPath).delete()) {
             this.log.debug("Unable to delete file " + mAbsoluteBackupPath);
         }
@@ -151,10 +158,10 @@ public class ServicesAPITest {
     }
 
     private void dropDatabase() throws Exception {
-        final FBManager testFBManager = new FBManager(gdsType);
-        testFBManager.start();
-        testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
-        testFBManager.stop();
+        try (FBManager testFBManager = new FBManager(gdsType)) {
+            testFBManager.start();
+            testFBManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
+        }
     }
 
     private void backupDatabase(FbService service) throws Exception {
@@ -164,9 +171,9 @@ public class ServicesAPITest {
 
         startBackup(service);
 
-        queryService(service, new File(logFolder, "backuptest.log").getAbsolutePath());
+        queryService(service, logFolder.resolve("backuptest.log").toString());
 
-        assertTrue("Backup file doesn't exist!", new File(mAbsoluteBackupPath).exists());
+        assertTrue(new File(mAbsoluteBackupPath).exists(), "Backup file doesn't exist!");
     }
 
     private void queryService(FbService service, String outputFilename) throws Exception {
@@ -212,7 +219,7 @@ public class ServicesAPITest {
         FbService service = dbFactory.serviceConnect(createServiceProperties());
         service.attach();
 
-        assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
+        assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally.");
 
         return service;
     }

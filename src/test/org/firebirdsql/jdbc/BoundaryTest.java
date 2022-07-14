@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,19 +18,18 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BoundaryTest extends FBJUnit4TestBase {
+class BoundaryTest {
 
     // TODO: document what this test is supposed to test
     // TODO: Consider removing this test
@@ -48,47 +47,40 @@ public class BoundaryTest extends FBJUnit4TestBase {
             + ")";
     //@formatter:on
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            executeCreateTable(connection, CREATE_META_ONE);
-        }
-    }
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase(
+            CREATE_META_ONE);
 
     @Test
-    public void testLockUp() {
+    void testLockUp() {
         final Results results = createResults();
-        final Thread thread = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    performLockupSequence();
-                    results.setIsOk();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+        final Thread thread = new Thread(() -> {
+            try {
+                performLockupSequence();
+                results.setIsOk();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }, "Lockup test thread.");
         thread.start();
 
-        assertTrue("Operation should have completed by now", results.waitForCompletionOrTimeout());
+        assertTrue(results.waitForCompletionOrTimeout(), "Operation should have completed by now");
     }
 
     @Test
-    public void testNoLockUp() {
+    void testNoLockUp() {
         final Results results = createResults();
-        final Thread thread = new Thread(new Runnable() {
-            public void run() {
-                try {
-                    performSimilarButNoLockupSequence();
-                    results.setIsOk();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+        final Thread thread = new Thread(() -> {
+            try {
+                performSimilarButNoLockupSequence();
+                results.setIsOk();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }, "Lockup test thread.");
         thread.start();
 
-        assertTrue("Operation should have completed by now", results.waitForCompletionOrTimeout());
+        assertTrue(results.waitForCompletionOrTimeout(), "Operation should have completed by now");
     }
 
     private synchronized Results createResults() {

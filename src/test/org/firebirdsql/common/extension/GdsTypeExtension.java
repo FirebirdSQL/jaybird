@@ -19,7 +19,6 @@
 package org.firebirdsql.common.extension;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
@@ -40,7 +39,6 @@ import static org.hamcrest.Matchers.not;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
- * @see GdsTypeRule
  */
 public class GdsTypeExtension implements BeforeAllCallback {
 
@@ -54,15 +52,6 @@ public class GdsTypeExtension implements BeforeAllCallback {
     public void beforeAll(ExtensionContext context) {
         String gdsType = FBTestProperties.GDS_TYPE;
         assumeThat("Test type not supported, test ignored", gdsType, testTypeMatcher);
-    }
-
-    /**
-     * Converts this extension to an equivalent JUnit 4 rule.
-     *
-     * @return rule
-     */
-    public GdsTypeRule toRule() {
-        return new GdsTypeRule(testTypeMatcher);
     }
 
     /**

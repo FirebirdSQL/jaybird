@@ -22,27 +22,27 @@ import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FBBigDecimalField}
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBBigDecimalFieldTest extends BaseJUnit4TestFBField<FBBigDecimalField, BigDecimal> {
+class FBBigDecimalFieldTest extends BaseJUnit5TestFBField<FBBigDecimalField, BigDecimal> {
     
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
         // NOTE This definition is necessary for the tests in the superclass, this is overridden by most tests in the class itself
         rowDescriptorBuilder.setType(ISCConstants.SQL_LONG)
@@ -55,690 +55,699 @@ public class FBBigDecimalFieldTest extends BaseJUnit4TestFBField<FBBigDecimalFie
     // TODO Add set/getObject test
 
     @Test
-    public void getBigDecimalNull() throws SQLException {
+    void getBigDecimalNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertNull("Expected null result", field.getBigDecimal());
+        assertNull(field.getBigDecimal(), "Expected null result");
     }
 
     @Test
-    public void getObject_BigDecimalNull() throws SQLException {
+    void getObject_BigDecimalNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected null result for getObject(BigDecimal.class)", field.getObject(BigDecimal.class));
+        assertNull(field.getObject(BigDecimal.class), "Expected null result for getObject(BigDecimal.class)");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-4);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(37);
 
         BigDecimal expectedValue = new BigDecimal("0.0037");
-        assertEquals("Unexpected value for integer BigDecimal", expectedValue, field.getObject(BigDecimal.class));
+        assertEquals(expectedValue, field.getObject(BigDecimal.class), "Unexpected value for integer BigDecimal");
     }
     
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
     }
     
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
     }
     
     @Test 
-    public void getBigDecimalShort() throws SQLException {
+    void getBigDecimalShort() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnShortExpectations((short) 231);
         
         BigDecimal expectedValue = new BigDecimal("23.1");
-        assertEquals("Unexpected value for short BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for short BigDecimal");
     }
     
     @Test 
-    public void getBigDecimalInteger() throws SQLException {
+    void getBigDecimalInteger() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-4);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(34);
         
         BigDecimal expectedValue = new BigDecimal("0.0034");
-        assertEquals("Unexpected value for integer BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for integer BigDecimal");
     }
     
     @Test 
-    public void getBigDecimalLong() throws SQLException {
+    void getBigDecimalLong() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(51300000000L);
         
         BigDecimal expectedValue = new BigDecimal("513.00000000");
-        assertEquals("Unexpected value for long BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for long BigDecimal");
     }
 
     @Test
-    public void getBigDecimalInt128() throws SQLException {
+    void getBigDecimalInt128() throws SQLException {
         fieldDescriptor = createInt128FieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnInt128Expectations(new BigInteger("4724323329251300020001"));
 
         final String value = "47243233292513.00020001";
         BigDecimal expectedValue = new BigDecimal(value);
-        assertEquals("Unexpected value for Int128 BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for Int128 BigDecimal");
     }
     
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
+    void setBigDecimalNonNull() throws SQLException {
     }
     
     @Test
-    public void setBigDecimalShort() throws SQLException {
+    void setBigDecimalShort() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setShortExpectations((short)4320);
-        
+
         // TODO Might need to add separate test for the rescaling applied here
         field.setBigDecimal(new BigDecimal("43.2"));
+        
+        verifySetShort((short) 4320);
     }
     
     @Test
-    public void setBigDecimalShortTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalShortTooHigh() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        
-        field.setBigDecimal(BigDecimal.valueOf(Short.MAX_VALUE + 1, 2));
+
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(BigDecimal.valueOf(Short.MAX_VALUE + 1, 2)));
     }
     
     @Test
-    public void setBigDecimalShortTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalShortTooLow() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        
-        field.setBigDecimal(BigDecimal.valueOf(Short.MIN_VALUE - 1, 2));
+
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(BigDecimal.valueOf(Short.MIN_VALUE - 1, 2)));
     }
     
     @Test
-    public void setBigDecimalShortNull() throws SQLException {
+    void setBigDecimalShortNull() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
-        
+
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setBigDecimalInteger() throws SQLException {
+    void setBigDecimalInteger() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-3);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setIntegerExpectations(1234567);
-        
+
         field.setBigDecimal(new BigDecimal("1234.567"));
+
+        verifySetInteger(1234567);
     }
     
     @Test
-    public void setBigDecimalIntegerTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalIntegerTooHigh() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        
-        field.setBigDecimal(BigDecimal.valueOf(Integer.MAX_VALUE + 1L, 2));
+
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(BigDecimal.valueOf(Integer.MAX_VALUE + 1L, 2)));
     }
     
     @Test
-    public void setBigDecimalIntegerTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalIntegerTooLow() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        
-        field.setBigDecimal(BigDecimal.valueOf(Integer.MIN_VALUE - 1L, 2));
+
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(BigDecimal.valueOf(Integer.MIN_VALUE - 1L, 2)));
     }
     
     @Test
-    public void setBigDecimalIntegerNull() throws SQLException {
+    void setBigDecimalIntegerNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
-        
+
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setBigDecimalLong() throws SQLException {
+    void setBigDecimalLong() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-5);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(1234567890123L);
-        
+
         field.setBigDecimal(new BigDecimal("12345678.90123"));
+
+        verifySetLong(1234567890123L);
     }
     
     @Test
-    public void setBigDecimalLongTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalLongTooHigh() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         
         BigInteger value = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE);
-        field.setBigDecimal(new BigDecimal(value, 2));
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(new BigDecimal(value, 2)));
     }
     
     @Test
-    public void setBigDecimalLongTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalLongTooLow() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         
         BigInteger value = BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE);
-        field.setBigDecimal(new BigDecimal(value, 2));
+        assertThrows(TypeConversionException.class, () -> field.setBigDecimal(new BigDecimal(value, 2)));
     }
     
     @Test
-    public void setBigDecimalLongNull() throws SQLException {
+    void setBigDecimalLongNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
-        
+
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setBigDecimalInt128() throws SQLException {
+    void setBigDecimalInt128() throws SQLException {
         fieldDescriptor = createInt128FieldDescriptor(-3);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setInt128Expectations(new BigInteger("1234567"));
 
         final String value = "1234.567";
         field.setBigDecimal(new BigDecimal(value));
+
+        verifySetInt128(new BigInteger("1234567"));
     }
 
     @Test
-    public void setBigDecimalInt128TooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalInt128TooHigh() throws SQLException {
         fieldDescriptor = createInt128FieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         final String maxValue = "9999999999999999999999999999999999999.99";
 
-        field.setBigDecimal(new BigDecimal(maxValue).add(new BigDecimal("0.01")));
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(new BigDecimal(maxValue).add(new BigDecimal("0.01"))));
     }
 
     @Test
-    public void setBigDecimalInt128TooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setBigDecimalInt128TooLow() throws SQLException {
         fieldDescriptor = createInt128FieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         final String minValue = "-9999999999999999999999999999999999999.99";
 
-        field.setBigDecimal(new BigDecimal(minValue).subtract(new BigDecimal("0.01")));
+        assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(new BigDecimal(minValue).subtract(new BigDecimal("0.01"))));
     }
 
     @Test
-    public void setBigDecimalInt128Null() throws SQLException {
+    void setBigDecimalInt128Null() throws SQLException {
         fieldDescriptor = createInt128FieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
 
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
     
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
     }
 
     @Test
-    public void getObject_BooleanNull() throws SQLException {
+    void getObject_BooleanNull() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertNull(field.getObject(Boolean.class), "Expected null for getObject(Boolean.class)");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         // NOTE: We could use 0 for the test, but in that case Jaybird would not have created a FBBigDecimalField
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnShortExpectations((short)10);
 
-        assertTrue("Expected true from getBoolean", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Expected true from getBoolean");
     }
     
     @Test
-    public void getBooleanTrue() throws SQLException {
-        // NOTE: We could use 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
+    void getBooleanTrue() throws SQLException {
+        // NOTE: We could use 0 for the test, but in that case Jaybird would not have created a FBBigDecimalField
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnShortExpectations((short)10);
         
-        assertTrue("Expected true from getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Expected true from getBoolean");
     }
     
     @Test
-    public void getBooleanFalse() throws SQLException {
-        // NOTE: We could use scale 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
+    void getBooleanFalse() throws SQLException {
+        // NOTE: We could use scale 0 for the test, but in that case Jaybird would not have created a FBBigDecimalField
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         // NOTE Any value other than 10 would do
         toReturnShortExpectations((short)0);
         
-        assertFalse("Expected false from getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false from getBoolean");
     }
     
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void setBoolean() throws SQLException {
+    void setBoolean() throws SQLException {
     }
     
     @Test
-    public void setBooleanTrue() throws SQLException {
-        // NOTE: We could use scale 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
+    void setBooleanTrue() throws SQLException {
+        // NOTE: We could use scale 0 for the test, but in that case Jaybird would not have created a FBBigDecimalField
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setShortExpectations((short)10);
-        
+
         field.setBoolean(true);
+
+        verifySetShort((short) 10);
     }
     
     @Test
-    public void setBooleanFalse() throws SQLException {
+    void setBooleanFalse() throws SQLException {
         // NOTE: We could use scale 0 for the test, but in that case Jaybird would not have create a FBBigDecimalField
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setShortExpectations((short)0);
-        
+
         field.setBoolean(false);
+
+        verifySetShort((short) 0);
     }
     
     @Test
-    public void getByteNull() throws SQLException {
+    void getByteNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getByte() to return 0 for NULL value", 0, field.getByte());
+        assertEquals(0, field.getByte(), "Expected getByte() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_ByteNull() throws SQLException {
+    void getObject_ByteNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Byte.class) to return null for NULL value", field.getObject(Byte.class));
+        assertNull(field.getObject(Byte.class), "Expected getObject(Byte.class) to return null for NULL value");
     }
 
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(Byte.MIN_VALUE * 100);
         
-        assertEquals("Unexpected value for getByte()", Byte.MIN_VALUE, field.getByte());
+        assertEquals(Byte.MIN_VALUE, field.getByte(), "Unexpected value for getByte()");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(Byte.MIN_VALUE * 100);
 
-        assertEquals("Unexpected value for getObject(Byte.class)",
-                Byte.valueOf(Byte.MIN_VALUE), field.getObject(Byte.class));
+        assertEquals(Byte.valueOf(Byte.MIN_VALUE), field.getObject(Byte.class),
+                "Unexpected value for getObject(Byte.class)");
     }
     
     @Test
-    public void getByteTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByteTooHigh() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Byte.MAX_VALUE + 1)* 100);
-        
-        field.getByte();
+
+        assertThrows(TypeConversionException.class, field::getByte);
     }
     
     @Test
-    public void getByteTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByteTooLow() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Byte.MIN_VALUE - 1)* 100);
-        
-        field.getByte();
+
+        assertThrows(TypeConversionException.class, field::getByte);
     }
     
     @Test
-    public void setByte() throws SQLException {
+    void setByte() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-7);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(-340000000L);
-        
+
         field.setByte((byte) -34);
+
+        verifySetLong(-340000000L);
     }
     
     @Test
-    public void getDoubleNull() throws SQLException {
+    void getDoubleNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getDouble() to return 0.0 for NULL value", 0.0, field.getDouble(), 0.0);
+        assertEquals(0.0, field.getDouble(), 0.0, "Expected getDouble() to return 0.0 for NULL value");
     }
 
     @Test
-    public void getObject_DoubleNull() throws SQLException {
+    void getObject_DoubleNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Double.class) to return null for NUL value", field.getObject(Double.class));
+        assertNull(field.getObject(Double.class), "Expected getObject(Double.class) to return null for NUL value");
     }
     
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MIN_VALUE);
         
-        assertEquals("Unexpected value for getDouble()", Long.MIN_VALUE / 100.0, field.getDouble(), 0.0);
+        assertEquals(Long.MIN_VALUE / 100.0, field.getDouble(), 0.0, "Unexpected value for getDouble()");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MIN_VALUE);
 
-        assertEquals("Unexpected value for getObject(Double.class)",
-                Long.MIN_VALUE / 100.0, field.getObject(Double.class), 0.0);
+        assertEquals(Long.MIN_VALUE / 100.0, field.getObject(Double.class), 0.0,
+                "Unexpected value for getObject(Double.class)");
     }
     
     @Test
-    public void setDouble() throws SQLException {
+    void setDouble() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setShortExpectations((short)4691);
-        
+
         field.setDouble(469.1234567);
+
+        verifySetShort((short) 4691);
     }
     
     @Test
-    public void getFloatNull() throws SQLException {
+    void getFloatNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getFloat() to return 0.0 for NULL value", 0.0, field.getFloat(), 0.0);
+        assertEquals(0.0, field.getFloat(), 0.0, "Expected getFloat() to return 0.0 for NULL value");
     }
 
     @Test
-    public void getObject_FloatNull() throws SQLException {
+    void getObject_FloatNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Float.class) to return null for NUL value", field.getObject(Float.class));
+        assertNull(field.getObject(Float.class), "Expected getObject(Float.class) to return null for NUL value");
     }
     
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MAX_VALUE);
         
-        assertEquals("Unexpected value for getFloat()", Long.MAX_VALUE / 100.0f, field.getFloat(), 0.0);
+        assertEquals(Long.MAX_VALUE / 100.0f, field.getFloat(), 0.0, "Unexpected value for getFloat()");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MAX_VALUE);
 
-        assertEquals("Unexpected value for getObject(Float.class)",
-                Long.MAX_VALUE / 100.0f, field.getObject(Float.class), 0.0);
+        assertEquals(Long.MAX_VALUE / 100.0f, field.getObject(Float.class), 0.0,
+                "Unexpected value for getObject(Float.class)");
     }
     
     @Test
     @Override
-    public void setFloat() throws SQLException {
+    void setFloat() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-5);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(46912344L);
 
         field.setFloat(469.1234567f);
+
+        verifySetLong(46912344L);
     }
     
     @Test
-    public void getIntNull() throws SQLException {
+    void getIntNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getInt() to return 0 for NULL value", 0, field.getInt());
+        assertEquals(0, field.getInt(), "Expected getInt() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_IntegerNull() throws SQLException {
+    void getObject_IntegerNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Integer.class) to return null for NUL value", field.getObject(Integer.class));
+        assertNull(field.getObject(Integer.class), "Expected getObject(Integer.class) to return null for NUL value");
     }
     
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(987654321098765L);
         
-        assertEquals("Unexpected value from getInt()", 987654321, field.getInt());
+        assertEquals(987654321, field.getInt(), "Unexpected value from getInt()");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-6);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(987654321098765L);
 
-        assertEquals("Unexpected value from getInt()", 987654321, (int) field.getObject(Integer.class));
+        assertEquals(987654321, (int) field.getObject(Integer.class), "Unexpected value from getInt()");
     }
     
     @Test
-    public void getIntTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getIntTooHigh() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations((Integer.MAX_VALUE + 1L) * 100);
-        
-        field.getInt();
+
+        assertThrows(TypeConversionException.class, field::getInt);
     }
     
     @Test
-    public void getIntTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getIntTooLow() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations((Integer.MIN_VALUE - 1L) * 100);
-        
-        field.getInt();
+
+        assertThrows(TypeConversionException.class, () -> field.getInt());
     }
     
     @Test
     @Override
-    public void setInteger() throws SQLException {
+    void setInteger() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setIntegerExpectations(1234560);
-        
+
         field.setInteger(123456);
+
+        verifySetInteger(1234560);
     }
     
     @Test
-    public void getLongNull() throws SQLException {
+    void getLongNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getLong() to return 0 for NULL value", 0, field.getLong());
+        assertEquals(0, field.getLong(), "Expected getLong() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_LongNull() throws SQLException {
+    void getObject_LongNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Long.class) to return null for NUL value", field.getObject(Long.class));
+        assertNull(field.getObject(Long.class), "Expected getObject(Long.class) to return null for NUL value");
     }
     
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MAX_VALUE);
         
-        assertEquals("Unexpected value from getLong()", Long.MAX_VALUE / 100, field.getLong());
+        assertEquals(Long.MAX_VALUE / 100, field.getLong(), "Unexpected value from getLong()");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(Long.MAX_VALUE);
 
-        assertEquals("Unexpected value from getLong()", Long.MAX_VALUE / 100, (long) field.getObject(Long.class));
+        assertEquals(Long.MAX_VALUE / 100, (long) field.getObject(Long.class), "Unexpected value from getLong()");
     }
     
     @Test
     @Override
-    public void setLong() throws SQLException {
+    void setLong() throws SQLException {
         fieldDescriptor = createShortFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setShortExpectations((short)3500);
-        
+
         field.setLong(35);
+
+        verifySetShort((short) 3500);
     }
     
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(51300000000L);
         
         BigDecimal expectedValue = new BigDecimal("513.00000000");
-        assertEquals("Unexpected value for long BigDecimal", expectedValue, field.getObject());
+        assertEquals(expectedValue, field.getObject(), "Unexpected value for long BigDecimal");
     }
     
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
+    void setObjectNonNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-3);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setIntegerExpectations(1234567);
-        
+
         field.setObject(new BigDecimal("1234.567"));
+
+        verifySetInteger(1234567);
     }
     
     // TODO Add tests for other object types
     
     @Test
-    public void getShortNull() throws SQLException {
+    void getShortNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
         
-        assertEquals("Expected getShort() to return 0 for NULL value", 0, field.getShort());
+        assertEquals(0, field.getShort(), "Expected getShort() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_ShortNull() throws SQLException {
+    void getObject_ShortNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Short.class) to return null for NUL value", field.getObject(Short.class));
+        assertNull(field.getObject(Short.class), "Expected getObject(Short.class) to return null for NUL value");
     }
     
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-4);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(123456789);
         
-        assertEquals("Unexpected value from getShort()", 12345, field.getShort());
+        assertEquals(12345, field.getShort(), "Unexpected value from getShort()");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-4);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations(123456789);
 
-        assertEquals("Unexpected value from getShort()", 12345, (short) field.getObject(Short.class));
+        assertEquals(12345, (short) field.getObject(Short.class), "Unexpected value from getShort()");
     }
     
     @Test
-    public void getShortTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShortTooHigh() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Short.MAX_VALUE + 1) * 100);
-        
-        field.getShort();
+
+        assertThrows(TypeConversionException.class, field::getShort);
     }
     
     @Test
-    public void getShortTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShortTooLow() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnIntegerExpectations((Short.MIN_VALUE - 1) * 100);
-        
-        field.getShort();
+
+        assertThrows(TypeConversionException.class, field::getShort);
     }
     
     @Test
     @Override
-    public void setShort() throws SQLException {
+    void setShort() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-3);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(Short.MIN_VALUE * 1000L);
-        
+
         field.setShort(Short.MIN_VALUE);
+
+        verifySetLong(Short.MIN_VALUE * 1000L);
     }
     
     @Test
-    public void getStringNull() throws SQLException {
+    void getStringNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
@@ -747,7 +756,7 @@ public class FBBigDecimalFieldTest extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     @Test
-    public void getObject_StringNull() throws SQLException {
+    void getObject_StringNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
@@ -757,171 +766,176 @@ public class FBBigDecimalFieldTest extends BaseJUnit4TestFBField<FBBigDecimalFie
     
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(456789123);
         
-        assertEquals("Unexpected value from getString()", "4567891.23", field.getString());
+        assertEquals("4567891.23", field.getString(), "Unexpected value from getString()");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(456789123);
 
-        assertEquals("Unexpected value from getString()", "4567891.23", field.getObject(String.class));
+        assertEquals("4567891.23", field.getObject(String.class), "Unexpected value from getString()");
     }
     
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
+    void setStringNonNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setIntegerExpectations(789123);
-        
+
         field.setString("78912.3456");
+
+        verifySetInteger(789123);
     }
     
     @Test
-    public void setStringNull() throws SQLException {
+    void setStringNull() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
         
         field.setString(null);
+
+        verifySetNull();
     }
     
     @Test
-    public void setStringNonNumber() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void setStringNonNumber() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-1);
         FBBigDecimalField field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        
-        field.setString("NotANumber");
+
+        assertThrows(TypeConversionException.class, () -> field.setString("NotANumber"));
     }
 
     @Test
     @Override
-    public void getObject_BigInteger() throws SQLException {
+    void getObject_BigInteger() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(456789123);
 
-        assertEquals("Unexpected value for getObject(BigInteger.class)",
-                BigInteger.valueOf(4567891), field.getObject(BigInteger.class));
+        assertEquals(BigInteger.valueOf(4567891), field.getObject(BigInteger.class),
+                "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
-    public void getObject_BigInteger_null() throws SQLException {
+    void getObject_BigInteger_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+        assertNull(field.getObject(BigInteger.class), "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
     @Override
-    public void setObject_BigInteger() throws SQLException {
+    void setObject_BigInteger() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(10);
 
         field.setObject(BigInteger.TEN);
+
+        verifySetLong(10);
     }
 
     @Test
-    public void setObject_BigInteger_MAX() throws SQLException {
+    void setObject_BigInteger_MAX() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(Long.MAX_VALUE);
 
         field.setObject(BigInteger.valueOf(Long.MAX_VALUE));
+
+        verifySetLong(Long.MAX_VALUE);
     }
 
     @Test
-    public void setObject_BigInteger_MAX_plus_1() throws SQLException {
+    void setObject_BigInteger_MAX_plus_1() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        expectedException.expect(TypeConversionException.class);
 
-        field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE));
+        assertThrows(TypeConversionException.class,
+                () -> field.setObject(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)));
     }
 
     @Test
-    public void setObject_BigInteger_MIN() throws SQLException {
+    void setObject_BigInteger_MIN() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(Long.MIN_VALUE);
 
         field.setObject(BigInteger.valueOf(Long.MIN_VALUE));
+
+        verifySetLong(Long.MIN_VALUE);
     }
 
     @Test
-    public void setObject_BigInteger_MIN_minus_1() throws SQLException {
+    void setObject_BigInteger_MIN_minus_1() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        expectedException.expect(TypeConversionException.class);
 
-        field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE));
+        assertThrows(TypeConversionException.class,
+                () -> field.setObject(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE)));
     }
 
     @Test
-    public void setBigInteger_null() throws SQLException {
+    void setBigInteger_null() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(0);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
 
         field.setBigInteger(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void getDecimal_null() throws SQLException {
+    void getDecimal_null() throws SQLException {
         fieldDescriptor = createIntegerFieldDescriptor(-2);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnNullExpectations();
 
-        assertNull("Expected null result", field.getDecimal());
+        assertNull(field.getDecimal(), "Expected null result");
     }
 
     @Test
     @Override
-    public void getDecimalNonNull() throws SQLException {
+    void getDecimalNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
         toReturnLongExpectations(51300000000L);
 
         Decimal128 expectedValue = Decimal128.valueOf("513.00000000");
-        assertEquals("Unexpected value for long Decimal", expectedValue, field.getDecimal());
+        assertEquals(expectedValue, field.getDecimal(), "Unexpected value for long Decimal");
     }
 
     @Test
-    public void setDecimal_null() throws SQLException {
+    void setDecimal_null() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-8);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setNullExpectations();
 
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
     @Override
-    public void setDecimalNonNull() throws SQLException {
+    void setDecimalNonNull() throws SQLException {
         fieldDescriptor = createLongFieldDescriptor(-5);
         field = new FBBigDecimalField(fieldDescriptor, fieldData, Types.NUMERIC);
-        setLongExpectations(1234567890123L);
 
         field.setDecimal(Decimal128.valueOf("12345678.90123"));
+
+        verifySetLong(1234567890123L);
     }
     
-    @SuppressWarnings("unused")
     @Test
-    public void constructWithUnsupportedSqlType() throws SQLException {
-        expectedException.expect(SQLException.class);
+    void constructWithUnsupportedSqlType() {
         rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
-        new FBBigDecimalField(fieldDescriptor, fieldData, Types.VARCHAR);
+        assertThrows(SQLException.class, () -> new FBBigDecimalField(fieldDescriptor, fieldData, Types.VARCHAR));
     }
 
     private FieldDescriptor createShortFieldDescriptor(int scale) {
@@ -953,7 +967,7 @@ public class FBBigDecimalFieldTest extends BaseJUnit4TestFBField<FBBigDecimalFie
     }
 
     @Override
-    protected BigDecimal getNonNullObject() {
+    BigDecimal getNonNullObject() {
         return BigDecimal.ONE;
     }
 }

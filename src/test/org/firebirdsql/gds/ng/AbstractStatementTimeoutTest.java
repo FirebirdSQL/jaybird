@@ -19,12 +19,17 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -36,9 +41,8 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEqua
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Shared test for statement timeout (Firebird 4).
@@ -47,31 +51,29 @@ import static org.junit.Assume.assumeTrue;
  */
 public abstract class AbstractStatementTimeoutTest {
 
+    @RegisterExtension
+    @Order(1)
+    public static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsStatementTimeouts, "Requires statement timeout support")
+            .build();
+
+    @RegisterExtension
+    public static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
     protected final SimpleStatementListener listener = new SimpleStatementListener();
     protected FbDatabase db;
     private FbTransaction transaction;
     protected FbStatement statement;
     protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
-
     protected abstract Class<? extends FbDatabase> getExpectedDatabaseType();
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
         db = createDatabase();
-        assertEquals("Unexpected FbDatabase implementation", getExpectedDatabaseType(), db.getClass());
+        assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbDatabase implementation");
 
         db.attach();
-    }
-
-    @BeforeClass
-    public static void requireTimeoutSupport() {
-        assumeTrue("Requires statement timeout support", getDefaultSupportInfo().supportsStatementTimeouts());
     }
 
     protected abstract FbDatabase createDatabase() throws SQLException;
@@ -93,7 +95,7 @@ public abstract class AbstractStatementTimeoutTest {
         statement.fetchRows(1);
 
         final List<RowValue> rows = statementListener.getRows();
-        assertEquals("Expected no row", 2, rows.size());
+        assertEquals(2, rows.size(), "Expected no row");
     }
 
     @Test
@@ -109,12 +111,10 @@ public abstract class AbstractStatementTimeoutTest {
         // fbclient will delay execute until fetch for remote connections
         statement.fetchRows(1);
 
-        expectedException.expect(SQLTimeoutException.class);
-        expectedException.expect(errorCodeEquals(ISCConstants.isc_req_stmt_timeout));
-
         Thread.sleep(100);
 
-        statement.fetchRows(1);
+        SQLException exception = assertThrows(SQLTimeoutException.class, () -> statement.fetchRows(1));
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_req_stmt_timeout));
     }
 
     @Test
@@ -132,12 +132,8 @@ public abstract class AbstractStatementTimeoutTest {
 
         Thread.sleep(100);
 
-        try {
-            statement.fetchRows(1);
-            fail("expected timeout to occur");
-        } catch (SQLTimeoutException e) {
-            // ignore
-        }
+        SQLException exception = assertThrows(SQLTimeoutException.class, () -> statement.fetchRows(1));
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_req_stmt_timeout));
 
         statement.setTimeout(0);
         statementListener.clear();
@@ -173,15 +169,11 @@ public abstract class AbstractStatementTimeoutTest {
         statement2.addStatementListener(statementListener2);
         statement2.execute(RowValue.EMPTY_ROW_VALUE);
         statement2.fetchRows(1);
-        assertEquals("Expected no row", 1, statementListener2.getRows().size());
+        assertEquals(1, statementListener2.getRows().size(), "Expected no row");
         statement2.close();
 
-        try {
-            statement.fetchRows(1);
-            fail("expected timeout to occur");
-        } catch (SQLTimeoutException e) {
-            // ignore
-        }
+        SQLException exception = assertThrows(SQLTimeoutException.class, () -> statement.fetchRows(1));
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_req_stmt_timeout));
 
         statement.setTimeout(0);
         statementListener.clear();
@@ -190,7 +182,7 @@ public abstract class AbstractStatementTimeoutTest {
 
         statement.fetchRows(1);
         final List<RowValue> rows = statementListener.getRows();
-        assertEquals("Expected a row", 1, rows.size());
+        assertEquals(1, rows.size(), "Expected a row");
     }
 
     private FbTransaction getTransaction() throws SQLException {
@@ -211,7 +203,7 @@ public abstract class AbstractStatementTimeoutTest {
         statement = db.createStatement(transaction);
     }
 
-    @After
+    @AfterEach
     public final void tearDown() {
         if (statement != null) {
             try {

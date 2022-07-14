@@ -18,26 +18,24 @@
  */
 package org.firebirdsql.gds.ng.wire.version18;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version16.V16StatementTimeoutTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 public class V18StatementTimeoutTest extends V16StatementTimeoutTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(18);
 
-    public V18StatementTimeoutTest() {
-        this(new V18CommonConnectionInfo());
-    }
-
-    protected V18StatementTimeoutTest(V18CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    protected V18CommonConnectionInfo commonConnectionInfo() {
+        return new V18CommonConnectionInfo();
     }
 
 }

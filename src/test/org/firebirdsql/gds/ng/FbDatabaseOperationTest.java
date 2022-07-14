@@ -23,78 +23,81 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.OperationMonitorTest.OperationReport;
 import org.firebirdsql.gds.ng.OperationMonitorTest.TestOperationAware;
 import org.firebirdsql.gds.ng.monitor.Operation;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
 import java.util.List;
 
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FbDatabaseOperationTest {
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    @SuppressWarnings("deprecation")
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+@ExtendWith(MockitoExtension.class)
+class FbDatabaseOperationTest {
 
     private final TestOperationAware testOperationAware = new TestOperationAware();
     private final List<OperationReport> reportedOperations = testOperationAware.getReportedOperations();
-    private final FbDatabase fbDatabase = context.mock(FbDatabase.class);
+    @Mock
+    private FbDatabase fbDatabase;
 
-    @Before
-    public void initOperationMonitor() {
+    @BeforeEach
+    void initOperationMonitor() {
         OperationMonitor.initOperationAware(testOperationAware);
     }
 
-    @After
-    public void clearOperationMonitor() {
+    @AfterEach
+    void clearOperationMonitor() {
         OperationMonitor.initOperationAware(null);
     }
 
-    @AfterClass
-    public static void clearOperationMonitorAgain() {
+    @AfterAll
+    static void clearOperationMonitorAgain() {
         // paranoia: extra clear of OperationMonitor
         OperationMonitor.initOperationAware(null);
     }
 
     @Test
-    public void signalExecuteNotifiesExecuteStart() {
+    void signalExecuteNotifiesExecuteStart() {
         OperationCloseHandle handle = FbDatabaseOperation.signalExecute(fbDatabase);
-        assertEquals("reported operations", 1, reportedOperations.size());
+        assertEquals(1, reportedOperations.size(), "reported operations");
         assertOperationReport(reportedOperations.get(0), OperationReport.Type.START, Operation.Type.STATEMENT_EXECUTE,
                 handle);
     }
 
     @Test
-    public void signalFetchNotifiesFetchStart() {
+    void signalFetchNotifiesFetchStart() {
         OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
-        assertEquals("reported operations", 1, reportedOperations.size());
+        assertEquals(1, reportedOperations.size(), "reported operations");
         assertOperationReport(reportedOperations.get(0), OperationReport.Type.START, Operation.Type.STATEMENT_FETCH,
                 handle);
     }
 
     @Test
-    public void closeOfExecuteNotifiesExecuteEnd() {
+    void closeOfExecuteNotifiesExecuteEnd() {
         OperationCloseHandle handle = FbDatabaseOperation.signalExecute(fbDatabase);
         handle.close();
-        assertEquals("reported operations", 2, reportedOperations.size());
+        assertEquals(2, reportedOperations.size(), "reported operations");
         assertOperationReport(reportedOperations.get(1), OperationReport.Type.END, Operation.Type.STATEMENT_EXECUTE,
                 handle);
     }
 
     @Test
-    public void closeOfFetchNotifiesFetchEnd() {
+    void closeOfFetchNotifiesFetchEnd() {
         class CompletionHandler implements Runnable {
             boolean hasRun;
 
@@ -106,77 +109,59 @@ public class FbDatabaseOperationTest {
         CompletionHandler completionHandler = new CompletionHandler();
         OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, completionHandler);
         handle.close();
-        assertEquals("reported operations", 2, reportedOperations.size());
+        assertEquals(2, reportedOperations.size(), "reported operations");
         assertOperationReport(reportedOperations.get(1), OperationReport.Type.END, Operation.Type.STATEMENT_FETCH,
                 handle);
-        assertTrue("Expected completion handler to have been run", completionHandler.hasRun);
+        assertTrue(completionHandler.hasRun, "Expected completion handler to have been run");
     }
 
     @Test
-    public void unclosedExecuteAllowsCancellation() throws Exception {
+    void unclosedExecuteAllowsCancellation() throws Exception {
         FbDatabaseOperation.signalExecute(fbDatabase);
         Operation operation = reportedOperations.get(0).getOperation();
 
-        context.checking(new Expectations() {{
-            oneOf(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
-        }});
-
         operation.cancel();
+        verify(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
     @Test
-    public void unclosedFetchAllowsCancellation() throws Exception {
+    void unclosedFetchAllowsCancellation() throws Exception {
         FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
         Operation operation = reportedOperations.get(0).getOperation();
 
-        context.checking(new Expectations() {{
-            oneOf(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
-        }});
-
         operation.cancel();
+        verify(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
     @Test
-    public void closedExecuteDisallowsCancellation() throws Exception {
+    void closedExecuteDisallowsCancellation() throws Exception {
         OperationCloseHandle handle = FbDatabaseOperation.signalExecute(fbDatabase);
         Operation operation = reportedOperations.get(0).getOperation();
         handle.close();
 
-        context.checking(new Expectations() {{
-            never(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
-        }});
-
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class, operation::cancel);
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_operationClosed),
-                fbMessageStartsWith(JaybirdErrorCodes.jb_operationClosed, "cancel")
-        ));
-
-        operation.cancel();
+                fbMessageStartsWith(JaybirdErrorCodes.jb_operationClosed, "cancel")));
+        verify(fbDatabase, never()).cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
     @Test
-    public void closedFetchDisallowsCancellation() throws Exception {
+    void closedFetchDisallowsCancellation() throws Exception {
         OperationCloseHandle handle = FbDatabaseOperation.signalFetch(fbDatabase, () -> {});
         Operation operation = reportedOperations.get(0).getOperation();
         handle.close();
 
-        context.checking(new Expectations() {{
-            never(fbDatabase).cancelOperation(ISCConstants.fb_cancel_raise);
-        }});
-
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class, operation::cancel);
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_operationClosed),
-                fbMessageStartsWith(JaybirdErrorCodes.jb_operationClosed, "cancel")
-        ));
-
-        operation.cancel();
+                fbMessageStartsWith(JaybirdErrorCodes.jb_operationClosed, "cancel")));
+        verify(fbDatabase, never()).cancelOperation(ISCConstants.fb_cancel_raise);
     }
 
-    void assertOperationReport(OperationReport operationReport, OperationReport.Type reportType,
+    private void assertOperationReport(OperationReport operationReport, OperationReport.Type reportType,
             Operation.Type operationType, OperationCloseHandle handle) {
         OperationMonitorTest.assertOperationReport(operationReport, reportType, operationType);
-        assertEquals("operationReport.operation", handle, operationReport.getOperation());
+        assertEquals(handle, operationReport.getOperation(), "operationReport.operation");
     }
 }

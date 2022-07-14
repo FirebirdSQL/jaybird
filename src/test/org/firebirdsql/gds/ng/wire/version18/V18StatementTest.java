@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,7 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version18;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.CursorFlag;
 import org.firebirdsql.gds.ng.FbStatement;
@@ -27,8 +27,9 @@ import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.gds.ng.wire.version16.V16StatementTest;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,15 +44,17 @@ import java.util.stream.IntStream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.firebirdsql.gds.ISCConstants.INF_RECORD_COUNT;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link V18Statement} in the V18 protocol, reuses test for V16.
@@ -63,25 +66,20 @@ public class V18StatementTest extends V16StatementTest {
 
     protected static final String CURSOR_NAME = "SOME_CURSOR";
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(18);
 
-    public V18StatementTest() {
-        this(new V18CommonConnectionInfo());
-    }
-
-    protected V18StatementTest(V18CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
+    protected V18CommonConnectionInfo commonConnectionInfo() {
+        return new V18CommonConnectionInfo();
     }
 
     @Test
     public void testGetCursorInfo_notAllowedBeforeFetch() throws Exception {
         StatementInfo stmtInfo = prepareScrollTest(5);
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(errorCodeEquals(ISCConstants.isc_cursor_not_open));
-
-        stmtInfo.getCursorRecordCount();
+        SQLException exception = assertThrows(SQLException.class, stmtInfo::getCursorRecordCount);
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_cursor_not_open));
     }
 
     @Test
@@ -109,19 +107,19 @@ public class V18StatementTest extends V16StatementTest {
         statement.fetchScroll(FetchType.NEXT, 1, -1);
 
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.NEXT, 4, -1);
         stmtInfo.assertRowsReceived(4);
-        assertEquals("expected row 5", 5, stmtInfo.getInt(3, 0));
+        assertEquals(5, stmtInfo.getInt(3, 0), "expected row 5");
         stmtInfo.clearReceivedRows();
 
-        assertNotEquals("expected after last not yet signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not yet signalled");
 
         statement.fetchScroll(FetchType.NEXT, 1, -1);
         stmtInfo.assertRowsReceived(0);
-        assertEquals("expected after last signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last signalled");
     }
 
     @Test
@@ -133,13 +131,13 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.PRIOR, 1, -1);
         stmtInfo.assertRowsReceived(0);
-        assertEquals("expected before first signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
+        assertEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first signalled");
 
         statement.fetchScroll(FetchType.NEXT, 1, -1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
         // NOTE: This partially tests SimpleStatementListener
-        assertEquals("expected before first no longer signalled", Boolean.FALSE, stmtInfo.isBeforeFirst());
-        assertEquals("expected after last not signalled", Boolean.FALSE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.FALSE, stmtInfo.isBeforeFirst(), "expected before first no longer signalled");
+        assertEquals(Boolean.FALSE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     @Test
@@ -148,7 +146,7 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.NEXT, 5, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
     }
 
     @Test
@@ -157,22 +155,22 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.ABSOLUTE, -1, 5);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 5", 5, stmtInfo.getInt(0, 0));
+        assertEquals(5, stmtInfo.getInt(0, 0), "expected row 5");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.PRIOR, 3, -1);
         stmtInfo.assertRowsReceived(3);
         assertEquals(Arrays.asList(4, 3, 2), stmtInfo.extractRows(rowValue -> stmtInfo.extractInt(rowValue, 0)));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.PRIOR, 2, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
 
-        assertEquals("expected before first signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     @Test
@@ -180,14 +178,14 @@ public class V18StatementTest extends V16StatementTest {
         StatementInfo stmtInfo = prepareScrollTest(5);
 
         statement.fetchScroll(FetchType.NEXT, 6, -1);
-        assertEquals("expected after last fetched signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last fetched signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.PRIOR, 1, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 5", 5, stmtInfo.getInt(0, 0));
+        assertEquals(5, stmtInfo.getInt(0, 0), "expected row 5");
         // NOTE: Technically tests SimpleStatementListener
-        assertEquals("expected after last no longer signalled", Boolean.FALSE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.FALSE, stmtInfo.isAfterLast(), "expected after last no longer signalled");
     }
 
     @Test
@@ -199,7 +197,7 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.PRIOR, 5, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 5", 5, stmtInfo.getInt(0, 0));
+        assertEquals(5, stmtInfo.getInt(0, 0), "expected row 5");
     }
 
     // TODO Consider splitting this in multiple tests
@@ -209,28 +207,28 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.ABSOLUTE, -1, 3);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 3", 3, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(3, stmtInfo.getInt(0, 0), "expected row 3");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.ABSOLUTE, -1, 6);
         stmtInfo.assertRowsReceived(0);
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertEquals("expected after last signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last signalled");
 
         // Negative absolute positions are calculated from end of cursor
         statement.fetchScroll(FetchType.ABSOLUTE, -1, -5);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.ABSOLUTE, -1, 0);
         stmtInfo.assertRowsReceived(0);
-        assertEquals("expected before first signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     // TODO Consider splitting this in multiple tests
@@ -243,27 +241,27 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.RELATIVE, -1, 1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 4", 4, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(4, stmtInfo.getInt(0, 0), "expected row 4");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.RELATIVE, -1, -3);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.RELATIVE, -1, -1);
         stmtInfo.assertRowsReceived(0);
-        assertEquals("expected before first signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
 
         statement.fetchScroll(FetchType.RELATIVE, -1, 6);
         stmtInfo.assertRowsReceived(0);
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertEquals("expected after last signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last signalled");
     }
 
     @Test
@@ -274,13 +272,13 @@ public class V18StatementTest extends V16StatementTest {
         stmtInfo.assertRowsReceived(0);
 
         int recordCount = stmtInfo.getCursorRecordCount();
-        assertEquals("unexpected record count", 5, recordCount);
+        assertEquals(5, recordCount, "unexpected record count");
 
         statement.fetchScroll(FetchType.RELATIVE, -1, 1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     @Test
@@ -289,9 +287,9 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.FIRST, -1, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 1", 1, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(1, stmtInfo.getInt(0, 0), "expected row 1");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     @Test
@@ -300,8 +298,8 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.FIRST, -1, -1);
         stmtInfo.assertRowsReceived(0);
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertEquals("expected after last signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last signalled");
     }
 
     @Test
@@ -310,9 +308,9 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.LAST, -1, -1);
         stmtInfo.assertRowsReceived(1);
-        assertEquals("expected row 5", 5, stmtInfo.getInt(0, 0));
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertNotEquals("expected after last not signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertEquals(5, stmtInfo.getInt(0, 0), "expected row 5");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertNotEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last not signalled");
     }
 
     @Test
@@ -321,8 +319,8 @@ public class V18StatementTest extends V16StatementTest {
 
         statement.fetchScroll(FetchType.LAST, -1, -1);
         stmtInfo.assertRowsReceived(0);
-        assertNotEquals("expected before first not signalled", Boolean.TRUE, stmtInfo.isBeforeFirst());
-        assertEquals("expected after last signalled", Boolean.TRUE, stmtInfo.isAfterLast());
+        assertNotEquals(Boolean.TRUE, stmtInfo.isBeforeFirst(), "expected before first not signalled");
+        assertEquals(Boolean.TRUE, stmtInfo.isAfterLast(), "expected after last signalled");
     }
 
     // TODO Check if other tests cover this and remove
@@ -336,7 +334,7 @@ public class V18StatementTest extends V16StatementTest {
         stmtInfo.clearReceivedRows();
 
         int recordCount = stmtInfo.getCursorRecordCount();
-        assertEquals("unexpected record count", 500, recordCount);
+        assertEquals(500, recordCount, "unexpected record count");
 
         statement.fetchScroll(FetchType.RELATIVE, 1, -1);
         stmtInfo.assertRowsReceived(1);
@@ -364,7 +362,7 @@ public class V18StatementTest extends V16StatementTest {
         stmtInfo.clearReceivedRows();
 
         statement.fetchScroll(FetchType.PRIOR, 2, 1);
-        assertEquals("expected 1 row", 2, stmtInfo.receivedRowsSize());
+        assertEquals(2, stmtInfo.receivedRowsSize(), "expected 1 row");
         assertEquals(Arrays.asList(9, 8), stmtInfo.extractRows(rowValue -> stmtInfo.extractInt(rowValue, 0)));
         stmtInfo.clearReceivedRows();
 
@@ -448,6 +446,7 @@ public class V18StatementTest extends V16StatementTest {
      * @param numberOfRecords Number of records to generate
      * @param scrollTestFeatures configuration for test
      */
+    @SuppressWarnings("SameParameterValue")
     protected StatementInfo prepareScrollTest(int numberOfRecords, ScrollTestFeature... scrollTestFeatures) throws SQLException {
         EnumSet<ScrollTestFeature> features = EnumSet.noneOf(ScrollTestFeature.class);
         features.addAll(Arrays.asList(scrollTestFeatures));
@@ -480,7 +479,7 @@ public class V18StatementTest extends V16StatementTest {
 
     private void setupTableForScrollTest(int numberOfRecords) throws SQLException {
         try (Connection connection = getConnectionViaDriverManager()) {
-            DdlHelper.executeDDL(connection, "create table scrolltest (id integer primary key)");
+            DdlHelper.executeDDL(connection, "recreate table scrolltest (id integer primary key)");
             if (numberOfRecords <= 0) return;
             try (PreparedStatement pstmt = connection.prepareStatement(
                     // @formatter:off
@@ -528,7 +527,7 @@ public class V18StatementTest extends V16StatementTest {
         }
 
         public void assertRowsReceived(int expectedRowCount) {
-            assertEquals(format("expected %d rows", expectedRowCount), expectedRowCount, receivedRowsSize());
+            assertEquals(expectedRowCount, receivedRowsSize(), () -> format("expected %d rows", expectedRowCount));
         }
 
         public void clearReceivedRows() {

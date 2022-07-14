@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,16 +18,21 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for behaviour surrounding autocommit.
@@ -41,74 +44,65 @@ import static org.junit.Assume.assumeThat;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class AutoCommitBehaviourTest extends FBJUnit4TestBase {
+class AutoCommitBehaviourTest {
 
     private static final String CREATE_ID_TABLE = "CREATE TABLE ID_TABLE (ID INTEGER PRIMARY KEY)";
     private static final String INSERT_ID_TABLE = "INSERT INTO ID_TABLE (ID) VALUES (?)";
     private static final String SELECT_ALL_ID_TABLE = "SELECT ID FROM ID_TABLE";
     private static final int MAX_ID = 50;
 
-    @Before
-    public void setUp() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            Statement stmt = connection.createStatement();
-            stmt.execute(CREATE_ID_TABLE);
-            stmt.close();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_ID_TABLE);
 
-            connection.setAutoCommit(false);
-            PreparedStatement pstmt = connection.prepareStatement(INSERT_ID_TABLE);
-            try {
-                for (int idValue = 1; idValue <= MAX_ID; idValue++) {
-                    pstmt.setInt(1, idValue);
-                    pstmt.addBatch();
-                }
-                pstmt.executeBatch();
-                connection.commit();
-            } catch (Exception ex) {
-                connection.rollback();
-            } finally {
-                pstmt.close();
+    private Connection connection;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        connection = getConnectionViaDriverManager();
+        connection.setAutoCommit(false);
+        try (Statement stmt = connection.createStatement();
+             PreparedStatement pstmt = connection.prepareStatement(INSERT_ID_TABLE)) {
+            stmt.execute("delete from ID_TABLE");
+            for (int idValue = 1; idValue <= MAX_ID; idValue++) {
+                pstmt.setInt(1, idValue);
+                pstmt.execute();
             }
         } finally {
-            connection.close();
+            connection.setAutoCommit(true);
         }
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        connection.close();
     }
 
     /**
      * Executing another statement in autocommit should close any previously opened result set if it isn't holdable.
      */
     @Test
-    public void testDifferentStatementExecution_ClosesResultSet() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
-        try {
-            // Check actual holdability, for example OOConnection forces HOLD_CURSORS_OVER_COMMIT always
-            assumeThat("Test requires ResultSet.CLOSE_CURSORS_AT_COMMIT", connection.getHoldability(),
-                    is(ResultSet.CLOSE_CURSORS_AT_COMMIT));
+    void testDifferentStatementExecution_ClosesResultSet() throws Exception {
+        // Check actual holdability, for example OOConnection forces HOLD_CURSORS_OVER_COMMIT always
+        assumeThat("Test requires ResultSet.CLOSE_CURSORS_AT_COMMIT", connection.getHoldability(),
+                is(ResultSet.CLOSE_CURSORS_AT_COMMIT));
 
-            Statement stmt1 = connection.createStatement();
-            Statement stmt2 = connection.createStatement();
+        Statement stmt1 = connection.createStatement();
+        Statement stmt2 = connection.createStatement();
 
-            ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
-            assertTrue("Expected a row", rs1.next());
-            assertFalse("Expected rs1 open", rs1.isClosed());
+        ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
+        assertTrue(rs1.next(), "Expected a row");
+        assertFalse(rs1.isClosed(), "Expected rs1 open");
 
-            ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
 
-            assertTrue("Expected rs1 closed", rs1.isClosed());
+        assertTrue(rs1.isClosed(), "Expected rs1 closed");
 
-            try {
-                rs1.next();
-                fail("Expected exception on rs1.next()");
-            } catch (SQLException ex) {
-                assertEquals("The result set is closed", ex.getMessage());
-            }
+        SQLException exception = assertThrows(SQLException.class, rs1::next, "Expected exception on rs1.next()");
+        assertThat(exception, message(equalTo("The result set is closed")));
 
-            for (int count = 1; count <= MAX_ID; count++) {
-                assertTrue("Expected true for rs2.next() nr " + count, rs2.next());
-            }
-        } finally {
-            connection.close();
+        for (int count = 1; count <= MAX_ID; count++) {
+            assertTrue(rs2.next(), "Expected true for rs2.next() nr " + count);
         }
     }
 
@@ -116,31 +110,25 @@ public class AutoCommitBehaviourTest extends FBJUnit4TestBase {
      * Executing another statement in autocommit and the result set is holdable should keep it open.
      */
     @Test
-    public void testHoldableDifferentStatementExecution_ResultSetRemainsOpen() throws Exception {
-        Connection connection = getConnectionViaDriverManager();
+    void testHoldableDifferentStatementExecution_ResultSetRemainsOpen() throws Exception {
+        connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        Statement stmt1 = connection.createStatement();
+        Statement stmt2 = connection.createStatement();
 
-        try {
-            connection.setHoldability(ResultSet.HOLD_CURSORS_OVER_COMMIT);
-            Statement stmt1 = connection.createStatement();
-            Statement stmt2 = connection.createStatement();
+        ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
+        assertTrue(rs1.next(), "Expected a row");
+        assertFalse(rs1.isClosed(), "Expected rs1 open");
 
-            ResultSet rs1 = stmt1.executeQuery(SELECT_ALL_ID_TABLE);
-            assertTrue("Expected a row", rs1.next());
-            assertFalse("Expected rs1 open", rs1.isClosed());
+        ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
 
-            ResultSet rs2 = stmt2.executeQuery(SELECT_ALL_ID_TABLE);
+        assertFalse(rs1.isClosed(), "Expected rs1 open");
 
-            assertFalse("Expected rs1 open", rs1.isClosed());
+        for (int count = 2; count <= MAX_ID; count++) {
+            assertTrue(rs1.next(), "Expected true for rs1.next() nr " + count);
+        }
 
-            for (int count = 2; count <= MAX_ID; count++) {
-                assertTrue("Expected true for rs1.next() nr " + count, rs1.next());
-            }
-
-            for (int count = 1; count <= MAX_ID; count++) {
-                assertTrue("Expected true for rs2.next() nr " + count, rs2.next());
-            }
-        } finally {
-            connection.close();
+        for (int count = 1; count <= MAX_ID; count++) {
+            assertTrue(rs2.next(), "Expected true for rs2.next() nr " + count);
         }
     }
 }

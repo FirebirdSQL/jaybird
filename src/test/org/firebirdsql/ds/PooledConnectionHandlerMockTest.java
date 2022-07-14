@@ -24,135 +24,98 @@ import java.sql.SQLException;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.FirebirdConnection;
-import org.jmock.Expectations;
-import org.jmock.Sequence;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.lib.concurrent.Synchroniser;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link PooledConnectionHandler} using jMock.
+ * Tests for {@link PooledConnectionHandler} using mocks.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class PooledConnectionHandlerMockTest {
+@ExtendWith(MockitoExtension.class)
+class PooledConnectionHandlerMockTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    {
-        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-        context.setThreadingPolicy(new Synchroniser());
-    }
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @Mock
+    private FirebirdConnection physicalConnection;
+    @Mock
+    private FBPooledConnection pooled;
+    @InjectMocks
+    private PooledConnectionHandler handler;
 
     /**
-     * The isClosed() method of PooledConnectionHandler and its proxy should
-     * report <code>true</code> after handler close.
-     * 
-     * @throws SQLException
+     * The isClosed() method of PooledConnectionHandler and its proxy should report {@code true} after handler close.
      */
     @Test
-    public void testHandlerClose_IsClosed() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-            }
-        });
+    void testHandlerClose_IsClosed() throws SQLException {
+        setupConnectionHandleRelease();
 
         Connection proxy = handler.getProxy();
         handler.close();
-        assertTrue("Closed handler should report isClosed() true", handler.isClosed());
-        assertTrue("Proxy of closed handler should report isClosed() true", proxy.isClosed());
+        assertTrue(handler.isClosed(), "Closed handler should report isClosed() true");
+        assertTrue(proxy.isClosed(), "Proxy of closed handler should report isClosed() true");
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
     }
 
     /**
-     * The isClosed() method of PooledConnectionHandler and its proxy should
-     * report <code>true</code> after proxy close.
-     * 
-     * @throws SQLException
+     * The isClosed() method of PooledConnectionHandler and its proxy should report {@code true} after proxy close.
      */
     @Test
-    public void testProxyClose_IsClosed() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-                allowing(pooled).fireConnectionClosed();
-            }
-        });
+    void testProxyClose_IsClosed() throws SQLException {
+        setupConnectionHandleRelease();
 
         Connection proxy = handler.getProxy();
         proxy.close();
-        assertTrue("Handler of closed proxy should report isClosed() true", handler.isClosed());
-        assertTrue("Closed proxy should report isClosed() true", proxy.isClosed());
+        assertTrue(handler.isClosed(), "Handler of closed proxy should report isClosed() true");
+        assertTrue(proxy.isClosed(), "Closed proxy should report isClosed() true");
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
+        verify(pooled).fireConnectionClosed();
     }
 
     /**
-     * Closing the PooledConnectionHandler should not notify the owner and not
-     * close the physical connection.
-     * 
-     * @throws SQLException
+     * Closing the PooledConnectionHandler should not notify the owner and not close the physical connection.
      */
     @Test
-    public void testHandlerClose_NoNotify() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-                never(physicalConnection).close();
-                never(pooled).fireConnectionClosed();
-            }
-        });
+    void testHandlerClose_NoNotify() throws SQLException {
+        setupConnectionHandleRelease();
 
         handler.close();
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
+        verify(physicalConnection, never()).close();
+        verify(pooled, never()).fireConnectionClosed();
     }
 
     /**
-     * Closing the Proxy of the PooledConnectionHandler should notify the owner
-     * but not close the physical connection.
-     * 
-     * @throws SQLException
+     * Closing the Proxy of the PooledConnectionHandler should notify the owner but not close the physical connection.
      */
     @Test
-    public void testProxyClose_Notify() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-                never(physicalConnection).close();
-                oneOf(pooled).fireConnectionClosed();
-            }
-        });
+    void testProxyClose_Notify() throws SQLException {
+        setupConnectionHandleRelease();
 
         handler.getProxy().close();
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
+        verify(physicalConnection, never()).close();
+        verify(pooled).fireConnectionClosed();
     }
 
     /**
@@ -160,172 +123,101 @@ public class PooledConnectionHandlerMockTest {
      * that was closed by closing the handler should throw an SQLException
      * mentioning the connection was forcibly closed; the owner should not be
      * notified of the exception.
-     * 
+     *
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosedHandler_throwsException() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-                allowing(pooled).fireConnectionClosed();
-                never(pooled).fireConnectionError(with(any(SQLException.class)));
-            }
-        });
+    void testClosedHandler_throwsException() throws SQLException {
+        setupConnectionHandleRelease();
 
         Connection proxy = handler.getProxy();
         handler.close();
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
+        verify(pooled, atMostOnce()).fireConnectionClosed();
 
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(PooledConnectionHandler.FORCIBLY_CLOSED_MESSAGE);
-
-        proxy.clearWarnings();
+        SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
+        assertThat(exception, message(equalTo(PooledConnectionHandler.FORCIBLY_CLOSED_MESSAGE)));
+        verify(pooled, never()).fireConnectionError(any(SQLException.class));
     }
 
     /**
      * Calling any Connection method (except isClosed() and close()) on a proxy
      * that was closed itself should throw an SQLException mentioning the
      * connection was closed; the owner should not be notified of the exception.
-     * 
+     *
      * TODO: Consider testing for all Connection methods
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testClosedProxy_throwsException() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
+    void testClosedProxy_throwsException() throws SQLException {
+        setupConnectionHandleRelease();
 
-        context.checking(new Expectations() {
-            {
-                connectionHandleReleaseExpectations(this, physicalConnection);
-                allowing(pooled).releaseConnectionHandler(handler);
-                allowing(pooled).fireConnectionClosed();
-                never(pooled).fireConnectionError(with(any(SQLException.class)));
-            }
-        });
+        Connection proxy = handler.getProxy();
+        proxy.close();
+        verifyConnectionHandleRelease();
+        verify(pooled).releaseConnectionHandler(handler);
+        verify(pooled, atMostOnce()).fireConnectionClosed();
+
+        SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
+        assertThat(exception, message(equalTo(PooledConnectionHandler.CLOSED_MESSAGE)));
+        verify(pooled, never()).fireConnectionError(any(SQLException.class));
+    }
+
+    /**
+     * Calling a Connection method on an open proxy should notify the owner of the occurrence of an exception.
+     */
+    @Test
+    void testException_Notify() throws SQLException {
+        SQLException sqle = new FBSQLException("Mock Exception");
+
+        Connection proxy = handler.getProxy();
+        doThrow(sqle).when(physicalConnection).clearWarnings();
+
+        SQLException exception = assertThrows(SQLException.class, proxy::clearWarnings);
+        assertSame(sqle, exception);
+        verify(pooled).fireConnectionError(sqle);
+    }
+
+    /**
+     * Closing a proxy should roll back the physical connection if not in auto-commit.
+     */
+    @Test
+    void testCloseNotAutoCommit_rollback() throws SQLException {
+        when(physicalConnection.getAutoCommit()).thenReturn(false);
 
         Connection proxy = handler.getProxy();
         proxy.close();
 
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(PooledConnectionHandler.CLOSED_MESSAGE);
-
-        proxy.clearWarnings();
-    }
-
-    /**
-     * Calling a Connection method on an open proxy should notify the owner of
-     * the occurrence of an exception.
-     * 
-     * @throws SQLException
-     */
-    @Test
-    public void testException_Notify() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-        final Sequence exceptionSequence = context.sequence("exceptionSequence");
-
-        context.checking(new Expectations() {
-            {
-                SQLException sqle = new FBSQLException("Mock Exception");
-                oneOf(physicalConnection).clearWarnings();
-                will(throwException(sqle));
-                inSequence(exceptionSequence);
-                oneOf(pooled).fireConnectionError(sqle);
-                inSequence(exceptionSequence);
-
-            }
-        });
-
-        Connection proxy = handler.getProxy();
-
-        expectedException.expect(SQLException.class);
-
-        proxy.clearWarnings();
-    }
-
-    /**
-     * Closing a proxy should rollback the physical connection if not in
-     * auto-commit.
-     * 
-     * @throws SQLException
-     */
-    @Test
-    public void testCloseNotAutoCommit_rollback() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-        final Sequence closeSequence = context.sequence("closeSequence");
-
-        context.checking(new Expectations() {
-            {
-                oneOf(physicalConnection).getAutoCommit();
-                will(returnValue(false));
-                inSequence(closeSequence);
-                oneOf(physicalConnection).rollback();
-                inSequence(closeSequence);
-                allowing(physicalConnection).clearWarnings();
-                allowing(pooled);
-            }
-        });
-
-        Connection proxy = handler.getProxy();
-        proxy.close();
+        verify(physicalConnection).rollback();
+        verify(physicalConnection, atMostOnce()).clearWarnings();
     }
 
     /**
      * Calling close() on a closed proxy should not throw an exception.
-     * 
-     * @throws SQLException
      */
     @Test
-    public void testDoubleClose_allowed() throws SQLException {
-        final FirebirdConnection physicalConnection = context.mock(FirebirdConnection.class);
-        final FBPooledConnection pooled = context.mock(FBPooledConnection.class);
-        final PooledConnectionHandler handler = new PooledConnectionHandler(physicalConnection,
-                pooled);
-
-        context.checking(new Expectations() {
-            {
-                ignoring(physicalConnection);
-                ignoring(pooled);
-            }
-        });
-
+    void testDoubleClose_allowed() throws SQLException {
         Connection proxy = handler.getProxy();
         proxy.close();
         // Expectation: no exception for double close
-        proxy.close();
+        assertDoesNotThrow(proxy::close);
     }
 
-    private void connectionHandleReleaseExpectations(Expectations expectations, FirebirdConnection physicalConnection)
-            throws SQLException {
-        expectations.allowing(physicalConnection).getAutoCommit();
-        expectations.will(Expectations.returnValue(true));
-        expectations.allowing(physicalConnection).isWrapperFor(FirebirdConnection.class);
-        expectations.will(Expectations.returnValue(true));
-        expectations.allowing(physicalConnection).unwrap(FirebirdConnection.class);
-        expectations.will(Expectations.returnValue(physicalConnection));
-        expectations.allowing(physicalConnection).isUseFirebirdAutoCommit();
-        expectations.will(Expectations.returnValue(FBTestProperties.USE_FIREBIRD_AUTOCOMMIT));
+    private void setupConnectionHandleRelease() throws SQLException {
+        lenient().when(physicalConnection.getAutoCommit()).thenReturn(true);
+        lenient().when(physicalConnection.isWrapperFor(FirebirdConnection.class)).thenReturn(true);
+        lenient().when(physicalConnection.unwrap(FirebirdConnection.class)).thenReturn(physicalConnection);
+        lenient().when(physicalConnection.isUseFirebirdAutoCommit())
+                .thenReturn(FBTestProperties.USE_FIREBIRD_AUTOCOMMIT);
+    }
+
+    private void verifyConnectionHandleRelease() throws SQLException {
         if (FBTestProperties.USE_FIREBIRD_AUTOCOMMIT) {
-            expectations.oneOf(physicalConnection).setAutoCommit(false);
-            expectations.oneOf(physicalConnection).setAutoCommit(true);
+            InOrder inOrder = inOrder(physicalConnection);
+            inOrder.verify(physicalConnection).setAutoCommit(true);
+            inOrder.verify(physicalConnection).setAutoCommit(false);
         }
-        expectations.allowing(physicalConnection).clearWarnings();
+
+        verify(physicalConnection).clearWarnings();
     }
 }

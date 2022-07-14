@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,19 +18,23 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
 import java.util.Properties;
 
+import static java.lang.String.format;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for "use Firebird autocommit" mode.
@@ -38,57 +42,31 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
-public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
+class UseFirebirdAutocommitTest {
 
-    /**
-     * Tests if the connection property {@code useFirebirdAutocommit} defaults to {@code false} if not set.
-     */
-    @Test
-    public void connectionPropertyUseFirebirdAutocommit_notSpecified() throws Exception {
-        String url = FBTestProperties.getUrl() + "?encoding=NONE";
-        checkFirebirdAutocommitValue(url, false);
-    }
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    /**
-     * Tests if the connection property {@code useFirebirdAutocommit} is set to {@code false} if URL value is false.
-     */
-    @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromUrl_valueFalse() throws Exception {
-        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit=false";
-        checkFirebirdAutocommitValue(url, false);
-    }
-
-    /**
-     * Tests if the connection property {@code useFirebirdAutocommit} is set to {@code true} from the URL without a value.
-     */
-    @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromUrl_noValue() throws Exception {
-        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit";
-        checkFirebirdAutocommitValue(url, true);
-    }
-
-    /**
-     * Tests if the connection property {@code useFirebirdAutocommit} is set to {@code true} from the URL with
-     * value {@code true}.
-     */
-    @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromUrl_valueTrue() throws Exception {
-        String url = FBTestProperties.getUrl() + "?encoding=NONE&useFirebirdAutocommit=true";
-        checkFirebirdAutocommitValue(url, true);
-    }
-
-    private void checkFirebirdAutocommitValue(String url, boolean expectedUseFirebirdAutocommit) throws SQLException {
+    @ParameterizedTest
+    @CsvSource({
+            "?encoding=NONE,                             false",
+            "?encoding=NONE&useFirebirdAutocommit=false, false",
+            "?encoding=NONE&useFirebirdAutocommit,       true",
+            "?encoding=NONE&useFirebirdAutocommit=true,  true"
+    })
+    void checkFirebirdAutocommitValue(String properties, boolean expectedUseFirebirdAutocommit) throws SQLException {
+        String url = FBTestProperties.getUrl() + properties;
         try (FBConnection connection = (FBConnection) DriverManager.getConnection(url, FBTestProperties.DB_USER,
                 FBTestProperties.DB_PASSWORD)) {
             FBManagedConnectionFactory managedConnectionFactory = connection
                     .getManagedConnection().getManagedConnectionFactory();
-            assertEquals("useFirebirdAutocommit",
-                    expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit());
+            assertEquals(expectedUseFirebirdAutocommit, managedConnectionFactory.isUseFirebirdAutocommit(),
+                    "useFirebirdAutocommit");
         }
     }
 
     @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueFalse() throws Exception {
+    void connectionPropertyUseFirebirdAutocommit_fromProperties_valueFalse() throws Exception {
         Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "false");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
@@ -98,7 +76,7 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueTrue() throws Exception {
+    void connectionPropertyUseFirebirdAutocommit_fromProperties_valueTrue() throws Exception {
         Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "true");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
@@ -108,7 +86,7 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void connectionPropertyUseFirebirdAutocommit_fromProperties_valueEmpty() throws Exception {
+    void connectionPropertyUseFirebirdAutocommit_fromProperties_valueEmpty() throws Exception {
         Properties properties = FBTestProperties.getDefaultPropertiesForConnection();
         properties.put("useFirebirdAutocommit", "");
         try (FirebirdConnection connection = (FirebirdConnection) DriverManager.getConnection(FBTestProperties.getUrl(),
@@ -125,17 +103,17 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void testResultSetClosedOnOtherStatementExecute() throws Exception {
+    void testResultSetClosedOnOtherStatementExecute() throws Exception {
         try (FirebirdConnection connection = getFirebirdAutocommitConnection()) {
             Statement stmt1 = connection.createStatement();
             Statement stmt2 = connection.createStatement();
 
             ResultSet rs1 = stmt1.executeQuery("select * from rdb$database");
-            assertFalse("Expected open result set from stmt1", rs1.isClosed());
+            assertFalse(rs1.isClosed(), "Expected open result set from stmt1");
 
             ResultSet rs2 = stmt2.executeQuery("select * from rdb$database");
-            assertTrue("Expected closed result set from stmt1", rs1.isClosed());
-            assertFalse("Expected open result set from stmt2", rs2.isClosed());
+            assertTrue(rs1.isClosed(), "Expected closed result set from stmt1");
+            assertFalse(rs2.isClosed(), "Expected open result set from stmt2");
         }
     }
 
@@ -147,7 +125,7 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
      * </p>
      */
     @Test
-    public void firebirdAutoCommitCommitsDuringExecution() throws Exception {
+    void firebirdAutoCommitCommitsDuringExecution() throws Exception {
         try (final Connection normalConnection = FBTestProperties.getConnectionViaDriverManager()) {
             class VerifyInsert {
                 final PreparedStatement verifyInsert;
@@ -168,11 +146,11 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
 
                 void checkCurrentCountLargerThanPrevious() throws SQLException {
                     count = getCurrentCount();
-                    // Firebird seems to prefetch occasionally, this might give spurious failures so we do
-                    // a more convoluted check then simply count > previousCount
+                    // Firebird seems to prefetch occasionally, this might give spurious failures, so we do
+                    // a more convoluted check than simply count > previousCount
                     // this also prevents an additional check at the limit of the SP
-                    assertTrue(String.format("%d + 1 should be larger than %d", count, previousCount),
-                            count > 0 && count + 1 > previousCount);
+                    assertTrue(count > 0 && count + 1 > previousCount,
+                            () -> format("%d + 1 should be larger than %d", count, previousCount));
                     previousCount = count;
                 }
             }
@@ -198,7 +176,7 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
             normalConnection.commit();
 
             try (FirebirdConnection fbAutocommitConnection = getFirebirdAutocommitConnection()) {
-                assertTrue("Test should be in Firebird autocommit", fbAutocommitConnection.isUseFirebirdAutoCommit());
+                assertTrue(fbAutocommitConnection.isUseFirebirdAutoCommit(), "Test should be in Firebird autocommit");
                 VerifyInsert verifyInsert = new VerifyInsert();
                 Statement selectInsert = fbAutocommitConnection.createStatement();
                 selectInsert.setFetchSize(1);
@@ -209,7 +187,7 @@ public class UseFirebirdAutocommitTest extends FBJUnit4TestBase {
                     verifyInsert.checkCurrentCountLargerThanPrevious();
                 }
 
-                assertEquals("Unexpected nr of items", 100, verifyInsert.getCurrentCount());
+                assertEquals(100, verifyInsert.getCurrentCount(), "Unexpected nr of items");
             }
         }
     }

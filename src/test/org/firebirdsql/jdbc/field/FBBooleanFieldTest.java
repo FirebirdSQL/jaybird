@@ -20,25 +20,25 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for boolean fields. Note that boolean fields are only supported in Firebird 3.0 or higher.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBBooleanFieldTest extends BaseJUnit4TestFBField<FBBooleanField, Boolean> {
+class FBBooleanFieldTest extends BaseJUnit5TestFBField<FBBooleanField, Boolean> {
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception{
+    void setUp() throws Exception{
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_BOOLEAN);
@@ -48,400 +48,400 @@ public class FBBooleanFieldTest extends BaseJUnit4TestFBField<FBBooleanField, Bo
 
     @Test
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getBigDecimal",  BigDecimal.ONE, field.getBigDecimal());
+        assertEquals(BigDecimal.ONE, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getObject(BigDecimal.class)",
-                BigDecimal.ONE, field.getObject(BigDecimal.class));
+        assertEquals(BigDecimal.ONE, field.getObject(BigDecimal.class),
+                "Unexpected value for getObject(BigDecimal.class)");
     }
 
     @Test
-    public void getBigDecimalNonNull_false() throws SQLException {
+    void getBigDecimalNonNull_false() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getBigDecimal",  BigDecimal.ZERO, field.getBigDecimal());
+        assertEquals( BigDecimal.ZERO, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setBigDecimalNonNull() throws SQLException {
         field.setBigDecimal(BigDecimal.ZERO);
+
+        verifySetBoolean(false);
     }
 
     @Test
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getBigDecimal", BigDecimal.ONE, field.getBigDecimal(1));
+        assertEquals(BigDecimal.ONE, field.getBigDecimal(1), "Unexpected value for getBigDecimal");
     }
 
     @Test
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertTrue("Unexpected value for getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertTrue("Unexpected value for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Unexpected value for getObject(Boolean.class)");
     }
 
     @Test
-    public void getBooleanNonNull_false() throws SQLException {
+    void getBooleanNonNull_false() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertFalse("Unexpected value for getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getBooleanNull() throws SQLException {
+    void getBooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertFalse("Unexpected value for getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Unexpected value for getBoolean");
     }
 
     @Test
-    public void getObject_BooleanNull() throws SQLException {
+    void getObject_BooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertNull(field.getObject(Boolean.class), "Expected null for getObject(Boolean.class)");
     }
 
     @Test
     @Override
-    public void setBoolean() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setBoolean() throws SQLException {
         field.setBoolean(true);
+
+        verifySetBoolean(true);
     }
 
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getByte", 0, field.getByte());
+        assertEquals(0, field.getByte(), "Unexpected value for getByte");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getObject(Byte.class)", 1, (byte) field.getObject(Byte.class));
+        assertEquals(1, (byte) field.getObject(Byte.class), "Unexpected value for getObject(Byte.class)");
     }
 
     @Test
     @Override
-    public void setByte() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setByte() throws SQLException {
         field.setByte((byte) 127);
+
+        verifySetBoolean(true);
     }
 
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getDouble", 1.0, field.getDouble(), 0.0);
+        assertEquals(1.0, field.getDouble(), 0.0, "Unexpected value for getDouble");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getObject(Double.class)", 1.0, field.getObject(Double.class), 0.0);
+        assertEquals(1.0, field.getObject(Double.class), 0.0, "Unexpected value for getObject(Double.class)");
     }
 
     @Test
     @Override
-    public void setDouble() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setDouble() throws SQLException {
         field.setDouble(0.0);
+
+        verifySetBoolean(false);
     }
 
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getFloat", 0.0, field.getFloat(), 0.0);
+        assertEquals(0.0, field.getFloat(), 0.0, "Unexpected value for getFloat");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getObject(Float.class)", 0.0, field.getObject(Float.class), 0.0);
+        assertEquals(0.0, field.getObject(Float.class), 0.0, "Unexpected value for getObject(Float.class)");
     }
 
     @Test
     @Override
-    public void setFloat() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setFloat() throws SQLException {
         field.setFloat(Float.MIN_VALUE);
+
+        verifySetBoolean(true);
     }
 
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getInt", 1, field.getInt());
+        assertEquals(1, field.getInt(), "Unexpected value for getInt");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getInt", 1, (int) field.getObject(Integer.class));
+        assertEquals(1, (int) field.getObject(Integer.class), "Unexpected value for getInt");
     }
 
     @Test
     @Override
-    public void setInteger() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setInteger() throws SQLException {
         field.setInteger(0);
+
+        verifySetBoolean(false);
     }
 
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getLong", 0L, field.getLong());
+        assertEquals(0L, field.getLong(), "Unexpected value for getLong");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getLong", 0L, (long) field.getObject(Long.class));
+        assertEquals(0L, (long) field.getObject(Long.class), "Unexpected value for getLong");
     }
 
     @Test
     @Override
-    public void setLong() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setLong() throws SQLException {
         field.setLong(1L);
+
+        verifySetBoolean(true);
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getObject", Boolean.TRUE, field.getObject());
+        assertEquals(Boolean.TRUE, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
-    public void getObjectNonNull_false() throws SQLException {
+    void getObjectNonNull_false() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getObject", Boolean.FALSE, field.getObject());
+        assertEquals(Boolean.FALSE, field.getObject(), "Unexpected value for getObject");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(Boolean.FALSE);
+
+        verifySetBoolean(false);
     }
 
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getShort", 1, field.getShort());
+        assertEquals(1, field.getShort(), "Unexpected value for getShort");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getShort", 1, (short) field.getObject(Short.class));
+        assertEquals(1, (short) field.getObject(Short.class), "Unexpected value for getShort");
     }
 
     @Test
     @Override
-    public void setShort() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setShort() throws SQLException {
         field.setShort((short) 0);
+
+        verifySetBoolean(false);
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getString", "false", field.getString());
+        assertEquals("false", field.getString(), "Unexpected value for getString");
     }
 
     @Test
-    public void getStringNonNull_true() throws SQLException {
+    void getStringNonNull_true() throws SQLException {
         toReturnBooleanExpectations(true);
 
-        assertEquals("Unexpected value for getString", "true", field.getString());
+        assertEquals("true", field.getString(), "Unexpected value for getString");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnBooleanExpectations(false);
 
-        assertEquals("Unexpected value for getString", "false", field.getObject(String.class));
+        assertEquals("false", field.getObject(String.class), "Unexpected value for getString");
     }
 
      @Test
      @Override
-     public void setStringNonNull() throws SQLException {
-        setBooleanExpectations(false);
-
+     void setStringNonNull() throws SQLException {
         field.setString("false");
+
+        verifySetBoolean(false);
     }
 
     /**
      * Test that non 'boolean' string values set false.
      */
     @Test
-    public void setStringNonNull_someString() throws SQLException {
-        setBooleanExpectations(false);
-
+    void setStringNonNull_someString() throws SQLException {
         field.setString("xyz");
+
+        verifySetBoolean(false);
     }
 
     /**
      * Test that 'T' sets to true (note: non-standard, subject to change)
      */
     @Test
-    public void setStringNonNull_T() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_T() throws SQLException {
         field.setString("T");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that 't' sets to true (note: non-standard, subject to change)
      */
     @Test
-    public void setStringNonNull_t() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_t() throws SQLException {
         field.setString("t");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that 'Y' sets to true (note: non-standard, subject to change)
      */
     @Test
-    public void setStringNonNull_Y() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_Y() throws SQLException {
         field.setString("Y");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that 'y' sets to true (note: non-standard, subject to change)
      */
     @Test
-    public void setStringNonNull_y() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_y() throws SQLException {
         field.setString("y");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that '1' sets to true.
      */
     @Test
-    public void setStringNonNull_1() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_1() throws SQLException {
         field.setString("1");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that 'true' sets to true.
      */
     @Test
-    public void setStringNonNull_true() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setStringNonNull_true() throws SQLException {
         field.setString("true");
+
+        verifySetBoolean(true);
     }
 
     /**
      * Test that 'TRUE' sets to true.
      */
     @Test
-    public void setStringNonNull_TRUE() throws SQLException {
-        setBooleanExpectations(true);
+    void setStringNonNull_TRUE() throws SQLException {
+        field.setString("TRUE");
 
-        field.setString("true");
+        verifySetBoolean(true);
     }
 
     @Test
     @Override
-    public void getDecimalNonNull() throws SQLException {
+    void getDecimalNonNull() throws SQLException {
         toReturnBooleanExpectations(true);
 
         Decimal128 expectedValue = Decimal128.valueOf("1");
-        assertEquals("Unexpected value for getDecimal", expectedValue, field.getDecimal());
+        assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 
     @Test
-    public void getDecimal_null() throws SQLException {
+    void getDecimal_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("expected null for getDecimal", field.getDecimal());
+        assertNull(field.getDecimal(), "expected null for getDecimal");
     }
 
     @Test
     @Override
-    public void setDecimalNonNull() throws SQLException {
-        setBooleanExpectations(true);
-
+    void setDecimalNonNull() throws SQLException {
         field.setDecimal(Decimal128.valueOf("1"));
+
+        verifySetBoolean(true);
     }
 
     @Test
-    public void setDecimalNull() throws SQLException {
-        setNullExpectations();
-
+    void setDecimalNull() throws SQLException {
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Override
-    protected Boolean getNonNullObject() {
+    Boolean getNonNullObject() {
         return Boolean.TRUE;
     }
 }

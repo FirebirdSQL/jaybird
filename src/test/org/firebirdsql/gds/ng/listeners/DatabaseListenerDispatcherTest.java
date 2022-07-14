@@ -19,19 +19,21 @@
 package org.firebirdsql.gds.ng.listeners;
 
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLWarning;
-import java.util.Arrays;
 
-import static org.jmock.Expectations.throwException;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher}.
@@ -39,37 +41,27 @@ import static org.junit.Assume.assumeFalse;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class DatabaseListenerDispatcherTest {
+@ExtendWith(MockitoExtension.class)
+class DatabaseListenerDispatcherTest {
 
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private DatabaseListenerDispatcher dispatcher;
+    private final DatabaseListenerDispatcher dispatcher = new DatabaseListenerDispatcher();
+    @Mock
     private DatabaseListener listener;
+    @Mock
     private FbDatabase database;
 
-    @Before
-    public void setUp() {
-        dispatcher = new DatabaseListenerDispatcher();
-        listener = context.mock(DatabaseListener.class, "listener");
+    @BeforeEach
+    void setUp() {
         dispatcher.addListener(listener);
-        database = context.mock(FbDatabase.class, "database");
     }
 
     /**
-     * Tests if calls to {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#detaching(org.firebirdsql.gds.ng.FbDatabase)}
-     * are forwarded correctly.
+     * Tests if calls to {@link DatabaseListenerDispatcher#detaching(FbDatabase)} are forwarded correctly.
      */
     @Test
-    public void testDetaching() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).detaching(database);
-        context.checking(expectations);
-
+    void testDetaching() {
         dispatcher.detaching(database);
+        verify(listener).detaching(database);
     }
 
     /**
@@ -77,30 +69,50 @@ public class DatabaseListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testDetaching_withException() {
-        final DatabaseListener listener2 = context.mock(DatabaseListener.class, "listener2");
+    void testDetaching_withException(@Mock DatabaseListener listener2) {
         dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).detaching(database);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).detaching(database);
+        doThrow(new RuntimeException("test")).when(listener2).detaching(database);
 
-        dispatcher.detaching(database);
+        assertDoesNotThrow(() -> dispatcher.detaching(database));
+        verify(listener).detaching(database);
+        verify(listener2).detaching(database);
     }
 
     /**
-     * Tests if calls to {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#detached(org.firebirdsql.gds.ng.FbDatabase)}
+     * Tests if calls to {@link DatabaseListenerDispatcher#detached(FbDatabase)} are forwarded correctly.
+     */
+    @Test
+    void testDetached() {
+        dispatcher.detached(database);
+        verify(listener).detached(database);
+    }
+
+    /**
+     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
+     * exceptions thrown to call of the dispatcher.
+     */
+    @Test
+    void testDetached_withException(@Mock DatabaseListener listener2) {
+        dispatcher.addListener(listener2);
+        doThrow(new RuntimeException("test")).when(listener).detached(database);
+        doThrow(new RuntimeException("test")).when(listener2).detached(database);
+
+        assertDoesNotThrow(() -> dispatcher.detached(database));
+        verify(listener).detached(database);
+        verify(listener2).detached(database);
+    }
+
+    /**
+     * Tests if calls to {@link DatabaseListenerDispatcher#warningReceived(FbDatabase, SQLWarning)} are
      * forwarded correctly.
      */
     @Test
-    public void testDetached() {
-        final Expectations expectations = new Expectations();
-        expectations.exactly(1).of(listener).detached(database);
-        context.checking(expectations);
+    void testWarningReceived() {
+        final SQLWarning warning = new SQLWarning();
 
-        dispatcher.detached(database);
+        dispatcher.warningReceived(database, warning);
+        verify(listener).warningReceived(database, warning);
     }
 
     /**
@@ -108,133 +120,81 @@ public class DatabaseListenerDispatcherTest {
      * exceptions thrown to call of the dispatcher.
      */
     @Test
-    public void testDetached_withException() {
-        final DatabaseListener listener2 = context.mock(DatabaseListener.class, "listener2");
-        dispatcher.addListener(listener2);
-        final Expectations expectations = new Expectations();
-        for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).detached(database);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
-
-        dispatcher.detached(database);
-    }
-
-    /**
-     * Tests if calls to {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#warningReceived(org.firebirdsql.gds.ng.FbDatabase, java.sql.SQLWarning)}
-     * forwarded correctly.
-     */
-    @Test
-    public void testWarningReceived() {
-        final Expectations expectations = new Expectations();
-        final SQLWarning warning = new SQLWarning();
-        expectations.exactly(1).of(listener).warningReceived(database, warning);
-        context.checking(expectations);
-
-        dispatcher.warningReceived(database, warning);
-    }
-
-    /**
-     * Tests if listeners throwing exceptions will still cause other listeners to be notified and not result in
-     * exceptions thrown to call of the dispatcher.
-     */
-    @Test
-    public void testWarningReceived_withException() {
-        final DatabaseListener listener2 = context.mock(DatabaseListener.class, "listener2");
+    void testWarningReceived_withException(@Mock DatabaseListener listener2) {
         dispatcher.addListener(listener2);
         final SQLWarning warning = new SQLWarning();
-        final Expectations expectations = new Expectations();
-        for (DatabaseListener currentListener : Arrays.asList(listener, listener2)) {
-            expectations.exactly(1).of(currentListener).warningReceived(database, warning);
-            expectations.will(throwException(new RuntimeException()));
-        }
-        context.checking(expectations);
+        doThrow(new RuntimeException("test")).when(listener).warningReceived(database, warning);
+        doThrow(new RuntimeException("test")).when(listener2).warningReceived(database, warning);
 
-        dispatcher.warningReceived(database, warning);
+        assertDoesNotThrow(() -> dispatcher.warningReceived(database, warning));
+        verify(listener).warningReceived(database, warning);
+        verify(listener2).warningReceived(database, warning);
     }
 
     /**
-     * Tests if events are not dispatched after call to
-     * {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#shutdown()}
+     * Tests if events are not dispatched after call to {@link DatabaseListenerDispatcher#shutdown()}.
      */
     @Test
-    public void testNoDispatch_afterShutdown() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(database);
-        context.checking(expectations);
-
+    void testNoDispatch_afterShutdown() {
         dispatcher.shutdown();
 
         dispatcher.detaching(database);
+        verifyNoInteractions(listener);
     }
 
     /**
-     * Tests if events are not dispatched after call to
-     * {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#shutdown()}
+     * Tests if events are not dispatched after call to {@link DatabaseListenerDispatcher#shutdown()}.
      */
     @Test
-    public void testNoDispatch_afterShutdownAndAdd() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(database);
-        context.checking(expectations);
-
+    void testNoDispatch_afterShutdownAndAdd() {
         dispatcher.shutdown();
         dispatcher.addListener(listener);
 
         dispatcher.detaching(database);
+        verifyNoInteractions(listener);
     }
 
     /**
-     * Tests if call to {@link DatabaseListenerDispatcher#shutdown()} will make {@link DatabaseListenerDispatcher#isShutdown()}
-     * return <code>true</code>
+     * Tests if call to {@link DatabaseListenerDispatcher#shutdown()} will make
+     * {@link DatabaseListenerDispatcher#isShutdown()} return {@code true}.
      */
     @Test
-    public void testShutdown() {
+    void testShutdown() {
         assumeFalse(dispatcher.isShutdown());
 
         dispatcher.shutdown();
 
-        assertTrue("Expected isShutDown() true after call to shutdown()", dispatcher.isShutdown());
+        assertTrue(dispatcher.isShutdown(), "Expected isShutDown() true after call to shutdown()");
     }
 
     /**
      * Tests if listener does not receive events after it has been removed using
-     * {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#removeListener(Object)}
+     * {@link DatabaseListenerDispatcher#removeListener(DatabaseListener)}.
      */
     @Test
-    public void testNoDispatch_afterRemove() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(database);
-        context.checking(expectations);
-
+    void testNoDispatch_afterRemove() {
         dispatcher.removeListener(listener);
 
         dispatcher.detaching(database);
+        verifyNoInteractions(listener);
     }
 
     /**
-     * Tests if listener does not receive events after call to
-     * {@link org.firebirdsql.gds.ng.listeners.DatabaseListenerDispatcher#removeAllListeners()}
+     * Tests if listener does not receive events after call to {@link DatabaseListenerDispatcher#removeAllListeners()}.
      */
     @Test
-    public void testNoDispatch_afterRemoveAll() {
-        final Expectations expectations = new Expectations();
-        expectations.never(listener).detaching(database);
-        context.checking(expectations);
-
+    void testNoDispatch_afterRemoveAll() {
         dispatcher.removeAllListeners();
 
         dispatcher.detaching(database);
+        verifyNoInteractions(listener);
     }
 
     /**
      * Tests if a dispatcher cannot be added to itself.
      */
     @Test
-    public void testAddingDispatcherToItself_notAllowed() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        dispatcher.addListener(dispatcher);
+    void testAddingDispatcherToItself_notAllowed() {
+        assertThrows(IllegalArgumentException.class, () -> dispatcher.addListener(dispatcher));
     }
 }

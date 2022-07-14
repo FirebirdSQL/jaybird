@@ -21,12 +21,12 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test numeric conversion in little endian
@@ -34,13 +34,13 @@ import static org.junit.Assert.assertEquals;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class LittleEndianDatatypeCoderTest {
+class LittleEndianDatatypeCoderTest {
 
     private final LittleEndianDatatypeCoder datatypeCoder =
             new LittleEndianDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Test
-    public void encodeShort() {
+    void encodeShort() {
         short testValue = 0b0110_1011_1010_1001;
         byte[] result = datatypeCoder.encodeShort(testValue);
 
@@ -48,7 +48,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeShort() {
+    void decodeShort() {
         byte[] testValue = { 0b0110_1001, 0b0011_1100 };
         short result = datatypeCoder.decodeShort(testValue);
 
@@ -56,7 +56,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeInt() {
+    void encodeInt() {
         int testValue = 0b1011_0110_1001_0000_1111_0101_0001_1010;
         byte[] result = datatypeCoder.encodeInt(testValue);
 
@@ -64,7 +64,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeInt() {
+    void decodeInt() {
         byte[] testValue = {0b0001_1010, (byte) 0b1111_0101, (byte) 0b1001_0000, (byte) 0b1011_0110 };
         int result = datatypeCoder.decodeInt(testValue);
 
@@ -72,7 +72,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeLong() {
+    void encodeLong() {
         long testValue = 0b1000_0001_0100_0010_0010_0100_0001_1000_1001_0001_0101_0010_0010_1100_0001_1010L;
         byte[] result = datatypeCoder.encodeLong(testValue);
 
@@ -81,7 +81,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeLong() {
+    void decodeLong() {
         byte[] testValue = { 0b0001_1010, 0b0010_1100, 0b0101_0010, (byte) 0b1001_0001,
                 0b0001_1000, 0b0010_0100, 0b0100_0010, (byte) 0b1000_0001 };
         long result = datatypeCoder.decodeLong(testValue);
@@ -90,7 +90,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDecimal64() {
+    void decodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = reverseByteOrder(decimal64.toBytes());
 
@@ -98,7 +98,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal64() {
+    void encodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = reverseByteOrder(decimal64.toBytes());
 
@@ -106,7 +106,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDecimal128() {
+    void decodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = reverseByteOrder(decimal128.toBytes());
 
@@ -114,7 +114,7 @@ public class LittleEndianDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal128() {
+    void encodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = reverseByteOrder(decimal128.toBytes());
 

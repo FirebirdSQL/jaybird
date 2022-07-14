@@ -26,7 +26,7 @@
 package org.firebirdsql.gds.impl.jni;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.GDSType;
@@ -38,15 +38,22 @@ import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.management.FBManager;
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Demonstrates a problem backing up a database which has been created using streamed blobs(As far as my testing shows
@@ -91,23 +98,23 @@ import static org.junit.Assert.assertTrue;
  * unbackupable database when using streamed blobs is as far as my testing shows common too type2 and type4
  * modes too.
  */
-public class JaybirdBlobBackupProblemTest {
+class JaybirdBlobBackupProblemTest {
 
-    @ClassRule
-    public static final GdsTypeRule testTypes = GdsTypeRule.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    @RegisterExtension
+    static final GdsTypeExtension testTypes = GdsTypeExtension.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
-    @Rule
-    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    private Path tempDir;
 
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String mAbsoluteDatabasePath = null;
     private String mAbsoluteBackupPath = null;
     private FBManager fbManager = null;
     private FbDatabaseFactory dbFactory;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         GDSType gdsType = FBTestProperties.getGdsType();
         dbFactory = FBTestProperties.getFbDatabaseFactory();
         try {
@@ -117,11 +124,12 @@ public class JaybirdBlobBackupProblemTest {
             fbManager.setPort(5066);
             fbManager.start();
 
-            File dbFolder = temporaryFolder.newFolder("db");
+            Path dbFolder = tempDir.resolve("db");
+            Files.createDirectories(dbFolder);
 
-            mAbsoluteBackupPath = new File(dbFolder, "testES01344.fbk").getAbsolutePath();
+            mAbsoluteBackupPath = dbFolder.resolve("testES01344.fbk").toString();
 
-            mAbsoluteDatabasePath = new File(dbFolder, "testES01344.fdb").getAbsolutePath();
+            mAbsoluteDatabasePath = dbFolder.resolve("testES01344.fdb").toString();
 
             fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         } catch (Exception e) {
@@ -129,8 +137,8 @@ public class JaybirdBlobBackupProblemTest {
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         try {
             fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
             fbManager.stop();
@@ -140,14 +148,14 @@ public class JaybirdBlobBackupProblemTest {
     }
 
     @Test
-    public void testBackupOfEmptyDatabase() throws Exception {
+    void testBackupOfEmptyDatabase() throws Exception {
         try (FbService service = attachToServiceManager()) {
             backupDatabase(service, "WithoutBlobData");
         }
     }
 
     @Test
-    public void testBackupOfBlobDataDatabase() throws Exception {
+    void testBackupOfBlobDataDatabase() throws Exception {
         writeSomeBlobData();
         try (FbService service = attachToServiceManager()) {
             backupDatabase(service, "WithBlobData");
@@ -155,8 +163,8 @@ public class JaybirdBlobBackupProblemTest {
     }
 
     private void writeSomeBlobData() throws SQLException {
-        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE",
-                "SYSDBA", "masterkey")) {
+        try (Connection connection = DriverManager.getConnection(
+                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey")) {
             createTheTable(connection);
             writeTheData(connection);
         }
@@ -186,13 +194,14 @@ public class JaybirdBlobBackupProblemTest {
 
     private void backupDatabase(FbService service, String logFilePostfix) throws Exception {
         new File(mAbsoluteBackupPath).delete();
-        File logFolder = temporaryFolder.newFolder("log");
-        String logfile = logFolder.getCanonicalPath() + "/backuptest_" + logFilePostfix + ".log";
+        Path logFolder = tempDir.resolve("log");
+        Files.createDirectories(logFolder);
+        String logfile = logFolder.resolve("backuptest_" + logFilePostfix + ".log").toString();
 
         startBackup(service);
         queryService(service, logfile);
 
-        assertTrue("Backup file doesn't exist", new File(mAbsoluteBackupPath).exists());
+        assertTrue(new File(mAbsoluteBackupPath).exists(), "Backup file doesn't exist");
     }
 
     private void queryService(FbService service, String outputFilename) throws Exception {
@@ -228,7 +237,8 @@ public class JaybirdBlobBackupProblemTest {
             }
         }
 
-        assertTrue("Looks like the backup failed. See logfile " + outputFilename, stringBuffer.toString().contains("committing, and finishing."));
+        assertThat("Looks like the backup failed. See logfile " + outputFilename, stringBuffer.toString(),
+                containsString("committing, and finishing."));
     }
 
     private void startBackup(FbService service) throws SQLException {
@@ -246,7 +256,7 @@ public class JaybirdBlobBackupProblemTest {
         FbService service = dbFactory.serviceConnect(createServiceProperties());
         service.attach();
 
-        assertTrue("Handle should be attached when isc_service_attach returns normally.", service.isAttached());
+        assertTrue(service.isAttached(), "Handle should be attached when isc_service_attach returns normally");
 
         return service;
     }

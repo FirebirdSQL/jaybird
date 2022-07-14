@@ -55,7 +55,6 @@ ext {
     junit_jupiter = '5.8.2'
     hamcrest = '2.2'
     assertj = '3.21.0'
-    jmock = '2.12.0'
     mockito = '4.2.0'
 }
 
@@ -70,20 +69,10 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_jupiter"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_jupiter"
 
-    // Support JUnit 4
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:$junit_jupiter"
-    testImplementation 'junit:junit:4.13.2'
-
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-library:$hamcrest"
     testImplementation "org.hamcrest:hamcrest-core:$hamcrest"
     testImplementation "org.assertj:assertj-core:$assertj"
-
-    testImplementation("org.jmock:jmock-junit4:$jmock") {
-        exclude group: 'org.jmock', module: 'jmock-legacy'
-    }
-    testImplementation("org.jmock:jmock-imposters:$jmock")
-    testImplementation 'net.bytebuddy:byte-buddy:1.12.6'
 
     testImplementation "org.mockito:mockito-core:$mockito"
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"

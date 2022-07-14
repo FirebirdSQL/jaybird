@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version18;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version16.V16WireOperationsTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -30,14 +31,12 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V18WireOperationsTest extends V16WireOperationsTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(18);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(18);
 
-    public V18WireOperationsTest() {
-        this(new V18CommonConnectionInfo());
+    protected V18CommonConnectionInfo commonConnectionInfo() {
+        return new V18CommonConnectionInfo();
     }
 
-    protected V18WireOperationsTest(V18CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
-    }
 }

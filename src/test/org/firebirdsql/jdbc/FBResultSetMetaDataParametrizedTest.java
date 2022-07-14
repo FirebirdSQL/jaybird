@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,30 +19,29 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.management.FBManager;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.sql.ResultSetMetaData.columnNullable;
 import static java.sql.Types.*;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for {@link org.firebirdsql.jdbc.FBResultSetMetaData}.
@@ -56,12 +55,11 @@ import static org.junit.Assume.assumeFalse;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-@RunWith(Parameterized.class)
-public class FBResultSetMetaDataParametrizedTest {
+class FBResultSetMetaDataParametrizedTest {
 
-    public static final String TABLE_NAME = "TEST_P_METADATA";
+    private static final String TABLE_NAME = "TEST_P_METADATA";
     //@formatter:off
-    public static String CREATE_TABLE =
+    private static final String CREATE_TABLE =
         "CREATE TABLE test_p_metadata (" +
         "  id INTEGER, " +
         "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
@@ -91,7 +89,7 @@ public class FBResultSetMetaDataParametrizedTest {
         "  /* int128 */ " +
         ")";
 
-    public static final String TEST_QUERY =
+    private static final String TEST_QUERY =
             "SELECT " +
             "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
             "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
@@ -105,21 +103,16 @@ public class FBResultSetMetaDataParametrizedTest {
             "FROM test_p_metadata";
     //@formatter:on
 
-    private static FBManager fbManager;
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
     private static Connection connection;
     private static PreparedStatement pstmt;
     private static ResultSetMetaData rsmd;
     private static FirebirdSupportInfo supportInfo;
 
-    private final Integer columnIndex;
-    private final ResultSetMetaDataInfo expectedMetaData;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        // Contrary to other tests we create the database, connection, statement etc only once
-        fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
-
+    @BeforeAll
+    static void setupAll() throws Exception {
         connection = getConnectionViaDriverManager();
         supportInfo = supportInfoFor(connection);
 
@@ -159,29 +152,21 @@ public class FBResultSetMetaDataParametrizedTest {
         rsmd = pstmt.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+    @AfterAll
+    static void tearDownAll() throws Exception {
         try {
             closeQuietly(pstmt, connection);
-            defaultDatabaseTearDown(fbManager);
         } finally {
             rsmd = null;
             pstmt = null;
             connection = null;
-            fbManager = null;
             supportInfo = null;
         }
     }
 
-    public FBResultSetMetaDataParametrizedTest(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, @SuppressWarnings("UnusedParameters") String descriptiveName) {
-        this.columnIndex = columnIndex;
-        this.expectedMetaData = expectedMetaData;
-    }
-
-    @Parameterized.Parameters(name = "Index {0} ({2})")
-    public static Collection<Object[]> testData() {
+    static Stream<Arguments> testData() {
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
-        List<Object[]> testData = new ArrayList<>(Arrays.asList(
+        List<Arguments> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", 60, "SIMPLE_FIELD", "SIMPLE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(2, "java.lang.String", 60, "TWO_BYTE_FIELD", "TWO_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
                 create(3, "java.lang.String", 60, "THREE_BYTE_FIELD", "THREE_BYTE_FIELD", VARCHAR, "VARCHAR", 60, 0, TABLE_NAME, columnNullable, true, false),
@@ -224,121 +209,147 @@ public class FBResultSetMetaDataParametrizedTest {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", 40, "COL_INT128", "COL_INT128", NUMERIC, "INT128", 38, 0, TABLE_NAME, columnNullable, true, true));
         }
 
-        return testData;
+        return testData.stream();
     }
 
-    @Before
-    public void checkAssumptions() {
-        assumeFalse("Test requires BIGINT support", expectedMetaData.getType() == BIGINT && !supportInfo.supportsBigint());
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetCatalogName(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertEquals("", rsmd.getCatalogName(columnIndex), "getCatalogName");
     }
 
-    @Test
-    public void testGetCatalogName() throws Exception {
-        assertEquals("getCatalogName", "", rsmd.getCatalogName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnClassName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getClassName(), rsmd.getColumnClassName(columnIndex), "getColumnClassName");
     }
 
-    @Test
-    public void testGetColumnClassName() throws Exception {
-        assertEquals("getColumnClassName", expectedMetaData.getClassName(), rsmd.getColumnClassName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnDisplaySize(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getDisplaySize(), rsmd.getColumnDisplaySize(columnIndex), "getColumnDisplaySize");
     }
 
-    @Test
-    public void testGetColumnDisplaySize() throws Exception {
-        assertEquals("getColumnDisplaySize", expectedMetaData.getDisplaySize(), rsmd.getColumnDisplaySize(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnLabel(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getLabel(), rsmd.getColumnLabel(columnIndex), "getColumnLabel");
     }
 
-    @Test
-    public void testGetColumnLabel() throws Exception {
-        assertEquals("getColumnLabel", expectedMetaData.getLabel(), rsmd.getColumnLabel(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getName(), rsmd.getColumnName(columnIndex), "getColumnName");
     }
 
-    @Test
-    public void testGetColumnName() throws Exception {
-        assertEquals("getColumnName", expectedMetaData.getName(), rsmd.getColumnName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnType(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getType(), rsmd.getColumnType(columnIndex), "getColumnType");
     }
 
-    @Test
-    public void testGetColumnType() throws Exception {
-        assertEquals("getColumnType", expectedMetaData.getType(), rsmd.getColumnType(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetColumnTypeName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getTypeName(), rsmd.getColumnTypeName(columnIndex), "getColumnTypeName");
     }
 
-    @Test
-    public void testGetColumnTypeName() throws Exception {
-        assertEquals("getColumnTypeName", expectedMetaData.getTypeName(), rsmd.getColumnTypeName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetPrecision(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getPrecision(), rsmd.getPrecision(columnIndex), "getPrecision");
     }
 
-    @Test
-    public void testGetPrecision() throws Exception {
-        assertEquals("getPrecision", expectedMetaData.getPrecision(), rsmd.getPrecision(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetScale(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
+        assertEquals(expectedMetaData.getScale(), rsmd.getScale(columnIndex), "getScale");
     }
 
-    @Test
-    public void testGetScale() throws Exception {
-        assertEquals("getScale", expectedMetaData.getScale(), rsmd.getScale(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetSchemaName(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertEquals("", rsmd.getSchemaName(columnIndex), "getSchemaName");
     }
 
-    @Test
-    public void testGetSchemaName() throws Exception {
-        assertEquals("getSchemaName", "", rsmd.getSchemaName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testGetTableName(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getTableName(), rsmd.getTableName(columnIndex), "getTableName");
     }
 
-    @Test
-    public void testGetTableName() throws Exception {
-        assertEquals("getTableName", expectedMetaData.getTableName(), rsmd.getTableName(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsAutoIncrement(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertFalse(rsmd.isAutoIncrement(columnIndex), "isAutoIncrement");
     }
 
-    @Test
-    public void testIsAutoIncrement() throws Exception {
-        assertFalse("isAutoIncrement", rsmd.isAutoIncrement(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsCaseSensitive(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertTrue(rsmd.isCaseSensitive(columnIndex), "isCaseSensitive");
     }
 
-    @Test
-    public void testIsCaseSensitive() throws Exception {
-        assertTrue("isCaseSensitive", rsmd.isCaseSensitive(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsCurrency(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertFalse(rsmd.isCurrency(columnIndex), "isCurrency");
     }
 
-    @Test
-    public void testIsCurrency() throws Exception {
-        assertFalse("isCurrency", rsmd.isCurrency(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsDefinitelyWritable(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2)
+            throws Exception {
+        assertTrue(rsmd.isDefinitelyWritable(columnIndex), "isDefiniteyWritable");
     }
 
-    @Test
-    public void testIsDefinitelyWritable() throws Exception {
-        assertTrue("isDefiniteyWritable", rsmd.isDefinitelyWritable(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsNullable(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
+        assertEquals(expectedMetaData.getNullable(), rsmd.isNullable(columnIndex), "isNullable");
     }
 
-    @Test
-    public void testIsNullable() throws Exception {
-        assertEquals("isNullable", expectedMetaData.getNullable(), rsmd.isNullable(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsReadOnly(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertFalse(rsmd.isReadOnly(columnIndex), "isReadOnly");
     }
 
-    @Test
-    public void testIsReadOnly() throws Exception {
-        assertFalse("isReadOnly", rsmd.isReadOnly(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsSearchable(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.isSearchable(), rsmd.isSearchable(columnIndex), "isSearchable");
     }
 
-    @Test
-    public void testIsSearchable() throws Exception {
-        assertEquals("isSearchable", expectedMetaData.isSearchable(), rsmd.isSearchable(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsSigned(Integer columnIndex, ResultSetMetaDataInfo expectedMetaData, String ignored) throws Exception {
+        assertEquals(expectedMetaData.isSigned(), rsmd.isSigned(columnIndex), "isSigned");
     }
 
-    @Test
-    public void testIsSigned() throws Exception {
-        assertEquals("isSigned", expectedMetaData.isSigned(), rsmd.isSigned(columnIndex));
+    @ParameterizedTest(name = "Index {0} ({2})")
+    @MethodSource("testData")
+    void testIsWritable(Integer columnIndex, ResultSetMetaDataInfo ignored1, String ignored2) throws Exception {
+        assertTrue(rsmd.isWritable(columnIndex), "isWritable");
     }
 
-    @Test
-    public void testIsWritable() throws Exception {
-        assertTrue("isWritable", rsmd.isWritable(columnIndex));
-    }
-
-    private static Object[] create(int index, String className, int displaySize, String label, String name, int type,
+    @SuppressWarnings("SameParameterValue")
+    private static Arguments create(int index, String className, int displaySize, String label, String name, int type,
             String typeName, int precision, int scale, String tableName, int nullable, boolean searchable,
             boolean signed) {
-        return new Object[] { index,
+        return Arguments.of(index,
                 new ResultSetMetaDataInfo(className, displaySize, label, name, type, typeName, precision, scale,
                         tableName, nullable, searchable, signed),
-                label };
+                label);
     }
 
     private static class ResultSetMetaDataInfo {

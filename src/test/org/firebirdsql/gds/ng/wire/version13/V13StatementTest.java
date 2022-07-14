@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version13;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version12.V12StatementTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version13.V13Statement} in the V13 protocol, reuses test for V12.
@@ -32,14 +33,12 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V13StatementTest extends V12StatementTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(13);
 
-    public V13StatementTest() {
-        this(new V13CommonConnectionInfo());
+    protected V13CommonConnectionInfo commonConnectionInfo() {
+        return new V13CommonConnectionInfo();
     }
 
-    protected V13StatementTest(V13CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
-    }
 }

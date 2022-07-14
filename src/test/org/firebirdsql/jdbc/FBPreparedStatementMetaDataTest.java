@@ -18,20 +18,20 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.management.FBManager;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.sql.ParameterMetaData.parameterModeIn;
 import static java.sql.ParameterMetaData.parameterNullable;
@@ -40,8 +40,7 @@ import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests {@link org.firebirdsql.jdbc.FBParameterMetaData} for a {@link org.firebirdsql.jdbc.FBPreparedStatement}.
@@ -55,11 +54,10 @@ import static org.junit.Assume.assumeFalse;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-@RunWith(Parameterized.class)
-public class FBPreparedStatementMetaDataTest {
+class FBPreparedStatementMetaDataTest {
 
     //@formatter:off
-    public static String CREATE_TABLE =
+    private static final String CREATE_TABLE =
         "CREATE TABLE test_p_metadata (" +
         "  id INTEGER, " +
         "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
@@ -89,7 +87,7 @@ public class FBPreparedStatementMetaDataTest {
         "  /* int128 */ " +
         ")";
 
-    public static final String TEST_QUERY =
+    private static final String TEST_QUERY =
             "insert into test_p_metadata(" +
             "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
             "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
@@ -105,21 +103,16 @@ public class FBPreparedStatementMetaDataTest {
             "/* decfloat-param *//* extended-num-param *//* time-zone-param *//* int128-param */)";
     //@formatter:on
 
-    private static FBManager fbManager;
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
     private static Connection connection;
     private static PreparedStatement pstmt;
     private static ParameterMetaData parameterMetaData;
     private static FirebirdSupportInfo supportInfo;
 
-    private final Integer parameterIndex;
-    private final ParameterMetaDataInfo expectedMetaData;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        // Contrary to other tests we create the database, connection, statement etc only once
-        fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
-
+    @BeforeAll
+    static void setupAll() throws Exception {
         connection = getConnectionViaDriverManager();
         supportInfo = supportInfoFor(connection);
 
@@ -161,29 +154,21 @@ public class FBPreparedStatementMetaDataTest {
         parameterMetaData = pstmt.getParameterMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+    @AfterAll
+    static void tearDownAll() throws Exception {
         try {
             closeQuietly(pstmt, connection);
-            defaultDatabaseTearDown(fbManager);
         } finally {
             parameterMetaData = null;
             pstmt = null;
             connection = null;
-            fbManager = null;
             supportInfo = null;
         }
     }
 
-    public FBPreparedStatementMetaDataTest(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, @SuppressWarnings("UnusedParameters") String descriptiveName) {
-        this.parameterIndex = parameterIndex;
-        this.expectedMetaData = expectedMetaData;
-    }
-
-    @Parameterized.Parameters(name = "Column {0} ({2})")
-    public static Collection<Object[]> testData() {
+    static Stream<Arguments> testData() {
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
-        List<Object[]> testData = new ArrayList<>(Arrays.asList(
+        List<Arguments> testData = new ArrayList<>(Arrays.asList(
                 create(1, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "simple_field"),
                 create(2, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "two_byte_field"),
                 create(3, "java.lang.String", parameterModeIn, VARCHAR, "VARCHAR", 60, 0, parameterNullable, false, "three_byte_field"),
@@ -226,60 +211,65 @@ public class FBPreparedStatementMetaDataTest {
             testData.add(create(testData.size() + 1, "java.math.BigDecimal", parameterModeIn, NUMERIC, "INT128", 38, 0, parameterNullable, true, "col_int128"));
         }
 
-        return testData;
+        return testData.stream();
     }
 
-    @Before
-    public void checkAssumptions() {
-        assumeFalse("Test requires BIGINT support", expectedMetaData.getType() == BIGINT && !supportInfo.supportsBigint());
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetParameterClassName(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getClassName(), parameterMetaData.getParameterClassName(parameterIndex),
+                "getParameterClassName");
     }
 
-    @Test
-    public void testGetParameterClassName() throws Exception {
-        assertEquals("getParameterClassName",
-                expectedMetaData.getClassName(), parameterMetaData.getParameterClassName(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetParameterMode(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getMode(), parameterMetaData.getParameterMode(parameterIndex),
+                "getParameterMode");
     }
 
-    @Test
-    public void testGetParameterMode() throws Exception {
-        assertEquals("getParameterMode",
-                expectedMetaData.getMode(), parameterMetaData.getParameterMode(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetParameterType(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getType(), parameterMetaData.getParameterType(parameterIndex),
+                "getParameterType");
     }
 
-    @Test
-    public void testGetParameterType() throws Exception {
-        assertEquals("getParameterType",
-                expectedMetaData.getType(), parameterMetaData.getParameterType(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetParameterTypeName(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getTypeName(), parameterMetaData.getParameterTypeName(parameterIndex),
+                "getParameterTypeName");
     }
 
-    @Test
-    public void testGetParameterTypeName() throws Exception {
-        assertEquals("getParameterTypeName",
-                expectedMetaData.getTypeName(), parameterMetaData.getParameterTypeName(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetPrecision(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.getPrecision(), parameterMetaData.getPrecision(parameterIndex), "getPrecision");
     }
 
-    @Test
-    public void testGetPrecision() throws Exception {
-        assertEquals("getPrecision",
-                expectedMetaData.getPrecision(), parameterMetaData.getPrecision(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testGetScale(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored) throws Exception {
+        assertEquals(expectedMetaData.getScale(), parameterMetaData.getScale(parameterIndex), "getScale");
     }
 
-    @Test
-    public void testGetScale() throws Exception {
-        assertEquals("getScale",
-                expectedMetaData.getScale(), parameterMetaData.getScale(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testIsNullable(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored)
+            throws Exception {
+        assertEquals(expectedMetaData.isNullable(), parameterMetaData.isNullable(parameterIndex), "isNullable");
     }
 
-    @Test
-    public void testIsNullable() throws Exception {
-        assertEquals("isNullable",
-                expectedMetaData.isNullable(), parameterMetaData.isNullable(parameterIndex));
-    }
-
-    @Test
-    public void testIsSigned() throws Exception {
-        assertEquals("isSigned",
-                expectedMetaData.isSigned(), parameterMetaData.isSigned(parameterIndex));
+    @ParameterizedTest(name = "Column {0} ({2})")
+    @MethodSource("testData")
+    void testIsSigned(Integer parameterIndex, ParameterMetaDataInfo expectedMetaData, String ignored) throws Exception {
+        assertEquals(expectedMetaData.isSigned(), parameterMetaData.isSigned(parameterIndex), "isSigned");
     }
 
     /**
@@ -307,11 +297,12 @@ public class FBPreparedStatementMetaDataTest {
      *         Descriptive name (eg the column name) for logging purposes
      * @return Test parameter data
      */
-    private static Object[] create(int index, String className, int mode, int type, String typeName, int precision,
+    @SuppressWarnings("SameParameterValue")
+    private static Arguments create(int index, String className, int mode, int type, String typeName, int precision,
                                    int scale, int nullable, boolean signed, String descriptiveName) {
-        return new Object[] { index,
+        return Arguments.of(index,
                 new ParameterMetaDataInfo(className, mode, type, typeName, precision, scale, nullable, signed),
-                descriptiveName };
+                descriptiveName);
     }
 
     /**

@@ -37,9 +37,10 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCode;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.oneOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -182,9 +183,8 @@ class FBMaintenanceManagerTest {
                 maintenanceManager.shutdownDatabase(MaintenanceManager.SHUTDOWN_FORCE, 0);
 
                 SQLException exception = assertThrows(SQLException.class, () -> stmt.executeQuery(sql));
-                assertThat(exception, anyOf(
-                        errorCodeEquals(ISCConstants.isc_shutdown),
-                        errorCodeEquals(ISCConstants.isc_att_shutdown)));
+                assertThat(exception, errorCode(oneOf(
+                        ISCConstants.isc_shutdown, ISCConstants.isc_att_shutdown, ISCConstants.isc_net_read_err)));
             } finally {
                 closeQuietly(stmt);
             }

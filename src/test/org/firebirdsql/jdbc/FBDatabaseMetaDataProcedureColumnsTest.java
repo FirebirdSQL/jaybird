@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,12 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
@@ -31,15 +31,15 @@ import java.util.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Tests for {@link FBDatabaseMetaData} for procedure columns related metadata.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataProcedureColumnsTest {
+class FBDatabaseMetaDataProcedureColumnsTest {
     
     // TODO This test will need to be expanded with version dependent features 
     // (eg TYPE OF <domain> (2.1), TYPE OF COLUMN <table.column> (2.5), NOT NULL (2.1), DEFAULT <value> (2.0)
@@ -92,20 +92,21 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
     private static final MetaDataTestSupport<ProcedureColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(ProcedureColumnMetaData.class);
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -131,7 +132,7 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
      * getProcedureColumns().
      */
     @Test
-    public void testProcedureColumnsMetaDataColumns() throws Exception {
+    void testProcedureColumnsMetaDataColumns() throws Exception {
         try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "doesnotexist", "%")) {
             metaDataTestSupport.validateResultSetColumns(procedureColumns);
         }
@@ -141,9 +142,9 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
      * Tests getProcedureColumn with proc_no_arg_no_return, expecting empty ResultSet.
      */
     @Test
-    public void testProcedureColumns_noArg_noReturn() throws Exception {
+    void testProcedureColumns_noArg_noReturn() throws Exception {
         try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "proc_no_arg_no_return", "%")) {
-            assertFalse("Expected empty resultset for procedure with arguments or return values", procedureColumns.next());
+            assertFalse(procedureColumns.next(), "Expected empty resultset for procedure with arguments or return values");
         }
     }
     
@@ -151,7 +152,7 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
      * Tests getProcedureColumn with normal_proc_no_return using all columnPattern, expecting resultset with all defined rows.
      */
     @Test
-    public void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
+    void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
         List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(2);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
@@ -186,7 +187,7 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
      * Tests getProcedureColumn with normal_proc_with_return using columnPattern all (%) string, expecting resultset with all defined rows.
      */
     @Test
-    public void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
+    void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
         List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(7);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
@@ -284,7 +285,7 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
      * Tests getProcedureColumn with quoted_proc_no_return using all columnPattern, expecting result set with all defined rows.
      */
     @Test
-    public void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
+    void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
         List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(1);
         Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
         column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
@@ -316,7 +317,7 @@ public class FBDatabaseMetaDataProcedureColumnsTest {
                 }
                 parameterCount++;
             }
-            assertEquals("Unexpected number of procedure columns returned", expectedColumns.size(), parameterCount);
+            assertEquals(expectedColumns.size(), parameterCount, "Unexpected number of procedure columns returned");
         } finally {
             closeQuietly(procedureColumns);
         }

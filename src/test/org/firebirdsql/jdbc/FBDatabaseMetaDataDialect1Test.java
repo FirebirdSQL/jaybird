@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,51 +20,41 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.management.FBManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.*;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for database metadata in dialect 1.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataDialect1Test {
+class FBDatabaseMetaDataDialect1Test {
 
-    protected FBManager fbManager = null;
+    private FBManager fbManager = null;
 
-    /**
-     * Basic setup of the test database.
-     *
-     * @throws Exception
-     */
-    @Before
-    public void basicSetUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         fbManager = createFBManager();
         fbManager.setDialect(1);
         defaultDatabaseSetUp(fbManager);
     }
 
-    /**
-     * Basic teardown of the test database
-     *
-     * @throws Exception
-     */
-    @After
-    public void basicTearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         defaultDatabaseTearDown(fbManager);
         fbManager = null;
     }
 
     @Test
-    public void testLargeNumeric() throws Exception {
+    void testLargeNumeric() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("sqlDialect", "1");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,12 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.gds.ng.wire.version15.V15DatabaseTest;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link org.firebirdsql.gds.ng.wire.version16.V16Database}, reuses test for V15.
@@ -32,14 +33,12 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
  */
 public class V16DatabaseTest extends V15DatabaseTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(16);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(16);
 
-    public V16DatabaseTest() {
-        this(new V16CommonConnectionInfo());
+    protected V16CommonConnectionInfo commonConnectionInfo() {
+        return new V16CommonConnectionInfo();
     }
 
-    protected V16DatabaseTest(V16CommonConnectionInfo commonConnectionInfo) {
-        super(commonConnectionInfo);
-    }
 }
