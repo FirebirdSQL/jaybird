@@ -159,7 +159,7 @@ class FBStatisticsManagerTest {
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        if (supportInfo.isVersionEqualOrAbove(5, 0)) {
+        if (supportInfo.isVersionEqualOrAbove(4, 0, 2)) {
             return 2;
         } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
             return 1;
