@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -114,14 +114,14 @@ public final class FirebirdSupportInfo {
      * Low level this feature was added in Interbase 6.0 / Firebird 1.0, but it was never surfaced in DDL
      * </p>
      *
-     * @return <code>true</code> when the data type BIGINT is supported
+     * @return {@code true} when the data type BIGINT is supported
      */
     public boolean supportsBigint() {
         return isVersionEqualOrAbove(1, 5);
     }
 
     /**
-     * @return <code>true</code> when the data type BOOLEAN is supported
+     * @return {@code true} when the data type BOOLEAN is supported
      */
     public boolean supportsBoolean() {
         return isVersionEqualOrAbove(3, 0);
@@ -173,28 +173,28 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return <code>true</code> when the COMMENT statement is supported
+     * @return {@code true} when the COMMENT statement is supported
      */
     public boolean supportsComment() {
         return isVersionEqualOrAbove(2, 0);
     }
 
     /**
-     * @return <code>true</code> when RDB$GET_CONTEXT and RDB$SET_CONTEXT are supported
+     * @return {@code true} when RDB$GET_CONTEXT and RDB$SET_CONTEXT are supported
      */
     public boolean supportsGetSetContext() {
         return isVersionEqualOrAbove(2, 0);
     }
 
     /**
-     * @return <code>true</code> when CASE (simple or searched) is supported
+     * @return {@code true} when CASE (simple or searched) is supported
      */
     public boolean supportsCase() {
         return isVersionEqualOrAbove(1, 5);
     }
 
     /**
-     * @return <code>true</code> when the blob character set is reported in the scale of the field descriptor
+     * @return {@code true} when the blob character set is reported in the scale of the field descriptor
      */
     public boolean reportsBlobCharSetInDescriptor() {
         return isVersionEqualOrAbove(2, 1);
@@ -203,7 +203,7 @@ public final class FirebirdSupportInfo {
     /**
      * TODO: Check if this is for all types or only for metadata.
      *
-     * @return <code>true</code> when the length of the field descriptor reports the byte length (max byte per char *
+     * @return {@code true} when the length of the field descriptor reports the byte length (max byte per char *
      * char length)
      */
     public boolean reportsByteLengthInDescriptor() {
@@ -213,14 +213,14 @@ public final class FirebirdSupportInfo {
     /**
      * TODO: Add methods for other RETURNING types?
      *
-     * @return <code>true</code> when INSERT ... RETURNING ... is supported
+     * @return {@code true} when INSERT ... RETURNING ... is supported
      */
     public boolean supportsInsertReturning() {
         return isVersionEqualOrAbove(2, 0);
     }
 
     /**
-     * @return <code>true</code> when UPDATE ... RETURNING ... is supported
+     * @return {@code true} when UPDATE ... RETURNING ... is supported
      */
     public boolean supportsUpdateReturning() {
         return isVersionEqualOrAbove(2, 1);
@@ -241,7 +241,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return <code>true</code> when the server knows the UTF8 character set (NOTE: For firebird 1.5 it is an alias for
+     * @return {@code true} when the server knows the UTF8 character set (NOTE: For firebird 1.5 it is an alias for
      * UNICODE_FSS)
      */
     public boolean supportsUtf8() {
@@ -249,28 +249,28 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return <code>true</code> when SAVEPOINT is supported
+     * @return {@code true} when SAVEPOINT is supported
      */
     public boolean supportsSavepoint() {
         return isVersionEqualOrAbove(1, 5);
     }
 
     /**
-     * @return <code>true</code> when EXECUTE BLOCK is supported
+     * @return {@code true} when EXECUTE BLOCK is supported
      */
     public boolean supportsExecuteBlock() {
         return isVersionEqualOrAbove(2, 0);
     }
 
     /**
-     * @return <code>true</code> when CREATE/ALTER/DROP USER is supported
+     * @return {@code true} when CREATE/ALTER/DROP USER is supported
      */
     public boolean supportsSqlUserManagement() {
         return isVersionEqualOrAbove(2, 5);
     }
 
     /**
-     * @return <code>true</code> when fb_cancel_operation is supported
+     * @return {@code true} when fb_cancel_operation is supported
      */
     public boolean supportsCancelOperation() {
         return isVersionEqualOrAbove(2, 5);
@@ -299,7 +299,7 @@ public final class FirebirdSupportInfo {
 
     /**
      * Checks support for protocol versions. The check is limited to those protocol versions supported by Jaybird
-     * (10-15 at this time, although v14 is only implemented as part of v15).
+     * (10-16 and 18 at this time, although v14 is only implemented as part of v15).
      *
      * @param protocolVersion
      *         Protocol version number
@@ -321,6 +321,8 @@ public final class FirebirdSupportInfo {
             return isVersionEqualOrAbove(3, 0, 2);
         case 16:
             return isVersionEqualOrAbove(4, 0, 0);
+        case 18:
+            return isVersionEqualOrAbove(5, 0 ,0);
         default:
             return false;
         }
@@ -611,6 +613,21 @@ public final class FirebirdSupportInfo {
      */
     public boolean supportsNBackupPreserveSequence() {
         return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
+     * @return {@code true} when this Firebird versions supports scrollable cursors. (NOTE: this does not mean
+     * the connection supports it, as that depends on the actual protocol (i.e. PURE_JAVA or derivative))
+     */
+    public boolean supportsScrollableCursors() {
+        return isVersionEqualOrAbove(5, 0);
+    }
+
+    /**
+     * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
+     */
+    public boolean hasProcedureTypeColumn() {
+        return isVersionEqualOrAbove(2, 1);
     }
 
     public boolean isWindows() {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,45 +22,47 @@ import org.firebirdsql.extern.decimal.*;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jdbc.JaybirdTypeCodes;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?>, BigDecimal> {
+class FBDecfloatFieldTest extends BaseJUnit5TestFBField<FBDecfloatField<?>, BigDecimal> {
 
     // TODO Handling infinity, and nan subject to discussion; add tests after this has been settled
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
         // NOTE Definition necessary for tests defined in superclass, decfloat(34) used as default
         setupDecfloat34Field();
     }
 
     @Test
-    @Ignore("Ignored in favour of more specific tests")
-    public void getDecimalNonNull() throws SQLException {
+    @Disabled("Ignored in favour of more specific tests")
+    void getDecimalNonNull() throws SQLException {
     }
 
     @Test
-    @Ignore("Ignored in favour of more specific tests")
-    public void setDecimalNonNull() throws SQLException {
+    @Disabled("Ignored in favour of more specific tests")
+    void setDecimalNonNull() throws SQLException {
     }
 
     @Test
-    public void getDecimal_matchesType_Decimal128() throws SQLException {
+    void getDecimal_matchesType_Decimal128() throws SQLException {
         FBDecfloatField<Decimal128> field = setupDecfloat34Field();
         final String stringValue = "1.2334E6000";
         toReturnDecfloat34Expectations(stringValue);
@@ -72,7 +74,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void getDecimal_Decimal64_decfloat34() throws SQLException {
+    void getDecimal_Decimal64_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456789012345678901234E300";
         toReturnDecfloat34Expectations(stringValue);
 
@@ -83,18 +85,16 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void getDecimal_Decimal64_decfloat34_overflow() throws SQLException {
+    void getDecimal_Decimal64_decfloat34_overflow() {
         final String stringValue = "1.234567890123456789012345678901234E385";
         toReturnDecfloat34Expectations(stringValue);
         
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
-
-        field.getDecimal(Decimal64.class);
+        SQLException exception = assertThrows(TypeConversionException.class, () -> field.getDecimal(Decimal64.class));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void getDecimal_Decimal128_decfloat34() throws SQLException {
+    void getDecimal_Decimal128_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456789012345678901234E300";
         toReturnDecfloat34Expectations(stringValue);
 
@@ -105,7 +105,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void getDecimal_matchesType_Decimal64() throws SQLException {
+    void getDecimal_matchesType_Decimal64() throws SQLException {
         FBDecfloatField<Decimal64> field = setupDecfloat16Field();
         final String stringValue = "1.2334E300";
         toReturnDecfloat16Expectations(stringValue);
@@ -117,7 +117,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void getDecimal_Decimal64_decfloat16() throws SQLException {
+    void getDecimal_Decimal64_decfloat16() throws SQLException {
         setupDecfloat16Field();
         final String stringValue = "1.2334E300";
         toReturnDecfloat16Expectations(stringValue);
@@ -129,7 +129,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void getDecimal_Decimal128_decfloat16() throws SQLException {
+    void getDecimal_Decimal128_decfloat16() throws SQLException {
         setupDecfloat16Field();
         final String stringValue = "1.2334E300";
         toReturnDecfloat16Expectations(stringValue);
@@ -141,676 +141,681 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Test
-    public void setDecimal_null() throws SQLException {
-        setNullExpectations();
-
+    void setDecimal_null() throws SQLException {
         field.setDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setDecimal_decfloat16_Decimal64() throws SQLException {
+    void setDecimal_decfloat16_Decimal64() throws SQLException {
         setupDecfloat16Field();
         final String stringValue = "1.234567890123456";
-        setDecfloat16Expectations(stringValue);
 
         field.setDecimal(Decimal64.valueOf(stringValue));
+
+        verifySetDecfloat16(stringValue);
     }
 
     @Test
-    public void setDecimal_decfloat16_Decimal128() throws SQLException {
+    void setDecimal_decfloat16_Decimal128() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("1.234567890123457");
 
         field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234"));
+
+        verifySetDecfloat16("1.234567890123457");
     }
 
     @Test
-    public void setDecimal_decfloat16_Decimal128_exception_onOverflow() throws SQLException {
+    void setDecimal_decfloat16_Decimal128_exception_onOverflow() throws SQLException {
         setupDecfloat16Field();
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
 
-        field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234E385"));
+        SQLException exception = assertThrows(TypeConversionException.class,
+                () -> field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234E385")));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void setDecimal_decfloat16_Decimal128_roundToZero_onUnderflow() throws SQLException {
+    void setDecimal_decfloat16_Decimal128_roundToZero_onUnderflow() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("0E-398");
 
         field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234E-399"));
+
+        verifySetDecfloat16("0E-398");
     }
 
     @Test
-    public void setDecimal_decfloat34_Decimal64() throws SQLException {
+    void setDecimal_decfloat34_Decimal64() throws SQLException {
         final String stringValue = "1.234567890123456";
-        setDecfloat34Expectations(stringValue);
 
         field.setDecimal(Decimal64.valueOf(stringValue));
+
+        verifySetDecfloat34(stringValue);
     }
 
     @Test
-    public void setDecimal_decfloat34_Decimal128() throws SQLException {
-        setDecfloat34Expectations("1.234567890123456789012345679901234");
-
+    void setDecimal_decfloat34_Decimal128() throws SQLException {
         field.setDecimal(Decimal128.valueOf("1.234567890123456789012345679901234"));
+
+        verifySetDecfloat34("1.234567890123456789012345679901234");
     }
 
     @Test
-    public void getObject_Decimal_decfloat34() throws SQLException {
+    void getObject_Decimal_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456";
         toReturnDecfloat34Expectations(stringValue);
 
         Decimal<?> value = field.getObject(Decimal.class);
-        assertTrue("Expected Decimal128", value instanceof Decimal128);
-        assertEquals("Unexpected value", Decimal128.valueOf(stringValue), value);
+        assertTrue(value instanceof Decimal128, "Expected Decimal128");
+        assertEquals(Decimal128.valueOf(stringValue), value, "Unexpected value");
     }
 
     @Test
-    public void getObject_Decimal_decfloat16() throws SQLException {
+    void getObject_Decimal_decfloat16() throws SQLException {
         setupDecfloat16Field();
         final String stringValue = "1.234567890123456";
         toReturnDecfloat16Expectations(stringValue);
 
         Decimal<?> value = field.getObject(Decimal.class);
-        assertTrue("Expected Decimal64", value instanceof Decimal64);
-        assertEquals("Unexpected value", Decimal64.valueOf(stringValue), value);
+        assertTrue(value instanceof Decimal64, "Expected Decimal64");
+        assertEquals(Decimal64.valueOf(stringValue), value, "Unexpected value");
     }
 
     @Test
-    public void getObject_Decimal32_decfloat34() throws SQLException {
+    void getObject_Decimal32_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456";
         toReturnDecfloat34Expectations(stringValue);
 
         Decimal32 value = field.getObject(Decimal32.class);
-        assertEquals("Unexpected value", Decimal32.valueOf(stringValue), value);
+        assertEquals(Decimal32.valueOf(stringValue), value, "Unexpected value");
     }
 
     @Test
-    public void getObject_Decimal64_decfloat34() throws SQLException {
+    void getObject_Decimal64_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456";
         toReturnDecfloat34Expectations(stringValue);
 
         Decimal64 value = field.getObject(Decimal64.class);
-        assertEquals("Unexpected value", Decimal64.valueOf(stringValue), value);
+        assertEquals(Decimal64.valueOf(stringValue), value, "Unexpected value");
     }
 
     @Test
-    public void getObject_Decimal128_decfloat34() throws SQLException {
+    void getObject_Decimal128_decfloat34() throws SQLException {
         final String stringValue = "1.234567890123456";
         toReturnDecfloat34Expectations(stringValue);
 
         Decimal128 value = field.getObject(Decimal128.class);
-        assertEquals("Unexpected value", Decimal128.valueOf(stringValue), value);
+        assertEquals(Decimal128.valueOf(stringValue), value, "Unexpected value");
     }
 
     @Test
-    public void getBigDecimalNull() throws SQLException {
+    void getBigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result", field.getBigDecimal());
+        assertNull(field.getBigDecimal(), "Expected null result");
     }
 
     @Test
-    public void getDecimalNull() throws SQLException {
+    void getDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result", field.getDecimal());
+        assertNull(field.getDecimal(), "Expected null result");
     }
 
     @Test
-    public void getObject_BigDecimalNull() throws SQLException {
+    void getObject_BigDecimalNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null result for getObject(BigDecimal.class)", field.getObject(BigDecimal.class));
+        assertNull(field.getObject(BigDecimal.class), "Expected null result for getObject(BigDecimal.class)");
     }
 
     @Test
     @Override
-    public void getObject_BigDecimal() throws SQLException {
+    void getObject_BigDecimal() throws SQLException {
         toReturnDecfloat34Expectations("0.0037");
 
         BigDecimal expectedValue = new BigDecimal("0.0037");
-        assertEquals("Unexpected value for BigDecimal", expectedValue, field.getObject(BigDecimal.class));
+        assertEquals(expectedValue, field.getObject(BigDecimal.class), "Unexpected value for BigDecimal");
     }
 
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBigDecimalNonNull() throws SQLException {
+    void getBigDecimalNonNull() throws SQLException {
     }
 
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBigDecimalIntNonNull() throws SQLException {
+    void getBigDecimalIntNonNull() throws SQLException {
     }
 
     @Test
-    public void getBigDecimalDecfloat16() throws SQLException {
+    void getBigDecimalDecfloat16() throws SQLException {
         setupDecfloat16Field();
         toReturnDecfloat16Expectations("9.999999999999999E+384");
 
         BigDecimal expectedValue = new BigDecimal("9.999999999999999E+384");
-        assertEquals("Unexpected value for Decimal64 BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for Decimal64 BigDecimal");
     }
 
     @Test
-    public void getBigDecimalDecfloat34() throws SQLException {
+    void getBigDecimalDecfloat34() throws SQLException {
         toReturnDecfloat34Expectations("9.999999999999999999999999999999999E+6144");
 
         BigDecimal expectedValue = new BigDecimal("9.999999999999999999999999999999999E+6144");
-        assertEquals("Unexpected value for Decimal64 BigDecimal", expectedValue, field.getBigDecimal());
+        assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for Decimal64 BigDecimal");
     }
 
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void setBigDecimalNonNull() throws SQLException {
+    void setBigDecimalNonNull() throws SQLException {
     }
 
     @Test
-    public void setBigDecimal_decfloat16() throws SQLException {
+    void setBigDecimal_decfloat16() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("43.12345678901234");
 
         field.setBigDecimal(new BigDecimal("43.12345678901234"));
+
+        verifySetDecfloat16("43.12345678901234");
     }
 
     @Test
-    public void setBigDecimal_decfloat16_null() throws SQLException {
+    void setBigDecimal_decfloat16_null() throws SQLException {
         setupDecfloat16Field();
-        setNullExpectations();
 
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setBigDecimal_decfloat16_exception_onOverflow() throws SQLException {
+    void setBigDecimal_decfloat16_exception_onOverflow() throws SQLException {
         setupDecfloat16Field();
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
 
-        field.setBigDecimal(new BigDecimal("1.234567890123456E385"));
+        SQLException exception = assertThrows(TypeConversionException.class,
+                () -> field.setBigDecimal(new BigDecimal("1.234567890123456E385")));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void setBigDecimal_decfloat16_roundToZero_onUnderflow() throws SQLException {
+    void setBigDecimal_decfloat16_roundToZero_onUnderflow() throws SQLException {
         setupDecfloat16Field();
         // value too small
         final String stringValue = "1.234567890123456E-399";
-        setDecfloat16Expectations("0E-398");
 
         field.setBigDecimal(new BigDecimal(stringValue));
+
+        verifySetDecfloat16("0E-398");
     }
 
     @Test
-    public void setBigDecimal_decfloat34() throws SQLException {
-        setDecfloat34Expectations("43.123456789012345678901234567890");
-
+    void setBigDecimal_decfloat34() throws SQLException {
         field.setBigDecimal(new BigDecimal("43.123456789012345678901234567890"));
+
+        verifySetDecfloat34("43.123456789012345678901234567890");
     }
 
     @Test
-    public void setBigDecimal_decfloat34Null() throws SQLException {
-        setNullExpectations();
-
+    void setBigDecimal_decfloat34Null() throws SQLException {
         field.setBigDecimal(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setBigDecimal_decfloat34_exception_onOverflow() throws SQLException {
+    void setBigDecimal_decfloat34_exception_onOverflow() {
         // value too big to fit
         final String stringValue = "1.234567890123456789012345678901234E+6145";
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
 
-        field.setBigDecimal(new BigDecimal(stringValue));
+        SQLException exception = assertThrows(SQLException.class,
+                () -> field.setBigDecimal(new BigDecimal(stringValue)));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void setBigDecimal_decfloat34_roundToZero_onUnderflow() throws SQLException {
+    void setBigDecimal_decfloat34_roundToZero_onUnderflow() throws SQLException {
         // value too small
         final String stringValue = "1.234567890123456789012345678901234E-6177";
-        setDecfloat34Expectations("0E-6176");
 
         field.setBigDecimal(new BigDecimal(stringValue));
+
+        verifySetDecfloat34("0E-6176");
     }
 
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void getBooleanNonNull() throws SQLException {
+    void getBooleanNonNull() throws SQLException {
     }
 
     @Test
-    public void getObject_BooleanNull() throws SQLException {
+    void getObject_BooleanNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected null for getObject(Boolean.class)", field.getObject(Boolean.class));
+        assertNull(field.getObject(Boolean.class), "Expected null for getObject(Boolean.class)");
     }
 
     @Test
     @Override
-    public void getObject_Boolean() throws SQLException {
+    void getObject_Boolean() throws SQLException {
         toReturnDecfloat34Expectations("1");
 
-        assertTrue("Expected true from getBoolean", field.getObject(Boolean.class));
+        assertTrue(field.getObject(Boolean.class), "Expected true from getBoolean");
     }
 
     @Test
-    public void getBooleanTrue() throws SQLException {
+    void getBooleanTrue() throws SQLException {
         toReturnDecfloat34Expectations("1");
 
-        assertTrue("Expected true from getBoolean", field.getBoolean());
+        assertTrue(field.getBoolean(), "Expected true from getBoolean");
     }
 
     @Test
-    public void getBooleanFalse() throws SQLException {
+    void getBooleanFalse() throws SQLException {
         // NOTE Any value other than 1 would do
         toReturnDecfloat34Expectations("0");
 
-        assertFalse("Expected false from getBoolean", field.getBoolean());
+        assertFalse(field.getBoolean(), "Expected false from getBoolean");
     }
 
     @Test
-    public void getBoolean_oneWithPrecision2() throws SQLException {
+    void getBoolean_oneWithPrecision2() throws SQLException {
         toReturnDecfloat34Expectations("1.0");
 
         //TODO See also DECIMAL/NUMERIC behavior?
-        // assertTrue("Expected true from getBoolean", field.getBoolean());
-        assertFalse("Expected true from getBoolean", field.getBoolean());
+        // assertTrue(field.getBoolean(), "Expected true from getBoolean");
+        assertFalse(field.getBoolean(), "Expected true from getBoolean");
     }
 
     @Test
-    public void getBoolean_notExactlyOne() throws SQLException {
+    void getBoolean_notExactlyOne() throws SQLException {
         toReturnDecfloat34Expectations("1.1");
 
         //TODO See also DECIMAL/NUMERIC behavior?
-        // assertTrue("Expected true from getBoolean", field.getBoolean());
-        assertFalse("Expected true from getBoolean", field.getBoolean());
+        // assertTrue(field.getBoolean(), "Expected true from getBoolean");
+        assertFalse(field.getBoolean(), "Expected true from getBoolean");
     }
 
     @Test
-    @Ignore("Ignored in favor of more specific tests")
+    @Disabled("Ignored in favor of more specific tests")
     @Override
-    public void setBoolean() throws SQLException {
+    void setBoolean() throws SQLException {
     }
 
     @Test
-    public void setBooleanTrue() throws SQLException {
-        setDecfloat34Expectations("1");
-
+    void setBooleanTrue() throws SQLException {
         field.setBoolean(true);
+
+        verifySetDecfloat34("1");
     }
 
     @Test
-    public void setBooleanFalse() throws SQLException {
-        setDecfloat34Expectations("0");
-
+    void setBooleanFalse() throws SQLException {
         field.setBoolean(false);
+
+        verifySetDecfloat34("0");
     }
 
     @Test
-    public void getByteNull() throws SQLException {
+    void getByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected getByte() to return 0 for NULL value", 0, field.getByte());
+        assertEquals(0, field.getByte(), "Expected getByte() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_ByteNull() throws SQLException {
+    void getObject_ByteNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Byte.class) to return null for NULL value", field.getObject(Byte.class));
+        assertNull(field.getObject(Byte.class), "Expected getObject(Byte.class) to return null for NULL value");
     }
 
     @Test
     @Override
-    public void getByteNonNull() throws SQLException {
+    void getByteNonNull() throws SQLException {
         toReturnDecfloat34Expectations("-128");
 
-        assertEquals("Unexpected value for getByte()", Byte.MIN_VALUE, field.getByte());
+        assertEquals(Byte.MIN_VALUE, field.getByte(), "Unexpected value for getByte()");
     }
 
     @Test
     @Override
-    public void getObject_Byte() throws SQLException {
+    void getObject_Byte() throws SQLException {
         toReturnDecfloat34Expectations("-128");
 
-        assertEquals("Unexpected value for getObject(Byte.class)",
-                Byte.valueOf(Byte.MIN_VALUE), field.getObject(Byte.class));
+        assertEquals(Byte.valueOf(Byte.MIN_VALUE), field.getObject(Byte.class),
+                "Unexpected value for getObject(Byte.class)");
     }
 
     @Test
-    public void getByteTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByteTooHigh() {
         toReturnDecfloat34Expectations("128");
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     @Test
-    public void getByteTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getByteTooLow() {
         toReturnDecfloat34Expectations("-129");
 
-        field.getByte();
+        assertThrows(TypeConversionException.class, field::getByte);
     }
 
     @Test
     @Override
-    public void setByte() throws SQLException {
-        setDecfloat34Expectations("-34");
-
+    void setByte() throws SQLException {
         field.setByte((byte) -34);
+
+        verifySetDecfloat34("-34");
     }
 
     @Test
-    public void getDoubleNull() throws SQLException {
+    void getDoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected getDouble() to return 0.0 for NULL value", 0.0, field.getDouble(), 0.0);
+        assertEquals(0.0, field.getDouble(), 0.0, "Expected getDouble() to return 0.0 for NULL value");
     }
 
     @Test
-    public void getObject_DoubleNull() throws SQLException {
+    void getObject_DoubleNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Double.class) to return null for NUL value", field.getObject(Double.class));
+        assertNull(field.getObject(Double.class), "Expected getObject(Double.class) to return null for NUL value");
     }
 
     @Test
     @Override
-    public void getDoubleNonNull() throws SQLException {
+    void getDoubleNonNull() throws SQLException {
         toReturnDecfloat34Expectations("8.938297342");
 
-        assertEquals("Unexpected value for getDouble()", 8.938297342, field.getDouble(), 0.0);
+        assertEquals(8.938297342, field.getDouble(), 0.0, "Unexpected value for getDouble()");
     }
 
     @Test
     @Override
-    public void getObject_Double() throws SQLException {
+    void getObject_Double() throws SQLException {
         toReturnDecfloat34Expectations("8.938297342");
 
-        assertEquals("Unexpected value for getObject(Double.class)",
-                8.938297342, field.getObject(Double.class), 0.0);
+        assertEquals(8.938297342, field.getObject(Double.class), 0.0, "Unexpected value for getObject(Double.class)");
     }
 
     @Test
-    public void setDouble() throws SQLException {
-        setDecfloat34Expectations("469.1234567");
-
+    void setDouble() throws SQLException {
         field.setDouble(469.1234567);
+
+        verifySetDecfloat34("469.1234567");
     }
 
     @Test
-    public void setDouble_decfloat16() throws SQLException {
+    void setDouble_decfloat16() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("469.1234567");
 
         field.setDouble(469.1234567);
+
+        verifySetDecfloat16("469.1234567");
     }
 
     @Test
-    public void getFloatNull() throws SQLException {
+    void getFloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected getFloat() to return 0.0 for NULL value", 0.0, field.getFloat(), 0.0);
+        assertEquals(0.0, field.getFloat(), 0.0, "Expected getFloat() to return 0.0 for NULL value");
     }
 
     @Test
-    public void getObject_FloatNull() throws SQLException {
+    void getObject_FloatNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Float.class) to return null for NUL value", field.getObject(Float.class));
+        assertNull(field.getObject(Float.class), "Expected getObject(Float.class) to return null for NUL value");
     }
 
     @Test
     @Override
-    public void getFloatNonNull() throws SQLException {
+    void getFloatNonNull() throws SQLException {
         toReturnDecfloat34Expectations("469.12344");
 
-        assertEquals("Unexpected value for getFloat()", 469.12344f, field.getFloat(), 0.0);
+        assertEquals(469.12344f, field.getFloat(), 0.0, "Unexpected value for getFloat()");
     }
 
     @Test
     @Override
-    public void getObject_Float() throws SQLException {
+    void getObject_Float() throws SQLException {
         toReturnDecfloat34Expectations("469.12344");
 
-        assertEquals("Unexpected value for getObject(Float.class)",
-                469.12344f, field.getObject(Float.class), 0.0);
+        assertEquals(469.12344f, field.getObject(Float.class), 0.0, "Unexpected value for getObject(Float.class)");
     }
 
     @Test
     @Override
-    public void setFloat() throws SQLException {
-        // artifact of float -> double -> decimal
-        setDecfloat34Expectations("469.1234436035156");
-
+    void setFloat() throws SQLException {
         field.setFloat(469.12344f);
+
+        // artifact of float -> double -> decimal
+        verifySetDecfloat34("469.1234436035156");
     }
 
     @Test
-    public void getIntNull() throws SQLException {
+    void getIntNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected getInt() to return 0 for NULL value", 0, field.getInt());
+        assertEquals(0, field.getInt(), "Expected getInt() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_IntegerNull() throws SQLException {
+    void getObject_IntegerNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Integer.class) to return null for NUL value", field.getObject(Integer.class));
+        assertNull(field.getObject(Integer.class), "Expected getObject(Integer.class) to return null for NUL value");
     }
 
     @Test
     @Override
-    public void getIntNonNull() throws SQLException {
+    void getIntNonNull() throws SQLException {
         final int expectedValue = 987654321;
         toReturnDecfloat34Expectations(String.valueOf(expectedValue));
 
-        assertEquals("Unexpected value from getInt()", expectedValue, field.getInt());
+        assertEquals(expectedValue, field.getInt(), "Unexpected value from getInt()");
     }
 
     @Test
     @Override
-    public void getObject_Integer() throws SQLException {
+    void getObject_Integer() throws SQLException {
         final int expectedValue = 987654321;
         toReturnDecfloat34Expectations(String.valueOf(expectedValue));
 
-        assertEquals("Unexpected value from getInt()", 987654321, (int) field.getObject(Integer.class));
+        assertEquals(987654321, (int) field.getObject(Integer.class), "Unexpected value from getInt()");
     }
 
     @Test
-    public void getIntTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getIntTooHigh() {
         toReturnDecfloat34Expectations(String.valueOf(Integer.MAX_VALUE + 1L));
 
-        field.getInt();
+        assertThrows(TypeConversionException.class, field::getInt);
     }
 
     @Test
-    public void getIntTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getIntTooLow() {
         toReturnDecfloat34Expectations(String.valueOf(Integer.MIN_VALUE - 1L));
 
-        field.getInt();
+        assertThrows(TypeConversionException.class, field::getInt);
     }
 
     @Test
     @Override
-    public void setInteger() throws SQLException {
+    void setInteger() throws SQLException {
         final int value = 123456;
-        setDecfloat34Expectations(String.valueOf(value));
 
         field.setInteger(value);
+
+        verifySetDecfloat34(String.valueOf(value));
     }
 
     @Test
-    public void getLongNull() throws SQLException {
+    void getLongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertEquals("Expected getLong() to return 0 for NULL value", 0, field.getLong());
+        assertEquals(0, field.getLong(), "Expected getLong() to return 0 for NULL value");
     }
 
     @Test
-    public void getObject_LongNull() throws SQLException {
+    void getObject_LongNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Expected getObject(Long.class) to return null for NUL value", field.getObject(Long.class));
+        assertNull(field.getObject(Long.class), "Expected getObject(Long.class) to return null for NUL value");
     }
 
     @Test
     @Override
-    public void getLongNonNull() throws SQLException {
+    void getLongNonNull() throws SQLException {
         toReturnDecfloat34Expectations(String.valueOf(Long.MAX_VALUE));
 
-        assertEquals("Unexpected value from getLong()", Long.MAX_VALUE, field.getLong());
+        assertEquals(Long.MAX_VALUE, field.getLong(), "Unexpected value from getLong()");
     }
 
     @Test
     @Override
-    public void getObject_Long() throws SQLException {
+    void getObject_Long() throws SQLException {
         toReturnDecfloat34Expectations(String.valueOf(Long.MAX_VALUE));
 
-        assertEquals("Unexpected value from getLong()", Long.MAX_VALUE, (long) field.getObject(Long.class));
+        assertEquals(Long.MAX_VALUE, (long) field.getObject(Long.class), "Unexpected value from getLong()");
     }
 
     @Test
-    public void getLongTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getLongTooHigh() {
         toReturnDecfloat34Expectations(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE).toString());
 
-        field.getLong();
+        assertThrows(TypeConversionException.class, field::getLong);
     }
 
     @Test
-    public void getLongTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getLongTooLow() {
         toReturnDecfloat34Expectations(BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE).toString());
 
-        field.getLong();
+        assertThrows(TypeConversionException.class, field::getLong);
     }
 
     @Test
     @Override
-    public void setLong() throws SQLException {
-        setDecfloat34Expectations("35");
-
+    void setLong() throws SQLException {
         field.setLong(35);
+
+        verifySetDecfloat34("35");
     }
 
     @Test
-    public void setLong_decfloat16_atMaxPrecision() throws SQLException {
+    void setLong_decfloat16_atMaxPrecision() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("9999999999999999");
 
         field.setLong(9999999999999999L);
+
+        verifySetDecfloat16("9999999999999999");
     }
 
     @Test
-    public void setLong_decfloat16_1OverMaxPrecision() throws SQLException {
+    void setLong_decfloat16_1OverMaxPrecision() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("1000000000000000E+1");
 
         field.setLong(10000000000000000L);
+
+        verifySetDecfloat16("1000000000000000E+1");
     }
 
     @Test
-    public void setLong_decfloat16_exceedsPrecision_maxValue() throws SQLException {
+    void setLong_decfloat16_exceedsPrecision_maxValue() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("9223372036854776E+3");
 
         field.setLong(Long.MAX_VALUE);
+
+        verifySetDecfloat16("9223372036854776E+3");
     }
 
     @Test
-    public void setLong_decfloat16_overMaxPrecision_roundingHalfEven_resultDown() throws SQLException {
+    void setLong_decfloat16_overMaxPrecision_roundingHalfEven_resultDown() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("1000000000000000E+1");
 
         field.setLong(10000000000000005L);
+
+        verifySetDecfloat16("1000000000000000E+1");
     }
 
     @Test
-    public void setLong_decfloat16_overMaxPrecision_roundingHalfEven_resultUp() throws SQLException {
+    void setLong_decfloat16_overMaxPrecision_roundingHalfEven_resultUp() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("1000000000000002E+1");
 
         field.setLong(10000000000000015L);
+
+        verifySetDecfloat16("1000000000000002E+1");
     }
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnDecfloat34Expectations("513.00000000");
 
         BigDecimal expectedValue = new BigDecimal("513.00000000");
-        assertEquals("Unexpected value for long BigDecimal", expectedValue, field.getObject());
+        assertEquals(expectedValue, field.getObject(), "Unexpected value for long BigDecimal");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setDecfloat34Expectations("1234.567");
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(new BigDecimal("1234.567"));
+
+        verifySetDecfloat34("1234.567");
     }
 
     // TODO Add tests for other object types
 
     @Test
     @Override
-    public void getShortNonNull() throws SQLException {
+    void getShortNonNull() throws SQLException {
         toReturnDecfloat34Expectations("12345.6789");
 
-        assertEquals("Unexpected value from getShort()", 12345, field.getShort());
+        assertEquals(12345, field.getShort(), "Unexpected value from getShort()");
     }
 
     @Test
     @Override
-    public void getObject_Short() throws SQLException {
+    void getObject_Short() throws SQLException {
         toReturnDecfloat34Expectations("12345.6789");
 
-        assertEquals("Unexpected value from getShort()", 12345, (short) field.getObject(Short.class));
+        assertEquals(12345, (short) field.getObject(Short.class), "Unexpected value from getShort()");
     }
 
     @Test
-    public void getShortTooHigh() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShortTooHigh() {
         toReturnDecfloat34Expectations(String.valueOf(Short.MAX_VALUE + 1));
 
-        field.getShort();
+        assertThrows(TypeConversionException.class, field::getShort);
     }
 
     @Test
-    public void getShortTooLow() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
+    void getShortTooLow() {
         toReturnDecfloat34Expectations(String.valueOf(Short.MIN_VALUE - 1));
 
-        field.getShort();
+        assertThrows(TypeConversionException.class, field::getShort);
     }
 
     @Test
     @Override
-    public void setShort() throws SQLException {
-        setDecfloat34Expectations(String.valueOf(Short.MIN_VALUE));
-
+    void setShort() throws SQLException {
         field.setShort(Short.MIN_VALUE);
+
+        verifySetDecfloat34(String.valueOf(Short.MIN_VALUE));
     }
 
     @Test
-    public void getStringNull() throws SQLException {
+    void getStringNull() throws SQLException {
         toReturnNullExpectations();
 
         assertNull(field.getString());
     }
 
     @Test
-    public void getObject_StringNull() throws SQLException {
+    void getObject_StringNull() throws SQLException {
         toReturnNullExpectations();
 
         assertNull(field.getObject(String.class));
@@ -818,179 +823,181 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnDecfloat34Expectations("4567891.23");
 
-        assertEquals("Unexpected value from getString()", "4567891.23", field.getString());
+        assertEquals("4567891.23", field.getString(), "Unexpected value from getString()");
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnDecfloat34Expectations("4567891.23");
 
-        assertEquals("Unexpected value from getString()", "4567891.23", field.getObject(String.class));
+        assertEquals("4567891.23", field.getObject(String.class), "Unexpected value from getString()");
     }
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
+    void setStringNonNull() throws SQLException {
         setupDecfloat16Field();
-        setDecfloat16Expectations("1234567890123.457");
 
         field.setString("1234567890123.456789");
+
+        verifySetDecfloat16("1234567890123.457");
     }
 
     @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-
+    void setStringNull() throws SQLException {
         field.setString(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setStringNonNumber() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setString("NotANumber");
+    void setStringNonNumber() {
+        assertThrows(TypeConversionException.class, () -> field.setString("NotANumber"));
     }
 
     @Test
-    public void setString_decfloat16_rounding_fitPrecision() throws SQLException {
+    void setString_decfloat16_rounding_fitPrecision() throws SQLException {
         setupDecfloat16Field();
-        // Precision 17 > 16
         final String stringValue = "1.2345678901234567";
-        setDecfloat16Expectations("1.234567890123457");
 
         field.setString(stringValue);
+
+        // Precision 17 > 16
+        verifySetDecfloat16("1.234567890123457");
     }
 
     @Test
-    public void setString_decfloat34_rounding_fitPrecision() throws SQLException {
-        // Precision 35 > 34
+    void setString_decfloat34_rounding_fitPrecision() throws SQLException {
         final String stringValue = "1.2345678901234567890123456789012345";
-        setDecfloat34Expectations("1.234567890123456789012345678901234");
 
         field.setString(stringValue);
+
+        // Precision 35 > 34
+        verifySetDecfloat34("1.234567890123456789012345678901234");
     }
 
     @Test
-    public void setString_decfloat16_exception_onOverflow() throws SQLException {
+    void setString_decfloat16_exception_onOverflow() throws SQLException {
         setupDecfloat16Field();
         // value too big to fit
         final String stringValue = "1.234567890123456E385";
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
 
-        field.setString(stringValue);
+        SQLException exception = assertThrows(TypeConversionException.class, () -> field.setString(stringValue));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void setString_decfloat16_roundToZero_onUnderflow() throws SQLException {
+    void setString_decfloat16_roundToZero_onUnderflow() throws SQLException {
         setupDecfloat16Field();
         // value too small
         final String stringValue = "1.234567890123456E-399";
-        setDecfloat16Expectations("0E-398");
 
         field.setString(stringValue);
+
+        verifySetDecfloat16("0E-398");
     }
 
     @Test
-    public void setString_decfloat34_exception_onOverflow() throws SQLException {
+    void setString_decfloat34_exception_onOverflow() {
         // value too big to fit
         final String stringValue = "1.234567890123456789012345678901234E+6145";
-        expectedException.expect(TypeConversionException.class);
-        expectedException.expectMessage(containsString("out of range"));
 
-        field.setString(stringValue);
+        SQLException exception = assertThrows(TypeConversionException.class, () -> field.setString(stringValue));
+        assertThat(exception, message(containsString("out of range")));
     }
 
     @Test
-    public void setString_decfloat34_roundToZero_onUnderflow() throws SQLException {
+    void setString_decfloat34_roundToZero_onUnderflow() throws SQLException {
         // value too small
         final String stringValue = "1.234567890123456789012345678901234E-6177";
-        setDecfloat34Expectations("0E-6176");
 
         field.setString(stringValue);
+
+        verifySetDecfloat34("0E-6176");
     }
 
     @Test
     @Override
-    public void getObject_BigInteger() throws SQLException {
+    void getObject_BigInteger() throws SQLException {
         toReturnDecfloat34Expectations("4567891.23");
 
-        assertEquals("Unexpected value for getObject(BigInteger.class)",
-                BigInteger.valueOf(4567891), field.getObject(BigInteger.class));
+        assertEquals(BigInteger.valueOf(4567891), field.getObject(BigInteger.class),
+                "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
-    public void getObject_BigInteger_null() throws SQLException {
+    void getObject_BigInteger_null() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(BigInteger.class)", field.getObject(BigInteger.class));
+        assertNull(field.getObject(BigInteger.class), "Unexpected value for getObject(BigInteger.class)");
     }
 
     @Test
     @Override
-    public void setObject_BigInteger() throws SQLException {
-        setDecfloat34Expectations("10");
-
+    void setObject_BigInteger() throws SQLException {
         field.setObject(BigInteger.TEN);
+
+        verifySetDecfloat34("10");
     }
 
     @Test
-    public void setObject_BigInteger_Long_MAX() throws SQLException {
-        setDecfloat34Expectations(String.valueOf(Long.MAX_VALUE));
-
+    void setObject_BigInteger_Long_MAX() throws SQLException {
         field.setObject(BigInteger.valueOf(Long.MAX_VALUE));
+
+        verifySetDecfloat34(String.valueOf(Long.MAX_VALUE));
     }
 
     @Test
-    public void setObject_BigInteger_Long_MAX_plus_1() throws SQLException {
+    void setObject_BigInteger_Long_MAX_plus_1() throws SQLException {
         final BigInteger value = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE);
-        setDecfloat34Expectations(value.toString());
 
         field.setObject(value);
+
+        verifySetDecfloat34(value.toString());
     }
 
     @Test
-    public void setObject_BigInteger_Long_MIN() throws SQLException {
-        setDecfloat34Expectations(String.valueOf(Long.MIN_VALUE));
-
+    void setObject_BigInteger_Long_MIN() throws SQLException {
         field.setObject(BigInteger.valueOf(Long.MIN_VALUE));
+
+        verifySetDecfloat34(String.valueOf(Long.MIN_VALUE));
     }
 
     @Test
-    public void setObject_BigInteger_Long_MIN_minus_1() throws SQLException {
+    void setObject_BigInteger_Long_MIN_minus_1() throws SQLException {
         final BigInteger value = BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE);
-        setDecfloat34Expectations(value.toString());
 
         field.setObject(value);
+
+        verifySetDecfloat34(value.toString());
     }
 
     @Test
-    public void setBigInteger_null() throws SQLException {
-        setNullExpectations();
-
+    void setBigInteger_null() throws SQLException {
         field.setBigInteger(null);
+
+        verifySetNull();
     }
 
     @SuppressWarnings("unused")
     @Test
-    public void constructWithUnsupportedSqlType() throws SQLException {
-        expectedException.expect(SQLException.class);
+    void constructWithUnsupportedSqlType() {
         rowDescriptorBuilder.setType(ISCConstants.SQL_VARYING);
         fieldDescriptor = rowDescriptorBuilder.toFieldDescriptor();
-        new FBDecfloatField<>(fieldDescriptor, fieldData, Types.VARCHAR, Decimal128.class);
+        assertThrows(SQLException.class,
+                () -> new FBDecfloatField<>(fieldDescriptor, fieldData, Types.VARCHAR, Decimal128.class));
     }
 
-    @SuppressWarnings("unused")
     @Test
-    public void constructWithUnsupportedDecimal32() throws SQLException {
-        expectedException.expect(FBDriverNotCapableException.class);
-        expectedException.expectMessage(
-                "Unsupported type org.firebirdsql.extern.decimal.Decimal32 and/or field type 32762");
-        new FBDecfloatField<>(fieldDescriptor, fieldData, JaybirdTypeCodes.DECFLOAT, Decimal32.class);
+    void constructWithUnsupportedDecimal32() {
+        SQLException exception = assertThrows(FBDriverNotCapableException.class,
+                () -> new FBDecfloatField<>(fieldDescriptor, fieldData, JaybirdTypeCodes.DECFLOAT, Decimal32.class));
+        assertThat(exception, message(equalTo(
+                "Unsupported type org.firebirdsql.extern.decimal.Decimal32 and/or field type 32762")));
     }
 
     private FBDecfloatField<Decimal64> setupDecfloat16Field() throws SQLException {
@@ -1014,7 +1021,7 @@ public class FBDecfloatFieldTest extends BaseJUnit4TestFBField<FBDecfloatField<?
     }
 
     @Override
-    protected BigDecimal getNonNullObject() {
+    BigDecimal getNonNullObject() {
         return BigDecimal.ONE;
     }
 }

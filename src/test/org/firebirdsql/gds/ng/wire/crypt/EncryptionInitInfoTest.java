@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,25 +18,23 @@
  */
 package org.firebirdsql.gds.ng.wire.crypt;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
 
 import java.sql.SQLException;
 
-import static org.junit.Assert.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link EncryptionInitInfo}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class EncryptionInitInfoTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class EncryptionInitInfoTest {
 
     private static final EncryptionIdentifier DUMMY_IDENTIFIER = new EncryptionIdentifier("type", "plugin");
 
@@ -55,31 +53,29 @@ public class EncryptionInitInfoTest {
     }
 
     @Test
-    public void successValues() {
+    void successValues() {
         EncryptionInitInfo initInfo = EncryptionInitInfo.success(DUMMY_IDENTIFIER, DUMMY_CIPHER_1, DUMMY_CIPHER_2);
 
-        assertEquals("encryptionIdentifier", DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier());
-        assertEquals("initResult", EncryptionInitInfo.InitResult.SUCCESS, initInfo.getInitResult());
-        assertTrue("success", initInfo.isSuccess());
-        assertNull("exception", initInfo.getException());
-        assertSame("encryptionCipher", DUMMY_CIPHER_1, initInfo.getEncryptionCipher());
-        assertSame("decryptionCipher", DUMMY_CIPHER_2, initInfo.getDecryptionCipher());
+        assertEquals(DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier(), "encryptionIdentifier");
+        assertEquals(EncryptionInitInfo.InitResult.SUCCESS, initInfo.getInitResult(), "initResult");
+        assertTrue(initInfo.isSuccess(), "success");
+        assertNull(initInfo.getException(), "exception");
+        assertSame(DUMMY_CIPHER_1, initInfo.getEncryptionCipher(), "encryptionCipher");
+        assertSame(DUMMY_CIPHER_2, initInfo.getDecryptionCipher(), "decryptionCipher");
     }
 
     @Test
-    public void successRequiresEncryptionCipherNotNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("encryptionCipher");
-
-        EncryptionInitInfo.success(DUMMY_IDENTIFIER, null, DUMMY_CIPHER_2);
+    void successRequiresEncryptionCipherNotNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class,
+                ()-> EncryptionInitInfo.success(DUMMY_IDENTIFIER, null, DUMMY_CIPHER_2));
+        assertThat(exception, message(equalTo("encryptionCipher")));
     }
 
     @Test
-    public void successRequiresDecryptionCipherNotNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("decryptionCipher");
-
-        EncryptionInitInfo.success(DUMMY_IDENTIFIER, DUMMY_CIPHER_1, null);
+    void successRequiresDecryptionCipherNotNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class,
+                ()-> EncryptionInitInfo.success(DUMMY_IDENTIFIER, DUMMY_CIPHER_1, null));
+        assertThat(exception, message(equalTo("decryptionCipher")));
     }
 
     @Test
@@ -87,33 +83,32 @@ public class EncryptionInitInfoTest {
         final SQLException exception = new SQLException();
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, exception);
 
-        assertEquals("encryptionIdentifier", DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier());
-        assertEquals("initResult", EncryptionInitInfo.InitResult.FAILURE, initInfo.getInitResult());
-        assertFalse("success", initInfo.isSuccess());
-        assertSame("exception", exception, initInfo.getException());
+        assertEquals(DUMMY_IDENTIFIER, initInfo.getEncryptionIdentifier(), "encryptionIdentifier");
+        assertEquals(EncryptionInitInfo.InitResult.FAILURE, initInfo.getInitResult(), "initResult");
+        assertFalse(initInfo.isSuccess(), "success");
+        assertSame(exception, initInfo.getException(), "exception");
     }
 
     @Test
-    public void failureRequiresExceptionNotNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("exception");
-
-        EncryptionInitInfo.failure(DUMMY_IDENTIFIER, null);
+    void failureRequiresExceptionNotNull() {
+        NullPointerException exception = assertThrows(NullPointerException.class,
+                ()-> EncryptionInitInfo.failure(DUMMY_IDENTIFIER, null));
+        assertThat(exception, message(equalTo("exception")));
     }
 
     @Test
-    public void failureGetEncryptionCipherNotAllowed() {
+    void failureGetEncryptionCipherNotAllowed() {
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
-        expectedException.expect(IllegalStateException.class);
 
-        initInfo.getEncryptionCipher();
+        //noinspection ResultOfMethodCallIgnored
+        assertThrows(IllegalStateException.class, initInfo::getEncryptionCipher);
     }
 
     @Test
-    public void failureGetDecryptionCipherNotAllowed() {
+    void failureGetDecryptionCipherNotAllowed() {
         EncryptionInitInfo initInfo = EncryptionInitInfo.failure(DUMMY_IDENTIFIER, new SQLException());
-        expectedException.expect(IllegalStateException.class);
 
-        initInfo.getDecryptionCipher();
+        //noinspection ResultOfMethodCallIgnored
+        assertThrows(IllegalStateException.class, initInfo::getDecryptionCipher);
     }
 }

@@ -37,8 +37,4 @@ abstract class TimeZoneCodecAbstractTimeTzTest extends TimeZoneCodecAbstractTest
     static final String EXTIMETZ_ZONE_LE_HEX = "F0AA830E49FE3C00";
     static final String EXTIMETZ_ZONE_BE_HEX = "0E83AAF0FE49003C";
 
-    TimeZoneCodecAbstractTimeTzTest(int tzType) {
-        super(tzType);
-    }
-
 }

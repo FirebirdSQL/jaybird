@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,27 +18,28 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.math.BigDecimal;
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for Firebird 4 extended precision of 38 for decimal (and numeric).
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class DecimalPrecision38SupportTest extends FBJUnit4TestBase {
+class DecimalPrecision38SupportTest {
 
     private static final String CREATE_TABLE =
             "create table extendeddecimal ("
@@ -49,23 +50,44 @@ public class DecimalPrecision38SupportTest extends FBJUnit4TestBase {
                     + "numeric38_4 numeric(38, 4)"
                     + ")";
 
-    @BeforeClass
-    public static void checkDecimalPrecisionOf38() {
-        assumeTrue("Requires DECIMAL/NUMERIC precision 38 support",
-                getDefaultSupportInfo().supportsDecimalPrecision(38));
+    @RegisterExtension
+    @Order(1)
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(supportInfo -> supportInfo.supportsDecimalPrecision(38),
+                    "Requires DECIMAL/NUMERIC precision 38 support")
+            .build();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
+
+    private static Connection connection;
+
+    @BeforeAll
+    static void setupAll() throws Exception{
+        connection = getConnectionViaDriverManager();
     }
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+    @BeforeEach
+    void setUp() throws Exception {
+        connection.setAutoCommit(true);
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from extendeddecimal");
+        }
+    }
+
+    @AfterAll
+    static void tearDownAll() throws Exception {
+        try {
+            connection.close();
+        } finally {
+            connection = null;
         }
     }
 
     @Test
-    public void simpleValuesSelect() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+    void simpleValuesSelect() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             stmt.execute("insert into extendeddecimal (id, decimal19_2, numeric19_2) "
                     + "values (1, 12345678901234567.89, 12345678901234567.89)");
@@ -89,28 +111,25 @@ public class DecimalPrecision38SupportTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void simpleInsert() throws Exception {
+    void simpleInsert() throws Exception {
         final String stringValue = "12345678901234567.89";
         final BigDecimal bdValue = new BigDecimal(stringValue);
         final String stringValue2 = "-12345678901234567.89";
         final BigDecimal bdValue2 = new BigDecimal(stringValue2);
-        try (Connection connection = getConnectionViaDriverManager()) {
-            connection.setAutoCommit(true);
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    "insert into extendeddecimal(id, decimal19_2, numeric19_2) values (?, ?, ?)")) {
-                execute(pstmt, 1, bdValue, bdValue);
-                execute(pstmt, 2, bdValue2, bdValue2);
-            }
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "insert into extendeddecimal(id, decimal19_2, numeric19_2) values (?, ?, ?)")) {
+            execute(pstmt, 1, bdValue, bdValue);
+            execute(pstmt, 2, bdValue2, bdValue2);
+        }
 
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(
-                         "select id, "
-                                 + "decimal19_2, cast(decimal19_2 as varchar(50)) str_decimal19_2, "
-                                 + "numeric19_2, cast(numeric19_2 as varchar(50)) str_numeric19_2 "
-                                 + "from extendeddecimal order by id")) {
-                assertRow(rs, 1, bdValue, stringValue, bdValue, stringValue);
-                assertRow(rs, 2, bdValue2, stringValue2, bdValue2, stringValue2);
-            }
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "select id, "
+                             + "decimal19_2, cast(decimal19_2 as varchar(50)) str_decimal19_2, "
+                             + "numeric19_2, cast(numeric19_2 as varchar(50)) str_numeric19_2 "
+                             + "from extendeddecimal order by id")) {
+            assertRow(rs, 1, bdValue, stringValue, bdValue, stringValue);
+            assertRow(rs, 2, bdValue2, stringValue2, bdValue2, stringValue2);
         }
     }
 
@@ -118,65 +137,62 @@ public class DecimalPrecision38SupportTest extends FBJUnit4TestBase {
      * Both DECIMAL and NUMERIC with precision >= 19 will actually have precision 38.
      */
     @Test
-    public void insert_actualPrecisionIs38() throws Exception {
+    void insert_actualPrecisionIs38() throws Exception {
         final String stringValue = "123456789012345678901234567890123456.78";
         final BigDecimal bdValue = new BigDecimal(stringValue);
-        try (Connection connection = getConnectionViaDriverManager()) {
-            connection.setAutoCommit(false);
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    "insert into extendeddecimal(id, decimal19_2, numeric19_2) values (?, ?, ?)")) {
-                execute(pstmt, 1, bdValue, bdValue);
-            }
+        connection.setAutoCommit(false);
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "insert into extendeddecimal(id, decimal19_2, numeric19_2) values (?, ?, ?)")) {
+            execute(pstmt, 1, bdValue, bdValue);
+        }
 
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(
-                         "select id, "
-                                 + "decimal19_2, cast(decimal19_2 as varchar(50)) str_decimal19_2, "
-                                 + "numeric19_2, cast(numeric19_2 as varchar(50)) str_numeric19_2 "
-                                 + "from extendeddecimal order by id")) {
-                assertRow(rs, 1, bdValue, stringValue, bdValue, stringValue);
-            }
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "select id, "
+                             + "decimal19_2, cast(decimal19_2 as varchar(50)) str_decimal19_2, "
+                             + "numeric19_2, cast(numeric19_2 as varchar(50)) str_numeric19_2 "
+                             + "from extendeddecimal order by id")) {
+            assertRow(rs, 1, bdValue, stringValue, bdValue, stringValue);
         }
     }
 
     @Test
-    public void select_decimal19_2_ResultSetMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement();
+    void select_decimal19_2_ResultSetMetaData() throws Exception {
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select decimal19_2 from extendeddecimal")) {
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            assertEquals("typeName", "DECIMAL", rsmd.getColumnTypeName(1));
-            assertEquals("type", Types.DECIMAL, rsmd.getColumnType(1));
-            assertEquals("className", "java.math.BigDecimal", rsmd.getColumnClassName(1));
-            assertEquals("precision", 19, rsmd.getPrecision(1));
-            assertEquals("scale", 2, rsmd.getScale(1));
-            assertEquals("displaySize", 21, rsmd.getColumnDisplaySize(1));
-            assertTrue("searchable", rsmd.isSearchable(1));
-            assertTrue("signed", rsmd.isSigned(1));
+            assertEquals("DECIMAL", rsmd.getColumnTypeName(1), "typeName");
+            assertEquals(Types.DECIMAL, rsmd.getColumnType(1), "type");
+            assertEquals("java.math.BigDecimal", rsmd.getColumnClassName(1), "className");
+            assertEquals(19, rsmd.getPrecision(1), "precision");
+            assertEquals(2, rsmd.getScale(1), "scale");
+            assertEquals(21, rsmd.getColumnDisplaySize(1), "displaySize");
+            assertTrue(rsmd.isSearchable(1), "searchable");
+            assertTrue(rsmd.isSigned(1), "signed");
         }
     }
 
     @Test
-    public void select_numeric19_2_ResultSetMetaData() throws Exception {
+    void select_numeric19_2_ResultSetMetaData() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select numeric19_2 from extendeddecimal")) {
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            assertEquals("typeName", "NUMERIC", rsmd.getColumnTypeName(1));
-            assertEquals("type", Types.NUMERIC, rsmd.getColumnType(1));
-            assertEquals("className", "java.math.BigDecimal", rsmd.getColumnClassName(1));
-            assertEquals("precision", 19, rsmd.getPrecision(1));
-            assertEquals("scale", 2, rsmd.getScale(1));
-            assertEquals("displaySize", 21, rsmd.getColumnDisplaySize(1));
-            assertTrue("searchable", rsmd.isSearchable(1));
-            assertTrue("signed", rsmd.isSigned(1));
+            assertEquals("NUMERIC", rsmd.getColumnTypeName(1), "typeName");
+            assertEquals(Types.NUMERIC, rsmd.getColumnType(1), "type");
+            assertEquals("java.math.BigDecimal", rsmd.getColumnClassName(1), "className");
+            assertEquals(19, rsmd.getPrecision(1), "precision");
+            assertEquals(2, rsmd.getScale(1), "scale");
+            assertEquals(21, rsmd.getColumnDisplaySize(1), "displaySize");
+            assertTrue(rsmd.isSearchable(1), "searchable");
+            assertTrue(rsmd.isSigned(1), "signed");
         }
     }
 
     @Test
-    public void insertAndSelectMinAndMaxValues() throws Exception {
+    void insertAndSelectMinAndMaxValues() throws Exception {
         final String stringValue = "9999999999999999999999999999999999.9999";
         final BigDecimal bdValue = new BigDecimal(stringValue);
         final String stringValue2 = "-9999999999999999999999999999999999.9999";
@@ -213,24 +229,24 @@ public class DecimalPrecision38SupportTest extends FBJUnit4TestBase {
             BigDecimal expectedDecimal19_2, String expectedDecimal19_2String,
             BigDecimal expectedNumeric19_2, String expectedNumeric19_2String) throws Exception {
         String prefix = "id=" + expectedId;
-        assertTrue(prefix + " expected row", resultSet.next());
-        assertEquals(prefix, expectedId, resultSet.getInt("id"));
-        assertEquals(prefix + " decimal19_2", expectedDecimal19_2, resultSet.getBigDecimal("decimal19_2"));
-        assertEquals(prefix + " numeric19_2", expectedNumeric19_2, resultSet.getBigDecimal("numeric19_2"));
-        assertEquals(prefix + " str_decimal19_2", expectedDecimal19_2String, resultSet.getString("str_decimal19_2"));
-        assertEquals(prefix + " str_numeric19_2", expectedNumeric19_2String, resultSet.getString("str_numeric19_2"));
+        assertTrue(resultSet.next(), prefix + " expected row");
+        assertEquals(expectedId, resultSet.getInt("id"), prefix);
+        assertEquals(expectedDecimal19_2, resultSet.getBigDecimal("decimal19_2"), prefix + " decimal19_2");
+        assertEquals(expectedNumeric19_2, resultSet.getBigDecimal("numeric19_2"), prefix + " numeric19_2");
+        assertEquals(expectedDecimal19_2String, resultSet.getString("str_decimal19_2"), prefix + " str_decimal19_2");
+        assertEquals(expectedNumeric19_2String, resultSet.getString("str_numeric19_2"), prefix + " str_numeric19_2");
     }
 
     private static void assertRow38_4(ResultSet resultSet, int expectedId,
             BigDecimal expectedDecimal19_2, String expectedDecimal19_2String,
             BigDecimal expectedNumeric19_2, String expectedNumeric19_2String) throws Exception {
         String prefix = "id=" + expectedId;
-        assertTrue(prefix + " expected row", resultSet.next());
-        assertEquals(prefix, expectedId, resultSet.getInt("id"));
-        assertEquals(prefix + " decimal38_4", expectedDecimal19_2, resultSet.getBigDecimal("decimal38_4"));
-        assertEquals(prefix + " numeric38_4", expectedNumeric19_2, resultSet.getBigDecimal("numeric38_4"));
-        assertEquals(prefix + " str_decimal38_4", expectedDecimal19_2String, resultSet.getString("str_decimal38_4"));
-        assertEquals(prefix + " str_numeric38_4", expectedNumeric19_2String, resultSet.getString("str_numeric38_4"));
+        assertTrue(resultSet.next(), prefix + " expected row");
+        assertEquals(expectedId, resultSet.getInt("id"), prefix);
+        assertEquals(expectedDecimal19_2, resultSet.getBigDecimal("decimal38_4"), prefix + " decimal38_4");
+        assertEquals(expectedNumeric19_2, resultSet.getBigDecimal("numeric38_4"), prefix + " numeric38_4");
+        assertEquals(expectedDecimal19_2String, resultSet.getString("str_decimal38_4"), prefix + " str_decimal38_4");
+        assertEquals(expectedNumeric19_2String, resultSet.getString("str_numeric38_4"), prefix + " str_numeric38_4");
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,46 +18,46 @@
  */
 package org.firebirdsql.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class StringUtilsTest {
+class StringUtilsTest {
 
     @Test
-    public void trimToNull_null_yields_null() {
+    void trimToNull_null_yields_null() {
         assertNull(StringUtils.trimToNull(null));
     }
 
     @Test
-    public void trimToNull_empty_yields_null() {
+    void trimToNull_empty_yields_null() {
         assertNull(StringUtils.trimToNull(""));
     }
 
     @Test
-    public void trimToNull_blank_yields_null() {
+    void trimToNull_blank_yields_null() {
         assertNull(StringUtils.trimToNull(" "));
     }
 
     @Test
-    public void trimToNull_nonEmptyWithoutSpaceSuffixPrefix_yields_value() {
+    void trimToNull_nonEmptyWithoutSpaceSuffixPrefix_yields_value() {
         final String value = "Without space as prefix or suffix";
         assertEquals(value, StringUtils.trimToNull(value));
     }
 
     @Test
-    public void trimToNull_startsWithSpace_yields_valueWithoutSpace() {
+    void trimToNull_startsWithSpace_yields_valueWithoutSpace() {
         final String value = " starts with space";
         final String expectedValue = "starts with space";
         assertEquals(expectedValue, StringUtils.trimToNull(value));
     }
 
     @Test
-    public void trimToNull_endsWithSpace_yields_valueWithoutSpace() {
+    void trimToNull_endsWithSpace_yields_valueWithoutSpace() {
         final String value = "ends with space ";
         final String expectedValue = "ends with space";
         assertEquals(expectedValue, StringUtils.trimToNull(value));

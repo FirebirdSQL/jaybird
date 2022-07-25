@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,8 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.AbstractStatementTimeoutTest;
 import org.firebirdsql.gds.ng.FbDatabase;
@@ -27,11 +27,12 @@ import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.ProtocolCollection;
 import org.firebirdsql.gds.ng.wire.WireDatabaseConnection;
 import org.firebirdsql.util.Unstable;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
+import static org.firebirdsql.common.extension.RequireProtocolExtension.requireProtocolVersion;
 
 /**
  * Tests for {@link V16Statement} timeouts in the V16 protocol.
@@ -42,20 +43,18 @@ import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersio
 @Unstable("Tests might spuriously fail if the connection is slow (eg for remote database tests)")
 public class V16StatementTimeoutTest extends AbstractStatementTimeoutTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(16);
+    @RegisterExtension
+    @Order(1)
+    public static final RequireProtocolExtension requireProtocol = requireProtocolVersion(16);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.excludesNativeOnly();
 
-    private final V16CommonConnectionInfo commonConnectionInfo;
+    private final V16CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    public V16StatementTimeoutTest() {
-        this(new V16CommonConnectionInfo());
-    }
-
-    protected V16StatementTimeoutTest(V16CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
+    protected V16CommonConnectionInfo commonConnectionInfo() {
+        return new V16CommonConnectionInfo();
     }
 
     protected final ProtocolCollection getProtocolCollection() {
@@ -67,6 +66,7 @@ public class V16StatementTimeoutTest extends AbstractStatementTimeoutTest {
         return commonConnectionInfo.getExpectedDatabaseType();
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected final FbDatabase createDatabase() throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,

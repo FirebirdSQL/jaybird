@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,28 +18,23 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.jdbc.escape.EscapeFunctionAsserts.assertParseException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ConstantSQLFunctionTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class ConstantSQLFunctionTest {
 
     private static final ConstantSQLFunction function = new ConstantSQLFunction("name");
 
     @Test
-    public void testWithoutArguments() throws Exception {
+    void testWithoutArguments() throws Exception {
         assertEquals("name", function.apply());
     }
 
     @Test
-    public void testWithArguments() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-
-        assertEquals("name", function.apply("argument"));
+    void testWithArguments() {
+        assertParseException(() -> assertEquals("name", function.apply("argument")),
+                "Invalid number of arguments, expected no arguments, received 1");
     }
 }

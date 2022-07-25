@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,15 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.firebirdsql.common.FBTestProperties;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,16 +35,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the decfloat support, which is only available in Firebird 4.0 or higher.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class DecfloatSupportTest extends FBJUnit4TestBase {
+class DecfloatSupportTest {
 
     private static final BigDecimal DECFLOAT_16_MAX = new BigDecimal("9999999999999999E+369");
     private static final BigDecimal DECFLOAT_34_MAX = new BigDecimal("9999999999999999999999999999999999E+6111");
@@ -52,24 +53,44 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                     + "decfloat34 decfloat(34)"
                     + ")";
 
-    @BeforeClass
-    public static void checkDecfloatSupport() {
-        // NOTE: For native tests will also requires use of a Firebird 4 client library
-        assumeTrue("Test requires DECFLOAT support on server", getDefaultSupportInfo().supportsDecfloat());
+    @RegisterExtension
+    @Order(1)
+    // NOTE: native tests also require use of a Firebird 4 client library
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsDecfloat, "requires decfloat support")
+            .build();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_TABLE);
+
+    private static Connection connection;
+
+    @BeforeAll
+    static void setupAll() throws Exception{
+        connection = getConnectionViaDriverManager();
     }
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+    @BeforeEach
+    void setUp() throws Exception {
+        connection.setAutoCommit(true);
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from decfloattest");
+        }
+    }
+
+    @AfterAll
+    static void tearDownAll() throws Exception {
+        try {
+            connection.close();
+        } finally {
+            connection = null;
         }
     }
 
     @Test
-    public void simpleValueSelects() throws Exception {
-        // NOTE Currently broken due to CORE-5696
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+    void simpleValueSelects() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             stmt.execute("insert into decfloattest(id, decfloat16, decfloat34) values (1, null, null)");
             stmt.execute("insert into decfloattest(id, decfloat16, decfloat34) values (2, 1, 1)");
@@ -92,44 +113,42 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                 assertEquals(DECFLOAT_16_MAX, rs.getBigDecimal("decfloat16"));
                 assertEquals(DECFLOAT_34_MAX, rs.getBigDecimal("decfloat34"));
 
-                assertFalse("expected no more rows", rs.next());
+                assertFalse(rs.next(), "expected no more rows");
             }
         }
     }
 
     @Test
-    public void select_decfloat16_ResultSetMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement();
+    void select_decfloat16_ResultSetMetaData() throws Exception {
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select decfloat16 from decfloattest")) {
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            assertEquals("typeName", "DECFLOAT", rsmd.getColumnTypeName(1));
-            assertEquals("type", JaybirdTypeCodes.DECFLOAT, rsmd.getColumnType(1));
-            assertEquals("className", "java.math.BigDecimal", rsmd.getColumnClassName(1));
-            assertEquals("precision", 16, rsmd.getPrecision(1));
-            assertEquals("scale", 0, rsmd.getScale(1));
-            assertEquals("displaySize", 23, rsmd.getColumnDisplaySize(1));
-            assertTrue("searchable", rsmd.isSearchable(1));
-            assertTrue("signed", rsmd.isSigned(1));
+            assertEquals("DECFLOAT", rsmd.getColumnTypeName(1), "typeName");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, rsmd.getColumnType(1), "type");
+            assertEquals("java.math.BigDecimal", rsmd.getColumnClassName(1), "className");
+            assertEquals(16, rsmd.getPrecision(1), "precision");
+            assertEquals(0, rsmd.getScale(1), "scale");
+            assertEquals(23, rsmd.getColumnDisplaySize(1), "displaySize");
+            assertTrue(rsmd.isSearchable(1), "searchable");
+            assertTrue(rsmd.isSigned(1), "signed");
         }
     }
 
     @Test
-    public void select_decfloat34_ResultSetMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement();
+    void select_decfloat34_ResultSetMetaData() throws Exception {
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select decfloat34 from decfloattest")) {
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            assertEquals("typeName", "DECFLOAT", rsmd.getColumnTypeName(1));
-            assertEquals("type", JaybirdTypeCodes.DECFLOAT, rsmd.getColumnType(1));
-            assertEquals("className", "java.math.BigDecimal", rsmd.getColumnClassName(1));
-            assertEquals("precision", 34, rsmd.getPrecision(1));
-            assertEquals("scale", 0, rsmd.getScale(1));
-            assertEquals("displaySize", 42, rsmd.getColumnDisplaySize(1));
-            assertTrue("searchable", rsmd.isSearchable(1));
-            assertTrue("signed", rsmd.isSigned(1));
+            assertEquals("DECFLOAT", rsmd.getColumnTypeName(1), "typeName");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, rsmd.getColumnType(1), "type");
+            assertEquals("java.math.BigDecimal", rsmd.getColumnClassName(1), "className");
+            assertEquals(34, rsmd.getPrecision(1), "precision");
+            assertEquals(0, rsmd.getScale(1), "scale");
+            assertEquals(42, rsmd.getColumnDisplaySize(1), "displaySize");
+            assertTrue(rsmd.isSearchable(1), "searchable");
+            assertTrue(rsmd.isSigned(1), "signed");
         }
     }
 
@@ -137,14 +156,13 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
      * Tests if values inserted correctly round trip
      */
     @Test
-    public void insert_parameterized() throws Exception {
+    void insert_parameterized() throws Exception {
         // String comparison might be sensitive to platform-dependent library used by Firebird(?)
         final BigDecimal bd16AllDigits = new BigDecimal("1234567890123456E123");
         final BigDecimal bd34AllDigits = new BigDecimal("1234567890123456789012345678901234E1234");
         final BigDecimal one_pow_300 = BigDecimal.ONE.scaleByPowerOfTen(300);
         final BigDecimal one_pow_3000 = BigDecimal.ONE.scaleByPowerOfTen(3000);
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement statement = connection.createStatement();
+        try (Statement statement = connection.createStatement();
              PreparedStatement insert = connection.prepareStatement(
                      "insert into decfloattest (id, decfloat16, decfloat34) values (?, ?, ?)")) {
             connection.setAutoCommit(false);
@@ -167,16 +185,15 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
                 assertRow(rs, 4, bd16AllDigits, "1.234567890123456E+138",
                         bd34AllDigits, "1.234567890123456789012345678901234E+1267");
                 assertRow(rs, 5, one_pow_300, "1E+300", one_pow_3000, "1E+3000");
-                assertFalse("expected no more rows", rs.next());
+                assertFalse(rs.next(), "expected no more rows");
             }
         }
     }
 
     // This is more a test of Firebird than of Jaybird
     @Test
-    public void testLiteralConversion() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+    void testLiteralConversion() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             List<LiteralTestCase> literalTestCases = Arrays.asList(
                     new LiteralTestCase(1, "-0", BigDecimal.ZERO, "-0", BigDecimal.ZERO, "-0"),
@@ -215,36 +232,34 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void insert_decfloat16_ParameterMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             PreparedStatement insert = connection.prepareStatement(
+    void insert_decfloat16_ParameterMetaData() throws Exception {
+        try (PreparedStatement insert = connection.prepareStatement(
                      "insert into decfloattest (decfloat16) values (?)")) {
             ParameterMetaData pmd = insert.getParameterMetaData();
 
-            assertEquals("typeName", "DECFLOAT", pmd.getParameterTypeName(1));
-            assertEquals("type", JaybirdTypeCodes.DECFLOAT, pmd.getParameterType(1));
-            assertEquals("className", "java.math.BigDecimal", pmd.getParameterClassName(1));
-            assertEquals("precision", 16, pmd.getPrecision(1));
-            assertEquals("scale", 0, pmd.getScale(1));
-            assertTrue("signed", pmd.isSigned(1));
-            assertEquals("parameterMode", ParameterMetaData.parameterModeIn, pmd.getParameterMode(1));
+            assertEquals("DECFLOAT", pmd.getParameterTypeName(1), "typeName");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, pmd.getParameterType(1), "type");
+            assertEquals("java.math.BigDecimal", pmd.getParameterClassName(1), "className");
+            assertEquals(16, pmd.getPrecision(1), "precision");
+            assertEquals(0, pmd.getScale(1), "scale");
+            assertTrue(pmd.isSigned(1), "signed");
+            assertEquals(ParameterMetaData.parameterModeIn, pmd.getParameterMode(1), "parameterMode");
         }
     }
 
     @Test
-    public void insert_decfloat34_ParameterMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             PreparedStatement insert = connection.prepareStatement(
+    void insert_decfloat34_ParameterMetaData() throws Exception {
+        try (PreparedStatement insert = connection.prepareStatement(
                      "insert into decfloattest (decfloat34) values (?)")) {
             ParameterMetaData pmd = insert.getParameterMetaData();
 
-            assertEquals("typeName", "DECFLOAT", pmd.getParameterTypeName(1));
-            assertEquals("type", JaybirdTypeCodes.DECFLOAT, pmd.getParameterType(1));
-            assertEquals("className", "java.math.BigDecimal", pmd.getParameterClassName(1));
-            assertEquals("precision", 34, pmd.getPrecision(1));
-            assertEquals("scale", 0, pmd.getScale(1));
-            assertTrue("signed", pmd.isSigned(1));
-            assertEquals("parameterMode", ParameterMetaData.parameterModeIn, pmd.getParameterMode(1));
+            assertEquals("DECFLOAT", pmd.getParameterTypeName(1), "typeName");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, pmd.getParameterType(1), "type");
+            assertEquals("java.math.BigDecimal", pmd.getParameterClassName(1), "className");
+            assertEquals(34, pmd.getPrecision(1), "precision");
+            assertEquals(0, pmd.getScale(1), "scale");
+            assertTrue(pmd.isSigned(1), "signed");
+            assertEquals(ParameterMetaData.parameterModeIn, pmd.getParameterMode(1), "parameterMode");
         }
     }
 
@@ -252,73 +267,67 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
      * Tests the value returned by {@link FBDatabaseMetaData#getTypeInfo()} (specifically only for DECFLOAT).
      */
     @Test
-    public void databaseMetaData_TypeInfo() throws Exception {
+    void databaseMetaData_TypeInfo() throws Exception {
         // TODO Create separate test for all typeinfo information
-        try (Connection con = getConnectionViaDriverManager()) {
-            DatabaseMetaData dbmd = con.getMetaData();
+        DatabaseMetaData dbmd = connection.getMetaData();
 
-            try (ResultSet rs = dbmd.getTypeInfo()) {
-                boolean foundDecfloatType = false;
-                while (rs.next()) {
-                    if (!"DECFLOAT".equals(rs.getString("TYPE_NAME"))) {
-                        continue;
-                    }
-                    foundDecfloatType = true;
-                    assertEquals("Unexpected DATA_TYPE", JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"));
-                    assertEquals("Unexpected PRECISION", 34, rs.getInt("PRECISION"));
-                    assertEquals("Unexpected NULLABLE", DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"));
-                    assertFalse("Unexpected CASE_SENSITIVE", rs.getBoolean("CASE_SENSITIVE"));
-                    assertEquals("Unexpected SEARCHABLE", DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"));
-                    assertFalse("Unexpected UNSIGNED_ATTRIBUTE", rs.getBoolean("UNSIGNED_ATTRIBUTE"));
-                    assertFalse("Unexpected FIXED_PREC_SCALE", rs.getBoolean("FIXED_PREC_SCALE"));
-                    assertFalse("Unexpected AUTO_INCREMENT", rs.getBoolean("AUTO_INCREMENT"));
-                    assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
-                    // Not testing other values
+        try (ResultSet rs = dbmd.getTypeInfo()) {
+            boolean foundDecfloatType = false;
+            while (rs.next()) {
+                if (!"DECFLOAT".equals(rs.getString("TYPE_NAME"))) {
+                    continue;
                 }
-                assertTrue("Expected to find decfloat type in typeInfo", foundDecfloatType);
+                foundDecfloatType = true;
+                assertEquals(JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"), "Unexpected DATA_TYPE");
+                assertEquals(34, rs.getInt("PRECISION"), "Unexpected PRECISION");
+                assertEquals(DatabaseMetaData.typeNullable, rs.getInt("NULLABLE"), "Unexpected NULLABLE");
+                assertFalse(rs.getBoolean("CASE_SENSITIVE"), "Unexpected CASE_SENSITIVE");
+                assertEquals(DatabaseMetaData.typeSearchable, rs.getInt("SEARCHABLE"), "Unexpected SEARCHABLE");
+                assertFalse(rs.getBoolean("UNSIGNED_ATTRIBUTE"), "Unexpected UNSIGNED_ATTRIBUTE");
+                assertFalse(rs.getBoolean("FIXED_PREC_SCALE"), "Unexpected FIXED_PREC_SCALE");
+                assertFalse(rs.getBoolean("AUTO_INCREMENT"), "Unexpected AUTO_INCREMENT");
+                assertEquals(10, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
+                // Not testing other values
             }
+            assertTrue(foundDecfloatType, "Expected to find decfloat type in typeInfo");
         }
     }
 
     @Test
-    public void databaseMetaData_getColumns_decfloat16() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            DatabaseMetaData dbmd = con.getMetaData();
-            try (ResultSet rs = dbmd.getColumns(null, null, "DECFLOATTEST", "DECFLOAT16")) {
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Unexpected COLUMN_NAME", "DECFLOAT16", rs.getString("COLUMN_NAME"));
-                assertEquals("Unexpected DATA_TYPE", JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"));
-                assertEquals("Unexpected TYPE_NAME", "DECFLOAT", rs.getString("TYPE_NAME"));
-                assertEquals("Unexpected COLUMN_SIZE", 16, rs.getInt("COLUMN_SIZE"));
-                assertEquals("Unexpected DECIMAL_DIGITS", 0, rs.getInt("DECIMAL_DIGITS"));
-                assertTrue("Expected null DECIMAL_DIGITS", rs.wasNull());
-                assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
-                assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"));
-                assertEquals("Unexpected IS_AUTOINCREMENT", "NO", rs.getString("IS_AUTOINCREMENT"));
+    void databaseMetaData_getColumns_decfloat16() throws Exception {
+        DatabaseMetaData dbmd = connection.getMetaData();
+        try (ResultSet rs = dbmd.getColumns(null, null, "DECFLOATTEST", "DECFLOAT16")) {
+            assertTrue(rs.next(), "Expected a row");
+            assertEquals("DECFLOAT16", rs.getString("COLUMN_NAME"), "Unexpected COLUMN_NAME");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"), "Unexpected DATA_TYPE");
+            assertEquals("DECFLOAT", rs.getString("TYPE_NAME"), "Unexpected TYPE_NAME");
+            assertEquals(16, rs.getInt("COLUMN_SIZE"), "Unexpected COLUMN_SIZE");
+            assertEquals(0, rs.getInt("DECIMAL_DIGITS"), "Unexpected DECIMAL_DIGITS");
+            assertTrue(rs.wasNull(), "Expected null DECIMAL_DIGITS");
+            assertEquals(10, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
+            assertEquals(DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"), "Unexpected NULLABLE");
+            assertEquals("NO", rs.getString("IS_AUTOINCREMENT"), "Unexpected IS_AUTOINCREMENT");
 
-                assertFalse("Expected no second row", rs.next());
-            }
+            assertFalse(rs.next(), "Expected no second row");
         }
     }
 
     @Test
-    public void databaseMetaData_getColumns_decfloat34() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            DatabaseMetaData dbmd = con.getMetaData();
-            try (ResultSet rs = dbmd.getColumns(null, null, "DECFLOATTEST", "DECFLOAT34")) {
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Unexpected COLUMN_NAME", "DECFLOAT34", rs.getString("COLUMN_NAME"));
-                assertEquals("Unexpected DATA_TYPE", JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"));
-                assertEquals("Unexpected TYPE_NAME", "DECFLOAT", rs.getString("TYPE_NAME"));
-                assertEquals("Unexpected COLUMN_SIZE", 34, rs.getInt("COLUMN_SIZE"));
-                assertEquals("Unexpected DECIMAL_DIGITS", 0, rs.getInt("DECIMAL_DIGITS"));
-                assertTrue("Expected null DECIMAL_DIGITS", rs.wasNull());
-                assertEquals("Unexpected NUM_PREC_RADIX", 10, rs.getInt("NUM_PREC_RADIX"));
-                assertEquals("Unexpected NULLABLE", DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"));
-                assertEquals("Unexpected IS_AUTOINCREMENT", "NO", rs.getString("IS_AUTOINCREMENT"));
+    void databaseMetaData_getColumns_decfloat34() throws Exception {
+        DatabaseMetaData dbmd = connection.getMetaData();
+        try (ResultSet rs = dbmd.getColumns(null, null, "DECFLOATTEST", "DECFLOAT34")) {
+            assertTrue(rs.next(), "Expected a row");
+            assertEquals("DECFLOAT34", rs.getString("COLUMN_NAME"), "Unexpected COLUMN_NAME");
+            assertEquals(JaybirdTypeCodes.DECFLOAT, rs.getInt("DATA_TYPE"), "Unexpected DATA_TYPE");
+            assertEquals("DECFLOAT", rs.getString("TYPE_NAME"), "Unexpected TYPE_NAME");
+            assertEquals(34, rs.getInt("COLUMN_SIZE"), "Unexpected COLUMN_SIZE");
+            assertEquals(0, rs.getInt("DECIMAL_DIGITS"), "Unexpected DECIMAL_DIGITS");
+            assertTrue(rs.wasNull(), "Expected null DECIMAL_DIGITS");
+            assertEquals(10, rs.getInt("NUM_PREC_RADIX"), "Unexpected NUM_PREC_RADIX");
+            assertEquals(DatabaseMetaData.columnNullable, rs.getInt("NULLABLE"), "Unexpected NULLABLE");
+            assertEquals("NO", rs.getString("IS_AUTOINCREMENT"), "Unexpected IS_AUTOINCREMENT");
 
-                assertFalse("Expected no second row", rs.next());
-            }
+            assertFalse(rs.next(), "Expected no second row");
         }
     }
 
@@ -333,12 +342,12 @@ public class DecfloatSupportTest extends FBJUnit4TestBase {
     private static void assertRow(ResultSet resultSet, int expectedId,
             BigDecimal expectedDecfloat16, String expectedDecfloat16String,
             BigDecimal expectedDecfloat34, String expectedDecfloat34String) throws Exception {
-        assertTrue("Expected row for id=" + expectedId, resultSet.next());
-        assertEquals("id", expectedId, resultSet.getInt("id"));
-        assertEquals("decfloat16 " + expectedId, expectedDecfloat16, resultSet.getBigDecimal("decfloat16"));
-        assertEquals("decfloat16str " + expectedId, expectedDecfloat16String, resultSet.getString("decfloat16str"));
-        assertEquals("decfloat34 " + expectedId, expectedDecfloat34, resultSet.getBigDecimal("decfloat34"));
-        assertEquals("decfloat34str " + expectedId, expectedDecfloat34String, resultSet.getString("decfloat34str"));
+        assertTrue(resultSet.next(), "Expected row for id=" + expectedId);
+        assertEquals(expectedId, resultSet.getInt("id"), "id");
+        assertEquals(expectedDecfloat16, resultSet.getBigDecimal("decfloat16"), "decfloat16 " + expectedId);
+        assertEquals(expectedDecfloat16String, resultSet.getString("decfloat16str"), "decfloat16str " + expectedId);
+        assertEquals(expectedDecfloat34, resultSet.getBigDecimal("decfloat34"), "decfloat34 " + expectedId);
+        assertEquals(expectedDecfloat34String, resultSet.getString("decfloat34str"), "decfloat34str " + expectedId);
     }
 
     private static class LiteralTestCase {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,64 +18,64 @@
  */
 package org.firebirdsql.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link SQLExceptionChainBuilder}.
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class SQLExceptionChainBuilderTest {
+class SQLExceptionChainBuilderTest {
 
     /**
      * Test for empty SQLExceptionChainBuilder.
      */
     @Test
-    public void testBuilder_EmptyOnConstruct_NoAppend() {
+    void testBuilder_EmptyOnConstruct_NoAppend() {
         SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>();
         
-        assertFalse("Empty SQLExceptionChainBuilder should have no Exception", builder.hasException());
-        assertNull("Empty SQLExceptionChainBuilder should have null Exception", builder.getException());
+        assertFalse(builder.hasException(), "Empty SQLExceptionChainBuilder should have no Exception");
+        assertNull(builder.getException(), "Empty SQLExceptionChainBuilder should have null Exception");
     }
     
     /**
      * Test for SQLExceptionChainBuilder constructed with a root SQLException and no further appends.
      */
     @Test
-    public void testBuilder_RootOnConstruct_NoAppend() {
+    void testBuilder_RootOnConstruct_NoAppend() {
         SQLException root = new SQLException();
         
         SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>(root);
         
-        assertTrue("SQLExceptionChainBuilder has a exception", builder.hasException());
-        assertSame("Expected root exception to be identical to returned exception", root, builder.getException());
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        assertSame(root, builder.getException(), "Expected root exception to be identical to returned exception");
     }
     
     /**
      * Test for SQLExceptionChainBuilder constructed empty with one append
      */
     @Test
-    public void testBuilder_EmptyOnConstruct_OneAppend() {
+    void testBuilder_EmptyOnConstruct_OneAppend() {
         SQLException root = new SQLException();
         SQLExceptionChainBuilder<SQLException> builder = new SQLExceptionChainBuilder<>();
 
         builder.append(root);
         
-        assertTrue("SQLExceptionChainBuilder has a exception", builder.hasException());
-        assertSame("Expected root exception to be identical to returned exception", root, builder.getException());
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
+        assertSame(root, builder.getException(), "Expected root exception to be identical to returned exception");
     }
     
     /**
      * Test for SQLExceptionChainBuilder constructed with a root SQLException and multiple appends.
      */
     @Test
-    public void testBuilder_RootOnConstruct_MultipleAppends() {
+    void testBuilder_RootOnConstruct_MultipleAppends() {
         SQLException root = new SQLException();
         List<SQLException> additionalExceptions = new ArrayList<>();
         for (int count = 1; count <= 3; count++) {
@@ -87,9 +87,9 @@ public class SQLExceptionChainBuilderTest {
             builder.append(ex);
         }
         
-        assertTrue("SQLExceptionChainBuilder has a exception", builder.hasException());
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
         SQLException resultException = builder.getException();
-        assertSame("Expected root exception to be identical to returned exception", root, resultException);
+        assertSame(root, resultException, "Expected root exception to be identical to returned exception");
         checkExceptionChain(resultException, additionalExceptions);
     }
     
@@ -97,7 +97,7 @@ public class SQLExceptionChainBuilderTest {
      * Test for SQLExceptionChainBuilder constructed with an empty root and multiple appends.
      */
     @Test
-    public void testBuilder_EmptyOnConstruct_MultipleAppends() {
+    void testBuilder_EmptyOnConstruct_MultipleAppends() {
         SQLException root = new SQLException();
         List<SQLException> additionalExceptions = new ArrayList<>();
         for (int count = 1; count <= 3; count++) {
@@ -110,9 +110,9 @@ public class SQLExceptionChainBuilderTest {
             builder.append(ex);
         }
         
-        assertTrue("SQLExceptionChainBuilder has a exception", builder.hasException());
+        assertTrue(builder.hasException(), "SQLExceptionChainBuilder has a exception");
         SQLException resultException = builder.getException();
-        assertSame("Expected root exception to be identical to returned exception", root, resultException);
+        assertSame(root, resultException, "Expected root exception to be identical to returned exception");
         checkExceptionChain(resultException, additionalExceptions);
     }
     
@@ -128,12 +128,12 @@ public class SQLExceptionChainBuilderTest {
         while((nextException = nextException.getNextException()) != null) {
             count++;
             if (count <= expectedExceptions.size()) {
-                assertSame("Unexpected Exception for count " + count, expectedExceptions.get(count - 1), nextException);
+                assertSame(expectedExceptions.get(count - 1), nextException, "Unexpected Exception for count " + count);
             } else {
                 // Break to avoid circular reference chains
                 break;
             }
         }
-        assertEquals("Unexpected number of exceptions returned", expectedExceptions.size(), count);
+        assertEquals(expectedExceptions.size(), count, "Unexpected number of exceptions returned");
     }
 }

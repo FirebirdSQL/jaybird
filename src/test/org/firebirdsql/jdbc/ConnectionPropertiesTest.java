@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,60 +18,60 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.ds.FBSimpleDataSource;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for connection properties (does not cover all properties for now)
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class ConnectionPropertiesTest {
+class ConnectionPropertiesTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void testProperty_defaultIsolation_onDataSource() throws Exception {
+    void testProperty_defaultIsolation_onDataSource() throws Exception {
         FBSimpleDataSource ds = createDataSource();
 
         ds.setDefaultIsolation("TRANSACTION_SERIALIZABLE");
 
         try (Connection connection = ds.getConnection()) {
-            assertEquals("Unexpected isolation level",
-                    Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation());
+            assertEquals(Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation(),
+                    "Unexpected isolation level");
         }
     }
 
     @Test
-    public void testProperty_defaultIsolation_onDriverManager() throws Exception {
+    void testProperty_defaultIsolation_onDriverManager() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("defaultIsolation", "TRANSACTION_SERIALIZABLE");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            assertEquals("Unexpected isolation level",
-                    Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation());
+            assertEquals(Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation(),
+                    "Unexpected isolation level");
         }
     }
 
     @Test
-    public void testProperty_isolation_onDriverManager() throws Exception {
+    void testProperty_isolation_onDriverManager() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         // alias for defaultIsolation
         props.setProperty("isolation", "TRANSACTION_SERIALIZABLE");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            assertEquals("Unexpected isolation level",
-                    Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation());
+            assertEquals(Connection.TRANSACTION_SERIALIZABLE, connection.getTransactionIsolation(),
+                    "Unexpected isolation level");
         }
     }
 

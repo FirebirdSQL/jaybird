@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,56 +20,109 @@ package org.firebirdsql.jdbc.metadata;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class MetadataPatternTest {
+class MetadataPatternTest {
 
     @Test
-    public void testIsPatternSpecialChar_noSpecials() {
-        assertFalse("No pattern special char", MetadataPattern.isPatternSpecialChar('a'));
+    void testIsPatternSpecialChar_noSpecials() {
+        assertFalse(MetadataPattern.isPatternSpecialChar('a'), "No pattern special char");
     }
 
     @Test
-    public void testIsPatternSpecialChar_underscore() {
-        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('_'));
+    void testIsPatternSpecialChar_underscore() {
+        assertTrue(MetadataPattern.isPatternSpecialChar('_'), "pattern special char");
     }
 
     @Test
-    public void testIsPatternSpecialChar_percent() {
-        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('%'));
+    void testIsPatternSpecialChar_percent() {
+        assertTrue(MetadataPattern.isPatternSpecialChar('%'), "pattern special char");
     }
 
     @Test
-    public void testIsPatternSpecialChar_backslash() {
-        assertTrue("pattern special char", MetadataPattern.isPatternSpecialChar('\\'));
+    void testIsPatternSpecialChar_backslash() {
+        assertTrue(MetadataPattern.isPatternSpecialChar('\\'), "pattern special char");
     }
 
     @Test
-    public void containsPatternSpecialChars_noSpecials() {
+    void containsPatternSpecialChars_noSpecials() {
         assertThat(Arrays.asList("abcd#*&$^", "", "xyz with spaces"),
                 everyItem(not(ContainsPatternSpecialCharMatcher.containsPatternSpecialCharMatcher())));
     }
 
     @Test
-    public void containsPatternSpecialChars_withSpecials() {
+    void containsPatternSpecialChars_withSpecials() {
         assertThat(Arrays.asList("%", "_", "\\", "abc%", "_ab%", "a\\_b"),
                 everyItem(ContainsPatternSpecialCharMatcher.containsPatternSpecialCharMatcher()));
     }
 
     @Test
-    public void testEscapeWildcards() {
-        assertEquals("escape wildcard incorrect", "test\\\\me", MetadataPattern.escapeWildcards("test\\me"));
-        assertEquals("escape wildcard incorrect", "test\\%me", MetadataPattern.escapeWildcards("test%me"));
-        assertEquals("escape wildcard incorrect", "test\\_me", MetadataPattern.escapeWildcards("test_me"));
-        assertEquals("escape wildcard incorrect", "test\\%\\_me", MetadataPattern.escapeWildcards("test%_me"));
-        assertEquals("escape wildcard incorrect", "test\\\\\\_me", MetadataPattern.escapeWildcards("test\\_me"));
+    void testEscapeWildcards() {
+        assertEquals("test\\\\me", MetadataPattern.escapeWildcards("test\\me"), "escape wildcard incorrect");
+        assertEquals("test\\%me", MetadataPattern.escapeWildcards("test%me"), "escape wildcard incorrect");
+        assertEquals("test\\_me", MetadataPattern.escapeWildcards("test_me"), "escape wildcard incorrect");
+        assertEquals("test\\%\\_me", MetadataPattern.escapeWildcards("test%_me"), "escape wildcard incorrect");
+        assertEquals("test\\\\\\_me", MetadataPattern.escapeWildcards("test\\_me"), "escape wildcard incorrect");
+    }
+
+    static Stream<Arguments> parameters() {
+        return Stream.of(
+                testCase(null, MetadataPattern.ConditionType.NONE, null),
+                testCase("%", MetadataPattern.ConditionType.NONE, null),
+                testCase("", MetadataPattern.ConditionType.SQL_EQUALS, ""),
+                testCase("_", MetadataPattern.ConditionType.SQL_LIKE, "_"),
+                testCase("\\", MetadataPattern.ConditionType.SQL_EQUALS, "\\"),
+                testCase("\\\\", MetadataPattern.ConditionType.SQL_EQUALS, "\\"),
+                testCase("a", MetadataPattern.ConditionType.SQL_EQUALS, "a"),
+                testCase("a%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "a"),
+                testCase("\\a%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "\\a"),
+                testCase("ab c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab c"),
+                testCase("ab\\_c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab_c"),
+                testCase("ab\\%c%", MetadataPattern.ConditionType.SQL_STARTING_WITH, "ab%c"),
+                testCase("a_b%", MetadataPattern.ConditionType.SQL_LIKE, "a_b%"),
+                testCase("a%b%", MetadataPattern.ConditionType.SQL_LIKE, "a%b%"),
+                testCase("a\\__b%", MetadataPattern.ConditionType.SQL_LIKE, "a\\__b%"),
+                testCase("a_", MetadataPattern.ConditionType.SQL_LIKE, "a_"),
+                testCase("%abc", MetadataPattern.ConditionType.SQL_LIKE, "%abc"),
+                testCase("_abc", MetadataPattern.ConditionType.SQL_LIKE, "_abc"),
+                testCase("_ab\\c", MetadataPattern.ConditionType.SQL_LIKE, "_ab\\\\c"),
+                testCase("_ab\\", MetadataPattern.ConditionType.SQL_LIKE, "_ab\\\\"),
+                testCase("_ab\\_", MetadataPattern.ConditionType.SQL_LIKE, "_ab\\_"),
+                testCase("_ab\\%", MetadataPattern.ConditionType.SQL_LIKE, "_ab\\%"),
+                testCase("ab\\%cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab%cd"),
+                testCase("ab\\_cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab_cd"),
+                testCase("ab\\_\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab_\\cd"),
+                testCase("a_\\_\\cd", MetadataPattern.ConditionType.SQL_LIKE, "a_\\_\\\\cd"),
+                testCase("ab\\\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\cd"),
+                testCase("ab\\cd", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\cd"),
+                testCase("ab\\", MetadataPattern.ConditionType.SQL_EQUALS, "ab\\")
+        );
+    }
+
+    @ParameterizedTest(name = "{index}: {0} => {1} value {2}")
+    @MethodSource("parameters")
+    void testCompile(String metadataPattern, MetadataPattern.ConditionType expectedConditionType,
+            String expectedConditionValue) {
+        MetadataPattern compiledPattern = MetadataPattern.compile(metadataPattern);
+
+        assertEquals(expectedConditionType, compiledPattern.getConditionType(), "conditionType");
+        assertEquals(expectedConditionValue, compiledPattern.getConditionValue(), "conditionValue");
+    }
+
+    private static Arguments testCase(String metadataPattern, MetadataPattern.ConditionType expectedConditionType,
+            String expectedConditionValue) {
+        return Arguments.of(metadataPattern, expectedConditionType, expectedConditionValue);
     }
 
     /**

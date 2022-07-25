@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,139 +27,118 @@ import java.sql.SQLException;
  */
 interface FBFetcher {
 
-    int MAX_FETCH_ROWS = 400;
-	
+    int DEFAULT_FETCH_ROWS = 400;
+
     /**
-     * Move cursor to the rist row.
-     * 
-     * @return <code>true</code> if cursor was moved to the first row.
-     * 
-     * @throws SQLException if something went wrong.
+     * Move cursor to the first row.
+     *
+     * @return {@code true} if cursor was moved to the first row.
      */
     boolean first() throws SQLException;
-    
+
     /**
      * Move cursor to the last row.
-     * 
-     * @return <code>true</code> if cursor was moved to the last row.
-     * 
-     * @throws SQLException if something went wrong.
+     *
+     * @return {@code true} if cursor was moved to the last row.
      */
     boolean last() throws SQLException;
-    
+
     /**
      * Move cursor to the previous row.
-     * 
-     * @return <code>true</code> if cursor was moved to the prevous row.
-     * 
-     * @throws SQLException if something went wrong.
+     *
+     * @return {@code true} if cursor was moved to the previous row.
      */
     boolean previous() throws SQLException;
-    
+
     /**
      * Move to next row.
-     * 
-     * @return <code>true</code> if cursor was moved.
-     * 
-     * @throws SQLException if something went wrong.
+     *
+     * @return {@code true} if cursor was moved.
      */
     boolean next() throws SQLException;
 
     /**
      * Move cursor to the absolute row.
-     * 
-     * @param row absolute row number.
-     * 
-     * @return <code>true</code> if cursor was successfully moved. 
-     * 
-     * @throws SQLException if something went wrong.
+     *
+     * @param row
+     *         absolute row number.
+     * @return {@code true} if cursor was successfully moved.
      */
     boolean absolute(int row) throws SQLException;
-    
+
     /**
      * Move cursor relative to the current row.
-     *  
-     * @param row relative row position.
-     * 
-     * @return <code>true</code> if cursor was successfully moved.
-     * 
-     * @throws SQLException if something went wrong.
+     *
+     * @param row
+     *         relative row position.
+     * @return {@code true} if cursor was successfully moved.
      */
-    boolean relative(int row) throws SQLException;    
-    
+    boolean relative(int row) throws SQLException;
+
     /**
      * Move cursor before first record.
-     * 
-     * @throws SQLException if something went wrong.
      */
     void beforeFirst() throws SQLException;
-    
+
     /**
      * Move cursor after last record.
-     * 
-     * @throws SQLException if something went wrong.
      */
     void afterLast() throws SQLException;
-    
+
     /**
      * Close this fetcher and corresponding result set.
      * <p>
      * Equivalent to calling {@link #close(CompletionReason)} with {@link CompletionReason#OTHER}.
      * </p>
-     * 
-     * @throws SQLException if something went wrong.
      */
     void close() throws SQLException;
 
     /**
      * Close this fetcher and corresponding result set.
      *
-     * @param completionReason Reason for completion
-     * @throws SQLException if something went wrong.
+     * @param completionReason
+     *         Reason for completion
      */
     void close(CompletionReason completionReason) throws SQLException;
 
     /**
      * Get row number.
-     * 
-     * @return row number.
+     *
+     * @return row number
+     * @see #currentPosition()
      */
-	int getRowNum();
-    
-	boolean isEmpty() throws SQLException;
-	boolean isBeforeFirst() throws SQLException;
-	boolean isFirst() throws SQLException;
-	boolean isLast() throws SQLException;
-	boolean isAfterLast() throws SQLException;
-    
+    int getRowNum() throws SQLException;
+
+    boolean isEmpty() throws SQLException;
+    boolean isBeforeFirst() throws SQLException;
+    boolean isFirst() throws SQLException;
+    boolean isLast() throws SQLException;
+    boolean isAfterLast() throws SQLException;
+
     /**
      * Insert row at current position. This method adds a row at the current
-     * position in case of updatable result sets after successfull execution of
+     * position in case of updatable result sets after successful execution of
      * the {@link java.sql.ResultSet#insertRow()} method.
-     * 
-     * @param data row data
-     * 
-     * @throws SQLException if operation cannot be completed.
+     *
+     * @param data
+     *         row data
      */
     void insertRow(RowValue data) throws SQLException;
-    
+
     /**
      * Delete row at current position. This method deletes a row at the current
-     * position in case of updatable result sets after successfull execution of
+     * position in case of updatable result sets after successful execution of
      * the {@link java.sql.ResultSet#deleteRow()} method.
-     * 
-     * @throws SQLException if operation cannot be completed.
      */
     void deleteRow() throws SQLException;
-    
+
     /**
      * Update row at current position. This method updates a row at the current
-     * position in case of updatable result sets after successfull execution of
+     * position in case of updatable result sets after successful execution of
      * the {@link java.sql.ResultSet#updateRow()} method.
-     * 
-     * @param data row data
-     * 
-     * @throws SQLException if operation cannot be completed.
+     *
+     * @param data
+     *         row data
      */
     void updateRow(RowValue data) throws SQLException;
 
@@ -173,8 +152,69 @@ interface FBFetcher {
     /**
      * Get the suggested number of rows to fetch with each batch fetch.
      *
-     * @param fetchSize The suggested number of rows to fetch
+     * @param fetchSize
+     *         The suggested number of rows to fetch
      */
     void setFetchSize(int fetchSize);
+
+    /**
+     * The current position of the fetcher.
+     * <p>
+     * Contrary to {@link #getRowNum()}, this should also report the after-last position.
+     * </p>
+     *
+     * @return Position of the fetcher, with {@code 0} for before-first, and {@code size + 1} for after-last.
+     * @see #getRowNum()
+     */
+    int currentPosition() throws SQLException;
+
+    /**
+     * Total number of rows of this fetcher, taking the max rows into account if relevant.
+     * <p>
+     * If the size of the fetcher is not known or not fixed, a {@link SQLException} should be thrown.
+     * </p>
+     *
+     * @return size of fetcher
+     * @throws SQLException
+     *         For exception retrieving the cursor size, or if it is not possible to determine the fetcher size
+     */
+    int size() throws SQLException;
+
+    /**
+     * Sets the fetcher listener.
+     * <p>
+     * Any current fetcher is replaced with the provided fetcher listener.
+     * </p>
+     *
+     * @param fetcherListener Fetcher listener
+     */
+    void setFetcherListener(FBObjectListener.FetcherListener fetcherListener);
+
+    /**
+     * Is the current row a newly inserted row (through the owning result set)?
+     *
+     * @return {@code true} if the row is newly inserted, {@code false} otherwise
+     */
+    default boolean rowInserted() throws SQLException {
+        return false;
+    }
+
+    /**
+     * Is the current row a deleted row (through the owning result set)?
+     *
+     * @return {@code true} if the row is deleted, {@code false} otherwise
+     */
+    default boolean rowDeleted() throws SQLException {
+        return false;
+    }
+
+    /**
+     * Is the current row an updated row (through the owning result set)?
+     *
+     * @return {@code true} if the row is updated, {@code false} otherwise
+     */
+    default boolean rowUpdated() throws SQLException {
+        return false;
+    }
 
 }

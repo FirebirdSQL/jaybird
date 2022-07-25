@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,22 +21,17 @@ package org.firebirdsql.gds.ng.fields;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-public class RowValueTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class RowValueTest {
 
     private static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
@@ -52,35 +47,35 @@ public class RowValueTest {
     }
 
     @Test
-    public void testDefaultFor_emptyRowDescriptor_returns_EMPTY_ROW_VALUE() {
+    void testDefaultFor_emptyRowDescriptor_returns_EMPTY_ROW_VALUE() {
         assertSame(RowValue.EMPTY_ROW_VALUE, RowValue.defaultFor(EMPTY_ROW_DESCRIPTOR));
     }
 
     @Test
-    public void testDefaultFor_fieldsNotInitialized() {
+    void testDefaultFor_fieldsNotInitialized() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
 
         RowValue rowValue = RowValue.defaultFor(rowDescriptor);
 
-        assertEquals("count", TEST_FIELD_DESCRIPTORS.size(), rowValue.getCount());
+        assertEquals(TEST_FIELD_DESCRIPTORS.size(), rowValue.getCount(), "count");
         for (int idx = 0; idx < TEST_FIELD_DESCRIPTORS.size(); idx++) {
-            assertNull(idx + " expected null fieldData", rowValue.getFieldData(idx));
-            assertFalse(idx + " expected uninitialized", rowValue.isInitialized(idx));
+            assertNull(rowValue.getFieldData(idx), idx + " expected null fieldData");
+            assertFalse(rowValue.isInitialized(idx), idx + " expected uninitialized");
         }
     }
 
     @Test
-    public void setFieldData_null_marksFieldAsInitialized() {
+    void setFieldData_null_marksFieldAsInitialized() {
         checkSetFieldDataMarksFieldAsInitialized(null);
     }
 
     @Test
-    public void setFieldData_emptyArray_marksFieldAsInitialized() {
+    void setFieldData_emptyArray_marksFieldAsInitialized() {
         checkSetFieldDataMarksFieldAsInitialized(new byte[0]);
     }
 
     @Test
-    public void setFieldData_nonEmptyArray_marksFieldAsInitialized() {
+    void setFieldData_nonEmptyArray_marksFieldAsInitialized() {
         checkSetFieldDataMarksFieldAsInitialized(new byte[] { 1, 2, 3, 4});
     }
 
@@ -91,100 +86,98 @@ public class RowValueTest {
 
         RowValue rowValue = RowValue.defaultFor(rowDescriptor);
 
-        assumeFalse("field should not be initialized", rowValue.isInitialized(0));
+        assumeFalse(rowValue.isInitialized(0), "field should not be initialized");
         rowValue.setFieldData(0, value);
 
-        assertTrue("field should be initialized", rowValue.isInitialized(0));
+        assertTrue(rowValue.isInitialized(0), "field should be initialized");
     }
 
     @Test
-    public void of_byteArrayOnly_empty_returns_EMPTY_ROW_VALUE() {
+    void of_byteArrayOnly_empty_returns_EMPTY_ROW_VALUE() {
         assertSame(RowValue.EMPTY_ROW_VALUE, RowValue.of());
     }
 
     @Test
-    public void of_byteArrayOnly_initializesWithData() {
+    void of_byteArrayOnly_initializesWithData() {
         RowValue rowValue = RowValue.of(new byte[] { 0 }, new byte[] { 1 }, new byte[] { 2 });
 
         assertEquals(3, rowValue.getCount());
         for (int idx = 0; idx < 3; idx++) {
-            assertTrue(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertArrayEquals(idx + " unexpected value", new byte[] { (byte) idx }, rowValue.getFieldData(idx));
+            assertTrue(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertArrayEquals(new byte[] { (byte) idx }, rowValue.getFieldData(idx), idx + " unexpected value");
         }
     }
 
     @Test
-    public void of_withDescriptor_empty_returns_EMPTY_ROW_VALUE() {
+    void of_withDescriptor_empty_returns_EMPTY_ROW_VALUE() {
         assertSame(RowValue.EMPTY_ROW_VALUE, RowValue.of(EMPTY_ROW_DESCRIPTOR));
     }
 
     @Test
-    public void of_withDescriptor_initializesWithData() {
+    void of_withDescriptor_initializesWithData() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
 
         RowValue rowValue = RowValue.of(rowDescriptor, new byte[] { 0 }, new byte[] { 1 }, new byte[] { 2 });
 
         assertEquals(3, rowValue.getCount());
         for (int idx = 0; idx < 3; idx++) {
-            assertTrue(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertArrayEquals(idx + " unexpected value", new byte[] { (byte) idx }, rowValue.getFieldData(idx));
+            assertTrue(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertArrayEquals(new byte[] { (byte) idx }, rowValue.getFieldData(idx), idx + " unexpected value");
         }
     }
 
     @Test
-    public void of_withDescriptor_countMismatch_throwsIllegalArgumentException() {
+    void of_withDescriptor_countMismatch_throwsIllegalArgumentException() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
 
-        expectedException.expect(IllegalArgumentException.class);
-
-        RowValue.of(rowDescriptor, new byte[] { 0 });
+        assertThrows(IllegalArgumentException.class, () -> RowValue.of(rowDescriptor, new byte[] { 0 }));
     }
 
     @Test
-    public void reset_clearsAndMarksAsUninitialized() {
+    void reset_clearsAndMarksAsUninitialized() {
         RowValue rowValue = RowValue.of(new byte[] { 0 }, new byte[] { 1 }, new byte[] { 2 });
 
         rowValue.reset();
 
         for (int idx = 0; idx < 3; idx++) {
-            assertFalse(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertNull(idx + " expected null", rowValue.getFieldData(idx));
+            assertFalse(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertNull(rowValue.getFieldData(idx), idx + " expected null");
         }
     }
 
     @Test
-    public void reset_onEmpty_noException() {
+    void reset_onEmpty_noException() {
         RowValue.EMPTY_ROW_VALUE.reset();
     }
 
     @Test
-    public void initializeFieldsMarksUninitializedFieldsAsInitialized_fullyInitialized() {
+    void initializeFieldsMarksUninitializedFieldsAsInitialized_fullyInitialized() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
         RowValue rowValue = RowValue.of(rowDescriptor, new byte[] { 0 }, new byte[] { 1 }, new byte[] { 2 });
 
         rowValue.initializeFields();
 
         for (int idx = 0; idx < 3; idx++) {
-            assertTrue(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertArrayEquals(idx + " unexpected value", new byte[] { (byte) idx }, rowValue.getFieldData(idx));
+            assertTrue(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertArrayEquals(new byte[] { (byte) idx }, rowValue.getFieldData(idx), idx + " unexpected value");
         }
     }
 
     @Test
-    public void initializeFieldsMarksUninitializedFieldsAsInitialized_fullyUninitialized() {
+    void initializeFieldsMarksUninitializedFieldsAsInitialized_fullyUninitialized() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
         RowValue rowValue = RowValue.defaultFor(rowDescriptor);
 
         rowValue.initializeFields();
 
         for (int idx = 0; idx < 3; idx++) {
-            assertTrue(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertNull(idx + " expected null", rowValue.getFieldData(idx));
+            assertTrue(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertNull(rowValue.getFieldData(idx), idx + " expected null");
         }
     }
 
     @Test
-    public void initializeFieldsMarksUninitializedFieldsAsInitialized_partiallyUninitialized() {
+    void initializeFieldsMarksUninitializedFieldsAsInitialized_partiallyUninitialized() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
 
         RowValue rowValue = RowValue.defaultFor(rowDescriptor);
@@ -192,35 +185,35 @@ public class RowValueTest {
         rowValue.setFieldData(2, new byte[] { 2 });
         rowValue.initializeFields();
 
-        assertTrue("0 expected initialized", rowValue.isInitialized(0));
-        assertArrayEquals("0 unexpected", new byte[] { 0 }, rowValue.getFieldData(0));
-        assertTrue("1 expected initialized", rowValue.isInitialized(1));
-        assertNull("1 expected null", rowValue.getFieldData(1));
-        assertTrue("2 expected initialized", rowValue.isInitialized(2));
-        assertArrayEquals("2 unexpected", new byte[] { 2 }, rowValue.getFieldData(2));
+        assertTrue(rowValue.isInitialized(0), "0 expected initialized");
+        assertArrayEquals(new byte[] { 0 }, rowValue.getFieldData(0), "0 unexpected");
+        assertTrue(rowValue.isInitialized(1), "1 expected initialized");
+        assertNull(rowValue.getFieldData(1), "1 expected null");
+        assertTrue(rowValue.isInitialized(2), "2 expected initialized");
+        assertArrayEquals(new byte[] { 2 }, rowValue.getFieldData(2), "2 unexpected");
     }
 
     @Test
-    public void deepCopy_empty_returns_EMPTY_ROW_VALUE() {
+    void deepCopy_empty_returns_EMPTY_ROW_VALUE() {
         assertSame(RowValue.EMPTY_ROW_VALUE, RowValue.EMPTY_ROW_VALUE.deepCopy());
     }
 
     @Test
-    public void deepCopy_clonesByteData() {
+    void deepCopy_clonesByteData() {
         RowValue original = RowValue.of(new byte[] { 0 }, new byte[] { 1 }, new byte[] { 2 });
 
         RowValue rowValue = original.deepCopy();
 
         assertEquals(3, rowValue.getCount());
         for (int idx = 0; idx < 3; idx++) {
-            assertTrue(idx + " expected initialized", rowValue.isInitialized(idx));
-            assertArrayEquals(idx + " unexpected value", original.getFieldData(idx), rowValue.getFieldData(idx));
-            assertNotSame(idx + " expected cloned value", original.getFieldData(idx), rowValue.getFieldData(idx));
+            assertTrue(rowValue.isInitialized(idx), idx + " expected initialized");
+            assertArrayEquals(original.getFieldData(idx), rowValue.getFieldData(idx), idx + " unexpected value");
+            assertNotSame(original.getFieldData(idx), rowValue.getFieldData(idx), idx + " expected cloned value");
         }
     }
 
     @Test
-    public void deepCopy_retainsUninitializedState() {
+    void deepCopy_retainsUninitializedState() {
         RowDescriptor rowDescriptor = createTestRowDescriptor();
 
         RowValue original = RowValue.defaultFor(rowDescriptor);
@@ -229,14 +222,14 @@ public class RowValueTest {
 
         RowValue rowValue = original.deepCopy();
 
-        assertTrue("0 expected initialized", rowValue.isInitialized(0));
-        assertArrayEquals("0 unexpected", original.getFieldData(0), rowValue.getFieldData(0));
-        assertNotSame("0 expected cloned value", original.getFieldData(0), rowValue.getFieldData(0));
-        assertFalse("1 expected not initialized", rowValue.isInitialized(1));
-        assertNull("1 expected null", rowValue.getFieldData(1));
-        assertTrue("2 expected initialized", rowValue.isInitialized(2));
-        assertArrayEquals("2 unexpected", original.getFieldData(2), rowValue.getFieldData(2));
-        assertNotSame("2 expected cloned value", original.getFieldData(2), rowValue.getFieldData(2));
+        assertTrue(rowValue.isInitialized(0), "0 expected initialized");
+        assertArrayEquals(original.getFieldData(0), rowValue.getFieldData(0), "0 unexpected");
+        assertNotSame(original.getFieldData(0), rowValue.getFieldData(0), "0 expected cloned value");
+        assertFalse(rowValue.isInitialized(1), "1 expected not initialized");
+        assertNull(rowValue.getFieldData(1), "1 expected null");
+        assertTrue(rowValue.isInitialized(2), "2 expected initialized");
+        assertArrayEquals(original.getFieldData(2), rowValue.getFieldData(2), "2 unexpected");
+        assertNotSame(original.getFieldData(2), rowValue.getFieldData(2), "2 expected cloned value");
     }
 
     private static RowDescriptor createTestRowDescriptor() {

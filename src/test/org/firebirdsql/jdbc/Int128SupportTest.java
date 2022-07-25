@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,51 +19,61 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
-import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for Firebird 4 INT128 datatype.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class Int128SupportTest extends FBJUnit4TestBase {
+class Int128SupportTest {
+
+    @RegisterExtension
+    @Order(1)
+    static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsInt128, "Requires INT128 support")
+            .build();
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     private static final String CREATE_TABLE =
-            "create table int128tbl ("
+            "recreate table int128tbl ("
                     + "id integer primary key,"
                     + "col_int128 INT128"
                     + ")";
 
-    @BeforeClass
-    public static void checkInt128Support() {
-        assumeTrue("Requires INT128 support",
-                getDefaultSupportInfo().supportsInt128());
+    private Connection connection;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        connection = getConnectionViaDriverManager();
+        DdlHelper.executeCreateTable(connection, CREATE_TABLE);
     }
 
-    @Before
-    public void setUp() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            DdlHelper.executeCreateTable(connection, CREATE_TABLE);
-        }
+    @AfterEach
+    void tearDown() throws Exception {
+        connection.close();
     }
 
     @Test
-    public void simpleValuesSelect() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement()) {
+    void simpleValuesSelect() throws Exception {
+        try (Statement stmt = connection.createStatement()) {
             connection.setAutoCommit(false);
             stmt.execute("insert into int128tbl (id, col_int128) "
                     + "values (1, 123456789012345678901234567890123456789)");
@@ -71,8 +81,7 @@ public class Int128SupportTest extends FBJUnit4TestBase {
                     + "values (2, -123456789012345678901234567890123456789)");
 
             try (ResultSet rs = stmt.executeQuery(
-                    "select id, "
-                            + "col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
+                    "select id, col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
                             + "from int128tbl order by id")) {
                 String row1ExpectedString = "123456789012345678901234567890123456789";
                 BigDecimal row1Expected = new BigDecimal(row1ExpectedString);
@@ -86,72 +95,63 @@ public class Int128SupportTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void simpleInsert() throws Exception {
+    void simpleInsert() throws Exception {
         final String stringValue = "123456789012345678901234567890123456789";
         final BigDecimal bdValue = new BigDecimal(stringValue);
         final String stringValue2 = "-123456789012345678901234567890123456789";
         final BigDecimal bdValue2 = new BigDecimal(stringValue2);
-        try (Connection connection = getConnectionViaDriverManager()) {
-            connection.setAutoCommit(true);
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    "insert into int128tbl(id, col_int128) values (?, ?)")) {
-                execute(pstmt, 1, bdValue);
-                execute(pstmt, 2, bdValue2);
-            }
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "insert into int128tbl(id, col_int128) values (?, ?)")) {
+            execute(pstmt, 1, bdValue);
+            execute(pstmt, 2, bdValue2);
+        }
 
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(
-                         "select id, "
-                                 + "col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
-                                 + "from int128tbl order by id")) {
-                assertRow(rs, 1, bdValue, stringValue);
-                assertRow(rs, 2, bdValue2, stringValue2);
-            }
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "select id, col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
+                             + "from int128tbl order by id")) {
+            assertRow(rs, 1, bdValue, stringValue);
+            assertRow(rs, 2, bdValue2, stringValue2);
         }
     }
 
     @Test
-    public void select_int128_ResultSetMetaData() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager();
-             Statement stmt = connection.createStatement();
+    void select_int128_ResultSetMetaData() throws Exception {
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery("select col_int128 from int128tbl")) {
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            assertEquals("typeName", "INT128", rsmd.getColumnTypeName(1));
-            assertEquals("type", Types.NUMERIC, rsmd.getColumnType(1));
-            assertEquals("className", "java.math.BigDecimal", rsmd.getColumnClassName(1));
-            assertEquals("precision", 38, rsmd.getPrecision(1));
-            assertEquals("scale", 0, rsmd.getScale(1));
-            assertEquals("displaySize", 40, rsmd.getColumnDisplaySize(1));
-            assertTrue("searchable", rsmd.isSearchable(1));
-            assertTrue("signed", rsmd.isSigned(1));
+            assertEquals("INT128", rsmd.getColumnTypeName(1), "typeName");
+            assertEquals(Types.NUMERIC, rsmd.getColumnType(1), "type");
+            assertEquals("java.math.BigDecimal", rsmd.getColumnClassName(1), "className");
+            assertEquals(38, rsmd.getPrecision(1), "precision");
+            assertEquals(0, rsmd.getScale(1), "scale");
+            assertEquals(40, rsmd.getColumnDisplaySize(1), "displaySize");
+            assertTrue(rsmd.isSearchable(1), "searchable");
+            assertTrue(rsmd.isSigned(1), "signed");
         }
     }
 
     @Test
-    public void insertAndSelectMinAndMaxValues() throws Exception {
+    void insertAndSelectMinAndMaxValues() throws Exception {
         BigInteger maxValue = BigInteger.ONE.pow(127).subtract(BigInteger.ONE);
         BigInteger minValue = BigInteger.ZERO.min(BigInteger.ONE.pow(127));
         final String stringValue = maxValue.toString();
         final BigDecimal bdValue = new BigDecimal(maxValue);
         final String stringValue2 = minValue.toString();
         final BigDecimal bdValue2 = new BigDecimal(minValue);
-        try (Connection connection = getConnectionViaDriverManager()) {
-            connection.setAutoCommit(true);
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    "insert into int128tbl(id, col_int128) values (?, ?)")) {
-                execute(pstmt, 1, bdValue);
-                execute(pstmt, 2, bdValue2);
-            }
+        try (PreparedStatement pstmt = connection.prepareStatement(
+                "insert into int128tbl(id, col_int128) values (?, ?)")) {
+            execute(pstmt, 1, bdValue);
+            execute(pstmt, 2, bdValue2);
+        }
 
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(
-                         "select id, "
-                                 + "col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
-                                 + "from int128tbl order by id")) {
-                assertRow(rs, 1, bdValue, stringValue);
-                assertRow(rs, 2, bdValue2, stringValue2);
-            }
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "select id, col_int128, cast(col_int128 as varchar(50)) str_col_int128 "
+                             + "from int128tbl order by id")) {
+            assertRow(rs, 1, bdValue, stringValue);
+            assertRow(rs, 2, bdValue2, stringValue2);
         }
     }
 
@@ -165,10 +165,10 @@ public class Int128SupportTest extends FBJUnit4TestBase {
     private static void assertRow(ResultSet resultSet, int expectedId,
             BigDecimal expectedInt128, String expectedInt128String) throws Exception {
         String prefix = "id=" + expectedId;
-        assertTrue(prefix + " expected row", resultSet.next());
-        assertEquals(prefix, expectedId, resultSet.getInt("id"));
-        assertEquals(prefix + " col_int128", expectedInt128, resultSet.getBigDecimal("col_int128"));
-        assertEquals(prefix + " str_col_int128", expectedInt128String, resultSet.getString("str_col_int128"));
+        assertTrue(resultSet.next(), prefix + " expected row");
+        assertEquals(expectedId, resultSet.getInt("id"), prefix);
+        assertEquals(expectedInt128, resultSet.getBigDecimal("col_int128"), prefix + " col_int128");
+        assertEquals(expectedInt128String, resultSet.getString("str_col_int128"), prefix + " str_col_int128");
     }
 
 }

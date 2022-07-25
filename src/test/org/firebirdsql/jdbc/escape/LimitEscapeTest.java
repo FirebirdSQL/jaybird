@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,17 +19,18 @@
 package org.firebirdsql.jdbc.escape;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for support of the Limiting Returned Rows Escape as defined in section
@@ -37,33 +38,35 @@ import static org.junit.Assert.assertEquals;
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class LimitEscapeTest {
+class LimitEscapeTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            "CREATE TABLE TAB1 (ID INT NOT NULL CONSTRAINT PK_TAB1 PRIMARY KEY)");
 
     private static final int ROW_COUNT = 25;
 
-    @BeforeClass
-    public static void setupTestData() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            try (Statement stmt = con.createStatement()) {
-//@formatter:off
-                stmt.execute("CREATE TABLE TAB1 (" +
-                         "  ID INT NOT NULL CONSTRAINT PK_TAB1 PRIMARY KEY" +
-                         ")");
-//@formatter:on
-            }
+    private static Connection con;
 
-            con.setAutoCommit(false);
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO TAB1 (ID) VALUES (?)")) {
-                for (int id = 1; id <= ROW_COUNT; id++) {
-                    pstmt.setInt(1, id);
-                    pstmt.addBatch();
-                }
-                pstmt.executeBatch();
+    @BeforeAll
+    static void setupTestData() throws Exception {
+        con = FBTestProperties.getConnectionViaDriverManager();
+        con.setAutoCommit(false);
+        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO TAB1 (ID) VALUES (?)")) {
+            for (int id = 1; id <= ROW_COUNT; id++) {
+                pstmt.setInt(1, id);
+                pstmt.execute();
             }
-            con.commit();
+        }
+        con.commit();
+    }
+
+    @AfterAll
+    static void tearDownAll() throws Exception {
+        try {
+            con.close();
+        } finally {
+            con = null;
         }
     }
 
@@ -71,9 +74,8 @@ public class LimitEscapeTest {
      * Test of limit escape with only the rows parameter with a literal value
      */
     @Test
-    public void testLimitLiteralWithoutOffset() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager();
-             Statement stmt = con.createStatement();
+    void testLimitLiteralWithoutOffset() throws Exception {
+        try (Statement stmt = con.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT ID FROM TAB1 ORDER BY ID {limit 10}")) {
 
             int id = 0;
@@ -82,7 +84,7 @@ public class LimitEscapeTest {
                 assertEquals(id, rs.getInt(1));
             }
 
-            assertEquals("Unexpected final value for ID returned", 10, id);
+            assertEquals(10, id, "Unexpected final value for ID returned");
         }
     }
 
@@ -90,9 +92,8 @@ public class LimitEscapeTest {
      * Test of limit escape with only the rows parameter with a parametrized value
      */
     @Test
-    public void testLimitParametrizedWithoutOffset() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager();
-             PreparedStatement stmt = con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit ?}")) {
+    void testLimitParametrizedWithoutOffset() throws Exception {
+        try (PreparedStatement stmt = con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit ?}")) {
 
             stmt.setInt(1, 10);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -102,7 +103,7 @@ public class LimitEscapeTest {
                     assertEquals(id, rs.getInt(1));
                 }
 
-                assertEquals("Unexpected final value for ID returned", 10, id);
+                assertEquals(10, id, "Unexpected final value for ID returned");
             }
         }
     }
@@ -111,9 +112,8 @@ public class LimitEscapeTest {
      * Test of limit escape with the rows and row_offset parameter with a literal value for both
      */
     @Test
-    public void testLimitLiteralWithOffset() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager();
-             Statement stmt = con.createStatement();
+    void testLimitLiteralWithOffset() throws Exception {
+        try (Statement stmt = con.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT ID FROM TAB1 ORDER BY ID {limit 10 offset 5}")) {
 
             int id = 4;
@@ -122,7 +122,7 @@ public class LimitEscapeTest {
                 assertEquals(id, rs.getInt(1));
             }
 
-            assertEquals("Unexpected final value for ID returned", 15, id);
+            assertEquals(15, id, "Unexpected final value for ID returned");
         }
     }
 
@@ -130,9 +130,8 @@ public class LimitEscapeTest {
      * Test of limit escape with the rows and row_offset parameter with a parameter for rows and a literal value for offset_rows.
      */
     @Test
-    public void testLimitRowsParameter() throws Exception {
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager();
-             PreparedStatement pstmt = con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit ? offset 10}")) {
+    void testLimitRowsParameter() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT ID FROM TAB1 ORDER BY ID {limit ? offset 10}")) {
 
             pstmt.setInt(1, 8);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -142,7 +141,7 @@ public class LimitEscapeTest {
                     assertEquals(id, rs.getInt(1));
                 }
 
-                assertEquals("Unexpected final value for ID returned", 18, id);
+                assertEquals(18, id, "Unexpected final value for ID returned");
             }
         }
     }

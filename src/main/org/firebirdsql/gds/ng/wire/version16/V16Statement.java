@@ -32,7 +32,7 @@ import java.sql.SQLException;
 public class V16Statement extends V13Statement {
 
     /**
-     * Creates a new instance of V15Statement for the specified database.
+     * Creates a new instance of V16Statement for the specified database.
      *
      * @param database
      *         FbWireDatabase implementation

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,10 +24,11 @@ import java.time.OffsetTime;
 import static org.firebirdsql.gds.ISCConstants.SQL_TIMESTAMP_TZ;
 import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
 
-public class TimeZoneCodecStandardTimestampTzTest extends TimeZoneCodecAbstractTimestampTzTest {
+class TimeZoneCodecStandardTimestampTzTest extends TimeZoneCodecAbstractTimestampTzTest {
 
-    public TimeZoneCodecStandardTimestampTzTest() {
-        super(SQL_TIMESTAMP_TZ);
+    @Override
+    int getTzType() {
+        return SQL_TIMESTAMP_TZ;
     }
 
     @Override

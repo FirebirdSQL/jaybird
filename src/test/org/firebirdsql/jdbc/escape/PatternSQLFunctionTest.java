@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,26 +18,26 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PatternSQLFunctionTest {
+class PatternSQLFunctionTest {
 
     private static final PatternSQLFunction function = new PatternSQLFunction("func({0}, {1})");
 
     @Test
-    public void testParameterCountEqualToArgumentCount() {
+    void testParameterCountEqualToArgumentCount() {
         assertEquals("func(?, 'abc')", function.apply("?", "'abc'"));
     }
 
     @Test
-    public void testParameterCountLessThanArgumentCount() {
+    void testParameterCountLessThanArgumentCount() {
         assertEquals("func(xyz, {1})", function.apply("xyz"));
     }
 
     @Test
-    public void testParameterCountGreaterThanArgumentCount() {
+    void testParameterCountGreaterThanArgumentCount() {
         assertEquals("func(?, 'abc')", function.apply("?", "'abc'", "xyz"));
     }
 }

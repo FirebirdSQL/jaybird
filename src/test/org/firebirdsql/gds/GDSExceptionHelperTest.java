@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,22 +18,22 @@
  */
 package org.firebirdsql.gds;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for {@link GDSExceptionHelper}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GDSExceptionHelperTest {
+class GDSExceptionHelperTest {
 
     /**
      * Checks if a message of the Jaybird range of error messages can be retrieved
      */
     @Test
-    public void getMessage_JaybirdRange() {
+    void getMessage_JaybirdRange() {
         // Test expectation is tied to the actual error message defined.
         final String expected = "getSegment called with sizeRequested (null), should be > 0";
 
@@ -47,18 +47,17 @@ public class GDSExceptionHelperTest {
      * Checks if a message of the Firebird range of error messages can be retrieved
      */
     @Test
-    public void getMessage_FirebirdRange() {
+    void getMessage_FirebirdRange() {
         // Test expectation is tied to the actual error message defined.
         final String expected = "Invalid parameter to FETCH or FIRST. Only integers >= 0 are allowed.";
 
-        GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(
-                ISCConstants.isc_bad_limit_param);
+        GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(ISCConstants.isc_bad_limit_param);
 
         assertEquals(expected, message.toString());
     }
 
     @Test
-    public void getMessage_noMessageFound() {
+    void getMessage_noMessageFound() {
         final String expected = "No message for code 1 found.";
 
         GDSExceptionHelper.GDSMessage message = GDSExceptionHelper.getMessage(1);
@@ -67,7 +66,7 @@ public class GDSExceptionHelperTest {
     }
 
     @Test
-    public void getSQLState_JaybirdRange() {
+    void getSQLState_JaybirdRange() {
         // Test expectation is tied to the actual state mapping defined.
         final String expected = "HY090";
 
@@ -77,7 +76,7 @@ public class GDSExceptionHelperTest {
     }
 
     @Test
-    public void getSQLState_FirebirdRange() {
+    void getSQLState_FirebirdRange() {
         // Test expectation is tied to the actual state mapping defined.
         final String expected = "27000";
 

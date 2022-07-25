@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -22,20 +22,20 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class RowDescriptorBuilderTest {
+class RowDescriptorBuilderTest {
 
     private static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
@@ -53,24 +53,24 @@ public class RowDescriptorBuilderTest {
     private static final FieldDescriptor SOURCE = new FieldDescriptor(-1, datatypeCoder, 1, 2, 3, 4, "5", "6", "7", "8", "9");
 
     @Test
-    public void testEmptyField() {
+    void testEmptyField() {
         FieldDescriptor descriptor = new RowDescriptorBuilder(0, datatypeCoder)
                 .toFieldDescriptor();
 
-        assertEquals("Unexpected Position", 0, descriptor.getPosition());
-        assertEquals("Unexpected Type", 0, descriptor.getType());
-        assertEquals("Unexpected SubType", 0, descriptor.getSubType());
-        assertEquals("Unexpected Scale", 0, descriptor.getScale());
-        assertEquals("Unexpected Length", 0, descriptor.getLength());
-        assertNull("Unexpected FieldName", descriptor.getFieldName());
-        assertNull("Unexpected TableAlias", descriptor.getTableAlias());
-        assertNull("Unexpected OriginalName", descriptor.getOriginalName());
-        assertNull("Unexpected OriginalTableName", descriptor.getOriginalTableName());
-        assertNull("Unexpected OwnerName", descriptor.getOwnerName());
+        assertEquals(0, descriptor.getPosition(), "Unexpected Position");
+        assertEquals(0, descriptor.getType(), "Unexpected Type");
+        assertEquals(0, descriptor.getSubType(), "Unexpected SubType");
+        assertEquals(0, descriptor.getScale(), "Unexpected Scale");
+        assertEquals(0, descriptor.getLength(), "Unexpected Length");
+        assertNull(descriptor.getFieldName(), "Unexpected FieldName");
+        assertNull(descriptor.getTableAlias(), "Unexpected TableAlias");
+        assertNull(descriptor.getOriginalName(), "Unexpected OriginalName");
+        assertNull(descriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertNull(descriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
-    public void testBasicFieldInitialization() {
+    void testBasicFieldInitialization() {
         FieldDescriptor descriptor =
                 new RowDescriptorBuilder(1, datatypeCoder)
                         .setType(1)
@@ -84,77 +84,77 @@ public class RowDescriptorBuilderTest {
                         .setOwnerName("9")
                         .toFieldDescriptor();
 
-        assertEquals("Unexpected Position", 0, descriptor.getPosition());
-        assertEquals("Unexpected Type", 1, descriptor.getType());
-        assertEquals("Unexpected SubType", 2, descriptor.getSubType());
-        assertEquals("Unexpected Scale", 3, descriptor.getScale());
-        assertEquals("Unexpected Length", 4, descriptor.getLength());
-        assertEquals("Unexpected FieldName", "5", descriptor.getFieldName());
-        assertEquals("Unexpected TableAlias", "6", descriptor.getTableAlias());
-        assertEquals("Unexpected OriginalName", "7", descriptor.getOriginalName());
-        assertEquals("Unexpected OriginalTableName", "8", descriptor.getOriginalTableName());
-        assertEquals("Unexpected OwnerName", "9", descriptor.getOwnerName());
+        assertEquals(0, descriptor.getPosition(), "Unexpected Position");
+        assertEquals(1, descriptor.getType(), "Unexpected Type");
+        assertEquals(2, descriptor.getSubType(), "Unexpected SubType");
+        assertEquals(3, descriptor.getScale(), "Unexpected Scale");
+        assertEquals(4, descriptor.getLength(), "Unexpected Length");
+        assertEquals("5", descriptor.getFieldName(), "Unexpected FieldName");
+        assertEquals("6", descriptor.getTableAlias(), "Unexpected TableAlias");
+        assertEquals("7", descriptor.getOriginalName(), "Unexpected OriginalName");
+        assertEquals("8", descriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertEquals("9", descriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
-    public void testCopyFrom() {
+    void testCopyFrom() {
         FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0, datatypeCoder)
                 .copyFieldFrom(SOURCE)
                 .toFieldDescriptor();
 
-        assertEquals("Unexpected Position", 0, fieldDescriptor.getPosition());
-        assertEquals("Unexpected Type", 1, fieldDescriptor.getType());
-        assertEquals("Unexpected SubType", 2, fieldDescriptor.getSubType());
-        assertEquals("Unexpected Scale", 3, fieldDescriptor.getScale());
-        assertEquals("Unexpected Length", 4, fieldDescriptor.getLength());
-        assertEquals("Unexpected FieldName", "5", fieldDescriptor.getFieldName());
-        assertEquals("Unexpected TableAlias", "6", fieldDescriptor.getTableAlias());
-        assertEquals("Unexpected OriginalName", "7", fieldDescriptor.getOriginalName());
-        assertEquals("Unexpected OriginalTableName", "8", fieldDescriptor.getOriginalTableName());
-        assertEquals("Unexpected OwnerName", "9", fieldDescriptor.getOwnerName());
+        assertEquals(0, fieldDescriptor.getPosition(), "Unexpected Position");
+        assertEquals(1, fieldDescriptor.getType(), "Unexpected Type");
+        assertEquals(2, fieldDescriptor.getSubType(), "Unexpected SubType");
+        assertEquals(3, fieldDescriptor.getScale(), "Unexpected Scale");
+        assertEquals(4, fieldDescriptor.getLength(), "Unexpected Length");
+        assertEquals("5", fieldDescriptor.getFieldName(), "Unexpected FieldName");
+        assertEquals("6", fieldDescriptor.getTableAlias(), "Unexpected TableAlias");
+        assertEquals("7", fieldDescriptor.getOriginalName(), "Unexpected OriginalName");
+        assertEquals("8", fieldDescriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertEquals("9", fieldDescriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
-    public void testResetField() {
+    void testResetField() {
         FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(0, datatypeCoder)
                 .copyFieldFrom(SOURCE)
                 .resetField()
                 .toFieldDescriptor();
 
-        assertEquals("Unexpected Position", 0, fieldDescriptor.getPosition());
-        assertEquals("Unexpected Type", 0, fieldDescriptor.getType());
-        assertEquals("Unexpected SubType", 0, fieldDescriptor.getSubType());
-        assertEquals("Unexpected Scale", 0, fieldDescriptor.getScale());
-        assertEquals("Unexpected Length", 0, fieldDescriptor.getLength());
-        assertNull("Unexpected FieldName", fieldDescriptor.getFieldName());
-        assertNull("Unexpected TableAlias", fieldDescriptor.getTableAlias());
-        assertNull("Unexpected OriginalName", fieldDescriptor.getOriginalName());
-        assertNull("Unexpected OriginalTableName", fieldDescriptor.getOriginalTableName());
-        assertNull("Unexpected OwnerName", fieldDescriptor.getOwnerName());
+        assertEquals(0, fieldDescriptor.getPosition(), "Unexpected Position");
+        assertEquals(0, fieldDescriptor.getType(), "Unexpected Type");
+        assertEquals(0, fieldDescriptor.getSubType(), "Unexpected SubType");
+        assertEquals(0, fieldDescriptor.getScale(), "Unexpected Scale");
+        assertEquals(0, fieldDescriptor.getLength(), "Unexpected Length");
+        assertNull(fieldDescriptor.getFieldName(), "Unexpected FieldName");
+        assertNull(fieldDescriptor.getTableAlias(), "Unexpected TableAlias");
+        assertNull(fieldDescriptor.getOriginalName(), "Unexpected OriginalName");
+        assertNull(fieldDescriptor.getOriginalTableName(), "Unexpected OriginalTableName");
+        assertNull(fieldDescriptor.getOwnerName(), "Unexpected OwnerName");
     }
 
     @Test
-    public void testEmpty() {
+    void testEmpty() {
         RowDescriptor rowDescriptor = new RowDescriptorBuilder(0, datatypeCoder)
                 .toRowDescriptor();
 
-        assertEquals("Unexpected count of fields in RowDescriptor", 0, rowDescriptor.getCount());
+        assertEquals(0, rowDescriptor.getCount(), "Unexpected count of fields in RowDescriptor");
     }
 
     @Test
-    public void testBasicInitialization() {
+    void testBasicInitialization() {
         RowDescriptorBuilder builder = new RowDescriptorBuilder(TEST_FIELD_DESCRIPTORS.size(), datatypeCoder);
         for (FieldDescriptor fieldDescriptor : TEST_FIELD_DESCRIPTORS) {
             builder.addField(fieldDescriptor);
         }
         RowDescriptor rowDescriptor = builder.toRowDescriptor();
 
-        assertEquals("Unexpected count of fields in RowDescriptor", TEST_FIELD_DESCRIPTORS.size(), rowDescriptor.getCount());
-        assertEquals("Unexpected list content", TEST_FIELD_DESCRIPTORS, rowDescriptor.getFieldDescriptors());
+        assertEquals(TEST_FIELD_DESCRIPTORS.size(), rowDescriptor.getCount(), "Unexpected count of fields in RowDescriptor");
+        assertEquals(TEST_FIELD_DESCRIPTORS, rowDescriptor.getFieldDescriptors(), "Unexpected list content");
     }
 
     @Test
-    public void testAddingFieldsChained() {
+    void testAddingFieldsChained() {
         RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2, datatypeCoder)
                 .setType(1)
                 .setSubType(1)
@@ -162,32 +162,32 @@ public class RowDescriptorBuilderTest {
                 .setTableAlias("Alias1")
                 .addField();
 
-        assertEquals("Unexpected value for getCurrentFieldIndex()", 1, descriptorBuilder.getCurrentFieldIndex());
+        assertEquals(1, descriptorBuilder.getCurrentFieldIndex(), "Unexpected value for getCurrentFieldIndex()");
         descriptorBuilder
                 .setType(2)
                 .setFieldName("Field2")
                 .addField();
-        assertEquals("Unexpected value for getCurrentFieldIndex()", 2, descriptorBuilder.getCurrentFieldIndex());
+        assertEquals(2, descriptorBuilder.getCurrentFieldIndex(), "Unexpected value for getCurrentFieldIndex()");
 
         RowDescriptor descriptor = descriptorBuilder.toRowDescriptor();
 
-        assertEquals("Unexpected count of fields in RowDescriptor", 2, descriptor.getCount());
+        assertEquals(2, descriptor.getCount(), "Unexpected count of fields in RowDescriptor");
         FieldDescriptor field1 = descriptor.getFieldDescriptor(0);
-        assertEquals("Field1.getPosition()", 0, field1.getPosition());
-        assertEquals("Field1.getType()", 1, field1.getType());
-        assertEquals("Field1.getSubType()", 1, field1.getSubType());
-        assertEquals("Field1.getFieldName()", "Field1", field1.getFieldName());
-        assertEquals("Field1.getTableAlias()", "Alias1", field1.getTableAlias());
+        assertEquals(0, field1.getPosition(), "Field1.getPosition()");
+        assertEquals(1, field1.getType(), "Field1.getType()");
+        assertEquals(1, field1.getSubType(), "Field1.getSubType()");
+        assertEquals("Field1", field1.getFieldName(), "Field1.getFieldName()");
+        assertEquals("Alias1", field1.getTableAlias(), "Field1.getTableAlias()");
         FieldDescriptor field2 = descriptor.getFieldDescriptor(1);
-        assertEquals("Field2.getPosition()", 1, field2.getPosition());
-        assertEquals("Field2.getType()", 2, field2.getType());
-        assertEquals("Field2.getSubType()", 0, field2.getSubType());
-        assertEquals("Field2.getFieldName()", "Field2", field2.getFieldName());
-        assertEquals("Field2.getTableAlias()", null, field2.getTableAlias());
+        assertEquals(1, field2.getPosition(), "Field2.getPosition()");
+        assertEquals(2, field2.getType(), "Field2.getType()");
+        assertEquals(0, field2.getSubType(), "Field2.getSubType()");
+        assertEquals("Field2", field2.getFieldName(), "Field2.getFieldName()");
+        assertNull(field2.getTableAlias(), "Field2.getTableAlias()");
     }
 
     @Test
-    public void testAddingFieldsChained_DifferentOrder() {
+    void testAddingFieldsChained_DifferentOrder() {
         RowDescriptorBuilder descriptorBuilder = new RowDescriptorBuilder(2, datatypeCoder)
                 .setFieldIndex(1)
                 .setType(1)
@@ -196,35 +196,35 @@ public class RowDescriptorBuilderTest {
                 .setTableAlias("Alias1")
                 .addField();
 
-        assertEquals("Unexpected value for getCurrentFieldIndex()", 2, descriptorBuilder.getCurrentFieldIndex());
+        assertEquals(2, descriptorBuilder.getCurrentFieldIndex(), "Unexpected value for getCurrentFieldIndex()");
         descriptorBuilder
                 .setFieldIndex(0)
                 .setType(2)
                 .setFieldName("Field2")
                 .addField();
-        assertEquals("Unexpected value for getCurrentFieldIndex()", 1, descriptorBuilder.getCurrentFieldIndex());
+        assertEquals(1, descriptorBuilder.getCurrentFieldIndex(), "Unexpected value for getCurrentFieldIndex()");
 
         RowDescriptor descriptor = descriptorBuilder.toRowDescriptor();
 
-        assertEquals("Unexpected count of fields in RowDescriptor", 2, descriptor.getCount());
+        assertEquals(2, descriptor.getCount(), "Unexpected count of fields in RowDescriptor");
         FieldDescriptor field1 = descriptor.getFieldDescriptor(1);
-        assertEquals("Field1.getPosition()", 1, field1.getPosition());
-        assertEquals("Field1.getType()", 1, field1.getType());
-        assertEquals("Field1.getSubType()", 1, field1.getSubType());
-        assertEquals("Field1.getFieldName()", "Field1", field1.getFieldName());
-        assertEquals("Field1.getTableAlias()", "Alias1", field1.getTableAlias());
-        assertFalse("Field1.isDbKey()", field1.isDbKey());
+        assertEquals(1, field1.getPosition(), "Field1.getPosition()");
+        assertEquals(1, field1.getType(), "Field1.getType()");
+        assertEquals(1, field1.getSubType(), "Field1.getSubType()");
+        assertEquals("Field1", field1.getFieldName(), "Field1.getFieldName()");
+        assertEquals("Alias1", field1.getTableAlias(), "Field1.getTableAlias()");
+        assertFalse(field1.isDbKey(), "Field1.isDbKey()");
         FieldDescriptor field2 = descriptor.getFieldDescriptor(0);
-        assertEquals("Field2.getPosition()", 0, field2.getPosition());
-        assertEquals("Field2.getType()", 2, field2.getType());
-        assertEquals("Field2.getSubType()", 0, field2.getSubType());
-        assertEquals("Field2.getFieldName()", "Field2", field2.getFieldName());
-        assertEquals("Field2.getTableAlias()", null, field2.getTableAlias());
-        assertFalse("Field2.isDbKey()", field1.isDbKey());
+        assertEquals(0, field2.getPosition(), "Field2.getPosition()");
+        assertEquals(2, field2.getType(), "Field2.getType()");
+        assertEquals(0, field2.getSubType(), "Field2.getSubType()");
+        assertEquals("Field2", field2.getFieldName(), "Field2.getFieldName()");
+        assertNull(field2.getTableAlias(), "Field2.getTableAlias()");
+        assertFalse(field1.isDbKey(), "Field2.isDbKey()");
     }
 
     @Test
-    public void testIsDbKey() {
+    void testIsDbKey() {
         FieldDescriptor fieldDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
                 .setFieldIndex(0)
                 .setType(ISCConstants.SQL_TEXT)
@@ -232,6 +232,6 @@ public class RowDescriptorBuilderTest {
                 .setOriginalName("DB_KEY")
                 .toFieldDescriptor();
 
-        assertTrue("isDbKey()", fieldDescriptor.isDbKey());
+        assertTrue(fieldDescriptor.isDbKey(), "isDbKey()");
     }
 }

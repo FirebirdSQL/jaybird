@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -133,7 +133,7 @@ public class JnaStatement extends AbstractFbStatement {
                 if (currentState == StatementState.NEW) {
                     clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
                     processStatusVector();
-                    setAllRowsFetched(false);
+                    reset();
                     switchState(StatementState.ALLOCATED);
                     setType(StatementType.NONE);
                 } else {
@@ -196,7 +196,7 @@ public class JnaStatement extends AbstractFbStatement {
                         statementListenerDispatcher.statementExecuted(this, false, true);
                         processStatusVector();
                         queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
-                        setAllRowsFetched(true);
+                        setAfterLast();
                     } else {
                         // A normal execute is never a singleton result (even if it only produces a single result)
                         statementListenerDispatcher.statementExecuted(this, hasFields(), false);
@@ -361,7 +361,7 @@ public class JnaStatement extends AbstractFbStatement {
                 if (!getState().isCursorOpen()) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
                 }
-                if (isAllRowsFetched()) return;
+                if (isAfterLast()) return;
 
                 try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                     if (operationCloseHandle.isCancelled()) {
@@ -376,7 +376,7 @@ public class JnaStatement extends AbstractFbStatement {
                     if (fetchStatusInt == ISCConstants.FETCH_OK) {
                         queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
                     } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
-                        setAllRowsFetched(true);
+                        setAfterLast();
                         // Note: we are not explicitly 'closing' the cursor here
                     } else {
                         final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;

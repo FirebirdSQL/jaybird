@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.*;
@@ -32,16 +32,16 @@ import java.util.*;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataFunctionColumnsTest {
+class FBDatabaseMetaDataFunctionColumnsTest {
 
     private static final String PSQL_EXAMPLE_1 = "PSQL$EXAMPLE$1";
     private static final String PSQL_EXAMPLE_2 = "PSQL$EXAMPLE$2";
@@ -143,8 +143,9 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
             + "  end\n"
             + "end";
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static final MetaDataTestSupport<FunctionColumnMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(FunctionColumnMetaData.class, EnumSet.allOf(FunctionColumnMetaData.class));
@@ -156,14 +157,14 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -201,19 +202,19 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
      * Tests the ordinal positions and types for the metadata columns of getFunctions().
      */
     @Test
-    public void testFunctionColumnMetaDataColumns() throws Exception {
+    void testFunctionColumnMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getFunctionColumns(null, null, "doesnotexist", "doesnotexist")) {
             metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
     @Test
-    public void testFunctionColumnMetaData_everything_functionNamePattern_null() throws Exception {
+    void testFunctionColumnMetaData_everything_functionNamePattern_null() throws Exception {
         validateFunctionColumnMetaData_everything(null);
     }
 
     @Test
-    public void testFunctionColumnMetaData_everything_functionNamePattern_allPattern() throws Exception {
+    void testFunctionColumnMetaData_everything_functionNamePattern_allPattern() throws Exception {
         validateFunctionColumnMetaData_everything("%");
     }
 
@@ -234,55 +235,55 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     @Test
-    public void testFunctionColumnMetaData_functionNamePattern_emptyString_noResults() throws Exception {
+    void testFunctionColumnMetaData_functionNamePattern_emptyString_noResults() throws Exception {
         validateNoRows("", "%");
     }
 
     @Test
-    public void testFunctionColumnMetaData_columnNamePattern_emptyString_noResults() throws Exception {
+    void testFunctionColumnMetaData_columnNamePattern_emptyString_noResults() throws Exception {
         validateNoRows("%", "");
     }
 
-    public void validateNoRows(String functionNamePattern, String columnNamePattern) throws Exception {
-        validateExpectedFunctionColumns(functionNamePattern, columnNamePattern,
-                Collections.<Map<FunctionColumnMetaData, Object>>emptyList());
+    private void validateNoRows(String functionNamePattern, String columnNamePattern) throws Exception {
+        validateExpectedFunctionColumns(functionNamePattern, columnNamePattern, Collections.emptyList());
     }
 
     @Test
-    public void testFunctionColumnMetaData_PsqlExample1() throws Exception {
-        assumeTrue("Requires PSQL function support", getDefaultSupportInfo().supportsPsqlFunctions());
+    void testFunctionColumnMetaData_PsqlExample1() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPsqlFunctions(), "Requires PSQL function support");
         validateExpectedFunctionColumns(PSQL_EXAMPLE_1, null, getPsqlExample1Columns());
     }
 
     @Test
-    public void testFunctionColumnMetaData_PsqlExample2() throws Exception {
-        assumeTrue("Requires Firebird 4", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+    void testFunctionColumnMetaData_PsqlExample2() throws Exception {
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires Firebird 4");
         validateExpectedFunctionColumns(PSQL_EXAMPLE_2, null, getPsqlExample2Columns());
     }
 
     @Test
-    public void testFunctionColumnMetaData_UdfExample1() throws Exception {
+    void testFunctionColumnMetaData_UdfExample1() throws Exception {
         validateExpectedFunctionColumns(UDF_EXAMPLE_1, null, getUdfExample1Columns());
     }
 
     @Test
-    public void testFunctionColumnMetaData_UdfExample2() throws Exception {
+    void testFunctionColumnMetaData_UdfExample2() throws Exception {
         validateExpectedFunctionColumns(UDF_EXAMPLE_2, "%", getUdfExample2Columns());
     }
 
     @Test
-    public void testFunctionColumnMetaData_functionInPackageNotFound() throws Exception {
-        assumeTrue("Requires package support", getDefaultSupportInfo().supportsPackages());
+    void testFunctionColumnMetaData_functionInPackageNotFound() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPackages(), "Requires package support");
         validateNoRows("IN$PACKAGE", "%");
         validateNoRows("%IN$PACKAGE%", "%");
     }
 
-    public void validateExpectedFunctionColumns(String functionNamePattern, String columnNamePattern,
+    private void validateExpectedFunctionColumns(String functionNamePattern, String columnNamePattern,
             List<Map<FunctionColumnMetaData, Object>> expectedColumns) throws Exception {
         try (ResultSet columns = dbmd.getFunctionColumns(null, null, functionNamePattern, columnNamePattern)) {
+            //noinspection ForLoopReplaceableByForEach
             for (int i = 0; i < expectedColumns.size(); i++) {
                 expectNextFunction(columns);
-                System.out.println("Position: " + i);
+                // System.out.println("Position: " + i);
                 Map<FunctionColumnMetaData, Object> expectedColumn = expectedColumns.get(i);
                 metaDataTestSupport.validateRowValues(columns, expectedColumn);
             }
@@ -291,20 +292,21 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
     }
 
     private void expectNextFunction(ResultSet rs) throws SQLException {
-        assertTrue("Expected a row", rs.next());
+        assertTrue(rs.next(), "Expected a row");
         while (FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
         }
     }
 
     private void expectNoMoreRows(ResultSet rs) throws SQLException {
         boolean hasRow;
+        //noinspection AssignmentUsedAsCondition
         while ((hasRow = rs.next())) {
             if (!FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
                 break;
             }
         }
-        assertFalse("Expected no more rows", hasRow);
+        assertFalse(hasRow, "Expected no more rows");
     }
 
     private static List<Map<FunctionColumnMetaData, Object>> getPsqlExample1Columns() {
@@ -520,6 +522,7 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
         return rules;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<FunctionColumnMetaData, Object> createFloat(String functionName, String columnName,
             int ordinalPosition, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = createColumn(functionName, columnName, ordinalPosition, nullable);
@@ -535,6 +538,7 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
         return rules;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<FunctionColumnMetaData, Object> createDouble(String functionName, String columnName,
             int ordinalPosition, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = createColumn(functionName, columnName, ordinalPosition, nullable);
@@ -550,6 +554,7 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
         return rules;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<FunctionColumnMetaData, Object> createBoolean(String functionName, String columnName,
             int ordinalPosition, boolean nullable) {
         Map<FunctionColumnMetaData, Object> rules = createColumn(functionName, columnName, ordinalPosition, nullable);
@@ -561,6 +566,7 @@ public class FBDatabaseMetaDataFunctionColumnsTest {
         return rules;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static Map<FunctionColumnMetaData, Object> createDecfloat(String functionName, String columnName,
             int ordinalPosition, int precision, boolean nullable) {
         assert precision == 16 || precision == 34 : "Decfloat requires precision 16 or 34";

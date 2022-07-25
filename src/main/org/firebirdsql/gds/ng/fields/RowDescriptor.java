@@ -119,6 +119,19 @@ public final class RowDescriptor implements Iterable<FieldDescriptor> {
         return RowValue.defaultFor(this);
     }
 
+    /**
+     * Creates a <em>deleted row marker</em>.
+     * <p>
+     * A deleted row marker is used in JDBC result sets for deleted rows, and to discern them from (updated) rows that
+     * are simply all {@code NULL}. This is for Jaybird internal implementation needs only.
+     * </p>
+     *
+     * @return Deleted row marker with {@code count} number of rows, all set to null
+     */
+    public RowValue createDeletedRowMarker() {
+        return RowValue.deletedRowMarker(getCount());
+    }
+
     @Override
     public Iterator<FieldDescriptor> iterator() {
         return new RowDescriptorIterator();

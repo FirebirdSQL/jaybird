@@ -3,8 +3,7 @@
  * client or other means. These classes are used by the JDBC implementation of Jaybird.
  * <p>
  * The classes in this package (and its subpackages) can be used directly but the stability of the interface is
- * <strong>not guaranteed</strong> (not even between point releases) for the next few versions. We strongly advise to
- * use the JDBC implementation.
+ * <strong>not guaranteed</strong> (not even between point releases). We strongly advise to use the JDBC implementation.
  * </p>
  * <p>
  * The classes and interfaces provided by this package can be used to add additional protocol implementations, but given

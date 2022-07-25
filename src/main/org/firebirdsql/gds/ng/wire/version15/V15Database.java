@@ -36,7 +36,8 @@ public class V15Database extends V13Database {
      * @param connection
      *         A WireConnection with an established connection to the server.
      * @param descriptor
-     *         The ProtocolDescriptor that created this connection (this is
+     *         The ProtocolDescriptor that created this connection (this is used for creating further dependent
+     *         objects).
      */
     protected V15Database(WireDatabaseConnection connection,
             ProtocolDescriptor descriptor) {

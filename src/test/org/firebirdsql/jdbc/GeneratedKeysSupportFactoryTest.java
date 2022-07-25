@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,12 +21,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
-import org.jmock.Expectations;
-import org.jmock.auto.Mock;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -39,149 +38,143 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_EXPLICITLY_DISABLED;
 import static org.firebirdsql.jdbc.GeneratedKeysSupportFactory.REASON_NO_RETURNING_SUPPORT;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link GeneratedKeysSupportFactory}.
  * <p>
- * The normal 'default' generated keys behavior is tested in more detail in {@link TestGeneratedKeysQuery}.
+ * The normal 'default' generated keys behavior is tested in more detail in {@link GeneratedKeysQueryTest}.
  * </p>
  */
-public class GeneratedKeysSupportFactoryTest {
+@ExtendWith(MockitoExtension.class)
+class GeneratedKeysSupportFactoryTest {
 
     private static final String TEST_INSERT_QUERY = "INSERT INTO GENERATED_KEYS_TBL(NAME, TEXT_VALUE) VALUES (?, ?)";
     private static final String TEST_UPDATE_QUERY = "update generated_keys_tbl set text_value = ?";
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private FirebirdDatabaseMetaData dbMetadata;
 
     @Test
-    public void testCreateFor_disabled_noGeneratedKeys_asIs() throws Exception {
+    void testCreateFor_disabled_noGeneratedKeys_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("DISABLED", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
 
-        assertFalse("Should not generated keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generated keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_disabled_returnGeneratedKeys_featureNotSupported() throws Exception {
+    void testCreateFor_disabled_returnGeneratedKeys_featureNotSupported() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("DISABLED", dbMetadata);
 
-        expectExceptionExplicitlyDisabledReason();
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+        assertExceptionExplicitlyDisabledReason(
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS));
     }
 
     @Test
-    public void testCreateFor_disabled_invalidValue_invalidOptionValue() throws Exception {
+    void testCreateFor_disabled_invalidValue_invalidOptionValue() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("DISABLED", dbMetadata);
 
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLNonTransientException.class,
+                () ->generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, 132));
+        assertThat(exception, allOf(
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidGeneratedKeysOption),
                 sqlStateEquals(SQLStateConstants.SQL_STATE_INVALID_OPTION_IDENTIFIER)));
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, 132);
     }
 
     @Test
-    public void testCreateFor_disabled_columnIndexArray_featureNotSupported() throws Exception {
+    void testCreateFor_disabled_columnIndexArray_featureNotSupported() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("DISABLED", dbMetadata);
 
-        expectExceptionExplicitlyDisabledReason();
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2 });
+        assertExceptionExplicitlyDisabledReason(
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2 }));
     }
 
     @Test
-    public void testCreateFor_disabled_columnNameArray_featureNotSupported() throws Exception {
+    void testCreateFor_disabled_columnNameArray_featureNotSupported() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("disabled", dbMetadata);
 
-        expectExceptionExplicitlyDisabledReason();
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new String[] { "ABC", "ID" });
+        assertExceptionExplicitlyDisabledReason(
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, new String[] { "ABC", "ID" }));
     }
 
     @Test
-    public void testCreateFor_ignored_noGeneratedKeys_asIs() throws Exception {
+    void testCreateFor_ignored_noGeneratedKeys_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("IGNORED", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.NO_GENERATED_KEYS);
 
-        assertFalse("Should not generate keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_ignored_returnGeneratedKeys_asIs() throws Exception {
+    void testCreateFor_ignored_returnGeneratedKeys_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("IGNORED", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertFalse("Should not generate keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_ignored_invalidValue_asIs() throws Exception {
+    void testCreateFor_ignored_invalidValue_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("IGNORED", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertFalse("Should not generate keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_ignored_columnIndexArray_asIs() throws Exception {
+    void testCreateFor_ignored_columnIndexArray_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("ignored", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new int[] { 1, 2 });
 
-        assertFalse("Should not generate keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_ignored_columnNameArray_asIs() throws Exception {
+    void testCreateFor_ignored_columnNameArray_asIs() throws Exception {
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("IGNORED", dbMetadata);
 
         GeneratedKeysSupport.Query query = generatedKeysSupport
                 .buildQuery(TEST_INSERT_QUERY, new String[] { "ABC", "ID" });
 
-        assertFalse("Should not generate keys", query.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, query.getQueryString());
+        assertFalse(query.generatesKeys(), "Should not generate keys");
+        assertEquals(TEST_INSERT_QUERY, query.getQueryString(), "Should return unmodified query");
     }
 
     @Test
-    public void testCreateFor_default_3_0_all() throws SQLException {
+    void testCreateFor_default_3_0_all() throws SQLException {
         // supports all query types
-        expectDatabaseVersionCheck(3, 0);
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("default", dbMetadata);
 
-        assertThat(generatedKeysSupport.supportedQueryTypes(), 
+        assertThat(generatedKeysSupport.supportedQueryTypes(),
                 equalTo(EnumSet.complementOf(EnumSet.of(GeneratedKeysSupport.QueryType.UNSUPPORTED))));
     }
 
     @Test
-    public void testCreateFor_default_2_0_insert_only() throws SQLException {
+    void testCreateFor_default_2_0_insert_only() throws SQLException {
         // supports only insert
-        expectDatabaseVersionCheck(2, 0);
+        prepareDatabaseVersionCheck(2, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("default", dbMetadata);
 
@@ -190,9 +183,9 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_default_2_5_allExceptMerge() throws SQLException {
+    void testCreateFor_default_2_5_allExceptMerge() throws SQLException {
         // supports all except merge
-        expectDatabaseVersionCheck(2, 5);
+        prepareDatabaseVersionCheck(2, 5);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("default", dbMetadata);
 
@@ -203,8 +196,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_insert_update_3_0_both() throws SQLException {
-        expectDatabaseVersionCheck(3, 0);
+    void testCreateFor_insert_update_3_0_both() throws SQLException {
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("insert,update", dbMetadata);
@@ -214,8 +207,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_insert_update_extra_whitespace_3_0_both() throws SQLException {
-        expectDatabaseVersionCheck(3, 0);
+    void testCreateFor_insert_update_extra_whitespace_3_0_both() throws SQLException {
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor(" insert , update ", dbMetadata);
@@ -225,8 +218,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_INSERT_UPDATE_3_0_both() throws SQLException {
-        expectDatabaseVersionCheck(3, 0);
+    void testCreateFor_INSERT_UPDATE_3_0_both() throws SQLException {
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("INSERT,UPDATE", dbMetadata);
@@ -236,8 +229,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_insert_update_2_0_insert_only() throws SQLException {
-        expectDatabaseVersionCheck(2, 0);
+    void testCreateFor_insert_update_2_0_insert_only() throws SQLException {
+        prepareDatabaseVersionCheck(2, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("insert,update", dbMetadata);
@@ -247,8 +240,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_insert_gibberish_3_0_insert_only() throws SQLException {
-        expectDatabaseVersionCheck(3, 0);
+    void testCreateFor_insert_gibberish_3_0_insert_only() throws SQLException {
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("insert,gibberish", dbMetadata);
@@ -258,8 +251,8 @@ public class GeneratedKeysSupportFactoryTest {
     }
 
     @Test
-    public void testCreateFor_allGibberish_3_0_none() throws SQLException {
-        expectDatabaseVersionCheck(3, 0);
+    void testCreateFor_allGibberish_3_0_none() throws SQLException {
+        prepareDatabaseVersionCheck(3, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory
                 .createFor("gibberish1,gibberish2", dbMetadata);
@@ -270,75 +263,70 @@ public class GeneratedKeysSupportFactoryTest {
         GeneratedKeysSupport.Query insertQuery =
                 generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertFalse("Should not generated keys", insertQuery.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, insertQuery.getQueryString());
+        assertFalse(insertQuery.generatesKeys(), "Should not generated keys");
+        assertEquals(TEST_INSERT_QUERY, insertQuery.getQueryString(), "Should return unmodified query");
     }
 
     /**
      * Default for 1.5 and earlier is as if disabled because absence of RETURNING support
      */
     @Test
-    public void testCreateFor_default_1_5_featureNotSupported() throws Exception {
-        expectDatabaseVersionCheck(1, 5);
+    void testCreateFor_default_1_5_featureNotSupported() throws Exception {
+        prepareDatabaseVersionCheck(1, 5);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("default", dbMetadata);
 
-        expectExceptionDisabledReason(REASON_NO_RETURNING_SUPPORT);
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+        assertExceptionDisabledReason(REASON_NO_RETURNING_SUPPORT,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS));
     }
 
     /**
      * Default for 1.5 and earlier is as if disabled because absence of RETURNING support
      */
     @Test
-    public void testCreateFor_update_1_5_featureNotSupported() throws Exception {
-        expectDatabaseVersionCheck(1, 5);
+    void testCreateFor_update_1_5_featureNotSupported() throws Exception {
+        prepareDatabaseVersionCheck(1, 5);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("insert", dbMetadata);
 
-        expectExceptionDisabledReason(REASON_NO_RETURNING_SUPPORT);
-
-        generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+        assertExceptionDisabledReason(REASON_NO_RETURNING_SUPPORT,
+                () -> generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS));
     }
 
     /**
      * Contrast behavior with {@link #testCreateFor_update_1_5_featureNotSupported()}
      */
     @Test
-    public void testCreateFor_update_2_0_ignored() throws Exception {
-        expectDatabaseVersionCheck(2, 0);
+    void testCreateFor_update_2_0_ignored() throws Exception {
+        prepareDatabaseVersionCheck(2, 0);
 
         GeneratedKeysSupport generatedKeysSupport = GeneratedKeysSupportFactory.createFor("update", dbMetadata);
 
         GeneratedKeysSupport.Query insertQuery =
                 generatedKeysSupport.buildQuery(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertFalse("Should not generated keys", insertQuery.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_INSERT_QUERY, insertQuery.getQueryString());
+        assertFalse(insertQuery.generatesKeys(), "Should not generated keys");
+        assertEquals(TEST_INSERT_QUERY, insertQuery.getQueryString(), "Should return unmodified query");
 
         GeneratedKeysSupport.Query updateQuery =
                 generatedKeysSupport.buildQuery(TEST_UPDATE_QUERY, Statement.RETURN_GENERATED_KEYS);
 
-        assertFalse("Should not generated keys", updateQuery.generatesKeys());
-        assertEquals("Should return unmodified query", TEST_UPDATE_QUERY, updateQuery.getQueryString());
+        assertFalse(updateQuery.generatesKeys(), "Should not generated keys");
+        assertEquals(TEST_UPDATE_QUERY, updateQuery.getQueryString(), "Should return unmodified query");
     }
 
-    private void expectExceptionExplicitlyDisabledReason() {
-        expectExceptionDisabledReason(REASON_EXPLICITLY_DISABLED);
+    private void assertExceptionExplicitlyDisabledReason(Executable executable) {
+        assertExceptionDisabledReason(REASON_EXPLICITLY_DISABLED, executable);
     }
 
-    private void expectExceptionDisabledReason(String reason) {
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-        expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable,
-                reason));
+    private void assertExceptionDisabledReason(String reason, Executable executable) {
+        SQLException exception = assertThrows(SQLFeatureNotSupportedException.class, executable);
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable, reason));
     }
 
-    private void expectDatabaseVersionCheck(final int major, final int minor) throws SQLException {
-        context.checking(new Expectations() {{
-            oneOf(dbMetadata).getDatabaseMajorVersion(); will(returnValue(major));
-            oneOf(dbMetadata).getDatabaseMinorVersion(); will(returnValue(minor));
-        }});
+    private void prepareDatabaseVersionCheck(final int major, final int minor) throws SQLException {
+        when(dbMetadata.getDatabaseMajorVersion()).thenReturn(major);
+        when(dbMetadata.getDatabaseMinorVersion()).thenReturn(minor);
     }
 
     private static Matcher<Set<GeneratedKeysSupport.QueryType>> equalTo(Set<GeneratedKeysSupport.QueryType> types) {

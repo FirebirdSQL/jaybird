@@ -1,6 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
- * JDBC extensions.
+ * Firebird Open Source JDBC Driver, public Firebird-specific JDBC extensions.
  *
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
@@ -47,12 +46,6 @@ interface FirebirdRowUpdater {
     void insertRow() throws SQLException;
 
     void refreshRow() throws SQLException;
-
-    boolean rowInserted() throws SQLException;
-
-    boolean rowDeleted() throws SQLException;
-
-    boolean rowUpdated() throws SQLException;
 
     void moveToInsertRow() throws SQLException;
 

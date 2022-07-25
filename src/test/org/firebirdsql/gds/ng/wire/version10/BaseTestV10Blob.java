@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -34,16 +34,15 @@ import java.sql.SQLException;
  */
 public abstract class BaseTestV10Blob extends BaseTestBlob {
 
-    private final V10CommonConnectionInfo commonConnectionInfo;
+    private final V10CommonConnectionInfo commonConnectionInfo = commonConnectionInfo();
 
-    protected BaseTestV10Blob(V10CommonConnectionInfo commonConnectionInfo) {
-        this.commonConnectionInfo = commonConnectionInfo;
-    }
+    protected abstract V10CommonConnectionInfo commonConnectionInfo();
 
     protected final ProtocolCollection getProtocolCollection() {
         return commonConnectionInfo.getProtocolCollection();
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected final FbDatabase createFbDatabase(FbConnectionProperties connectionInfo) throws SQLException {
         WireDatabaseConnection gdsConnection = new WireDatabaseConnection(connectionInfo,

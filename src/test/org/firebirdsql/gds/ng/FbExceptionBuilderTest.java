@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,15 +18,17 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.IOException;
 import java.sql.*;
 
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link FbExceptionBuilder}
@@ -34,93 +36,88 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
-public class FbExceptionBuilderTest {
-
-    @Rule
-    public ExpectedException exceptionRule = ExpectedException.none();
+class FbExceptionBuilderTest {
 
     /**
      * Test simple use of {@link FbExceptionBuilder#exception(int)}.
      */
     @Test
-    public void exception_Simple() {
+    void exception_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         SQLException result = builder.exception(isc_req_wrong_db).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
-        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
-        assertEquals("Unexpected SQLState", "HY000", result.getSQLState());
-        assertEquals("Unexpected message",
-                "request referenced an unavailable database [SQLState:HY000, ISC error code:335544365]",
-                result.getMessage());
-        assertNull("Expected no cause set", result.getCause());
+        assertEquals(SQLException.class, result.getClass(), "Expected exception to be SQLException (no subclass!)");
+        assertEquals(isc_req_wrong_db, result.getErrorCode(), "Unexpected errorCode");
+        assertEquals("HY000", result.getSQLState(), "Unexpected SQLState");
+        assertEquals("request referenced an unavailable database [SQLState:HY000, ISC error code:335544365]",
+                result.getMessage(), "Unexpected message");
+        assertNull(result.getCause(), "Expected no cause set");
     }
 
     /**
      * Test simple use of {@link FbExceptionBuilder#warning(int)}.
      */
     @Test
-    public void warning_Simple() {
+    void warning_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         SQLException result = builder.warning(isc_unavailable).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLWarning (no subclass!)", SQLWarning.class, result.getClass());
-        assertEquals("Unexpected errorCode", isc_unavailable, result.getErrorCode());
-        assertEquals("Unexpected SQLState", "08001", result.getSQLState());
-        assertEquals("Unexpected message",
-                "unavailable database [SQLState:08001, ISC error code:335544375]", result.getMessage());
-        assertNull("Expected no cause set", result.getCause());
+        assertEquals(SQLWarning.class, result.getClass(), "Expected exception to be SQLWarning (no subclass!)");
+        assertEquals(isc_unavailable, result.getErrorCode(), "Unexpected errorCode");
+        assertEquals("08001", result.getSQLState(), "Unexpected SQLState");
+        assertEquals("unavailable database [SQLState:08001, ISC error code:335544375]", result.getMessage(),
+                "Unexpected message");
+        assertNull(result.getCause(), "Expected no cause set");
     }
 
     /**
      * Test simple use of {@link FbExceptionBuilder#timeoutException(int)}.
      */
     @Test
-    public void timeoutException_Simple() {
+    void timeoutException_Simple() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         SQLException result = builder.timeoutException(isc_net_connect_err).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLTimeoutException (no subclass!)",
-                SQLTimeoutException.class, result.getClass());
-        assertEquals("Unexpected errorCode", isc_net_connect_err, result.getErrorCode());
-        assertEquals("Unexpected SQLState", "08006", result.getSQLState());
-        assertEquals("Unexpected message",
-                "Failed to establish a connection. [SQLState:08006, ISC error code:335544722]", result.getMessage());
-        assertNull("Expected no cause set", result.getCause());
+        assertEquals(SQLTimeoutException.class, result.getClass(),
+                "Expected exception to be SQLTimeoutException (no subclass!)");
+        assertEquals(isc_net_connect_err, result.getErrorCode(), "Unexpected errorCode");
+        assertEquals("08006", result.getSQLState(), "Unexpected SQLState");
+        assertEquals("Failed to establish a connection. [SQLState:08006, ISC error code:335544722]",
+                result.getMessage(), "Unexpected message");
+        assertNull(result.getCause(), "Expected no cause set");
     }
 
     /**
      * Test use of {@link FbExceptionBuilder#exception(int)} with an error code associated with an SQLState 0A000 to
-     * test
-     * if an {@link SQLFeatureNotSupportedException} is created.
+     * test if an {@link SQLFeatureNotSupportedException} is created.
      */
     @Test
-    public void exception_featureNotSupported() {
+    void exception_featureNotSupported() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         SQLException result = builder.exception(isc_wish_list).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLFeatureNotSupportedException (no subclass!)",
-                SQLFeatureNotSupportedException.class, result.getClass());
-        assertEquals("Unexpected errorCode", isc_wish_list, result.getErrorCode());
-        assertEquals("Unexpected SQLState", "0A000", result.getSQLState());
-        assertEquals("Unexpected message",
-                "feature is not supported [SQLState:0A000, ISC error code:335544378]", result.getMessage());
-        assertNull("Expected no cause set", result.getCause());
+        assertEquals(SQLFeatureNotSupportedException.class,
+                result.getClass(), "Expected exception to be SQLFeatureNotSupportedException (no subclass!)");
+        assertEquals(isc_wish_list, result.getErrorCode(), "Unexpected errorCode");
+        assertEquals("0A000", result.getSQLState(), "Unexpected SQLState");
+        assertEquals("feature is not supported [SQLState:0A000, ISC error code:335544378]", result.getMessage(),
+                "Unexpected message");
+        assertNull(result.getCause(), "Expected no cause set");
     }
 
     /**
      * Tests parameter substitution in exception messages.
      */
     @Test
-    public void exception_parameterSubstitution() {
+    void exception_parameterSubstitution() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_wrong_ods).messageParameter("the filename");
@@ -130,9 +127,8 @@ public class FbExceptionBuilderTest {
         SQLException result = builder.toSQLException();
 
         assertNotNull(result);
-        assertEquals("Unexpected message with parameter substitution",
-                "unsupported on-disk structure for file the filename; found 11.2, support 10.0 [SQLState:HY000, ISC error code:335544379]",
-                result.getMessage());
+        assertEquals("unsupported on-disk structure for file the filename; found 11.2, support 10.0 [SQLState:HY000, ISC error code:335544379]",
+                result.getMessage(), "Unexpected message with parameter substitution");
     }
 
     /**
@@ -140,7 +136,7 @@ public class FbExceptionBuilderTest {
      * TODO: Move to {@link org.firebirdsql.gds.GDSExceptionHelper}?
      */
     @Test
-    public void exception_parameterIncompleteSubstitution() {
+    void exception_parameterIncompleteSubstitution() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_wrong_ods).messageParameter("the filename");
@@ -149,16 +145,15 @@ public class FbExceptionBuilderTest {
         SQLException result = builder.toSQLException();
 
         assertNotNull(result);
-        assertEquals("Unexpected message with parameter substitution",
-                "unsupported on-disk structure for file the filename; found 11.2, support (null).(null) [SQLState:HY000, ISC error code:335544379]",
-                result.getMessage());
+        assertEquals("unsupported on-disk structure for file the filename; found 11.2, support (null).(null) [SQLState:HY000, ISC error code:335544379]",
+                result.getMessage(), "Unexpected message with parameter substitution");
     }
 
     /**
      * Test setting cause of exception.
      */
     @Test
-    public void exception_cause() {
+    void exception_cause() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
         Throwable throwable = new IOException("the message");
 
@@ -167,14 +162,14 @@ public class FbExceptionBuilderTest {
         SQLException result = builder.toSQLException();
 
         assertNotNull(result);
-        assertSame("Unexpected exception cause", throwable, result.getCause());
+        assertSame(throwable, result.getCause(), "Unexpected exception cause");
     }
 
     /**
      * Tests if override the SQLState works.
      */
     @Test
-    public void exception_overrideSQLState_valid() {
+    void exception_overrideSQLState_valid() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_req_wrong_db).toSQLException();
@@ -184,22 +179,21 @@ public class FbExceptionBuilderTest {
         SQLException result = builder.toSQLException();
 
         assertNotNull(result);
-        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
-        assertEquals("Unexpected SQLState", "42000", result.getSQLState());
+        assertEquals(isc_req_wrong_db, result.getErrorCode(), "Unexpected errorCode");
+        assertEquals("42000", result.getSQLState(), "Unexpected SQLState");
     }
 
     /**
      * Tests if overriding the SQLState throws an {@link IllegalArgumentException} if null is passed
      */
     @Test
-    public void exception_overrideSQLState_null() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        exceptionRule.expectMessage("Value of sqlState must be a 5 character string");
+    void exception_overrideSQLState_null() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
-        builder.sqlState(null);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> builder.sqlState(null));
+        assertThat(exception, message(equalTo("Value of sqlState must be a 5 character string")));
     }
 
     /**
@@ -207,21 +201,21 @@ public class FbExceptionBuilderTest {
      * that is not 5 characters.
      */
     @Test
-    public void exception_overrideSQLState_not5Characters() {
-        exceptionRule.expect(IllegalArgumentException.class);
-        exceptionRule.expectMessage("Value of sqlState must be a 5 character string");
+    void exception_overrideSQLState_not5Characters() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_req_wrong_db).toSQLException();
         // isc_req_wrong_db defaults to SQLState HY000
-        builder.sqlState("4200");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> builder.sqlState("4200"));
+        assertThat(exception, message(equalTo("Value of sqlState must be a 5 character string")));
     }
 
     /**
      * Test exception chain produced with builder.
      */
     @Test
-    public void exception_chaining() {
+    void exception_chaining() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         // Exception one
@@ -233,15 +227,15 @@ public class FbExceptionBuilderTest {
         assertNotNull(result);
 
         // Exception one
-        assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
-        assertEquals("Unexpected errorCode", isc_req_wrong_db, result.getErrorCode());
+        assertEquals(SQLException.class, result.getClass(), "Expected exception to be SQLException (no subclass!)");
+        assertEquals(isc_req_wrong_db, result.getErrorCode(), "Unexpected errorCode");
         // Exception two
         SQLException result2 = result.getNextException();
         assertNotNull(result2);
-        assertEquals("Expected exception to be SQLFeatureNotSupportedException (no subclass!)", SQLFeatureNotSupportedException.class, result2.getClass());
-        assertEquals("Unexpected errorCode", isc_wish_list, result2.getErrorCode());
+        assertEquals(SQLFeatureNotSupportedException.class, result2.getClass(), "Expected exception to be SQLFeatureNotSupportedException (no subclass!)");
+        assertEquals(isc_wish_list, result2.getErrorCode(), "Unexpected errorCode");
         // No further results
-        assertNull("Expected no further exceptions", result2.getNextException());
+        assertNull(result2.getNextException(), "Expected no further exceptions");
     }
 
     /**
@@ -249,13 +243,13 @@ public class FbExceptionBuilderTest {
      * the produced exception is of the specified type.
      */
     @Test
-    public void toSQLException_withCasting_valid() {
+    void toSQLException_withCasting_valid() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.warning(isc_req_wrong_db);
 
         SQLWarning warning = builder.toSQLException(SQLWarning.class);
-        assertNotNull("Expected non-null warning", warning);
+        assertNotNull(warning, "Expected non-null warning");
     }
 
     /**
@@ -263,13 +257,12 @@ public class FbExceptionBuilderTest {
      * the produced exception is not of the specified type.
      */
     @Test
-    public void toSQLException_withCasting_invalid() {
-        exceptionRule.expect(ClassCastException.class);
+    void toSQLException_withCasting_invalid() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
 
         builder.exception(isc_req_wrong_db);
 
-        builder.toSQLException(SQLWarning.class);
+        assertThrows(ClassCastException.class, () -> builder.toSQLException(SQLWarning.class));
     }
 
     /**
@@ -277,11 +270,9 @@ public class FbExceptionBuilderTest {
      * should result in an {@link IllegalStateException}
      */
     @Test
-    public void SQLState_ThrowsIllegalState() {
-        expectIllegalStateForUninitializedExceptionType();
-
+    void SQLState_ThrowsIllegalState() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
-        builder.sqlState("0A000");
+        assertIllegalStateForUninitializedExceptionType(() -> builder.sqlState("0A000"));
     }
 
     /**
@@ -289,11 +280,9 @@ public class FbExceptionBuilderTest {
      * should result in an {@link IllegalStateException}
      */
     @Test
-    public void messageParameter_int_ThrowsIllegalState() {
-        expectIllegalStateForUninitializedExceptionType();
-
+    void messageParameter_int_ThrowsIllegalState() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
-        builder.messageParameter(5);
+        assertIllegalStateForUninitializedExceptionType(() -> builder.messageParameter(5));
     }
 
     /**
@@ -301,67 +290,61 @@ public class FbExceptionBuilderTest {
      * should result in an {@link IllegalStateException}
      */
     @Test
-    public void messageParameter_String_ThrowsIllegalState() {
-        expectIllegalStateForUninitializedExceptionType();
-
+    void messageParameter_String_ThrowsIllegalState() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
-        builder.messageParameter("");
+        assertIllegalStateForUninitializedExceptionType(() -> builder.messageParameter(""));
     }
 
     @Test
-    public void toSQLException_empty_throwsIllegalState() {
-        expectIllegalStateForEmptyBuilder();
-
+    void toSQLException_empty_throwsIllegalState() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
-        builder.toSQLException();
+        assertIllegalStateForEmptyBuilder(builder::toSQLException);
     }
 
     @Test
-    public void toFlatSQLException_empty_throwsIllegalState() {
-        expectIllegalStateForEmptyBuilder();
-
+    void toFlatSQLException_empty_throwsIllegalState() {
         FbExceptionBuilder builder = new FbExceptionBuilder();
-        builder.toFlatSQLException();
+        assertIllegalStateForEmptyBuilder(builder::toFlatSQLException);
     }
 
     @Test
-    public void forException() {
+    void forException() {
         SQLException result = FbExceptionBuilder.forException(isc_req_wrong_db).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLException (no subclass!)", SQLException.class, result.getClass());
+        assertEquals(SQLException.class, result.getClass(), "Expected exception to be SQLException (no subclass!)");
         // Rest covered by test exception_Simple
     }
 
     @Test
-    public void forWarning() {
+    void forWarning() {
         SQLException result = FbExceptionBuilder.forWarning(isc_unavailable).toSQLException();
 
         assertNotNull(result);
-        assertEquals("Expected exception to be SQLWarning (no subclass!)", SQLWarning.class, result.getClass());
+        assertEquals(SQLWarning.class, result.getClass(), "Expected exception to be SQLWarning (no subclass!)");
         // Rest covered by test warning_Simple
     }
 
     @Test
-    public void exceptionTypeUpgrade_EXCEPTION_to_NON_TRANSIENT() {
+    void exceptionTypeUpgrade_EXCEPTION_to_NON_TRANSIENT() {
         SQLException result = FbExceptionBuilder.forException(isc_login).toFlatSQLException();
 
         assertNotNull(result);
         // Definition to map isc_login to SQLInvalidAuthorizationSpecException is part of NON_TRANSIENT
-        assertEquals("Expected result to be SQLInvalidAuthorizationSpecException (no subclass!)",
-                SQLInvalidAuthorizationSpecException.class, result.getClass());
+        assertEquals(SQLInvalidAuthorizationSpecException.class, result.getClass(),
+                "Expected result to be SQLInvalidAuthorizationSpecException (no subclass!)");
     }
 
     /**
-     * Helper method to set the expected exception for an uninitialized exception type.
+     * Helper method to assert exception for an uninitialized exception type.
      */
-    private void expectIllegalStateForUninitializedExceptionType() {
-        exceptionRule.expect(IllegalStateException.class);
-        exceptionRule.expectMessage("FbExceptionBuilder requires call to warning() or exception() first");
+    private void assertIllegalStateForUninitializedExceptionType(Executable executable) {
+        IllegalStateException exception = assertThrows(IllegalStateException.class, executable);
+        assertThat(exception, message(equalTo("FbExceptionBuilder requires call to warning() or exception() first")));
     }
 
-    private void expectIllegalStateForEmptyBuilder() {
-        exceptionRule.expect(IllegalStateException.class);
-        exceptionRule.expectMessage("No information available to build an SQLException");
+    private void assertIllegalStateForEmptyBuilder(Executable executable) {
+        IllegalStateException exception = assertThrows(IllegalStateException.class, executable);
+        assertThat(exception, message(equalTo("No information available to build an SQLException")));
     }
 }

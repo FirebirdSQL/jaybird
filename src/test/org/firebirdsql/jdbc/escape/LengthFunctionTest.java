@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,79 +18,65 @@
  */
 package org.firebirdsql.jdbc.escape;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.jdbc.escape.EscapeFunctionAsserts.assertParseException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LengthFunctionTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class LengthFunctionTest {
 
     private static final LengthFunction function = new LengthFunction();
 
     @Test
-    public void testSingleParameter_rendersChar_Length() throws Exception {
+    void testSingleParameter_rendersChar_Length() throws Exception {
         assertEquals("CHAR_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'"));
     }
 
     @Test
-    public void testSecondParameter_CHARACTERS_rendersChar_Length() throws Exception {
+    void testSecondParameter_CHARACTERS_rendersChar_Length() throws Exception {
         assertEquals("CHAR_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", "CHARACTERS"));
     }
 
     @Test
-    public void testSecondParameter_characters_rendersChar_Length() throws Exception {
+    void testSecondParameter_characters_rendersChar_Length() throws Exception {
         assertEquals("CHAR_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", "characters"));
     }
 
     @Test
-    public void testSecondParameter_characters_whitespace_rendersChar_Length() throws Exception {
+    void testSecondParameter_characters_whitespace_rendersChar_Length() throws Exception {
         assertEquals("CHAR_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", " characters "));
     }
 
     @Test
-    public void testSecondParameter_OCTETS_rendersOctet_Length() throws Exception {
+    void testSecondParameter_OCTETS_rendersOctet_Length() throws Exception {
         assertEquals("OCTET_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", "OCTETS"));
     }
 
     @Test
-    public void testSecondParameter_octets_rendersChar_Length() throws Exception {
+    void testSecondParameter_octets_rendersChar_Length() throws Exception {
         assertEquals("OCTET_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", "octets"));
     }
 
     @Test
-    public void testSecondParameter_octets_whitespace_rendersChar_Length() throws Exception {
+    void testSecondParameter_octets_whitespace_rendersChar_Length() throws Exception {
         assertEquals("OCTET_LENGTH(TRIM(TRAILING FROM 'abc'))", function.apply("'abc'", " octets "));
     }
 
     @Test
-    public void testSecondParameter_wrongValue_throwsException() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-        expectedException.expectMessage(
+    void testSecondParameter_wrongValue_throwsException() {
+        assertParseException(() -> function.apply("'abc'", "invalid"),
                 "Second parameter for CHAR(ACTER)_LENGTH must be OCTETS or CHARACTERS, was invalid");
-
-        function.apply("'abc'", "invalid");
     }
 
     @Test
-    public void testZeroParameters_throwsException() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-        expectedException.expectMessage(
-                "Expected 1 or 2 parameters for LENGTH, received 0");
-
-        function.apply();
+    void testZeroParameters_throwsException() {
+        assertParseException(function::apply, "Expected 1 or 2 parameters for LENGTH, received 0");
     }
 
     @Test
-    public void testThreeParameters_throwsException() throws Exception {
-        expectedException.expect(FBSQLParseException.class);
-        expectedException.expectMessage(
+    void testThreeParameters_throwsException() {
+        assertParseException(() -> function.apply("'abc'", "invalid", "xyz"),
                 "Expected 1 or 2 parameters for LENGTH, received 3");
-
-        function.apply("'abc'", "invalid", "xyz");
     }
-
+    
 }

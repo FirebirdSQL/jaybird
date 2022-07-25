@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -41,9 +41,9 @@ class FBCachedFetcher implements FBFetcher {
 
     private final boolean forwardOnly;
     private List<RowValue> rows;
-    private int rowNum = 0;
+    private int rowNum;
     private int fetchSize;
-    private final FBObjectListener.FetcherListener fetcherListener;
+    private FBObjectListener.FetcherListener fetcherListener;
 
     FBCachedFetcher(GDSHelper gdsHelper, int fetchSize, int maxRows, FbStatement stmt_handle,
             FBObjectListener.FetcherListener fetcherListener, boolean forwardOnly) throws SQLException {
@@ -56,9 +56,7 @@ class FBCachedFetcher implements FBFetcher {
         final boolean hasBlobs = determineBlobs(rowDescriptor, isBlob);
 
         // load all rows from statement
-        if (fetchSize == 0)
-            fetchSize = MAX_FETCH_ROWS;
-        this.fetchSize = fetchSize;
+        this.fetchSize = fetchSize != 0 ? fetchSize : DEFAULT_FETCH_ROWS;
 
         try {
             RowListener rowListener = new RowListener();
@@ -286,10 +284,12 @@ class FBCachedFetcher implements FBFetcher {
     @Override
     public void close(CompletionReason completionReason) throws SQLException {
         rows = Collections.emptyList();
+        fetcherListener = null;
     }
 
     @Override
     public int getRowNum() {
+        // TODO This seems to violate the requirement that it should return 0 when not on a row
         return rowNum;
     }
 
@@ -363,6 +363,22 @@ class FBCachedFetcher implements FBFetcher {
         this.fetchSize = fetchSize;
     }
 
+    @Override
+    public int currentPosition() {
+        // NOTE: Current implementation of getRowNum is identical, but basically violates requirements
+        return rowNum;
+    }
+
+    @Override
+    public int size() {
+        return rows.size();
+    }
+
+    @Override
+    public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
+        this.fetcherListener = fetcherListener;
+    }
+
     private static final class RowListener extends DefaultStatementListener {
         private final List<RowValue> rows = new ArrayList<>();
         private boolean allRowsFetched = false;
@@ -373,7 +389,7 @@ class FBCachedFetcher implements FBFetcher {
         }
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             allRowsFetched = true;
         }
 

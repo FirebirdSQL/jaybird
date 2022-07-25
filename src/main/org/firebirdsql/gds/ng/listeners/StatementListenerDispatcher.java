@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,68 +38,44 @@ public final class StatementListenerDispatcher extends AbstractListenerDispatche
     private static final Logger log = LoggerFactory.getLogger(StatementListenerDispatcher.class);
 
     @Override
-    public void receivedRow(final FbStatement sender, final RowValue rowValue) {
-        for (StatementListener listener : this) {
-            try {
-                listener.receivedRow(sender, rowValue);
-            } catch (Exception e) {
-                log.error("Error on notify receivedRow to listener " + listener, e);
-            }
-        }
+    public void receivedRow(FbStatement sender, RowValue rowValue) {
+        notify(listener -> listener.receivedRow(sender, rowValue), "receivedRow");
     }
 
     @Override
-    public void allRowsFetched(final FbStatement sender) {
-        for (StatementListener listener : this) {
-            try {
-                listener.allRowsFetched(sender);
-            } catch (Exception e) {
-                log.error("Error on notify allRowsFetched to listener " + listener, e);
-            }
-        }
+    public void beforeFirst(FbStatement sender) {
+        notify(listener -> listener.beforeFirst(sender), "beforeFirst");
     }
 
     @Override
-    public void statementExecuted(final FbStatement sender, final boolean hasResultSet, final boolean hasSingletonResult) {
-        for (StatementListener listener : this) {
-            try {
-                listener.statementExecuted(sender, hasResultSet, hasSingletonResult);
-            } catch (Exception e) {
-                log.error("Error on notify statementExecuted to listener " + listener, e);
-            }
-        }
+    public void afterLast(FbStatement sender) {
+        notify(listener -> listener.afterLast(sender), "afterLast");
+    }
+
+    @Override
+    public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
+        notify(listener ->
+                listener.statementExecuted(sender, hasResultSet, hasSingletonResult), "statementExecuted");
     }
 
     @Override
     public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
-        for (StatementListener listener : this) {
-            try {
-                listener.statementStateChanged(sender, newState, previousState);
-            } catch (Exception e) {
-                log.error("Error on notify statementStateChanged to listener " + listener, e);
-            }
-        }
+        notify(listener ->
+                listener.statementStateChanged(sender, newState, previousState), "statementStateChanged");
     }
 
     @Override
     public void warningReceived(FbStatement sender, SQLWarning warning) {
-        for (StatementListener listener : this) {
-            try {
-                listener.warningReceived(sender, warning);
-            } catch (Exception e) {
-                log.error("Error on notify warningReceived to listener " + listener, e);
-            }
-        }
+        notify(listener -> listener.warningReceived(sender, warning), "warningReceived");
     }
 
     @Override
     public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
-        for (StatementListener listener : this) {
-            try {
-                listener.sqlCounts(sender, sqlCounts);
-            } catch (Exception e) {
-                log.error("Error on notify sqlCounts to listener " + listener, e);
-            }
-        }
+        notify(listener -> listener.sqlCounts(sender, sqlCounts), "sqlCounts");
+    }
+
+    @Override
+    protected void logError(String message, Throwable throwable) {
+        log.error(message, throwable);
     }
 }

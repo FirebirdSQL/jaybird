@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,17 +19,15 @@
 package org.firebirdsql.gds.ng.wire.auth;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.DatabaseUserRule;
-import org.firebirdsql.common.rules.GdsTypeRule;
-import org.firebirdsql.common.rules.RequireProtocol;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.RequireProtocolExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.management.FBServiceManager;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -39,14 +37,13 @@ import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.FBTestProperties.getUrl;
-import static org.firebirdsql.common.rules.RequireProtocol.requireProtocolVersion;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test Firebird 3 and higher authentication introduced in protocol v13.
@@ -54,29 +51,30 @@ import static org.junit.Assert.assertTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class Firebird3PlusAuthenticationTest {
+class Firebird3PlusAuthenticationTest {
 
-    @ClassRule
-    public static final RequireProtocol requireProtocol = requireProtocolVersion(13);
+    @RegisterExtension
+    @Order(1)
+    static final RequireProtocolExtension requireProtocol = RequireProtocolExtension.requireProtocolVersion(13);
 
-    @ClassRule
-    public static final GdsTypeRule gdsTypeRule = GdsTypeRule.excludesNativeOnly();
+    @RegisterExtension
+    @Order(2)
+    static final GdsTypeExtension gdsType = GdsTypeExtension.excludesNativeOnly();
 
-    private final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
-    private final DatabaseUserRule databaseUserRule = DatabaseUserRule.withDatabaseUser();
-    @Rule
-    public final TestRule ruleChain = RuleChain
-            .outerRule(usesDatabase)
-            .around(databaseUserRule);
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
+
+    @RegisterExtension
+    final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
     /**
      * This test assumes that the Firebird 3 config for {@code UserManager} contains {@code Legacy_UserManager}.
      */
     @Test
-    public void authenticateDatabaseUsingLegacyAuth() throws Exception {
+    void authenticateDatabaseUsingLegacyAuth() throws Exception {
         final String username = "legacyauth";
         final String password = "legacy";
-        databaseUserRule.createUser(username, password, "Legacy_UserManager");
+        databaseUser.createUser(username, password, "Legacy_UserManager");
         Properties connectionProperties = getDefaultPropertiesForConnection();
         connectionProperties.setProperty("user", username);
         connectionProperties.setProperty("password", password);
@@ -84,10 +82,9 @@ public class Firebird3PlusAuthenticationTest {
         try (Connection connection = DriverManager.getConnection(getUrl(), connectionProperties);
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(
-                     "SELECT MON$AUTH_METHOD FROM MON$ATTACHMENTS WHERE MON$ATTACHMENT_ID = CURRENT_CONNECTION")
-        ) {
-            assertTrue("Expected a row with attachment information", resultSet.next());
-            assertEquals("Unexpected authentication method", "Legacy_Auth", resultSet.getString(1));
+                     "SELECT MON$AUTH_METHOD FROM MON$ATTACHMENTS WHERE MON$ATTACHMENT_ID = CURRENT_CONNECTION")) {
+            assertTrue(resultSet.next(), "Expected a row with attachment information");
+            assertEquals("Legacy_Auth", resultSet.getString(1), "Unexpected authentication method");
         }
     }
 
@@ -98,10 +95,10 @@ public class Firebird3PlusAuthenticationTest {
      * </p>
      */
     @Test
-    public void authenticateServiceUsingLegacyAuth() throws Exception {
+    void authenticateServiceUsingLegacyAuth() throws Exception {
         final String username = "legacyauth";
         final String password = "legacy";
-        databaseUserRule.createUser(username, password, "Legacy_UserManager");
+        databaseUser.createUser(username, password, "Legacy_UserManager");
         final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
         fbServiceManager.setServerName(FBTestProperties.DB_SERVER_URL);
         fbServiceManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);
@@ -123,10 +120,10 @@ public class Firebird3PlusAuthenticationTest {
      * </p>
      */
     @Test
-    public void authenticateServiceUsingSrpAuth() throws Exception {
+    void authenticateServiceUsingSrpAuth() throws Exception {
         final String username = "srpauth";
         final String password = "srp";
-        databaseUserRule.createUser(username, password, "Srp");
+        databaseUser.createUser(username, password, "Srp");
         final FBServiceManager fbServiceManager = new FBServiceManager(FBTestProperties.getGdsType());
         fbServiceManager.setServerName(FBTestProperties.DB_SERVER_URL);
         fbServiceManager.setPortNumber(FBTestProperties.DB_SERVER_PORT);

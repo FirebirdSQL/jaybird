@@ -44,8 +44,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
- * The class <code>FBConnection</code> is a handle to a
- * {@link FBManagedConnection} and implements {@link Connection}.
+ * The class {@code FBConnection} is a handle to a {@link FBManagedConnection} and implements {@link Connection}.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -137,10 +136,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     /**
-     * This method should be invoked by each of the statements in the
-     * {@link Statement#close()} method. Here we remove statement from the
-     * <code>activeStatements</code> set, so we do not need to close it
-     * later.
+     * This method should be invoked by each of the statements in the {@link Statement#close()} method. Here we remove
+     * statement from the {@code activeStatements} set, so we do not need to close it later.
      *
      * @param stmt
      *         statement that was closed.
@@ -1301,6 +1298,24 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     boolean isIgnoreProcedureType() {
         DatabaseConnectionProperties props = connectionProperties();
         return props != null && props.isIgnoreProcedureType();
+    }
+
+    /**
+     * Checks (case-insensitive) value of the {@code scrollableCursor} connection property.
+     * <p>
+     * <b>Important:</b> this does not verify actual server support for the requested feature, just the value of
+     * the connection property.
+     * </p>
+     *
+     * @param scrollableCursor
+     *         Value to check (case-insensitive)
+     * @return {@code true} if the {@code scrollableCursor} connection property matches the specified value,
+     * {@code false} otherwise.
+     */
+    boolean isScrollableCursor(String scrollableCursor) {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null && scrollableCursor != null
+                && scrollableCursor.equalsIgnoreCase(props.getScrollableCursor());
     }
 
 }

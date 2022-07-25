@@ -440,6 +440,35 @@ Jaybird supports multi-row `RETURNING` introduced in Firebird 5.0.
 The entire generated keys result set is retrieved immediately on execute.
 So, if the statement inserts, updates or deletes a significant number of rows, this can consume a lot of memory in Jaybird.
 
+[#scrollable-cursors]
+=== Firebird 5 scrollable cursor support
+
+Jaybird supports server-side scrollable cursors introduced in Firebird 5.0.
+
+This feature is only available on pure-java connections, and only when explicitly enabled with connection property `scrollableCursor`.
+Support is only available in pure-java, as the bindings for native and embedded use the legacy fbclient API, and scrollable cursors are not exposed in the legacy fbclient API.
+
+The connection property `scrollableCursor` has the following values (case-insensitive):
+
+`EMULATED`::
+(default) Use client-side cached result set;
+this is the same behaviour as previous Jaybird versions used
+`SERVER`::
+Use server-side scrollable cursors, if possible
+
+If a connection does not support scrollable cursors, or if holdable cursors are requested, the behaviour will silently fall back to _emulated_ scrollable cursors.
+
+Compared to emulated scrollable cursor, server-side scrollable cursors exhibit slightly different behaviour (we may change the behaviour of _emulated_ later in Jaybird 5 or in a future Jaybird release):
+
+* New rows are inserted at the end of the cursor, where in _emulated_ they are inserted before the current row
+* Deleted rows are visible with an all-null marker row, where in _emulated_, the deleted row is removed from the result set
+* Result sets now report `true` for `rowUpdated()`, `rowDeleted()` and `rowInserted()` for rows updated, deleted or inserted through the result set.
++
+This is not yet reflected in `updatesAreDetected()`, `deletesAreDetected()` and `insertsAreDetected()` of `DatabaseMetaData`.
+This will be corrected when we retrofit the new behaviour for _emulated_ as well.
+
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md.md[jdp-2021-04].
+
 [#potentially-breaking-changes]
 === Potentially breaking changes
 
@@ -612,6 +641,13 @@ There is no direct equivalent beyond accessing the properties with the same name
 ** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
 ** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
 ** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
+* `V10Statement` (this is internal implementation, but might be used by custom protocol implementations)
+** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
+** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
+* `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
+* `AbstractFbStatement` (this is internal implementation, but might be used by custom protocol implementations)
+** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
+** `isAllRowsFetched()` -- `isAfterLast()`
 
 The following methods had their visibility reduced:
 
@@ -632,6 +668,10 @@ The following classes have been removed in Jaybird 5:
 These were implementation artifacts to support multiple JDBC versions.
 * `AbstractPreparedStatement`, `AbstractCallableStatement` and `AbstractResultSet`.
 These were implementation artifacts to support multiple JDBC versions.
+
+The following classes are no longer accessible in Jaybird 5:
+
+* `FBUpdatableCursorFetcher` is now package private.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
@@ -699,7 +739,7 @@ With Jaybird 6 the following breaking changes will be introduced.
 [#dropping-support-firebird-25]
 ==== Dropping support for Firebird 2.5
 
-Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdpjdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03]).
+Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
 [#removal-of-deprecated-classes-packages-and-methods-6]

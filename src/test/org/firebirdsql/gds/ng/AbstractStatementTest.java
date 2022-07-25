@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,23 +20,20 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.jna.JnaStatement;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.util.Arrays;
@@ -44,12 +41,16 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Generic tests for FbStatement.
@@ -118,35 +119,24 @@ public abstract class AbstractStatementTest {
     protected FbDatabase db;
     private FbTransaction transaction;
     protected FbStatement statement;
-    protected final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+    protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @Rule
-    public final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    public static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_EXECUTABLE_STORED_PROCEDURE,
+            CREATE_SELECTABLE_STORED_PROCEDURE,
+            CREATE_KEY_VALUE_TABLE);
 
     protected abstract Class<? extends FbDatabase> getExpectedDatabaseType();
 
-    @Before
+    @BeforeEach
     public final void setUp() throws Exception {
-        try (Connection con = getConnectionViaDriverManager()) {
-            DdlHelper.executeDDL(con, CREATE_EXECUTABLE_STORED_PROCEDURE);
-            DdlHelper.executeDDL(con, CREATE_SELECTABLE_STORED_PROCEDURE);
-            DdlHelper.executeCreateTable(con, CREATE_KEY_VALUE_TABLE);
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from keyvalue");
         }
-
         db = createDatabase();
-        assertEquals("Unexpected FbDatabase implementation", getExpectedDatabaseType(), db.getClass());
+        assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbDatabase implementation");
 
         db.attach();
     }
@@ -160,29 +150,28 @@ public abstract class AbstractStatementTest {
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
 
-        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+        assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
+        assertNotNull(fields, "Fields");
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
-        List<FieldDescriptor> expectedFields =
-                Arrays.asList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
-                                supportInfo.reportsBlobCharSetInDescriptor() ? metadataCharSetId : 0, 8, "Description", null,
-                                "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                                "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(2, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
-                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$SECURITY_CLASS", null,
-                                "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
-                        new FieldDescriptor(3, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
-                                supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME", null,
-                                "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
-                );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
-        assertNotNull("Parameters", statement.getParameterDescriptor());
-        assertEquals("Unexpected parameter count", 0, statement.getParameterDescriptor().getCount());
+        List<FieldDescriptor> expectedFields = Arrays.asList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_BLOB | 1, 1,
+                        supportInfo.reportsBlobCharSetInDescriptor() ? metadataCharSetId : 0, 8, "Description", null,
+                        "RDB$DESCRIPTION", "RDB$DATABASE", "SYSDBA"),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                        "RDB$RELATION_ID", null, "RDB$RELATION_ID", "RDB$DATABASE", "SYSDBA"),
+                new FieldDescriptor(2, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                        supportInfo.maxReportedIdentifierLengthBytes(), "RDB$SECURITY_CLASS", null,
+                        "RDB$SECURITY_CLASS", "RDB$DATABASE", "SYSDBA"),
+                new FieldDescriptor(3, db.getDatatypeCoder(), ISCConstants.SQL_TEXT | 1, metadataCharSetId, 0,
+                        supportInfo.maxReportedIdentifierLengthBytes(), "RDB$CHARACTER_SET_NAME", null,
+                        "RDB$CHARACTER_SET_NAME", "RDB$DATABASE", "SYSDBA")
+        );
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
+        assertNotNull(statement.getParameterDescriptor(), "Parameters");
+        assertEquals(0, statement.getParameterDescriptor().getCount(), "Unexpected parameter count");
     }
 
     @Test
@@ -197,15 +186,15 @@ public abstract class AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -216,10 +205,10 @@ public abstract class AbstractStatementTest {
                         "FROM RDB$CHARACTER_SETS a " +
                         "WHERE a.RDB$CHARACTER_SET_ID = ? OR a.RDB$BYTES_PER_CHARACTER = ?");
 
-        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+        assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
+        assertNotNull(fields, "Fields");
         final FirebirdSupportInfo supportInfo = supportInfoFor(db);
         final boolean supportsTableAlias = supportInfo.supportsTableAlias();
         final int metadataCharSetId = supportInfo.reportedMetadataCharacterSetId();
@@ -231,18 +220,17 @@ public abstract class AbstractStatementTest {
                                 supportsTableAlias ? "A" : null, "RDB$CHARACTER_SET_NAME", "RDB$CHARACTER_SETS",
                                 "SYSDBA")
                 );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
-        assertNotNull("Parameters", parameters);
-        List<FieldDescriptor> expectedParameters =
-                Arrays.asList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                                null, null, null, null, null),
-                        new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
-                                null, null, null, null, null)
-                );
-        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+        assertNotNull(parameters, "Parameters");
+        List<FieldDescriptor> expectedParameters = Arrays.asList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                        null, null, null, null, null),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_SHORT | 1, 0, 0, 2,
+                        null, null, null, null, null)
+        );
+        assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
     @Test
@@ -261,25 +249,26 @@ public abstract class AbstractStatementTest {
 
         statement.execute(rowValue);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, listener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", listener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, listener.getRows().size());
-        assertNull("Expected no SQL counts yet", listener.getSqlCounts());
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, listener.hasSingletonResult(), "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, listener.getRows().size(), "Expected no rows to be fetched yet");
+        assertNull(listener.getSqlCounts(), "Expected no SQL counts yet");
 
         // 100 should be sufficient to fetch all character sets
         statement.fetchRows(100);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, listener.isAllRowsFetched());
+        assertEquals(Boolean.TRUE, listener.isAfterLast(), "Expected afterLast to be set to true");
         // Number is database dependent (unicode_fss + all single byte character sets)
-        assertTrue("Expected more than two rows", listener.getRows().size() > 2);
+        assertTrue(listener.getRows().size() > 2, "Expected more than two rows");
 
-        assertNull("expected no SQL counts immediately after retrieving all rows", listener.getSqlCounts());
+        assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after retrieving all rows");
 
         statement.getSqlCounts();
 
-        assertNotNull("Expected SQL counts", listener.getSqlCounts());
-        assertEquals("Unexpected select count", listener.getRows().size(), listener.getSqlCounts().getLongSelectCount());
+        assertNotNull(listener.getSqlCounts(), "Expected SQL counts");
+        assertEquals(listener.getRows().size(), listener.getSqlCounts().getLongSelectCount(),
+                "Unexpected select count");
     }
 
     @Test
@@ -287,25 +276,23 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare(EXECUTE_EXECUTABLE_STORED_PROCEDURE);
 
-        assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
+        assertEquals(StatementType.STORED_PROCEDURE, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
-        List<FieldDescriptor> expectedFields =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
-                                "OUTVALUE", "INCREMENT", "SYSDBA")
-                );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        assertNotNull(fields, "Fields");
+        List<FieldDescriptor> expectedFields = Collections.singletonList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
+                        "OUTVALUE", "INCREMENT", "SYSDBA")
+        );
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
-        assertNotNull("Parameters", parameters);
-        List<FieldDescriptor> expectedParameters =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                                null, null)
-                );
-        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+        assertNotNull(parameters, "Parameters");
+        List<FieldDescriptor> expectedParameters = Collections.singletonList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                        null, null)
+        );
+        assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
     @Test
@@ -318,14 +305,14 @@ public abstract class AbstractStatementTest {
                 db.getDatatypeCoder().encodeInt(1)); // Byte representation of 1
         statement.execute(rowValue);
 
-        assertTrue("Expected singleton result for executable stored procedure", listener.hasSingletonResult());
-        assertFalse("Expected no result set for executable stored procedure", listener.hasResultSet());
-        assertTrue("Expected all rows to have been fetched", listener.isAllRowsFetched());
-        assertEquals("Expected 1 row", 1, listener.getRows().size());
+        assertTrue(listener.hasSingletonResult(), "Expected singleton result for executable stored procedure");
+        assertFalse(listener.hasResultSet(), "Expected no result set for executable stored procedure");
+        assertTrue(listener.isAfterLast(), "Expected all rows to have been fetched");
+        assertEquals(1, listener.getRows().size(), "Expected 1 row");
         RowValue fieldValues = listener.getRows().get(0);
-        assertEquals("Expected one field", 1, fieldValues.getCount());
-        assertEquals("Expected byte representation of 2", 2,
-                db.getDatatypeCoder().decodeInt(fieldValues.getFieldData(0)));
+        assertEquals(1, fieldValues.getCount(), "Expected one field");
+        assertEquals(2, db.getDatatypeCoder().decodeInt(fieldValues.getFieldData(0)),
+                "Expected byte representation of 2");
     }
 
     @Test
@@ -333,56 +320,52 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare(EXECUTE_SELECTABLE_STORED_PROCEDURE);
 
-        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+        assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
-        List<FieldDescriptor> expectedFields =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
-                                "OUTVALUE", "RANGE", "SYSDBA")
-                );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        assertNotNull(fields, "Fields");
+        List<FieldDescriptor> expectedFields = Collections.singletonList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "OUTVALUE", null,
+                        "OUTVALUE", "RANGE", "SYSDBA")
+        );
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
-        assertNotNull("Parameters", parameters);
-        List<FieldDescriptor> expectedParameters =
-                Arrays.asList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                                null, null),
-                        new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
-                                null, null)
-                );
-        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+        assertNotNull(parameters, "Parameters");
+        List<FieldDescriptor> expectedParameters = Arrays.asList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                        null, null),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, null, null, null,
+                        null, null)
+        );
+        assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
     @Test
     public void test_PrepareInsertReturning() throws Exception {
-        assumeTrue("Test requires INSERT .. RETURNING ... support", supportInfoFor(db).supportsInsertReturning());
+        assumeTrue(getDefaultSupportInfo().supportsInsertReturning(), "Test requires INSERT .. RETURNING ... support");
 
         allocateStatement();
         statement.prepare(INSERT_RETURNING_KEY_VALUE);
 
         // DML {INSERT, UPDATE, DELETE} ... RETURNING is described as a stored procedure!
-        assertEquals("Unexpected StatementType", StatementType.STORED_PROCEDURE, statement.getType());
+        assertEquals(StatementType.STORED_PROCEDURE, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
-        List<FieldDescriptor> expectedFields =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
-                                "THEKEY", "KEYVALUE", "SYSDBA")
-                );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        assertNotNull(fields, "Fields");
+        List<FieldDescriptor> expectedFields = Collections.singletonList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_LONG | 1, 0, 0, 4, "THEKEY", null,
+                        "THEKEY", "KEYVALUE", "SYSDBA")
+        );
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
 
         final RowDescriptor parameters = statement.getParameterDescriptor();
-        assertNotNull("Parameters", parameters);
-        List<FieldDescriptor> expectedParameters =
-                Collections.singletonList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
-                                null, null, null)
-                );
-        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+        assertNotNull(parameters, "Parameters");
+        List<FieldDescriptor> expectedParameters = Collections.singletonList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 0, 0, 5, null, null,
+                        null, null, null)
+        );
+        assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
     @Test
@@ -394,51 +377,48 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExecutionPlan();
 
-        assertEquals("Unexpected plan for prepared statement", "PLAN (RDB$DATABASE NATURAL)", executionPlan);
+        assertEquals("PLAN (RDB$DATABASE NATURAL)", executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
     public void test_GetExecutionPlan_noStatementPrepared() throws Exception {
         allocateStatement();
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("Statement not yet allocated");
 
-        statement.getExecutionPlan();
+        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
+        assertThat(exception, message(equalTo("Statement not yet allocated")));
     }
 
     @Test
     public void test_GetExecutionPlan_StatementClosed() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("Statement closed");
         allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
         statement.close();
 
-        statement.getExecutionPlan();
+        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
+        assertThat(exception, message(equalTo("Statement closed")));
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_unsupportedVersion() throws Exception {
-        assumeFalse("Test expects explained execution plan not supported",
-                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+        assumeFalse(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+                "Test expects explained execution plan not supported");
 
         allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
 
-        expectedException.expect(SQLFeatureNotSupportedException.class);
-        expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported));
-
-        statement.getExplainedExecutionPlan();
+        SQLException exception = assertThrows(SQLFeatureNotSupportedException.class,
+                statement::getExplainedExecutionPlan);
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported));
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_withStatementPrepared() throws Exception {
-        assumeTrue("Test requires explained execution plan support",
-                getDefaultSupportInfo().supportsExplainedExecutionPlan());
+        assumeTrue(getDefaultSupportInfo().supportsExplainedExecutionPlan(),
+                "Test requires explained execution plan support");
 
         allocateStatement();
         statement.prepare(
@@ -447,30 +427,28 @@ public abstract class AbstractStatementTest {
 
         String executionPlan = statement.getExplainedExecutionPlan();
 
-        assertEquals("Unexpected plan for prepared statement", "Select Expression\n" +
-                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan);
+        assertEquals("Select Expression\n" +
+                "    -> Table \"RDB$DATABASE\" Full Scan", executionPlan, "Unexpected plan for prepared statement");
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_noStatementPrepared() throws Exception {
         allocateStatement();
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("Statement not yet allocated");
 
-        statement.getExplainedExecutionPlan();
+        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
+        assertThat(exception, message(equalTo("Statement not yet allocated")));
     }
 
     @Test
     public void test_GetExplainedExecutionPlan_StatementClosed() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expectMessage("Statement closed");
         allocateStatement();
         statement.prepare(
                 "SELECT RDB$DESCRIPTION AS \"Description\", RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME " +
                         "FROM RDB$DATABASE");
         statement.close();
 
-        statement.getExplainedExecutionPlan();
+        SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
+        assertThat(exception, message(equalTo("Statement closed")));
     }
 
     @Test
@@ -485,12 +463,12 @@ public abstract class AbstractStatementTest {
 
         statement.execute(rowValue);
 
-        assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
+        assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after execute");
 
         statement.getSqlCounts();
 
-        assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
-        assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
+        assertNotNull(listener.getSqlCounts(), "Expected SQL counts on listener");
+        assertEquals(1, listener.getSqlCounts().getLongInsertCount(), "Expected one row to have been inserted");
     }
 
     /**
@@ -500,7 +478,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void test_CloseCursor_State_NEW() throws Exception {
         statement = db.createStatement(null);
-        assumeThat(statement.getState(), equalTo(StatementState.NEW));
+        assumeThat("Statement state", statement.getState(), equalTo(StatementState.NEW));
 
         statement.closeCursor();
         assertEquals(StatementState.NEW, statement.getState());
@@ -514,7 +492,7 @@ public abstract class AbstractStatementTest {
     public void test_CloseCursor_State_PREPARED() throws Exception {
         allocateStatement();
         statement.prepare("SELECT * FROM RDB$DATABASE");
-        assumeThat(statement.getState(), equalTo(StatementState.PREPARED));
+        assumeThat("Statement state", statement.getState(), equalTo(StatementState.PREPARED));
 
         statement.closeCursor();
         assertEquals(StatementState.PREPARED, statement.getState());
@@ -529,7 +507,7 @@ public abstract class AbstractStatementTest {
         allocateStatement();
         statement.prepare("SELECT * FROM RDB$DATABASE");
         statement.execute(RowValue.EMPTY_ROW_VALUE);
-        assumeThat(statement.getState(), equalTo(StatementState.CURSOR_OPEN));
+        assumeThat("Statement state", statement.getState(), equalTo(StatementState.CURSOR_OPEN));
 
         statement.closeCursor();
         assertEquals(StatementState.PREPARED, statement.getState());
@@ -543,7 +521,7 @@ public abstract class AbstractStatementTest {
     public void test_CloseCursor_State_CLOSED() throws Exception {
         statement = db.createStatement(null);
         statement.close();
-        assumeThat(statement.getState(), equalTo(StatementState.CLOSED));
+        assumeThat("Statement state", statement.getState(), equalTo(StatementState.CLOSED));
 
         statement.closeCursor();
         assertEquals(StatementState.CLOSED, statement.getState());
@@ -561,30 +539,32 @@ public abstract class AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(),
+                "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
         final SimpleStatementListener statementListener2 = new SimpleStatementListener();
         statement.addStatementListener(statementListener2);
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(),
+                "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -599,15 +579,16 @@ public abstract class AbstractStatementTest {
 
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener.hasSingletonResult(),
+                "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener.getRows().size(), "Expected a single row to have been fetched");
 
         statement.closeCursor();
 
@@ -619,15 +600,16 @@ public abstract class AbstractStatementTest {
         statement.addStatementListener(statementListener2);
         statement.execute(RowValue.EMPTY_ROW_VALUE);
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, statementListener2.hasResultSet());
-        assertEquals("Expected hasSingletonResult to be set to false", Boolean.FALSE, statementListener2.hasSingletonResult());
-        assertNull("Expected allRowsFetched not set yet", statementListener2.isAllRowsFetched());
-        assertEquals("Expected no rows to be fetched yet", 0, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.hasResultSet(), "Expected hasResultSet to be set to true");
+        assertEquals(Boolean.FALSE, statementListener2.hasSingletonResult(),
+                "Expected hasSingletonResult to be set to false");
+        assertNotEquals(Boolean.TRUE, statementListener.isAfterLast(), "Expected afterLast not set yet");
+        assertEquals(0, statementListener2.getRows().size(), "Expected no rows to be fetched yet");
 
         statement.fetchRows(10);
 
-        assertEquals("Expected allRowsFetched to be set to true", Boolean.TRUE, statementListener2.isAllRowsFetched());
-        assertEquals("Expected a single row to have been fetched", 1, statementListener2.getRows().size());
+        assertEquals(Boolean.TRUE, statementListener2.isAfterLast(), "Expected afterLast to be set to true");
+        assertEquals(1, statementListener2.getRows().size(), "Expected a single row to have been fetched");
     }
 
     @Test
@@ -671,23 +653,25 @@ public abstract class AbstractStatementTest {
         statement.fetchRows(1);
 
         final List<RowValue> rows = statementListener.getRows();
-        assertEquals("Expected a row", 1, rows.size());
+        assertEquals(1, rows.size(), "Expected a row");
         final RowValue selectResult = rows.get(0);
         final byte[] selectVarcharFieldData = selectResult.getFieldData(0);
         final byte[] selectCharFieldData = selectResult.getFieldData(1);
-        assertEquals("Length of selected varchar field data", 4, selectVarcharFieldData.length);
-        assertEquals("Length of selected char field data", 20, selectCharFieldData.length);
+        assertNotNull(selectVarcharFieldData);
+        assertEquals(4, selectVarcharFieldData.length, "Length of selected varchar field data");
+        assertNotNull(selectCharFieldData);
+        assertEquals(20, selectCharFieldData.length, "Length of selected char field data");
 
         String decodedVarchar = utf8Encoding.decodeFromCharset(selectVarcharFieldData);
         String decodedChar = utf8Encoding.decodeFromCharset(selectCharFieldData);
 
-        assertEquals("Unexpected value for varchar", aEuro, decodedVarchar);
-        assertEquals("Unexpected value for trimmed char", aEuro, decodedChar.trim());
+        assertEquals(aEuro, decodedVarchar, "Unexpected value for varchar");
+        assertEquals(aEuro, decodedChar.trim(), "Unexpected value for trimmed char");
         // Note artificial result from the way UTF8 is handled
-        assertEquals("Unexpected length for char", 18, decodedChar.length());
+        assertEquals(18, decodedChar.length(), "Unexpected length for char");
         char[] spaceChars16 = new char[16];
         Arrays.fill(spaceChars16, ' ');
-        assertEquals("Unexpected trailing characters for char", new String(spaceChars16), decodedChar.substring(2));
+        assertEquals(new String(spaceChars16), decodedChar.substring(2), "Unexpected trailing characters for char");
     }
 
     @Test
@@ -701,13 +685,8 @@ public abstract class AbstractStatementTest {
 
         // Insert value
         statement.execute(rowValue);
-        try {
-            // Insert value again
-            statement.execute(rowValue);
-            fail("Expected exception");
-        } catch (SQLException e) {
-            // ignore
-        }
+        // Insert value again
+        assertThrows(SQLException.class, () -> statement.execute(rowValue));
 
         statement.addStatementListener(listener);
 
@@ -719,12 +698,12 @@ public abstract class AbstractStatementTest {
                 db.getEncoding().encodeToCharset("test"));
         statement.execute(differentRowValue);
 
-        assertNull("expected no SQL counts immediately after execute", listener.getSqlCounts());
+        assertNull(listener.getSqlCounts(), "expected no SQL counts immediately after execute");
 
         statement.getSqlCounts();
 
-        assertNotNull("Expected SQL counts on listener", listener.getSqlCounts());
-        assertEquals("Expected one row to have been inserted", 1, listener.getSqlCounts().getLongInsertCount());
+        assertNotNull(listener.getSqlCounts(), "Expected SQL counts on listener");
+        assertEquals(1, listener.getSqlCounts().getLongInsertCount(), "Expected one row to have been inserted");
     }
 
     @Test
@@ -738,13 +717,8 @@ public abstract class AbstractStatementTest {
 
         // Insert value
         statement.execute(rowValue);
-        try {
-            // Insert value again
-            statement.execute(rowValue);
-            fail("Expected exception");
-        } catch (SQLException e) {
-            // ignore
-        }
+        // Insert value again
+        assertThrows(SQLException.class, () -> statement.execute(rowValue));
 
         statement.prepare("INSERT INTO keyvalue (thekey, theUTFVarcharValue) VALUES (?, ?)");
         RowValue differentRowValue = RowValue.of(
@@ -756,20 +730,17 @@ public abstract class AbstractStatementTest {
     @Test
     public void testStatementPrepareAfterPrepareError() throws Exception {
         allocateStatement();
-        try {
-            // Prepare statement with typo
-            statement.prepare("INSRT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
-            fail("Expected exception");
-        } catch (SQLException e) {
-            // ignore
-        }
+        // Prepare statement with typo
+        assertThrows(SQLException.class,
+                () -> statement.prepare("INSRT INTO keyvalue (thekey, thevalue) VALUES (?, ?)"));
+
         statement.prepare("INSERT INTO keyvalue (thekey, thevalue) VALUES (?, ?)");
     }
 
     @Test
     public void testStatementPrepareLongObjectNames() throws Exception {
-        assumeTrue("Test requires 63 character identifier support",
-                supportInfoFor(db).maxIdentifierLengthCharacters() >= 63);
+        assumeThat("Test requires 63 character identifier support",
+                getDefaultSupportInfo().maxIdentifierLengthCharacters(), greaterThan(63));
 
         String tableName = generateIdentifier('A', 63);
         String column1 = generateIdentifier('B', 63);
@@ -783,26 +754,25 @@ public abstract class AbstractStatementTest {
         statement.prepare(
                 "SELECT " + column1 + ", " + column2 + " FROM " + tableName + " where " + column1 + " = ?");
 
-        assertEquals("Unexpected StatementType", StatementType.SELECT, statement.getType());
+        assertEquals(StatementType.SELECT, statement.getType(), "Unexpected StatementType");
 
         final RowDescriptor fields = statement.getRowDescriptor();
-        assertNotNull("Fields", fields);
-        List<FieldDescriptor> expectedFields =
-                Arrays.asList(
-                        new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
-                                0, 40, column1, null, column1, tableName, "SYSDBA"),
-                        new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
-                                0, 80, column2, null, column2, tableName, "SYSDBA")
-                );
-        assertEquals("Unexpected values for fields", expectedFields, fields.getFieldDescriptors());
+        assertNotNull(fields, "Fields");
+        List<FieldDescriptor> expectedFields = Arrays.asList(
+                new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
+                        0, 40, column1, null, column1, tableName, "SYSDBA"),
+                new FieldDescriptor(1, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
+                        0, 80, column2, null, column2, tableName, "SYSDBA")
+        );
+        assertEquals(expectedFields, fields.getFieldDescriptors(), "Unexpected values for fields");
         RowDescriptor parameters = statement.getParameterDescriptor();
-        assertNotNull("Parameters", parameters);
+        assertNotNull(parameters, "Parameters");
 
         List<FieldDescriptor> expectedParameters =
                 Collections.singletonList(
                         new FieldDescriptor(0, db.getDatatypeCoder(), ISCConstants.SQL_VARYING | 1, 4,
                                 0, 40, null, null, null, null, null));
-        assertEquals("Unexpected values for parameters", expectedParameters, parameters.getFieldDescriptors());
+        assertEquals(expectedParameters, parameters.getFieldDescriptors(), "Unexpected values for parameters");
     }
 
     @Test
@@ -831,10 +801,8 @@ public abstract class AbstractStatementTest {
     public void setTimeout_negativeValue_throwsException() throws Exception {
         allocateStatement();
 
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
-
-        statement.setTimeout(-1);
+        SQLException exception = assertThrows(SQLNonTransientException.class, () -> statement.setTimeout(-1));
+        assertThat(exception, errorCodeEquals(JaybirdErrorCodes.jb_invalidTimeout));
     }
 
     @Test
@@ -846,7 +814,7 @@ public abstract class AbstractStatementTest {
 
     @Test
     public void testVerifyUnprepare() throws Exception {
-        assumeTrue("Test requires support for statement unprepare", supportInfoFor(db).supportsStatementUnprepare());
+        assumeTrue(supportInfoFor(db).supportsStatementUnprepare(), "Test requires support for statement unprepare");
 
         allocateStatement();
         String statementText = "SELECT * FROM RDB$DATABASE";
@@ -858,8 +826,8 @@ public abstract class AbstractStatementTest {
                              + "where mon$attachment_id <> current_connection and mon$sql_text = cast(? as varchar(50))")) {
             pstmt.setString(1, statementText);
             try (ResultSet rs = pstmt.executeQuery()) {
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Expected prepared statement", 1, rs.getInt(1));
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(1, rs.getInt(1), "Expected prepared statement");
             }
 
             statement.unprepare();
@@ -870,19 +838,14 @@ public abstract class AbstractStatementTest {
             }
 
             try (ResultSet rs = pstmt.executeQuery()) {
-                assertTrue("Expected a row", rs.next());
-                assertEquals("Expected no prepared statement", 0, rs.getInt(1));
+                assertTrue(rs.next(), "Expected a row");
+                assertEquals(0, rs.getInt(1), "Expected no prepared statement");
             }
         }
     }
 
     private FbTransaction getTransaction() throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
     protected FbTransaction getOrCreateTransaction() throws SQLException {
@@ -899,7 +862,7 @@ public abstract class AbstractStatementTest {
         statement = db.createStatement(transaction);
     }
 
-    @After
+    @AfterEach
     public final void tearDown() throws Exception {
         if (statement != null) {
             try {
@@ -927,6 +890,7 @@ public abstract class AbstractStatementTest {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected static String generateIdentifier(final char identifierChar,final int length) {
         StringBuilder sb = new StringBuilder(length);
         int tempLength = length;

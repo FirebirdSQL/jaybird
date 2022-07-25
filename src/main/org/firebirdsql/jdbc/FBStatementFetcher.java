@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -41,7 +41,7 @@ class FBStatementFetcher implements FBFetcher {
     private boolean wasFetched;
 
     protected final GDSHelper gdsHelper;
-    protected final FBObjectListener.FetcherListener fetcherListener;
+    protected FBObjectListener.FetcherListener fetcherListener;
 
     protected final int maxRows;
     protected int fetchSize;
@@ -54,20 +54,17 @@ class FBStatementFetcher implements FBFetcher {
     private boolean allRowsFetched;
     protected RowValue _nextRow;
 
-    private int rowNum = 0;
-    private int rowPosition = 0;
+    private int rowNum;
+    private int rowPosition;
 
-    private boolean isEmpty = false;
-    private boolean isBeforeFirst = false;
-    private boolean isFirst = false;
-    private boolean isLast = false;
-    private boolean isAfterLast = false;
+    private boolean isEmpty;
+    private boolean isBeforeFirst = true;
+    private boolean isFirst;
+    private boolean isLast;
+    private boolean isAfterLast;
 
-    FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider,
-            FbStatement stmth,
-            FBObjectListener.FetcherListener fetcherListener, int maxRows,
-            int fetchSize) throws SQLException {
-
+    FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider, FbStatement stmth,
+            FBObjectListener.FetcherListener fetcherListener, int maxRows, int fetchSize) throws SQLException {
         this.gdsHelper = gdsHelper;
         this.stmt = stmth;
         stmt.addStatementListener(rowListener);
@@ -75,15 +72,6 @@ class FBStatementFetcher implements FBFetcher {
         this.fetcherListener = fetcherListener;
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
-
-        synchronized (syncProvider.getSynchronizationObject()) {
-            isEmpty = false;
-            isBeforeFirst = false;
-            isFirst = false;
-            isLast = false;
-            isAfterLast = false;
-            allRowsFetched = false;
-        }
     }
 
     protected RowValue getNextRow() throws SQLException {
@@ -187,7 +175,7 @@ class FBStatementFetcher implements FBFetcher {
             if (this.maxRows != 0) maxRows = this.maxRows - rowNum;
 
             int fetchSize = this.fetchSize;
-            if (fetchSize == 0) fetchSize = MAX_FETCH_ROWS;
+            if (fetchSize == 0) fetchSize = DEFAULT_FETCH_ROWS;
 
             if (maxRows != 0 && fetchSize > maxRows) fetchSize = maxRows;
 
@@ -309,6 +297,21 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     @Override
+    public int currentPosition() throws SQLException {
+        throw new FBDriverNotCapableException("Cannot report current position. This is a bug in the calling code, because this method is not expected to be called on this implementation");
+    }
+
+    @Override
+    public int size() throws SQLException {
+        throw new FBDriverNotCapableException("Cannot report total size. This is a bug in the calling code, because this method is not expected to be called on this implementation");
+    }
+
+    @Override
+    public void setFetcherListener(FBObjectListener.FetcherListener fetcherListener) {
+        this.fetcherListener = fetcherListener;
+    }
+
+    @Override
     public int getFetchSize() {
         return fetchSize;
     }
@@ -325,7 +328,7 @@ class FBStatementFetcher implements FBFetcher {
         }
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             allRowsFetched = true;
         }
     }

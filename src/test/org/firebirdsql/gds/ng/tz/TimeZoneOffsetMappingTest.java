@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,94 +18,87 @@
  */
 package org.firebirdsql.gds.ng.tz;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@RunWith(Parameterized.class)
-public class TimeZoneOffsetMappingTest {
+class TimeZoneOffsetMappingTest {
 
     private static final int SIGN_POSITIVE = 1;
     private static final int SIGN_NEGATIVE = -1;
     private static final TimeZoneMapping mapping = TimeZoneMapping.getInstance();
     private static final ZoneId UTC_ZONE_UID = ZoneOffset.UTC;
 
-    private final int firebirdZoneId;
-    private final int sign;
-    private final int hours;
-    private final int minutes;
-    private final ZoneId zoneId;
-
-    public TimeZoneOffsetMappingTest(int firebirdZoneId, int sign, int hours, int minutes, ZoneId zoneId) {
-        this.firebirdZoneId = firebirdZoneId;
-        this.sign = sign;
-        this.hours = hours;
-        this.minutes = minutes;
-        this.zoneId = zoneId;
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{0} => {4}")
+    @MethodSource("testCases")
+    void testTimeZoneById(int firebirdZoneId, int sign, int hours, int minutes, ZoneId zoneId) {
+        assertEquals(zoneId, mapping.timeZoneById(firebirdZoneId), "Unexpected mapping");
     }
 
-    @Test
-    public void testTimeZoneById() {
-        assertEquals("Unexpected mapping", zoneId, mapping.timeZoneById(firebirdZoneId));
+    @ParameterizedTest
+    @MethodSource("testCases")
+    void testToOffsetMinutes(int firebirdZoneId, int sign, int hours, int minutes) {
+        final int offsetMinutes = getOffsetMinutes(sign, hours, minutes);
+
+        assertEquals(offsetMinutes, mapping.toOffsetMinutes(firebirdZoneId), "Unexpected offset");
     }
 
-    @Test
-    public void testToOffsetMinutes() {
-        final int offsetMinutes = getOffsetMinutes();
+    @ParameterizedTest
+    @MethodSource("testCases")
+    void testToTimeZoneId_minutes(int firebirdZoneId, int sign, int hours, int minutes) {
+        final int offsetMinutes = getOffsetMinutes(sign, hours, minutes);
 
-        assertEquals("Unexpected offset", offsetMinutes, mapping.toOffsetMinutes(firebirdZoneId));
+        assertEquals(firebirdZoneId, mapping.toTimeZoneId(offsetMinutes), "Unexpected timezone id");
     }
 
-    @Test
-    public void testToTimeZoneId_minutes() {
-        final int offsetMinutes = getOffsetMinutes();
+    @SuppressWarnings("unused")
+    @ParameterizedTest(name = "{4} => {0}")
+    @MethodSource("testCases")
+    void testToTimeZoneId_ZoneOffset(int firebirdZoneId, int sign, int hours, int minutes, ZoneId zoneId) {
+        assumeTrue(isInImplementationRange(hours, minutes), "Test requires ZoneOffset");
 
-        assertEquals("Unexpected timezone id", firebirdZoneId, mapping.toTimeZoneId(offsetMinutes));
+        assertEquals(firebirdZoneId, mapping.toTimeZoneId((ZoneOffset) zoneId), "Unexpected mapping");
     }
 
-    @Test
-    public void testToTimeZoneId_ZoneOffset() {
-        assumeTrue("Test requires ZoneOffset", isInImplementationRange());
-
-        assertEquals("Unexpected mapping", firebirdZoneId, mapping.toTimeZoneId((ZoneOffset) zoneId));
-    }
-
-    @Test
-    public void testIsSupportedOffsetTimezone() {
-        final boolean expectedSupport = isInImplementationRange();
+    @SuppressWarnings("unused")
+    @ParameterizedTest
+    @MethodSource("testCases")
+    void testIsSupportedOffsetTimezone(int firebirdZoneId, int sign, int hours, int minutes) {
+        final boolean expectedSupport = isInImplementationRange(hours, minutes);
 
         assertEquals(expectedSupport, mapping.isSupportedOffsetTimezone(firebirdZoneId));
     }
 
-    @Test
-    public void testIsOffsetTimeZone() {
+    @ParameterizedTest
+    @MethodSource("testCases")
+    void testIsOffsetTimeZone(int firebirdZoneId) {
         assertTrue(mapping.isOffsetTimeZone(firebirdZoneId));
     }
 
     /**
      * @return {@code true} if the offset is within the Jaybird implementation range.
      */
-    private boolean isInImplementationRange() {
+    private static boolean isInImplementationRange(int hours, int minutes) {
         return hours >= 0 && (hours < 17 || hours == 18 && minutes == 0);
     }
 
-    private int getOffsetMinutes() {
+    private static int getOffsetMinutes(int sign, int hours, int minutes) {
         return sign * (hours * 60 + minutes);
     }
 
-    @Parameterized.Parameters(name = "{0} => {4}")
-    public static Collection<Object[]> testCases() {
-        List<Object[]> testData = new ArrayList<>(24 * 4 * 2 + 2);
+    static Stream<Arguments> testCases() {
+        List<Arguments> testData = new ArrayList<>(24 * 4 * 2 + 2);
         testData.add(testCase(1439, 1, 0, 0, ZoneOffset.ofHoursMinutes(0, 0)));
         // Maximum range supported by Jaybird due to ZoneOffset limit of [-18:00, +18:00]
         testData.add(testCase(SIGN_POSITIVE, 18, 0));
@@ -134,16 +127,16 @@ public class TimeZoneOffsetMappingTest {
                 testData.add(outOfRangeCase(SIGN_NEGATIVE, hours, minutes));
             }
         }
-        return testData;
+        return testData.stream();
     }
 
-    private static Object[] testCase(int sign, int hours, int minutes) {
+    private static Arguments testCase(int sign, int hours, int minutes) {
         int firebirdZoneId = calculateFirebirdZoneId(sign, hours, minutes);
         ZoneOffset zoneOffset = ZoneOffset.ofHoursMinutes(sign * hours, sign * minutes);
         return testCase(firebirdZoneId, sign, hours, minutes, zoneOffset);
     }
 
-    private static Object[] outOfRangeCase(int sign, int hours, int minutes) {
+    private static Arguments outOfRangeCase(int sign, int hours, int minutes) {
         int firebirdZoneId = calculateFirebirdZoneId(sign, hours, minutes);
         return testCase(firebirdZoneId, sign, hours, minutes, UTC_ZONE_UID);
     }
@@ -152,7 +145,7 @@ public class TimeZoneOffsetMappingTest {
         return sign * (hours * 60 + minutes) + 1439;
     }
 
-    private static Object[] testCase(int firebirdZoneId, int sign, int hours, int minutes, ZoneId zoneId) {
-        return new Object[] { firebirdZoneId, sign, hours, minutes, zoneId };
+    private static Arguments testCase(int firebirdZoneId, int sign, int hours, int minutes, ZoneId zoneId) {
+        return Arguments.of(firebirdZoneId, sign, hours, minutes, zoneId);
     }
 }

@@ -60,61 +60,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     @Override
-    public byte[] getSqlInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    sendInfoSql(requestItems, bufferLength);
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    return processInfoSqlResponse(getDatabase().readGenericResponse(getStatementWarningCallback()));
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
-            }
-        } catch (SQLException e) {
-            exceptionListenerDispatcher.errorOccurred(e);
-            throw e;
-        }
-    }
-
-    /**
-     * Sends the info sql request to the database
-     *
-     * @param requestItems
-     *         Info request items
-     * @param bufferLength
-     *         Requested response buffer length
-     * @throws IOException
-     * @throws SQLException
-     */
-    protected void sendInfoSql(final byte[] requestItems, final int bufferLength) throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        xdrOut.writeInt(WireProtocolConstants.op_info_sql);
-        xdrOut.writeInt(getHandle());
-        xdrOut.writeInt(0); // incarnation
-        xdrOut.writeBuffer(requestItems);
-        xdrOut.writeInt(bufferLength);
-    }
-
-    /**
-     * Processes the info sql response.
-     *
-     * @param response
-     *         GenericResponse
-     * @return info sql response buffer
-     */
-    protected byte[] processInfoSqlResponse(GenericResponse response) {
-        return response.getData();
-    }
-
-    @Override
     protected void free(final int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
             try {
@@ -346,7 +291,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                     log.debug(sqlWarning.toString(), sqlWarning);
                                     statementWarningCallback.processWarning(sqlWarning);
                                 }
-                                setAllRowsFetched(true);
+                                setAfterLast();
                             } else {
                                 // A normal execute is never a singleton result (even if it only produces a single result)
                                 statementListenerDispatcher.statementExecuted(this, hasFields(), false);
@@ -449,12 +394,12 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 if (!getState().isCursorOpen()) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
                 }
-                if (isAllRowsFetched()) return;
+                if (isAfterLast()) return;
 
                 try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                     if (operationCloseHandle.isCancelled()) {
                         // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                     }
                     try {
                         sendFetch(fetchSize);
@@ -464,7 +409,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
                     }
                     try {
-                        processFetchResponse();
+                        processFetchResponse(FetchDirection.FORWARD);
                     } catch (IOException ex) {
                         switchState(StatementState.ERROR);
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
@@ -480,20 +425,38 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     /**
      * Process the fetch response by reading the returned rows and queuing them.
      *
-     * @throws IOException
-     * @throws SQLException
+     * @param direction
+     *         fetch direction
      */
-    protected void processFetchResponse() throws IOException, SQLException {
+    protected void processFetchResponse(FetchDirection direction) throws IOException, SQLException {
         Response response;
-        while (!isAllRowsFetched() && (response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
+        while ((response = getDatabase().readResponse(getStatementWarningCallback())) instanceof FetchResponse) {
             final FetchResponse fetchResponse = (FetchResponse) response;
             if (fetchResponse.getCount() > 0 && fetchResponse.getStatus() == ISCConstants.FETCH_OK) {
                 queueRowData(readSqlData());
             } else if (fetchResponse.getStatus() == ISCConstants.FETCH_NO_MORE_ROWS) {
-                setAllRowsFetched(true);
-                // Note: we are not explicitly 'closing' the cursor here
+                switch (direction) {
+                case IN_PLACE:
+                    if (isBeforeFirst()) {
+                        setBeforeFirst();
+                    } else {
+                        setAfterLast();
+                    }
+                    break;
+                case UNKNOWN:
+                    // Not generally applicable, but handling as after-last
+                case FORWARD:
+                    setAfterLast();
+                    break;
+                case REVERSE:
+                    setBeforeFirst();
+                    break;
+                }
+                // Note: we are not explicitly 'closing' the cursor here as we might be scrolling
+                // Exit loop
+                break;
             } else {
-                // TODO Log, raise exception, or simply 'not possible'?
+                log.debug("Received unexpected fetch response " + fetchResponse + ", ignored");
                 break;
             }
         }
@@ -511,7 +474,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_fetch);
         xdrOut.writeInt(getHandle());
-        xdrOut.writeBuffer(calculateBlr(getRowDescriptor()));
+        xdrOut.writeBuffer(hasFetched() ? null : calculateBlr(getRowDescriptor()));
         xdrOut.writeInt(0); // out_message_number = out_message_type
         xdrOut.writeInt(fetchSize); // fetch size
     }
@@ -647,7 +610,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     protected void processAllocateResponse(GenericResponse response) throws SQLException {
         synchronized (getSynchronizationObject()) {
             setHandle(response.getObjectHandle());
-            setAllRowsFetched(false);
+            reset();
             switchState(StatementState.ALLOCATED);
             setType(StatementType.NONE);
         }

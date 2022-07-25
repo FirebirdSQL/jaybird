@@ -18,18 +18,14 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.DatabaseUserRule;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.DatabaseUserExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
-import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.InfoProcessor;
@@ -38,34 +34,37 @@ import org.firebirdsql.gds.ng.wire.crypt.FBSQLEncryptException;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.*;
 
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.gds.ISCConstants.fb_info_wire_crypt;
 import static org.firebirdsql.gds.ISCConstants.isc_info_end;
+import static org.firebirdsql.gds.ISCConstants.isc_net_read_err;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.isIn;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Test cases for FirebirdConnection interface.
@@ -73,17 +72,13 @@ import static org.junit.Assume.*;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBConnectionTest {
+class FBConnectionTest {
 
-    private final ExpectedException expectedException = ExpectedException.none();
-    private final DatabaseUserRule databaseUserRule = DatabaseUserRule.withDatabaseUser();
-    private final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    @Rule
-    public final TestRule ruleChain = RuleChain
-            .outerRule(usesDatabase)
-            .around(databaseUserRule)
-            .around(expectedException);
+    @RegisterExtension
+    final DatabaseUserExtension databaseUser = DatabaseUserExtension.withDatabaseUser();
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -95,15 +90,11 @@ public class FBConnectionTest {
     //@formatter:on
 
     /**
-     * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])}
-     * method works correctly.
-     *
-     * @throws Exception
-     *         if something went wrong.
+     * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])} method works correctly.
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void testTpbMapping() throws Exception {
+    void testTpbMapping() throws Exception {
         try (Connection conA = getConnectionViaDriverManager()) {
             executeCreateTable(conA, CREATE_TABLE);
 
@@ -121,7 +112,7 @@ public class FBConnectionTest {
 
                 /*
 
-                // This is correct way to set transaction parameters
+                // This is the correct way to set transaction parameters
                 // However, we use deprecated methods to check the
                 // backward compatibility
 
@@ -149,17 +140,15 @@ public class FBConnectionTest {
 
                     stmtA.execute("UPDATE test SET col1 = 2");
 
-                    expectedException.expect(SQLException.class);
-                    expectedException.reportMissingExceptionWithMessage("Should notify about a deadlock.");
-
-                    stmtB.execute("UPDATE test SET col1 = 3");
+                    assertThrows(SQLException.class, () -> stmtB.execute("UPDATE test SET col1 = 3"),
+                            "Should notify about a deadlock");
                 }
             }
         }
     }
 
     @Test
-    public void testStatementCompletion() throws Exception {
+    void testStatementCompletion() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(false);
             try (Statement stmt = connection.createStatement()) {
@@ -176,7 +165,7 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testExecuteStatementTwice() throws Exception {
+    void testExecuteStatementTwice() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             executeCreateTable(connection, "CREATE TABLE test_exec_twice(col1 VARCHAR(100))");
 
@@ -194,6 +183,7 @@ public class FBConnectionTest {
 
                 pstmt.setString(1, "ABC");
                 rs = pstmt.executeQuery();
+                //noinspection StatementWithEmptyBody
                 for (int i = 0; i < 10 && rs.next(); i++)
                     ;   // do something
                 rs.close();
@@ -204,6 +194,7 @@ public class FBConnectionTest {
 
                 pstmt.setString(1, "ABC");
                 rs = pstmt.executeQuery();
+                //noinspection StatementWithEmptyBody
                 for (int i = 0; i < 10 && rs.next(); i++)
                     ;   // do something
                 rs.close();
@@ -214,13 +205,10 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testLockTable() throws Exception {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            executeCreateTable(connection, "CREATE TABLE test_lock(col1 INTEGER)");
-        }
-
+    void testLockTable() throws Exception {
         try (FirebirdConnection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
+            executeCreateTable(connection, "CREATE TABLE test_lock(col1 INTEGER)");
 
             TransactionParameterBuffer tpb = connection.getTransactionParameters(Connection.TRANSACTION_READ_COMMITTED);
 
@@ -251,19 +239,16 @@ public class FBConnectionTest {
                     anotherStmt.execute("INSERT INTO test_lock VALUES(1)");
                 }
 
-                expectedException.expect(errorCodeEquals(ISCConstants.isc_lock_conflict));
-                expectedException.reportMissingExceptionWithMessage("Should throw an error because of lock conflict.");
-
-                stmt.execute("INSERT INTO test_lock VALUES(2)");
+                SQLException exception = assertThrows(SQLException.class,
+                        () -> stmt.execute("INSERT INTO test_lock VALUES(2)"),
+                        "Should throw an error because of lock conflict");
+                assertThat(exception, errorCodeEquals(ISCConstants.isc_lock_conflict));
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            throw ex;
         }
     }
 
     @Test
-    public void testMetaDataTransaction() throws Exception {
+    void testMetaDataTransaction() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             connection.setAutoCommit(true);
             DatabaseMetaData metaData = connection.getMetaData();
@@ -273,7 +258,7 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testTransactionCoordinatorAutoCommitChange() throws Exception {
+    void testTransactionCoordinatorAutoCommitChange() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
             try (PreparedStatement ignored = connection.prepareStatement("SELECT * FROM rdb$database")) {
                 connection.setAutoCommit(false);
@@ -283,9 +268,9 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testDefaultHoldableResultSet() throws Exception {
+    void testDefaultHoldableResultSet() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
-        props.put("defaultHoldable", "");
+        props.put("defaultHoldable", "true");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             Statement stmt1 = connection.createStatement();
@@ -298,13 +283,13 @@ public class FBConnectionTest {
                 ResultSet rs2 = stmt2.executeQuery("SELECT rdb$character_set_name FROM rdb$character_sets " +
                         "WHERE rdb$character_set_id = " + rs1.getInt(2));
 
-                assertTrue("Should find corresponding charset.", rs2.next());
+                assertTrue(rs2.next(), "Should find corresponding charset");
             }
         }
     }
 
     @Test
-    public void testGetAttachments() throws Exception {
+    void testGetAttachments() throws Exception {
         try (FBConnection connection = (FBConnection) getConnectionViaDriverManager()) {
             FbDatabase database = connection.getFbDatabase();
 
@@ -314,29 +299,26 @@ public class FBConnectionTest {
             int i = 0;
 
             while (reply[i] != ISCConstants.isc_info_end) {
-                switch (reply[i++]) {
-                case ISCConstants.isc_info_user_names:
+                if (reply[i++] == ISCConstants.isc_info_user_names) {
                     //iscVaxInteger2(reply, i); // can be ignored
                     i += 2;
                     int strLen = reply[i] & 0xff;
                     i += 1;
                     String userName = new String(reply, i, strLen);
                     i += strLen;
-                    System.out.println(userName);
-                    break;
-                default:
-                    break;
+                    // This assumes unquoted, non-mapped users
+                    assertThat(userName, equalToIgnoringCase(DB_USER));
                 }
             }
         }
     }
 
     @Test
-    public void testWireProtocolCompatibility() throws Exception {
+    void testWireProtocolCompatibility() throws Exception {
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
             ResultSet rs = stmt.executeQuery("SELECT max(rdb$format) FROM rdb$formats");
-            assertTrue("Should fetch some rows.", rs.next());
+            assertTrue(rs.next(), "Should fetch some rows");
         }
     }
 
@@ -345,7 +327,7 @@ public class FBConnectionTest {
      * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has been set.
      */
     @Test
-    public void testNoCharacterSetWarningWithDefaultConnectionEncoding() throws Exception {
+    void testNoCharacterSetWarningWithDefaultConnectionEncoding() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());
@@ -356,12 +338,12 @@ public class FBConnectionTest {
             props.remove("lc_ctype");
             try (Connection con = DriverManager.getConnection(getUrl(), props)) {
                 SQLWarning warnings = con.getWarnings();
-                assertNotNull("Expected a warning for not specifying connection character set", warnings);
-                assertEquals("Unexpected warning message for not specifying connection character set",
-                        FBManagedConnection.WARNING_NO_CHARSET + "WIN1252", warnings.getMessage());
+                assertNotNull(warnings, "Expected a warning for not specifying connection character set");
+                assertEquals(FBManagedConnection.WARNING_NO_CHARSET + "WIN1252", warnings.getMessage(),
+                        "Unexpected warning message for not specifying connection character set");
                 IConnectionProperties connectionProperties =
                         con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
-                assertEquals("Unexpected connection encoding", "WIN1252", connectionProperties.getEncoding());
+                assertEquals("WIN1252", connectionProperties.getEncoding(), "Unexpected connection encoding");
             }
         } finally {
             System.clearProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
@@ -384,15 +366,14 @@ public class FBConnectionTest {
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
 
-        //noinspection EmptyTryBlock
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = connection.getWarnings();
-            assertNotNull("Expected a warning for not specifying connection character set", warnings);
-            assertEquals("Unexpected warning message for not specifying connection character set",
-                    FBManagedConnection.WARNING_NO_CHARSET + "NONE", warnings.getMessage());
+            assertNotNull(warnings, "Expected a warning for not specifying connection character set");
+            assertEquals(FBManagedConnection.WARNING_NO_CHARSET + "NONE", warnings.getMessage(),
+                    "Unexpected warning message for not specifying connection character set");
             IConnectionProperties connectionProperties =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
-            assertEquals("Unexpected connection encoding", "NONE", connectionProperties.getEncoding());
+            assertEquals("NONE", connectionProperties.getEncoding(), "Unexpected connection encoding");
         }
     }
 
@@ -402,21 +383,22 @@ public class FBConnectionTest {
      * {@code org.firebirdsql.jdbc.requireConnectionEncoding} has been set to {@code true}
      */
     @Test
-    public void testNoCharacterSetExceptionWithoutDefaultConnectionEncodingAndEncodingRequired() throws Exception {
+    void testNoCharacterSetExceptionWithoutDefaultConnectionEncodingAndEncodingRequired() {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
-        expectedException.expect(SQLNonTransientConnectionException.class);
-        expectedException.expectMessage(FBManagedConnection.ERROR_NO_CHARSET);
 
         try {
             System.setProperty("org.firebirdsql.jdbc.requireConnectionEncoding", "true");
-            //noinspection EmptyTryBlock
-            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-                // Using try-with-resources just in case connection is created
-            }
+            SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
+                //noinspection EmptyTryBlock
+                try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                    // Using try-with-resources just in case connection is created
+                }
+            });
+            assertThat(exception, message(equalTo(FBManagedConnection.ERROR_NO_CHARSET)));
         } finally {
             System.clearProperty("org.firebirdsql.jdbc.requireConnectionEncoding");
         }
@@ -426,16 +408,16 @@ public class FBConnectionTest {
      * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
      */
     @Test
-    public void testCharacterSetFirebirdNoWarning() throws Exception {
+    void testCharacterSetFirebirdNoWarning() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "WIN1252");
 
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
-            assertNull("Expected no warning when specifying connection character set", warnings);
+            assertNull(warnings, "Expected no warning when specifying connection character set");
             IConnectionProperties connectionProperties =
                     con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
-            assertEquals("Unexpected connection encoding", "WIN1252", connectionProperties.getEncoding());
+            assertEquals("WIN1252", connectionProperties.getEncoding(), "Unexpected connection encoding");
         }
     }
 
@@ -443,26 +425,24 @@ public class FBConnectionTest {
      * Test if explicitly specifying a connection character set does not add a warning (or exception) on the connection.
      */
     @Test
-    public void testCharacterSetJavaNoWarning() throws Exception {
+    void testCharacterSetJavaNoWarning() throws Exception {
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
         props.setProperty("charSet", "Cp1254");
 
         try (Connection con = DriverManager.getConnection(getUrl(), props)) {
             SQLWarning warnings = con.getWarnings();
-            assertNull("Expected no warning when specifying connection character set", warnings);
+            assertNull(warnings, "Expected no warning when specifying connection character set");
             IConnectionProperties connectionProperties =
                     con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
-            assertEquals("Unexpected connection encoding", "WIN1254", connectionProperties.getEncoding());
+            assertEquals("WIN1254", connectionProperties.getEncoding(), "Unexpected connection encoding");
         }
     }
 
     @Test
-    public void testClientInfo() throws Exception {
+    void testClientInfo() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsGetSetContext(), "Test requires GET_CONTEXT/SET_CONTEXT support");
         try (FBConnection connection = (FBConnection) getConnectionViaDriverManager()) {
-            assumeTrue("This test requires GET_CONTEXT/SET_CONTEXT support",
-                    supportInfoFor(connection).supportsGetSetContext());
-
             connection.setClientInfo("TestProperty", "testValue");
             String checkValue = connection.getClientInfo("TestProperty");
             assertEquals("testValue", checkValue);
@@ -470,8 +450,8 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testProcessNameThroughConnectionProperty() throws Exception {
-        assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
+    void testProcessNameThroughConnectionProperty() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
         final Properties props = getDefaultPropertiesForConnection();
         final String processName = "Test process name";
         props.setProperty(PropertyNames.processName, processName);
@@ -486,9 +466,9 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testProcessIdThroughConnectionProperty() throws Exception {
-        assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
-        assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
+    void testProcessIdThroughConnectionProperty() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
+        assumeThat("Test only works in pure java", GDS_TYPE, isPureJavaType());
         final Properties props = getDefaultPropertiesForConnection();
         final int processId = 5843;
         props.setProperty(PropertyNames.processId, String.valueOf(processId));
@@ -503,9 +483,9 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testProcessAndIdThroughConnectionPropertyTakesPrecedence() throws Exception {
-        assumeTrue("Test requires monitoring tables", getDefaultSupportInfo().supportsMonitoringTables());
-        assumeTrue("Test only works in pure java", Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME).contains(FBTestProperties.GDS_TYPE));
+    void testProcessAndIdThroughConnectionPropertyTakesPrecedence() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsMonitoringTables(), "Test requires monitoring tables");
+        assumeThat("Test only works in pure java", GDS_TYPE, isPureJavaType());
         final Properties props = getDefaultPropertiesForConnection();
         final String processNameThroughConnection = "Process name in connection property";
         props.setProperty(PropertyNames.processName, processNameThroughConnection);
@@ -530,7 +510,7 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testConnectionsViaDriverManagerAreDistinct() throws Exception {
+    void testConnectionsViaDriverManagerAreDistinct() throws Exception {
         try (Connection connection1 = getConnectionViaDriverManager();
              Connection connection2 = getConnectionViaDriverManager()) {
             assertNotSame(connection1, connection2);
@@ -542,47 +522,30 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void testIPv6AddressHandling() throws Exception {
-        assumeThat("Test only works for pure java", FBTestProperties.GDS_TYPE,
-                isIn(Arrays.asList(WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME, OOGDSFactoryPlugin.TYPE_NAME)));
-        assumeTrue("Firebird 3 or higher required for IPv6 testing", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
-        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
+    void testIPv6AddressHandling() throws Exception {
+        assumeThat("Test only works in pure java", GDS_TYPE, isPureJavaType());
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(3, 0), "Firebird 3 or higher required for IPv6 testing");
+        try (Connection connection = DriverManager.getConnection(
+                "jdbc:firebirdsql://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
             assertTrue(connection.isValid(0));
         }
     }
 
     @Test
-    public void testIPv6AddressHandling_native() throws Exception {
-        assumeTrue("Firebird 3 or higher required for IPv6 testing", getDefaultSupportInfo().isVersionEqualOrAbove(3, 0));
-        assumeTrue("Test only works for native", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME.equals(FBTestProperties.GDS_TYPE));
-        try (Connection connection = DriverManager.getConnection("jdbc:firebirdsql:native://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
+    void testIPv6AddressHandling_native() throws Exception {
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(3, 0), "Firebird 3 or higher required for IPv6 testing");
+        assumeThat("Test only works for native", GDS_TYPE, isOtherNativeType());
+        try (Connection connection = DriverManager.getConnection(
+                "jdbc:firebirdsql:native://[::1]/" + getDatabasePath() + "?charSet=utf-8", DB_USER, DB_PASSWORD)) {
             assertTrue(connection.isValid(0));
         }
     }
 
-    @Test
-    public void testWireCrypt_DISABLED_FB2_5_and_earlier() throws Exception {
-        testWireCrypt_FB2_5_and_earlier(WireCrypt.DISABLED);
-    }
-
-    @Test
-    public void testWireCrypt_ENABLED_FB2_5_and_earlier() throws Exception {
-        testWireCrypt_FB2_5_and_earlier(WireCrypt.ENABLED);
-    }
-
-    @Test
-    public void testWireCrypt_DEFAULT_FB2_5_and_earlier() throws Exception {
-        testWireCrypt_FB2_5_and_earlier(WireCrypt.DEFAULT);
-    }
-
-    @Test
-    public void testWireCrypt_REQUIRED_FB2_5_and_earlier() throws Exception {
-        testWireCrypt_FB2_5_and_earlier(WireCrypt.REQUIRED);
-    }
-
-    private void testWireCrypt_FB2_5_and_earlier(WireCrypt wireCrypt) throws Exception {
-        assumeFalse("Test for Firebird versions without wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
+    @ParameterizedTest
+    @EnumSource
+    void testWireCrypt_FB2_5_and_earlier(WireCrypt wireCrypt) throws Exception {
+        assumeFalse(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions without wire encryption support");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", wireCrypt.name());
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
@@ -590,30 +553,12 @@ public class FBConnectionTest {
         }
     }
 
-    @Test
-    public void testWireCrypt_DISABLED_FB3_0_and_later() {
-        testWireCrypt_FB3_0_and_later(WireCrypt.DISABLED);
-    }
-
-    @Test
-    public void testWireCrypt_ENABLED_FB3_0_and_later() {
-        testWireCrypt_FB3_0_and_later(WireCrypt.ENABLED);
-    }
-
-    @Test
-    public void testWireCrypt_DEFAULT_FB3_0_and_later() {
-        testWireCrypt_FB3_0_and_later(WireCrypt.DEFAULT);
-    }
-
-    @Test
-    public void testWireCrypt_REQUIRED_FB3_0_and_later() {
-        testWireCrypt_FB3_0_and_later(WireCrypt.REQUIRED);
-    }
-
-    private void testWireCrypt_FB3_0_and_later(WireCrypt wireCrypt) {
-        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Test for Firebird versions with wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
+    @ParameterizedTest
+    @EnumSource
+    void testWireCrypt_FB3_0_and_later(WireCrypt wireCrypt) {
+        assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
+        assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions with wire encryption support");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", wireCrypt.name());
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
@@ -630,10 +575,10 @@ public class FBConnectionTest {
                 }
                 // intentional fall-through
             case REQUIRED:
-                assertTrue("Expected wire encryption to be used for wireCrypt=" + wireCrypt, encryptionUsed);
+                assertTrue(encryptionUsed, "Expected wire encryption to be used for wireCrypt=" + wireCrypt);
                 break;
             case DISABLED:
-                assertFalse("Expected wire encryption not to be used for wireCrypt=" + wireCrypt, encryptionUsed);
+                assertFalse(encryptionUsed, "Expected wire encryption not to be used for wireCrypt=" + wireCrypt);
             }
         } catch (SQLException e) {
             if (e.getErrorCode() == ISCConstants.isc_wirecrypt_incompatible) {
@@ -644,12 +589,12 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void legacyAuthUserWithWireCrypt_ENABLED_canCreateConnection() throws Exception {
-        assumeTrue("Test for Firebird versions with wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
+    void legacyAuthUserWithWireCrypt_ENABLED_canCreateConnection() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions with wire encryption support");
         final String user = "legacy_auth";
         final String password = "leg_auth";
-        databaseUserRule.createUser(user, password, "Legacy_UserManager");
+        databaseUser.createUser(user, password, "Legacy_UserManager");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("user", user);
         props.setProperty("password", password);
@@ -660,19 +605,19 @@ public class FBConnectionTest {
             assertTrue(connection.isValid(0));
             GDSServerVersion serverVersion =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
-            assertFalse("Expected wire encryption not to be used when connecting with legacy auth user",
-                    serverVersion.isWireEncryptionUsed());
+            assertFalse(serverVersion.isWireEncryptionUsed(),
+                    "Expected wire encryption not to be used when connecting with legacy auth user");
         }
     }
 
     @Test
-    public void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_tryLegacy_AuthOnly() throws Exception {
-        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Test for Firebird versions with wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
+    void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_tryLegacy_AuthOnly() throws Exception {
+        assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
+        assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions with wire encryption support");
         final String user = "legacy_auth";
         final String password = "leg_auth";
-        databaseUserRule.createUser(user, password, "Legacy_UserManager");
+        databaseUser.createUser(user, password, "Legacy_UserManager");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("user", user);
         props.setProperty("password", password);
@@ -680,23 +625,23 @@ public class FBConnectionTest {
         // Using only Legacy_Auth produces different error than trying Srp and then Legacy_Auth
         props.setProperty("authPlugins", "Legacy_Auth");
 
-        expectedException.expect(FBSQLEncryptException.class);
-        expectedException.expect(errorCodeEquals(ISCConstants.isc_miss_wirecrypt));
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
+        SQLException exception = assertThrows(FBSQLEncryptException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_miss_wirecrypt));
     }
 
     @Test
-    public void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_trySrpFirst() throws Exception {
-        assumeThat("Test doesn't work with embedded", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Test for Firebird versions with wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
+    void legacyAuthUserWithWireCrypt_REQUIRED_hasConnectionRejected_trySrpFirst() throws Exception {
+        assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
+        assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions with wire encryption support");
         final String user = "legacy_auth";
         final String password = "leg_auth";
-        databaseUserRule.createUser(user, password, "Legacy_UserManager");
+        databaseUser.createUser(user, password, "Legacy_UserManager");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("user", user);
         props.setProperty("password", password);
@@ -704,39 +649,40 @@ public class FBConnectionTest {
         // Using only Legacy_Auth produces different error than trying Srp and then Legacy_Auth
         props.setProperty("authPlugins", "Srp,Legacy_Auth");
 
-        expectedException.expect(FBSQLEncryptException.class);
+        SQLException exception = assertThrows(FBSQLEncryptException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
         // TODO Check if we can make behavior consistent between native and pure java
-        expectedException.expect(anyOf(errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible),
+        assertThat(exception, anyOf(
+                errorCodeEquals(ISCConstants.isc_wirecrypt_incompatible),
                 errorCodeEquals(ISCConstants.isc_miss_wirecrypt)));
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
     }
 
     @Test
-    public void invalidValueForWireCrypt() throws Exception {
+    void invalidValueForWireCrypt() {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", "NOT_A_VALID_VALUE");
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
+        assertThat(exception, allOf(
                 errorCodeEquals(JaybirdErrorCodes.jb_invalidConnectionPropertyValue),
                 fbMessageStartsWith(JaybirdErrorCodes.jb_invalidConnectionPropertyValue, "NOT_A_VALID_VALUE", "wireCrypt")));
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
     }
 
     @Test
-    public void expectedWireCryptPluginApplied() throws Exception {
+    void expectedWireCryptPluginApplied() throws Exception {
         assumeThat("Test doesn't work with embedded", GDS_TYPE, not(isEmbeddedType()));
-        assumeTrue("Test for Firebird versions with wire encryption support",
-                getDefaultSupportInfo().supportsWireEncryption());
-        assumeTrue("Requires fb_info_wire_crypt support", getDefaultSupportInfo().isVersionEqualOrAbove(4, 0));
+        assumeTrue(getDefaultSupportInfo().supportsWireEncryption(),
+                "Test for Firebird versions with wire encryption support");
+        assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires fb_info_wire_crypt support");
         String expectedCryptPlugin = System.getProperty("java.specification.version").equals("1.8")
                 || Version.JAYBIRD_DISPLAY_VERSION.endsWith(".java8") ? "Arc4" : "ChaCha";
 
@@ -763,61 +709,63 @@ public class FBConnectionTest {
     }
 
     @Test
-    public void connectingWithUnknownFirebirdCharacterSetName() throws Exception {
+    void connectingWithUnknownFirebirdCharacterSetName() {
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("lc_ctype", "DOES_NOT_EXIST");
 
-        expectedException.expect(SQLNonTransientConnectionException.class);
-        expectedException.expectMessage("No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null");
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
+        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
+        assertThat(exception, message(equalTo(
+                "No valid encoding definition for Firebird encoding DOES_NOT_EXIST and/or Java charset null")));
     }
 
     @Test
-    public void connectingWithUnknownJavaCharacterSetName() throws Exception {
+    void connectingWithUnknownJavaCharacterSetName() {
         Properties props = getDefaultPropertiesForConnection();
         props.remove("lc_ctype");
         props.setProperty("charSet", "DOES_NOT_EXIST");
 
-        expectedException.expect(SQLNonTransientConnectionException.class);
-        expectedException.expectMessage("No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST");
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
+        SQLException exception = assertThrows(SQLNonTransientConnectionException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
+        assertThat(exception, message(equalTo(
+                "No valid encoding definition for Firebird encoding null and/or Java charset DOES_NOT_EXIST")));
     }
 
     @Test
-    public void legacyAuthUserCannotConnectByDefault() throws Exception {
-        assumeThat("Test assumes pure Java implementation (native uses fbclient defaults)",
-                FBTestProperties.GDS_TYPE, isPureJavaType());
-        assumeTrue("Test for Firebird versions with v13 or higher protocol",
-                getDefaultSupportInfo().supportsProtocol(13));
+    void legacyAuthUserCannotConnectByDefault() throws Exception {
+        assumeThat("Test assumes pure Java implementation (native uses fbclient defaults)", GDS_TYPE, isPureJavaType());
+        assumeTrue(getDefaultSupportInfo().supportsProtocol(13),
+                "Test for Firebird versions with v13 or higher protocol");
         final String user = "legacy_auth";
         final String password = "leg_auth";
-        databaseUserRule.createUser(user, password, "Legacy_UserManager");
+        databaseUser.createUser(user, password, "Legacy_UserManager");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("user", user);
         props.setProperty("password", password);
 
         // We don't try Legacy_Auth by default
-        expectedException.expect(SQLInvalidAuthorizationSpecException.class);
-        expectedException.expect(errorCodeEquals(ISCConstants.isc_login));
-
-        //noinspection EmptyTryBlock
-        try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
-            // Using try-with-resources just in case connection is created
-        }
+        SQLException exception = assertThrows(SQLInvalidAuthorizationSpecException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignored = DriverManager.getConnection(getUrl(), props)) {
+                // Using try-with-resources just in case connection is created
+            }
+        });
+        assertThat(exception, errorCodeEquals(ISCConstants.isc_login));
     }
 
-    @Test(timeout = 10000L)
-    public void setNetworkTimeout_isUsed() throws Exception {
+    @Test
+    @Timeout(10)
+    void setNetworkTimeout_isUsed() throws Exception {
         assumeThat("Test assumes pure Java implementation (native doesn't support setNetworkTimeout)",
-                FBTestProperties.GDS_TYPE, isPureJavaType());
+                GDS_TYPE, isPureJavaType());
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         // Workaround for bug with TPBMapper being shared (has conflict with testTpbMapping)
@@ -837,91 +785,84 @@ public class FBConnectionTest {
                 try (Statement statement2 = connection2.createStatement();
                      ResultSet rs2 = statement2.executeQuery("select id, colval from locking with lock")) {
                     start = System.currentTimeMillis();
-                    // Fetch will blocking waiting for lock held by statement1/rs1 to be released
-                    rs2.next();
-                    fail("Expected an exception");
-                } catch (SQLException e) {
-                    // expected
-                    e.printStackTrace();
+                    // Fetch will block waiting for lock held by statement1/rs1 to be released
+                    SQLException exception = assertThrows(SQLException.class, rs2::next);
+                    assertThat(exception, errorCodeEquals(isc_net_read_err));
                 } finally {
                     long end = System.currentTimeMillis();
                     System.out.println("Time taken: " + (end - start));
                 }
             } catch (SQLException e) {
                 // ignore
-                e.printStackTrace();
             }
 
-            assertTrue("Expected connection2 to be closed by timeout", connection2.isClosed());
+            assertTrue(connection2.isClosed(), "Expected connection2 to be closed by timeout");
         } finally {
             executor.shutdown();
         }
     }
 
     @Test
-    public void setNetworkTimeout_invalidTimeout() throws Exception {
+    void setNetworkTimeout_invalidTimeout() throws Exception {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try (Connection connection = getConnectionViaDriverManager()) {
-            expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_invalidTimeout));
-
-            connection.setNetworkTimeout(executorService, -1);
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> connection.setNetworkTimeout(executorService, -1));
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_invalidTimeout));
         } finally {
             executorService.shutdown();
         }
     }
 
     @Test
-    public void setNetworkTimeout_invalidExecutor() throws Exception {
+    void setNetworkTimeout_invalidExecutor() throws Exception {
         try (Connection connection = getConnectionViaDriverManager()) {
-            expectedException.expect(fbMessageStartsWith(JaybirdErrorCodes.jb_invalidExecutor));
-
-            connection.setNetworkTimeout(null, 500);
+            SQLException exception = assertThrows(SQLException.class, () -> connection.setNetworkTimeout(null, 500));
+            assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_invalidExecutor));
         }
     }
 
     @Test
-    public void setNetworkTimeout_getAndSetSeries() throws Exception {
-        assumeThat("Type is pure Java", FBTestProperties.GDS_TYPE, isPureJavaType());
+    void setNetworkTimeout_getAndSetSeries() throws Exception {
+        assumeThat("Type is pure Java", GDS_TYPE, isPureJavaType());
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try (Connection connection = getConnectionViaDriverManager()) {
-            assertEquals("Expected 0 as initial network timeout", 0, connection.getNetworkTimeout());
+            assertEquals(0, connection.getNetworkTimeout(), "Expected 0 as initial network timeout");
 
             connection.setNetworkTimeout(executorService, 500);
             final CyclicBarrier barrier = new CyclicBarrier(2);
-            Runnable waitForBarrier = new Runnable() {
-                public void run() {
-                    try {
-                        barrier.await(500, TimeUnit.MILLISECONDS);
-                    } catch (TimeoutException | InterruptedException | BrokenBarrierException e) {
-                        e.printStackTrace();
-                    }
+            Runnable waitForBarrier = () -> {
+                try {
+                    barrier.await(500, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException | InterruptedException | BrokenBarrierException e) {
+                    e.printStackTrace();
                 }
             };
             executorService.execute(waitForBarrier);
             barrier.await(500, TimeUnit.MILLISECONDS);
-            assertEquals("Unexpected getNetworkTimeout", 500, connection.getNetworkTimeout());
+            assertEquals(500, connection.getNetworkTimeout(), "Unexpected getNetworkTimeout");
 
             barrier.reset();
             connection.setNetworkTimeout(executorService, 0);
             executorService.execute(waitForBarrier);
             barrier.await(500, TimeUnit.MILLISECONDS);
-            assertEquals("Unexpected getNetworkTimeout", 0, connection.getNetworkTimeout());
+            assertEquals(0, connection.getNetworkTimeout(), "Unexpected getNetworkTimeout");
         } finally {
             executorService.shutdown();
         }
     }
 
     @Test
-    public void testWireCompression() throws Exception {
-        assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());
-        assumeTrue("Test requires wire compression", getDefaultSupportInfo().supportsWireCompression());
+    void testWireCompression() throws Exception {
+        assumeThat("Test only works with pure java connections", GDS_TYPE, isPureJavaType());
+        assumeTrue(getDefaultSupportInfo().supportsWireCompression(), "Test requires wire compression");
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCompression", "true");
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             assertTrue(connection.isValid(0));
             GDSServerVersion serverVersion =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getServerVersion();
-            assertTrue("expected wire compression in use", serverVersion.isWireCompressionUsed());
+            assertTrue(serverVersion.isWireCompressionUsed(), "expected wire compression in use");
         }
     }
 
@@ -929,7 +870,7 @@ public class FBConnectionTest {
      * Rationale: see <a href="http://tracker.firebirdsql.org/browse/JDBC-386">JDBC-386</a>
      */
     @Test
-    public void transactionSettingsNotShared() throws Exception {
+    void transactionSettingsNotShared() throws Exception {
         try (FBConnection con1 = getConnectionViaDriverManager().unwrap(FBConnection.class);
              FBConnection con2 = getConnectionViaDriverManager().unwrap(FBConnection.class)) {
             TransactionParameterBuffer con2Original =
@@ -942,12 +883,12 @@ public class FBConnectionTest {
 
             con1.setTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ, newParameters);
 
-            assertEquals("Setting of con1 update",
-                    newParameters, con1.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
-            assertEquals("Setting of con2 unchanged",
-                    con2Original, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
-            assertNotEquals("Setting of con2 not equal to new config of con1",
-                    newParameters, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ));
+            assertEquals(newParameters, con1.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ),
+                    "Setting of con1 update");
+            assertEquals(con2Original,
+                    con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ), "Setting of con2 unchanged");
+            assertNotEquals(newParameters, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ),
+                    "Setting of con2 not equal to new config of con1");
         }
     }
 

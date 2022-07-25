@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,6 +27,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import static java.util.Objects.requireNonNull;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.PROTOCOL_VERSION18;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_blob;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_cursor;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_database;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_request;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_sql;
+import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_info_transaction;
 
 /**
  * Abstract class for operations common to all version of the wire protocol implementation.
@@ -261,6 +268,45 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
+        }
+    }
+
+    @Override
+    public final byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
+        try {
+            checkAttached();
+            return getInfo(op_info_database, getHandle(), requestItems, maxBufferLength, null);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
+            WarningMessageCallback warningMessageCallback) throws SQLException {
+        assert operation == op_info_sql || operation == op_info_blob || operation == op_info_database
+                || operation == op_info_transaction || operation == op_info_request
+                || operation == op_info_cursor && protocolDescriptor.getVersion() >= PROTOCOL_VERSION18
+                : "Unsupported operation code for info request " + operation;
+        synchronized (getSynchronizationObject()) {
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(operation);
+                xdrOut.writeInt(handle);
+                xdrOut.writeInt(0); // incarnation
+                xdrOut.writeBuffer(requestItems);
+                xdrOut.writeInt(maxBufferLength);
+                xdrOut.flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                final GenericResponse genericResponse = readGenericResponse(null);
+                return genericResponse.getData();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+            }
         }
     }
 

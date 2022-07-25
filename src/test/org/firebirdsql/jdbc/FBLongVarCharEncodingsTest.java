@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,14 +12,11 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc;
-
-import org.junit.Ignore;
 
 /**
  * This test case tests encodings in text blobs.
@@ -27,7 +24,7 @@ import org.junit.Ignore;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @version 1.0
  */
-public class FBLongVarCharEncodingsTest extends FBEncodingsTest {
+class FBLongVarCharEncodingsTest extends FBEncodingsTest {
 
     //@formatter:off
     private static final String CREATE_TABLE =
@@ -55,23 +52,22 @@ public class FBLongVarCharEncodingsTest extends FBEncodingsTest {
         return CREATE_TABLE;
     }
 
-    @Ignore
     @Override
-    public void testPadding() throws Exception {
+    void testPadding() {
         // test is not relevant
     }
 
     @Override
     protected byte[] getOctetsFullLength() {
         // This is to make sure testOctets() works correctly as 
-        // the datatype of the fields is different then defined in TestFBEncodings
+        // the datatype of the fields is different than defined in TestFBEncodings
         return OCTETS_DATA;
     }
 
     @Override
     protected byte[] getOctetsFullLengthAsNone() {
         // This is to make sure testOctets() works correctly as
-        // the datatype of the fields is different then defined in TestFBEncodings
+        // the datatype of the fields is different than defined in TestFBEncodings
         return OCTETS_DATA;
     }
 }

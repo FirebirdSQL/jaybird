@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,7 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
@@ -27,48 +27,36 @@ import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.oo.OOGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.wire.WireGDSFactoryPlugin;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.stream.Stream;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultPropertiesForConnection;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isOtherNativeType;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for alternative JDBC URLs supported.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-@RunWith(Parameterized.class)
-public class JDBCUrlPrefixTest {
+class JDBCUrlPrefixTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
-    private final String urlPrefix;
-    private final String expectedType;
-
-    public JDBCUrlPrefixTest(String urlPrefix, String expectedType) {
-        this.urlPrefix = urlPrefix;
-        this.expectedType = expectedType;
-    }
-
-    @Parameterized.Parameters(name = "{0} => {1}")
-    public static List<Object[]> parameters() {
-        return Arrays.asList(
+    static Stream<Arguments> parameters() {
+        return Stream.of(
                 testCase("jdbc:firebirdsql:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
                 testCase("jdbc:firebirdsql:java:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
                 testCase("jdbc:firebird:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
@@ -85,12 +73,10 @@ public class JDBCUrlPrefixTest {
                 testCase("jdbc:firebird:fboo:native:", FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME),
                 // For backwards compatibility
                 testCase("jdbc:firebird:local:", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME),
-                testCase("jdbc:firebird:local:", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME)
-        );
+                testCase("jdbc:firebird:local:", NativeGDSFactoryPlugin.NATIVE_TYPE_NAME));
     }
 
-    @Before
-    public void checkGDSType() {
+    void checkGDSType(String expectedType) {
         if (isPureJavaType().matches(expectedType)) {
             assumeThat("Unexpected GDS type", FBTestProperties.GDS_TYPE, isPureJavaType());
         } else if (isEmbeddedType().matches(expectedType)) {
@@ -100,24 +86,26 @@ public class JDBCUrlPrefixTest {
         }
     }
 
-    @Test
-    public void verifyUrl() throws SQLException {
-        String url = getUrl();
+    @ParameterizedTest(name = "{0} => {1}")
+    @MethodSource("parameters")
+    public void verifyUrl(String urlPrefix, String expectedType) throws SQLException {
+        checkGDSType(expectedType);
+        String url = getUrl(urlPrefix);
         try (Connection connection = DriverManager.getConnection(url, getDefaultPropertiesForConnection())) {
-            assertTrue("connection isValid", connection.isValid(500));
+            assertTrue(connection.isValid(500), "connection isValid");
             FBConnection fbConnection = connection.unwrap(FBConnection.class);
             FBManagedConnectionFactory fbManagedConnectionFactory =
-                    (FBManagedConnectionFactory) fbConnection.getManagedConnection().getManagedConnectionFactory();
+                    fbConnection.getManagedConnection().getManagedConnectionFactory();
             String actualType = fbManagedConnectionFactory.getType();
-            assertEquals("unexpected GDS type", expectedType, actualType);
+            assertEquals(expectedType, actualType, "unexpected GDS type");
         }
     }
 
-    private static Object[] testCase(String urlPrefix, String expectedType) {
-        return new Object[] { urlPrefix, expectedType };
+    private static Arguments testCase(String urlPrefix, String expectedType) {
+        return Arguments.of(urlPrefix, expectedType);
     }
 
-    private String getUrl() {
+    private String getUrl(String urlPrefix) {
         return urlPrefix + FBTestProperties.getdbpath(FBTestProperties.DB_NAME);
     }
 }

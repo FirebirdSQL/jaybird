@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,7 +18,7 @@
  */
 package org.firebirdsql.common;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Helper class for generating (random) test data.
@@ -30,8 +28,6 @@ import java.util.Random;
  */
 public class DataGenerator {
 
-    private static final Random rnd = new Random();
-
     private DataGenerator() {
         // No instance
     }
@@ -39,17 +35,34 @@ public class DataGenerator {
     /**
      * Creates a byte array with random bytes with the specified length.
      *
-     * @param length Requested length
+     * @param length
+     *         Requested length
      * @return Byte array of length filled with random bytes
      */
     public static byte[] createRandomBytes(int length) {
         byte[] randomBytes = new byte[length];
-        rnd.nextBytes(randomBytes);
+        ThreadLocalRandom.current().nextBytes(randomBytes);
         return randomBytes;
     }
 
     /**
-     * Generates a random number between <code>lowerBound</code> (inclusive) and <code>upperBound</code> (exclusive).
+     * Creates a byte array with random bytes in the range 0 - 127 with the specified length.
+     *
+     * @param length
+     *         Requested length
+     * @return Byte array of length filled with random bytes in the range 0 - 127
+     */
+    public static byte[] createRandomAsciiBytes(int length) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        byte[] bytes = new byte[length];
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) random.nextInt(128);
+        }
+        return bytes;
+    }
+
+    /**
+     * Generates a random number between {@code lowerBound} (inclusive) and {@code upperBound} (exclusive).
      *
      * @return Generated number.
      */
@@ -57,6 +70,6 @@ public class DataGenerator {
         if (lowerBound >= upperBound) {
             throw new IllegalArgumentException("lowerBound must be smaller than upperBound");
         }
-        return rnd.nextInt(upperBound - lowerBound) + lowerBound;
+        return ThreadLocalRandom.current().nextInt(upperBound - lowerBound) + lowerBound;
     }
 }

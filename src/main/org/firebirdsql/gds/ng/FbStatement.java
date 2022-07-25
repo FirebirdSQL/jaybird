@@ -24,11 +24,11 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
 
 import java.sql.SQLException;
 
@@ -42,7 +42,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public interface FbStatement extends ExceptionListenable {
+public interface FbStatement extends ExceptionListenable, AutoCloseable {
 
     /**
      * @return Transaction currently associated with this statement
@@ -59,7 +59,6 @@ public interface FbStatement extends ExceptionListenable {
      *
      * @param transaction
      *         The transaction
-     * @throws SQLException
      */
     void setTransaction(FbTransaction transaction) throws SQLException;
 
@@ -90,9 +89,8 @@ public interface FbStatement extends ExceptionListenable {
 
     /**
      * Close and deallocate this statement.
-     *
-     * @throws SQLException
      */
+    @Override
     void close() throws SQLException;
 
     /**
@@ -101,8 +99,6 @@ public interface FbStatement extends ExceptionListenable {
      * <p>
      * Equivalent to calling {@link #closeCursor(boolean)} with {@code false}.
      * </p>
-     *
-     * @throws SQLException
      */
     void closeCursor() throws SQLException;
 
@@ -115,7 +111,6 @@ public interface FbStatement extends ExceptionListenable {
      *
      * @param transactionEnd
      *         Close is in response to a transaction end.
-     * @throws SQLException
      */
     void closeCursor(boolean transactionEnd) throws SQLException;
 
@@ -167,18 +162,76 @@ public interface FbStatement extends ExceptionListenable {
     void execute(RowValue parameters) throws SQLException;
 
     /**
-     * Requests this statement to fetch the next <code>fetchSize</code> rows.
+     * Requests this statement to fetch the next {@code fetchSize} rows.
      * <p>
      * Fetched rows are not returned from this method, but sent to the registered {@link org.firebirdsql.gds.ng.listeners.StatementListener} instances.
      * </p>
      *
      * @param fetchSize
-     *         Number of rows to fetch (must be <code>&gt; 0</code>)
+     *         Number of rows to fetch (must be greater than {@code 0})
      * @throws SQLException
      *         For database access errors, when called on a closed statement, when no cursor is open or when the fetch
-     *         size is not <code>&gt; 0</code>.
+     *         size is not greater than {@code 0}.
      */
     void fetchRows(int fetchSize) throws SQLException;
+
+    /**
+     * Requests this statement to fetch rows using the specified fetch type.
+     * <p>
+     * The default implementation only supports {@link FetchType#NEXT} by redirecting to {@link #fetchRows(int)} and
+     * throws an {@code SQLFeatureNotSupported} for other types.
+     * </p>
+     * <p>
+     * The caller is responsible for tracking and correcting for server-side positional state, taking into account any
+     * rows already fetched. For example, if 100 rows have been fetched with {@code NEXT} or {@code PRIOR}, and 80
+     * rows are still in the local buffer, the server-side position is actually 80 rows ahead (or behind). The next
+     * fetch with {@code RELATIVE} will need to correct this in {@code position}, and a {@code PRIOR} after
+     * a {@code NEXT} or a {@code NEXT} after a {@code PRIOR} will need to reposition with {@code RELATIVE} or
+     * {@code ABSOLUTE}, or know how many rows to ignore from the fetched batch.
+     * </p>
+     *
+     * @param fetchType
+     *         Fetch type
+     * @param fetchSize
+     *         Number of rows to fetch (must be {@code > 0}) (ignored by server for types other than
+     *         {@link FetchType#NEXT} and {@link FetchType#PRIOR})
+     * @param position
+     *         Absolute or relative position for the row to fetch (ignored by server for types other than
+     *         {@link FetchType#ABSOLUTE} and {@link FetchType#RELATIVE})
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         For types other than {@link FetchType#NEXT} if the protocol version or the implementation does not
+     *         support scroll fetch
+     * @throws SQLException
+     *         For database access errors, when called on a closed statement, when no cursor is open or for server-side
+     *         error conditions
+     * @see #supportsFetchScroll()
+     */
+    default void fetchScroll(FetchType fetchType, int fetchSize, int position) throws SQLException {
+        if (fetchType == FetchType.NEXT) {
+            fetchRows(fetchSize);
+            return;
+        }
+        throw new FBDriverNotCapableException("implementation does not support fetchScroll");
+    }
+
+    /**
+     * Has at least one fetch been executed on the current cursor?
+     *
+     * @return {@code true} if at least one fetch has been executed on the current cursor, {@code false} otherwise
+     * (including if nothing has been executed, or the current statement has no cursor)
+     */
+    boolean hasFetched();
+
+    /**
+     * Reports whether this statement implementation supports {@link #fetchScroll(FetchType, int, int)} with anything
+     * other than {@link FetchType#NEXT}.
+     *
+     * @return {@code true} {@code fetchScroll} supported, {@code false} if not supported (default implementation
+     * returns {@code false})
+     */
+    default boolean supportsFetchScroll() {
+        return false;
+    }
 
     /**
      * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
@@ -221,8 +274,59 @@ public interface FbStatement extends ExceptionListenable {
      *         Response buffer length to use
      * @return Response buffer
      * @throws SQLException
+     *         For errors retrieving or transforming the response.
      */
     byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException;
+
+    /**
+     * Request cursor info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @param infoProcessor
+     *         Implementation of {@link InfoProcessor} to transform
+     *         the info response
+     * @return Transformed info response of type T
+     * @throws SQLException
+     *         For errors retrieving or transforming the response
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If requesting cursor info is not supported (Firebird 4.0 or earlier, or native implementation)
+     * @see #supportsCursorInfo() 
+     */
+    default <T> T getCursorInfo(byte[] requestItems, int bufferLength, InfoProcessor<T> infoProcessor)
+            throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support getCursorInfo");
+    }
+
+    /**
+     * Request cursor info.
+     *
+     * @param requestItems
+     *         Array of info items to request
+     * @param bufferLength
+     *         Response buffer length to use
+     * @return Response buffer
+     * @throws SQLException
+     *         For errors retrieving or transforming the response
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         If requesting cursor info is not supported (Firebird 4.0 or earlier, or native implementation)
+     */
+    default byte[] getCursorInfo(byte[] requestItems, int bufferLength) throws SQLException {
+        throw new FBDriverNotCapableException("implementation does not support getCursorInfo");
+    }
+
+    /**
+     * Reports whether this statement implementation supports {@link #getCursorInfo(byte[], int, InfoProcessor)} and
+     * {@link #getCursorInfo(byte[], int)}.
+     *
+     * @return {@code true} {@code getCursorInfo} supported, {@code false} if not supported (default implementation
+     * returns {@code false})
+     */
+    default boolean supportsCursorInfo() {
+        return false;
+    }
 
     /**
      * @return The default size to use for the sql info buffer
@@ -334,12 +438,45 @@ public interface FbStatement extends ExceptionListenable {
     long getTimeout() throws SQLException;
 
     /**
-     * Creates a batch that call prepared statement to get a metadata.
+     * Set cursor flag.
+     * <p>
+     * If a protocol version does not support cursor flags, this is silently ignored.
+     * </p>
      *
-     * @param parameters
-     *         Batch parameters buffer {@link BatchParameterBuffer}
-     * @return Instance of {@link FbBatch}
-     * @throws SQLException
+     * @param flag
+     *         Cursor flag to set
      */
-    FbBatch createBatch(BatchParameterBuffer parameters) throws SQLException;
+    default void setCursorFlag(CursorFlag flag) {
+        // do nothing
+    }
+
+    /**
+     * Clears cursor flag.
+     * <p>
+     * Setting a cursor flag only affects subsequent executes. A currently open cursor will not be affected.
+     * </p>
+     * <p>
+     * If a protocol version does not support cursor flags, this is silently ignored.
+     * </p>
+     *
+     * @param flag
+     *         Cursor flag to clear
+     */
+    default void clearCursorFlag(CursorFlag flag) {
+        // do nothing
+    }
+
+    /**
+     * Reports whether a cursor flag is set.
+     * <p>
+     * If a protocol version does not support cursor flags, {@code false} should be returned.
+     * </p>
+     *
+     * @param flag
+     *         Cursor flag
+     * @return {@code true} when set, {@code false} otherwise
+     */
+    default boolean isCursorFlagSet(CursorFlag flag) {
+        return false;
+    }
 }

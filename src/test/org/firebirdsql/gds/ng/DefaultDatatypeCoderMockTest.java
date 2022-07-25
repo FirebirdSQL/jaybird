@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,49 +20,39 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.encodings.IEncodingFactory;
-import org.jmock.Expectations;
-import org.jmock.auto.Mock;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.*;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
-public class DefaultDatatypeCoderMockTest {
-
-    @Rule
-    public final JUnitRuleMockery context = new JUnitRuleMockery();
-    {
-        context.setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-    }
+@ExtendWith(MockitoExtension.class)
+class DefaultDatatypeCoderMockTest {
 
     @Mock
     private IEncodingFactory encodingFactory;
     @Mock private Encoding encoding;
     private DefaultDatatypeCoder defaultDatatypeCoder;
 
-    @Before
-    public void setup() {
-        context.checking(new Expectations() {{
-            allowing(encodingFactory).getDefaultEncoding(); will(returnValue(encoding));
-        }});
+    @BeforeEach
+    void setup() {
+        lenient().when(encodingFactory.getDefaultEncoding()).thenReturn(encoding);
         defaultDatatypeCoder = new DefaultDatatypeCoder(encodingFactory);
     }
 
     @Test
-    public void encodeStringDelegatesToEncoding() {
+    void encodeStringDelegatesToEncoding() {
         final String inputValue = "result value";
         final byte[] resultValue = { 1, 2, 3, 4};
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).encodeToCharset(inputValue); will(returnValue(resultValue));
-        }});
+        when(encoding.encodeToCharset(inputValue)).thenReturn(resultValue);
 
         byte[] result = defaultDatatypeCoder.encodeString(inputValue);
 
@@ -70,13 +60,9 @@ public class DefaultDatatypeCoderMockTest {
     }
 
     @Test
-    public void createWriterDelegatesToEncoding() {
-        final OutputStream outputStream = context.mock(OutputStream.class);
+    void createWriterDelegatesToEncoding(@Mock OutputStream outputStream) {
         final Writer writer = new StringWriter();
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).createWriter(outputStream); will(returnValue(writer));
-        }});
+        when(encoding.createWriter(outputStream)).thenReturn(writer);
 
         Writer result = defaultDatatypeCoder.createWriter(outputStream);
 
@@ -84,13 +70,10 @@ public class DefaultDatatypeCoderMockTest {
     }
 
     @Test
-    public void decodeStringDelegatesToEncoding() {
+    void decodeStringDelegatesToEncoding() {
         final byte[] inputValue = { 1, 2, 3, 4};
         final String resultValue = "result value";
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).decodeFromCharset(inputValue); will(returnValue(resultValue));
-        }});
+        when(encoding.decodeFromCharset(inputValue)).thenReturn(resultValue);
 
         String result = defaultDatatypeCoder.decodeString(inputValue);
 
@@ -98,13 +81,9 @@ public class DefaultDatatypeCoderMockTest {
     }
 
     @Test
-    public void createReaderDelegatesToEncoding() {
-        final InputStream inputStream = context.mock(InputStream.class);
+    void createReaderDelegatesToEncoding(@Mock InputStream inputStream) {
         final Reader reader = new StringReader("test");
-
-        context.checking(new Expectations() {{
-            oneOf(encoding).createReader(inputStream); will(returnValue(reader));
-        }});
+        when(encoding.createReader(inputStream)).thenReturn(reader);
 
         Reader result = defaultDatatypeCoder.createReader(inputStream);
 

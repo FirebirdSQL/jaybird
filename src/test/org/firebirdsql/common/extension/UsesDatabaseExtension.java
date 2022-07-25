@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.firebirdsql.common.FBTestProperties.createFBManager;
 import static org.firebirdsql.common.FBTestProperties.defaultDatabaseSetUp;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
@@ -40,9 +41,6 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
 
 /**
  * JUnit 5 extension that creates and deletes a database.
- * <p>
- * This is similar to the JUnit 4 rule {@link org.firebirdsql.common.rules.UsesDatabase}.
- * </p>
  * <p>
  * When used with {@code @ExtendWith}, a default database is created. For more control,
  * use {@code @RegisterExtension}, the static factory methods can be used for configuration.
@@ -55,56 +53,32 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback {
+public abstract class UsesDatabaseExtension {
+
+    // TODO Split into having a UsesDatabaseExtension and a UsesDatabaseForAllExtension or similar to avoid warnings
+    //  when registering non-static "per-test" variant, and having exceptions on cleanup when registering static for
+    //  a "per-test" variant
 
     private final boolean initialCreate;
-    private final boolean forAll;
     private FBManager fbManager = null;
-    private final List<String> initStatements = new ArrayList<>();
+    private final List<String> initStatements;
     private final List<String> databasesToDrop = new ArrayList<>();
 
-    @SuppressWarnings("unused")
-    public UsesDatabaseExtension() {
-        this(true, false);
+    private UsesDatabaseExtension(boolean initialCreate) {
+        this(initialCreate, emptyList());
     }
 
-    private UsesDatabaseExtension(boolean initialCreate, boolean forAll) {
+    private UsesDatabaseExtension(boolean initialCreate, List<String> initStatements) {
         this.initialCreate = initialCreate;
-        this.forAll = forAll;
+        this.initStatements = initStatements;
     }
 
-    // NOTE: Can be called with context == null (from UsesDatabase)
-    @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
-        if (forAll) return;
-        sharedBefore();
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        if (!forAll) return;
-        sharedBefore();
-    }
-
-    private void sharedBefore() throws Exception {
+    void sharedBefore() throws Exception {
         fbManager = createFBManager();
         if (initialCreate) createDefaultDatabase();
     }
 
-    // NOTE: Can be called with context == null (from UsesDatabase)
-    @Override
-    public void afterEach(ExtensionContext context) {
-        if (forAll) return;
-        sharedAfter();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) {
-        if (!forAll) return;
-        sharedAfter();
-    }
-
-    private void sharedAfter() {
+    void sharedAfter() {
         try {
             for (String databasePath : databasesToDrop) {
                 try {
@@ -117,7 +91,9 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
             ex.printStackTrace();
         } finally {
             try {
-                fbManager.stop();
+                if (!(fbManager == null || fbManager.getState().equals("Stopped"))) {
+                    fbManager.stop();
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -143,15 +119,15 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
         databasesToDrop.add(databasePath);
     }
 
-    // TODO Consider implementing a way to have a non-standard initialization (eg as in TestResultSetDialect1)
+    // TODO Consider implementing a way to have a non-standard initialization (e.g. as in TestResultSetDialect1)
 
     /**
      * Creates a rule to initialize (and drop) a test database with the default configuration.
      *
      * @return a UsesDatabase extension
      */
-    public static UsesDatabaseExtension usesDatabase() {
-        return new UsesDatabaseExtension(true, false);
+    public static UsesDatabaseForEach usesDatabase() {
+        return new UsesDatabaseForEach(true);
     }
 
     /**
@@ -163,8 +139,8 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @return a UsesDatabase extension
      * @since 5
      */
-    public static UsesDatabaseExtension usesDatabaseForAll() {
-        return new UsesDatabaseExtension(true, true);
+    public static UsesDatabaseForAll usesDatabaseForAll() {
+        return new UsesDatabaseForAll(true);
     }
 
     /**
@@ -182,7 +158,7 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @return a UsesDatabase extension
      * @since 4.0
      */
-    public static UsesDatabaseExtension usesDatabase(String... initializationStatements) {
+    public static UsesDatabaseForEach usesDatabase(String... initializationStatements) {
         return usesDatabase(Arrays.asList(initializationStatements));
     }
 
@@ -197,7 +173,7 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @see #usesDatabase(String...)
      * @since 5
      */
-    public static UsesDatabaseExtension usesDatabaseForAll(String... initializationStatements) {
+    public static UsesDatabaseForAll usesDatabaseForAll(String... initializationStatements) {
         return usesDatabaseForAll(Arrays.asList(initializationStatements));
     }
 
@@ -216,10 +192,8 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @return a UsesDatabase extension
      * @since 4.0
      */
-    public static UsesDatabaseExtension usesDatabase(List<String> initializationStatements) {
-        UsesDatabaseExtension extension = new UsesDatabaseExtension(true, false);
-        extension.initStatements.addAll(initializationStatements);
-        return extension;
+    public static UsesDatabaseForEach usesDatabase(List<String> initializationStatements) {
+        return new UsesDatabaseForEach(true, initializationStatements);
     }
 
     /**
@@ -233,10 +207,8 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @see #usesDatabaseForAll(List)
      * @since 5
      */
-    public static UsesDatabaseExtension usesDatabaseForAll(List<String> initializationStatements) {
-        UsesDatabaseExtension extension = new UsesDatabaseExtension(true, true);
-        extension.initStatements.addAll(initializationStatements);
-        return extension;
+    public static UsesDatabaseForAll usesDatabaseForAll(List<String> initializationStatements) {
+        return new UsesDatabaseForAll(true, initializationStatements);
     }
 
     /**
@@ -247,8 +219,8 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      *
      * @return a UsesDatabase extension
      */
-    public static UsesDatabaseExtension noDatabase() {
-        return new UsesDatabaseExtension(false, false);
+    public static UsesDatabaseForEach noDatabase() {
+        return new UsesDatabaseForEach(false);
     }
 
     /**
@@ -260,8 +232,8 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
      * @return a UsesDatabase extension
      * @since 5
      */
-    public static UsesDatabaseExtension noDatabaseForAll() {
-        return new UsesDatabaseExtension(false, true);
+    public static UsesDatabaseForAll noDatabaseForAll() {
+        return new UsesDatabaseForAll(false);
     }
 
     private void executeInitStatements() throws SQLException {
@@ -280,4 +252,53 @@ public class UsesDatabaseExtension implements BeforeEachCallback, AfterEachCallb
             connection.commit();
         }
     }
+
+    public static class UsesDatabaseForEach extends UsesDatabaseExtension
+            implements BeforeEachCallback, AfterEachCallback {
+
+        private UsesDatabaseForEach(boolean initialCreate) {
+            super(initialCreate);
+        }
+
+        private UsesDatabaseForEach(boolean initialCreate, List<String> initStatements) {
+            super(initialCreate, initStatements);
+        }
+
+        // NOTE: Can be called with context == null (from UsesDatabase)
+        @Override
+        public void beforeEach(ExtensionContext context) throws Exception {
+            sharedBefore();
+        }
+
+        // NOTE: Can be called with context == null (from UsesDatabase)
+        @Override
+        public void afterEach(ExtensionContext context) {
+            sharedAfter();
+        }
+
+    }
+
+    public static class UsesDatabaseForAll extends UsesDatabaseExtension
+            implements BeforeAllCallback, AfterAllCallback {
+
+        private UsesDatabaseForAll(boolean initialCreate) {
+            super(initialCreate);
+        }
+
+        private UsesDatabaseForAll(boolean initialCreate, List<String> initStatements) {
+            super(initialCreate, initStatements);
+        }
+
+        @Override
+        public void beforeAll(ExtensionContext context) throws Exception {
+            sharedBefore();
+        }
+
+        @Override
+        public void afterAll(ExtensionContext context) {
+            sharedAfter();
+        }
+
+    }
+
 }

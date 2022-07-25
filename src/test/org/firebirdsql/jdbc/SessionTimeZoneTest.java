@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -37,33 +35,31 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStar
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class SessionTimeZoneTest {
+class SessionTimeZoneTest {
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void withTimeZone_appliesServerDefaultTimeZone() throws Exception {
+    void withTimeZone_appliesServerDefaultTimeZone() throws Exception {
         requireTimeZoneSupport();
         checkForTimeZone("server", "timestamp'2019-03-23 14:05:12.12' at local", "2019-03-23 14:05:12.12",
                 "2019-03-23 14:05:12.1200");
     }
 
     @Test
-    public void withoutTimeZone_appliesServerDefaultTimeZone() throws Exception {
+    void withoutTimeZone_appliesServerDefaultTimeZone() throws Exception {
         long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getDefault());
         checkForWithoutTimeZone("server", "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
     @Test
-    public void withTimeZone_appliesJvmDefaultTimeZone() throws Exception {
+    void withTimeZone_appliesJvmDefaultTimeZone() throws Exception {
         requireTimeZoneSupport();
         // NOTE: Can potentially fail if Java default TimeZone id does not exist in Firebird
         checkForTimeZone(null, "timestamp'2019-03-23 14:05:12.12' at local", "2019-03-23 14:05:12.12",
@@ -71,13 +67,13 @@ public class SessionTimeZoneTest {
     }
 
     @Test
-    public void withoutTimeZone_appliesJvmDefaultTimeZone() throws Exception {
+    void withoutTimeZone_appliesJvmDefaultTimeZone() throws Exception {
         long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getDefault());
         checkForWithoutTimeZone(null, "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
     @Test
-    public void withTimeZone_appliesSpecificTimeZone() throws Exception {
+    void withTimeZone_appliesSpecificTimeZone() throws Exception {
         requireTimeZoneSupport();
         long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("America/New_York"));
         checkForTimeZone("America/New_York", "timestamp'2019-03-23 14:05:12.12' at local", expectedMillis,
@@ -85,13 +81,13 @@ public class SessionTimeZoneTest {
     }
 
     @Test
-    public void withoutTimeZone_appliesSpecificTimeZone() throws Exception {
+    void withoutTimeZone_appliesSpecificTimeZone() throws Exception {
         long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("America/New_York"));
         checkForWithoutTimeZone("America/New_York", "timestamp'2019-03-23 14:05:12.12'", expectedMillis);
     }
 
     @Test
-    public void withTimeZone_appliesSpecificTimeZone_differentValue() throws Exception {
+    void withTimeZone_appliesSpecificTimeZone_differentValue() throws Exception {
         requireTimeZoneSupport();
         long expectedMillis = getMillis("2019-03-23T14:05:12.120", TimeZone.getTimeZone("Europe/Amsterdam"));
         checkForTimeZone("America/Buenos_Aires", "timestamp'2019-03-23 14:05:12.12 Europe/Amsterdam'",
@@ -99,22 +95,23 @@ public class SessionTimeZoneTest {
     }
 
     @Test
-    public void errorOnInvalidTimeZoneName() throws Exception {
+    void errorOnInvalidTimeZoneName() {
         requireTimeZoneSupport();
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("sessionTimeZone", "does_not_exist");
 
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
+        SQLException exception = assertThrows(SQLException.class, () -> {
+            //noinspection EmptyTryBlock
+            try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
+                // ensure connection is closed if this does not fail as expected
+            }
+        });
+        assertThat(exception, allOf(
                 errorCodeEquals(ISCConstants.isc_invalid_timezone_region),
                 fbMessageStartsWith(ISCConstants.isc_invalid_timezone_region, "does_not_exist")));
-
-        //noinspection EmptyTryBlock
-        try (Connection ignore = DriverManager.getConnection(getUrl(), props)) {
-            // ensure connection is closed if this does not fail as expected
-        }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void checkForTimeZone(String zoneName, String timeValue, String expectedLocal, String expectedZonedString)
             throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
@@ -127,7 +124,7 @@ public class SessionTimeZoneTest {
 
             try (ResultSet rs = stmt.executeQuery("select " + timeValue + ", "
                     + "cast(" + timeValue + " as varchar(100)) from rdb$database")) {
-                assertTrue("expected a row", rs.next());
+                assertTrue(rs.next(), "expected a row");
                 Timestamp timestamp = rs.getTimestamp(1);
                 assertEquals(expectedLocal, timestamp.toString());
                 // Need to take into account server-defined zone which we can't know in advance
@@ -148,7 +145,7 @@ public class SessionTimeZoneTest {
 
             try (ResultSet rs = stmt.executeQuery("select " + timeValue + ", "
                     + "cast(" + timeValue + " as varchar(100)) from rdb$database")) {
-                assertTrue("expected a row", rs.next());
+                assertTrue(rs.next(), "expected a row");
                 Timestamp timestamp = rs.getTimestamp(1);
                 assertEquals(expectedMillis, timestamp.getTime());
                 // Need to take into account server-defined zone which we can't know in advance
@@ -157,6 +154,7 @@ public class SessionTimeZoneTest {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void checkForWithoutTimeZone(String zoneName, String timeValue, long expectedMillis)
             throws SQLException {
         Properties props = getDefaultPropertiesForConnection();
@@ -167,13 +165,14 @@ public class SessionTimeZoneTest {
              Statement stmt = connection.createStatement()) {
 
             try (ResultSet rs = stmt.executeQuery("select " + timeValue + " from rdb$database")) {
-                assertTrue("expected a row", rs.next());
+                assertTrue(rs.next(), "expected a row");
                 Timestamp timestamp = rs.getTimestamp(1);
                 assertEquals(expectedMillis, timestamp.getTime());
             }
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static long getMillis(String localDateTimeString, TimeZone zone) throws Exception {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         sdf.setTimeZone(zone);
@@ -182,7 +181,7 @@ public class SessionTimeZoneTest {
     }
 
     private static void requireTimeZoneSupport() {
-        assumeTrue("Requires time zone support", getDefaultSupportInfo().supportsTimeZones());
+        assumeTrue(getDefaultSupportInfo().supportsTimeZones(), "Requires time zone support");
     }
 
 }

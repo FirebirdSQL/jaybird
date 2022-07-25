@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,7 +22,9 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.extern.decimal.Decimal128;
 import org.firebirdsql.extern.decimal.Decimal64;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -32,7 +34,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for internal consistency of encoding and decoding provided by {@link org.firebirdsql.gds.ng.DefaultDatatypeCoder}.
@@ -43,23 +45,23 @@ import static org.junit.Assert.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class DefaultDatatypeCoderTest {
+class DefaultDatatypeCoderTest {
 
     private final DefaultDatatypeCoder datatypeCoder =
             new DefaultDatatypeCoder(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     @Test
-    public void testShort() {
+    void testShort() {
         final short testShort = 513;
         final byte[] shortBytes = datatypeCoder.encodeShort(testShort);
 
         final short result = datatypeCoder.decodeShort(shortBytes);
 
-        assertEquals("Unexpected short", testShort, result);
+        assertEquals(testShort, result, "Unexpected short");
     }
 
     @Test
-    public void testShortWithOffset() {
+    void testShortWithOffset() {
         final short testShort = 513;
         byte[] target = new byte[8];
 
@@ -67,23 +69,23 @@ public class DefaultDatatypeCoderTest {
 
         final short result = datatypeCoder.decodeShort(target, 2);
 
-        assertEquals("Unexpected short", testShort, result);
-        assertEquals("First byte should not be set", 0, target[0]);
-        assertEquals("Second byte should not be set", 0, target[0]);
+        assertEquals(testShort, result, "Unexpected short");
+        assertEquals(0, target[0], "First byte should not be set");
+        assertEquals(0, target[1], "Second byte should not be set");
     }
 
     @Test
-    public void testInt() {
+    void testInt() {
         final int testInt = -1405525771;
         final byte[] intBytes = datatypeCoder.encodeInt(testInt);
 
         final int result = datatypeCoder.decodeInt(intBytes);
 
-        assertEquals("Unexpected int", testInt, result);
+        assertEquals(testInt, result, "Unexpected int");
     }
 
     @Test
-    public void testIntWithOffset() {
+    void testIntWithOffset() {
         final int testInt = -1405525771;
         byte[] target = new byte[8];
 
@@ -91,104 +93,96 @@ public class DefaultDatatypeCoderTest {
 
         final int result = datatypeCoder.decodeInt(target, 2);
 
-        assertEquals("Unexpected short", testInt, result);
-        assertEquals("First byte should not be set", 0, target[0]);
-        assertEquals("Second byte should not be set", 0, target[0]);
+        assertEquals(testInt, result, "Unexpected short");
+        assertEquals(0, target[0], "First byte should not be set");
+        assertEquals(0, target[1], "Second byte should not be set");
     }
 
     @Test
-    public void testLong() {
+    void testLong() {
         final long testLong = Long.MAX_VALUE ^ ((132L << 56) + 513);
         final byte[] longBytes = datatypeCoder.encodeLong(testLong);
 
         final long result = datatypeCoder.decodeLong(longBytes);
 
-        assertEquals("Unexpected long", testLong, result);
+        assertEquals(testLong, result, "Unexpected long");
     }
 
     // Skip testing encode/decodeFloat as it is same as testing encode/decodeInt + JDK implementation of Float.floatToIntBits/intBitsToFloat
 
-    // Skip testing encode/decodeDouble as it is same as  testing encode/decodeLong + JDK implementation of Double.doubleToLongBits/longBitsToDouble
+    // Skip testing encode/decodeDouble as it is same as testing encode/decodeLong + JDK implementation of Double.doubleToLongBits/longBitsToDouble
 
     // Skipping string encoding
 
     @Test
-    public void testLocalDateTime() {
+    void testLocalDateTime() {
         LocalDateTime testTimestamp = LocalDateTime.parse("2021-10-31T17:23:01.1234");
         byte[] timestampBytes = datatypeCoder.encodeLocalDateTime(testTimestamp);
 
         LocalDateTime result = datatypeCoder.decodeLocalDateTime(timestampBytes);
 
-        assertEquals("Unexpected timestamp", testTimestamp, result);
+        assertEquals(testTimestamp, result, "Unexpected timestamp");
     }
 
     // TODO Tests for various Timestamp methods taking a Calendar
 
     @Test
-    public void testLocalTime() {
+    void testLocalTime() {
         LocalTime testTime = LocalTime.parse("17:23:01");
         byte[] timeBytes = datatypeCoder.encodeLocalTime(testTime);
 
         LocalTime result = datatypeCoder.decodeLocalTime(timeBytes);
 
-        assertEquals("Unexpected time", testTime, result);
+        assertEquals(testTime, result, "Unexpected time");
     }
 
     @Test
-    public void testLocalDate() {
+    void testLocalDate() {
         LocalDate testDate = LocalDate.parse("2014-03-29");
         byte[] dateBytes = datatypeCoder.encodeLocalDate(testDate);
 
         LocalDate result = datatypeCoder.decodeLocalDate(dateBytes);
 
-        assertEquals("Unexpected date", testDate, result);
+        assertEquals(testDate, result, "Unexpected date");
     }
 
-    @Test
-    public void testBooleanTrue() {
-        checkBoolean(true);
-    }
-
-    @Test
-    public void testBooleanFalse() {
-        checkBoolean(false);
-    }
-
-    private void checkBoolean(final boolean testBoolean) {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testBoolean(final boolean testBoolean) {
         final byte[] booleanBytes = datatypeCoder.encodeBoolean(testBoolean);
 
         final boolean result = datatypeCoder.decodeBoolean(booleanBytes);
 
-        assertEquals("Unexpected boolean", testBoolean, result);
+        assertEquals(testBoolean, result, "Unexpected boolean");
     }
-
+    
     // TODO java.time roundtrip tests
 
     /**
      * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDateTime(LocalDateTime)} using {@link DefaultDatatypeCoder#decodeTimestampCalendar(byte[], Calendar)}.
      */
     @Test
-    public void testLocalDateTimeToTimestamp() {
+    void testLocalDateTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2013-03-29 17:43:01.9751");
         final byte[] localDateTimeBytes = datatypeCoder.encodeLocalDateTime(
                 LocalDateTime.of(2013, 3, 29, 17, 43, 1, (int) TimeUnit.MICROSECONDS.toNanos(975100)));
 
         final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(localDateTimeBytes, Calendar.getInstance());
 
-        assertEquals("Unexpected timestamp", expected, result);
+        assertEquals(expected, result, "Unexpected timestamp");
     }
 
     /**
      * Test round trip for {@link DefaultDatatypeCoder#encodeLocalDate(LocalDate)} using {@link DefaultDatatypeCoder#decodeDateCalendar(byte[], Calendar)}.
      */
     @Test
-    public void testLocalDateToDate() {
+    void testLocalDateToDate() {
         final java.sql.Date expected = java.sql.Date.valueOf("2014-03-29");
         final byte[] localDateBytes = datatypeCoder.encodeLocalDate(LocalDate.of(2014, 3, 29));
 
         final java.sql.Date result = datatypeCoder.decodeDateCalendar(localDateBytes, Calendar.getInstance());
 
-        assertEquals("Unexpected date", expected, result);
+        assertEquals(expected, result, "Unexpected date");
     }
 
     /**
@@ -198,7 +192,7 @@ public class DefaultDatatypeCoderTest {
      * </p>
      */
     @Test
-    public void testLocalTimeToTimestamp() {
+    void testLocalTimeToTimestamp() {
         final java.sql.Timestamp expected = java.sql.Timestamp.valueOf("2014-03-29 17:43:01.9751");
         // We need a date part as well to construct a valid timestamp
         final byte[] localDateBytes = datatypeCoder.encodeLocalDate(LocalDate.of(2014, 3, 29));
@@ -211,14 +205,14 @@ public class DefaultDatatypeCoderTest {
 
         final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(combinedDateTime, Calendar.getInstance());
 
-        assertEquals("Unexpected timestamp", expected, result);
+        assertEquals(expected, result, "Unexpected timestamp");
     }
 
     /**
      * Test round trip for timestamp conversion with timezone.
      */
     @Test
-    public void testTimestampRoundtripWithCalendar() {
+    void testTimestampRoundtripWithCalendar() {
         // Note we test with the assumption that we are not in timezone America/New_York
         TimeZone timeZone = TimeZone.getTimeZone("America/New_York");
         Calendar calendar = Calendar.getInstance(timeZone);
@@ -227,11 +221,11 @@ public class DefaultDatatypeCoderTest {
 
         final java.sql.Timestamp result = datatypeCoder.decodeTimestampCalendar(dateTimeBytes, calendar);
 
-        assertEquals("Unexpected timestamp", expected, result);
+        assertEquals(expected, result, "Unexpected timestamp");
     }
 
     @Test
-    public void testTimeRoundtripWithCalendar() {
+    void testTimeRoundtripWithCalendar() {
         // Note we test with the assumption that we are not in timezone America/New_York
         TimeZone timeZone = TimeZone.getTimeZone("America/New_York");
         Calendar calendar = Calendar.getInstance(timeZone);
@@ -240,7 +234,7 @@ public class DefaultDatatypeCoderTest {
 
         final java.sql.Time result = datatypeCoder.decodeTimeCalendar(timeBytes, calendar);
 
-        assertEquals("Unexpected timestamp", expected, result);
+        assertEquals(expected, result, "Unexpected timestamp");
     }
 
     /**
@@ -251,7 +245,7 @@ public class DefaultDatatypeCoderTest {
         Field cacheField = DefaultDatatypeCoder.class.getDeclaredField("encodingSpecificDatatypeCoders");
         cacheField.setAccessible(true);
 
-        assertEquals("Cache size at start", 0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
+        assertEquals(0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size(), "Cache size at start");
 
         List<String> encodingsToTry = Arrays.asList("ISO8859_1", "ISO8859_2", "ISO8859_3", "ISO8859_4", "ISO8859_5",
                 "ISO8859_6", "ISO8859_7", "ISO8859_8", "ISO8859_9", "DOS437");
@@ -266,14 +260,15 @@ public class DefaultDatatypeCoderTest {
             retrievedDatatypeCoders.put(encoding, encodingSpecificDatatypeCoder);
         }
 
-        assertEquals("Cache size after adding items", encodingsToTry.size(), ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
+        assertEquals(encodingsToTry.size(), ((Map<?, ?>) cacheField.get(datatypeCoder)).size(),
+                "Cache size after adding items");
 
         // check cache
         for (String encoding : encodingsToTry) {
             DatatypeCoder encodingSpecificDatatypeCoder =
                     datatypeCoder.forEncodingDefinition(encodingFactory.getEncodingDefinitionByFirebirdName(encoding));
-            assertSame("Unexpected instance for " + encoding,
-                    retrievedDatatypeCoders.get(encoding), encodingSpecificDatatypeCoder);
+            assertSame(retrievedDatatypeCoders.get(encoding), encodingSpecificDatatypeCoder,
+                    "Unexpected instance for " + encoding);
         }
 
         // Overflow cache to trigger clean up
@@ -281,11 +276,11 @@ public class DefaultDatatypeCoderTest {
                 encodingFactory.getEncodingDefinitionByFirebirdName(additionalEncoding));
         assertNotNull(additionalDatatypeCoder);
 
-        assertEquals("Cache size after overflow", 0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size());
+        assertEquals(0, ((Map<?, ?>) cacheField.get(datatypeCoder)).size(), "Cache size after overflow");
     }
 
     @Test
-    public void decodeDecimal64() {
+    void decodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
@@ -293,7 +288,7 @@ public class DefaultDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal64() {
+    void encodeDecimal64() {
         final Decimal64 decimal64 = Decimal64.valueOf("1.234567890123456E123");
         final byte[] bytes = decimal64.toBytes();
 
@@ -301,7 +296,7 @@ public class DefaultDatatypeCoderTest {
     }
 
     @Test
-    public void decodeDecimal128() {
+    void decodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 
@@ -309,7 +304,7 @@ public class DefaultDatatypeCoderTest {
     }
 
     @Test
-    public void encodeDecimal128() {
+    void encodeDecimal128() {
         final Decimal128 decimal128 = Decimal128.valueOf("1.234567890123456789012345678901234E1234");
         final byte[] bytes = decimal128.toBytes();
 

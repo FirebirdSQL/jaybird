@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,31 +18,26 @@
  */
 package org.firebirdsql.gds.ng.dbcrypt;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link DbCryptData}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class DbCryptDataTest {
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+class DbCryptDataTest {
 
     @Test
-    public void pluginDataNullAllowed() {
+    void pluginDataNullAllowed() {
         DbCryptData dbCryptData = new DbCryptData(null, 0);
 
         assertNull(dbCryptData.getPluginData());
     }
 
     @Test
-    public void pluginData32767BytesAllowed() {
+    void pluginData32767BytesAllowed() {
         final byte[] pluginData = new byte[32767];
         DbCryptData dbCryptData = new DbCryptData(pluginData, 0);
 
@@ -50,22 +45,21 @@ public class DbCryptDataTest {
     }
 
     @Test
-    public void pluginData32768Bytes_throwsIllegalArgumentException() {
+    void pluginData32768Bytes_throwsIllegalArgumentException() {
         final byte[] pluginData = new byte[32768];
-        expectedException.expect(IllegalArgumentException.class);
 
-        new DbCryptData(pluginData, 0);
+        assertThrows(IllegalArgumentException.class, () -> new DbCryptData(pluginData, 0));
     }
 
     @Test
-    public void replySizeNegativeAllowed() {
+    void replySizeNegativeAllowed() {
         DbCryptData dbCryptData = new DbCryptData(null, -1);
 
         assertEquals(-1, dbCryptData.getReplySize());
     }
 
     @Test
-    public void replySizePositiveAllowed() {
+    void replySizePositiveAllowed() {
         DbCryptData dbCryptData = new DbCryptData(null, 64);
 
         assertEquals(64, dbCryptData.getReplySize());
@@ -75,7 +69,7 @@ public class DbCryptDataTest {
      * We don't constrain the reply size value (even if it doesn't make sense to allow values bigger than 32767).
      */
     @Test
-    public void replySizeIntegerMaxAllowed() {
+    void replySizeIntegerMaxAllowed() {
         DbCryptData dbCryptData = new DbCryptData(null, Integer.MAX_VALUE);
 
         assertEquals(Integer.MAX_VALUE, dbCryptData.getReplySize());
@@ -85,28 +79,28 @@ public class DbCryptDataTest {
      * We don't constrain the reply size value.
      */
     @Test
-    public void replySizeIntegerMinAllowed() {
+    void replySizeIntegerMinAllowed() {
         DbCryptData dbCryptData = new DbCryptData(null, Integer.MIN_VALUE);
 
         assertEquals(Integer.MIN_VALUE, dbCryptData.getReplySize());
     }
 
     @Test
-    public void createReplyCreatesInstanceWithSuppliedData() {
+    void createReplyCreatesInstanceWithSuppliedData() {
         final byte[] pluginData = { 1, 2, 3, 4, 5 };
         DbCryptData dbCryptData = DbCryptData.createReply(pluginData);
 
-        assertEquals("Expected zero reply size", 0, dbCryptData.getReplySize());
-        assertSame("Expected same plugin data", pluginData, dbCryptData.getPluginData());
+        assertEquals(0, dbCryptData.getReplySize(), "Expected zero reply size");
+        assertSame(pluginData, dbCryptData.getPluginData(), "Expected same plugin data");
     }
 
     @Test
-    public void createReplyWithNullDataReturnsEMPTY_DATA() {
+    void createReplyWithNullDataReturnsEMPTY_DATA() {
         DbCryptData dbCryptData = DbCryptData.createReply(null);
 
         assertSame(DbCryptData.EMPTY_DATA, dbCryptData);
-        assertEquals("Expected zero reply size", 0, dbCryptData.getReplySize());
-        assertNull("Expected null plugin data", dbCryptData.getPluginData());
+        assertEquals(0, dbCryptData.getReplySize(), "Expected zero reply size");
+        assertNull(dbCryptData.getPluginData(), "Expected null plugin data");
     }
 
 }

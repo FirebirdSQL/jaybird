@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,25 +18,26 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link Clause}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class ClauseTest {
+class ClauseTest {
 
     // Note: some tests repeat what is also tested by MetadataPatternParameterizedTest
 
     @Test
-    public void clauseSimpleValue() {
+    void clauseSimpleValue() {
         Clause clause = new Clause("COLUMN", "SIMPLE");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition());
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition(true));
         assertEquals("COLUMN = cast(? as varchar(73)) ", clause.getCondition(false));
@@ -48,10 +49,10 @@ public class ClauseTest {
     }
 
     @Test
-    public void clauseAnyCharacterWildcardValue() {
+    void clauseAnyCharacterWildcardValue() {
         Clause clause = new Clause("COLUMN", "WITH_WILDCARD");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("trim(trailing from COLUMN) like cast(? as varchar(73)) escape '\\'  and ", clause.getCondition());
         assertEquals("trim(trailing from COLUMN) like cast(? as varchar(73)) escape '\\'  and ",
                 clause.getCondition(true));
@@ -68,10 +69,10 @@ public class ClauseTest {
     }
 
     @Test
-    public void clauseAllWildcardValue_inMiddle() {
+    void clauseAllWildcardValue_inMiddle() {
         Clause clause = new Clause("COLUMN", "WITH%WILDCARD");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("trim(trailing from COLUMN) like cast(? as varchar(73)) escape '\\'  and ", clause.getCondition());
         assertEquals("trim(trailing from COLUMN) like cast(? as varchar(73)) escape '\\'  and ",
                 clause.getCondition(true));
@@ -88,10 +89,10 @@ public class ClauseTest {
     }
 
     @Test
-    public void clauseAllWildcardValue_atEnd() {
+    void clauseAllWildcardValue_atEnd() {
         Clause clause = new Clause("COLUMN", "WITH%");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("COLUMN starting with cast(? as varchar(73))  and ", clause.getCondition());
         assertEquals("COLUMN starting with cast(? as varchar(73))  and ", clause.getCondition(true));
         assertEquals("COLUMN starting with cast(? as varchar(73)) ", clause.getCondition(false));
@@ -104,10 +105,10 @@ public class ClauseTest {
     }
 
     @Test
-    public void clauseEscapedAnyCharacterWildcardValue() {
+    void clauseEscapedAnyCharacterWildcardValue() {
         Clause clause = new Clause("COLUMN", "WITH\\_WILDCARD");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition());
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition(true));
         assertEquals("COLUMN = cast(? as varchar(73)) ", clause.getCondition(false));
@@ -119,10 +120,10 @@ public class ClauseTest {
     }
 
     @Test
-    public void clauseEscapedAllWildcardValue() {
+    void clauseEscapedAllWildcardValue() {
         Clause clause = new Clause("COLUMN", "WITH\\%WILDCARD");
 
-        assertTrue("Expected condition", clause.hasCondition());
+        assertTrue(clause.hasCondition(), "Expected condition");
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition());
         assertEquals("COLUMN = cast(? as varchar(73))  and ", clause.getCondition(true));
         assertEquals("COLUMN = cast(? as varchar(73)) ", clause.getCondition(false));
@@ -146,15 +147,15 @@ public class ClauseTest {
     private void validateNoCondition(String conditionValue) {
         Clause clause = new Clause("COLUMN", conditionValue);
 
-        assertFalse("Expected no condition", clause.hasCondition());
-        assertThat("Expected no condition", clause.getCondition(), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition(true), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition(false), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition("", ""), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition("prefix|", "|suffix"), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition("", "|suffix"), isEmptyString());
-        assertThat("Expected no condition", clause.getCondition("prefix|", ""), isEmptyString());
-        assertNull("Expected null value", clause.getValue());
+        assertFalse(clause.hasCondition(), "Expected no condition");
+        assertThat("Expected no condition", clause.getCondition(), emptyString());
+        assertThat("Expected no condition", clause.getCondition(true), emptyString());
+        assertThat("Expected no condition", clause.getCondition(false), emptyString());
+        assertThat("Expected no condition", clause.getCondition("", ""), emptyString());
+        assertThat("Expected no condition", clause.getCondition("prefix|", "|suffix"), emptyString());
+        assertThat("Expected no condition", clause.getCondition("", "|suffix"), emptyString());
+        assertThat("Expected no condition", clause.getCondition("prefix|", ""), emptyString());
+        assertNull(clause.getValue(), "Expected null value");
     }
 
 }

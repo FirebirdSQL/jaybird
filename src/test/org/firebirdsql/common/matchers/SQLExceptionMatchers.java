@@ -102,8 +102,8 @@ public class SQLExceptionMatchers {
      *         Matcher for the exception message
      * @return The Matcher
      */
-    public static Matcher<Exception> message(final Matcher<String> matcher) {
-        return new FeatureMatcher<Exception, String>(matcher, "exception message", "exception message") {
+    public static <T extends Exception> Matcher<T> message(final Matcher<String> matcher) {
+        return new FeatureMatcher<T, String>(matcher, "exception message", "exception message") {
             @Override
             protected String featureValueOf(Exception e) {
                 return e.getMessage();
@@ -125,7 +125,7 @@ public class SQLExceptionMatchers {
      *         The message parameters
      * @return The Matcher
      */
-    public static Matcher<Exception> fbMessageEquals(int fbErrorCode, String... messageParameters) {
+    public static <T extends Exception> Matcher<T> fbMessageEquals(int fbErrorCode, String... messageParameters) {
         return message(equalTo(getFbMessage(fbErrorCode, messageParameters)));
     }
 
@@ -143,7 +143,7 @@ public class SQLExceptionMatchers {
      *         The message parameters
      * @return The Matcher
      */
-    public static Matcher<Exception> fbMessageStartsWith(int fbErrorCode, String... messageParameters) {
+    public static <T extends Exception> Matcher<T> fbMessageStartsWith(int fbErrorCode, String... messageParameters) {
         return message(startsWith(getFbMessage(fbErrorCode, messageParameters)));
     }
 
@@ -161,7 +161,7 @@ public class SQLExceptionMatchers {
      *         The message parameters
      * @return The Matcher
      */
-    public static Matcher<Exception> fbMessageContains(int fbErrorCode, String... messageParameters) {
+    public static <T extends Exception> Matcher<T> fbMessageContains(int fbErrorCode, String... messageParameters) {
         return message(containsString(getFbMessage(fbErrorCode, messageParameters)));
     }
 
@@ -196,7 +196,7 @@ public class SQLExceptionMatchers {
 
     /**
      * Convenience factory for matcher of SQLException with the message {@link org.firebirdsql.jdbc.FBPreparedStatement#METHOD_NOT_SUPPORTED}
-     * thrown when one of the <code>execute*(String)</code> methods of {@link java.sql.Statement} is called on
+     * thrown when one of the {@code execute*(String)} methods of {@link java.sql.Statement} is called on
      * a {@link java.sql.PreparedStatement} or {@link java.sql.CallableStatement}.
      *
      * @return The Matcher

@@ -103,4 +103,29 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * @param warningCallback Callback for warnings
      */
     void consumePackets(int numberOfResponses, WarningMessageCallback warningCallback);
+
+    /**
+     * Generic info request.
+     * <p>
+     * The implementation does not perform handle validation nor notification of error dispatchers. Doing that is the
+     * responsibility of the caller.
+     * </p>
+     *
+     * @param operation
+     *         Operation code
+     * @param handle
+     *         Handle (db, transaction, statement, blob, etc)
+     * @param requestItems
+     *         Information items to request
+     * @param maxBufferLength
+     *         Maximum response buffer length to use
+     * @param warningMessageCallback
+     *         Callback for warnings when reading the response (can be {@code null} to use database default)
+     * @return The response buffer (note: length is the actual length of the response, not {@code maxBufferLength})
+     * @throws SQLException
+     *         For errors retrieving the information
+     */
+    byte[] getInfo(int operation, int handle, byte[] requestItems, int maxBufferLength,
+            WarningMessageCallback warningMessageCallback) throws SQLException;
+    
 }

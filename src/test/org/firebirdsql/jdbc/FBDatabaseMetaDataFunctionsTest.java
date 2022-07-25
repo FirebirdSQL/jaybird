@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,16 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -34,16 +37,16 @@ import java.util.*;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link java.sql.DatabaseMetaData#getFunctions(String, String, String)}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBDatabaseMetaDataFunctionsTest {
+class FBDatabaseMetaDataFunctionsTest {
 
     private static final String CREATE_UDF_EXAMPLE = "declare external function UDF$EXAMPLE\n"
             + "int by descriptor, int by descriptor\n"
@@ -78,8 +81,9 @@ public class FBDatabaseMetaDataFunctionsTest {
             + "  end\n"
             + "end";
 
-    @ClassRule
-    public static final UsesDatabase usesDatabase = UsesDatabase.usesDatabase(getCreateStatements());
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            getCreateStatements());
 
     private static final MetaDataTestSupport<FunctionMetaData> metaDataTestSupport =
             new MetaDataTestSupport<>(FunctionMetaData.class, EnumSet.allOf(FunctionMetaData.class));
@@ -91,14 +95,14 @@ public class FBDatabaseMetaDataFunctionsTest {
     private static Connection con;
     private static DatabaseMetaData dbmd;
 
-    @BeforeClass
-    public static void setUp() throws SQLException {
+    @BeforeAll
+    static void setupAll() throws SQLException {
         con = getConnectionViaDriverManager();
         dbmd = con.getMetaData();
     }
 
-    @AfterClass
-    public static void tearDown() throws SQLException {
+    @AfterAll
+    static void tearDownAll() throws SQLException {
         try {
             con.close();
         } finally {
@@ -133,26 +137,18 @@ public class FBDatabaseMetaDataFunctionsTest {
      * Tests the ordinal positions and types for the metadata columns of getFunctions().
      */
     @Test
-    public void testFunctionMetaDataColumns() throws Exception {
+    void testFunctionMetaDataColumns() throws Exception {
         try (ResultSet columns = dbmd.getFunctions(null, null, "doesnotexist")) {
             metaDataTestSupport.validateResultSetColumns(columns);
         }
     }
 
-    @Test
-    public void testFunctionMetadata_everything_functionNamePattern_null() throws Exception {
-        validateFunctionMetaData_everything(null);
-    }
-
-    @Test
-    public void testFunctionMetaData_everything_functionNamePattern_allPattern() throws Exception {
-        validateFunctionMetaData_everything("%");
-    }
-
-    private void validateFunctionMetaData_everything(String functionNamePattern) throws Exception {
-        final boolean supportPsqlFunctions = getDefaultSupportInfo().supportsPsqlFunctions();
+    @ParameterizedTest
+    @ValueSource(strings = "%")
+    @NullSource
+    void testFunctionMetadata_everything_functionNamePattern(String functionNamePattern) throws Exception {
         try (ResultSet functions = dbmd.getFunctions(null, null, functionNamePattern)) {
-            if (supportPsqlFunctions) {
+            if (getDefaultSupportInfo().supportsPsqlFunctions()) {
                 expectNextFunction(functions);
                 validatePsqlExample(functions);
             }
@@ -166,44 +162,44 @@ public class FBDatabaseMetaDataFunctionsTest {
     }
 
     @Test
-    public void testFunctionMetaData_udfExampleOnly() throws Exception {
+    void testFunctionMetaData_udfExampleOnly() throws Exception {
         try (ResultSet functions = dbmd.getFunctions(null, null, "UDF$EXAMPLE")) {
-            assertTrue("Expected a row", functions.next());
+            assertTrue(functions.next(), "Expected a row");
             validateUdfExample(functions);
-            assertFalse("Expected no more rows", functions.next());
+            assertFalse(functions.next(), "Expected no more rows");
         }
     }
 
     @Test
-    public void testFunctionMetaData_psqlExampleOnly() throws Exception {
-        assumeTrue("Requires PSQL function support", getDefaultSupportInfo().supportsPsqlFunctions());
-        try (ResultSet functions = dbmd.getFunctions(null, null, "UDF$EXAMPLE")) {
-            assertTrue("Expected a row", functions.next());
-            validateUdfExample(functions);
-            assertFalse("Expected no more rows", functions.next());
+    void testFunctionMetaData_psqlExampleOnly() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPsqlFunctions(), "Requires PSQL function support");
+        try (ResultSet functions = dbmd.getFunctions(null, null, "PSQL$EXAMPLE")) {
+            assertTrue(functions.next(), "Expected a row");
+            validatePsqlExample(functions);
+            assertFalse(functions.next(), "Expected no more rows");
         }
     }
 
     @Test
-    public void testFunctionMetaData_caseSensitivity_udfExampleNotFound_with_lowercase() throws Exception {
+    void testFunctionMetaData_caseSensitivity_udfExampleNotFound_with_lowercase() throws Exception {
         validateNoRows("udf$example");
     }
 
     @Test
-    public void testFunctionMetaData_functionInPackageNotFound() throws Exception {
-        assumeTrue("Requires package support", getDefaultSupportInfo().supportsPackages());
+    void testFunctionMetaData_functionInPackageNotFound() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPackages(), "Requires package support");
         validateNoRows("IN$PACKAGE");
         validateNoRows("%IN$PACKAGE%");
     }
 
     @Test
-    public void testFunctionMetaData_emptyString_noResults() throws Exception {
+    void testFunctionMetaData_emptyString_noResults() throws Exception {
         validateNoRows("");
     }
 
-    public void validateNoRows(String functionNamePattern) throws Exception {
+    private void validateNoRows(String functionNamePattern) throws Exception {
         try (ResultSet functions = dbmd.getFunctions(null, null, functionNamePattern)) {
-            assertFalse("Expected no rows", functions.next());
+            assertFalse(functions.next(), "Expected no rows");
         }
     }
 
@@ -238,20 +234,21 @@ public class FBDatabaseMetaDataFunctionsTest {
     }
 
     private void expectNextFunction(ResultSet rs) throws SQLException {
-        assertTrue("Expected a row", rs.next());
+        assertTrue(rs.next(), "Expected a row");
         while (FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
-            assertTrue("Expected a row", rs.next());
+            assertTrue(rs.next(), "Expected a row");
         }
     }
 
     private void expectNoMoreRows(ResultSet rs) throws SQLException {
         boolean hasRow;
+        //noinspection AssignmentUsedAsCondition
         while ((hasRow = rs.next())) {
             if (!FUNCTIONS_TO_IGNORE.contains(rs.getString("FUNCTION_NAME"))) {
                 break;
             }
         }
-        assertFalse("Expected no more rows", hasRow);
+        assertFalse(hasRow, "Expected no more rows");
     }
 
     private static final Map<FunctionMetaData, Object> DEFAULT_COLUMN_VALUES;

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,30 +18,27 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.DdlHelper;
-import org.firebirdsql.common.FBJUnit4TestBase;
+import org.firebirdsql.common.DataGenerator;
 import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.extension.RequireFeatureExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.util.FirebirdSupportInfo;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Random;
+import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
-import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Abstract test class for blob related tests shared by the wire and JNA implementation.
@@ -49,14 +46,13 @@ import static org.junit.Assume.assumeTrue;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public abstract class BaseTestBlob extends FBJUnit4TestBase {
+public abstract class BaseTestBlob {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    protected SimpleStatementListener listener;
-    protected FbTransaction transaction;
-    protected FbStatement statement;
+    @RegisterExtension
+    @Order(1)
+    public static final RequireFeatureExtension requireFeature = RequireFeatureExtension
+            .withFeatureCheck(FirebirdSupportInfo::supportsCase, "Test requires CASE support")
+            .build();
 
     private static final int BASE_CONTENT_SIZE = 16384;
 
@@ -146,7 +142,23 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
             "SELECT blobvalue FROM blob_table WHERE id = ?";
     //@formatter:on
 
-    protected static final Random rnd = new Random();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_BLOB_TABLE,
+            CREATE_PROC_FILL_BINARY_BLOB,
+            CREATE_PROC_CHECK_BINARY_BLOB);
+
+    protected SimpleStatementListener listener;
+    protected FbTransaction transaction;
+    protected FbStatement statement;
+
+    @BeforeEach
+    public final void setup() throws Exception {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute("delete from blob_table");
+        }
+    }
 
     /**
      * Queries the blob table for the blob id of the record with the specified (row) id.
@@ -155,6 +167,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @return Blob id
      * @throws SQLException For errors executing the query
      */
+    @SuppressWarnings("SameParameterValue")
     protected long getBlobId(int testId, FbDatabase db) throws SQLException {
         listener = new SimpleStatementListener();
         transaction = getTransaction(db);
@@ -164,27 +177,13 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
         statement.execute(RowValue.of(db.getDatatypeCoder().encodeInt(testId)));
 
-        assertEquals("Expected hasResultSet to be set to true", Boolean.TRUE, listener.hasResultSet());
+        assertEquals(Boolean.TRUE, listener.hasResultSet(), "Expected hasResultSet to be set to true");
 
         statement.fetchRows(1);
-        assertEquals("Expected a row", 1, listener.getRows().size());
+        assertEquals(1, listener.getRows().size(), "Expected a row");
 
         RowValue row = listener.getRows().get(0);
         return db.getDatatypeCoder().decodeLong(row.getFieldData(0));
-    }
-
-    @Before
-    public final void setUp() throws SQLException {
-        Connection con = FBTestProperties.getConnectionViaDriverManager();
-        try {
-            assumeTrue("Test requires CASE support", supportInfoFor(con).supportsCase());
-
-            DdlHelper.executeCreateTable(con, CREATE_BLOB_TABLE);
-            DdlHelper.executeDDL(con, CREATE_PROC_FILL_BINARY_BLOB);
-            DdlHelper.executeDDL(con, CREATE_PROC_CHECK_BINARY_BLOB);
-        } finally {
-            closeQuietly(con);
-        }
     }
 
     /**
@@ -193,9 +192,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @return Array
      */
     protected byte[] generateBaseContent() {
-        byte[] baseContent = new byte[BASE_CONTENT_SIZE];
-        rnd.nextBytes(baseContent);
-        return baseContent;
+        return DataGenerator.createRandomBytes(BASE_CONTENT_SIZE);
     }
 
     /**
@@ -219,7 +216,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param blobContent Blob content
      * @param baseContent Base content
      * @param requiredSize Required size
-     * @return <code>true</code> content matches, <code>false</code> otherwise
+     * @return {@code true} content matches, {@code false} otherwise
      */
     protected boolean validateBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
         if (blobContent.length != requiredSize) return false;
@@ -235,8 +232,8 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param id ID of the record to be created in blob_table
      * @param baseContent Base content
      * @param requiredSize Required size
-     * @throws SQLException
      */
+    @SuppressWarnings("SameParameterValue")
     protected void populateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         Connection con = getConnectionViaDriverManager();
         CallableStatement cstmt = null;
@@ -248,8 +245,7 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
 
             cstmt.execute();
         } finally {
-            closeQuietly(cstmt);
-            closeQuietly(con);
+            closeQuietly(cstmt, con);
         }
     }
 
@@ -257,8 +253,8 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * Populates a stream blob for testing.
      *
      * @param testId Id of the record to be inserted.
-     * @throws SQLException
      */
+    @SuppressWarnings("SameParameterValue")
     protected void populateStreamBlob(int testId, byte[] baseContent, int requiredSize) throws SQLException {
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
 
@@ -302,8 +298,8 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param testBytes Bytes to write
      * @param db Database to use
      * @param blobParameterBuffer Blob parameter buffer (or null)
-     * @throws SQLException
      */
+    @SuppressWarnings("SameParameterValue")
     protected void writeBlob(int testId, byte[] testBytes, FbDatabase db, BlobParameterBuffer blobParameterBuffer) throws SQLException {
         final SimpleStatementListener listener = new SimpleStatementListener();
         final FbTransaction transaction = getTransaction(db);
@@ -340,9 +336,9 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
      * @param id ID of the record in blob_table
      * @param baseContent Base content
      * @param requiredSize Required (expected) size
-     * @return <code>true</code> when the content matches.
-     * @throws SQLException
+     * @return {@code true} when the content matches.
      */
+    @SuppressWarnings("SameParameterValue")
     protected boolean validateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
         try (Connection con = getConnectionViaDriverManager();
             CallableStatement cstmt = con.prepareCall(EXECUTE_CHECK_BINARY_BLOB)) {
@@ -360,25 +356,12 @@ public abstract class BaseTestBlob extends FBJUnit4TestBase {
     /**
      * Creates a database connection to the test database.
      * @return FbWireDatabase instance
-     * @throws SQLException
      */
     protected FbDatabase createDatabaseConnection() throws SQLException {
-        final FbConnectionProperties connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-        return createFbDatabase(connectionInfo);
+        return createFbDatabase(FBTestProperties.getDefaultFbConnectionProperties());
     }
 
     protected final FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(ISCConstants.isc_tpb_read_committed);
-        tpb.addArgument(ISCConstants.isc_tpb_rec_version);
-        tpb.addArgument(ISCConstants.isc_tpb_write);
-        tpb.addArgument(ISCConstants.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 }

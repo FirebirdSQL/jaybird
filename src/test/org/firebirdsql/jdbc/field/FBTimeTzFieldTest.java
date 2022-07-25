@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,8 +20,8 @@ package org.firebirdsql.jdbc.field;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.tz.TimeZoneDatatypeCoder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -30,10 +30,11 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.Calendar;
 
 import static org.firebirdsql.util.ByteArrayHelper.fromHexString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, OffsetTime> {
+class FBTimeTzFieldTest extends BaseJUnit5TestFBField<FBTimeTzField, OffsetTime> {
 
     private static final String TIMETZ = "07:45:51+01:00";
     private static final OffsetTime TIMETZ_OFFSETTIME = OffsetTime.parse(TIMETZ);
@@ -44,9 +45,9 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
     // Defined using Europe/Amsterdam
     private static final String TIMETZ_ZONE_NETWORK_HEX = "0E83AAF0FFFFFE49";
 
-    @Before
+    @BeforeEach
     @Override
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         super.setUp();
 
         rowDescriptorBuilder.setType(ISCConstants.SQL_TIME_TZ);
@@ -56,219 +57,222 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
 
     @Test
     @Override
-    public void getObjectNonNull() throws SQLException {
+    void getObjectNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
-        assertEquals("Unexpected value for getObject()", getNonNullObject(), field.getObject());
+        assertEquals(getNonNullObject(), field.getObject(), "Unexpected value for getObject()");
     }
 
     @Test
     @Override
-    public void setObjectNonNull() throws SQLException {
-        setNonNullOffsetTimeExpectations();
-
+    void setObjectNonNull() throws SQLException {
         field.setObject(getNonNullObject());
+
+        verifySetNonNullOffsetTime();
     }
 
     @Test
-    public void getObject_OffsetTime() throws SQLException {
+    void getObject_OffsetTime() throws SQLException {
         toReturnNonNullOffsetTime();
 
-        assertEquals("Unexpected value for getObject(OffsetTime.class)",
-                getNonNullObject(), field.getObject(OffsetTime.class));
+        assertEquals(getNonNullObject(), field.getObject(OffsetTime.class),
+                "Unexpected value for getObject(OffsetTime.class)");
     }
 
     @Test
-    public void getObjectNull_OffsetTime() throws SQLException {
+    void getObjectNull_OffsetTime() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(OffsetTime.class)", field.getObject(OffsetTime.class));
+        assertNull(field.getObject(OffsetTime.class), "Unexpected value for getObject(OffsetTime.class)");
     }
 
     @Test
-    public void getObject_OffsetDateTime() throws SQLException {
+    void getObject_OffsetDateTime() throws SQLException {
         toReturnNonNullOffsetTime();
 
-        assertEquals("Unexpected value for getObject(OffsetDateTime.class)",
-                getExpectedNonNullOffsetDateTime(), field.getObject(OffsetDateTime.class));
+        assertEquals(getExpectedNonNullOffsetDateTime(), field.getObject(OffsetDateTime.class),
+                "Unexpected value for getObject(OffsetDateTime.class)");
     }
 
     @Test
-    public void getObjectNull_OffsetDateTime() throws SQLException {
+    void getObjectNull_OffsetDateTime() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(OffsetDateTime.class)", field.getObject(OffsetDateTime.class));
+        assertNull(field.getObject(OffsetDateTime.class), "Unexpected value for getObject(OffsetDateTime.class)");
     }
 
     @Test
-    public void setObject_OffsetDateTime() throws SQLException {
-        setNonNullOffsetTimeExpectations();
+    void setObject_OffsetDateTime() throws SQLException {
         // note: offset date time applies current date
         OffsetDateTime offsetDateTime = getExpectedNonNullOffsetDateTime();
 
         field.setObject(offsetDateTime);
+
+        verifySetNonNullOffsetTime();
     }
 
     @Test
-    public void getObject_ZonedDateTime() throws SQLException {
+    void getObject_ZonedDateTime() throws SQLException {
         toReturnNonNullNamedZonedDateTime();
 
-        assertEquals("Unexpected value for getObject(ZonedDateTime.class)",
-                getTimeTzExpectedNamedZonedDateTime(), field.getObject(ZonedDateTime.class));
+        assertEquals(getTimeTzExpectedNamedZonedDateTime(), field.getObject(ZonedDateTime.class),
+                "Unexpected value for getObject(ZonedDateTime.class)");
     }
 
     @Test
-    public void getObjectNull_ZonedDateTime() throws SQLException {
+    void getObjectNull_ZonedDateTime() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getObject(ZonedDateTime.class)", field.getObject(ZonedDateTime.class));
+        assertNull(field.getObject(ZonedDateTime.class), "Unexpected value for getObject(ZonedDateTime.class)");
     }
 
     @Test
-    public void setObject_ZonedDateTime() throws SQLException {
-        setNonNullNamedZonedDateTimeExpectations();
-
+    void setObject_ZonedDateTime() throws SQLException {
         field.setObject(getTimeTzExpectedNamedZonedDateTime());
+
+        verifySetNonNullNamedZonedDateTime();
     }
 
     @Test
     @Override
-    public void getObject_String() throws SQLException {
+    void getObject_String() throws SQLException {
         toReturnNonNullOffsetTime();
 
-        assertEquals("Unexpected value for getObject(String.class)", TIMETZ, field.getObject(String.class));
+        assertEquals(TIMETZ, field.getObject(String.class), "Unexpected value for getObject(String.class)");
     }
 
     @Test
-    public void setObject_String() throws SQLException {
-        setNonNullOffsetTimeExpectations();
-
+    void setObject_String() throws SQLException {
         field.setString(TIMETZ);
+
+        verifySetNonNullOffsetTime();
     }
 
     @Test
     @Override
-    public void getTimeNonNull() throws SQLException {
+    void getTimeNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getTime()", new java.sql.Time(expectedMillis), field.getTime());
+        assertEquals(new java.sql.Time(expectedMillis), field.getTime(), "Unexpected value for getTime()");
     }
 
     @Test
     @Override
-    public void getTimeCalendarNonNull() throws SQLException {
+    void getTimeCalendarNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getTime(Calendar)", new java.sql.Time(expectedMillis),
-                field.getTime(calendar));
+        assertEquals(new java.sql.Time(expectedMillis), field.getTime(calendar),
+                "Unexpected value for getTime(Calendar)");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Time() throws SQLException {
+    void getObject_java_sql_Time() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getObject(java.sql.Time.class)", new java.sql.Time(expectedMillis),
-                field.getObject(java.sql.Time.class));
+        assertEquals(new java.sql.Time(expectedMillis), field.getObject(java.sql.Time.class),
+                "Unexpected value for getObject(java.sql.Time.class)");
     }
 
     @Test
     @Override
-    public void setTimeNonNull() throws SQLException {
+    void setTimeNonNull() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDate.now(), LocalTime.parse("16:12:01"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
 
         field.setTime(java.sql.Time.valueOf("16:12:01"));
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
     @Override
-    public void setTimeCalendarNonNull() throws SQLException {
+    void setTimeCalendarNonNull() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDate.now(), LocalTime.parse("16:12:01"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
-
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTime(java.sql.Time.valueOf("16:12:01"), calendar);
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
-    public void setObject_java_sql_Time() throws SQLException {
+    void setObject_java_sql_Time() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDate.now(), LocalTime.parse("16:12:01"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
 
         field.setObject(java.sql.Time.valueOf("16:12:01"));
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
     @Override
-    public void getTimestampNonNull() throws SQLException {
+    void getTimestampNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getTimestamp()", new java.sql.Timestamp(expectedMillis),
-                field.getTimestamp());
+        assertEquals(new java.sql.Timestamp(expectedMillis), field.getTimestamp(),
+                "Unexpected value for getTimestamp()");
     }
 
     @Test
     @Override
-    public void getTimestampCalendarNonNull() throws SQLException {
+    void getTimestampCalendarNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getTimestamp(Calendar)", new java.sql.Timestamp(expectedMillis),
-                field.getTimestamp(calendar));
+        assertEquals(new java.sql.Timestamp(expectedMillis), field.getTimestamp(calendar),
+                "Unexpected value for getTimestamp(Calendar)");
     }
 
     @Test
     @Override
-    public void getObject_java_sql_Timestamp() throws SQLException {
+    void getObject_java_sql_Timestamp() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
-        assertEquals("Unexpected value for getObject(java.sql.Timestamp.class)", new java.sql.Timestamp(expectedMillis),
-                field.getObject(java.sql.Timestamp.class));
+        assertEquals(new java.sql.Timestamp(expectedMillis), field.getObject(java.sql.Timestamp.class),
+                "Unexpected value for getObject(java.sql.Timestamp.class)");
     }
 
     @Test
     @Override
-    public void getObject_java_util_Date() throws SQLException {
+    void getObject_java_util_Date() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
         long expectedMillis = TIMETZ_OFFSETTIME.atDate(localDate).toInstant().toEpochMilli();
 
         // NOTE: This actually returns a java.sql.Timestamp
-        assertEquals("Unexpected value for getObject(java.util.Date.class)", new java.sql.Timestamp(expectedMillis),
-                field.getObject(java.util.Date.class));
+        assertEquals(new java.sql.Timestamp(expectedMillis), field.getObject(java.util.Date.class),
+                "Unexpected value for getObject(java.util.Date.class)");
     }
 
     @Test
     @Override
-    public void getObject_Calendar() throws SQLException {
+    void getObject_Calendar() throws SQLException {
         toReturnNonNullOffsetTime();
 
         LocalDate localDate = OffsetDateTime.now(TIMETZ_OFFSETTIME.getOffset()).toLocalDate();
@@ -276,100 +280,99 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         Calendar expectedCalendar = Calendar.getInstance();
         expectedCalendar.setTimeInMillis(expectedMillis);
 
-        assertEquals("Unexpected value for getObject(java.util.Calendar.class)", expectedCalendar,
-                field.getObject(java.util.Calendar.class));
+        assertEquals(expectedCalendar, field.getObject(Calendar.class),
+                "Unexpected value for getObject(java.util.Calendar.class)");
     }
 
     @Test
     @Override
-    public void setTimestampNonNull() throws SQLException {
+    void setTimestampNonNull() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDateTime.parse("2019-03-09T07:45:51.1234"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
 
         field.setTimestamp(java.sql.Timestamp.valueOf("2019-03-09 07:45:51.1234"));
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
     @Override
-    public void setTimestampCalendarNonNull() throws SQLException {
+    void setTimestampCalendarNonNull() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDateTime.parse("2019-03-09T07:45:51.1234"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
-
         Calendar calendar = Calendar.getInstance(getOneHourBehindTimeZone());
 
         field.setTimestamp(java.sql.Timestamp.valueOf("2019-03-09 07:45:51.1234"), calendar);
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
-    public void setObject_java_sql_Timestamp() throws SQLException {
+    void setObject_java_sql_Timestamp() throws SQLException {
         OffsetDateTime offsetDateTime = ZonedDateTime
                 .of(LocalDateTime.parse("2019-03-09T07:45:51.1234"), ZoneId.systemDefault())
                 .toOffsetDateTime();
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
 
         field.setObject(java.sql.Timestamp.valueOf("2019-03-09 07:45:51.1234"));
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
     @Override
-    public void getStringNonNull() throws SQLException {
+    void getStringNonNull() throws SQLException {
         toReturnNonNullOffsetTime();
 
-        assertEquals("Unexpected value for getString()", TIMETZ, field.getString());
+        assertEquals(TIMETZ, field.getString(), "Unexpected value for getString()");
     }
 
     @Test
     @Override
-    public void setStringNonNull() throws SQLException {
-        setNonNullOffsetTimeExpectations();
-
+    void setStringNonNull() throws SQLException {
         field.setString(TIMETZ);
+
+        verifySetNonNullOffsetTime();
     }
 
     @Test
-    public void getStringNull() throws SQLException {
+    void getStringNull() throws SQLException {
         toReturnNullExpectations();
 
-        assertNull("Unexpected value for getString()", field.getString());
+        assertNull(field.getString(), "Unexpected value for getString()");
     }
 
     @Test
-    public void setStringNull() throws SQLException {
-        setNullExpectations();
-
+    void setStringNull() throws SQLException {
         field.setString(null);
+
+        verifySetNull();
     }
 
     @Test
-    public void setString_acceptsOffsetDateTimeString() throws SQLException {
+    void setString_acceptsOffsetDateTimeString() throws SQLException {
         String offsetDateTimeString = "2019-03-09T07:45:51+01:00";
         OffsetDateTime offsetDateTime = OffsetDateTime.parse(offsetDateTimeString);
-        setOffsetTimeExpectations(offsetDateTime.toOffsetTime());
 
         field.setString(offsetDateTimeString);
+
+        verifySetOffsetTime(offsetDateTime.toOffsetTime());
     }
 
     @Test
-    public void setString_illegalFormat_throwsTypeConversionException() throws SQLException {
-        expectedException.expect(TypeConversionException.class);
-
-        field.setString("GARBAGE");
+    void setString_illegalFormat_throwsTypeConversionException() {
+        assertThrows(TypeConversionException.class, () -> field.setString("GARBAGE"));
     }
 
     @Test
-    public void setString_illegalFormatWithT_throwsTypeConversionException() throws SQLException {
+    void setString_illegalFormatWithT_throwsTypeConversionException() {
         // Presence of T in string is used to determine flow used for parsing; implementation artifact
-        expectedException.expect(TypeConversionException.class);
-
-        field.setString("GARBAGE WITH T");
+        assertThrows(TypeConversionException.class, () -> field.setString("GARBAGE WITH T"));
     }
 
     @Override
-    protected OffsetTime getNonNullObject() {
+    OffsetTime getNonNullObject() {
         return TIMETZ_OFFSETTIME;
     }
 
@@ -381,16 +384,16 @@ public class FBTimeTzFieldTest extends BaseJUnit4TestFBField<FBTimeTzField, Offs
         toReturnValueExpectations(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
     }
 
-    private void setNonNullOffsetTimeExpectations() {
-        setValueExpectations(fromHexString(TIMETZ_OFFSET_NETWORK_HEX));
+    private void verifySetNonNullOffsetTime() {
+        verifySetValue(fromHexString(TIMETZ_OFFSET_NETWORK_HEX));
     }
 
-    private void setNonNullNamedZonedDateTimeExpectations() {
-        setValueExpectations(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
+    private void verifySetNonNullNamedZonedDateTime() {
+        verifySetValue(fromHexString(TIMETZ_ZONE_NETWORK_HEX));
     }
 
-    private void setOffsetTimeExpectations(OffsetTime offsetTime) throws SQLException {
-        setValueExpectations(TimeZoneDatatypeCoder
+    private void verifySetOffsetTime(OffsetTime offsetTime) throws SQLException {
+        verifySetValue(TimeZoneDatatypeCoder
                 .getInstanceFor(datatypeCoder)
                 .getTimeZoneCodecFor(fieldDescriptor)
                 .encodeOffsetTime(offsetTime));

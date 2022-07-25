@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,7 +23,6 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
-import org.firebirdsql.gds.ng.wire.GenericResponse;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -184,25 +183,7 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
     @Override
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_info_transaction);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation(?)
-                    xdrOut.writeBuffer(requestItems);
-                    xdrOut.writeInt(maxBufferLength);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
-                }
-                try {
-                    final GenericResponse genericResponse = getDatabase().readGenericResponse(null);
-                    return genericResponse.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
-            }
+            return getDatabase().getInfo(op_info_transaction, getHandle(), requestItems, maxBufferLength, null);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,6 +24,7 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.logging.LoggerFactory;
 
@@ -93,7 +94,9 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     /**
      * Listener for the result sets.
      */
-    private class RSListener implements FBObjectListener.ResultSetListener {
+    private final class RSListener implements FBObjectListener.ResultSetListener {
+
+        private boolean rowUpdaterSeparateTransaction;
 
         /**
          * Notify that result set was closed. This method cleans the result
@@ -135,12 +138,24 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
         @Override
         public void executionCompleted(FirebirdRowUpdater updater, boolean success) throws SQLException {
-            notifyStatementCompleted(success);
+            if (rowUpdaterSeparateTransaction) {
+                // Only notify when executionStarted started a transaction specifically for the row-updater
+                notifyStatementCompleted(success);
+            }
         }
 
         @Override
         public void executionStarted(FirebirdRowUpdater updater) throws SQLException {
-            notifyStatementStarted(false);
+            FbTransaction stmtTransaction = fbStatement != null ? fbStatement.getTransaction() : null;
+            if (stmtTransaction != null && stmtTransaction.getState() == TransactionState.ACTIVE) {
+                // RowUpdater execution will piggyback on the current active transaction
+                rowUpdaterSeparateTransaction = false;
+            } else {
+                rowUpdaterSeparateTransaction = true;
+                // Notify statement started by this statement, so a transaction is started to be used by the row updater
+                // This should only apply to holdable result sets when updated after the transaction boundary
+                notifyStatementStarted(false);
+            }
         }
     }
 
@@ -861,8 +876,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
      *
      * @param sql SQL statement to check
      *
-     * @return <code>true</code> if supplied statement is EXECUTE PROCEDURE
-     * type of statement.
+     * @return {@code true} if supplied statement is EXECUTE PROCEDURE type of statement.
      *
      * @throws SQLException if translating statement into native code failed.
      */
@@ -918,9 +932,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (fbStatement == null) {
                 fbStatement = gdsHelper.allocateStatement();
                 fbStatement.addStatementListener(createStatementListener());
+                if (needsScrollableCursorEnabled()) {
+                    fbStatement.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
+                }
             }
             return fbStatement;
         }
+    }
+
+    protected boolean needsScrollableCursorEnabled() {
+        return rsType != ResultSet.TYPE_FORWARD_ONLY && rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT
+                && connection != null && connection.isScrollableCursor(PropertyConstants.SCROLLABLE_CURSOR_SERVER)
+                && fbStatement.supportsFetchScroll();
     }
 
     protected void addWarning(SQLWarning warning) {
@@ -940,7 +963,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     /**
-     * @return <code>true</code> when the current statement is expected to return generated keys, <code>false</code> otherwise.
+     * @return {@code true} when the current statement is expected to return generated keys, {@code false} otherwise.
      */
     protected boolean isGeneratedKeyQuery() {
         return currentStatementGeneratedKeys;
@@ -988,7 +1011,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     /**
      * Get the statement type of this PreparedStatement.
-     * The returned value will be one of the <code>TYPE_*</code> constant
+     * The returned value will be one of the {@code TYPE_*} constant
      * values.
      *
      * @return The identifier for the given statement's type
@@ -1242,7 +1265,13 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void beforeFirst(FbStatement sender) {
+            if (!isValidSender(sender)) return;
+            // TODO Evaluate if we need to do any processing
+        }
+
+        @Override
+        public void afterLast(FbStatement sender) {
             if (!isValidSender(sender)) return;
             // TODO Evaluate if we need to do any processing
         }
@@ -1303,10 +1332,10 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
     private static final class RowsFetchedListener extends DefaultStatementListener {
 
-        private boolean allRowsFetched = false;
+        private boolean allRowsFetched;
 
         @Override
-        public void allRowsFetched(FbStatement sender) {
+        public void afterLast(FbStatement sender) {
             allRowsFetched = true;
         }
 

@@ -18,9 +18,14 @@
  */
 package org.firebirdsql.common;
 
+import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabaseFactory;
+import org.firebirdsql.gds.ng.FbServiceProperties;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.jdbc.FBDriver;
 import org.firebirdsql.jdbc.FirebirdConnection;
@@ -123,6 +128,40 @@ public final class FBTestProperties {
         return returnValue;
     }
 
+    public static FbConnectionProperties getDefaultFbConnectionProperties() {
+        FbConnectionProperties connectionInfo = new FbConnectionProperties();
+        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
+        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
+        connectionInfo.setUser(DB_USER);
+        connectionInfo.setPassword(DB_PASSWORD);
+        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
+        connectionInfo.setEncoding(DB_LC_CTYPE);
+        return connectionInfo;
+    }
+
+    public static FbServiceProperties getDefaultServiceProperties() {
+        FbServiceProperties connectionInfo = new FbServiceProperties();
+        connectionInfo.setServerName(DB_SERVER_URL);
+        connectionInfo.setPortNumber(DB_SERVER_PORT);
+        connectionInfo.setUser(DB_USER);
+        connectionInfo.setPassword(DB_PASSWORD);
+        return connectionInfo;
+    }
+
+    /**
+     * Creates a default TPB (read_committed, rec_version, write, wait).
+     *
+     * @return TPB
+     */
+    public static TransactionParameterBuffer getDefaultTpb() {
+        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
+        tpb.addArgument(TpbItems.isc_tpb_read_committed);
+        tpb.addArgument(TpbItems.isc_tpb_rec_version);
+        tpb.addArgument(TpbItems.isc_tpb_write);
+        tpb.addArgument(TpbItems.isc_tpb_wait);
+        return tpb;
+    }
+
     /**
      * Configures the host, port, user and password of a service manager using the default properties.
      *
@@ -221,6 +260,20 @@ public final class FBTestProperties {
         return new FBManagedConnectionFactory(shared, getGdsType());
     }
 
+    public static FBManagedConnectionFactory createDefaultMcf() {
+        return createDefaultMcf(true);
+    }
+
+    public static FBManagedConnectionFactory createDefaultMcf(boolean shared) {
+        FBManagedConnectionFactory mcf = createFBManagedConnectionFactory(shared);
+        mcf.setDatabaseName(DB_DATASOURCE_URL);
+        mcf.setUser(DB_USER);
+        mcf.setPassword(DB_PASSWORD);
+        mcf.setEncoding(DB_LC_CTYPE);
+
+        return mcf;
+    }
+
     public static FBManager createFBManager() {
         return new FBManager(getGdsType());
     }
@@ -233,8 +286,8 @@ public final class FBTestProperties {
     /**
      * Creates the default test database, and configures the passed in FBManager with the server and type of test.
      *
-     * @param fbManager instance used for creation of the database
-     * @throws Exception
+     * @param fbManager
+     *         instance used for creation of the database
      */
     public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
         final GDSType gdsType = getGdsType();
@@ -258,7 +311,6 @@ public final class FBTestProperties {
      * 
      * @param fbManager
      *            FBManager instance
-     * @throws Exception
      */
     public static void defaultDatabaseTearDown(FBManager fbManager) throws Exception {
         try {

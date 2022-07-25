@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,11 +18,15 @@
  */
 package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.monitor.Operation;
 import org.firebirdsql.gds.ng.monitor.OperationAware;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -33,58 +37,60 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class OperationMonitorTest {
+class OperationMonitorTest {
 
-    @Rule
-    public final UsesDatabase usesDatabase = UsesDatabase.noDatabase();
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.noDatabase();
+
     private final TestOperationAware testOperationAware = new TestOperationAware();
 
-    @Before
-    public void initOperationMonitor() {
+    @BeforeEach
+    void initOperationMonitor() {
         OperationMonitor.initOperationAware(testOperationAware);
     }
 
-    @After
-    public void clearOperationMonitor() {
+    @AfterEach
+    void clearOperationMonitor() {
         OperationMonitor.initOperationAware(null);
     }
 
-    @AfterClass
-    public static void clearOperationMonitorAgain() {
+    @AfterAll
+    static void clearOperationMonitorAgain() {
         // paranoia: extra clear of OperationMonitor
         OperationMonitor.initOperationAware(null);
     }
 
     @Test
-    public void startOperationNotifiesOnRegisteredInstance() {
+    void startOperationNotifiesOnRegisteredInstance() {
         Operation operation = new DummyOperation();
         OperationMonitor.startOperation(operation);
 
         List<OperationReport> reportedOperations = testOperationAware.getReportedOperations();
-        assertEquals("Unexpected number of operations", 1, reportedOperations.size());
+        assertEquals(1, reportedOperations.size(), "Unexpected number of operations");
         OperationReport operationReport = reportedOperations.get(0);
-        assertEquals(OperationReport.Type.START, operationReport.getType());
-        assertEquals(operation, operationReport.getOperation());
+        assertEquals(OperationReport.Type.START, operationReport.getType(), "Unexpected report type");
+        assertEquals(operation, operationReport.getOperation(), "Unexpected operation");
     }
 
     @Test
-    public void endOperationNotifiesOnRegisteredInstance() {
+    void endOperationNotifiesOnRegisteredInstance() {
         Operation operation = new DummyOperation();
         OperationMonitor.endOperation(operation);
 
         List<OperationReport> reportedOperations = testOperationAware.getReportedOperations();
-        assertEquals("Unexpected number of operations", 1, reportedOperations.size());
+        assertEquals(1, reportedOperations.size(), "Unexpected number of operations");
         OperationReport operationReport = reportedOperations.get(0);
-        assertEquals("Unexpected report type", OperationReport.Type.END, operationReport.getType());
-        assertEquals("Unexpected operation", operation, operationReport.getOperation());
+        assertEquals(OperationReport.Type.END, operationReport.getType(), "Unexpected report type");
+        assertEquals(operation, operationReport.getOperation(), "Unexpected operation");
     }
 
     @Test
-    public void notificationDuringSimpleSelect() throws Exception {
+    void notificationDuringSimpleSelect() throws Exception {
         usesDatabase.createDefaultDatabase();
         try (Connection connection = getConnectionViaDriverManager();
              Statement stmt = connection.createStatement()) {
@@ -98,7 +104,7 @@ public class OperationMonitorTest {
                 assertOperationReport(reportedOperations.get(1), OperationReport.Type.END,
                         Operation.Type.STATEMENT_EXECUTE);
 
-                assertTrue("Expected a row", rs.next());
+                assertTrue(rs.next(), "Expected a row");
                 // Native implementation does additional fetch during next()
                 assertThat(reportedOperations, hasSize(greaterThanOrEqualTo(4)));
                 assertOperationReport(reportedOperations.get(2), OperationReport.Type.START,
@@ -111,7 +117,7 @@ public class OperationMonitorTest {
 
     // Technically this test should probably belong in a FbStatementTest instead
     @Test
-    public void synchronousCancellationDuringExecute() throws Exception {
+    void synchronousCancellationDuringExecute() throws Exception {
         TestOperationAware syncCancelOperationAware = new TestOperationAware() {
             @Override
             public void startOperation(Operation operation) {
@@ -132,11 +138,9 @@ public class OperationMonitorTest {
             connection.setAutoCommit(false);
             List<OperationReport> reportedOperations = syncCancelOperationAware.getReportedOperations();
             assertEquals(0, reportedOperations.size());
-            try (ResultSet rs = stmt.executeQuery("select 1 from RDB$DATABASE")) {
-                fail("should throw exception");
-            } catch (SQLException e) {
-                assertThat(e, errorCodeEquals(ISCConstants.isc_cancelled));
-            }
+            SQLException exception = assertThrows(SQLException.class,
+                    () -> stmt.executeQuery("select 1 from RDB$DATABASE"));
+            assertThat(exception, errorCodeEquals(ISCConstants.isc_cancelled));
             assertEquals(2, reportedOperations.size());
             assertOperationReport(reportedOperations.get(0), OperationReport.Type.START,
                     Operation.Type.STATEMENT_EXECUTE);
@@ -147,7 +151,7 @@ public class OperationMonitorTest {
 
     // Technically this test should probably belong in a FbStatementTest instead
     @Test
-    public void synchronousCancellationDuringFetch() throws Exception {
+    void synchronousCancellationDuringFetch() throws Exception {
         TestOperationAware syncCancelOperationAware = new TestOperationAware() {
             @Override
             public void startOperation(Operation operation) {
@@ -175,11 +179,8 @@ public class OperationMonitorTest {
                 assertOperationReport(reportedOperations.get(1), OperationReport.Type.END,
                         Operation.Type.STATEMENT_EXECUTE);
 
-                rs.next();
-
-                fail("should throw exception");
-            } catch (SQLException e) {
-                assertThat(e, errorCodeEquals(ISCConstants.isc_cancelled));
+                SQLException exception = assertThrows(SQLException.class, rs::next);
+                assertThat(exception, errorCodeEquals(ISCConstants.isc_cancelled));
             }
             assertEquals(4, reportedOperations.size());
             assertOperationReport(reportedOperations.get(2), OperationReport.Type.START,
@@ -191,8 +192,8 @@ public class OperationMonitorTest {
 
     static void assertOperationReport(OperationReport operationReport, OperationReport.Type reportType,
             Operation.Type operationType) {
-        assertEquals("operationReport.type", reportType, operationReport.getType());
-        assertEquals("operationReport.operation.type", operationType, operationReport.getOperation().getType());
+        assertEquals(reportType, operationReport.getType(), "operationReport.type");
+        assertEquals(operationType, operationReport.getOperation().getType(), "operationReport.operation.type");
     }
 
     static class TestOperationAware implements OperationAware {
@@ -246,7 +247,7 @@ public class OperationMonitorTest {
         }
     }
 
-    static class DummyOperation implements Operation {
+    private static class DummyOperation implements Operation {
 
         @Override
         public Type getType() {

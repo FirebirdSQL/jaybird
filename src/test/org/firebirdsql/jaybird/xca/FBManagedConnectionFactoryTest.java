@@ -18,29 +18,32 @@
  */
 package org.firebirdsql.jaybird.xca;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.Connection;
 
-import static org.junit.Assert.assertEquals;
+import static org.firebirdsql.common.FBTestProperties.createDefaultMcf;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FBManagedConnectionFactoryTest extends TestXABase {
+class FBManagedConnectionFactoryTest {
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
     @Test
-    public void testCreateMcf() {
+    void testCreateMcf() {
         // TODO Test doesn't assert anything
-        initMcf();
+        createDefaultMcf();
     }
 
     @Test
-    public void testCreateMc() throws Exception {
+    void testCreateMc() throws Exception {
         // TODO Test doesn't assert anything
-        FBManagedConnectionFactory mcf = initMcf();
+        FBManagedConnectionFactory mcf = createDefaultMcf();
         FBManagedConnection mc = mcf.createManagedConnection();
         mc.destroy();
     }
@@ -49,16 +52,16 @@ public class FBManagedConnectionFactoryTest extends TestXABase {
      * Test if default isolation level is Connection.TRANSACTION_READ_COMMITTED
      */
     @Test
-    public void testDefaultTransactionIsolation() {
-        FBManagedConnectionFactory mcf = initMcf();
+    void testDefaultTransactionIsolation() {
+        FBManagedConnectionFactory mcf = createDefaultMcf();
 
-        assertEquals("Default tx isolation level must be READ_COMMITTED",
-                Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation());
+        assertEquals(Connection.TRANSACTION_READ_COMMITTED, mcf.getDefaultTransactionIsolation(),
+                "Default tx isolation level must be READ_COMMITTED");
     }
 
     @Test
-    public void cannotChangeConfigurationAfterStartForSharedMcf() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf(true);
+    void cannotChangeConfigurationAfterStartForSharedMcf() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf(true);
 
         // possible before connecting
         mcf.setBlobBufferSize(1024);
@@ -66,15 +69,13 @@ public class FBManagedConnectionFactoryTest extends TestXABase {
         FBManagedConnection mc = mcf.createManagedConnection();
         mc.destroy();
 
-        expectedException.expect(IllegalStateException.class);
-
-        // not possible after creating a connection
-        mcf.setBlobBufferSize(2048);
+        assertThrows(IllegalStateException.class, () -> mcf.setBlobBufferSize(2048),
+                "modification of config of shared mcf should not be allowed after creating a connection");
     }
 
     @Test
-    public void canChangeConfigurationAfterStartForUnsharedMcf() throws Exception {
-        FBManagedConnectionFactory mcf = initMcf(false);
+    void canChangeConfigurationAfterStartForUnsharedMcf() throws Exception {
+        FBManagedConnectionFactory mcf = createDefaultMcf(false);
 
         // possible before connecting
         mcf.setBlobBufferSize(1024);
@@ -83,7 +84,8 @@ public class FBManagedConnectionFactoryTest extends TestXABase {
         mc.destroy();
 
         // still possible after creating a connection
-        mcf.setBlobBufferSize(2048);
+        assertDoesNotThrow(() -> mcf.setBlobBufferSize(2048),
+                "modification of config of not shared mcf should be allowed after creating a connection");
     }
 }
 

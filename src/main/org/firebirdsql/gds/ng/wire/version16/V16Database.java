@@ -31,12 +31,13 @@ import org.firebirdsql.gds.ng.wire.version15.V15Database;
 public class V16Database extends V15Database {
 
     /**
-     * Creates a V15Database instance.
+     * Creates a V16Database instance.
      *
      * @param connection
      *         A WireConnection with an established connection to the server.
      * @param descriptor
-     *         The ProtocolDescriptor that created this connection (this is
+     *         The ProtocolDescriptor that created this connection (this is used for creating further dependent
+     *         objects).
      */
     protected V16Database(WireDatabaseConnection connection,
             ProtocolDescriptor descriptor) {

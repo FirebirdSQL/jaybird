@@ -19,13 +19,14 @@
 package org.firebirdsql.gds.ng.tz;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.SQLException;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.ng.tz.TimeZoneCodecAbstractTest.*;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for {@link TimeZoneDatatypeCoder} that are not covered through {@link TimeZoneCodecStandardTimestampTzTest}
@@ -33,22 +34,18 @@ import static org.junit.Assert.fail;
  * 
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class TimeZoneDatatypeCoderTest {
+class TimeZoneDatatypeCoderTest {
 
-    @Test
-    public void getTimeZoneCode_nonTimeZoneType_throwsSQLException() {
-        for (int baseType : new int[] { SQL_TEXT, SQL_VARYING, SQL_SHORT, SQL_LONG, SQL_FLOAT, SQL_DOUBLE,
-                SQL_TIMESTAMP, SQL_BLOB, SQL_TYPE_TIME, SQL_TYPE_DATE, SQL_INT64, SQL_INT128, SQL_DEC16, SQL_DEC34,
-                SQL_BOOLEAN }) {
-            for (int type : new int[] { baseType, baseType | 1 }) {
-                FieldDescriptor descriptor = rowDescriptorBuilder().setType(type).toFieldDescriptor();
-                try {
-                    getDefaultTzCoder(FIXED_AT_2019_03_09).getTimeZoneCodecFor(descriptor);
-                    fail("Should have thrown SQLException for type " + type);
-                } catch (SQLException e) {
-                    //ignore
-                }
-            }
+    @ParameterizedTest
+    @ValueSource(ints = { SQL_TEXT, SQL_VARYING, SQL_SHORT, SQL_LONG, SQL_FLOAT, SQL_DOUBLE, SQL_TIMESTAMP, SQL_BLOB,
+            SQL_TYPE_TIME, SQL_TYPE_DATE, SQL_INT64, SQL_INT128, SQL_DEC16, SQL_DEC34, SQL_BOOLEAN })
+    void getTimeZoneCode_nonTimeZoneType_throwsSQLException(int baseType) {
+        // check for baseType and nullable baseType
+        for (int type : new int[] { baseType, baseType | 1 }) {
+            FieldDescriptor descriptor = rowDescriptorBuilder().setType(type).toFieldDescriptor();
+            assertThrows(SQLException.class,
+                    () -> getDefaultTzCoder(FIXED_AT_2019_03_09).getTimeZoneCodecFor(descriptor),
+                    "Should have thrown SQLException for type " + type);
         }
     }
 }
