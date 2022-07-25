@@ -19,16 +19,15 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
-
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
@@ -38,39 +37,34 @@ import java.util.Arrays;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.startsWith;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Test for blobs in the OO API implementation {@link org.firebirdsql.nativeoo.gds.ng.IBlobImpl}.
  * <p>
- * This class has copied tests from {@link org.firebirdsql.gds.ng.wire.version10.TestV10OutputBlob} and
- * {@link org.firebirdsql.gds.ng.wire.version10.TestV10InputBlob}.
+ * This class has copied tests from {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlobTest} and
+ * {@link org.firebirdsql.gds.ng.wire.version10.V10InputBlobTest}.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 4.0
+ * @since 5.0
  */
-public class IBlobImplTest extends BaseTestBlob {
+class IBlobImplTest extends BaseTestBlob {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private AbstractNativeOODatabaseFactory factory;
-
-    @Before
-    public void setFactory() {
-        factory = (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-    }
+    private final AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     /**
      * Tests retrieval of a blob (what goes in is what comes out).
      */
     @Test
-    public void testInputBlobRetrieval() throws Exception {
+    void testInputBlobRetrieval() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
@@ -90,8 +84,8 @@ public class IBlobImplTest extends BaseTestBlob {
                 blob.close();
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals("Unexpected length read from blob", requiredSize, result.length);
-                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
+                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -102,7 +96,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Tests absolute seek on a segmented blob. Expectation: fails with an exception
      */
     @Test
-    public void testInputBlobSeek_segmented() throws Exception {
+    void testInputBlobSeek_segmented() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
@@ -118,13 +112,11 @@ public class IBlobImplTest extends BaseTestBlob {
                 blob.open();
                 int offset = baseContent.length / 2;
 
-                expectedException.expect(SQLException.class);
-                expectedException.expect(allOf(
+                SQLException exception = assertThrows(SQLException.class,
+                        () -> blob.seek(offset, FbBlob.SeekMode.ABSOLUTE));
+                assertThat(exception, allOf(
                         errorCodeEquals(ISCConstants.isc_bad_segstr_type),
-                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))
-                ));
-
-                blob.seek(offset, FbBlob.SeekMode.ABSOLUTE);
+                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_type)))));
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -135,7 +127,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Tests absolute seek on a stream blob.
      */
     @Test
-    public void testInputBlobSeek_streamed() throws Exception {
+    void testInputBlobSeek_streamed() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
@@ -157,8 +149,8 @@ public class IBlobImplTest extends BaseTestBlob {
 
                 blob.close();
                 statement.close();
-                assertEquals("Unexpected length read from blob", 100, segment.length);
-                assertArrayEquals("Unexpected segment content", expected, segment);
+                assertEquals(100, segment.length, "Unexpected length read from blob");
+                assertArrayEquals(expected, segment, "Unexpected segment content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -169,7 +161,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Tests reopen of input blob is allowed.
      */
     @Test
-    public void testInputBlobReopen() throws Exception {
+    void testInputBlobReopen() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -196,8 +188,8 @@ public class IBlobImplTest extends BaseTestBlob {
 
                 statement.close();
                 byte[] result = bos.toByteArray();
-                assertEquals("Unexpected length read from blob", requiredSize, result.length);
-                assertTrue("Unexpected blob content", validateBlobContent(result, baseContent, requiredSize));
+                assertEquals(requiredSize, result.length, "Unexpected length read from blob");
+                assertTrue(validateBlobContent(result, baseContent, requiredSize), "Unexpected blob content");
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -208,13 +200,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Tests double open of input blob is not allowed.
      */
     @Test
-    public void testInputBlobDoubleOpen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_no_segstr_close),
-                fbMessageStartsWith(ISCConstants.isc_no_segstr_close)
-        ));
-
+    void testInputBlobDoubleOpen() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -227,7 +213,10 @@ public class IBlobImplTest extends BaseTestBlob {
                 final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
                 blob.open();
                 // Double open
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_no_segstr_close),
+                        fbMessageStartsWith(ISCConstants.isc_no_segstr_close)));
             } finally {
                 if (transaction != null) transaction.commit();
             }
@@ -238,7 +227,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Tests storage of a blob (what goes in is what comes out).
      */
     @Test
-    public void testOutputBlobStorage() throws Exception {
+    void testOutputBlobStorage() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
@@ -249,14 +238,14 @@ public class IBlobImplTest extends BaseTestBlob {
             writeBlob(testId, testBytes, db, null);
         }
 
-        assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
+        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
     }
 
     /**
      * Tests storage of a stream blob (what goes in is what comes out).
      */
     @Test
-    public void testOutputBlobStorage_Stream() throws Exception {
+    void testOutputBlobStorage_Stream() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         // Use sufficiently large value so that multiple segments are used
@@ -269,22 +258,22 @@ public class IBlobImplTest extends BaseTestBlob {
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         }
 
-        assertTrue("Unexpected blob content", validateBlob(testId, baseContent, requiredSize));
+        assertTrue(validateBlob(testId, baseContent, requiredSize), "Unexpected blob content");
     }
 
     /**
      * Test if blob is not eof after open.
      */
     @Test
-    public void testOutputBlobIsEof_afterOpen() throws Exception {
+    void testOutputBlobIsEof_afterOpen() throws Exception {
         try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
 
                 blob.open();
-                assertFalse("Output blob after open should not be eof", blob.isEof());
+                assertFalse(blob.isEof(), "Output blob after open should not be eof");
             } finally {
                 transaction.commit();
             }
@@ -295,16 +284,16 @@ public class IBlobImplTest extends BaseTestBlob {
      * Test if blob is eof after close.
      */
     @Test
-    public void testOutputBlobIsEof_afterClose() throws Exception {
+    void testOutputBlobIsEof_afterClose() throws Exception {
         try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
                 blob.close();
-                assertTrue("Output blob after close should be eof", blob.isEof());
+                assertTrue(blob.isEof(), "Output blob after close should be eof");
             } finally {
                 transaction.commit();
             }
@@ -315,16 +304,16 @@ public class IBlobImplTest extends BaseTestBlob {
      * Test if blob is eof after cancel.
      */
     @Test
-    public void testOutputBlobIsEof_afterCancel() throws Exception {
+    void testOutputBlobIsEof_afterCancel() throws Exception {
         try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 FbBlob blob = db.createBlobForOutput(transaction, null);
-                assumeTrue("Output blob before open should be eof", blob.isEof());
+                assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
                 blob.cancel();
-                assertTrue("Output blob after cancel should be eof", blob.isEof());
+                assertTrue(blob.isEof(), "Output blob after cancel should be eof");
             } finally {
                 transaction.commit();
             }
@@ -335,13 +324,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Test whether a cancelled blob cannot be used (indicating it was indeed cancelled).
      */
     @Test
-    public void testOutputBlobUsingCancelledBlob() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_bad_segstr_id),
-                message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))
-        ));
-
+    void testOutputBlobUsingCancelledBlob() throws Exception {
         final int testId = 1;
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
@@ -368,7 +351,13 @@ public class IBlobImplTest extends BaseTestBlob {
 
                 statement.prepare(INSERT_BLOB_TABLE);
                 final DatatypeCoder datatypeCoder = db.getDatatypeCoder();
-                statement.execute(RowValue.of(datatypeCoder.encodeInt(testId), datatypeCoder.encodeLong(blob.getBlobId())));
+                RowValue rowValue = RowValue.of(
+                        datatypeCoder.encodeInt(testId),
+                        datatypeCoder.encodeLong(blob.getBlobId()));
+                SQLException exception = assertThrows(SQLException.class, () ->statement.execute(rowValue));
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_bad_segstr_id),
+                        message(startsWith(getFbMessage(ISCConstants.isc_bad_segstr_id)))));
                 statement.close();
             } finally {
                 transaction.commit();
@@ -380,13 +369,7 @@ public class IBlobImplTest extends BaseTestBlob {
      * Test reopen is not allowed.
      */
     @Test
-    public void testOutputBlobReopen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageStartsWith(ISCConstants.isc_segstr_no_op)
-        ));
-
+    void testOutputBlobReopen() throws Exception {
         final byte[] baseContent = generateBaseContent();
         final int requiredSize = 256;
         final byte[] testBytes = generateBlobContent(baseContent, requiredSize);
@@ -407,7 +390,10 @@ public class IBlobImplTest extends BaseTestBlob {
                 blob.close();
 
                 // Reopen
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                        fbMessageStartsWith(ISCConstants.isc_segstr_no_op)));
             } finally {
                 transaction.commit();
             }
@@ -418,19 +404,16 @@ public class IBlobImplTest extends BaseTestBlob {
      * Test double open is not allowed.
      */
     @Test
-    public void testOutputBlobDoubleOpen() throws Exception {
-        expectedException.expect(SQLNonTransientException.class);
-        expectedException.expect(allOf(
-                errorCodeEquals(ISCConstants.isc_segstr_no_op),
-                fbMessageStartsWith(ISCConstants.isc_segstr_no_op)
-        ));
-
+    void testOutputBlobDoubleOpen() throws Exception {
         try (IDatabaseImpl db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
                 final FbBlob blob = db.createBlobForOutput(transaction, null);
                 blob.open();
-                blob.open();
+                SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
+                assertThat(exception, allOf(
+                        errorCodeEquals(ISCConstants.isc_segstr_no_op),
+                        fbMessageStartsWith(ISCConstants.isc_segstr_no_op)));
             } finally {
                 transaction.commit();
             }

@@ -1,24 +1,26 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.AbstractTransactionTest;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
 /**
- * Tests for {@link org.firebirdsql.nativeoo.gds.ng.ITransactionImpl}.
+ * Tests for OO API transaction. See {@link org.firebirdsql.nativeoo.gds.ng.ITransactionImpl}.
  *
- * @since 4.0
+ * @since 5.0
  */
-public class ITransactionImplTest extends AbstractTransactionTest {
+class ITransactionImplTest extends AbstractTransactionTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
-    private AbstractNativeOODatabaseFactory factory =
+    private final AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override

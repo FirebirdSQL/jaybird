@@ -13,7 +13,7 @@ import java.sql.SQLException;
  * Class handling the initial setup of the native service connection.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IServiceConnectionImpl extends AbstractNativeConnection<IServiceProperties, IServiceImpl> {
     /**

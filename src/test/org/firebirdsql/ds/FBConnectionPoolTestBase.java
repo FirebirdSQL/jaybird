@@ -50,7 +50,8 @@ abstract class FBConnectionPoolTestBase {
         FBConnectionPoolDataSource newDs = new FBConnectionPoolDataSource();
         newDs.setType(getProperty("test.gds_type", null));
         if (getGdsType() == GDSType.getType("PURE_JAVA")
-                || getGdsType() == GDSType.getType("NATIVE")) {
+                || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             newDs.setServerName(DB_SERVER_URL);
             newDs.setPortNumber(DB_SERVER_PORT);
         }

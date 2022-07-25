@@ -63,7 +63,8 @@ class FBStreamingBackupManagerTest {
     @BeforeEach
     void setUp() {
         backupManager = new FBStreamingBackupManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             backupManager.setServerName(DB_SERVER_URL);
             backupManager.setPortNumber(DB_SERVER_PORT);
         }

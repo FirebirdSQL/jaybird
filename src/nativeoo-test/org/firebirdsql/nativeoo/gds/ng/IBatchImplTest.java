@@ -1,7 +1,7 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
@@ -10,10 +10,9 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
 import org.firebirdsql.jdbc.FBBlob;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -22,10 +21,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test for batch in the OO API implementation.
@@ -33,12 +34,16 @@ import static org.junit.Assert.assertTrue;
  * {@link org.firebirdsql.nativeoo.gds.ng.IBatchImpl}.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
-public class IBatchImplTest extends AbstractBatchTest {
+class IBatchImplTest extends AbstractBatchTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    @Order(1)
+    public static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
+
+    private final AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     //@formatter:off
     protected String INSERT_QUERY_WITHOUT_BLOBS = "INSERT INTO test_p_metadata (" +
@@ -94,31 +99,25 @@ public class IBatchImplTest extends AbstractBatchTest {
 
     protected String SELECT_QUERY_WITHOUT_BLOBS =
             "SELECT " +
-                    "id, simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
-                    "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
-                    "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-                    "timestamp_field " +
+            "id, simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
+            "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
+            "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
+            "timestamp_field " +
             " from test_p_metadata";
 
     protected String SELECT_QUERY_WITH_BLOBS =
             "SELECT " +
-                    "id, simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
-                    "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
-                    "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-                    "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
-                    " from test_p_metadata";
+            "id, simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
+            "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
+            "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
+            "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
+            " from test_p_metadata";
 
     protected String SELECT_QUERY_ONLY_BLOBS =
             "SELECT " +
-                    "blob_field, blob_text_field, blob_minus_one " +
-                    " from test_p_metadata";
+            "blob_field, blob_text_field, blob_minus_one " +
+            " from test_p_metadata";
     //@formatter:on
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    private AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
     @Override
     protected Class<? extends FbDatabase> getExpectedDatabaseType() {
@@ -1327,7 +1326,7 @@ public class IBatchImplTest extends AbstractBatchTest {
         }
     }
 
-    public void checkBlob(long blobID, byte[] originalContent) throws Exception {
+    private void checkBlob(long blobID, byte[] originalContent) throws Exception {
         // Use sufficiently large value so that multiple segments are used
         final int requiredSize = (originalContent == null ? 10 : originalContent.length);
         final FbBlob blob = db.createBlobForInput(transaction, null, blobID);
@@ -1338,8 +1337,8 @@ public class IBatchImplTest extends AbstractBatchTest {
         }
         blob.close();
         byte[] result = bos.toByteArray();
-        assertEquals("Unexpected length read from blob", originalContent.length, result.length);
-        assertTrue("Unexpected blob content", validateBlobContent(result, originalContent, requiredSize));
+        assertEquals(originalContent.length, result.length, "Unexpected length read from blob");
+        assertTrue(validateBlobContent(result, originalContent, requiredSize), "Unexpected blob content");
     }
 
     /**
@@ -1350,7 +1349,7 @@ public class IBatchImplTest extends AbstractBatchTest {
      * @param requiredSize Required size
      * @return <code>true</code> content matches, <code>false</code> otherwise
      */
-    protected boolean validateBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
+    private boolean validateBlobContent(byte[] blobContent, byte[] baseContent, int requiredSize) {
         if (blobContent.length != requiredSize) return false;
         for (int index = 0; index < blobContent.length; index++) {
             if (blobContent[index] != baseContent[index % baseContent.length]) return false;

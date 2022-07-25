@@ -1,65 +1,57 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class NativeDatabaseConnectionTest {
+/**
+ *  Tests for OO API database connection. See {@link org.firebirdsql.nativeoo.gds.ng.NativeDatabaseConnection}.
+ *
+ * @since 5.0
+ */
+class NativeDatabaseConnectionTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
-    private AbstractNativeOODatabaseFactory factory =
+    private final AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
+    @Test
+    void construct_clientLibraryNull_IllegalArgument() throws Exception {
+        assertThrows(NullPointerException.class, () -> new NativeDatabaseConnection(null, connectionInfo));
     }
 
     @Test
-    public void construct_clientLibraryNull_IllegalArgument() throws Exception {
-        expectedException.expect(NullPointerException.class);
-
-        new NativeDatabaseConnection(null, connectionInfo);
-    }
-
-    @Test
-    public void getClientLibrary_returnsSuppliedLibrary() throws Exception {
+    void getClientLibrary_returnsSuppliedLibrary() throws Exception {
         final FbClientLibrary clientLibrary = factory.getClientLibrary();
         NativeDatabaseConnection connection = new NativeDatabaseConnection(clientLibrary, connectionInfo);
 
-        assertSame("Expected returned client library to be identical", clientLibrary, connection.getClientLibrary());
+        assertSame(clientLibrary, connection.getClientLibrary(), "Expected returned client library to be identical");
     }
 
     @Test
-    public void identify_unconnected() throws Exception {
+    void identify_unconnected() throws Exception {
         NativeDatabaseConnection connection = new NativeDatabaseConnection(factory.getClientLibrary(), connectionInfo);
 
         FbDatabase db = connection.identify();
 
-        assertFalse("Expected isAttached() to return false", db.isAttached());
-        assertNull("Expected version string to be null", db.getServerVersion());
-        assertNull("Expected version should be null", db.getServerVersion());
+        assertFalse(db.isAttached(), "Expected isAttached() to return false");
+        assertNull(db.getServerVersion(), "Expected version string to be null");
+        assertNull(db.getServerVersion(), "Expected version should be null");
     }
 
 }

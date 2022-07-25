@@ -70,7 +70,8 @@ class FBBackupManagerTest {
     @BeforeEach
     void setUp() {
         backupManager = new FBBackupManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             assumeTrue(isLocalHost(DB_SERVER_URL), "Test needs to run on localhost for proper clean up");
             backupManager.setServerName(DB_SERVER_URL);
             backupManager.setPortNumber(DB_SERVER_PORT);

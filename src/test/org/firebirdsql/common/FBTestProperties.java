@@ -105,7 +105,7 @@ public final class FBTestProperties {
      */
     public static String getdbpath(String name) {
         final String gdsType = getProperty("test.gds_type", null);
-        if ("EMBEDDED".equalsIgnoreCase(gdsType)) {
+        if ("EMBEDDED".equalsIgnoreCase(gdsType) || "FBOOEMBEDDED".equalsIgnoreCase(gdsType)) {
             return new File(DB_PATH, name).getAbsolutePath();
         } else {
             return DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + getDatabasePath(name);
@@ -240,7 +240,7 @@ public final class FBTestProperties {
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
+        if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE) || "FBOOEMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
         } else {
             return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;

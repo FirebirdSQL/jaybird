@@ -21,6 +21,8 @@ package org.firebirdsql.common.extension;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.impl.jni.NativeGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.nativeoo.FbOONativeGDSFactoryPlugin;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -77,6 +79,16 @@ public class GdsTypeExtension implements BeforeAllCallback {
     }
 
     /**
+     * Creates an instance that supports only all (known) OO API native test types.
+     *
+     * @return Instance
+     */
+    public static GdsTypeExtension supportsFBOONativeOnly() {
+        return supports(FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME,
+                FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+    }
+
+    /**
      * Creates an instance that supports only all (known) native test types.
      *
      * @return Instance
@@ -91,6 +103,7 @@ public class GdsTypeExtension implements BeforeAllCallback {
      * @return Instance
      */
     public static GdsTypeExtension excludesNativeOnly() {
-        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
+        return excludes(NativeGDSFactoryPlugin.NATIVE_TYPE_NAME, EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME,
+                FbOONativeGDSFactoryPlugin.NATIVE_TYPE_NAME, FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
     }
 }

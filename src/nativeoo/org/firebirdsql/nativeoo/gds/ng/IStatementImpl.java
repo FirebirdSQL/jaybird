@@ -40,7 +40,7 @@ import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
  * Implementation of {@link org.firebirdsql.gds.ng.FbStatement} for native client access using OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IStatementImpl extends AbstractFbStatement {
 
@@ -63,11 +63,15 @@ public class IStatementImpl extends AbstractFbStatement {
     @Override
     protected void free(int option) throws SQLException {
         synchronized (getSynchronizationObject()) {
-            if (option == ISCConstants.DSQL_close)
+            if (option == ISCConstants.DSQL_close) {
                 cursor.close(getStatus());
-            else if (statement != null)
+                cursor = null;
+                processStatus();
+            } else if (statement != null) {
                 statement.free(getStatus());
-            processStatus();
+                statement = null;
+                processStatus();
+            }
             // Reset statement information
             reset(option == ISCConstants.DSQL_drop);
         }
@@ -92,12 +96,6 @@ public class IStatementImpl extends AbstractFbStatement {
     public void prepare(String statementText) throws SQLException {
         try {
             final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
-            if (statementArray.length > JnaDatabase.MAX_STATEMENT_LENGTH) {
-                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
-                        .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
-                        .messageParameter(statementArray.length)
-                        .toFlatSQLException();
-            }
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());
                 final StatementState currentState = getState();
@@ -115,8 +113,9 @@ public class IStatementImpl extends AbstractFbStatement {
                 }
 
                 ITransactionImpl transaction = (ITransactionImpl) getTransaction();
-                statement = getDatabase().getAttachment().prepare(getStatus(), transaction.getTransaction(), statementText.length(), statementText,
-                        getDatabase().getConnectionDialect(), IStatement.PREPARE_PREFETCH_METADATA);
+                statement = getDatabase().getAttachment().prepare(getStatus(), transaction.getTransaction(),
+                        statementArray.length, statementArray, getDatabase().getConnectionDialect(),
+                        IStatement.PREPARE_PREFETCH_METADATA);
                 processStatus();
                 outMeta = statement.getOutputMetadata(getStatus());
                 processStatus();
@@ -177,18 +176,19 @@ public class IStatementImpl extends AbstractFbStatement {
                         outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
                         statement.execute(getStatus(), transaction.getTransaction(), inMeta, inPtr, outMeta, outPtr);
                     }
-                    processStatus();
 
                     if (hasSingletonResult) {
                         /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
                          * have a result set that will be fetched, instead we have a singleton result if we have fields
                          */
                         statementListenerDispatcher.statementExecuted(this, false, true);
+                        processStatus();
                         queueRowData(toRowValue(getRowDescriptor(), outMeta, outPtr));
-                        setAllRowsFetched(true);
+                        setAfterLast();
                     } else {
                         // A normal execute is never a singleton result (even if it only produces a single result)
                         statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                        processStatus();
                     }
                 }
 
@@ -216,24 +216,23 @@ public class IStatementImpl extends AbstractFbStatement {
         byte[] nullShort = new byte[]{-1, -1};
         byte[] notNullShort = new byte[]{0, 0};
         int shift;
-
+        // Values must be aligned, otherwise, data will be lost
+        int alignment = inMeta.getAlignment(status);
         for (int idx = 0; idx < parameters.getCount(); idx++) {
-
             byte[] fieldData = parameters.getFieldData(idx);
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
             if (fieldData == null) {
-                // Note this only works because we mark the type as nullable in inMessage
-
                 // clear status
                 getStatus();
-
                 int nullOffset = inMeta.getNullOffset(status, idx);
-
                 processStatus();
                 // clear status
                 getStatus();
                 int length = inMeta.getLength(status, idx);
                 processStatus();
+                if (offset != 0)
+                    offset += offset % alignment;
+                inMessage.position(offset);
                 offset += length;
                 inMessage.position(nullOffset);
                 inMessage.put(nullShort);
@@ -244,11 +243,8 @@ public class IStatementImpl extends AbstractFbStatement {
                 metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                 metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
             } else {
-
                 // clear status
                 getStatus();
-                // Values must be aligned, otherwise, data will be lost
-                int alignment = inMeta.getAlignment(status);
                 shift = (fieldData.length ^ alignment) & 1;
                 inMessage.position(offset);
                 if (fieldDescriptor.isVarying()) {
@@ -260,7 +256,6 @@ public class IStatementImpl extends AbstractFbStatement {
                     inMessage.put(encodeShort);
                     offset += encodeShort.length;
                     inMessage.position(offset);
-
                 } else if (fieldDescriptor.isFbType(ISCConstants.SQL_TEXT)) {
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_TEXT + 1);
                     metadataBuilder.setLength(status, idx, Math.min(fieldDescriptor.getLength(), fieldData.length));
@@ -286,11 +281,57 @@ public class IStatementImpl extends AbstractFbStatement {
                     metadataBuilder.setType(status, idx, ISCConstants.SQL_TIMESTAMP + 1);
                     metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_INT64)) {
+                    metadataBuilder.setType(status, idx, ISCConstants.SQL_INT64);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
+                    metadataBuilder.setScale(status, idx, inMeta.getScale(status, idx));
+                    metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
+                    if (offset != 0)
+                        offset += offset % alignment;
+                    inMessage.position(offset);
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_INT128)) {
+                    metadataBuilder.setType(status, idx, ISCConstants.SQL_INT128);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
+                    metadataBuilder.setScale(status, idx, inMeta.getScale(status, idx));
+                    metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
+                    byte[] encodeShort = fieldDescriptor.getDatatypeCoder().encodeShort(fieldData.length);
+                    inMessage.put(encodeShort);
+                    offset += encodeShort.length;
+                    if (offset != 0)
+                        offset += offset % alignment;
+                    inMessage.position(offset);
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_DEC16)) {
+                    metadataBuilder.setType(status, idx, ISCConstants.SQL_DEC16);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
+                    metadataBuilder.setScale(status, idx, inMeta.getScale(status, idx));
+                    metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
+                    byte[] encodeShort = fieldDescriptor.getDatatypeCoder().encodeShort(fieldData.length);
+                    inMessage.put(encodeShort);
+                    offset += encodeShort.length;
+                    if (offset != 0)
+                        offset += offset % alignment;
+                    inMessage.position(offset);
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_DEC34)) {
+                    metadataBuilder.setType(status, idx, ISCConstants.SQL_DEC34);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
+                    metadataBuilder.setScale(status, idx, inMeta.getScale(status, idx));
+                    metadataBuilder.setCharSet(status, idx, inMeta.getCharSet(status, idx));
+                    byte[] encodeShort = fieldDescriptor.getDatatypeCoder().encodeShort(fieldData.length);
+                    inMessage.put(encodeShort);
+                    offset += encodeShort.length;
+                    if (offset != 0)
+                        offset += offset % alignment;
+                    inMessage.position(offset);
+                } else if (fieldDescriptor.isFbType(ISCConstants.SQL_BOOLEAN)) {
+                    inMessage.position(offset);
+                    metadataBuilder.setType(status, idx, ISCConstants.SQL_BOOLEAN);
+                    metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
+                    metadataBuilder.setCharSet(status, idx, 0);
                 } else {
                     if (offset % alignment != 0)
                         offset += offset % alignment;
                     inMessage.position(offset);
-                    metadataBuilder.setType(status, idx, fieldDescriptor.getType());
+                    metadataBuilder.setType(status, idx, inMeta.getType(status, idx) | 1);
                     metadataBuilder.setLength(status, idx, inMeta.getLength(status, idx));
                     metadataBuilder.setCharSet(status, idx, 0);
                 }
@@ -316,7 +357,7 @@ public class IStatementImpl extends AbstractFbStatement {
                 if (!getState().isCursorOpen()) {
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
                 }
-                if (isAllRowsFetched()) return;
+                if (isAfterLast()) return;
 
                 try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                     if (operationCloseHandle.isCancelled()) {
@@ -332,7 +373,7 @@ public class IStatementImpl extends AbstractFbStatement {
                     if (fetchStatus == IStatus.RESULT_OK) {
                         queueRowData(toRowValue(getRowDescriptor(), outMeta, ptr));
                     } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
-                        setAllRowsFetched(true);
+                        setAfterLast();
                         // Note: we are not explicitly 'closing' the cursor here
                     } else {
                         final String errorMessage = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;

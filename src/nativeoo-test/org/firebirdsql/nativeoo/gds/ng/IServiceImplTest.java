@@ -1,121 +1,100 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
-
 import org.firebirdsql.gds.impl.GDSServerVersion;
-
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbServiceProperties;
-
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.management.FBStatisticsManager;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.FBTestProperties.defaultDatabaseTearDown;
-import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.gds.ISCConstants.isc_info_end;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class IServiceImplTest {
+/**
+ * Tests for OO API service implementation.
+ * See {@link org.firebirdsql.nativeoo.gds.ng.IServiceImpl}.
+ *
+ * @since 5.0
+ */
+class IServiceImplTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
     private AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
 
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-
-
-    private final FbServiceProperties connectionInfo;
-    {
-        connectionInfo = new FbServiceProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-    }
+    private final FbServiceProperties connectionInfo = getDefaultServiceProperties();
 
     @Test
-    public void testBasicAttach() throws Exception {
-        try (IServiceImpl service = (IServiceImpl)factory.serviceConnect(connectionInfo)) {
+    void testBasicAttach() throws Exception {
+        try (IServiceImpl service = factory.serviceConnect(connectionInfo)) {
             service.attach();
 
-            assertTrue("Expected isAttached() to return true", service.isAttached());
-            assertNotNull("Expected version string to be not null", service.getServerVersion());
-            assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, service.getServerVersion());
+            assertTrue(service.isAttached(), "Expected isAttached() to return true");
+            assertNotNull(service.getServerVersion(), "Expected version string to be not null");
+            assertNotEquals(GDSServerVersion.INVALID_VERSION, service.getServerVersion(), "Expected version should not be invalid");
         }
     }
 
     @Test
-    public void doubleAttach() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("Already attached to a service"));
-
-        try (IServiceImpl service = (IServiceImpl)factory.serviceConnect(connectionInfo)) {
+    void doubleAttach() throws Exception {
+        try (IServiceImpl service = factory.serviceConnect(connectionInfo)) {
             service.attach();
 
             //Second attach should throw exception
-            service.attach();
+            SQLException exception = assertThrows(SQLException.class, service::attach,
+                    "Second attach should throw exception");
+            assertThat(exception, message(equalTo("Already attached to a service")));
         }
     }
 
     @Test
-    public void basicStatusVectorProcessing_wrongLogin() throws Exception {
+    void basicStatusVectorProcessing_wrongLogin() throws Exception {
         assumeThat("Embedded on windows does not use authentication",
-                FBTestProperties.GDS_TYPE, is(not(FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+                FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         // set invalid password
         connectionInfo.setPassword("abcd");
-        try (IServiceImpl service = (IServiceImpl)factory.serviceConnect(connectionInfo)) {
-
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
+        IServiceImpl service = factory.serviceConnect(connectionInfo);
+        try {
+            SQLException exception = assertThrows(SQLException.class, service::attach);
+            assertThat(exception, allOf(
                     message(startsWith(getFbMessage(ISCConstants.isc_login))),
-                    errorCode(equalTo(ISCConstants.isc_login))
-            ));
-
-            service.attach();
+                    errorCode(equalTo(ISCConstants.isc_login))));
+        } finally {
+            closeQuietly(service);
         }
     }
 
     @Test
-    public void testBasicStatusVectorProcessing_wrongService() throws Exception {
-        assumeTrue("Incorrect service name ignored in Firebird 4+", getDefaultSupportInfo().isVersionBelow(4, 0));
+    void testBasicStatusVectorProcessing_wrongService() throws Exception {
+        assumeTrue(getDefaultSupportInfo().isVersionBelow(4, 0), "Incorrect service name ignored in Firebird 4+");
         // set invalid database
         final String invalidServiceName = "doesnotexist";
         connectionInfo.setServiceName(invalidServiceName);
-        try (IServiceImpl service = (IServiceImpl)factory.serviceConnect(connectionInfo)) {
-
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
-                    fbMessageStartsWith(ISCConstants.isc_service_att_err))
-            );
-
-            service.attach();
+        IServiceImpl service = factory.serviceConnect(connectionInfo);
+        try {
+            SQLException exception = assertThrows(SQLException.class, service::attach);
+            assertThat(exception, fbMessageStartsWith(ISCConstants.isc_service_att_err));
+        } finally {
+            closeQuietly(service);
         }
     }
 
@@ -126,10 +105,10 @@ public class IServiceImplTest {
      * </p>
      */
     @Test
-    public void testStartServiceAction() throws Exception {
+    void testStartServiceAction() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try (IServiceImpl service = (IServiceImpl)factory.serviceConnect(connectionInfo)) {
+        try (IServiceImpl service = factory.serviceConnect(connectionInfo)) {
             service.attach();
 
             ServiceRequestBuffer actionSrb = service.createServiceRequestBuffer();
@@ -172,7 +151,7 @@ public class IServiceImplTest {
             assertThat("Expected database header page content", headerPage, allOf(
                     startsWith("\nDatabase"),
                     containsString("Database header page information"),
-                    endsWith("\n")));
+                    containsString("*END*\n")));
         } finally {
             defaultDatabaseTearDown(fbManager);
         }

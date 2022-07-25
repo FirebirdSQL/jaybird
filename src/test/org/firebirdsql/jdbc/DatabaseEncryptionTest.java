@@ -172,7 +172,8 @@ class DatabaseEncryptionTest {
     void testFBConnectionPoolDataSource() throws Exception {
         final FBConnectionPoolDataSource ds = new FBConnectionPoolDataSource();
         ds.setDatabaseName(CRYPTTEST_DB);
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             ds.setServerName(FBTestProperties.DB_SERVER_URL);
             ds.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         }
@@ -195,7 +196,8 @@ class DatabaseEncryptionTest {
     void testFBXADataSource() throws Exception {
         final FBXADataSource ds = new FBXADataSource();
         ds.setDatabaseName(CRYPTTEST_DB);
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             ds.setServerName(FBTestProperties.DB_SERVER_URL);
             ds.setPortNumber(FBTestProperties.DB_SERVER_PORT);
         }
@@ -218,7 +220,8 @@ class DatabaseEncryptionTest {
     @Disabled("Requires global KeyHolderPlugin configuration")
     void testServiceManagerConnection_gstatException() {
         FBStatisticsManager statManager = new FBStatisticsManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             statManager.setServerName(DB_SERVER_URL);
             statManager.setPortNumber(DB_SERVER_PORT);
         }
@@ -240,7 +243,8 @@ class DatabaseEncryptionTest {
     @Disabled("Requires global KeyHolderPlugin configuration")
     void testDatabaseValidation() throws Exception {
         FBMaintenanceManager maintenanceManager = new FBMaintenanceManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             maintenanceManager.setServerName(DB_SERVER_URL);
             maintenanceManager.setPortNumber(DB_SERVER_PORT);
         }
@@ -273,7 +277,8 @@ class DatabaseEncryptionTest {
 
     @SuppressWarnings("SameParameterValue")
     private static String getUrlWithoutProtocol(String dbPath) {
-        if ("EMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE)) {
+        if ("EMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE) ||
+                "FBOOEMBEDDED".equalsIgnoreCase(FBTestProperties.GDS_TYPE)) {
             return dbPath;
         } else {
             return FBTestProperties.DB_SERVER_URL + "/" + FBTestProperties.DB_SERVER_PORT + ":" + dbPath;

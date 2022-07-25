@@ -4,13 +4,15 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.nativeoo.gds.ng.FbOOClientDatabaseFactory;
 
+import java.util.Arrays;
+
 public class FbOONativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "FBOONATIVE";
 
     private static final String[] TYPE_ALIASES = new String[] { "TYPE2" };
     private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:fboo:native:", "jdbc:firebird:fboo:native:"
+        "jdbc:firebirdsql:fboo:native:", "jdbc:firebird:fboo:native:"
     };
 
     public String getPluginName() {
@@ -26,7 +28,7 @@ public class FbOONativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {

@@ -4,6 +4,8 @@ import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.nativeoo.gds.ng.FbOOEmbeddedDatabaseFactory;
 
+import java.util.Arrays;
+
 public class FbOOEmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String EMBEDDED_TYPE_NAME = "FBOOEMBEDDED";
@@ -11,7 +13,7 @@ public class FbOOEmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     private static final String[] TYPE_ALIASES = new String[0];
 
     private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:fboo:embedded:", "jdbc:firebird:fboo:embedded:"
+        "jdbc:firebirdsql:fboo:embedded:", "jdbc:firebird:fboo:embedded:"
     };
 
     public String getPluginName() {
@@ -27,7 +29,7 @@ public class FbOOEmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     }
 
     public String[] getSupportedProtocols() {
-        return JDBC_PROTOCOLS;
+        return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
 
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {

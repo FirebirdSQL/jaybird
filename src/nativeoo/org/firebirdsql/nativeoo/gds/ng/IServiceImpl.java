@@ -24,7 +24,7 @@ import java.sql.SQLException;
  * Implementation of {@link FbInterface.IService} for native client access using OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> implements FbAttachment {
 

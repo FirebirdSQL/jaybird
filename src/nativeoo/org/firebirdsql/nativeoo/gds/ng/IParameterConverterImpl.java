@@ -9,6 +9,12 @@ import org.firebirdsql.gds.ng.WireCrypt;
 
 import java.sql.SQLException;
 
+/**
+ * Implementation of {@link org.firebirdsql.gds.ng.ParameterConverter} for native OO API.
+ *
+ * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
+ * @since 5.0
+ */
 public class IParameterConverterImpl extends AbstractParameterConverter<NativeDatabaseConnection, IServiceConnectionImpl> {
 
     @Override

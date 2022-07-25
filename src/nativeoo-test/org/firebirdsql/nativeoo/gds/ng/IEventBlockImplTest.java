@@ -1,49 +1,49 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
-import org.firebirdsql.common.FBJUnit4TestBase;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.EventHandle;
-import org.firebirdsql.gds.EventHandler;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.ng.*;
+import org.firebirdsql.gds.ng.FbConnectionProperties;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.SimpleEventHandler;
 import org.firebirdsql.gds.ng.fields.RowValue;
-
-import org.firebirdsql.jaybird.fb.constants.TpbItems;
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.firebirdsql.gds.ng.jna.JnaDatabase;
+import org.firebirdsql.logging.Logger;
+import org.firebirdsql.logging.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.SQLException;
 
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.DB_USER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.firebirdsql.common.FBTestProperties.getDefaultTpb;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class IEventBlockImplTest extends FBJUnit4TestBase {
+/**
+ * Tests for OO API events implementation. See {@link org.firebirdsql.nativeoo.gds.ng.IDatabaseImpl}.
+ *
+ * @since 5.0
+ */
+class IEventBlockImplTest {
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    private final Logger log = LoggerFactory.getLogger(IEventBlockImplTest.class);
 
-    private AbstractNativeOODatabaseFactory factory =
-            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
+    @RegisterExtension
+    @Order(1)
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
     //@formatter:off
-    public static final String TABLE_DEF =
+    private static final String TABLE_DEF =
             "CREATE TABLE TEST (" +
                     "     TESTVAL INTEGER NOT NULL" +
                     ")";
 
-    public static final String TRIGGER_DEF =
+    private static final String TRIGGER_DEF =
             "CREATE TRIGGER INSERT_TRIG " +
                     "     FOR TEST AFTER INSERT " +
                     "AS BEGIN " +
@@ -51,22 +51,20 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
                     "     POST_EVENT 'TEST_EVENT_B';" +
                     "END";
     //@formatter:on
-    
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            TABLE_DEF,
+            TRIGGER_DEF);
+
+    private final AbstractNativeOODatabaseFactory factory =
+            (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     private IDatabaseImpl db;
 
-    @After
-    public final void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         if (db != null && db.isAttached()) {
             try {
                 db.close();
@@ -77,31 +75,19 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
     }
 
     @Test
-    public void testCreateEventHandle() throws Exception {
-        db = (IDatabaseImpl) factory.connect(connectionInfo);
+    void testCreateEventHandle() throws Exception {
+        db = factory.connect(connectionInfo);
         db.attach();
 
-        IEventImpl eventBlock = (IEventImpl)db.createEventHandle("TEST_EVENT", new EventHandler() {
-            @Override
-            public void eventOccurred(EventHandle eventHandle) {
-            }
-        });
+        IEventImpl eventHandle = db.createEventHandle("TEST_EVENT", eventHandle1 -> { });
 
-        assertTrue("Event handle should have a size set", eventBlock.getSize() > 0);
+        assertTrue(eventHandle.getSize() > 0, "Event handle should have a size set");
     }
 
     @Test
-    public void testQueueEvent_andNotification() throws Exception {
-        db = (IDatabaseImpl) factory.connect(connectionInfo);
+    void testQueueEvent_andNotification() throws Exception {
+        db = factory.connect(connectionInfo);
         db.attach();
-
-        FbTransaction transaction = getTransaction(db);
-        final FbStatement statement = db.createStatement(transaction);
-        statement.prepare(TABLE_DEF);
-        statement.execute(RowValue.EMPTY_ROW_VALUE);
-        statement.prepare(TRIGGER_DEF);
-        statement.execute(RowValue.EMPTY_ROW_VALUE);
-        transaction.commit();
 
         SimpleEventHandler eventHandler = new SimpleEventHandler();
 
@@ -126,10 +112,10 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
         db.queueEvent(eventHandleB);
 
         Thread.sleep(50);
-        assertTrue("Expected events to not have been triggered", eventHandler.getReceivedEventHandles().isEmpty());
+        assertTrue(eventHandler.getReceivedEventHandles().isEmpty(), "Expected events to not have been triggered");
 
-        transaction = getTransaction(db);
-        statement.setTransaction(transaction);
+        FbTransaction transaction = getTransaction(db);
+        FbStatement statement = db.createStatement(transaction);
         statement.prepare("INSERT INTO TEST VALUES (1)");
         statement.execute(RowValue.EMPTY_ROW_VALUE);
         transaction.commit();
@@ -140,12 +126,13 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
                 && retry++ < 10) {
             Thread.sleep(50);
         }
-        assertEquals("Unexpected number of events received", 2, eventHandler.getReceivedEventHandles().size());
+        assertEquals(2, eventHandler.getReceivedEventHandles().size(), "Unexpected number of events received");
 
         db.countEvents(eventHandleA);
         db.countEvents(eventHandleB);
         assertEquals(1, eventHandleA.getEventCount());
         assertEquals(1, eventHandleB.getEventCount());
+
 
         // TODO Workaround for CORE-4794
         db.queueEvent(eventHandleA);
@@ -155,13 +142,7 @@ public class IEventBlockImplTest extends FBJUnit4TestBase {
         db.cancelEvent(eventHandleB);
     }
 
-
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(TpbItems.isc_tpb_read_committed);
-        tpb.addArgument(TpbItems.isc_tpb_rec_version);
-        tpb.addArgument(TpbItems.isc_tpb_write);
-        tpb.addArgument(TpbItems.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 }

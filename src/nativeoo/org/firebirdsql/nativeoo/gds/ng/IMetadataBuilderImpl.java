@@ -30,7 +30,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
  * Implementation of {@link org.firebirdsql.gds.ng.FbMetadataBuilder} for native OO API.
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public class IMetadataBuilderImpl implements FbMetadataBuilder {
 

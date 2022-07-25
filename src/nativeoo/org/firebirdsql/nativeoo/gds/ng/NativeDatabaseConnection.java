@@ -13,7 +13,7 @@ import java.sql.SQLException;
 /**
  * Class handling the initial setup of the native OO API database connection.
  *
- * @since 4.0
+ * @since 5.0
  */
 public class NativeDatabaseConnection extends AbstractNativeConnection<IConnectionProperties, IDatabaseImpl> {
 

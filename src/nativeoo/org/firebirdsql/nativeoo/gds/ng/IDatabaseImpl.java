@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.sql.SQLTransientException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.firebirdsql.gds.ISCConstants.fb_cancel_abort;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -58,7 +60,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     private final IProvider provider;
     private final IUtil util;
     protected IAttachment attachment;
-    private IEvents events;
+    private final Map<EventHandle, IEvents> events = new HashMap<>();
     protected IStatus status;
 
 
@@ -266,17 +268,16 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
                         .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
                         .toFlatSQLException();
             }
-
+            final byte[] statementArray = getEncoding().encodeToCharset(statementText);
             synchronized (getSynchronizationObject()) {
                 if (attachment == null) {
-                    attachment = util.executeCreateDatabase(getStatus(), statementText.length(),
-                            statementText, getConnectionDialect(), new boolean[]{false});
+                    attachment = util.executeCreateDatabase(getStatus(), statementArray.length, statementArray,
+                            getConnectionDialect(), new boolean[]{false});
                 } else {
                     attachment.execute(getStatus(),
                             transaction != null ? ((ITransactionImpl) transaction).getTransaction() :
                                     attachment.startTransaction(getStatus(), 0, null),
-                            statementText.length(),
-                            statementText, getConnectionDialect(), null, null,
+                            statementArray.length, statementArray, getConnectionDialect(), null, null,
                             null, null);
                 }
                 if (!isAttached()) {
@@ -316,7 +317,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     }
 
     @Override
-    public EventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
+    public IEventImpl createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
         final IEventImpl eventHandle = new IEventImpl(eventName, eventHandler, getEncoding());
         synchronized (getSynchronizationObject()) {
             synchronized (eventHandle) {
@@ -358,9 +359,10 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
                 synchronized (event) {
                     int length = event.getSize();
                     byte[] array = event.getEventBuffer().getValue().getByteArray(0, length);
-                    events = attachment.queEvents(getStatus(), event.getCallback(),
+                    IEvents iEvents = attachment.queEvents(getStatus(), event.getCallback(),
                             length,
                             array);
+                    events.put(eventHandle, iEvents);
                 }
             }
         } catch (SQLException e) {
@@ -378,7 +380,8 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             synchronized (getSynchronizationObject()) {
                 synchronized (event) {
                     try {
-                        events.cancel(getStatus());
+                        IEvents iEvents = events.remove(eventHandle);
+                        iEvents.cancel(getStatus());
                     } finally {
                         event.releaseMemory();
                     }

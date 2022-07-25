@@ -18,6 +18,7 @@ import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 
 import java.nio.ByteOrder;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ISCConstants.isc_arg_cstring;
@@ -83,27 +84,51 @@ public abstract class AbstractNativeConnection<T extends IAttachProperties<T>, C
     /**
      * Processing {@link IStatus} to get result of native calling
      */
-    protected void processStatus(IStatus status, WarningMessageCallback messageCallback) throws SQLException {
-        Pointer pointer = status.getErrors();
-        long[] statusVector = pointer.getLongArray(0, 20);
+    protected void processStatus(IStatus status, WarningMessageCallback warningMessageCallback)
+            throws SQLException {
+        if (warningMessageCallback == null) {
+            throw new NullPointerException("warningMessageCallback is null");
+        }
 
         boolean debug = log.isDebugEnabled();
         final FbExceptionBuilder builder = new FbExceptionBuilder();
+
+        if (status.getState() == IStatus.STATE_WARNINGS) {
+            final long[] warningVector = status.getWarnings().getLongArray(0, 20);
+            processVector(warningVector, debug, builder);
+        }
+
+        if (status.getState() == IStatus.STATE_ERRORS) {
+            final long[] errorVector = status.getErrors().getLongArray(0, 20);
+            processVector(errorVector, debug, builder);
+        }
+
+        if (!builder.isEmpty()) {
+            SQLException exception = builder.toFlatSQLException();
+            if (exception instanceof SQLWarning) {
+                warningMessageCallback.processWarning((SQLWarning) exception);
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    private void processVector(long[] errorVector, boolean debug, FbExceptionBuilder builder) {
         int vectorIndex = 0;
         processingLoop:
-        while (vectorIndex < statusVector.length) {
-            int arg = (int) statusVector[vectorIndex++];
+        while (vectorIndex < errorVector.length) {
+            int arg = (int) errorVector[vectorIndex++];
             int errorCode;
             switch (arg) {
                 case isc_arg_gds:
-                    errorCode = (int) statusVector[vectorIndex++];
+                    errorCode = (int) errorVector[vectorIndex++];
                     if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
                     if (errorCode != 0) {
                         builder.exception(errorCode);
                     }
                     break;
                 case isc_arg_warning:
-                    errorCode = (int) statusVector[vectorIndex++];
+                    errorCode = (int) errorVector[vectorIndex++];
                     if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
                     if (errorCode != 0) {
                         builder.warning(errorCode);
@@ -112,7 +137,7 @@ public abstract class AbstractNativeConnection<T extends IAttachProperties<T>, C
                 case isc_arg_interpreted:
                 case isc_arg_string:
                 case isc_arg_sql_state:
-                    long stringPointerAddress = statusVector[vectorIndex++];
+                    long stringPointerAddress = errorVector[vectorIndex++];
                     if (stringPointerAddress == 0L) {
                         log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
                         break processingLoop;
@@ -128,32 +153,28 @@ public abstract class AbstractNativeConnection<T extends IAttachProperties<T>, C
                     }
                     break;
                 case isc_arg_cstring:
-                    int stringLength = (int) statusVector[vectorIndex++];
-                    long cStringPointerAddress = statusVector[vectorIndex++];
+                    int stringLength = (int) errorVector[vectorIndex++];
+                    long cStringPointerAddress = errorVector[vectorIndex++];
                     Pointer cStringPointer = new Pointer(cStringPointerAddress);
                     byte[] stringData = cStringPointer.getByteArray(0, stringLength);
                     String cStringValue = getEncoding().decodeFromCharset(stringData);
                     builder.messageParameter(cStringValue);
                     break;
                 case isc_arg_number:
-                    int intValue = (int) statusVector[vectorIndex++];
+                    int intValue = (int) errorVector[vectorIndex++];
                     if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
                     builder.messageParameter(intValue);
                     break;
                 case isc_arg_end:
                     break processingLoop;
                 default:
-                    int e = (int) statusVector[vectorIndex++];
+                    int e = (int) errorVector[vectorIndex++];
                     if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
                     builder.messageParameter(e);
                     break;
             }
         }
 
-        if (!builder.isEmpty()) {
-            SQLException exception = builder.toFlatSQLException();
-            throw exception;
-        }
     }
 
     public final DatatypeCoder createDatatypeCoder() {

@@ -49,13 +49,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Initial tests for Services API. Currently run only against embedded server.
- * TODO: Make run against other types
+ * Initial tests for Services API.
  */
 class ServicesAPITest {
-
-    @RegisterExtension
-    static final GdsTypeExtension testType = GdsTypeExtension.supports(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
 
     @TempDir
     private Path tempDir;
@@ -65,20 +61,21 @@ class ServicesAPITest {
     private String mAbsoluteDatabasePath;
     private String mAbsoluteBackupPath;
     private FBManager fbManager;
-    private GDSType gdsType;
+    protected String protocol;
+    protected GDSType gdsType;
+    protected int port = 5066;
     private FbDatabaseFactory dbFactory;
     private Path logFolder;
 
     @BeforeEach
     void setUp() throws Exception {
         Class.forName(FBDriver.class.getName());
-        gdsType = GDSType.getType(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME);
         dbFactory = GDSFactory.getDatabaseFactoryForType(gdsType);
 
         fbManager = new FBManager(gdsType);
 
         fbManager.setServer("localhost");
-        fbManager.setPort(5066);
+        fbManager.setPort(port);
         fbManager.start();
 
         Path dbFolder = tempDir.resolve("db");
@@ -130,7 +127,7 @@ class ServicesAPITest {
 
     private void connectToDatabase() throws SQLException {
         Connection connection = DriverManager.getConnection(
-                "jdbc:firebirdsql:embedded:" + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey");
+                protocol + mAbsoluteDatabasePath + "?encoding=NONE", "SYSDBA", "masterkey");
         connection.close();
     }
 

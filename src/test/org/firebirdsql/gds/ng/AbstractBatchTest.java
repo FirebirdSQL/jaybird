@@ -2,26 +2,23 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.BatchParameterBuffer;
-import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.BatchParameterBufferImpl;
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Generic tests for FbBatch.
@@ -30,37 +27,37 @@ import static org.junit.Assert.assertEquals;
  * </p>
  *
  * @author <a href="mailto:vasiliy.yashkov@red-soft.ru">Vasiliy Yashkov</a>
- * @since 4.0
+ * @since 5.0
  */
 public abstract class AbstractBatchTest {
     //@formatter:off
     protected String CREATE_TABLE =
             "CREATE TABLE test_p_metadata (" +
-                    "  id INTEGER, " +
-                    "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
-                    "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
-                    "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
-                    "  long_field BIGINT, " +
-                    "  int_field INTEGER, " +
-                    "  short_field SMALLINT, " +
-                    "  float_field FLOAT, " +
-                    "  double_field DOUBLE PRECISION, " +
-                    "  smallint_numeric NUMERIC(3,1), " +
-                    "  integer_decimal_1 DECIMAL(3,1), " +
-                    "  integer_numeric NUMERIC(5,2), " +
-                    "  integer_decimal_2 DECIMAL(9,3), " +
-                    "  bigint_numeric NUMERIC(10,4), " +
-                    "  bigint_decimal DECIMAL(18,9), " +
-                    "  date_field DATE, " +
-                    "  time_field TIME, " +
-                    "  timestamp_field TIMESTAMP, " +
-                    "  blob_field BLOB, " +
-                    "  blob_text_field BLOB SUB_TYPE TEXT, " +
-                    "  blob_minus_one BLOB SUB_TYPE -1 " +
-                    "  /* boolean */ " +
-                    "  /* decfloat */ " +
-                    "  /* extended numerics */ " +
-                    ")";
+            "  id INTEGER, " +
+            "  simple_field VARCHAR(60) CHARACTER SET WIN1251 COLLATE PXW_CYRL, " +
+            "  two_byte_field VARCHAR(60) CHARACTER SET BIG_5, " +
+            "  three_byte_field VARCHAR(60) CHARACTER SET UNICODE_FSS, " +
+            "  long_field BIGINT, " +
+            "  int_field INTEGER, " +
+            "  short_field SMALLINT, " +
+            "  float_field FLOAT, " +
+            "  double_field DOUBLE PRECISION, " +
+            "  smallint_numeric NUMERIC(3,1), " +
+            "  integer_decimal_1 DECIMAL(3,1), " +
+            "  integer_numeric NUMERIC(5,2), " +
+            "  integer_decimal_2 DECIMAL(9,3), " +
+            "  bigint_numeric NUMERIC(10,4), " +
+            "  bigint_decimal DECIMAL(18,9), " +
+            "  date_field DATE, " +
+            "  time_field TIME, " +
+            "  timestamp_field TIMESTAMP, " +
+            "  blob_field BLOB, " +
+            "  blob_text_field BLOB SUB_TYPE TEXT, " +
+            "  blob_minus_one BLOB SUB_TYPE -1 " +
+            "  /* boolean */ " +
+            "  /* decfloat */ " +
+            "  /* extended numerics */ " +
+            ")";
 
     protected String INSERT_QUERY = "INSERT INTO test_p_metadata (" +
             "  id, " +
@@ -91,92 +88,88 @@ public abstract class AbstractBatchTest {
 
     protected String TEST_QUERY =
             "SELECT " +
-                    "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
-                    "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
-                    "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
-                    "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
-                    "/* boolean */ " +
-                    "/* decfloat */ " +
-                    "/* extended numerics */ " +
-                    "FROM test_p_metadata";
+            "simple_field, two_byte_field, three_byte_field, long_field, int_field, short_field," +
+            "float_field, double_field, smallint_numeric, integer_decimal_1, integer_numeric," +
+            "integer_decimal_2, bigint_numeric, bigint_decimal, date_field, time_field," +
+            "timestamp_field, blob_field, blob_text_field, blob_minus_one " +
+            "/* boolean */ " +
+            "/* decfloat */ " +
+            "/* extended numerics */ " +
+            "FROM test_p_metadata";
     //@formatter:on
 
+    @RegisterExtension
+    final UsesDatabaseExtension.UsesDatabaseForEach usesDatabase = UsesDatabaseExtension.usesDatabase();
+
     protected FbDatabase db;
-    protected static FBManager fbManager;
-    //    private Connection connection;
+    protected Connection connection;
     protected FbTransaction transaction;
     protected PreparedStatement pstmt;
     protected ParameterMetaData parameterMetaData;
     protected FirebirdSupportInfo supportInfo;
     protected FbMetadataBuilder metadataBuilder;
 
-    //    protected FbStatement statement;
-    protected final FbConnectionProperties connectionInfo;
-
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-    }
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-    @Rule
-    public final UsesDatabase usesDatabase = UsesDatabase.usesDatabase();
+    protected final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     protected abstract Class<? extends FbDatabase> getExpectedDatabaseType();
 
-    @Before
-    public final void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
 
-        fbManager = createFBManager();
-        defaultDatabaseSetUp(fbManager);
+        connection = getConnectionViaDriverManager();
+        supportInfo = supportInfoFor(connection);
 
-        try (Connection con = FBTestProperties.getConnectionViaDriverManager()) {
-            supportInfo = supportInfoFor(con);
-
-            if (!supportInfo.supportsBigint()) {
-                // No BIGINT support, replacing type so number of columns remain the same
-                CREATE_TABLE = CREATE_TABLE.replace("long_field BIGINT,", "long field DOUBLE PRECISION,");
-            }
-            if (supportInfo.supportsBoolean()) {
-                CREATE_TABLE = CREATE_TABLE.replace("/* boolean */", ", boolean_field BOOLEAN");
-                TEST_QUERY = TEST_QUERY.replace("/* boolean */", ", boolean_field").replace("/* boolean-param */", ", ?");
-                INSERT_QUERY = INSERT_QUERY.replace("/* boolean */", ", boolean_field")
-                        .replace("/* boolean-param */", ", ?");
-            }
-            if (supportInfo.supportsDecfloat()) {
-                CREATE_TABLE = CREATE_TABLE.replace("/* decfloat */",
-                        ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
-                TEST_QUERY = TEST_QUERY.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
-                        .replace("/* decfloat-param */", ", ?, ?");
-                INSERT_QUERY = INSERT_QUERY.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
-                        .replace("/* decfloat-param */", ", ?, ?");
-            }
-            if (supportInfo.supportsDecimalPrecision(34)) {
-                CREATE_TABLE = CREATE_TABLE.replace("/* extended numerics */",
-                        ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
-                TEST_QUERY = TEST_QUERY.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
-                        .replace("/* extended-num-param*/", ", ?, ?");
-                INSERT_QUERY = INSERT_QUERY.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
-                        .replace("/* extended numerics-param */", ", ?, ?");
-            }
-
-            DdlHelper.executeCreateTable(con, CREATE_TABLE);
-
-            pstmt = con.prepareStatement(TEST_QUERY);
-            parameterMetaData = pstmt.getParameterMetaData();
+        if (!supportInfo.supportsBigint()) {
+            // No BIGINT support, replacing type so number of columns remain the same
+            CREATE_TABLE = CREATE_TABLE.replace("long_field BIGINT,", "long field DOUBLE PRECISION,");
+        }
+        if (supportInfo.supportsBoolean()) {
+            CREATE_TABLE = CREATE_TABLE.replace("/* boolean */", ", boolean_field BOOLEAN");
+            TEST_QUERY = TEST_QUERY.replace("/* boolean */", ", boolean_field").replace("/* boolean-param */", ", ?");
+            INSERT_QUERY = INSERT_QUERY.replace("/* boolean */", ", boolean_field")
+                    .replace("/* boolean-param */", ", ?");
+        }
+        if (supportInfo.supportsDecfloat()) {
+            CREATE_TABLE = CREATE_TABLE.replace("/* decfloat */",
+                    ", decfloat16_field DECFLOAT(16), decfloat34_field DECFLOAT(34)");
+            TEST_QUERY = TEST_QUERY.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
+                    .replace("/* decfloat-param */", ", ?, ?");
+            INSERT_QUERY = INSERT_QUERY.replace("/* decfloat */", ", decfloat16_field, decfloat34_field")
+                    .replace("/* decfloat-param */", ", ?, ?");
+        }
+        if (supportInfo.supportsDecimalPrecision(34)) {
+            CREATE_TABLE = CREATE_TABLE.replace("/* extended numerics */",
+                    ", col_numeric25_20 NUMERIC(25, 20), col_decimal30_5 DECIMAL(30,5)");
+            TEST_QUERY = TEST_QUERY.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
+                    .replace("/* extended-num-param*/", ", ?, ?");
+            INSERT_QUERY = INSERT_QUERY.replace("/* extended numerics */", ", col_numeric25_20, col_decimal30_5")
+                    .replace("/* extended numerics-param */", ", ?, ?");
         }
 
+        DdlHelper.executeCreateTable(connection, CREATE_TABLE);
+
+        pstmt = connection.prepareStatement(TEST_QUERY);
+        parameterMetaData = pstmt.getParameterMetaData();
+
         db = createDatabase();
-        assertEquals("Unexpected FbDatabase implementation", getExpectedDatabaseType(), db.getClass());
+        assertEquals(getExpectedDatabaseType(), db.getClass(), "Unexpected FbDatabase implementation");
 
         db.attach();
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        try {
+            transaction.commit();
+            closeQuietly(pstmt, connection);
+            closeQuietly(db);
+        } finally {
+            transaction = null;
+            parameterMetaData = null;
+            pstmt = null;
+            connection = null;
+            supportInfo = null;
+        }
     }
 
     public static FBManager createFBManager() {
@@ -239,16 +232,11 @@ public abstract class AbstractBatchTest {
 
         BatchParameterBuffer buffer = new BatchParameterBufferImpl();
         buffer.addArgument(BatchParameterBuffer.TAG_RECORD_COUNTS, 1);
-        db.createBatch(transaction, INSERT_QUERY, metadataBuilder.getMessageMetadata(), buffer);
+        FbBatch batch = db.createBatch(transaction, INSERT_QUERY, metadataBuilder.getMessageMetadata(), buffer);
     }
 
     private FbTransaction getTransaction() throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(TpbItems.isc_tpb_read_committed);
-        tpb.addArgument(TpbItems.isc_tpb_rec_version);
-        tpb.addArgument(TpbItems.isc_tpb_write);
-        tpb.addArgument(TpbItems.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
     protected void allocateTransaction() throws SQLException {
@@ -257,23 +245,4 @@ public abstract class AbstractBatchTest {
         }
     }
 
-    @After
-    public final void tearDown() throws Exception {
-        if (transaction != null) {
-            try {
-                transaction.commit();
-            } catch (SQLException ex) {
-                System.out.println("Exception on transaction commit");
-                ex.printStackTrace();
-            }
-        }
-        if (db != null) {
-            try {
-                db.close();
-            } catch (SQLException ex) {
-                System.out.println("Exception on detach");
-                ex.printStackTrace();
-            }
-        }
-    }
 }

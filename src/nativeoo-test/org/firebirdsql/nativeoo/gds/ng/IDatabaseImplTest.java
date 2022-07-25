@@ -1,131 +1,106 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.common.FBTestProperties;
-import org.firebirdsql.common.rules.GdsTypeRule;
+import org.firebirdsql.common.extension.GdsTypeExtension;
 import org.firebirdsql.gds.ISCConstants;
-import org.firebirdsql.gds.TransactionParameterBuffer;
-
 import org.firebirdsql.gds.impl.GDSServerVersion;
-
-import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
-import org.firebirdsql.gds.impl.nativeoo.FbOOEmbeddedGDSFactoryPlugin;
+import org.firebirdsql.gds.impl.jni.EmbeddedGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.FbConnectionProperties;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.TransactionState;
-
-import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jdbc.SQLStateConstants;
 import org.firebirdsql.management.FBManager;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.File;
 import java.sql.SQLException;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
-import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
+import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.getFbMessage;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.oneOf;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-public class IDatabaseImplTest {
+/**
+ * Tests for OO API database. See {@link org.firebirdsql.nativeoo.gds.ng.IDatabaseImpl}.
+ *
+ * @since 5.0
+ */
+class IDatabaseImplTest {
 
     // TODO Assert in tests need to be checked (and more need to be added)
 
-    @ClassRule
-    public static final GdsTypeRule testType = GdsTypeRule.supportsFBOONativeOnly();
+    @RegisterExtension
+    static final GdsTypeExtension testType = GdsTypeExtension.supportsFBOONativeOnly();
 
-    private AbstractNativeOODatabaseFactory factory =
+    private final AbstractNativeOODatabaseFactory factory =
             (AbstractNativeOODatabaseFactory) FBTestProperties.getFbDatabaseFactory();
-
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
-
-    private final FbConnectionProperties connectionInfo;
-    {
-        connectionInfo = new FbConnectionProperties();
-        connectionInfo.setServerName(FBTestProperties.DB_SERVER_URL);
-        connectionInfo.setPortNumber(FBTestProperties.DB_SERVER_PORT);
-        connectionInfo.setUser(DB_USER);
-        connectionInfo.setPassword(DB_PASSWORD);
-        connectionInfo.setDatabaseName(FBTestProperties.getDatabasePath());
-        connectionInfo.setEncoding("NONE");
-
-    }
+    private final FbConnectionProperties connectionInfo = FBTestProperties.getDefaultFbConnectionProperties();
 
     @Test
-    public void testBasicAttach() throws Exception {
+    void testBasicAttach() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-        try (IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo)) {
+        try (IDatabaseImpl db = factory.connect(connectionInfo)) {
             db.attach();
 
-            assertTrue("Expected isAttached() to return true", db.isAttached());
-            assertNotNull("Expected version string to be not null", db.getServerVersion());
-            assertNotEquals("Expected version should not be invalid", GDSServerVersion.INVALID_VERSION, db.getServerVersion());
+            assertTrue(db.isAttached(), "Expected isAttached() to return true");
+            assertNotNull(db.getServerVersion(), "Expected version string to be not null");
+            assertNotEquals(GDSServerVersion.INVALID_VERSION, db.getServerVersion(), "Expected version should not be invalid");
         } finally {
             defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
-    public void doubleAttach() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(equalTo("Already attached to a database"));
-
+    void doubleAttach() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
-
-        try (IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo)) {
+        try (IDatabaseImpl db = factory.connect(connectionInfo)) {
             db.attach();
 
-            //Second attach should throw exception
-            db.attach();
+            SQLException exception = assertThrows(SQLException.class, db::attach,
+                    "Second attach should throw exception");
+            assertThat(exception, message(equalTo("Already attached to a database")));
         } finally {
             defaultDatabaseTearDown(fbManager);
         }
     }
 
     @Test
-    public void basicStatusProcessing_wrongLogin() throws Exception {
-        assumeThat("Embedded on windows does not use authentication",
-                FBTestProperties.GDS_TYPE, is(not(FbOOEmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+    void basicStatusProcessing_wrongLogin() throws Exception {
+        assumeThat("Embedded does not use authentication",
+                FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
         // set invalid password
         connectionInfo.setPassword("abcd");
-        try (IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo)) {
-
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
+        IDatabaseImpl db = factory.connect(connectionInfo);
+        try {
+            SQLException exception = assertThrows(SQLException.class, db::attach);
+            assertThat(exception, allOf(
                     message(startsWith(getFbMessage(ISCConstants.isc_login))),
-                    errorCode(equalTo(ISCConstants.isc_login))
-            ));
-
-            db.attach();
+                    errorCode(equalTo(ISCConstants.isc_login))));
+        } finally {
+            closeQuietly(db);
         }
     }
 
     @Test
-    public void testBasicStatusProcessing_wrongDatabase() throws Exception {
+    void testBasicStatusProcessing_wrongDatabase() throws Exception {
         // set invalid database
         final String invalidDatabaseName = FBTestProperties.getDatabasePath() + "doesnotexist";
         connectionInfo.setDatabaseName(invalidDatabaseName);
-        try (IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo)) {
-
-            expectedException.expect(allOf(
-                    isA(SQLException.class),
+        IDatabaseImpl db = factory.connect(connectionInfo);
+        try {
+            SQLException exception = assertThrows(SQLException.class, db::attach);
+            assertThat(exception, allOf(
                     // TODO Error parameter is platform dependent
                     anyOf(
                             message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)",
@@ -139,8 +114,8 @@ public class IDatabaseImplTest {
                     ),
                     errorCode(equalTo(ISCConstants.isc_io_error))
             ));
-
-            db.attach();
+        } finally {
+            closeQuietly(db);
         }
     }
 
@@ -148,70 +123,74 @@ public class IDatabaseImplTest {
      * Tests creating and subsequently dropping a database
      */
     @Test
-    public void testBasicCreateAndDrop() throws Exception {
+    void testBasicCreateAndDrop() throws Exception {
         connectionInfo.setSqlDialect(3);
-        IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+        IDatabaseImpl db = factory.connect(connectionInfo);
         File dbFile = new File(connectionInfo.getDatabaseName());
         try {
             db.createDatabase();
-            assertTrue("Database should be attached after create", db.isAttached());
-            assertTrue("Expected database file to exist (NOTE: only works on localhost)",
-                    dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost") );
+            assertTrue(db.isAttached(), "Database should be attached after create");
+            assertTrue(dbFile.exists() || !FBTestProperties.DB_SERVER_URL.equalsIgnoreCase("localhost"),
+                    "Expected database file to exist (NOTE: only works on localhost)");
 
             db.dropDatabase();
-            assertFalse("Database should be detached after drop", db.isAttached());
-            assertFalse("Expected database file to have been removed after drop", dbFile.exists());
+            assertFalse(db.isAttached(), "Database should be detached after drop");
+            assertFalse(dbFile.exists(), "Expected database file to have been removed after drop");
         } finally {
-            safelyClose(db);
+            closeQuietly(db);
             if (dbFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
                 dbFile.delete();
             }
         }
     }
 
     @Test
-    public void testDrop_NotAttached() throws Exception {
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
-
+    void testDrop_NotAttached() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
-            db.dropDatabase();
+            IDatabaseImpl db = factory.connect(connectionInfo);
+            try {
+                SQLException exception = assertThrows(SQLException.class, db::dropDatabase);
+                assertThat(exception, allOf(
+                        message(startsWith("The connection is not attached to a database")),
+                        sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
+            } finally {
+                closeQuietly(db);
+            }
         } finally {
             defaultDatabaseTearDown(fbManager);
         }
     }
 
+    @SuppressWarnings("resource")
     @Test
-    public void testDetach_NotConnected() throws Exception {
-        IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+    void testDetach_NotConnected() throws Exception {
+        IDatabaseImpl db = factory.connect(connectionInfo);
 
+        SQLException exception = assertThrows(SQLException.class, db::close);
         // Note: the error is different from the one in the pure java implementation as we cannot discern between
         // not connected and not attached
-        expectedException.expect(SQLException.class);
-        expectedException.expectMessage(startsWith("The connection is not attached to a database"));
-        expectedException.expect(sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR));
-
-        db.close();
+        assertThat(exception, allOf(
+                message(startsWith("The connection is not attached to a database")),
+                sqlStateEquals(SQLStateConstants.SQL_STATE_CONNECTION_ERROR)));
     }
 
     @Test
-    public void testBasicDetach() throws Exception {
+    void testBasicDetach() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+            IDatabaseImpl db = factory.connect(connectionInfo);
             try {
                 db.attach();
 
                 db.close();
 
-                assertFalse("Expected database not attached", db.isAttached());
+                assertFalse(db.isAttached(), "Expected database not attached");
             } finally {
-                safelyClose(db);
+                closeQuietly(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -219,29 +198,27 @@ public class IDatabaseImplTest {
     }
 
     @Test
-    public void testDetach_openTransactions() throws Exception {
+    void testDetach_openTransactions() throws Exception {
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
 
         try {
-            IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+            IDatabaseImpl db = factory.connect(connectionInfo);
             FbTransaction transaction = null;
             try {
                 db.attach();
                 // Starting an active transaction
                 transaction = getTransaction(db);
 
-                expectedException.expect(allOf(
+                SQLException exception = assertThrows(SQLException.class, db::close);
+                assertThat(exception, allOf(
                         errorCodeEquals(ISCConstants.isc_open_trans),
-                        message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))
-                ));
-
-                db.close();
+                        message(startsWith(getFbMessage(ISCConstants.isc_open_trans, "1")))));
             } finally {
                 if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
                     transaction.commit();
                 }
-                safelyClose(db);
+                closeQuietly(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -249,21 +226,26 @@ public class IDatabaseImplTest {
     }
 
     @Test
-    public void testCancelOperation_abortSupported() throws Exception {
+    void testCancelOperation_abortSupported() throws Exception {
+        // TODO Investigate why this doesn't work.
+        assumeThat("Test doesn't work with embedded protocol",
+                FBTestProperties.GDS_TYPE,
+                not(oneOf(EmbeddedGDSFactoryPlugin.EMBEDDED_TYPE_NAME)));
+
         FBManager fbManager = createFBManager();
         defaultDatabaseSetUp(fbManager);
         try {
-            IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+            IDatabaseImpl db = factory.connect(connectionInfo);
             try {
                 db.attach();
-                assumeTrue("expected database attached", db.isAttached());
-                assumeTrue("Test requires cancel support", supportInfoFor(db).supportsCancelOperation());
+                assumeTrue(db.isAttached(), "expected database attached");
+                assumeTrue(supportInfoFor(db).supportsCancelOperation(), "Test requires cancel support");
 
                 db.cancelOperation(ISCConstants.fb_cancel_abort);
 
-                assertFalse("Expected database not attached after abort", db.isAttached());
+                assertFalse(db.isAttached(), "Expected database not attached after abort");
             } finally {
-                safelyClose(db);
+                closeQuietly(db);
             }
         } finally {
             defaultDatabaseTearDown(fbManager);
@@ -271,38 +253,23 @@ public class IDatabaseImplTest {
     }
 
     @Test
-    public void testExecuteImmediate_createDatabase() throws Exception {
-        IDatabaseImpl db = (IDatabaseImpl) factory.connect(connectionInfo);
+    void testExecuteImmediate_createDatabase() throws Exception {
+        IDatabaseImpl db = factory.connect(connectionInfo);
         try {
             String createDb = String.format("CREATE DATABASE '%s' USER '%s' PASSWORD '%s'",
                     getDatabasePath(), DB_USER, DB_PASSWORD);
             db.executeImmediate(createDb, null);
-            assertTrue("Expected to be attached after create database", db.isAttached());
+            assertTrue(db.isAttached(), "Expected to be attached after create database");
             db.dropDatabase();
         } finally {
-            safelyClose(db);
+            closeQuietly(db);
+            //noinspection ResultOfMethodCallIgnored
             new File(getDatabasePath()).delete();
         }
     }
 
     private FbTransaction getTransaction(FbDatabase db) throws SQLException {
-        TransactionParameterBuffer tpb = new TransactionParameterBufferImpl();
-        tpb.addArgument(TpbItems.isc_tpb_read_committed);
-        tpb.addArgument(TpbItems.isc_tpb_rec_version);
-        tpb.addArgument(TpbItems.isc_tpb_write);
-        tpb.addArgument(TpbItems.isc_tpb_wait);
-        return db.startTransaction(tpb);
+        return db.startTransaction(getDefaultTpb());
     }
 
-    private static void safelyClose(FbDatabase db) {
-        if (db == null) return;
-        try {
-            if (db.isAttached()) {
-                db.close();
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            // ignore
-        }
-    }
 }

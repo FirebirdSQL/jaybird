@@ -77,7 +77,8 @@ class FBEventManagerTest {
 
     private void setupDefaultEventManager() throws SQLException {
         eventManager = new FBEventManager(getGdsType());
-        if (getGdsType() == GDSType.getType("PURE_JAVA") ||  getGdsType() == GDSType.getType("NATIVE")) {
+        if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")
+                || getGdsType() == GDSType.getType("FBOONATIVE")) {
             eventManager.setServerName(DB_SERVER_URL);
         }
         eventManager.setUser(DB_USER);

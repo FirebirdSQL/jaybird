@@ -17,14 +17,14 @@ import java.sql.SQLException;
  */
 public abstract class AbstractNativeOODatabaseFactory implements FbDatabaseFactory {
     @Override
-    public FbDatabase connect(IConnectionProperties connectionProperties) throws SQLException {
+    public IDatabaseImpl connect(IConnectionProperties connectionProperties) throws SQLException {
         final NativeDatabaseConnection databaseConnection = new NativeDatabaseConnection(getClientLibrary(),
                 filterProperties(connectionProperties));
         return databaseConnection.identify();
     }
 
     @Override
-    public FbService serviceConnect(IServiceProperties serviceProperties) throws SQLException {
+    public IServiceImpl serviceConnect(IServiceProperties serviceProperties) throws SQLException {
         final IServiceConnectionImpl serviceConnection = new IServiceConnectionImpl(getClientLibrary(),
                 filterProperties(serviceProperties));
         return serviceConnection.identify();

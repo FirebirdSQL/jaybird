@@ -89,15 +89,15 @@ public class IBatchImpl extends AbstractFbBatch {
                 statement.prepare(statementText);
                 metadata = (IMessageMetadataImpl) statement.getInputMetadata();
             }
-
+            final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
             if (parameterBuffer == null) {
-                batch = attachment.createBatch(getStatus(), ((ITransactionImpl) transaction).getTransaction(), statementText.length(),
-                        statementText, getDatabase().getDatabaseDialect(),
+                batch = attachment.createBatch(getStatus(), ((ITransactionImpl) transaction).getTransaction(),
+                        statementArray.length, statementArray, getDatabase().getDatabaseDialect(),
                         metadata.getMetadata(), 0, null);
             } else {
-                batch = attachment.createBatch(getStatus(), ((ITransactionImpl) transaction).getTransaction(), statementText.length(),
-                        statementText, getDatabase().getDatabaseDialect(),
-                        metadata.getMetadata(), parameterBuffer.toBytesWithType().length, parameterBuffer.toBytesWithType());
+                batch = attachment.createBatch(getStatus(), ((ITransactionImpl) transaction).getTransaction(),
+                        statementArray.length, statementArray, getDatabase().getDatabaseDialect(), metadata.getMetadata(),
+                        parameterBuffer.toBytesWithType().length, parameterBuffer.toBytesWithType());
             }
             processStatus();
         }
