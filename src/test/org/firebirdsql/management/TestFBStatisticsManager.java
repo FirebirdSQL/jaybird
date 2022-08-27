@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.junit.Assert.*;
 
 /**
@@ -174,7 +175,7 @@ public class TestFBStatisticsManager extends FBJUnit4TestBase {
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        if (supportInfo.isVersionEqualOrAbove(5, 0)) {
+        if (supportInfo.isVersionEqualOrAbove(4, 0, 2) && !isEmbeddedType().matches(GDS_TYPE)) {
             return 2;
         } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
             return 1;
