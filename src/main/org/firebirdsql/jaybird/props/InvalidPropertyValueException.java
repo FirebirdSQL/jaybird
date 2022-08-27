@@ -54,6 +54,6 @@ public class InvalidPropertyValueException extends IllegalArgumentException {
         if (additionalDetails != null) {
             builder.messageParameter(additionalDetails);
         }
-        return new InvalidPropertyValueException(builder.toFlatSQLException());
+        return new InvalidPropertyValueException(builder.toSQLException());
     }
 }

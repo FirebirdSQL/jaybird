@@ -397,13 +397,13 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 if (transaction == null) {
                     throw FbExceptionBuilder
                             .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
-                            .toFlatSQLException();
+                            .toSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
                 throw FbExceptionBuilder
                         .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 try {

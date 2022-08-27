@@ -82,8 +82,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     @Override
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
         }
     }
 
@@ -335,7 +334,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                 if (transaction == null) {
                     throw FbExceptionBuilder
                             .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
-                            .toFlatSQLException();
+                            .toSQLException();
                 } else if (!(transaction instanceof JnaTransaction)) {
                     // TODO SQLState and/or Firebird specific error
                     throw new SQLNonTransientException(format("Invalid transaction handle type: %s, expected: %s",
@@ -345,7 +344,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             } else if (transaction != null) {
                 throw FbExceptionBuilder
                         .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
 
             final byte[] statementArray = getEncoding().encodeToCharset(statementText);

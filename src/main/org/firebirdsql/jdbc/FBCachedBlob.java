@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -190,7 +190,7 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
 
     private void checkClosed() throws SQLException {
         if (blobData == FREED_MARKER) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toSQLException();
         }
     }
 }

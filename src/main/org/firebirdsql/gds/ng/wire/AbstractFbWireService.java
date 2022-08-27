@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -69,10 +69,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
                 connection.close();
             }
         } catch (IOException e) {
-            throw new FbExceptionBuilder()
-                    .exception(ISCConstants.isc_net_write_err)
-                    .cause(e)
-                    .toFlatSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
         } finally {
             serviceListenerDispatcher.detached(this);
             serviceListenerDispatcher.shutdown();
@@ -103,8 +100,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
         }
     }
 
@@ -122,8 +118,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
         }
     }
 

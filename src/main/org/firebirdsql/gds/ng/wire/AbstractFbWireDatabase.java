@@ -71,10 +71,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 connection.close();
             }
         } catch (IOException e) {
-            throw new FbExceptionBuilder()
-                    .exception(ISCConstants.isc_net_write_err)
-                    .cause(e)
-                    .toFlatSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
         } finally {
             databaseListenerDispatcher.detached(this);
             databaseListenerDispatcher.shutdown();
@@ -125,8 +122,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     @Override
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
         }
     }
 
@@ -144,8 +140,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
         }
     }
 
@@ -253,7 +248,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
                     throw new FbExceptionBuilder()
                             .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
-                            .toFlatSQLException();
+                            .toSQLException();
                 }
                 asynchronousChannel.cancelEvent(eventHandle);
             }

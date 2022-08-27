@@ -119,7 +119,7 @@ public class JnaStatement extends AbstractFbStatement {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
                         .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
                         .messageParameter(statementArray.length)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());
@@ -191,7 +191,7 @@ public class JnaStatement extends AbstractFbStatement {
                 try (OperationCloseHandle operationCloseHandle = signalExecute()) {
                     if (operationCloseHandle.isCancelled()) {
                         // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                     }
                     if (hasSingletonResult) {
                         clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
@@ -378,7 +378,7 @@ public class JnaStatement extends AbstractFbStatement {
                 try (OperationCloseHandle operationCloseHandle = signalFetch()) {
                     if (operationCloseHandle.isCancelled()) {
                         // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                     }
                     final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
                             outXSqlDa);

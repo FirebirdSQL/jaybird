@@ -547,15 +547,11 @@ public class ClumpletReader {
     }
 
     private static SQLException invalidStructure(String message) {
-        return FbExceptionBuilder.forException(jb_invalidClumpletStructure)
-                .messageParameter(message)
-                .toFlatSQLException();
+        return FbExceptionBuilder.forException(jb_invalidClumpletStructure).messageParameter(message).toSQLException();
     }
 
     private static SQLException usageMistake(String message) {
-        return FbExceptionBuilder.forException(jb_clumpletReaderUsageError)
-                .messageParameter(message)
-                .toFlatSQLException();
+        return FbExceptionBuilder.forException(jb_clumpletReaderUsageError).messageParameter(message).toSQLException();
     }
 
     public enum Kind {

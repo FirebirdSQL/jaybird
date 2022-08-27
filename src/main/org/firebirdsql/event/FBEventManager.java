@@ -488,8 +488,7 @@ public class FBEventManager implements EventManager {
             // using existing connection
             if (fbDatabase == null) {
                 // fbDatabase has already detached
-                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
-                        .toFlatSQLException();
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
             }
         }
 

@@ -224,20 +224,20 @@ public final class SrpClient {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_hashAlgorithmNotAvailable)
                     .messageParameter(clientProofHashAlgorithm)
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
     byte[] clientProof(String user, String password, byte[] authData) throws SQLException {
         if (authData == null || authData.length == 0) {
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_data).toFlatSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_data).toSQLException();
         }
         if (authData.length > EXPECTED_AUTH_DATA_LENGTH) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_auth_datalength)
                     .messageParameter(authData.length)
                     .messageParameter(EXPECTED_AUTH_DATA_LENGTH)
                     .messageParameter("data")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
 
         final int saltLength = VaxEncoding.iscVaxInteger2(authData, 0);
@@ -246,7 +246,7 @@ public final class SrpClient {
                     .messageParameter(saltLength)
                     .messageParameter(SRP_SALT_SIZE * 2)
                     .messageParameter("salt")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         final byte[] salt = Arrays.copyOfRange(authData, 2, saltLength + 2);
 
@@ -257,7 +257,7 @@ public final class SrpClient {
                     .messageParameter(keyLength)
                     .messageParameter(authData.length - serverKeyStart)
                     .messageParameter("key")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         final String hexServerPublicKey = new String(authData, serverKeyStart, authData.length - serverKeyStart,
                 StandardCharsets.US_ASCII);

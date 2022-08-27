@@ -216,7 +216,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                     .messageParameter(operation)
                     .messageParameter("processOperation")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
@@ -314,9 +314,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     @Override
     public void setNetworkTimeout(int milliseconds) throws SQLException {
         if (milliseconds < 0) {
-            throw FbExceptionBuilder
-                    .forException(JaybirdErrorCodes.jb_invalidTimeout)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTimeout).toSQLException();
         }
         connection.setSoTimeout(milliseconds);
     }

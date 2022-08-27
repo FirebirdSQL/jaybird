@@ -348,7 +348,7 @@ public class FBDriver implements FirebirdDriver {
                     .messageParameter(url)
                     .messageParameter(e.toString())
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 }

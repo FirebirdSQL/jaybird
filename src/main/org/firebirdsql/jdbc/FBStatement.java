@@ -651,7 +651,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         default:
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
                     .messageParameter(direction)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 

@@ -416,7 +416,7 @@ class FBCachedFetcher implements FBFetcher {
     private void checkScrollable() throws SQLException {
         if (forwardOnly) {
             throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 }

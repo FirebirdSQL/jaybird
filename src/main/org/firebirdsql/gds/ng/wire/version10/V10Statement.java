@@ -255,7 +255,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 try (OperationCloseHandle operationCloseHandle = signalExecute()){
                     if (operationCloseHandle.isCancelled()) {
                         // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
+                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                     }
                     try {
                         if (hasSingletonResult) {

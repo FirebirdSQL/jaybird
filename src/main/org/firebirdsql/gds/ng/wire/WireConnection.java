@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -369,7 +369,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toFlatSQLException();
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toSQLException();
             }
         } catch (SocketTimeoutException ste) {
             throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)

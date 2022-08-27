@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -348,7 +348,7 @@ final class FBBigDecimalField extends FBField {
             default:
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_unsupportedFieldType)
                         .messageParameter(fieldDescriptor.getType())
-                        .toFlatSQLException();
+                        .toSQLException();
             }
         }
 

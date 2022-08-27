@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -50,7 +50,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
@@ -64,7 +64,7 @@ public abstract class AbstractNativeDatabaseFactory implements FbDatabaseFactory
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_failedToLoadNativeLibrary)
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 

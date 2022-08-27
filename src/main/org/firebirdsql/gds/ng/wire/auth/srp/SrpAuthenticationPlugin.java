@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -79,7 +79,7 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
         } else if (srpClient.getSessionKey() != null) {
             throw new FbExceptionBuilder().exception(ISCConstants.isc_random)
                     .messageParameter("Auth sync failure - SRP's authenticate called more times than supported")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
 
         log.debug("SRP phase 2");

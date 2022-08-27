@@ -117,7 +117,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         } catch (IOException ex) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_errorAsynchronousEventChannelClose)
                     .cause(ex)
-                    .toFlatSQLException();
+                    .toSQLException();
         } finally {
             socketChannel = null;
             closeLock.unlock();
