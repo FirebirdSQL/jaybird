@@ -350,7 +350,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             if (fbStatement != null) {
                 try {
                     try {
-                        closeResultSet(false);
+                        closeResultSet(false, CompletionReason.STATEMENT_CLOSE);
                     } finally {
                         //may need ensureTransaction?
                         fbStatement.close();

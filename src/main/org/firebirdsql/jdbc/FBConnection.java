@@ -420,8 +420,8 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                 log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
             }
             try {
-                freeStatements();
                 if (metaData != null) metaData.close();
+                freeStatements();
             } catch (SQLException e) {
                 chainBuilder.append(e);
             } finally {

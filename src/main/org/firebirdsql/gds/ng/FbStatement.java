@@ -107,12 +107,13 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     /**
      * Closes the cursor associated with this statement, leaving the statement itself allocated.
      * <p>
-     * When this method is called in preparation of a commit or rollback (see {@code transactionEnd}), then
-     * implementations may opt to not close the cursor on the server if the server closes the cursor automatically.
+     * When this method is called in preparation of a commit, rollback or another operation which will close the cursor
+     * (see {@code transactionEnd}), then implementations may opt to not close the cursor on the server as the server
+     * closes the cursor automatically, or the statement as a whole is closed by the implementation.
      * </p>
      *
      * @param transactionEnd
-     *         Close is in response to a transaction end.
+     *         close is in response to a transaction end or another operation which will close the cursor
      */
     void closeCursor(boolean transactionEnd) throws SQLException;
 

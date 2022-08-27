@@ -362,7 +362,7 @@ final class FBServerScrollFetcher implements FBFetcher {
     public void close(CompletionReason completionReason) throws SQLException {
         closed = true;
         try {
-            stmt.closeCursor(completionReason.isTransactionEnd());
+            stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
         } finally {
             rows.clear();
             rowsOffset = 0;
