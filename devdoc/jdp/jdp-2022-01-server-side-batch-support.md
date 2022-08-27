@@ -2,8 +2,8 @@
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 5
+- Published: 2022-08-27
+- Implemented in: Jaybird 5
 
 ## Type
 
