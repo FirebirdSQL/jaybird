@@ -87,6 +87,6 @@ public final class PropertyNames {
     public static final String timestampUsesLocalTimezone = "timestampUsesLocalTimezone";
 
     private PropertyNames() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 }

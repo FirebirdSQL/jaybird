@@ -64,6 +64,6 @@ public final class SpbItems {
     public static final int isc_spb_expected_db = 124;
 
     private SpbItems() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 }

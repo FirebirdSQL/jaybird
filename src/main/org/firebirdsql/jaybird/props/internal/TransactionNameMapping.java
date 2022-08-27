@@ -38,7 +38,7 @@ public final class TransactionNameMapping {
     public static final String TRANSACTION_SERIALIZABLE = "TRANSACTION_SERIALIZABLE";
 
     private TransactionNameMapping() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
     /**

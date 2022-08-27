@@ -72,6 +72,6 @@ public final class PropertyConstants {
     public static final String DEFAULT_AUTH_PLUGINS = "Srp256,Srp";
 
     private PropertyConstants() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 }

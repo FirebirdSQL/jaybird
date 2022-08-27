@@ -61,7 +61,7 @@ public final class BatchItems {
     public static final int BATCH_SUCCESS_NO_INFO = -2;
 
     private BatchItems() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
 }

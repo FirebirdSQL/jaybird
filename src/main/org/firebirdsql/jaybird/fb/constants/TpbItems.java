@@ -58,7 +58,7 @@ public class TpbItems {
     public static final int isc_tpb_at_snapshot_number = 23;
 
     private TpbItems() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
 }
