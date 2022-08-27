@@ -467,7 +467,7 @@ This support comes with a number of limitations:
 ** The `Statement` batch behaviour is not supported by server-side batch updates.
 ** The `CallableStatement` implementation is more complex than prepared statement, so the decision was made not to reimplement this using server-side batch updates.
 The implementation might be rewritten in a future Jaybird version, if there is sufficient interest.
-As a workaround, use `execute procedure` or `{call procedure_name(...)}` from a `PreparedStatement`.
+As a workaround, use `execute procedure` or `++{call procedure_name(...)}++` from a `PreparedStatement`.
 * Requesting generated-keys will fall back to emulated behaviour as server-side batches do not support returning values produced by the `RETURNING` clause.
 * Firebird 4.0 has additional facilities to send `BLOB` values as part of the batch update, but this is not yet used by Jaybird.
 
