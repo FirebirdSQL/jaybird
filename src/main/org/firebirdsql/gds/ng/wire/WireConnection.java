@@ -74,8 +74,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
 
     private static final Logger log = LoggerFactory.getLogger(WireConnection.class);
 
-    // Micro-optimization: we usually expect at most 1 (Firebird 3), and usually 0 (Firebird 2.5 and earlier)
-    private final List<KnownServerKey> knownServerKeys = new ArrayList<>(1);
+    // Micro-optimization: we usually expect at most 3 (Firebird 5)
+    private final List<KnownServerKey> knownServerKeys = new ArrayList<>(3);
     private final DbAttachInfo dbAttachInfo;
     private ClientAuthBlock clientAuthBlock;
     private Socket socket;
@@ -549,15 +549,6 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrIn = null;
             socket = null;
             protocols = null;
-        }
-    }
-
-    @Override
-    protected final void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
         }
     }
 

@@ -65,6 +65,12 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    public final int getHandle() {
+        // The handle is always 0 for a TCP/IP database
+        return 0;
+    }
+
+    @Override
     public void forceClose() throws SQLException {
         try {
             if (connection.isConnected()) {

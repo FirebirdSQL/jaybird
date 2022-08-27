@@ -52,7 +52,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class);
 
-    private int handle;
     private BlrCalculator blrCalculator;
 
     /**
@@ -66,11 +65,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected V10Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
-    }
-
-    @Override
-    public final int getHandle() {
-        return handle;
     }
 
     @Override
@@ -168,8 +162,9 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param genericResponse
      *         GenericResponse received from the server.
      */
+    @SuppressWarnings("unused")
     protected final void processAttachOrCreateResponse(GenericResponse genericResponse) {
-        handle = genericResponse.getObjectHandle();
+        // nothing to do
     }
 
     /**

@@ -63,6 +63,12 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     }
 
     @Override
+    public final int getHandle() {
+        // The handle is always 0 for a TCP/IP service
+        return 0;
+    }
+
+    @Override
     public void forceClose() throws SQLException {
         try {
             if (connection.isConnected()) {
@@ -163,6 +169,37 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     @Override
     public final XdrStreamAccess getXdrStreamAccess() {
         return connection.getXdrStreamAccess();
+    }
+
+    /**
+     * Closes the WireConnection associated with this connection.
+     *
+     * @throws IOException
+     *         For errors closing the connection.
+     */
+    protected final void closeConnection() throws IOException {
+        if (!connection.isConnected()) return;
+        synchronized (getSynchronizationObject()) {
+            try {
+                connection.close();
+            } finally {
+                setDetached();
+            }
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (!connection.isConnected()) return;
+            if (isAttached()) {
+                safelyDetach();
+            } else {
+                closeConnection();
+            }
+        } finally {
+            super.finalize();
+        }
     }
 
 }

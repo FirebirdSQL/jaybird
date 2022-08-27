@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -39,15 +39,8 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10Service extends AbstractFbWireService implements FbWireService {
 
-    private int handle;
-
     public V10Service(WireServiceConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
-    }
-
-    @Override
-    public int getHandle() {
-        return handle;
     }
 
     @Override
@@ -92,8 +85,9 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
      * @param genericResponse
      *         GenericResponse received from the server.
      */
+    @SuppressWarnings("unused")
     protected void processAttachResponse(GenericResponse genericResponse) {
-        handle = genericResponse.getObjectHandle();
+        // nothing to do
     }
 
     protected void afterAttachActions() throws SQLException {
@@ -218,38 +212,6 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
-        }
-    }
-
-    /**
-     * Closes the WireConnection associated with this connection.
-     *
-     * @throws IOException
-     *         For errors closing the connection.
-     */
-    protected final void closeConnection() throws IOException {
-        if (!connection.isConnected()) return;
-        synchronized (getSynchronizationObject()) {
-            try {
-                connection.close();
-            } finally {
-                setDetached();
-            }
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (connection.isConnected()) {
-                if (isAttached()) {
-                    safelyDetach();
-                } else {
-                    closeConnection();
-                }
-            }
-        } finally {
-            super.finalize();
         }
     }
 
