@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
+import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
@@ -1316,6 +1317,16 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         DatabaseConnectionProperties props = connectionProperties();
         return props != null && scrollableCursor != null
                 && scrollableCursor.equalsIgnoreCase(props.getScrollableCursor());
+    }
+
+    boolean isUseServerBatch() {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null && props.isUseServerBatch();
+    }
+
+    int getServerBatchBufferSize() {
+        DatabaseConnectionProperties props = connectionProperties();
+        return props != null ? props.getServerBatchBufferSize() : PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE;
     }
 
 }

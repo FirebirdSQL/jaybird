@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +55,7 @@ public enum StatementState {
         }
     },
     /**
-     * Statement is closed or has been de-allocated
+     * Statement is closed or has been de-allocated.
      */
     CLOSED {
         @Override
@@ -66,34 +64,45 @@ public enum StatementState {
         }
     },
     /**
-     * Statement has been allocated or unprepared
+     * Statement has been allocated or unprepared.
      */
     ALLOCATED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, ALLOCATED, CLOSING);
+            return EnumSet.of(ERROR, PREPARING, ALLOCATED, CLOSING);
         }
     },
     /**
-     * Statement has been prepared
+     * Statement is preparing a new statement text, this is an ephemeral state that should only last as long as
+     * the prepare call to the database takes.
+     */
+    PREPARING {
+        @Override
+        Set<StatementState> createValidTransitionSet() {
+            return EnumSet.of(ERROR, PREPARING, PREPARED, ALLOCATED, CLOSING);
+        }
+    },
+    /**
+     * Statement has been prepared.
      */
     PREPARED {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, EXECUTING, CLOSING, PREPARED, ALLOCATED);
+            return EnumSet.of(ERROR, EXECUTING, CLOSING, PREPARING, PREPARED, ALLOCATED);
         }
     },
     /**
-     * A statement is being executed, this is an ephemeral state that should only last as long as the execute call to the database takes.
+     * A statement is being executed, this is an ephemeral state that should only last as long as the execute call to
+     * the database takes.
      */
     EXECUTING {
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, CURSOR_OPEN, PREPARED, CLOSING);
+            return EnumSet.of(ERROR, CURSOR_OPEN, PREPARING, PREPARED, CLOSING);
         }
     },
     /**
-     * Statement has been executed, cursor is still open
+     * Statement has been executed, cursor is still open.
      */
     CURSOR_OPEN {
         @Override
@@ -103,11 +112,11 @@ public enum StatementState {
 
         @Override
         EnumSet<StatementState> createValidTransitionSet() {
-            return EnumSet.of(ERROR, PREPARED, ALLOCATED, CLOSING);
+            return EnumSet.of(ERROR, PREPARING, PREPARED, ALLOCATED, CLOSING);
         }
     },
     /**
-     * Last statement execute or prepare resulted in an error
+     * Last statement execute or prepare resulted in an error.
      */
     ERROR {
         /**

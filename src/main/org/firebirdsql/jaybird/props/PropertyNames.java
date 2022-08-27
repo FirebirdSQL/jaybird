@@ -77,6 +77,8 @@ public final class PropertyNames {
     public static final String tpbMapping = "tpbMapping";
     public static final String defaultIsolation = "defaultIsolation";
     public static final String scrollableCursor = "scrollableCursor";
+    public static final String useServerBatch = "useServerBatch";
+    public static final String serverBatchBufferSize = "serverBatchBufferSize";
 
     /**
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)

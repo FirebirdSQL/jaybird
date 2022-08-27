@@ -23,7 +23,6 @@ import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.xca.FBTpb;
 import org.firebirdsql.jdbc.FBTpbMapper;
@@ -101,7 +100,7 @@ class ReconnectTransactionTest {
             stmtHandle2.prepare(RECOVERY_QUERY);
 
             final List<RowValue> rows = new ArrayList<>();
-            StatementListener stmtListener = new DefaultStatementListener() {
+            StatementListener stmtListener = new StatementListener() {
                 @Override
                 public void receivedRow(FbStatement sender, RowValue rowValues) {
                     rows.add(rowValues);

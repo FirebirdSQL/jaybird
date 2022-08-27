@@ -60,7 +60,7 @@ Feedback can be sent to the Firebird-java mailing list or reported on the issue 
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.7, and 4.0.0, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.10, and 4.0.2, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -71,7 +71,7 @@ Jaybird 5 supports Java 8 (JDBC 4.2), and Java 9 and higher (JDBC 4.3).
 Support for earlier Java versions has been dropped.
 
 Given the limited support period for Java 9 and higher versions, we will limit support on those versions to the most recent LTS version and the latest release.
-Currently, that means we support Java 11 and Java 17.
+Currently, that means we support Java 8, 11 and 17.
 
 [NOTE]
 ====
@@ -303,7 +303,7 @@ Some examples that all identify the same database:
 * `(serverName = "localhost", portNumber = 3050, databaseName = "/path/to/db.fdb")`
 * `(serverName = null, portNumber = 3050, databaseName = "//localhost//path/to/db.fdb")`
 * `(serverName = null, portNumber = 3050, databaseName = "localhost:/path/to/db.fdb")`
-* `(serverName = null, portNumber = 3050, databaseName = "///path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
+* `(serverName = null, portNumber = 3050, databaseName = "////path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
 * `(serverName = null, portNumber = 3050, databaseName = "/path/to/db.fdb")` -- for NATIVE and EMBEDDED, this may result in an embedded connection instead of through localhost.
 
 Some examples that all identify the same service:
@@ -432,8 +432,55 @@ Please report any incorrect changes in detection on https://groups.google.com/g/
 If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
 Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
 
+[#server-batch-updates]
+=== Firebird 4.0 server-side batch updates
+
+Jaybird supports server-side batch updates introduced in Firebird 4.0.
+
+This feature is only available on pure-java connections, and only on prepared statements (but not callable statements).
+Support is only available in pure-java, as the bindings for native and embedded use the legacy fbclient API, and batch updates are not (fully) exposed in the legacy fbclient API.
+
+Two new properties have been added for this feature:
+
+* `useServerBatch` -- a Boolean property to enable or disable server-side batch, default is `true`.
+When set to `false`, emulated batch behaviour (comparable to the behaviour of previous Jaybird versions) will be used.
++
+When server-side batch support is not available, Jaybird will fall back to the emulated batch behaviour.
+* `serverBatchBufferSize` -- size in bytes of the server-side batch buffer, default is `0`.
++
+This property supports the following value ranges:
++
+--
+[horizontal]
+`< 0`:: use server-side default (16MB as of Firebird 4.0)
+`0`:: (default) use server-side maximum (256MB as of Firebird 4.0)
+`> 0`:: use specified size, capped at server-side maximum
+--
++
+Too small buffer sizes will use 128KB or the size necessary for two rows (whichever is bigger).
+Too large buffer sizes will use the server-side maximum (256MB as of Firebird 4.0).
+
+This support comes with a number of limitations:
+
+* Only supported on the pure-java protocol, not on native or embedded.
+* Only supported on `PreparedStatement`.
+** The `Statement` batch behaviour is not supported by server-side batch updates.
+** The `CallableStatement` implementation is more complex than prepared statement, so the decision was made not to reimplement this using server-side batch updates.
+The implementation might be rewritten in a future Jaybird version, if there is sufficient interest.
+As a workaround, use `execute procedure` or `{call procedure_name(...)}` from a `PreparedStatement`.
+* Requesting generated-keys will fall back to emulated behaviour as server-side batches do not support returning values produced by the `RETURNING` clause.
+* Firebird 4.0 has additional facilities to send `BLOB` values as part of the batch update, but this is not yet used by Jaybird.
+
+When server-side batch support is unavailable, either because the server doesn't support it, or because of above limitations, or if the connection property `useServerBatch` is `false`, Jaybird will fall back to the emulated behaviour.
+
+By default, Jaybird will request the maximum server-side batch buffer size (256MB as of Firebird 4.0).
+A smaller buffer can be requested with connection property `serverBatchBufferSize` (value in bytes).
+Jaybird does not track the available size of the server-side batch buffer.
+Attempting to execute a batch larger than this buffer will fail with error "`Internal buffer overflow - batch too big`" (`isc_batch_too_big`, error code `335545198`).
+The 256MB buffer used with Jaybird defaults on Firebird 4.0 is sufficient to accommodate several thousand rows at maximum row size (a naive calculation says around 4000 rows, but this doesn't account for all overhead of a row).
+
 [#multirow-returning]
-=== Firebird 5 multi-row RETURNING support
+=== Firebird 5.0 multi-row RETURNING support
 
 Jaybird supports multi-row `RETURNING` introduced in Firebird 5.0.
 
@@ -441,7 +488,7 @@ The entire generated keys result set is retrieved immediately on execute.
 So, if the statement inserts, updates or deletes a significant number of rows, this can consume a lot of memory in Jaybird.
 
 [#scrollable-cursors]
-=== Firebird 5 scrollable cursor support
+=== Firebird 5.0 scrollable cursor support
 
 Jaybird supports server-side scrollable cursors introduced in Firebird 5.0.
 
@@ -579,6 +626,7 @@ Some examples:
 
 These cases need to be replaced with `"a=b"`.
 
+[#generated-keys-always]
 === Generated keys support always available
 
 Previously, support for generated keys depended on the presence of the antlr4-runtime library on the classpath.
@@ -586,11 +634,25 @@ With <<generated-keys-parser-replaced>>, generated keys support is now always av
 
 See <<generated-keys-parser-replaced>> for information on disabling or ignoring generated keys support if you relied on this behaviour.
 
+[#batch-too-big]
+=== Batch execution error "`Internal buffer overflow - batch too big`"
+
+With the introduction of server-side batch updates, it is possible that execution of a very large batch fails with error "`Internal buffer overflow - batch too big`" (`isc_batch_too_big`, `335545198`).
+
+There are two possible solutions for this error:
+
+. Reduce the size of the batch, by executing when the batch has accumulated a few hundred to a few thousand rows.
+. Disable server-side batch updates by setting connection property `useServerBatch` to `false`.
+
+The maximum server-side batch buffer should be sufficient to have a batch of around 4000 rows with the maximum row size (around 64KB), more rows are possible for smaller row sizes.
+
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
 
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
+
+// TODO Consider if some of these changes need to be moved to GDS-ng/internal breaking changes
 
 The following methods have been removed in Jaybird 5:
 
@@ -598,6 +660,9 @@ The following methods have been removed in Jaybird 5:
 there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor.
 * `FBConnection.getDatabaseParameterBuffer()`;
 there is no direct replacement, though `FBConnection.connectionProperties()` can be considered its successor.
+* `FBStatement`
+** `toArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toIntArray(List<? extends Number>)`
+** `toLargeArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toLongArray(List<? extends Number>)`
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
 * `IConnectionProperties.getExtraDatabaseParameters`;
@@ -644,10 +709,14 @@ There is no direct equivalent beyond accessing the properties with the same name
 * `V10Statement` (this is internal implementation, but might be used by custom protocol implementations)
 ** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
 ** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
+** `writeSqlData(RowDescriptor, RowValue)` -- use `writeSqlData(RowDescriptor, RowValue, boolean)`, with the third parameter `true` for the equivalent behaviour
 * `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
 * `AbstractFbStatement` (this is internal implementation, but might be used by custom protocol implementations)
 ** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
 ** `isAllRowsFetched()` -- `isAfterLast()`
+* `FbWireOperations.readSingleResponse` -- use `FbWireOperations.readResponse`
++
+Contrary to `readSingleResponse`, `readResponse` throws the `SQLException` reported in a `GenericResponse`
 
 The following methods had their visibility reduced:
 
@@ -661,8 +730,6 @@ The following classes have been removed in Jaybird 5:
 * `ParameterBufferHelper.DpbParameterType`
 * `ParameterBufferHelper.DpbValueType`
 * `DatabaseParameterBufferExtension`
-* `IAttachProperties.DEFAULT_PORT`
-* `IAttachProperties.DEFAULT_SERVER_NAME`
 * `Base64Decoder` and `Base64DecoderImpl`, these classes were internal API, but not marked as such.
 * `JdbcVersionSupport` and implementations, `JdbcVersionSupportHolder`.
 These were implementation artifacts to support multiple JDBC versions.
@@ -685,6 +752,8 @@ Use the constants with the same name from `java.sql.Types`.
 ** `isc_dpb_{asterisk}` of Jaybird-specific connection properties, Firebird-specific connection properties have been deprecated for removal in Jaybird 6.
 ** `jaybirdMinIscDpbValue`
 ** `jaybirdMaxIscDpbValue`
+* `IAttachProperties.DEFAULT_PORT`
+* `IAttachProperties.DEFAULT_SERVER_NAME`
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods
@@ -731,6 +800,20 @@ As a result, the following methods, constants, properties and others are no long
 * Enum `EscapeParserMode` and its usages in `FBEscapedCallParser` and `FBEscapedParser`
 * Public classes in package are now marked as internal-api
 
+[#breaking-changes-internal-api]
+=== Breaking changes internal API
+
+The following breaking changes were made to the internal API, like the GDS-ng API in `org.firebirdsql.gds.ng` and sub-packages.
+These changes are primarily interesting for implementers of custom GDS-ng implementations, or people using this low-level API directly.
+
+[#breaking-changes-statement-state]
+==== Additional statement state `PREPARING`
+
+To be able to detect preparing a new statement text on a statement handle, the state `PREPARING` has been added to `org.firebirdsql.gds.ng.StatementState`.
+The state transition `ALLOCATED` -> `PREPARED` is no longer valid, and must now be `ALLOCATED` -> `PREPARING` -> `PREPARED`.
+
+Custom statement implementations need to add a state transition to `PREPARING` before preparing a new statement text.
+
 [#breaking-changes-for-jaybird-6]
 === Breaking changes for Jaybird 6
 
@@ -768,6 +851,11 @@ Changes to the `FirebirdConnectionProperties` interface affect the data source i
 
 [#removal-of-deprecated-classes-6]
 ===== Removal of deprecated classes
+
+The following classes have been deprecated and will be removed in Jaybird 6:
+
+* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
 
 [#removal-of-deprecated-constants-6]
 ==== Removal of deprecated constants

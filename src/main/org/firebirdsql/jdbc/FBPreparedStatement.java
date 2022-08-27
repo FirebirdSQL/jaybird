@@ -19,17 +19,19 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
 import org.firebirdsql.jdbc.field.FBWorkaroundStringField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.util.Primitives;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -38,6 +40,8 @@ import java.net.URL;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Implementation of {@link java.sql.PreparedStatement}.
@@ -77,6 +81,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     private final FBObjectListener.BlobListener blobListener;
     private RowValue fieldValues;
+    private Batch batch;
 
     /**
      * Create instance of this class for the specified result set type and 
@@ -202,8 +207,15 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     void close(boolean ignoreAlreadyClosed) throws SQLException {
-        batchList = null;
-        super.close(ignoreAlreadyClosed);
+        try {
+            Batch batch = this.batch;
+            if (batch != null) {
+                this.batch = null;
+                batch.close();
+            }
+        } finally {
+            super.close(ignoreAlreadyClosed);
+        }
     }
 
     public FirebirdParameterMetaData getFirebirdParameterMetaData() throws SQLException {
@@ -604,8 +616,27 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         }
     }
 
-    // TODO: AbstractCallableStatement adds FBProcedureCall, while AbstractPreparedStatement adds RowValue: separate?
-    protected List<Object> batchList = new ArrayList<>();
+    private Batch requireBatch() throws SQLException {
+        Batch batch = this.batch;
+        if (batch != null) {
+            return batch;
+        }
+        return this.batch = createBatch();
+    }
+
+    // NOTE: This is not used for FBCallableStatement!
+    private Batch createBatch() throws SQLException {
+        if (connection != null && connection.isUseServerBatch()
+                && fbStatement != null && fbStatement.supportBatchUpdates()
+                && !isGeneratedKeyQuery()) {
+            return new ServerBatch(
+                    FbBatchConfig.of(FbBatchConfig.HALT_AT_FIRST_ERROR, FbBatchConfig.UPDATE_COUNTS,
+                            FbBatchConfig.SERVER_DEFAULT_DETAILED_ERRORS, connection.getServerBatchBufferSize()),
+                    fbStatement);
+        } else {
+            return new EmulatedPreparedStatementBatch();
+        }
+    }
 
     @Override
     public void addBatch() throws SQLException {
@@ -621,7 +652,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 }
             }
 
-            batchList.add(batchedValues);
+            requireBatch().addBatch(batchedValues);
         }
     }
 
@@ -630,8 +661,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         checkValidity();
 
         synchronized (getSynchronizationObject()) {
-            // TODO Find open streams and close them?
-            batchList.clear();
+            Batch batch = this.batch;
+            if (batch != null) {
+                // TODO Find open streams and close them?
+                batch.clearBatch();
+            }
         }
     }
 
@@ -639,67 +673,16 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     protected List<Long> executeBatchInternal() throws SQLException {
         synchronized (getSynchronizationObject()) {
             checkValidity();
-            final BatchStatementListener batchStatementListener;
             boolean commit = false;
             try {
                 notifyStatementStarted();
-
-                final int size = batchList.size();
-                if (isGeneratedKeyQuery()) {
-                    batchStatementListener = new BatchStatementListener(size);
-                    fbStatement.addStatementListener(batchStatementListener);
-                } else {
-                    batchStatementListener = null;
-                }
-                final List<Long> results = new ArrayList<>(size);
-                final Iterator<Object> iter = batchList.iterator();
-
-                try {
-                    while (iter.hasNext()) {
-                        BatchedRowValue data = (BatchedRowValue) iter.next();
-
-                        executeSingleForBatch(data, results);
-                    }
-
-                    commit = true;
-
-                    return results;
-
-                } catch (SQLException ex) {
-                    throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
-                            ex.getErrorCode(), toLargeArray(results), ex);
-                } finally {
-                    if (batchStatementListener != null) {
-                        fbStatement.removeStatementListener(batchStatementListener);
-                        specialResult.clear();
-                        specialResult.addAll(batchStatementListener.getRows());
-                    }
-                    clearBatch();
-                }
+                List<Long> results = requireBatch().execute();
+                commit = true;
+                return results;
             } finally {
                 notifyStatementCompleted(commit);
             }
         }
-    }
-
-    private void executeSingleForBatch(BatchedRowValue data, List<Long> results) throws SQLException {
-        fieldValues.reset();
-        for (int i = 0; i < fieldValues.getCount(); i++) {
-            FBField field = getField(i + 1);
-            if (field instanceof FBFlushableField) {
-                ((FBFlushableField) field).setCachedObject((CachedObject) data.getCachedObject(i));
-            } else {
-                fieldValues.setFieldData(i, data.getFieldData(i));
-            }
-        }
-
-        if (internalExecute(isExecuteProcedureStatement)) {
-            throw createBatchUpdateException(
-                    "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
-        }
-
-        results.add(getLargeUpdateCount());
     }
 
     @Override
@@ -965,7 +948,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         return fields != null;
     }
 
-    private static class BatchStatementListener extends DefaultStatementListener {
+    private static final class BatchStatementListener implements StatementListener {
 
         private final List<RowValue> rows;
 
@@ -984,7 +967,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     }
 
 
-    private static final class BatchedRowValue {
+    private final class BatchedRowValue implements Batch.BatchRowValue {
 
         private final RowValue rowValue;
         private Object[] cachedObjects;
@@ -995,10 +978,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
         private int getCount() {
             return rowValue.getCount();
-        }
-
-        private byte[] getFieldData(int index) {
-            return rowValue.getFieldData(index);
         }
 
         private void setCachedObject(int index, Object object) {
@@ -1023,5 +1002,99 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             }
         }
 
+        @Override
+        public RowValue toRowValue() throws SQLException {
+            // NOTE This is basically the old implementation of flushing fields. The use of the fieldValues field is
+            // a bit of a kludge, but we use fields for the operation, which are hardwired to it.
+            // We may want to see if we can move the flushing down into CachedObject or something like that
+            RowValue preservedFieldValues = fieldValues;
+            try {
+                fieldValues = rowValue;
+                for (int i = 0; i < fieldValues.getCount(); i++) {
+                    FBField field = getField(i + 1);
+                    if (field instanceof FBFlushableField) {
+                        ((FBFlushableField) field).setCachedObject((CachedObject) getCachedObject(i));
+                    }
+                }
+                flushFields();
+                return rowValue;
+            } finally {
+                fieldValues = preservedFieldValues;
+            }
+        }
+    }
+
+    /**
+     * Emulated batch, which executes row values individually.
+     * <p>
+     * This implementation is never really closed, and, once instantiated, its lifetime is tied to the parent statement.
+     * It does not check whether the statement or batch is closed, instead relying on the caller to check if the
+     * statement is closed or not.
+     * </p>
+     */
+    private final class EmulatedPreparedStatementBatch implements Batch {
+
+        private final Deque<BatchRowValue> batchRowValues = new ArrayDeque<>();
+
+        @Override
+        public void addBatch(BatchRowValue rowValue) throws SQLException {
+            batchRowValues.addLast(rowValue);
+        }
+
+        private boolean isEmpty() throws SQLException {
+            return batchRowValues.isEmpty();
+        }
+
+        @Override
+        public List<Long> execute() throws SQLException {
+            if (isEmpty()) {
+                return emptyList();
+            }
+            final int size = batchRowValues.size();
+            final BatchStatementListener batchStatementListener;
+            if (isGeneratedKeyQuery()) {
+                batchStatementListener = new BatchStatementListener(size);
+                fbStatement.addStatementListener(batchStatementListener);
+            } else {
+                batchStatementListener = null;
+            }
+            final List<Long> results = new ArrayList<>(size);
+            try {
+                Deque<Batch.BatchRowValue> batchRowValues = this.batchRowValues;
+                Batch.BatchRowValue batchRowValue;
+                while ((batchRowValue = batchRowValues.pollFirst()) != null) {
+                    RowValue rowValue = batchRowValue.toRowValue();
+                    if (internalExecute(rowValue)) {
+                        throw new SQLException("Statements executed as batch should not produce a result set",
+                                SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
+                    }
+                    results.add(getLargeUpdateCount());
+                }
+                return results;
+            } catch (BatchUpdateException ex) {
+                throw ex;
+            } catch (SQLException ex) {
+                throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
+                        ex.getErrorCode(), Primitives.toLongArray(results), ex);
+            } finally {
+                currentStatementResult = StatementResult.NO_MORE_RESULTS;
+                if (batchStatementListener != null) {
+                    fbStatement.removeStatementListener(batchStatementListener);
+                    specialResult.clear();
+                    specialResult.addAll(batchStatementListener.getRows());
+                }
+                clearBatch();
+            }
+        }
+
+        @Override
+        public void clearBatch() {
+            batchRowValues.clear();
+        }
+
+        @Override
+        public void close() {
+            clearBatch();
+        }
     }
 }

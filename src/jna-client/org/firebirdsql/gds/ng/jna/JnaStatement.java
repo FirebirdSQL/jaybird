@@ -123,35 +123,47 @@ public class JnaStatement extends AbstractFbStatement {
             }
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());
-                final StatementState currentState = getState();
-                if (!isPrepareAllowed(currentState)) {
-                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
+                final StatementState initialState = getState();
+                if (!isPrepareAllowed(initialState)) {
+                    throw new SQLNonTransientException(String.format(
+                            "Current statement state (%s) does not allow call to prepare", initialState));
                 }
                 resetAll();
 
                 final JnaDatabase db = getDatabase();
-                if (currentState == StatementState.NEW) {
-                    clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
-                    processStatusVector();
-                    reset();
-                    switchState(StatementState.ALLOCATED);
-                    setType(StatementType.NONE);
+                if (initialState == StatementState.NEW) {
+                    try {
+                        clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
+                        processStatusVector();
+                        reset();
+                        switchState(StatementState.ALLOCATED);
+                        setType(StatementType.NONE);
+                    } catch (SQLException e) {
+                        forceState(StatementState.NEW);
+                        throw e;
+                    }
                 } else {
                     checkStatementValid();
                 }
 
-                // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
-                final XSQLDA tempXSqlDa = new XSQLDA();
-                tempXSqlDa.setAutoRead(false);
-                clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
-                        (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
-                processStatusVector();
+                switchState(StatementState.PREPARING);
+                try {
+                    // Information in tempXSqlDa is ignored, as we are retrieving more detailed information using getSqlInfo
+                    final XSQLDA tempXSqlDa = new XSQLDA();
+                    tempXSqlDa.setAutoRead(false);
+                    clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
+                            (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
+                    processStatusVector();
 
-                final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
-                final int responseLength = getDefaultSqlInfoSize();
-                byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
-                parseStatementInfo(statementInfo);
-                switchState(StatementState.PREPARED);
+                    final byte[] statementInfoRequestItems = getStatementInfoRequestItems();
+                    final int responseLength = getDefaultSqlInfoSize();
+                    byte[] statementInfo = getSqlInfo(statementInfoRequestItems, responseLength);
+                    parseStatementInfo(statementInfo);
+                    switchState(StatementState.PREPARED);
+                } catch (SQLException e) {
+                    switchState(StatementState.ALLOCATED);
+                    throw e;
+                }
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

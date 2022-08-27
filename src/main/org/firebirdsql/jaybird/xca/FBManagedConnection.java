@@ -24,9 +24,9 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.*;
 import org.firebirdsql.jdbc.field.FBField;
@@ -865,7 +865,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         return syncObject;
     }
 
-    private static class DataProvider extends DefaultStatementListener implements FieldDataProvider {
+    private static final class DataProvider implements StatementListener, FieldDataProvider {
         private final List<RowValue> rows = new ArrayList<>();
         private final int fieldPos;
         private int row;
@@ -1238,7 +1238,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
     /**
      * DatabaseListener implementation for use by this managed connection.
      */
-    private class MCDatabaseListener extends DefaultDatabaseListener {
+    private final class MCDatabaseListener implements DatabaseListener {
         @Override
         public void warningReceived(FbDatabase database, SQLWarning warning) {
             if (database != FBManagedConnection.this.database) {

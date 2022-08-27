@@ -29,7 +29,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBSQLException;
@@ -92,7 +92,7 @@ public class FBEventManager implements EventManager {
         // NOTE In this implementation, we don't take into account pooled connections that might be closed while
         //  the FbDatabase instance remains in use. This means that at the moment, it is possible that the event manager
         //  can remain in use for longer than the Connection.
-        fbDatabase.addDatabaseListener(new DefaultDatabaseListener() {
+        fbDatabase.addDatabaseListener(new DatabaseListener() {
             @Override
             public void detaching(FbDatabase database) {
                 try {

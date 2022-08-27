@@ -25,39 +25,42 @@
 package org.firebirdsql.jaybird.fb.constants;
 
 /**
- * Constants for TPB items.
+ * Constants for batch items and values (batch config, blob policy and information items).
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
 @SuppressWarnings("unused")
-public class TpbItems {
+public final class BatchItems {
 
-    public static final int isc_tpb_consistency = 1;
-    public static final int isc_tpb_concurrency = 2;
-    public static final int isc_tpb_shared = 3;
-    public static final int isc_tpb_protected = 4;
-    public static final int isc_tpb_exclusive = 5;
-    public static final int isc_tpb_wait = 6;
-    public static final int isc_tpb_nowait = 7;
-    public static final int isc_tpb_read = 8;
-    public static final int isc_tpb_write = 9;
-    public static final int isc_tpb_lock_read = 10;
-    public static final int isc_tpb_lock_write = 11;
-    public static final int isc_tpb_verb_time = 12;
-    public static final int isc_tpb_commit_time = 13;
-    public static final int isc_tpb_ignore_limbo = 14;
-    public static final int isc_tpb_read_committed = 15;
-    public static final int isc_tpb_autocommit = 16;
-    public static final int isc_tpb_rec_version = 17;
-    public static final int isc_tpb_no_rec_version = 18;
-    public static final int isc_tpb_restart_requests = 19;
-    public static final int isc_tpb_no_auto_undo = 20;
-    public static final int isc_tpb_lock_timeout = 21;
-    public static final int isc_tpb_read_consistency = 22;
-    public static final int isc_tpb_at_snapshot_number = 23;
+    public static final int BATCH_VERSION_1 = 1;
+    
+    // Tags
+    public static final int TAG_MULTIERROR = 1;
+    public static final int TAG_RECORD_COUNTS = 2;
+    public static final int TAG_BUFFER_BYTES_SIZE = 3;
+    public static final int TAG_BLOB_POLICY = 4;
+    public static final int TAG_DETAILED_ERRORS = 5;
 
-    private TpbItems() {
+    // Information items
+    public static final int INF_BUFFER_BYTES_SIZE = 10;
+    public static final int INF_DATA_BYTES_SIZE = 11;
+    public static final int INF_BLOBS_BYTES_SIZE = 12;
+    public static final int INF_BLOB_ALIGNMENT = 13;
+    public static final int INF_BLOB_HEADER = 14;
+
+    // Blob policy values
+    public static final int BLOB_NONE = 0;
+    public static final int BLOB_ID_ENGINE = 1;
+    public static final int BLOB_ID_USER = 2;
+    public static final int BLOB_STREAM = 3;
+
+    public static final int BLOB_SEGHDR_ALIGN = 2;
+
+    public static final int BATCH_EXECUTE_FAILED = -1;
+    public static final int BATCH_SUCCESS_NO_INFO = -2;
+
+    private BatchItems() {
         throw new AssertionError("no instances");
     }
 

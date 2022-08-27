@@ -19,8 +19,10 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.DataGenerator;
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.util.Unstable;
 import org.hamcrest.number.OrderingComparison;
 import org.junit.jupiter.api.AfterEach;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -45,6 +48,7 @@ import java.util.stream.Stream;
 import static org.firebirdsql.common.DdlHelper.executeCreateTable;
 import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
@@ -368,14 +372,21 @@ class FBPreparedStatementTest {
     /**
      * Test if batch execution works correctly.
      */
-    @Test
-    void testBatch() throws Exception {
-        executeCreateTable(con, "CREATE TABLE foo ("
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testBatch(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
+        executeCreateTable(con, "RECREATE TABLE foo ("
                     + "bar varchar(64) NOT NULL, "
                     + "baz varchar(8) NOT NULL, "
                     + "CONSTRAINT pk_foo PRIMARY KEY (bar, baz))");
 
-        try (PreparedStatement ps = con.prepareStatement("Insert into foo values (?, ?)")) {
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+             PreparedStatement ps = con.prepareStatement("Insert into foo values (?, ?)")) {
             ps.setString(1, "one");
             ps.setString(2, "two");
             ps.addBatch();
@@ -906,12 +917,18 @@ class FBPreparedStatementTest {
      * See <a href="http://tracker.firebirdsql.org/browse/JDBC-312">JDBC-312</a>
      * </p>
      */
-    @Test
-    void testRepeatedBatchExecutionWithBlobFromStream() throws Exception {
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testRepeatedBatchExecutionWithBlobFromStream(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        con.setAutoCommit(false);
         List<byte[]> expectedData = new ArrayList<>();
-        try {
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+            con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, obj_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
@@ -938,8 +955,6 @@ class FBPreparedStatementTest {
                 }
                 assertEquals(2, count, "Unexpected number of blobs in table");
             }
-        } finally {
-            con.setAutoCommit(true);
         }
     }
 
@@ -949,12 +964,18 @@ class FBPreparedStatementTest {
      * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
      * </p>
      */
-    @Test
-    void testRepeatedBatchExecutionWithClobFromBinaryStream() throws Exception {
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testRepeatedBatchExecutionWithClobFromBinaryStream(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        con.setAutoCommit(false);
         List<byte[]> expectedData = new ArrayList<>();
-        try {
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+            con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (PreparedStatement insert = con.prepareStatement(
                     "INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
@@ -982,8 +1003,6 @@ class FBPreparedStatementTest {
                 }
                 assertEquals(2, count, "Unexpected number of blobs in table");
             }
-        } finally {
-            con.setAutoCommit(true);
         }
     }
 
@@ -993,14 +1012,20 @@ class FBPreparedStatementTest {
      * See <a href="http://tracker.firebirdsql.org/browse/JDBC-433">JDBC-433</a>
      * </p>
      */
-    @Test
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
     @Disabled
     @Unstable("Susceptible to character set transliteration issues")
-    void testRepeatedBatchExecutionWithClobFromString() throws Exception {
+    void testRepeatedBatchExecutionWithClobFromString(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
         executeCreateTable(con, CREATE_TEST_BLOB_TABLE);
-        con.setAutoCommit(false);
         List<String> expectedData = new ArrayList<>();
-        try {
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props)) {
+            con.setAutoCommit(false);
             // Execute two separate batches inserting a random blob
             try (PreparedStatement insert = con.prepareStatement("INSERT INTO test_blob (id, clob_data) VALUES (?,?)")) {
                 for (int i = 0; i < 2; i++) {
@@ -1027,8 +1052,6 @@ class FBPreparedStatementTest {
                 }
                 assertEquals(2, count, "Unexpected number of blobs in table");
             }
-        } finally {
-            con.setAutoCommit(true);
         }
     }
 

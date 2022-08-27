@@ -25,7 +25,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -379,7 +379,7 @@ class FBCachedFetcher implements FBFetcher {
         this.fetcherListener = fetcherListener;
     }
 
-    private static final class RowListener extends DefaultStatementListener {
+    private static final class RowListener implements StatementListener {
         private final List<RowValue> rows = new ArrayList<>();
         private boolean allRowsFetched = false;
 

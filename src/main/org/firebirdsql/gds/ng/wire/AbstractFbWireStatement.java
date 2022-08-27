@@ -22,14 +22,19 @@ import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
+import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -105,7 +110,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         if (rowDescriptor == null) return null;
         byte[] blr = blrCache.get(rowDescriptor);
         if (blr == null) {
-            blr = getDatabase().getBlrCalculator().calculateBlr(rowDescriptor);
+            blr = getBlrCalculator().calculateBlr(rowDescriptor);
             blrCache.put(rowDescriptor, blr);
         }
         return blr;
@@ -126,7 +131,15 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
      */
     protected final byte[] calculateBlr(RowDescriptor rowDescriptor, RowValue rowValue) throws SQLException {
         if (rowDescriptor == null || rowValue == null) return null;
-        return getDatabase().getBlrCalculator().calculateBlr(rowDescriptor, rowValue);
+        return getBlrCalculator().calculateBlr(rowDescriptor, rowValue);
+    }
+
+    /**
+     * @return The {@link BlrCalculator} instance for this statement (currently always the one from
+     * the {@link FbWireDatabase} instance).
+     */
+    protected final BlrCalculator getBlrCalculator() {
+        return getDatabase().getBlrCalculator();
     }
 
     @Override
@@ -167,4 +180,40 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
         return getDatabase().getInfo(operation, getHandle(), requestItems, bufferLength, getStatementWarningCallback());
     }
 
+    /**
+     * Wraps a deferred response to produce a deferred action that can be added
+     * using {@link FbWireDatabase#enqueueDeferredAction(DeferredAction)}, notifying the exception listener of this
+     * statement for exceptions, and forcing the ERROR state for IO errors.
+     *
+     * @param deferredResponse
+     *         deferred response to wrap
+     * @param responseMapper
+     *         Function to map a {@link Response} to the response object expected by the deferred response
+     * @param <T>
+     *         type of deferred response
+     * @return deferred action
+     */
+    protected final <T> DeferredAction wrapDeferredResponse(DeferredResponse<T> deferredResponse,
+            Function<Response, T> responseMapper) {
+        return DeferredAction.wrapDeferredResponse(
+                deferredResponse, responseMapper, getStatementWarningCallback(), this::deferredExceptionHandler);
+    }
+
+    /**
+     * Handler for exceptions to a deferred response.
+     * <p>
+     * If the exception is a {@code SQLException}, the exception listener dispatcher is notified. If the exception
+     * or its cause is an {@code IOException}, the statement state is forced to {@code ERROR}.
+     * </p>
+     *
+     * @param exception exception received in a deferred response, or thrown while receiving the deferred response
+     */
+    private void deferredExceptionHandler(Exception exception) {
+        if (exception instanceof SQLException) {
+            exceptionListenerDispatcher.errorOccurred((SQLException) exception);
+        }
+        if (exception instanceof IOException || exception.getCause() instanceof IOException) {
+            forceState(StatementState.ERROR);
+        }
+    }
 }

@@ -122,14 +122,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         try {
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());
-                final StatementState currentState = getState();
-                if (!isPrepareAllowed(currentState)) {
-                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
+                final StatementState initialState = getState();
+                if (!isPrepareAllowed(initialState)) {
+                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", initialState));
                 }
                 resetAll();
 
                 final FbWireDatabase db = getDatabase();
-                if (currentState == StatementState.NEW) {
+                if (initialState == StatementState.NEW) {
                     try {
                         sendAllocate();
                         getXdrOut().flush();
@@ -139,9 +139,13 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                     }
                     try {
                         processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        switchState(StatementState.ALLOCATED);
                     } catch (IOException ex) {
                         switchState(StatementState.ERROR);
                         throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    } catch (SQLException e) {
+                        forceState(StatementState.NEW);
+                        throw e;
                     }
                 } else {
                     checkStatementValid();
@@ -159,6 +163,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 } catch (IOException ex) {
                     switchState(StatementState.ERROR);
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                } catch (SQLException e) {
+                    switchState(StatementState.ALLOCATED);
+                    throw e;
                 }
             }
         } catch (SQLException e) {
@@ -172,10 +179,9 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param statementText
      *         Statement
-     * @throws SQLException
-     * @throws IOException
      */
     protected void sendPrepare(final String statementText) throws SQLException, IOException {
+        switchState(StatementState.PREPARING);
         final XdrOutputStream xdrOut = getXdrOut();
         xdrOut.writeInt(WireProtocolConstants.op_prepare_statement);
         xdrOut.writeInt(getTransaction().getHandle());
@@ -333,8 +339,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         Operation (<code>op_execute</code> or <code>op_execute2</code>)
      * @param parameters
      *         Parameters
-     * @throws IOException
-     * @throws SQLException
      */
     protected void sendExecute(final int operation, final RowValue parameters) throws IOException, SQLException {
         assert operation == WireProtocolConstants.op_execute || operation == WireProtocolConstants.op_execute2 : "Needs to be called with operation op_execute or op_execute2";
@@ -348,7 +352,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             xdrOut.writeBuffer(calculateBlr(parameterDescriptor, parameters));
             xdrOut.writeInt(0); // message number = in_message_type
             xdrOut.writeInt(1); // Number of messages
-            writeSqlData(parameterDescriptor, parameters);
+            writeSqlData(parameterDescriptor, parameters, true);
         } else {
             xdrOut.writeBuffer(null);
             xdrOut.writeInt(0); // message number = in_message_type
@@ -483,13 +487,11 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * Reads a single row from the database.
      *
      * @return Row as a {@link RowValue}
-     * @throws SQLException
-     * @throws IOException
      */
     protected RowValue readSqlData() throws SQLException, IOException {
         final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
-        final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
+        final BlrCalculator blrCalculator = getBlrCalculator();
 
         final XdrInputStream xdrIn = getXdrIn();
 
@@ -534,34 +536,40 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *         The row descriptor
      * @param fieldValues
      *         The List containing the SQL data to be written
+     * @param useActualLength
+     *         Should actual field length be used (applies to CHAR)
      * @throws IOException
      *         if an error occurs while writing to the underlying output stream
      */
-    protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues) throws IOException, SQLException {
+    protected void writeSqlData(RowDescriptor rowDescriptor, RowValue fieldValues, boolean useActualLength)
+        throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
-        final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
+        final BlrCalculator blrCalculator = getBlrCalculator();
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
             final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
             final byte[] buffer = fieldValues.getFieldData(idx);
-            final int len = blrCalculator.calculateIoLength(fieldDescriptor, buffer);
-            final int fieldType = fieldDescriptor.getType();
-            writeColumnData(xdrOut, len, buffer, fieldType);
+            final int len = useActualLength
+                    ? blrCalculator.calculateIoLength(fieldDescriptor, buffer)
+                    : blrCalculator.calculateIoLength(fieldDescriptor);
+            writeColumnData(xdrOut, len, buffer, fieldDescriptor);
             // sqlind (null indicator)
             xdrOut.writeInt(buffer != null ? NULL_INDICATOR_NOT_NULL : NULL_INDICATOR_NULL);
         }
     }
 
-    protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, int fieldType) throws IOException {
-        final int tempType = fieldType & ~1;
+    protected void writeColumnData(XdrOutputStream xdrOut, int len, byte[] buffer, FieldDescriptor fieldDescriptor)
+            throws IOException {
+        final int tempType = fieldDescriptor.getType() & ~1;
 
         // TODO Correctly pad with 0x00 instead of 0x20 for octets.
         if (tempType == ISCConstants.SQL_NULL) {
-            // Nothing to write for SQL_NULL (except null indicator, which happens at end)
+            // Nothing to write for SQL_NULL (except null indicator, which happens at end in writeSqlData)
         } else if (len == 0) {
             if (buffer != null) {
                 len = buffer.length;
                 xdrOut.writeInt(len);
-                xdrOut.write(buffer, 0, len, (4 - len) & 3);
+                xdrOut.write(buffer, 0, len);
+                xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
             } else {
                 xdrOut.writeInt(0);
             }
@@ -578,13 +586,14 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
             if (buffer != null) {
                 final int buflen = buffer.length;
                 if (buflen >= len) {
-                    xdrOut.write(buffer, 0, len, (4 - len) & 3);
+                    xdrOut.write(buffer, 0, len);
+                    xdrOut.writePadding((4 - len) & 3, fieldDescriptor.getPaddingByte());
                 } else {
-                    xdrOut.write(buffer, 0, buflen, 0);
-                    xdrOut.writeSpacePadding(len - buflen + ((4 - len) & 3));
+                    xdrOut.write(buffer, 0, buflen);
+                    xdrOut.writePadding(len - buflen + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
                 }
             } else {
-                xdrOut.writeSpacePadding(len + ((4 - len) & 3));
+                xdrOut.writePadding(len + ((4 - len) & 3), fieldDescriptor.getPaddingByte());
             }
         }
     }
@@ -611,7 +620,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
         synchronized (getSynchronizationObject()) {
             setHandle(response.getObjectHandle());
             reset();
-            switchState(StatementState.ALLOCATED);
             setType(StatementType.NONE);
         }
     }

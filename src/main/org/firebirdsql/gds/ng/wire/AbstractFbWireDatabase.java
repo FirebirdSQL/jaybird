@@ -219,6 +219,11 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     }
 
     @Override
+    public final void enqueueDeferredAction(DeferredAction deferredAction) {
+        wireOperations.enqueueDeferredAction(deferredAction);
+    }
+
+    @Override
     public final EventHandle createEventHandle(String eventName, EventHandler eventHandler) {
         return new WireEventHandle(eventName, eventHandler, getEncoding());
     }

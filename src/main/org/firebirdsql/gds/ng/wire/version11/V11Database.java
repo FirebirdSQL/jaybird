@@ -53,10 +53,6 @@ public class V11Database extends V10Database {
         super(connection, descriptor);
     }
 
-    public final void enqueueDeferredAction(DeferredAction deferredAction) {
-        wireOperations.enqueueDeferredAction(deferredAction);
-    }
-
     @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
         checkAttached();

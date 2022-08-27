@@ -16,17 +16,28 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.listeners;
+package org.firebirdsql.common;
+
+import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isPureJavaType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Default implementation of {@link org.firebirdsql.gds.ng.listeners.DatabaseListener} where all implemented methods
- * do nothing.
+ * Common assumptions for tests.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
- * @deprecated implementing {@link DatabaseListener} is sufficient as all its methods have a default implementation
- * doing nothing, class will be removed in Jaybird 6
+ * @since 5
  */
-@Deprecated
-public class DefaultDatabaseListener implements DatabaseListener {
+public final class FbAssumptions {
+
+    private FbAssumptions() {
+        // no instances
+    }
+
+    public static void assumeServerBatchSupport() {
+        assumeTrue(getDefaultSupportInfo().supportsServerBatch(), "test requires server-side batch support");
+        assumeThat("Server-side batch support only works with pure java connections",
+                FBTestProperties.GDS_TYPE, isPureJavaType());
+    }
 }

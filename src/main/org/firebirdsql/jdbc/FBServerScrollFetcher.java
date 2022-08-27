@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.FetchType;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -508,7 +508,7 @@ final class FBServerScrollFetcher implements FBFetcher {
         return serverCursorSize;
     }
 
-    private static class RowListener extends DefaultStatementListener {
+    private static final class RowListener implements StatementListener {
         boolean beforeFirst;
         boolean afterLast;
 

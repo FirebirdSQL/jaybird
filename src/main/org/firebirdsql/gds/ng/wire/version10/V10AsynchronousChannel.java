@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -24,7 +24,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
@@ -52,7 +52,7 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
  */
 public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
-    private static Logger log = LoggerFactory.getLogger(V10AsynchronousChannel.class);
+    private static final Logger log = LoggerFactory.getLogger(V10AsynchronousChannel.class);
 
     /*
      * Expecting:
@@ -309,7 +309,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
-    private class ChannelDatabaseListener extends DefaultDatabaseListener {
+    private class ChannelDatabaseListener implements DatabaseListener {
 
         @Override
         public void detached(FbDatabase database) {

@@ -43,16 +43,6 @@ public class V10WireOperations extends AbstractWireOperations {
     }
 
     @Override
-    public void enqueueDeferredAction(DeferredAction deferredAction) {
-        throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
-    }
-
-    @Override
-    public void processDeferredActions() {
-        // does nothing in V10 protocol
-    }
-
-    @Override
     public void authReceiveResponse(FbWireAttachment.AcceptPacket acceptPacket,
             DbCryptCallback dbCryptCallback,
             ProcessAttachCallback processAttachCallback) throws IOException, SQLException {

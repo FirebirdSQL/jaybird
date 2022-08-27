@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,6 +22,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
+import org.firebirdsql.util.Primitives;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -74,6 +75,13 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         }
     }
 
+    @Override
+    void close(boolean ignoreAlreadyClosed) throws SQLException {
+        batchList = null;
+        super.close(ignoreAlreadyClosed);
+    }
+
+    @Override
     public ParameterMetaData getParameterMetaData() throws SQLException {
         synchronized (getSynchronizationObject()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
@@ -84,11 +92,24 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
         return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
+    private List<FBProcedureCall> batchList = new ArrayList<>();
+
+    @Override
     public void addBatch() throws SQLException {
         checkValidity();
         synchronized (getSynchronizationObject()) {
             procedureCall.checkParameters();
-            batchList.add(procedureCall.clone());
+            batchList.add((FBProcedureCall) procedureCall.clone());
+        }
+    }
+
+    @Override
+    public void clearBatch() throws SQLException {
+        checkValidity();
+
+        synchronized (getSynchronizationObject()) {
+            // TODO Find open streams and close them?
+            batchList.clear();
         }
     }
 
@@ -101,13 +122,13 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                 notifyStatementStarted();
 
                 List<Long> results = new ArrayList<>(batchList.size());
-                Iterator<Object> iterator = batchList.iterator();
+                Iterator<FBProcedureCall> iterator = batchList.iterator();
 
                 try {
                     prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
                     while (iterator.hasNext()) {
-                        procedureCall = (FBProcedureCall) iterator.next();
+                        procedureCall = iterator.next();
                         executeSingleForBatch(results);
                     }
 
@@ -115,7 +136,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     return results;
                 } catch (SQLException ex) {
                     throw createBatchUpdateException(ex.getMessage(), ex.getSQLState(),
-                            ex.getErrorCode(), toLargeArray(results), ex);
+                            ex.getErrorCode(), Primitives.toLongArray(results), ex);
                 } finally {
                     clearBatch();
                 }
@@ -127,9 +148,8 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     
     private void executeSingleForBatch(List<Long> results) throws SQLException {
         if (internalExecute(!isSelectableProcedure())) {
-            throw createBatchUpdateException(
-                    "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE, 0, toLargeArray(results), null);
+            throw new SQLException("Statements executed as batch should not produce a result set",
+                    SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
         }
 
         results.add(getLargeUpdateCount());

@@ -282,7 +282,7 @@ public class V13WireOperations extends V11WireOperations {
         xdrIn.setCipher(encryptionInitInfo.getDecryptionCipher());
         xdrOut.setCipher(encryptionInitInfo.getEncryptionCipher());
 
-        readOperationResponse(readNextOperation(), null);
+        readResponse(null);
     }
 
     @Override

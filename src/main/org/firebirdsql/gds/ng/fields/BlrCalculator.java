@@ -86,7 +86,7 @@ public interface BlrCalculator {
      * <li>&lt; 0 : Type is of specified length * -1 and not padded</li>
      * <li>== 0 : Type is of dynamic length (which is specified in the buffer as an integer) and padded</li>
      * <li>&gt; 0 : Type is of specified length minus 1 (subtracting 1 is required to avoid 0 for types of zero length)
-     * nd padded</li>
+     * and padded</li>
      * </ul>
      * </p>
      * <p>
@@ -94,7 +94,7 @@ public interface BlrCalculator {
      * </p>
      * <p>
      * For <code>CHAR</code> ({@link org.firebirdsql.gds.ISCConstants#SQL_TEXT} the implementation should be consistent
-     * with the lengths as given by {@link #calculateBlr(RowDescriptor, RowValue)}.
+     * with the lengths as given by {@link #calculateIoLength(FieldDescriptor)}.
      * </p>
      *
      * @param fieldDescriptor
@@ -105,5 +105,17 @@ public interface BlrCalculator {
      * @since 4.0
      */
     int calculateIoLength(FieldDescriptor fieldDescriptor, byte[] fieldData) throws SQLException;
-    
+
+    /**
+     * Calculates the batch message length.
+     *
+     * @param rowDescriptor
+     *         row descriptor
+     * @return batch message length
+     * @throws SQLException
+     *         when the {@link RowDescriptor} contains an unsupported field type.
+     * @since 5
+     */
+    int calculateBatchMessageLength(RowDescriptor rowDescriptor) throws SQLException;
+
 }

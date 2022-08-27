@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,12 +18,30 @@
  */
 package org.firebirdsql.gds.ng.wire.version16;
 
+import org.firebirdsql.gds.BatchParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.impl.BatchParameterBufferImp;
+import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
+import org.firebirdsql.gds.impl.wire.XdrOutputStream;
+import org.firebirdsql.gds.ng.BatchCompletion;
+import org.firebirdsql.gds.ng.DeferredResponse;
+import org.firebirdsql.gds.ng.FbBatchConfig;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.fields.BlrCalculator;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.wire.BatchCompletionResponse;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.version13.V13Statement;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collection;
+
+import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -47,4 +65,178 @@ public class V16Statement extends V13Statement {
         // timeout is an unsigned 32 bit int
         getXdrOut().writeInt((int) getAllowedTimeout()); // p_sqldata_timeout
     }
+
+    @Override
+    public boolean supportBatchUpdates() {
+        return true;
+    }
+
+    @Override
+    public BatchParameterBuffer createBatchParameterBuffer() throws SQLException {
+        checkStatementValid();
+        return new BatchParameterBufferImp();
+    }
+
+    @Override
+    public void deferredBatchCreate(FbBatchConfig batchConfig, DeferredResponse<Void> onResponse) throws SQLException {
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkStatementValid();
+                try {
+                    sendBatchCreate(batchConfig);
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    protected void sendBatchCreate(FbBatchConfig batchConfig) throws SQLException, IOException {
+        BlrCalculator blrCalculator = getBlrCalculator();
+        RowDescriptor parameterDescriptor = getParameterDescriptor();
+        byte[] blrMessage = blrCalculator.calculateBlr(parameterDescriptor);
+        int messageLength = blrCalculator.calculateBatchMessageLength(parameterDescriptor);
+        BatchParameterBuffer batchPb = createBatchParameterBuffer();
+        batchConfig.populateBatchParameterBuffer(batchPb);
+
+        XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_batch_create);
+        xdrOut.writeInt(getHandle()); // p_batch_statement
+        xdrOut.writeBuffer(blrMessage); // p_batch_blr
+        xdrOut.writeInt(messageLength); // p_batch_msglen
+        xdrOut.writeTyped(batchPb); // p_batch_pb
+        xdrOut.flush();
+    }
+
+    @Override
+    public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkStatementValid();
+                try {
+                    sendBatchMsg(rowValues);
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            }
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    protected void sendBatchMsg(Collection<RowValue> rowValues) throws SQLException, IOException {
+        BlrCalculator blrCalculator = getBlrCalculator();
+        RowDescriptor parameterDescriptor = getParameterDescriptor();
+        XdrOutputStream xdrOut = getXdrOut();
+        xdrOut.writeInt(WireProtocolConstants.op_batch_msg);
+        xdrOut.writeInt(getHandle()); // p_batch_statement
+        xdrOut.writeInt(rowValues.size());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        XdrOutputStream rowOut = new XdrOutputStream(baos, 512);
+        for (RowValue rowValue : rowValues) {
+            baos.reset();
+            writeSqlData(rowOut, blrCalculator, parameterDescriptor, rowValue, false);
+            rowOut.flush();
+            byte[] rowBytes = baos.toByteArray();
+            xdrOut.write(rowBytes);
+            xdrOut.writeZeroPadding((4 - rowBytes.length) & 3);
+        }
+        xdrOut.flush();
+    }
+
+    @Override
+    public BatchCompletion batchExecute() throws SQLException {
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkStatementValid();
+                FbTransaction transaction = getTransaction();
+                checkTransactionActive(transaction);
+                try {
+                    XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.writeInt(transaction.getHandle());
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+                try {
+                    BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
+                            .readResponse(getStatementWarningCallback());
+                    return response.batchCompletion();
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+            }
+        }  catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void batchCancel() throws SQLException {
+        try {
+            synchronized (getSynchronizationObject()) {
+                try {
+                    XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+                try {
+                    getDatabase().readResponse(getStatementWarningCallback());
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e)
+                            .toSQLException();
+                }
+            }
+        }  catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
+    @Override
+    public void deferredBatchRelease(DeferredResponse<Void> onResponse) throws SQLException {
+        try {
+            synchronized (getSynchronizationObject()) {
+                checkStatementValid();
+                try {
+                    XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.flush();
+                } catch (IOException e) {
+                    switchState(StatementState.ERROR);
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
+                            .toSQLException();
+                }
+                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+            }
+        }  catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
+        }
+    }
+
 }

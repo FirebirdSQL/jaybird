@@ -332,6 +332,25 @@ public final class FieldDescriptor {
                 && this.length == other.length;
     }
 
+    /**
+     * Padding to use for fields of this type.
+     *
+     * @return padding byte (generally 0x00, or 0x20 for non-binary character data).
+     * @since 5
+     */
+    public byte getPaddingByte() {
+        switch (type & ~1) {
+        case SQL_TEXT:
+        case SQL_VARYING:
+            if (getCharacterSetId(type, subType, scale) == CS_BINARY) {
+                return 0x00;
+            }
+            return 0x20;
+        default:
+            return 0x00;
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

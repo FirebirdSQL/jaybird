@@ -22,11 +22,11 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.Primitives;
 
 import java.sql.*;
 import java.util.*;
@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static java.util.Collections.emptyList;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -339,7 +340,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             return new FBResultSet(fbStatement.getRowDescriptor(), new ArrayList<>(specialResult),
                     resultSetListener);
         }
-        return new FBResultSet(fbStatement.emptyRowDescriptor(), Collections.emptyList());
+        return new FBResultSet(fbStatement.emptyRowDescriptor(), emptyList());
     }
 
     @Override
@@ -714,15 +715,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
         }
 
-        return toArray(executeBatchInternal());
+        return Primitives.toIntArray(executeBatchInternal());
     }
 
     protected List<Long> executeBatchInternal() throws SQLException {
-        checkValidity();
-        currentStatementGeneratedKeys = false;
-
-        notifyStatementStarted();
         synchronized (getSynchronizationObject()) {
+            checkValidity();
+            currentStatementGeneratedKeys = false;
+            if (batchList.isEmpty()) {
+                return emptyList();
+            }
+
+            notifyStatementStarted();
             boolean success = false;
             try {
                 List<Long> responses = new ArrayList<>(batchList.size());
@@ -735,7 +739,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
                     return responses;
                 } catch (SQLException e) {
                     throw createBatchUpdateException(e.getMessage(), e.getSQLState(),
-                            e.getErrorCode(), toLargeArray(responses), e);
+                            e.getErrorCode(), Primitives.toLongArray(responses), e);
                 } finally {
                     clearBatch();
                 }
@@ -750,7 +754,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             // TODO SQL state?
             throw createBatchUpdateException(
                     "Statements executed as batch should not produce a result set",
-                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, toLargeArray(responses), null);
+                    SQLStateConstants.SQL_STATE_GENERAL_ERROR, 0, Primitives.toLongArray(responses), null);
         } else {
             responses.add(getLargeUpdateCount());
         }
@@ -759,40 +763,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     protected final BatchUpdateException createBatchUpdateException(String reason, String SQLState, int vendorCode,
             long[] updateCounts, Throwable cause) {
         return new BatchUpdateException(reason, SQLState, vendorCode, updateCounts, cause);
-    }
-
-    /**
-     * Convert collection of {@link Long} update counts into array of int.
-     *
-     * @param updateCounts
-     *            collection of integer elements.
-     *
-     * @return array of int.
-     */
-    protected int[] toArray(Collection<Long> updateCounts) {
-        int[] result = new int[updateCounts.size()];
-        int counter = 0;
-        for (long value : updateCounts) {
-        	result[counter++] = (int) value;
-        }
-        return result;
-    }
-
-    /**
-     * Convert collection of {@link Integer} update counts into array of int.
-     *
-     * @param updateCounts
-     *            collection of integer elements.
-     *
-     * @return array of int.
-     */
-    protected long[] toLargeArray(Collection<Long> updateCounts) {
-        long[] result = new long[updateCounts.size()];
-        int counter = 0;
-        for (long value : updateCounts) {
-            result[counter++] = value;
-        }
-        return result;
     }
 
     @Override
@@ -1081,7 +1051,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
             addWarning(new SQLWarning("Batch updates should be run with auto-commit disabled.", "01000"));
         }
 
-        return toLargeArray(executeBatchInternal());
+        return Primitives.toLongArray(executeBatchInternal());
     }
 
     public final long executeLargeUpdate(String sql) throws SQLException {
@@ -1330,7 +1300,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
     }
 
-    private static final class RowsFetchedListener extends DefaultStatementListener {
+    private static final class RowsFetchedListener implements StatementListener {
 
         private boolean allRowsFetched;
 

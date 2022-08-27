@@ -685,6 +685,9 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires fb_info_wire_crypt support");
         String expectedCryptPlugin = System.getProperty("java.specification.version").equals("1.8")
                 || Version.JAYBIRD_DISPLAY_VERSION.endsWith(".java8") ? "Arc4" : "ChaCha";
+        if (isOtherNativeType().matches(GDS_TYPE) && getDefaultSupportInfo().isVersionEqualOrAbove(4, 0, 1)) {
+            expectedCryptPlugin = "ChaCha64";
+        }
 
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", "REQUIRED");
@@ -702,7 +705,7 @@ class FBConnectionTest {
                 return new String(info, 3, dataLength, StandardCharsets.US_ASCII);
             };
             String cryptPlugin = fbDatabase.getDatabaseInfo(
-                    new byte[] { (byte) fb_info_wire_crypt, isc_info_end }, 11, getPluginName);
+                    new byte[] { (byte) fb_info_wire_crypt, isc_info_end }, 100, getPluginName);
 
             assertEquals(expectedCryptPlugin, cryptPlugin);
         }

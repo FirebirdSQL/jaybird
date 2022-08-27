@@ -43,7 +43,7 @@ public interface FbWireOperations {
      * <p>
      * NOTE: This method <b>returns</b> the SQLException read from the
      * status vector, and only <b>throws</b> SQLException when an error occurs
-     * processing the status ector.
+     * processing the status vector.
      * </p>
      *
      * @return SQLException from the status vector
@@ -128,13 +128,15 @@ public interface FbWireOperations {
      * Enqueue a deferred action.
      * <p>
      * FbDatabase implementations that do not support deferred actions are allowed to throw an
-     * {@link java.lang.UnsupportedOperationException}
+     * {@link java.lang.UnsupportedOperationException} (which the default implementation does).
      * </p>
      *
      * @param deferredAction
      *         Deferred action
      */
-    void enqueueDeferredAction(DeferredAction deferredAction);
+    default void enqueueDeferredAction(DeferredAction deferredAction) {
+        throw new UnsupportedOperationException("enqueueDeferredAction is not supported in " + getClass().getName());
+    }
 
     /**
      * Consumes packets notifying for warnings, but ignoring exceptions thrown from the packet.
@@ -153,22 +155,12 @@ public interface FbWireOperations {
 
     /**
      * Processes any deferred actions. Protocol versions that do not support deferred actions should simply do nothing.
+     * <p>
+     * WARNING: If the server queues deferred responses, and expects an operation (e.g. {@code op_batch_sync},
+     * {@code op_batch_exec} or {@code op_ping}) to actual send those responses, this method may block indefinitely.
+     * </p>
      */
-    void processDeferredActions();
-
-    /**
-     * Reads the response from the server.
-     *
-     * @param warningCallback
-     *         Callback object for signalling warnings, <code>null</code> to register warning on the default callback
-     * @return Response
-     * @throws SQLException
-     *         For errors returned from the server, or when attempting to
-     *         read
-     * @throws IOException
-     *         For errors reading the response from the connection.
-     */
-    Response readSingleResponse(WarningMessageCallback warningCallback) throws SQLException, IOException;
+    default void processDeferredActions() { }
 
     /**
      * @param response

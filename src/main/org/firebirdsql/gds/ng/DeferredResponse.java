@@ -22,55 +22,52 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firebirdsql.gds.ng.listeners;
+package org.firebirdsql.gds.ng;
 
-import org.firebirdsql.gds.ng.FbDatabase;
-
-import java.sql.SQLWarning;
+import org.firebirdsql.logging.LoggerFactory;
 
 /**
- * Listener for database events.
+ * Interface for receiving deferred/async responses.
  * <p>
- * All listener methods have a default implementation that does nothing.
+ * GDS-ng implementations which are not capable of asynchronous or delayed processing of responses are expected to
+ * synchronously invoke the {@link #onResponse(Object)} and - optionally - {@link #onException(Exception)}
+ * methods within the method call.
  * </p>
  *
+ * @param <T>
+ *         response type expected ({@code Void} if no object, but {@code null} is expected)
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @since 3.0
+ * @since 5
  */
-public interface DatabaseListener {
+public interface DeferredResponse<T> {
 
     /**
-     * Called before the {@code database} will be detached.
+     * Called with successful response.
+     *
+     * @param response
+     *         response object, or {@code null} if there is no response, but the request completed successfully
+     */
+    @SuppressWarnings("unused")
+    default void onResponse(T response) {
+    }
+
+    /**
+     * Exception received when receiving or processing the response.
      * <p>
-     * This event is intended for cleanup action, implementer should take care that
-     * no exceptions are thrown from this method.
+     * The default implementation only logs the exception on debug level.
+     * </p>
+     * <p>
+     * For GDS-ng implementations that can only perform synchronous processing, it is implementation-defined whether
+     * or not this method is called, or if the exception is thrown directly from the invoked method.
      * </p>
      *
-     * @param database
-     *         The database object that is detaching
+     * @param exception
+     *         exception received processing the response
      */
-    default void detaching(FbDatabase database) { }
+    default void onException(Exception exception) {
+        // Default expectation: this only happen if the connection is no longer available.
+        // We ignore the exception and assume the next operation by the caller will fail as well.
+        LoggerFactory.getLogger(getClass()).debug("Exception in processDeferredActions", exception);
+    }
 
-    /**
-     * Called when the {@code database} connection has been detached
-     *
-     * @param database
-     *         The database object that was detached
-     */
-    default void detached(FbDatabase database) { }
-
-    /**
-     * Called when a warning was received for the {@code database} connection.
-     * <p>
-     * In implementation it is possible that some warnings are not sent to listeners on the database, but only to
-     * listeners on
-     * specific connection derived objects (like an {@link org.firebirdsql.gds.ng.FbStatement} implementation).
-     * </p>
-     *
-     * @param database
-     *         Database receiving the warning
-     * @param warning
-     *         Warning
-     */
-    default void warningReceived(FbDatabase database, SQLWarning warning) { }
 }

@@ -418,6 +418,26 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setScrollableCursor(scrollableCursor);
     }
 
+    @Override
+    public boolean isUseServerBatch() {
+        return FirebirdConnectionProperties.super.isUseServerBatch();
+    }
+
+    @Override
+    public void setUseServerBatch(boolean useServerBatch) {
+        FirebirdConnectionProperties.super.setUseServerBatch(useServerBatch);
+    }
+
+    @Override
+    public int getServerBatchBufferSize() {
+        return FirebirdConnectionProperties.super.getServerBatchBufferSize();
+    }
+
+    @Override
+    public void setServerBatchBufferSize(int serverBatchBufferSize) {
+        FirebirdConnectionProperties.super.setServerBatchBufferSize(serverBatchBufferSize);
+    }
+
     @SuppressWarnings("deprecation")
     @Deprecated
     @Override
