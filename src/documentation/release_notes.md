@@ -11,6 +11,8 @@ The following has been changed or fixed since Jaybird 4.0.6
 
 - Improvement: `(VAR)CHAR` is now sent to the server with `blr_varying2` or
   `blr_text2` which includes the character set information ([jaybird#692](https://github.com/FirebirdSQL/jaybird/issues/692))
+- Changed: Usages of `String.toUpperCase` and `String.toLowerCase` now use 
+  `Locale.ROOT` to prevent locale-sensitivity issues ([jaybird#697](https://github.com/FirebirdSQL/jaybird/issues/697))
 
 Jaybird 4.0.6
 -------------
