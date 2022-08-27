@@ -1096,15 +1096,6 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return props != null && props.isUseFirebirdAutocommit();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
-
     /**
      * Checks if client info is supported.
      *

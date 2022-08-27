@@ -193,16 +193,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         return syncObject;
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (!closed)
-                close();
-        } finally {
-            super.finalize();
-        }
-    }
-
     public void completeStatement() throws SQLException {
         completeStatement(CompletionReason.OTHER);
     }
