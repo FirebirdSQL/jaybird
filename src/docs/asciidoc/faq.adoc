@@ -581,10 +581,9 @@ It can have other causes than described below.
 [#cause-username-or-password-is-null]
 ==== Cause: username or password is null
 
-With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result, Firebird will reject the connection.
+With Jaybird 3.0 and Jaybird 4.0 connecting to Firebird 3.0 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result Firebird will reject the connection.
 
-With Firebird 2.5 and earlier, or Jaybird 2.2, this situation will normally yield error _"Your user name and password are not defined.
-Ask your database  administrator to set up a Firebird login."_.
+With Firebird 2.5 and earlier, or Jaybird 2.2 or earlier, or Jaybird 5.0 or higher, this situation will yield error "`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`"
 
 [#cause-wirecrypt-required]
 ==== Cause: wirecrypt required

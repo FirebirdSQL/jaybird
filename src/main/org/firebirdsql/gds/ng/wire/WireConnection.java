@@ -369,7 +369,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_connect_reject).toSQLException();
+                if (log.isDebugEnabled()) {
+                    log.debug("Reached end of identify without error or connection, last operation: " + operation);
+                }
+                // If we reach here, authentication failed (or never authenticated for lack of username and password)
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
             }
         } catch (SocketTimeoutException ste) {
             throw new FbExceptionBuilder().timeoutException(ISCConstants.isc_network_error)
