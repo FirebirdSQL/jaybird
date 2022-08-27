@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.text.BreakIterator;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -227,7 +228,7 @@ public final class FBEscapedParser {
         processEscaped(escaped, keyword, payload);
 
         //Handle keywords.
-        final String keywordStr = keyword.toString().toLowerCase();
+        final String keywordStr = keyword.toString().toLowerCase(Locale.ROOT);
         // NOTE: We assume here that all KEYWORD constants are lowercase!
         switch (keywordStr) {
         case ESCAPE_CALL_KEYWORD:
@@ -368,7 +369,7 @@ public final class FBEscapedParser {
      */
     private static void convertLimitString(final StringBuilder target, final CharSequence limitClause)
             throws FBSQLParseException {
-        final String limitEscape = limitClause.toString().toLowerCase();
+        final String limitEscape = limitClause.toString().toLowerCase(Locale.ROOT);
         final int offsetStart = limitEscape.indexOf(LIMIT_OFFSET_CLAUSE);
         if (offsetStart == -1) {
             target.append("ROWS ").append(limitEscape);

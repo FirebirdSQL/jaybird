@@ -1957,7 +1957,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
                 if (column_def != null) {
                     // TODO This looks suspicious (what if it contains default)
-                    int defaultPos = column_def.toUpperCase().indexOf("DEFAULT");
+                    int defaultPos = column_def.toUpperCase(Locale.ROOT).indexOf("DEFAULT");
                     if (defaultPos >= 0)
                         column_def = column_def.substring(7).trim();
                     valueBuilder.at(12).set(getBytes(column_def));

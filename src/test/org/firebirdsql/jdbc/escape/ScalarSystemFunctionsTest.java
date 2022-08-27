@@ -87,7 +87,7 @@ class ScalarSystemFunctionsTest {
     void testUser() throws Exception {
         ResultSet rs = stmt.executeQuery("SELECT {fn USER()} FROM RDB$DATABASE");
         assertTrue(rs.next(), "Expected at least one row");
-        assertEquals(FBTestProperties.DB_USER.toUpperCase(), rs.getString(1),
+        assertEquals(FBTestProperties.DB_USER.toUpperCase(Locale.ROOT), rs.getString(1),
                 "Unexpected result for function escape USER()");
     }
 

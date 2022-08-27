@@ -365,7 +365,7 @@ public class FBEscapedFunctionHelper {
      *         if escaped function call has incorrect syntax.
      */
     public static String convertTemplate(final String functionCall) throws FBSQLParseException {
-        final String functionName = parseFunction(functionCall).toUpperCase();
+        final String functionName = parseFunction(functionCall).toUpperCase(Locale.ROOT);
         final String[] params = parseArguments(functionCall).toArray(new String[0]);
 
         if (!FUNCTION_MAP.containsKey(functionName)) {

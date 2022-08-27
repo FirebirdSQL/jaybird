@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -88,7 +89,7 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
             String sql = "SELECT RDB$PROCEDURE_NAME FROM RDB$PROCEDURES WHERE RDB$PROCEDURE_TYPE = 1";
             try (ResultSet resultSet = stmt.executeQuery(sql)) {
                 while (resultSet.next()) {
-                    selectableProcedureNames.add(resultSet.getString(1).trim().toUpperCase());
+                    selectableProcedureNames.add(resultSet.getString(1).trim().toUpperCase(Locale.ROOT));
                 }
             }
         }
@@ -99,7 +100,7 @@ class DefaultCallableStatementMetaData implements StoredProcedureMetaData {
     }
 
     public boolean isSelectable(String procedureName) throws SQLException {
-        return selectableProcedureNames.contains(procedureName.toUpperCase());
+        return selectableProcedureNames.contains(procedureName.toUpperCase(Locale.ROOT));
     }
 }
 

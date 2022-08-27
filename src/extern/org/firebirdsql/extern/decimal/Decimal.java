@@ -24,6 +24,7 @@ package org.firebirdsql.extern.decimal;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.util.Locale;
 
 import static java.util.Objects.requireNonNull;
 
@@ -446,7 +447,7 @@ public abstract class Decimal<T extends Decimal<T>> {
         }
 
         private T valueOfSpecial(String special) {
-            switch (special.toLowerCase()) {
+            switch (special.toLowerCase(Locale.ROOT)) {
             case "inf":
             case "infinity":
             case "+inf":
