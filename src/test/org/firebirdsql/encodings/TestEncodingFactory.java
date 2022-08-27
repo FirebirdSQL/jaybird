@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -91,9 +92,9 @@ public class TestEncodingFactory {
         assumeTrue(FIREBIRD_TEST_CHARSET.equals(factory
                 .getEncodingDefinitionByCharsetAlias(JAVA_TEST_CHARSET).getFirebirdEncodingName()));
 
-        String differentCasedJavaAlias = JAVA_TEST_CHARSET.toUpperCase();
+        String differentCasedJavaAlias = JAVA_TEST_CHARSET.toUpperCase(Locale.ROOT);
         if (differentCasedJavaAlias.equals(JAVA_TEST_CHARSET)) {
-            differentCasedJavaAlias = JAVA_TEST_CHARSET.toLowerCase();
+            differentCasedJavaAlias = JAVA_TEST_CHARSET.toLowerCase(Locale.ROOT);
         }
 
         assertEquals("Unexpected FB characterset for differently cased Java alias",
@@ -107,9 +108,9 @@ public class TestEncodingFactory {
         assumeTrue(JAVA_TEST_CHARSET.equals(factory.getEncodingDefinitionByFirebirdName(FIREBIRD_TEST_CHARSET)
                 .getJavaEncodingName()));
 
-        String differentCasedFbAlias = FIREBIRD_TEST_CHARSET.toUpperCase();
+        String differentCasedFbAlias = FIREBIRD_TEST_CHARSET.toUpperCase(Locale.ROOT);
         if (differentCasedFbAlias.equals(FIREBIRD_TEST_CHARSET)) {
-            differentCasedFbAlias = FIREBIRD_TEST_CHARSET.toLowerCase();
+            differentCasedFbAlias = FIREBIRD_TEST_CHARSET.toLowerCase(Locale.ROOT);
         }
 
         assertEquals("Unexpected Java character set for differently cased FB alias",

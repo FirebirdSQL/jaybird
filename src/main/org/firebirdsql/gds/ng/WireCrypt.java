@@ -26,6 +26,8 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 
+import java.util.Locale;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
@@ -67,7 +69,7 @@ public enum WireCrypt {
         if (name == null) {
             return DEFAULT;
         }
-        String uppercaseValue = name.toUpperCase();
+        String uppercaseValue = name.toUpperCase(Locale.ROOT);
         return valueOf(uppercaseValue);
     }
 }

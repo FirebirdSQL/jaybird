@@ -365,7 +365,7 @@ public class FBEscapedFunctionHelper {
      *         if escaped function call has incorrect syntax.
      */
     public static String convertTemplate(final String functionCall, final EscapeParserMode mode) throws FBSQLParseException {
-        final String functionName = parseFunction(functionCall).toUpperCase();
+        final String functionName = parseFunction(functionCall).toUpperCase(Locale.ROOT);
         final String[] params = parseArguments(functionCall).toArray(new String[0]);
 
         if (!FUNCTION_MAP.containsKey(functionName)) {
@@ -404,7 +404,7 @@ public class FBEscapedFunctionHelper {
 
     private static String convertUsingStandardUDF(String name, String[] params) throws FBSQLParseException {
         try {
-            name = name.toLowerCase();
+            name = name.toLowerCase(Locale.ROOT);
             Method method = FBEscapedFunctionHelper.class.getMethod(name, new Class[] { String[].class });
             return (String) method.invoke(null, new Object[] { params });
         } catch (NoSuchMethodException ex) {

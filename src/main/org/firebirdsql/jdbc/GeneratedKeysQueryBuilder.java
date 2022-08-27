@@ -366,7 +366,7 @@ final class GeneratedKeysQueryBuilder {
                 && objectName.charAt(objectName.length() - 1) == '"') {
             return objectName.substring(1, objectName.length() - 1).replaceAll("\"\"", "\"");
         }
-        return objectName.toUpperCase();
+        return objectName.toUpperCase(Locale.ROOT);
     }
 
 }

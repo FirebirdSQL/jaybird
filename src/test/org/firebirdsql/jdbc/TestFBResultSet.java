@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
@@ -811,13 +812,15 @@ public class TestFBResultSet extends FBJUnit4TestBase {
              FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
 
             String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
+            assertThat("Execution plan should reference test_table",
+                    execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
         }
 
         try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
              FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
             String execPlan = rs.getExecutionPlan();
-            assertTrue("Execution plan should reference test_table", execPlan.toUpperCase().contains("TEST_TABLE"));
+            assertThat("Execution plan should reference test_table",
+                    execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
         }
 
         // Ensure there isn't a crash when attempting to retrieve the
@@ -839,15 +842,15 @@ public class TestFBResultSet extends FBJUnit4TestBase {
              FBResultSet rs = (FBResultSet) stmt.executeQuery("SELECT id, str FROM test_table")) {
 
             String execPlan = rs.getExplainedExecutionPlan();
-            assertTrue("Detailed execution plan should reference test_table",
-                    execPlan.toUpperCase().contains("TEST_TABLE"));
+            assertThat("Detailed execution plan should reference test_table",
+                    execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
         }
 
         try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
              FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
             String execPlan = rs.getExplainedExecutionPlan();
-            assertTrue("Detailed execution plan should reference test_table",
-                    execPlan.toUpperCase().contains("TEST_TABLE"));
+            assertThat("Detailed execution plan should reference test_table",
+                    execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
         }
 
         // Ensure there isn't a crash when attempting to retrieve the

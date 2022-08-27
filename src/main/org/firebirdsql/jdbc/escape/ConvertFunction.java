@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.escape;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,7 +79,7 @@ final class ConvertFunction implements SQLFunction {
     }
 
     private String renderCast(final String value, final Matcher typeMatcher) {
-        String dataType = typeMatcher.group(1).toUpperCase();
+        String dataType = typeMatcher.group(1).toUpperCase(Locale.ROOT);
         String parameters = typeMatcher.group(2);
         switch (dataType) {
         case "TINYINT":

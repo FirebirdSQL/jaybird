@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 
@@ -69,7 +70,7 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             return rs;
         }
 
-        tableNamePattern = tableNamePattern.toUpperCase();
+        tableNamePattern = tableNamePattern.toUpperCase(Locale.ROOT);
 
         return super.getTables(catalog, schemaPattern, tableNamePattern, types);
     }
@@ -89,8 +90,8 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
             return rs;
         }
 
-        String upperTableNamePattern = tableNamePattern.toUpperCase();
-        String upperColumnNamePattern = columnNamePattern.toUpperCase();
+        String upperTableNamePattern = tableNamePattern.toUpperCase(Locale.ROOT);
+        String upperColumnNamePattern = columnNamePattern.toUpperCase(Locale.ROOT);
 
         rs = (FBResultSet) super.getColumns(catalog, schemaPattern,
                 upperTableNamePattern, columnNamePattern);

@@ -39,6 +39,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
@@ -151,11 +152,11 @@ public class TestJnaDatabase {
                             message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)",
                                     invalidDatabaseName))),
                             message(startsWith(getFbMessage(ISCConstants.isc_io_error, "CreateFile (open)",
-                                    invalidDatabaseName.toUpperCase()))),
+                                    invalidDatabaseName.toUpperCase(Locale.ROOT)))),
                             message(startsWith(getFbMessage(ISCConstants.isc_io_error, "open",
                                     invalidDatabaseName))),
                             message(startsWith(getFbMessage(ISCConstants.isc_io_error, "open",
-                                    invalidDatabaseName.toUpperCase())))
+                                    invalidDatabaseName.toUpperCase(Locale.ROOT))))
                     ),
                     errorCode(equalTo(ISCConstants.isc_io_error))
             ));

@@ -26,6 +26,7 @@ import org.junit.Test;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Locale;
 
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,7 +51,7 @@ public class TestScalarSystemFunctions {
             ResultSet rs = stmt.executeQuery("SELECT {fn DATABASE()} FROM RDB$DATABASE");
             assertTrue("Expected at least one row", rs.next());
             assertThat("Unexpected result for function escape DATABASE()",
-                    rs.getString(1), endsWith(FBTestProperties.DB_NAME.toUpperCase()));
+                    rs.getString(1), endsWith(FBTestProperties.DB_NAME.toUpperCase(Locale.ROOT)));
         }
     }
 
@@ -71,7 +72,7 @@ public class TestScalarSystemFunctions {
             ResultSet rs = stmt.executeQuery("SELECT {fn USER()} FROM RDB$DATABASE");
             assertTrue("Expected at least one row", rs.next());
             assertEquals("Unexpected result for function escape USER()",
-                    FBTestProperties.DB_USER.toUpperCase(), rs.getString(1));
+                    FBTestProperties.DB_USER.toUpperCase(Locale.ROOT), rs.getString(1));
         }
     }
 
