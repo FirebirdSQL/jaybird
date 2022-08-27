@@ -116,7 +116,7 @@ public interface FbBatchConfig {
      * the maximum (256MB as of Firebird 4) will be silently set to the server maximum.
      * </p>
      *
-     * @return maximum batch buffer size, return (@code < 0) to use server-side default (16MB as of Firebird 4),
+     * @return maximum batch buffer size, return {@code < 0} to use server-side default (16MB as of Firebird 4),
      * {@code 0} for the server-side maximum (256MB as of Firebird 4)
      */
     int batchBufferSize();
