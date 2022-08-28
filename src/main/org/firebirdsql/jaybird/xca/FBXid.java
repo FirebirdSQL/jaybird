@@ -22,7 +22,6 @@ import javax.transaction.xa.Xid;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
@@ -46,7 +45,7 @@ class FBXid implements Xid {
     public static final int TDR_XID_GLOBAL_ID = 6;
     public static final int TDR_XID_BRANCH_ID = 4;
 
-    private int formatId;
+    private final int formatId;
 
     /**
      * Global transaction id of this instance.

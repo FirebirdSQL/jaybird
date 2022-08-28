@@ -169,7 +169,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
     /**
      * Returns the {@code databaseName} property as configured on the {@code ManagedConnectionFactory}.
-     * 
+     *
      * @return database name
      * @deprecated Will be removed in Jaybird 6; there is no direction replacement
      */
@@ -571,9 +571,12 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         }
     }
 
-    private final static String FORGET_FIND_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-            + "FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_STATE IN (2, 3)";
-    private final static String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
+    private static final String FIND_TRANSACTION_FRAGMENT =
+            "SELECT RDB$TRANSACTION_ID, cast(RDB$TRANSACTION_DESCRIPTION as varchar(32764) character set octets) "
+                    + "FROM RDB$TRANSACTIONS ";
+    private static final String FORGET_FIND_QUERY = FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
+            + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+    private static final String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
 
     /**
      * Indicates that no further action will be taken on behalf of this
@@ -598,22 +601,13 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
             stmtHandle2.prepare(FORGET_FIND_QUERY);
 
-            DataProvider dataProvider0 = new DataProvider(0);
-            stmtHandle2.addStatementListener(dataProvider0);
-            DataProvider dataProvider1 = new DataProvider(1);
-            stmtHandle2.addStatementListener(dataProvider1);
+            DataProvider dataProvider = new DataProvider(stmtHandle2);
+            stmtHandle2.addStatementListener(dataProvider);
 
-            stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
-            stmtHandle2.fetchRows(10);
+            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
-            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
-
-            int row = 0;
-            while (row < dataProvider0.getRowCount()) {
-                dataProvider0.setRow(row);
-                dataProvider1.setRow(row);
-
+            while (dataProvider.next()) {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
@@ -631,8 +625,6 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
                     log.warnDebug(
                             "incorrect XID format in RDB$TRANSACTIONS where RDB$TRANSACTION_ID=" + inLimboTxId, ex);
                 }
-
-                row++;
             }
 
             stmtHandle2.close();
@@ -719,8 +711,8 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         return XAResource.XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-            + "FROM RDB$TRANSACTIONS";
+    private static final String RECOVERY_QUERY = FIND_TRANSACTION_FRAGMENT
+            + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
 
     /**
      * Obtain a list of prepared transaction branches from a resource manager.
@@ -758,22 +750,16 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
             stmtHandle2.prepare(RECOVERY_QUERY);
 
-            DataProvider dataProvider0 = new DataProvider(0);
-            stmtHandle2.addStatementListener(dataProvider0);
-            DataProvider dataProvider1 = new DataProvider(1);
-            stmtHandle2.addStatementListener(dataProvider1);
+            DataProvider dataProvider = new DataProvider(stmtHandle2);
+            stmtHandle2.addStatementListener(dataProvider);
 
             stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
             stmtHandle2.fetchRows(10);
 
-            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
-            int row = 0;
-            while (row < dataProvider0.getRowCount()) {
-                dataProvider0.setRow(row);
-                dataProvider1.setRow(row);
-
+            while (dataProvider.next()) {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
@@ -783,8 +769,6 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
                 } catch (FBIncorrectXidException ex) {
                     log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
-
-                row++;
             }
 
             stmtHandle2.close();
@@ -796,10 +780,8 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         }
     }
 
-    private static final String RECOVERY_QUERY_PARAMETRIZED =
-            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION "
-                    + "FROM RDB$TRANSACTIONS "
-                    + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
+    private static final String RECOVERY_QUERY_PARAMETRIZED = FIND_TRANSACTION_FRAGMENT
+            + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
 
     /**
      * Obtain a single prepared transaction branch from a resource manager, based on a Xid
@@ -822,25 +804,19 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
             stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);
 
-            DataProvider dataProvider0 = new DataProvider(0);
-            stmtHandle2.addStatementListener(dataProvider0);
-            DataProvider dataProvider1 = new DataProvider(1);
-            stmtHandle2.addStatementListener(dataProvider1);
+            DataProvider dataProvider = new DataProvider(stmtHandle2);
+            stmtHandle2.addStatementListener(dataProvider);
 
             FBXid tempXid = new FBXid(externalXid);
-            final RowValue parameters = RowValue.of(stmtHandle2.getParameterDescriptor(),
-                    tempXid.toBytes());
+            final RowValue parameters = RowValue.of(stmtHandle2.getParameterDescriptor(), tempXid.toBytes());
             stmtHandle2.execute(parameters);
             stmtHandle2.fetchRows(1);
 
-            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider0, gdsHelper2, false);
-            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider1, gdsHelper2, false);
+            FBField field0 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(0), dataProvider.asFieldDataProvider(0), gdsHelper2, false);
+            FBField field1 = FBField.createField(stmtHandle2.getRowDescriptor().getFieldDescriptor(1), dataProvider.asFieldDataProvider(1), gdsHelper2, false);
 
             FBXid xid = null;
-            if (dataProvider0.getRowCount() > 0) {
-                dataProvider0.setRow(0);
-                dataProvider1.setRow(0);
-
+            if (dataProvider.next()) {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
@@ -865,35 +841,60 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         return syncObject;
     }
 
-    private static final class DataProvider implements StatementListener, FieldDataProvider {
-        private final List<RowValue> rows = new ArrayList<>();
-        private final int fieldPos;
-        private int row;
+    private static final class DataProvider implements StatementListener {
+        private final Deque<RowValue> rows = new ArrayDeque<>();
+        private final FbStatement statementHandle;
+        private RowValue currentRow = null;
+        private boolean moreRows = true;
 
-        private DataProvider(int fieldPos) {
-            this.fieldPos = fieldPos;
+        private DataProvider(FbStatement statementHandle) {
+            this.statementHandle = statementHandle;
         }
 
-        public void setRow(int row) {
-            this.row = row;
+        boolean hasNext() throws SQLException {
+            if (rows.isEmpty() && moreRows) {
+                fetch();
+            }
+            return !rows.isEmpty();
         }
 
-        public byte[] getFieldData() {
-            return rows.get(row).getFieldData(fieldPos);
+        boolean next() throws SQLException {
+            if (hasNext()) {
+                currentRow = Objects.requireNonNull(rows.pollFirst(), "row");
+                return true;
+            }
+            currentRow = null;
+            return false;
         }
 
-        public void setFieldData(byte[] data) {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getRowCount() {
-            return rows.size();
+        private void fetch() throws SQLException {
+            statementHandle.fetchRows(Integer.MAX_VALUE);
         }
 
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);
         }
+
+        @Override
+        public void afterLast(FbStatement sender) {
+            moreRows = false;
+        }
+
+        FieldDataProvider asFieldDataProvider(int fieldPos) {
+            return new FieldDataProvider() {
+                @Override
+                public byte[] getFieldData() {
+                    return currentRow.getFieldData(fieldPos);
+                }
+
+                @Override
+                public void setFieldData(byte[] data) {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
     }
 
     /**
