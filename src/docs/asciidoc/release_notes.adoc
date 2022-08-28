@@ -135,14 +135,14 @@ For example:
 </dependency>
 ----
 
-If you want to use Type 2 support (native, local or embedded), you need to  explicitly include JNA 5.5.0 as a dependency:
+If you want to use Type 2 support (native, local or embedded), you need to  explicitly include JNA 5.12.1 as a dependency:
 
 [source,{.xml}]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.5.0</version>
+    <version>5.12.1</version>
 </dependency>
 ----
 
@@ -158,7 +158,7 @@ You can download the latest versions from https://www.firebirdsql.org/en/jdbc-dr
 
 At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`).
 
-For native, local or embedded support, you will need to include `jna-5.5.0.jar`  on your classpath.
+For native, local or embedded support, you will need to include `jna-5.12.1.jar`  on your classpath.
 See also <<type-2-native-and-embedded-driver,Type 2 (native) and embedded driver>>.
 
 [#upgrading-from-jaybird-4-to-jaybird-5]
@@ -194,6 +194,9 @@ If you manage your dependencies manually, you need to do the following:
 . Replace the Jaybird 4 library with the Jaybird 5 version
  ** `jaybird-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
  ** `jaybird-full-4.0.x.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar`, the `jaybird-full` library no longer exists
+. Replace the `jna-5.5.0.jar` library with `jna-5.12.1.jar`
++
+Only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
 . Remove the `connector-api-1.5.jar` library, it is no longer used by Jaybird
 . Remove the `antlr4-runtime-4.7.2.jar` library, it is no longer used by Jaybird
 
@@ -888,7 +891,7 @@ removed without replacement.
 === Type 2 (native) and embedded driver
 
 Jaybird uses JNA to access the client library.
-If you want to use the Type 2  driver, or Firebird embedded, then you need to include `jna-5.5.0.jar` on the  classpath.
+If you want to use the Type 2  driver, or Firebird embedded, then you need to include `jna-5.12.1.jar` on the  classpath.
 
 When using Maven, you need to specify the dependency on JNA yourself, as we  don't depend on it by default (it is specified as an optional dependency):
 
@@ -897,7 +900,7 @@ When using Maven, you need to specify the dependency on JNA yourself, as we  don
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.5.0</artifactId>
+    <version>5.12.1</artifactId>
 </dependency>
 ----
 
