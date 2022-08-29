@@ -784,11 +784,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
     }
 
-    public void forgetResultSet() { //yuck should be package
-        // TODO Use case unclear, find out if this needs to be added to fbStatement somehow
-        currentRs = null;
-    }
-
     @Override
     public ResultSet getCurrentResultSet() throws SQLException {
         return currentRs;
@@ -827,23 +822,6 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     @Override
     public boolean isCloseOnCompletion() {
         return closeOnCompletion;
-    }
-
-    /**
-     * This method checks if supplied statement is executing procedure or
-     * it is generic statement. This check is needed to handle correctly
-     * parameters that are returned from non-selectable procedures.
-     *
-     * @param sql SQL statement to check
-     *
-     * @return {@code true} if supplied statement is EXECUTE PROCEDURE type of statement.
-     *
-     * @throws SQLException if translating statement into native code failed.
-     */
-    protected boolean isExecuteProcedureStatement(String sql) throws SQLException {
-        // TODO Unused? Remove?
-        final String trimmedSql = nativeSQL(sql).trim();
-        return trimmedSql.startsWith("EXECUTE");
     }
 
     protected boolean internalExecute(String sql) throws SQLException {

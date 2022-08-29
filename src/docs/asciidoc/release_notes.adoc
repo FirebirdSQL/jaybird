@@ -679,6 +679,10 @@ there is no direct replacement, though `FBConnection.connectionProperties()` can
 * `FBStatement`
 ** `toArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toIntArray(List<? extends Number>)`
 ** `toLargeArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toLongArray(List<? extends Number>)`
+** `forgetResultSet()`;
+there is no replacement
+** `isExecuteProcedureStatement(String sql);
+there is no replacement
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
 * `IConnectionProperties.getExtraDatabaseParameters`;
