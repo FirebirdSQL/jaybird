@@ -553,6 +553,9 @@ The `org.firebirdsql.management.NBackupManager` interface has two new methods: `
 These options require Firebird 4.0 or higher.
 * Improvement: The `charSet` connection property now also has an alias `charset` (URL property, not as get/set pair).
 * Improvement: The `dbCryptConfig` connection property now supports _base64url_ (the "`URL and Filename safe`" Base 64 Alphabet) with the `base64url:` prefix (https://github.com/FirebirdSQL/jaybird/issues/677[jaybird#677])
+* Fix: `FBStatement` allowed retrieval of update count after error, while `FBPreparedStatement` -- correctly -- did not (https://github.com/FirebirdSQL/jaybird/issues/681[jaybird#681])
++
+Now, after an exception, attempting to retrieve the update count with `getUpdateCount()` will return `-1`.
 * Improvement: Renamed `NativeResourceUnloadWebListener` to `NativeResourceUnloadWebListenerJavaX` and added its twin `NativeResourceUnloadWebListenerJakarta` using the `jakarta.servlet` namespace to support native resource unloading on Jakarta EE 9 and higher (https://github.com/FirebirdSQL/jaybird/issues/684[jaybird#684])
 * Improvement: `Connection.isValid(int)` now asynchronously checks validity of connections, allowing the timeout to also be honoured for native connections (https://github.com/FirebirdSQL/jaybird/issues/685[jaybird#685])
 * Change: Removed finalization from `FBConnection` and `FBStatement` (https://github.com/FirebirdSQL/jaybird/issues/699[jaybird#699])

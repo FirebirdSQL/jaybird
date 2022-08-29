@@ -854,13 +854,18 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     protected boolean internalExecute(RowValue rowValue) throws SQLException {
-        fbStatement.execute(rowValue);
-        boolean hasResultSet = currentStatementResult == StatementResult.RESULT_SET;
-        if (hasResultSet && isGeneratedKeyQuery()) {
-            fetchMultiRowGeneratedKeys();
-            return false;
+        try {
+            fbStatement.execute(rowValue);
+            boolean hasResultSet = currentStatementResult == StatementResult.RESULT_SET;
+            if (hasResultSet && isGeneratedKeyQuery()) {
+                fetchMultiRowGeneratedKeys();
+                return false;
+            }
+            return hasResultSet;
+        } catch (SQLException e) {
+            currentStatementResult = StatementResult.NO_MORE_RESULTS;
+            throw e;
         }
-        return hasResultSet;
     }
 
     private void fetchMultiRowGeneratedKeys() throws SQLException {

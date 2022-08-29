@@ -580,12 +580,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         synchronized (getSynchronizationObject()) {
             flushFields();
 
-            try {
-                return internalExecute(fieldValues);
-            } catch (SQLException e) {
-                currentStatementResult = StatementResult.NO_MORE_RESULTS;
-                throw e;
-            }
+            return internalExecute(fieldValues);
         }
     }
 
