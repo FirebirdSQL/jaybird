@@ -1112,7 +1112,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     }
 
     // NOTE: This intentionally does not take case sensitivity into account
-    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("[\\p{Alpha}][\\p{Alnum}_$]*");
+    private static final Pattern SIMPLE_IDENTIFIER_PATTERN = Pattern.compile("\\p{Alpha}[\\p{Alnum}_$]*");
 
     /**
      * Returns a SQL identifier. If {@code identifier} is a simple SQL identifier:
@@ -1219,7 +1219,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
     private final class FBStatementListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {
-            if (!isValidSender(sender)) return;
+            if (isUnexpectedSender(sender)) return;
             // TODO May need extra condition to distinguish between singleton result of EXECUTE PROCEDURE and INSERT ... RETURNING ...
             if (isSingletonResult) {
                 specialResult.clear();
@@ -1230,20 +1230,8 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
         }
 
         @Override
-        public void beforeFirst(FbStatement sender) {
-            if (!isValidSender(sender)) return;
-            // TODO Evaluate if we need to do any processing
-        }
-
-        @Override
-        public void afterLast(FbStatement sender) {
-            if (!isValidSender(sender)) return;
-            // TODO Evaluate if we need to do any processing
-        }
-
-        @Override
         public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
-            if (!isValidSender(sender)) return;
+            if (isUnexpectedSender(sender)) return;
             // TODO If true create ResultSet and attach listener to sender
             currentStatementResult = hasResultSet || hasSingletonResult && !isGeneratedKeyQuery()
                     ? StatementResult.RESULT_SET
@@ -1253,7 +1241,7 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
         @Override
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
-            if (!isValidSender(sender)) return;
+            if (isUnexpectedSender(sender)) return;
             switch (newState) {
             case PREPARED:
                 // TODO Evaluate correct changes when state goes to prepared
@@ -1275,23 +1263,23 @@ public class FBStatement implements FirebirdStatement, Synchronizable {
 
         @Override
         public void warningReceived(FbStatement sender, SQLWarning warning) {
-            if (!isValidSender(sender)) return;
+            if (isUnexpectedSender(sender)) return;
             addWarning(warning);
         }
 
         @Override
         public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
-            if (!isValidSender(sender)) return;
+            if (isUnexpectedSender(sender)) return;
             sqlCountHolder = sqlCounts;
         }
 
-        private boolean isValidSender(FbStatement sender) {
+        private boolean isUnexpectedSender(FbStatement sender) {
             if (sender != fbStatement) {
                 log.debug(String.format("Received statement listener update from unrelated statement [%s]", sender.toString()));
                 sender.removeStatementListener(this);
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }
     }
 
