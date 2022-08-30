@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -135,16 +133,13 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     @Override
     public long getTransactionId() throws SQLException {
         // TODO As separate class?
-        return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, new InfoProcessor<Long>() {
-            @Override
-            public Long process(byte[] infoResponse) throws SQLException {
-                if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
-                    // TODO Message, SQL state, error code?
-                    throw new SQLException("Unexpected response buffer");
-                }
-                int length = iscVaxInteger2(infoResponse, 1);
-                return iscVaxLong(infoResponse, 3, length);
+        return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, infoResponse -> {
+            if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
+                // TODO Message, SQL state, error code?
+                throw new SQLException("Unexpected response buffer");
             }
+            int length = iscVaxInteger2(infoResponse, 1);
+            return iscVaxLong(infoResponse, 3, length);
         });
     }
 

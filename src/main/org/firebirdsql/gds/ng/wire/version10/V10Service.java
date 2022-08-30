@@ -218,11 +218,6 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
         final DbCryptCallback dbCryptCallback = connection.createDbCryptCallback();
-        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, new FbWireOperations.ProcessAttachCallback() {
-            @Override
-            public void processAttachResponse(GenericResponse response) {
-                V10Service.this.processAttachResponse(response);
-            }
-        });
+        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, V10Service.this::processAttachResponse);
     }
 }

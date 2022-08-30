@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,7 +27,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
@@ -43,12 +42,8 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbService.class);
     protected final ServiceListenerDispatcher serviceListenerDispatcher = new ServiceListenerDispatcher();
-    private final WarningMessageCallback serviceWarningCallback = new WarningMessageCallback() {
-        @Override
-        public void processWarning(SQLWarning warning) {
-            serviceListenerDispatcher.warningReceived(AbstractFbService.this, warning);
-        }
-    };
+    private final WarningMessageCallback serviceWarningCallback =
+            warning -> serviceListenerDispatcher.warningReceived(AbstractFbService.this, warning);
 
     protected AbstractFbService(T connection, DatatypeCoder datatypeCoder) {
         super(connection, datatypeCoder);

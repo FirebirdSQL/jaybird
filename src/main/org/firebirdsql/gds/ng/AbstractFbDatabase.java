@@ -31,7 +31,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -69,13 +68,9 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     // @formatter:on
 
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
-    private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<FbTransaction>());
-    private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
-        @Override
-        public void processWarning(SQLWarning warning) {
-            databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
-        }
-    };
+    private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<>());
+    private final WarningMessageCallback warningCallback =
+            warning -> databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
     private final RowDescriptor emptyRowDescriptor;
     private short databaseDialect;
     private int odsMajor;

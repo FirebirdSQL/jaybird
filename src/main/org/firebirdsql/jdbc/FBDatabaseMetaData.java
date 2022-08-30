@@ -3521,6 +3521,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
                 if (cachedStatement != null) {
                     if (cachedStatement.isClosed()) {
+                        //noinspection resource
                         statements.remove(sql);
                     } else {
                         return cachedStatement;
@@ -3633,11 +3634,13 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return JDBC_MINOR_VERSION;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static String getSystemPropertyPrivileged(final String propertyName) {
         return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
     }
 
     private static class LruPreparedStatementCache extends LinkedHashMap<String, FBPreparedStatement> {
+        private static final long serialVersionUID = -6600678461169652270L;
         private final int maxCapacity;
 
         private LruPreparedStatementCache(int maxCapacity) {
