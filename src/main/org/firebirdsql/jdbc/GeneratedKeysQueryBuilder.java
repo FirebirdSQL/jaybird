@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -224,7 +224,7 @@ final class GeneratedKeysQueryBuilder {
         } else if (columnIndexes == null || columnIndexes.length == 0) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull)
                     .messageParameter("columnIndexes")
-                    .toFlatSQLException();
+                    .toSQLException();
         } else if (isSupportedType()) {
             List<String> columnNames = getColumnNames(statementIdentification.getTableName(), columnIndexes, databaseMetaData);
             QuoteStrategy quoteStrategy = QuoteStrategy.forDialect(databaseMetaData.getConnectionDialect());
@@ -251,7 +251,7 @@ final class GeneratedKeysQueryBuilder {
         } else if (columnNames == null || columnNames.length == 0) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_generatedKeysArrayEmptyOrNull)
                     .messageParameter("columnNames")
-                    .toFlatSQLException();
+                    .toSQLException();
         } else if (isSupportedType()) {
             return addColumnsByNameImpl(Arrays.asList(columnNames), QuoteStrategy.NO_QUOTES);
         } else {
@@ -300,7 +300,7 @@ final class GeneratedKeysQueryBuilder {
             }
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
                     .messageParameter(tableName)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
@@ -316,7 +316,7 @@ final class GeneratedKeysQueryBuilder {
                         .nonTransientException(JaybirdErrorCodes.jb_generatedKeysInvalidColumnPosition)
                         .messageParameter(indexToAdd)
                         .messageParameter(tableName)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             columns.add(columnName);
         }
@@ -330,7 +330,7 @@ final class GeneratedKeysQueryBuilder {
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_generatedKeysNoColumnsFound)
                         .messageParameter(tableName)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
 
             Map<Integer, String> columnByIndex = new HashMap<>();
@@ -367,7 +367,7 @@ final class GeneratedKeysQueryBuilder {
                 && objectName.charAt(objectName.length() - 1) == '"') {
             return objectName.substring(1, objectName.length() - 1).replaceAll("\"\"", "\"");
         }
-        return objectName.toUpperCase();
+        return objectName.toUpperCase(Locale.ROOT);
     }
 
 }

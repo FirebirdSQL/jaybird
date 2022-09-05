@@ -29,7 +29,10 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import java.sql.SQLWarning;
 
 /**
- * Listener for database events
+ * Listener for database events.
+ * <p>
+ * All listener methods have a default implementation that does nothing.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -46,7 +49,7 @@ public interface DatabaseListener {
      * @param database
      *         The database object that is detaching
      */
-    void detaching(FbDatabase database);
+    default void detaching(FbDatabase database) { }
 
     /**
      * Called when the {@code database} connection has been detached
@@ -54,7 +57,7 @@ public interface DatabaseListener {
      * @param database
      *         The database object that was detached
      */
-    void detached(FbDatabase database);
+    default void detached(FbDatabase database) { }
 
     /**
      * Called when a warning was received for the {@code database} connection.
@@ -69,5 +72,5 @@ public interface DatabaseListener {
      * @param warning
      *         Warning
      */
-    void warningReceived(FbDatabase database, SQLWarning warning);
+    default void warningReceived(FbDatabase database, SQLWarning warning) { }
 }

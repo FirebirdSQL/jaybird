@@ -916,8 +916,8 @@ class FBStatementTest {
         try (Statement stmt = con.createStatement()) {
             assertThrows(SQLException.class, () -> stmt.execute("execute procedure singleton_error"));
 
-            stmt.getMoreResults();
-            assertEquals(0, stmt.getUpdateCount());
+            assertFalse(stmt.getMoreResults());
+            assertEquals(-1, stmt.getUpdateCount());
         }
     }
 

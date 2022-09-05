@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -110,12 +108,17 @@ public class DefaultBlrCalculator implements BlrCalculator {
     /**
      * Calculates the blr for a single field.
      *
-     * @param bout Byte array OutputStream
-     * @param field Field descriptor
-     * @param len Length to use for SQL_VARYING and SQL_TEXT
+     * @param bout
+     *         byte array OutputStream
+     * @param field
+     *         field descriptor
+     * @param len
+     *         length to use for SQL_VARYING and SQL_TEXT
      * @throws SQLException
+     *         when {@code field} has an unknown type
      */
-    private void calculateFieldBlr(final ByteArrayOutputStream bout, final FieldDescriptor field, final int len) throws SQLException {
+    private void calculateFieldBlr(final ByteArrayOutputStream bout, final FieldDescriptor field, final int len)
+            throws SQLException {
         final int fieldType = field.getType() & ~1;
         switch (fieldType) {
         case SQL_VARYING:
@@ -261,5 +264,79 @@ public class DefaultBlrCalculator implements BlrCalculator {
             return (fieldData != null ? fieldData.length : 0) + 1;
         }
         return calculateIoLength(fieldDescriptor);
+    }
+
+    // See src/remote/client/BlrFromMessage.cpp method buildBlr
+    @Override
+    public int calculateBatchMessageLength(RowDescriptor rowDescriptor) throws SQLException {
+        int length = 0;
+        for (FieldDescriptor fieldDescriptor : rowDescriptor) {
+            int fieldLength = fieldDescriptor.getLength();
+
+            int align;
+            switch (fieldDescriptor.getType() & ~1) {
+            case SQL_TEXT:
+            case SQL_NULL:
+            case SQL_BOOLEAN:
+                // no align
+                align = 1;
+                break;
+            case SQL_SHORT:
+                align = 2;
+                break;
+            case SQL_VARYING:
+                align = 2;
+                // varchar length bytes
+                fieldLength += 2;
+                break;
+            case SQL_FLOAT:
+            case SQL_LONG:
+            case SQL_TYPE_DATE:
+            case SQL_TYPE_TIME:
+            case SQL_TIMESTAMP:
+            case SQL_TIME_TZ_EX:
+            case SQL_BLOB:
+            case SQL_ARRAY:
+            case SQL_QUAD:
+            case SQL_TIMESTAMP_TZ_EX:
+            case SQL_TIMESTAMP_TZ:
+            case SQL_TIME_TZ:
+                align = 4;
+                break;
+            case SQL_DOUBLE:
+            case SQL_D_FLOAT:
+            case SQL_INT64:
+            case SQL_DEC16:
+            case SQL_DEC34:
+            case SQL_INT128:
+                align = 8;
+                break;
+            default:
+                throw new FbExceptionBuilder().exception(isc_dsql_datatype_err).toSQLException();
+            }
+            if (align > 1) {
+                length = blrAlign(length, align);
+            }
+            length += fieldLength;
+            // null-indicator
+            length = blrAlign(length, 2) + 2;
+        }
+        return length;
+    }
+
+    /**
+     * Length alignment.
+     * <p>
+     * See {@code FB_ALIGN} in {@code src/include/fb_types.h}.
+     * </p>
+     *
+     * @param length
+     *         Current length
+     * @param alignment
+     *         Alignment
+     * @return aligned length
+     */
+    private int blrAlign(int length, int alignment) {
+        return (length + alignment - 1) & -alignment;
     }
 }

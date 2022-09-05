@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -73,7 +73,7 @@ public class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, 
                     // Using original attach object name as that may well be non-null even if it is null in dbAttachInfo
                     .messageParameter(connectionProperties.getAttachObjectName())
                     .messageParameter("null or empty database name in connection string")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         return toAttachUrl(dbAttachInfo);
     }

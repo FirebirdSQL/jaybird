@@ -18,13 +18,19 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
+import java.util.Properties;
 
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
+import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -108,9 +114,16 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
         }
     }
 
-    @Test
-    void testReturnGeneratedKeysWithBatchExecution() throws Exception {
-        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testReturnGeneratedKeysWithBatchExecution(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        try (Connection con = DriverManager.getConnection(FBTestProperties.getUrl(), props);
+             PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, TEXT_VALUE + "1");
             stmt.addBatch();
             stmt.setString(1, TEXT_VALUE + "2");

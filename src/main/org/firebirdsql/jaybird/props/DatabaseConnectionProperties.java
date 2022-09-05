@@ -38,7 +38,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * Gets the database of the connection.
      *
      * @return database name
-     * @see #setDatabaseName(String) 
+     * @see #setDatabaseName(String)
      */
     default String getDatabaseName() {
         return getProperty(PropertyNames.databaseName);
@@ -514,6 +514,57 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      */
     default void setScrollableCursor(String scrollableCursor) {
         setProperty(PropertyNames.scrollableCursor, scrollableCursor);
+    }
+
+    /**
+     * @return {@code true} (default) use server-side batch if supported by server, {@code false} always use emulated batch
+     * @see #setUseServerBatch(boolean)
+     */
+    default boolean isUseServerBatch() {
+        return getBooleanProperty(PropertyNames.useServerBatch, PropertyConstants.DEFAULT_USE_SERVER_BATCH);
+    }
+
+    /**
+     * Sets whether to use server-side batch support, if available.
+     * <p>
+     * Currently, server-side batch is only supported with Firebird 4.0 or higher, with a pure Java connection, using
+     * a {@link java.sql.PreparedStatement}, but not a {@link java.sql.CallableStatement}, and only when not requesting
+     * generated keys.
+     * </p>
+     * <p>
+     * The implementation will fall back to emulated batches if either the server version doesn't support batches, or
+     * if the statement cannot be executed using the server-side batch mechanism for other reasons (e.g. requesting
+     * generated keys).
+     * </p>
+     *
+     * @param useServerBatch
+     *         {@code true}, use server-side batch support if possible, {@code false} always use emulated
+     *         batch
+     */
+    default void setUseServerBatch(boolean useServerBatch) {
+        setBooleanProperty(PropertyNames.useServerBatch, useServerBatch);
+    }
+
+    /**
+     * @return batch buffer size in bytes, {@code < 0} to use server-side default (16MB as of Firebird 4.0),
+     * {@code 0} (default) to use server-side maximum (256MB as of Firebird 4.0), values exceeding server-side maximum
+     * will set server-side maximum
+     * @see #setServerBatchBufferSize(int)
+     */
+    default int getServerBatchBufferSize() {
+        return getIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
+    }
+
+    /**
+     * Sets the server batch buffer size (if server batch is supported and enabled).
+     *
+     * @param serverBatchBufferSize
+     *         server batch buffer size in bytes, use {@code < 0} to set server-side default (16MB as of Firebird 4.0),
+     *         use {@code 0} to use server-side maximum (256MB as of Firebird 4.0), values exceeding server-side maximum
+     *         will set server-side maximum
+     */
+    default void setServerBatchBufferSize(int serverBatchBufferSize) {
+        setIntProperty(PropertyNames.serverBatchBufferSize, PropertyConstants.DEFAULT_SERVER_BATCH_BUFFER_SIZE);
     }
 
 }

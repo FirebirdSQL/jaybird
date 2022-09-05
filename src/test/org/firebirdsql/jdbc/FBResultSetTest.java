@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
@@ -714,14 +715,14 @@ class FBResultSetTest {
 
                 String execPlan = rs.getExecutionPlan();
                 assertThat("Execution plan should reference test_table",
-                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+                        execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
 
             try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
                  FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
                 String execPlan = rs.getExecutionPlan();
                 assertThat("Execution plan should reference test_table",
-                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+                        execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
 
             // Ensure there isn't a crash when attempting to retrieve the
@@ -746,14 +747,14 @@ class FBResultSetTest {
 
                 String execPlan = rs.getExplainedExecutionPlan();
                 assertThat("Detailed execution plan should reference test_table",
-                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+                        execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
 
             try (PreparedStatement pStmt = connection.prepareStatement("SELECT * FROM TEST_TABLE");
                  FBResultSet rs = (FBResultSet) pStmt.executeQuery()) {
                 String execPlan = rs.getExplainedExecutionPlan();
                 assertThat("Detailed execution plan should reference test_table",
-                        execPlan.toUpperCase(), containsString("TEST_TABLE"));
+                        execPlan.toUpperCase(Locale.ROOT), containsString("TEST_TABLE"));
             }
 
             // Ensure there isn't a crash when attempting to retrieve the

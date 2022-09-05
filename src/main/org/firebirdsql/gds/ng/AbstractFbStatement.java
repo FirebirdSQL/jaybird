@@ -273,7 +273,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         New state
      * @see #switchState(StatementState)
      */
-    private void forceState(final StatementState newState) {
+    protected void forceState(final StatementState newState) {
         synchronized (getSynchronizationObject()) {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
@@ -572,7 +572,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             checkStatementValid();
             if (!getDatabase().getServerVersion().isEqualOrAbove(3, 0)) {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_explainedExecutionPlanNotSupported)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -768,7 +768,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             if (statementTimeout < 0) {
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 checkStatementValid(StatementState.NEW);
@@ -886,7 +886,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     /**
      * Listener that allows a statement to listen to itself, so it can react to its own actions or state transitions.
      */
-    private final class SelfListener extends DefaultStatementListener {
+    private final class SelfListener implements StatementListener {
         @Override
         public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
             // Any statement state change indicates existing 'fetched' information is no longer valid

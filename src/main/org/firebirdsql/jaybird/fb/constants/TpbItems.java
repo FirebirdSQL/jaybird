@@ -30,6 +30,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
+@SuppressWarnings("unused")
 public class TpbItems {
 
     public static final int isc_tpb_consistency = 1;
@@ -53,9 +54,11 @@ public class TpbItems {
     public static final int isc_tpb_restart_requests = 19;
     public static final int isc_tpb_no_auto_undo = 20;
     public static final int isc_tpb_lock_timeout = 21;
+    public static final int isc_tpb_read_consistency = 22;
+    public static final int isc_tpb_at_snapshot_number = 23;
 
     private TpbItems() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
 }

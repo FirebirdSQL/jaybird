@@ -29,7 +29,7 @@ import java.sql.SQLException;
 public final class ExceptionHelper {
 
     private ExceptionHelper() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
     /**

@@ -23,7 +23,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -205,7 +205,7 @@ class FBStatementFetcher implements FBFetcher {
     public void close(CompletionReason completionReason) throws SQLException {
         closed = true;
         try {
-            stmt.closeCursor(completionReason.isTransactionEnd());
+            stmt.closeCursor(completionReason.isTransactionEnd() || completionReason.isCompletesStatement());
         } finally {
             stmt.removeStatementListener(rowListener);
             rows = Collections.emptyList();
@@ -318,10 +318,10 @@ class FBStatementFetcher implements FBFetcher {
 
     private void notScrollable() throws SQLException {
         throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                .toFlatSQLException();
+                .toSQLException();
     }
 
-    private class RowListener extends DefaultStatementListener {
+    private final class RowListener implements StatementListener {
         @Override
         public void receivedRow(FbStatement sender, RowValue rowValue) {
             rows.add(rowValue);

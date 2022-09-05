@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.MaxFbTimePrecision;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.field.TypeConversionException;
 import org.junit.jupiter.api.AfterAll;
@@ -29,8 +30,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import java.sql.*;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -734,45 +733,4 @@ class JDBC42JavaTimeConversionsTest {
         }
     }
 
-    private static final class MaxFbTimePrecision implements TemporalUnit {
-
-        private static final Duration PRECISION_DURATION = Duration.ofNanos(100_000);
-        private static final MaxFbTimePrecision INSTANCE = new MaxFbTimePrecision();
-
-        @Override
-        public Duration getDuration() {
-            return PRECISION_DURATION;
-        }
-
-        @Override
-        public boolean isDurationEstimated() {
-            return false;
-        }
-
-        @Override
-        public boolean isDateBased() {
-            return false;
-        }
-
-        @Override
-        public boolean isTimeBased() {
-            return true;
-        }
-
-        @Override
-        public boolean isSupportedBy(Temporal temporal) {
-            return temporal.isSupported(this);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public <R extends Temporal> R addTo(R temporal, long amount) {
-            return (R) temporal.plus(amount, this);
-        }
-
-        @Override
-        public long between(Temporal temporal1Inclusive, Temporal temporal2Exclusive) {
-            return temporal1Inclusive.until(temporal2Exclusive, this);
-        }
-    }
 }

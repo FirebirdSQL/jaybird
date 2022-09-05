@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -92,12 +92,10 @@ public final class Arc4EncryptionPlugin implements EncryptionPlugin {
             return rc4Cipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
-                    .messageParameter(getEncryptionIdentifier().toString())
-                    .cause(e).toFlatSQLException();
+                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
         } catch (InvalidKeyException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
-                    .messageParameter(getEncryptionIdentifier().toString())
-                    .cause(e).toFlatSQLException();
+                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -33,7 +33,6 @@ import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.gds.ng.wire.version10.*;
 import org.firebirdsql.gds.ng.wire.version13.V13ParameterConverter;
-import org.firebirdsql.gds.ng.wire.version15.V15WireOperations;
 
 /**
  * The {@link ProtocolDescriptor} for the Firebird version 16 protocol. This version
@@ -117,6 +116,6 @@ public final class Version16Descriptor extends AbstractProtocolDescriptor implem
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
             WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        return new V15WireOperations(connection, defaultWarningMessageCallback, syncObject);
+        return new V16WireOperations(connection, defaultWarningMessageCallback, syncObject);
     }
 }

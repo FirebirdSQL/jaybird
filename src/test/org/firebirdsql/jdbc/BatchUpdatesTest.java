@@ -18,50 +18,89 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.DataGenerator;
+import org.firebirdsql.common.FBTestProperties;
+import org.firebirdsql.common.MaxFbTimePrecision;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.firebirdsql.jaybird.props.PropertyNames;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.stream.IntStream;
 
-import static org.firebirdsql.common.DdlHelper.executeCreateTable;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
+import static org.firebirdsql.common.FBTestProperties.getUrl;
+import static org.firebirdsql.common.FbAssumptions.assumeServerBatchSupport;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BatchUpdatesTest {
 
-    @RegisterExtension
-    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
-
-    private static final String CREATE_TABLE = ""
+    private static final String RECREATE_BATCH_UPDATES_TABLE = ""
             + "RECREATE TABLE batch_updates("
-            + "  id INTEGER, "
-            + "  str_value BLOB, "
+            + "  id INTEGER primary key, "
+            + "  str_value varchar(50), "
             + "  clob_value BLOB SUB_TYPE 1"
             + ")";
 
-    private Connection connection;
+    // Only 2.5 types
+    private static final String RECREATE_WIDE_BATCH_TABLE = ""
+            + "RECREATE TABLE wide_batch ("
+            + "  id integer," // 1
+            + "  bigintval bigint," // 2
+            + "  smallintval smallint," // 3
+            + "  sintnumval numeric(4, 2)," // 4
+            + "  intnumval numeric(9, 2)," // 5
+            + "  bintnumval numeric(18, 2)," // 6
+            + "  doubleval double precision," //7
+            + "  floatval float," //8 8
+            + "  smallcharval char(11)," //9
+            + "  largecharval char(1025)," // 10
+            + "  smallvarcharval varchar(11)," // 11
+            + "  largevarcharval varchar(1025)," // 12
+            + "  dateval date," // 13
+            + "  timeval time," // 14
+            + "  timestampval timestamp," // 15
+            + "  blobval blob" // 16
+            + ")";
 
-    @BeforeEach
-    void setUp() throws Exception {
-        connection = getConnectionViaDriverManager();
-        executeCreateTable(connection, CREATE_TABLE);
-    }
+    private static final String INSERT_WIDE_BATCH = "insert into wide_batch (id, bigintval, smallintval, sintnumval, "
+            + "intnumval, bintnumval, doubleval, floatval, smallcharval, largecharval, smallvarcharval, "
+            + "largevarcharval, dateval, timeval, timestampval, blobval) "
+            + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    @AfterEach
-    void tearDown() throws Exception {
-        connection.close();
-    }
+    private static final String CREATE_DUMMY_PROCEDURE = "create procedure dummy_procedure (value1 integer) "
+            + "as "
+            + "begin "
+            + "  /* intentionally empty */"
+            + "end";
+
+    @RegisterExtension
+    static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll(
+            CREATE_DUMMY_PROCEDURE);
 
     /**
      * Test if batch updates in {@link Statement} implementation works correctly.
      */
     @Test
     void testStatementBatch() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection connection = getConnectionViaDriverManager();
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_BATCH_UPDATES_TABLE);
+            connection.setAutoCommit(false);
             stmt.addBatch("INSERT INTO batch_updates(id, str_value) VALUES (1, 'test')");
             stmt.addBatch("INSERT INTO batch_updates(id, str_value) VALUES (2, 'another')");
             stmt.addBatch("UPDATE batch_updates SET id = 3 WHERE id = 2");
@@ -83,47 +122,245 @@ class BatchUpdatesTest {
             updates = stmt.executeBatch();
 
             assertEquals(0, updates.length, "No updates should have been made");
+
+            connection.commit();
         }
     }
 
     /**
      * Test if batch updates work correctly with prepared statement.
      */
-    @Test
-    void testPreparedStatementBatch() throws SQLException {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO batch_updates(id, str_value, clob_value) VALUES (?, ?, ?)")) {
-            ps.setInt(1, 1);
-            ps.setString(2, "test");
-            ps.setNull(3, Types.LONGVARBINARY);
-            ps.addBatch();
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testPreparedStatementBatch(boolean useServerBatch) throws SQLException {
+        // NOTE: Intentionally not checking server batch support when useServerBatch=true to verify fall back works
+        try (Connection connection = createConnection(useServerBatch);
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_BATCH_UPDATES_TABLE);
+            connection.setAutoCommit(false);
 
-            ps.setInt(1, 3);
-            ps.setCharacterStream(2, new StringReader("stream"), 11);
-            ps.setString(3, "string");
-            ps.addBatch();
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO batch_updates(id, str_value, clob_value) VALUES (?, ?, ?)")) {
+                ps.setInt(1, 1);
+                ps.setString(2, "test");
+                ps.setNull(3, Types.LONGVARBINARY);
+                ps.addBatch();
 
-            ps.setInt(1, 2);
-            ps.setString(2, "another");
-            ps.setNull(3, Types.LONGVARBINARY);
-            ps.addBatch();
+                ps.setInt(1, 3);
+                ps.setCharacterStream(2, new StringReader("stream"), 11);
+                ps.setString(3, "string");
+                ps.addBatch();
 
-            ps.executeBatch();
+                ps.setInt(1, 2);
+                ps.setString(2, "another");
+                ps.setNull(3, Types.LONGVARBINARY);
+                ps.addBatch();
 
+                ps.executeBatch();
+            }
+
+            ResultSet rs = stmt.executeQuery("SELECT * FROM batch_updates order by id");
+            assertTrue(rs.next(), "expected row 1");
+            assertEquals(rs.getInt(1), 1, "id=1");
+            assertEquals("test", rs.getString(2), "id=1 str_value");
+            assertTrue(rs.next(), "expected row 2");
+            assertEquals(rs.getInt(1), 2, "id=2");
+            assertEquals("another", rs.getString(2), "id=2 str_value");
+            assertTrue(rs.next(), "expected row 3");
+            assertEquals(rs.getInt(1), 3, "id=3");
+            assertEquals("stream", rs.getString(2), "id=3 str_value");
+            assertEquals("string", rs.getString(3), "id=3 clob_value");
+            assertFalse(rs.next(), "no more rows");
+
+            connection.commit();
+        }
+    }
+
+    /**
+     * Tests batch with a column for each data type supported by Firebird 2.5 (except decimal).
+     * <p>
+     * Rationale: check if wider batches are handled correctly (especially for server-side batches).
+     * </p>
+     */
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testPreparedStatementWideBatch(boolean useServerBatch) throws SQLException {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
+        final long bigintBase = Long.MAX_VALUE / 2;
+        final int smallintBase = Short.MAX_VALUE / 2;
+        final BigDecimal sintNumBase = new BigDecimal("45.23");
+        final BigDecimal intNumBase = new BigDecimal("8367205.49");
+        final BigDecimal bintNumBase = BigDecimal.valueOf(bigintBase, 2);
+        final double doubleBase = bigintBase * 1.3;
+        final float floatBase = smallintBase * 0.9f;
+        final String shortStringBase = new String(DataGenerator.createRandomAsciiBytes(10), US_ASCII);
+        final String largeStringBase = new String(DataGenerator.createRandomAsciiBytes(1024), US_ASCII);
+        final LocalDate localDateBase = LocalDate.now();
+        final LocalTime localTimeBase = LocalTime.now();
+        final LocalDateTime localDateTimeBase = LocalDateTime.now();
+        final int noOfRows = 11;
+
+        try (Connection connection = createConnection(useServerBatch)) {
             try (Statement stmt = connection.createStatement()) {
-                ResultSet rs = stmt.executeQuery("SELECT * FROM batch_updates order by id");
-                assertTrue(rs.next(), "expected row 1");
-                assertEquals(rs.getInt(1), 1, "id=1");
-                assertEquals("test", rs.getString(2), "id=1 str_value");
-                assertTrue(rs.next(), "expected row 2");
-                assertEquals(rs.getInt(1), 2, "id=2");
-                assertEquals("another", rs.getString(2), "id=2 str_value");
-                assertTrue(rs.next(), "expected row 3");
-                assertEquals(rs.getInt(1), 3, "id=3");
-                assertEquals("stream", rs.getString(2), "id=3 str_value");
-                assertEquals("string", rs.getString(3), "id=3 clob_value");
-                assertFalse(rs.next(), "no more rows");
+                stmt.execute(RECREATE_WIDE_BATCH_TABLE);
+                connection.setAutoCommit(false);
+
+                try (PreparedStatement pstmt = connection.prepareStatement(INSERT_WIDE_BATCH)) {
+                    IntStream.rangeClosed(1, noOfRows).forEach(id -> {
+                        try {
+                            pstmt.setInt(1, id);
+                            pstmt.setLong(2, bigintBase + id);
+                            pstmt.setInt(3, smallintBase + id);
+                            pstmt.setBigDecimal(4, sintNumBase.add(BigDecimal.valueOf(id, 2)));
+                            pstmt.setBigDecimal(5, intNumBase.add(BigDecimal.valueOf(id, 2)));
+                            pstmt.setBigDecimal(6, bintNumBase.add(BigDecimal.valueOf(id, 2)));
+                            pstmt.setDouble(7, doubleBase + id);
+                            pstmt.setFloat(8, floatBase + id);
+                            String smallString = (id + shortStringBase).substring(0, 11);
+                            String largeString = (id + largeStringBase).substring(0, 1025);
+                            pstmt.setString(9, smallString);
+                            pstmt.setString(10, largeString);
+                            pstmt.setString(11, smallString);
+                            pstmt.setString(12, largeString);
+                            pstmt.setObject(13, localDateBase.plusDays(id));
+                            pstmt.setObject(14, localTimeBase.plusMinutes(id));
+                            pstmt.setObject(15, localDateTimeBase.plusHours(id));
+                            pstmt.setString(16, largeString);
+                            pstmt.addBatch();
+                        } catch (SQLException e) {
+                            fail(e);
+                        }
+                    });
+                    int[] updateCounts = pstmt.executeBatch();
+                    int[] expectedCounts = new int[noOfRows];
+                    Arrays.fill(expectedCounts, 1);
+                    assertArrayEquals(expectedCounts, updateCounts, "update counts");
+                }
+
+                connection.commit();
+
+                try (ResultSet rs = stmt.executeQuery("select * from wide_batch order by id")) {
+                    IntStream.rangeClosed(1, noOfRows).forEach(id -> {
+                        try {
+                            assertTrue(rs.next(), "expected row for " + id);
+                            assertEquals(id, rs.getInt(1));
+                            assertEquals(bigintBase + id, rs.getLong(2));
+                            assertEquals(smallintBase + id, rs.getInt(3));
+                            assertEquals(sintNumBase.add(BigDecimal.valueOf(id, 2)), rs.getBigDecimal(4));
+                            assertEquals(intNumBase.add(BigDecimal.valueOf(id, 2)), rs.getBigDecimal(5));
+                            assertEquals(bintNumBase.add(BigDecimal.valueOf(id, 2)), rs.getBigDecimal(6));
+                            assertEquals(doubleBase + id, rs.getDouble(7), 0.1);
+                            assertEquals(floatBase + id, rs.getFloat(8), 0.1);
+                            String expectedSmallString = (id + shortStringBase).substring(0, 11);
+                            String expectedLargeString = (id + largeStringBase).substring(0, 1025);
+                            assertEquals(expectedSmallString, rs.getString(9));
+                            assertEquals(expectedLargeString, rs.getString(10));
+                            assertEquals(expectedSmallString, rs.getString(11));
+                            assertEquals(expectedLargeString, rs.getString(12));
+                            assertEquals(localDateBase.plusDays(id), rs.getObject(13, LocalDate.class));
+                            assertEquals(localTimeBase.plusMinutes(id).truncatedTo(MaxFbTimePrecision.INSTANCE),
+                                    rs.getObject(14, LocalTime.class));
+                            assertEquals(localDateTimeBase.plusHours(id).truncatedTo(MaxFbTimePrecision.INSTANCE),
+                                    rs.getObject(15, LocalDateTime.class));
+                            assertEquals(expectedLargeString, rs.getString(16));
+                        } catch (SQLException e) {
+                            fail(e);
+                        }
+                    });
+                    assertFalse(rs.next(), "expected no more rows");
+                }
             }
         }
     }
+
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testExecuteProcedureInPreparedStatementBatch(boolean useServerBatch) throws Exception {
+        if (useServerBatch) {
+            assumeServerBatchSupport();
+        }
+        try (Connection connection = createConnection(useServerBatch)) {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement pstmt = connection.prepareStatement("{call dummy_procedure(?)}")) {
+                int rows = 5;
+                IntStream.rangeClosed(1, 5).forEach(i -> {
+                    try {
+                        pstmt.setInt(1, i);
+                        pstmt.addBatch();
+                    } catch (SQLException e) {
+                        fail(e);
+                    }
+                });
+                int[] updateCounts = pstmt.executeBatch();
+                int[] expectedUpdateCounts = new int[rows];
+                assertArrayEquals(expectedUpdateCounts, updateCounts);
+            }
+        }
+    }
+
+    @Test
+    void testExecuteProcedureInCallableStatementBatch() throws Exception {
+        // NOTE: server batch not supported for callable statement
+        try (Connection connection = getConnectionViaDriverManager()) {
+
+            try (CallableStatement pstmt = connection.prepareCall("{call dummy_procedure(?)}")) {
+                int rows = 5;
+                IntStream.rangeClosed(1, 5).forEach(i -> {
+                    try {
+                        pstmt.setInt(1, i);
+                        pstmt.addBatch();
+                    } catch (SQLException e) {
+                        fail(e);
+                    }
+                });
+                int[] updateCounts = pstmt.executeBatch();
+                int[] expectedUpdateCounts = new int[rows];
+                assertArrayEquals(expectedUpdateCounts, updateCounts);
+            }
+        }
+    }
+
+    @ParameterizedTest(name = "[{index}] useServerBatch = {0}")
+    @ValueSource(booleans = { true, false })
+    void testPreparedStatementExecuteBatch_endAtFirstFailure(boolean useServerBatch) throws Exception {
+        try (Connection connection = createConnection(useServerBatch);
+             Statement stmt = connection.createStatement()) {
+            stmt.execute(RECREATE_BATCH_UPDATES_TABLE);
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO batch_updates(id, str_value) VALUES (?, ?)")) {
+                ps.setInt(1, 1);
+                ps.setString(2, "first");
+                ps.addBatch();
+                ps.setInt(1, 1);
+                ps.setString(2, "should fail");
+                ps.addBatch();
+                ps.setInt(1, 2);
+                ps.setString(2, "should not execute");
+                ps.addBatch();
+
+                BatchUpdateException bue = assertThrows(BatchUpdateException.class, ps::executeBatch);
+                assertArrayEquals(new int[] { 1 }, bue.getUpdateCounts());
+                assertThat(bue, message(containsString("violation of PRIMARY or UNIQUE KEY constraint")));
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select id from batch_updates")) {
+                assertTrue(rs.next(), "expected a row");
+                assertEquals(1, rs.getInt(1));
+                assertFalse(rs.next(), "expected no more rows");
+            } finally {
+                connection.commit();
+            }
+        }
+    }
+
+    private static Connection createConnection(boolean useServerBatch) throws SQLException {
+        Properties props = FBTestProperties.getDefaultPropertiesForConnection();
+        props.setProperty(PropertyNames.useServerBatch, String.valueOf(useServerBatch));
+        return DriverManager.getConnection(getUrl(), props);
+    }
+
 }

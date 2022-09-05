@@ -35,6 +35,9 @@ import java.sql.SQLWarning;
  * Listener interface for receiving rows and related information as retrieved by
  * an {@link org.firebirdsql.gds.ng.FbStatement#fetchRows(int)}, or
  * {@link org.firebirdsql.gds.ng.FbStatement#execute(RowValue)} with a singleton result.
+ * <p>
+ * All listener methods have a default implementation that does nothing.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -53,7 +56,7 @@ public interface StatementListener {
      * @param rowValue
      *         The row values.
      */
-    void receivedRow(FbStatement sender, RowValue rowValue);
+    default void receivedRow(FbStatement sender, RowValue rowValue) { }
 
     /**
      * Method to be notified when the cursor of a statement is positioned before the first row.
@@ -68,7 +71,7 @@ public interface StatementListener {
      * @see #receivedRow(FbStatement, RowValue)
      * @see #afterLast(FbStatement)
      */
-    void beforeFirst(FbStatement sender);
+    default void beforeFirst(FbStatement sender) { }
 
     /**
      * Method to be notified when the cursor of a statement is positioned after the last row.
@@ -83,7 +86,7 @@ public interface StatementListener {
      * @see #receivedRow(FbStatement, RowValue)
      * @see #beforeFirst(FbStatement)
      */
-    void afterLast(FbStatement sender);
+    default void afterLast(FbStatement sender) { }
 
     /**
      * Method to be notified when a statement has been executed.
@@ -99,7 +102,7 @@ public interface StatementListener {
      *         {@code true} singleton result, {@code false} statement will produce indeterminate number of rows;
      *         can be ignored when {@code hasResultSet} is {@code false}.
      */
-    void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult);
+    default void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) { }
 
     /**
      * Method to be notified when the state of a statement has changed.
@@ -111,7 +114,7 @@ public interface StatementListener {
      * @param previousState
      *         The old state of the statement
      */
-    void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState);
+    default void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) { }
 
     /**
      * Called when a warning was received for the {@code sender} statement.
@@ -121,7 +124,7 @@ public interface StatementListener {
      * @param warning
      *         Warning
      */
-    void warningReceived(FbStatement sender, SQLWarning warning);
+    default void warningReceived(FbStatement sender, SQLWarning warning) { }
 
     /**
      * Called when the SQL counts of a statement have been retrieved.
@@ -131,5 +134,5 @@ public interface StatementListener {
      * @param sqlCounts
      *         SQL counts
      */
-    void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts);
+    default void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) { }
 }

@@ -56,7 +56,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     private static final Logger log = LoggerFactory.getLogger(V10Database.class);
 
-    private int handle;
     private BlrCalculator blrCalculator;
 
     /**
@@ -70,11 +69,6 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      */
     protected V10Database(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, descriptor);
-    }
-
-    @Override
-    public final int getHandle() {
-        return handle;
     }
 
     @Override
@@ -187,8 +181,9 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
      * @param genericResponse
      *         GenericResponse received from the server.
      */
+    @SuppressWarnings("unused")
     protected final void processAttachOrCreateResponse(GenericResponse genericResponse) {
-        handle = genericResponse.getObjectHandle();
+        // nothing to do
     }
 
     /**
@@ -416,13 +411,13 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                 if (transaction == null) {
                     throw FbExceptionBuilder
                             .forException(JaybirdErrorCodes.jb_executeImmediateRequiresTransactionAttached)
-                            .toFlatSQLException();
+                            .toSQLException();
                 }
                 checkTransactionActive(transaction);
             } else if (transaction != null) {
                 throw FbExceptionBuilder
                         .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             synchronized (getSynchronizationObject()) {
                 try {
@@ -544,18 +539,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     }
 
     @Override
-    public void enqueueDeferredAction(DeferredAction deferredAction) {
-        throw new UnsupportedOperationException("enqueueDeferredAction is not supported in the V10 protocol");
-    }
-
-    @Override
     public final void authReceiveResponse(AcceptPacket acceptPacket) throws IOException, SQLException {
         final DbCryptCallback dbCryptCallback = connection.createDbCryptCallback();
-        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, new FbWireOperations.ProcessAttachCallback() {
-            @Override
-            public void processAttachResponse(GenericResponse response) {
-                processAttachOrCreateResponse(response);
-            }
-        });
+        wireOperations.authReceiveResponse(acceptPacket, dbCryptCallback, this::processAttachOrCreateResponse);
     }
 }

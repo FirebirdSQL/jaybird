@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,29 +20,41 @@ package org.firebirdsql.jdbc;
 
 /**
  * Reasons for statement (or other resources) completion. This is intended for the {@link InternalTransactionCoordinator}
- * to notify the statement and related objects on why it should complete.
+ * to notify the statement and related objects on why it should complete, and for statement to notify its dependent
+ * objects.
  * 
  * @since 2.2.3
  */
 public enum CompletionReason {
-    COMMIT {
-        @Override
-        boolean isTransactionEnd() {
-            return true;
-        }
-    },
-    ROLLBACK{
-        @Override
-        boolean isTransactionEnd() {
-            return true;
-        }
-    },
-    OTHER;
+    COMMIT(true, true),
+    ROLLBACK(true, true),
+    /**
+     * Completion was signalled from a statement close.
+     *
+     * @since 5
+     */
+    STATEMENT_CLOSE(false, true),
+    OTHER(false, false);
+
+    private final boolean transactionEnd;
+    private final boolean completesStatement;
+
+    CompletionReason(boolean transactionEnd, boolean completesStatement) {
+        this.transactionEnd = transactionEnd;
+        this.completesStatement = completesStatement;
+    }
 
     /**
      * @return {@code true} if this completion indicates a transaction end
      */
-    boolean isTransactionEnd() {
-        return false;
+    final boolean isTransactionEnd() {
+        return transactionEnd;
+    }
+
+    /**
+     * @return {@code true} if this completion will automatically complete a statement (as in close the cursor)
+     */
+    final boolean isCompletesStatement() {
+        return completesStatement;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -93,7 +93,7 @@ public class DbAttachInfo {
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter("(null)")
                     .messageParameter("Connection string is missing")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
 
         // allows standard syntax //host:port/.... and old fb syntax host/port:....
@@ -125,7 +125,7 @@ public class DbAttachInfo {
                         .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                         .messageParameter(originalConnectString)
                         .messageParameter("IPv6 address expected, missing closing ']'")
-                        .toFlatSQLException();
+                        .toSQLException();
             }
             server = connectString.substring(1, endIpv6Address);
             int afterEndIpv6Address = endIpv6Address + 1;
@@ -139,7 +139,7 @@ public class DbAttachInfo {
                         .messageParameter(originalConnectString)
                         .messageParameter("Unexpected tokens '" + connectString.substring(afterEndIpv6Address)
                                 + "' after IPv6 address")
-                        .toFlatSQLException();
+                        .toSQLException();
             }
         } else {
             pathSep = connectString.indexOf('/');
@@ -159,7 +159,7 @@ public class DbAttachInfo {
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter(originalConnectString)
                     .messageParameter("Port separator ':' at beginning or end")
-                    .toFlatSQLException();
+                    .toSQLException();
         } else if (portSep > 0) {
             port = parsePortNumber(originalConnectString, connectString.substring(portSep + 1, pathSep));
         }
@@ -180,7 +180,7 @@ public class DbAttachInfo {
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                     .messageParameter(connectString)
                     .messageParameter("Path separator ':' at beginning")
-                    .toFlatSQLException();
+                    .toSQLException();
         } else if (sep == 1 && !isLikelyWindowsAbsolutePath(connectString) || sep > 1) {
             server = connectString.substring(0, sep);
             fileName = connectString.substring(sep + 1);
@@ -190,7 +190,7 @@ public class DbAttachInfo {
                         .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)
                         .messageParameter(connectString)
                         .messageParameter("Port separator '/' at beginning or end")
-                        .toFlatSQLException();
+                        .toSQLException();
             } else if (portSep > 0) {
                 String portString = server.substring(portSep + 1);
                 port = parsePortNumber(connectString, portString);
@@ -226,7 +226,7 @@ public class DbAttachInfo {
                     .messageParameter(connectString)
                     .messageParameter("Bad port: '" + portString + "' is not a number")
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 }

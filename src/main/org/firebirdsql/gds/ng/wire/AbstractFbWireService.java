@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -63,16 +63,19 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     }
 
     @Override
+    public final int getHandle() {
+        // The handle is always 0 for a TCP/IP service
+        return 0;
+    }
+
+    @Override
     public void forceClose() throws SQLException {
         try {
             if (connection.isConnected()) {
                 connection.close();
             }
         } catch (IOException e) {
-            throw new FbExceptionBuilder()
-                    .exception(ISCConstants.isc_net_write_err)
-                    .cause(e)
-                    .toFlatSQLException();
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
         } finally {
             serviceListenerDispatcher.detached(this);
             serviceListenerDispatcher.shutdown();
@@ -103,8 +106,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final void checkConnected() throws SQLException {
         if (!connection.isConnected()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notConnectedToServer).toSQLException();
         }
     }
 
@@ -122,8 +124,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected final void checkAttached() throws SQLException {
         checkConnected();
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
         }
     }
 
@@ -168,6 +169,37 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     @Override
     public final XdrStreamAccess getXdrStreamAccess() {
         return connection.getXdrStreamAccess();
+    }
+
+    /**
+     * Closes the WireConnection associated with this connection.
+     *
+     * @throws IOException
+     *         For errors closing the connection.
+     */
+    protected final void closeConnection() throws IOException {
+        if (!connection.isConnected()) return;
+        synchronized (getSynchronizationObject()) {
+            try {
+                connection.close();
+            } finally {
+                setDetached();
+            }
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            if (!connection.isConnected()) return;
+            if (isAttached()) {
+                safelyDetach();
+            } else {
+                closeConnection();
+            }
+        } finally {
+            super.finalize();
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,13 +18,14 @@
  */
 package org.firebirdsql.gds.ng.wire.version11;
 
+import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.WireConnection;
 import org.firebirdsql.gds.ng.wire.version10.V10WireOperations;
-import org.firebirdsql.logging.Logger;
-import org.firebirdsql.logging.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +34,6 @@ import java.util.List;
  * @since 3.0
  */
 public class V11WireOperations extends V10WireOperations {
-
-    private static final Logger log = LoggerFactory.getLogger(V11WireOperations.class);
 
     /**
      * Actions on this object need to be synchronized on {@link #getSynchronizationObject()}.
@@ -62,11 +61,12 @@ public class V11WireOperations extends V10WireOperations {
             deferredActions.clear();
             for (DeferredAction action : actions) {
                 try {
-                    action.processResponse(readSingleResponse(action.getWarningMessageCallback()));
+                    action.processResponse(readResponse(action.getWarningMessageCallback()));
+                } catch (IOException ex) {
+                    action.onException(FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(ex)
+                            .toSQLException());
                 } catch (Exception ex) {
-                    // This only happen if the connection is no longer available
-                    // We ignore the exception and assume the next operation by the caller will fail as well
-                    log.debug("Exception in processDeferredActions", ex);
+                    action.onException(ex);
                 }
             }
         }

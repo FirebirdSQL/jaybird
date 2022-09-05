@@ -23,7 +23,7 @@ import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.listeners.DefaultStatementListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
@@ -609,7 +609,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         this.updatedFlags = new boolean[rowDescriptor.getCount()];
     }
 
-    private static class RowListener extends DefaultStatementListener {
+    private static final class RowListener implements StatementListener {
         private final List<RowValue> rows = new ArrayList<>();
 
         @Override

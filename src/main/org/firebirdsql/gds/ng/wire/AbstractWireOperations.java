@@ -95,9 +95,22 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     @Override
     public final SQLException readStatusVector() throws SQLException {
+        return readStatusVector(getXdrIn());
+    }
+
+    /**
+     * Process the status vector from {@code xdrIn} and returns the associated {@link SQLException} instance.
+     *
+     * @param xdrIn
+     *         XDR input stream to read from
+     * @return SQLException from the status vector
+     * @throws SQLException
+     *         for errors reading or processing the status vector
+     * @see FbWireOperations#readStatusVector()
+     */
+    protected final SQLException readStatusVector(XdrInputStream xdrIn) throws SQLException {
         boolean debug = log.isDebugEnabled();
         final FbExceptionBuilder builder = new FbExceptionBuilder();
-        final XdrInputStream xdrIn = getXdrIn();
         try {
             while (true) {
                 int arg = xdrIn.readInt();
@@ -152,9 +165,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     @Override
     public final Response readResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
-        Response response = readSingleResponse(warningCallback);
-        processResponse(response);
-        return response;
+        return readOperationResponse(readNextOperation(), warningCallback);
     }
 
     @Override
@@ -163,13 +174,6 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         Response response = processOperation(operationCode);
         processResponseWarnings(response, warningCallback);
         processResponse(response);
-        return response;
-    }
-
-    @Override
-    public final Response readSingleResponse(WarningMessageCallback warningCallback) throws SQLException, IOException {
-        Response response = processOperation(readNextOperation());
-        processResponseWarnings(response, warningCallback);
         return response;
     }
 
@@ -206,12 +210,33 @@ public abstract class AbstractWireOperations implements FbWireOperations {
             return new FetchResponse(xdrIn.readInt(), xdrIn.readInt());
         case op_sql_response:
             return new SqlResponse(xdrIn.readInt());
+        case op_batch_cs:
+            return readBatchCompletionResponse(xdrIn);
         default:
             throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_unexpectedOperationCode)
                     .messageParameter(operation)
                     .messageParameter("processOperation")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
+    }
+
+    /**
+     * Reads the batch completion response ({@code op_batch_cs}) without reading the operation code itself.
+     *
+     * @param xdrIn
+     *         XDR input stream to read
+     * @return batch completion response
+     * @throws SQLException
+     *         for errors reading the response from the connection
+     * @throws java.sql.SQLFeatureNotSupportedException
+     *         when the protocol version does not support this response
+     * @throws IOException
+     *         for errors reading the response from the connection
+     * @since 5
+     */
+    protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn)
+            throws SQLException, IOException {
+        throw new FBDriverNotCapableException("Reading batch completion response not supported by " + this);
     }
 
     /**
@@ -289,9 +314,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
     @Override
     public void setNetworkTimeout(int milliseconds) throws SQLException {
         if (milliseconds < 0) {
-            throw FbExceptionBuilder
-                    .forException(JaybirdErrorCodes.jb_invalidTimeout)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTimeout).toSQLException();
         }
         connection.setSoTimeout(milliseconds);
     }

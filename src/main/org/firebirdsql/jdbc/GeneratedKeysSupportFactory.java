@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -175,7 +175,7 @@ final class GeneratedKeysSupportFactory {
             default:
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
         }
 
@@ -233,7 +233,7 @@ final class GeneratedKeysSupportFactory {
             default:
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_invalidGeneratedKeysOption)
-                        .toFlatSQLException();
+                        .toSQLException();
             }
         }
 
@@ -260,7 +260,7 @@ final class GeneratedKeysSupportFactory {
         private SQLException disabled() {
             return FbExceptionBuilder.forException(JaybirdErrorCodes.jb_generatedKeysSupportNotAvailable)
                     .messageParameter(reasonDisabled)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 

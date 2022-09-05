@@ -624,6 +624,14 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird versions supports server-side batch updates. (NOTE: this does not mean
+     * the connection supports it, as that depends on the actual protocol (i.e. PURE_JAVA or derivative))
+     */
+    public boolean supportsServerBatch() {
+        return isVersionEqualOrAbove(4, 0);
+    }
+
+    /**
      * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
      */
     public boolean hasProcedureTypeColumn() {

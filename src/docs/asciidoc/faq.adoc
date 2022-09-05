@@ -45,14 +45,14 @@ For example, for Java 8:
 ----
 
 If you want to use Type 2 support (native or embedded), you need to explicitly
-include JNA 5.5.0 as a dependency:
+include JNA 5.12.1 as a dependency:
 
 [source,xml]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
     <artifactId>jna</artifactId>
-    <version>5.5.0</version>
+    <version>5.12.1</version>
 </dependency>
 ----
 ////
@@ -420,13 +420,13 @@ Legacy URL format:
  jdbc:firebirdsql:native:host[/port]:<database>
 
 Type 2 driver, will connect to the database using client library (`fbclient.dll` on Windows, and `libfbclient.so` on Linux).
-Requires correct installation of the client library and - for Jaybird 2.2 or earlier - the Jaybird native library,  or - for Jaybird 3.0 - the JNA jar file.
+Requires correct installation of the client library and - for Jaybird 2.2 or earlier - the Jaybird native library,  or - for Jaybird 3.0 and higher - the JNA jar file.
 
  jdbc:firebirdsql:local:<database>
 
 Type 2 driver in local mode.
 Uses client library as in previous case, however will not use socket communication, but rather access database directly.
-Requires correct installation of the client library and - for Jaybird 2.2 or earlier -  the Jaybird native library, or - for Jaybird 3.0 - the JNA jar file.
+Requires correct installation of the client library and - for Jaybird 2.2 or earlier -  the Jaybird native library, or - for Jaybird 3.0 and higher - the JNA jar file.
 
 Jaybird 4 and higher also support:
 
@@ -440,7 +440,7 @@ Jaybird 4 and higher also support:
  jdbc:firebirdsql:embedded:<database>
 
 Similar to the Firebird client library, however `fbembed.dll` on Windows and `libfbembed.so` on Linux are used, falling back to `fbclient.dll`/`libfbclient.so` under the assumption it provides Embedded functionality.
-Requires correctly installed and configured Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native  library, or - for Jaybird 3.0 - the JNA jar file.
+Requires correctly installed and configured Firebird embedded library and - for Jaybird 2.2 or earlier - the Jaybird native  library, or - for Jaybird 3.0 and higher - the JNA jar file.
 
 Jaybird 4 and higher also support:
 
@@ -581,10 +581,9 @@ It can have other causes than described below.
 [#cause-username-or-password-is-null]
 ==== Cause: username or password is null
 
-With Jaybird 3 and higher connecting to Firebird 3 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result, Firebird will reject the connection.
+With Jaybird 3.0 and Jaybird 4.0 connecting to Firebird 3.0 or higher, leaving username or password null will lead to Jaybird not trying any authentication plugin, and as a result Firebird will reject the connection.
 
-With Firebird 2.5 and earlier, or Jaybird 2.2, this situation will normally yield error _"Your user name and password are not defined.
-Ask your database  administrator to set up a Firebird login."_.
+With Firebird 2.5 and earlier, or Jaybird 2.2 or earlier, or Jaybird 5.0 or higher, this situation will yield error "`Your user name and password are not defined. Ask your database administrator to set up a Firebird login.`"
 
 [#cause-wirecrypt-required]
 ==== Cause: wirecrypt required

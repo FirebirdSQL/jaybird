@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -14,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -28,8 +26,9 @@ import java.sql.SQLException;
  * <b>NOTE</b>: This class is not thread-safe; an instance should only be used on
  * a single thread or with proper external synchronisation.
  * </p>
- *  
- * @param <E> Type of SQLException (definition: E extends SQLException) 
+ *
+ * @param <E>
+ *         type of SQLException (definition: {@code E extends SQLException})
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 2.2
  */
@@ -37,31 +36,32 @@ import java.sql.SQLException;
 public final class SQLExceptionChainBuilder<E extends SQLException> {
 
     private E root;
-    
+
     /**
      * Create SQLExceptionChainBuilder
      */
     public SQLExceptionChainBuilder() {
         this(null);
     }
-    
+
     /**
      * Create SQLExceptionChainBuilder with the specified root exception.
-     * 
-     * @param root Root SQLException
+     *
+     * @param root
+     *         root SQLException
      */
     public SQLExceptionChainBuilder(E root) {
         this.root = root;
     }
-    
+
     /**
      * Appends the passed SQLException to the exception chain.
      * <p>
-     * If this SQLExceptionChainBuilder does not have a root, <code>sqle</code> will be come
-     * the root.
+     * If this SQLExceptionChainBuilder does not have a root, {@code sqle} will be come the root.
      * </p>
-     * 
-     * @param sqle SQLException to add to the chain.
+     *
+     * @param sqle
+     *         SQLException to add to the chain.
      * @return this SQLExceptionChainBuilder
      */
     public SQLExceptionChainBuilder<E> append(E sqle) {
@@ -72,16 +72,37 @@ public final class SQLExceptionChainBuilder<E extends SQLException> {
         }
         return this;
     }
-    
+
     /**
-     * @return <code>true</code> if this SQLExceptionChainBuilder contains at least one SQLException.
+     * Adds the passed SQLException as the first exception in the chain.
+     * <p>
+     * If this SQLExceptionChainBuilder already has a root, that root will be chained to {@code sqle}, and {@code sqle}
+     * becomes the new root.
+     * </p>
+     *
+     * @param sqle
+     *         SQLException to add to the chain
+     * @return this SQLExceptionChainBuilder
+     * @since 5
+     */
+    public SQLExceptionChainBuilder<E> addFirst(E sqle) {
+        SQLException originalRoot = root;
+        if (originalRoot != null) {
+            sqle.setNextException(originalRoot);
+        }
+        root = sqle;
+        return this;
+    }
+
+    /**
+     * @return {@code true} if this SQLExceptionChainBuilder contains at least one SQLException.
      */
     public boolean hasException() {
         return root != null;
     }
-    
+
     /**
-     * @return The root SQLException or <code>null</code> if no SQLException was added to this SQLExceptionChainBuilder
+     * @return the root SQLException or {@code null} if no SQLException was added to this SQLExceptionChainBuilder
      */
     public E getException() {
         return root;

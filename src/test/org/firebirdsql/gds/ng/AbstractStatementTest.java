@@ -47,8 +47,9 @@ import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStar
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.*;
 
@@ -740,7 +741,7 @@ public abstract class AbstractStatementTest {
     @Test
     public void testStatementPrepareLongObjectNames() throws Exception {
         assumeThat("Test requires 63 character identifier support",
-                getDefaultSupportInfo().maxIdentifierLengthCharacters(), greaterThan(63));
+                getDefaultSupportInfo().maxIdentifierLengthCharacters(), not(lessThan(63)));
 
         String tableName = generateIdentifier('A', 63);
         String column1 = generateIdentifier('B', 63);
@@ -787,7 +788,7 @@ public abstract class AbstractStatementTest {
     }
 
     /**
-     * Even though the maximum supported timeout (in Firebird 4) is ‭4294967295‬ (2^32), the setter allows full range.
+     * Even though the maximum supported timeout (in Firebird 4) is 4294967295 (2^32), the setter allows full range.
      */
     @Test
     public void setTimeout_max_long_allowed() throws Exception {
@@ -872,7 +873,7 @@ public abstract class AbstractStatementTest {
                 ex.printStackTrace();
             }
         }
-        if (transaction != null) {
+        if (transaction != null && transaction.getState() == TransactionState.ACTIVE) {
             try {
                 transaction.commit();
             } catch (SQLException ex) {

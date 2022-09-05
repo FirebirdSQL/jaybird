@@ -63,7 +63,7 @@ final class FbDatabaseOperation implements Operation, OperationCloseHandle {
             throw FbExceptionBuilder
                     .forException(JaybirdErrorCodes.jb_operationClosed)
                     .messageParameter("cancel")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         cancelled = true;
         current.cancelOperation(ISCConstants.fb_cancel_raise);

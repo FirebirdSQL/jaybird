@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -55,16 +55,19 @@ public class V11Statement extends V10Statement {
         try {
             synchronized (getSynchronizationObject()) {
                 checkTransactionActive(getTransaction());
-                final StatementState currentState = getState();
-                if (!isPrepareAllowed(currentState)) {
-                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", currentState));
+                final StatementState initialState = getState();
+                if (!isPrepareAllowed(initialState)) {
+                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", initialState));
                 }
                 resetAll();
 
                 int expectedResponseCount = 0;
                 try {
-                    if (currentState == StatementState.NEW) {
+                    if (initialState == StatementState.NEW) {
                         sendAllocate();
+                        // We're assuming allocation is successful, as changing it when processing the response breaks
+                        // the state transition in sendPrepare
+                        switchState(StatementState.ALLOCATED);
                         expectedResponseCount++;
                     } else {
                         checkStatementValid();
@@ -81,12 +84,22 @@ public class V11Statement extends V10Statement {
                 try {
                     final FbWireDatabase db = getDatabase();
                     try {
-                        if (currentState == StatementState.NEW) {
-                            expectedResponseCount--;
-                            processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        if (initialState == StatementState.NEW) {
+                            try {
+                                expectedResponseCount--;
+                                processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
+                            } catch (SQLException e) {
+                                forceState(StatementState.NEW);
+                                throw e;
+                            }
                         }
-                        expectedResponseCount--;
-                        processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        try {
+                            expectedResponseCount--;
+                            processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                        } catch (SQLException e) {
+                            switchState(StatementState.ALLOCATED);
+                            throw e;
+                        }
                     } finally {
                         db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                     }

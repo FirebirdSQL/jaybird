@@ -6,7 +6,7 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
   Define target Java version:
   - -PbuildProfile=java8           : Java 8  (supported)
-  - -PbuildProfile=java11or
+  - -PbuildProfile=java11 or
     not specified or unknown value : Java 11 (supported)
   - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
 
@@ -52,14 +52,14 @@ java {
 }
 
 ext {
-    junit_jupiter = '5.8.2'
+    junit_jupiter = '5.9.0'
     hamcrest = '2.2'
-    assertj = '3.21.0'
-    mockito = '4.2.0'
+    assertj = '3.23.1'
+    mockito = '4.7.0'
 }
 
 dependencies {
-    nativeImplementation 'net.java.dev.jna:jna:5.5.0'
+    nativeImplementation 'net.java.dev.jna:jna:5.12.1'
 
     compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
     compileOnly 'jakarta.servlet:jakarta.servlet-api:5.0.0'
@@ -76,9 +76,6 @@ dependencies {
 
     testImplementation "org.mockito:mockito-core:$mockito"
     testImplementation "org.mockito:mockito-junit-jupiter:$mockito"
-
-    testImplementation 'org.ow2.asm:asm:9.2'
-    testImplementation 'org.objenesis:objenesis:3.2'
 }
 
 sourceSets {

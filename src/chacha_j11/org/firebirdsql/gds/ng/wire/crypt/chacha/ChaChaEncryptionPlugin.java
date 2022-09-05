@@ -100,7 +100,7 @@ public class ChaChaEncryptionPlugin implements EncryptionPlugin {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
                     .messageParameter(getEncryptionIdentifier().toString())
                     .messageParameter("Key too short")
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -109,7 +109,7 @@ public class ChaChaEncryptionPlugin implements EncryptionPlugin {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
                     .messageParameter(getEncryptionIdentifier().toString())
                     .cause(e)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
@@ -121,12 +121,10 @@ public class ChaChaEncryptionPlugin implements EncryptionPlugin {
             return chaChaCipher;
         } catch (NoSuchPaddingException | NoSuchAlgorithmException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptAlgorithmNotAvailable)
-                    .messageParameter(getEncryptionIdentifier().toString())
-                    .cause(e).toFlatSQLException();
+                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
-                    .messageParameter(getEncryptionIdentifier().toString())
-                    .cause(e).toFlatSQLException();
+                    .messageParameter(getEncryptionIdentifier().toString()).cause(e).toSQLException();
         }
     }
 
@@ -141,7 +139,7 @@ public class ChaChaEncryptionPlugin implements EncryptionPlugin {
                 throw new FbExceptionBuilder().nonTransientException(jb_cryptInvalidKey)
                         .messageParameter(getEncryptionIdentifier().toString())
                         .messageParameter("Wrong IV length, needs 12 or 16 bytes")
-                        .toFlatSQLException();
+                        .toSQLException();
             }
 
             nonce = Arrays.copyOf(iv, 12);

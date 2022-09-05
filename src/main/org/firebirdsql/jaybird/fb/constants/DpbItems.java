@@ -138,6 +138,6 @@ public final class DpbItems {
     public static final int isc_dpb_decfloat_traps = 95;
 
     private DpbItems() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 }

@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 final class TokenSources {
 
     private TokenSources() {
-        throw new AssertionError("no instances");
+        // no instances
     }
 
     public static boolean isParenthesisToken(Token token) {

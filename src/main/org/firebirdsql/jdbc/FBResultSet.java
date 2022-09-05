@@ -129,7 +129,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
             if (rsType == ResultSet.TYPE_SCROLL_SENSITIVE) {
                 fbStatement.addWarning(FbExceptionBuilder
                         .forWarning(JaybirdErrorCodes.jb_resultSetTypeDowngradeReasonScrollSensitive)
-                        .toFlatSQLException(SQLWarning.class));
+                        .toSQLException(SQLWarning.class));
                 rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
             }
             boolean serverSideScrollable = rsHoldability != ResultSet.HOLD_CURSORS_OVER_COMMIT && !metaDataQuery
@@ -162,7 +162,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                 } catch (FBResultSetNotUpdatableException ex) {
                     fbStatement.addWarning(FbExceptionBuilder
                             .forWarning(JaybirdErrorCodes.jb_concurrencyResetReadOnlyReasonNotUpdatable)
-                            .toFlatSQLException(SQLWarning.class));
+                            .toSQLException(SQLWarning.class));
                     rsConcurrency = ResultSet.CONCUR_READ_ONLY;
                 }
             }
@@ -337,7 +337,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
     protected void checkScrollable() throws SQLException {
         if (rsType == ResultSet.TYPE_FORWARD_ONLY) {
             throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_operationNotAllowedOnForwardOnly)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 
@@ -992,7 +992,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         default:
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidFetchDirection)
                     .messageParameter(direction)
-                    .toFlatSQLException();
+                    .toSQLException();
         }
     }
 

@@ -90,26 +90,14 @@ public final class JaybirdSystemProperties {
     }
 
     private static String getSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty(propertyName);
-            }
-        });
+        return AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(propertyName));
     }
 
     private static boolean getBooleanSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            public Boolean run() {
-                return Boolean.getBoolean(propertyName);
-            }
-        });
+        return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> Boolean.getBoolean(propertyName));
     }
 
     private static Integer getIntegerSystemPropertyPrivileged(final String propertyName) {
-        return AccessController.doPrivileged(new PrivilegedAction<Integer>() {
-            public Integer run() {
-                return Integer.getInteger(propertyName);
-            }
-        });
+        return AccessController.doPrivileged((PrivilegedAction<Integer>) () -> Integer.getInteger(propertyName));
     }
 }

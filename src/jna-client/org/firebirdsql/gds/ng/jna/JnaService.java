@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -73,8 +73,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     @Override
     protected void checkConnected() throws SQLException {
         if (!isAttached()) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase)
-                    .toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_notAttachedToDatabase).toSQLException();
         }
     }
 

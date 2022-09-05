@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -78,7 +78,10 @@ public class V13WireOperations extends V11WireOperations {
                         (EncryptionPluginSpi) spiClass.getDeclaredConstructor().newInstance();
                 tempMap.put(encryptionPluginSpi.getEncryptionIdentifier(), encryptionPluginSpi);
             } catch (Exception e) {
-                log.info("Could not load EncryptionPluginSpi: " + spiName + "; see debug for details");
+                if (!(spiName.equals(CHA_CHA_PLUGIN_SPI_CLASS_NAME) && e instanceof ClassNotFoundException)) {
+                    // Expected on Java 8 as this class only exists on Java 11+, so don't log it obtrusively
+                    log.info("Could not load EncryptionPluginSpi: " + spiName + "; see debug for details");
+                }
                 log.debug("Could not load EncryptionPluginSpi: " + spiName, e);
             }
         }
@@ -118,7 +121,7 @@ public class V13WireOperations extends V11WireOperations {
                     xdrIn.readBuffer(); // p_trau_data
                     throw new FbExceptionBuilder()
                             .nonTransientConnectionException(JaybirdErrorCodes.jb_receiveTrustedAuth_NotSupported)
-                            .toFlatSQLException();
+                            .toSQLException();
                 case op_cont_auth:
                     data = xdrIn.readBuffer(); // p_data
                     pluginName = xdrIn.readString(encoding); //p_name
@@ -197,7 +200,7 @@ public class V13WireOperations extends V11WireOperations {
         }
 
         // If we have exited from the cycle, this mean auth failed
-        throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toFlatSQLException();
+        throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
     }
 
     private CryptSessionConfig getCryptSessionConfig(EncryptionIdentifier encryptionIdentifier, byte[] specificData)
@@ -206,7 +209,7 @@ public class V13WireOperations extends V11WireOperations {
         if (!clientAuthBlock.supportsEncryption() || !encryptionIdentifier.isTypeSymmetric()) {
             throw new FbExceptionBuilder().nonTransientException(jb_cryptNoCryptKeyAvailable)
                     .messageParameter(encryptionIdentifier.toString())
-                    .toFlatSQLException();
+                    .toSQLException();
         }
         return CryptSessionConfig.symmetric(encryptionIdentifier, clientAuthBlock.getSessionKey(), specificData);
     }
@@ -248,7 +251,7 @@ public class V13WireOperations extends V11WireOperations {
             if (chainBuilder.hasException()) {
                 exceptionBuilder.cause(chainBuilder.getException());
             }
-            throw exceptionBuilder.toFlatSQLException();
+            throw exceptionBuilder.toSQLException();
         }
 
         if (chainBuilder.hasException()) {
@@ -282,7 +285,7 @@ public class V13WireOperations extends V11WireOperations {
         xdrIn.setCipher(encryptionInitInfo.getDecryptionCipher());
         xdrOut.setCipher(encryptionInitInfo.getEncryptionCipher());
 
-        readOperationResponse(readNextOperation(), null);
+        readResponse(null);
     }
 
     @Override

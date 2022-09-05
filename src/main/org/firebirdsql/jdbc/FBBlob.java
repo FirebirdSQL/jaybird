@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -58,7 +58,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
     private volatile GDSHelper gdsHelper;
     private FBObjectListener.BlobListener blobListener;
 
-    private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<FBBlobInputStream>());
+    private final Collection<FBBlobInputStream> inputStreams = Collections.synchronizedSet(new HashSet<>());
     private FBBlobOutputStream blobOut = null;
 
     private FBBlob(GDSHelper c, boolean isNew, FBObjectListener.BlobListener blobListener) {
@@ -542,7 +542,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
 
     private void checkClosed() throws SQLException {
         if (gdsHelper == null) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toFlatSQLException();
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_blobClosed).toSQLException();
         }
     }
 }

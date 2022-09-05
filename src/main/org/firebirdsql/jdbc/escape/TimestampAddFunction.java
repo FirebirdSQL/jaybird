@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.jdbc.escape;
 
+import java.util.Locale;
+
 /**
  * Implements the {@code TIMESTAMPADD} JDBC escape.
  * <p>
@@ -38,7 +40,7 @@ final class TimestampAddFunction implements SQLFunction {
         if (parameters.length != 3) {
             throw new FBSQLParseException("Expected 3 parameters for TIMESTAMPADD, received " + parameters.length);
         }
-        String jdbcIntervalName = parameters[0].trim().toUpperCase();
+        String jdbcIntervalName = parameters[0].trim().toUpperCase(Locale.ROOT);
         if ("SQL_TSI_QUARTER".equals(jdbcIntervalName)) {
             return "DATEADD(MONTH,3*(" + parameters[1] + ")," + parameters[2] + ")";
         } else if ("SQL_TSI_FRAC_SECOND".equals(jdbcIntervalName)) {

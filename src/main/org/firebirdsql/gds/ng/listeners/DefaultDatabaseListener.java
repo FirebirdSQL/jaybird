@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,27 +18,15 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.gds.ng.FbDatabase;
-
-import java.sql.SQLWarning;
-
 /**
  * Default implementation of {@link org.firebirdsql.gds.ng.listeners.DatabaseListener} where all implemented methods
  * do nothing.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @deprecated implementing {@link DatabaseListener} is sufficient as all its methods have a default implementation
+ * doing nothing, class will be removed in Jaybird 6
  */
+@Deprecated
 public class DefaultDatabaseListener implements DatabaseListener {
-    @Override
-    public void detaching(FbDatabase database) {
-    }
-
-    @Override
-    public void detached(FbDatabase database) {
-    }
-
-    @Override
-    public void warningReceived(FbDatabase database, SQLWarning warning) {
-    }
 }

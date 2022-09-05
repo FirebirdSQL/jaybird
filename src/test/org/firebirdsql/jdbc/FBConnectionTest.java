@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.DatabaseUserExtension;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.ISCConstants;
@@ -685,6 +686,9 @@ class FBConnectionTest {
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires fb_info_wire_crypt support");
         String expectedCryptPlugin = System.getProperty("java.specification.version").equals("1.8")
                 || Version.JAYBIRD_DISPLAY_VERSION.endsWith(".java8") ? "Arc4" : "ChaCha";
+        if (isOtherNativeType().matches(GDS_TYPE) && getDefaultSupportInfo().isVersionEqualOrAbove(4, 0, 1)) {
+            expectedCryptPlugin = "ChaCha64";
+        }
 
         Properties props = getDefaultPropertiesForConnection();
         props.setProperty("wireCrypt", "REQUIRED");
@@ -702,7 +706,7 @@ class FBConnectionTest {
                 return new String(info, 3, dataLength, StandardCharsets.US_ASCII);
             };
             String cryptPlugin = fbDatabase.getDatabaseInfo(
-                    new byte[] { (byte) fb_info_wire_crypt, isc_info_end }, 11, getPluginName);
+                    new byte[] { (byte) fb_info_wire_crypt, isc_info_end }, 100, getPluginName);
 
             assertEquals(expectedCryptPlugin, cryptPlugin);
         }
@@ -889,6 +893,21 @@ class FBConnectionTest {
                     con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ), "Setting of con2 unchanged");
             assertNotEquals(newParameters, con2.getTransactionParameters(Connection.TRANSACTION_REPEATABLE_READ),
                     "Setting of con2 not equal to new config of con1");
+        }
+    }
+
+    /**
+     * Rationale: Jaybird 3.0 and 4.0 threw "wrong" error (isc_connect_reject)
+     */
+    @Test
+    void testErrorWhenNoCredentials() {
+        assumeThat("Embedded does not use authentication", FBTestProperties.GDS_TYPE, not(isEmbeddedType()));
+        try (Connection ignored = DriverManager.getConnection(getUrl())) {
+            fail("expected exception when connecting without user name and password");
+        } catch (SQLException e) {
+            assertThat(e, allOf(
+                    errorCodeEquals(ISCConstants.isc_login),
+                    fbMessageStartsWith(ISCConstants.isc_login)));
         }
     }
 

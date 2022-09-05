@@ -18,46 +18,15 @@
  */
 package org.firebirdsql.gds.ng.listeners;
 
-import org.firebirdsql.gds.ng.FbStatement;
-import org.firebirdsql.gds.ng.SqlCountHolder;
-import org.firebirdsql.gds.ng.StatementState;
-import org.firebirdsql.gds.ng.fields.RowValue;
-
-import java.sql.SQLWarning;
-
 /**
  * Default implementation of {@link org.firebirdsql.gds.ng.listeners.StatementListener} where all implemented methods
  * do nothing.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
+ * @deprecated implementing {@link StatementListener} is sufficient as all its methods have a default implementation
+ * doing nothing, class will be removed in Jaybird 6
  */
+@Deprecated
 public class DefaultStatementListener implements StatementListener {
-    @Override
-    public void receivedRow(FbStatement sender, RowValue rowValue) {
-    }
-
-    @Override
-    public void beforeFirst(FbStatement sender) {
-    }
-
-    @Override
-    public void afterLast(FbStatement sender) {
-    }
-
-    @Override
-    public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
-    }
-
-    @Override
-    public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
-    }
-
-    @Override
-    public void warningReceived(FbStatement sender, SQLWarning warning) {
-    }
-
-    @Override
-    public void sqlCounts(FbStatement sender, SqlCountHolder sqlCounts) {
-    }
 }

@@ -37,10 +37,12 @@ import static org.firebirdsql.common.FBTestProperties.DB_PASSWORD;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_PORT;
 import static org.firebirdsql.common.FBTestProperties.DB_SERVER_URL;
 import static org.firebirdsql.common.FBTestProperties.DB_USER;
+import static org.firebirdsql.common.FBTestProperties.GDS_TYPE;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.FBTestProperties.getGdsType;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -160,7 +162,7 @@ class FBStatisticsManagerTest {
     }
 
     private int getExpectedOldest(FirebirdSupportInfo supportInfo) {
-        if (supportInfo.isVersionEqualOrAbove(4, 0, 2)) {
+        if (supportInfo.isVersionEqualOrAbove(4, 0, 2) && !isEmbeddedType().matches(GDS_TYPE)) {
             return 2;
         } else if (supportInfo.isVersionEqualOrAbove(4, 0)) {
             return 1;

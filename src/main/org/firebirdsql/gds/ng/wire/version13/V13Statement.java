@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -47,7 +47,7 @@ public class V13Statement extends V12Statement {
     protected RowValue readSqlData() throws SQLException, IOException {
         final RowDescriptor rowDescriptor = getRowDescriptor();
         final RowValue rowValue = rowDescriptor.createDefaultFieldValues();
-        final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
+        final BlrCalculator blrCalculator = getBlrCalculator();
 
         final XdrInputStream xdrIn = getXdrIn();
         final int nullBitsLen = (rowDescriptor.getCount() + 7) / 8;
@@ -69,9 +69,13 @@ public class V13Statement extends V12Statement {
     }
 
     @Override
-    protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues) throws IOException, SQLException {
-        final XdrOutputStream xdrOut = getXdrOut();
-        final BlrCalculator blrCalculator = getDatabase().getBlrCalculator();
+    protected void writeSqlData(final RowDescriptor rowDescriptor, final RowValue fieldValues, boolean useActualLength)
+            throws IOException, SQLException {
+        writeSqlData(getXdrOut(), getBlrCalculator(), rowDescriptor, fieldValues, useActualLength);
+    }
+    
+    protected void writeSqlData(XdrOutputStream xdrOut, BlrCalculator blrCalculator, RowDescriptor rowDescriptor,
+            RowValue fieldValues, boolean useActualLength) throws IOException, SQLException {
         // null indicator bitmap
         final BitSet nullBits = new BitSet(fieldValues.getCount());
         for (int idx = 0; idx < fieldValues.getCount(); idx++) {
@@ -90,9 +94,10 @@ public class V13Statement extends V12Statement {
             if (!nullBits.get(idx)) {
                 final byte[] buffer = fieldValues.getFieldData(idx);
                 final FieldDescriptor fieldDescriptor = rowDescriptor.getFieldDescriptor(idx);
-                final int len = blrCalculator.calculateIoLength(fieldDescriptor, buffer);
-                final int fieldType = fieldDescriptor.getType();
-                writeColumnData(xdrOut, len, buffer, fieldType);
+                final int len = useActualLength
+                        ? blrCalculator.calculateIoLength(fieldDescriptor, buffer)
+                        : blrCalculator.calculateIoLength(fieldDescriptor);
+                writeColumnData(xdrOut, len, buffer, fieldDescriptor);
             }
         }
     }

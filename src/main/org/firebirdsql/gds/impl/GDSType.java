@@ -26,6 +26,7 @@ package org.firebirdsql.gds.impl;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -66,7 +67,7 @@ public final class GDSType implements Serializable {
             return null;
         }
             
-        return typeMap.get(type.toUpperCase());
+        return typeMap.get(type.toUpperCase(Locale.ROOT));
     }
     
     /**
