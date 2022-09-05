@@ -53,7 +53,8 @@ public abstract class AbstractNativeConnection<T extends IAttachProperties<T>, C
      * @param attachProperties Attach properties
      * @param encodingFactory  Encoding factory
      */
-    protected AbstractNativeConnection(FbClientLibrary clientLibrary, T attachProperties, IEncodingFactory encodingFactory)
+    protected AbstractNativeConnection(FbClientLibrary clientLibrary, T attachProperties,
+                                       IEncodingFactory encodingFactory)
             throws SQLException {
         super(attachProperties, encodingFactory);
         this.clientLibrary = requireNonNull(clientLibrary, "parameter clientLibrary cannot be null");
@@ -139,11 +140,13 @@ public abstract class AbstractNativeConnection<T extends IAttachProperties<T>, C
                 case isc_arg_sql_state:
                     long stringPointerAddress = errorVector[vectorIndex++];
                     if (stringPointerAddress == 0L) {
-                        log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or isc_arg_sql_state");
+                        log.warn("Received NULL pointer address for isc_arg_interpreted, isc_arg_string or " +
+                                "isc_arg_sql_state");
                         break processingLoop;
                     }
                     Pointer stringPointer = new Pointer(stringPointerAddress);
-                    String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
+                    String stringValue = stringPointer.getString(0,
+                            getEncodingDefinition().getJavaEncodingName());
                     if (arg != isc_arg_sql_state) {
                         if (debug) log.debug("readStatusVector string: " + stringValue);
                         builder.messageParameter(stringValue);

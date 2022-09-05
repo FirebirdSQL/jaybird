@@ -3,6 +3,7 @@ package org.firebirdsql.gds.ng;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+import org.firebirdsql.jaybird.fb.constants.BatchItems;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -153,7 +154,7 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
 
     @Override
     public void addBlobSegment(byte[] data, boolean lastSegment) throws IOException {
-        int align = align(blobStream.size(), BatchParameterBuffer.BLOB_SEGHDR_ALIGN);
+        int align = align(blobStream.size(), BatchItems.BLOB_SEGHDR_ALIGN);
         if (align != 0 && blobStream.size() - align < 0) {
             byte[] shift = ByteBuffer.allocate(Math.abs(blobStream.size() - align)).array();
             blobStream.write(shift);
@@ -162,7 +163,7 @@ public abstract class AbstractFbMessageBuilder<E extends FbBatch> implements FbM
         blobStream.seek(segmentedBlobOffset);
 
         byte[] dataLength = statement.getDatabase().getDatatypeCoder().encodeShort(data.length);
-        segmentedBlobSize += align(data.length + dataLength.length, BatchParameterBuffer.BLOB_SEGHDR_ALIGN);
+        segmentedBlobSize += align(data.length + dataLength.length, BatchItems.BLOB_SEGHDR_ALIGN);
         blobStream.write(statement.getDatabase().getDatatypeCoder().encodeShort(segmentedBlobSize));
 
         blobStream.seek(oldPosition);

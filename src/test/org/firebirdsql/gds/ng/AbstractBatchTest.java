@@ -4,7 +4,8 @@ import org.firebirdsql.common.DdlHelper;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.gds.BatchParameterBuffer;
-import org.firebirdsql.gds.impl.BatchParameterBufferImpl;
+import org.firebirdsql.gds.impl.BatchParameterBufferImp;
+import org.firebirdsql.jaybird.fb.constants.BatchItems;
 import org.firebirdsql.jdbc.FirebirdConnection;
 import org.firebirdsql.management.FBManager;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -186,8 +187,8 @@ public abstract class AbstractBatchTest {
     @Test
     public void testCreateBatchWithoutMetadata() throws SQLException {
         allocateTransaction();
-        BatchParameterBuffer buffer = new BatchParameterBufferImpl();
-        buffer.addArgument(BatchParameterBuffer.TAG_RECORD_COUNTS, 1);
+        BatchParameterBuffer buffer = new BatchParameterBufferImp();
+        buffer.addArgument(BatchItems.TAG_RECORD_COUNTS, 1);
         FbBatch batch = db.createBatch(transaction, INSERT_QUERY, buffer);
     }
 
@@ -230,8 +231,8 @@ public abstract class AbstractBatchTest {
             metadataBuilder.addDecDecimal(25, 30, 5);
         }
 
-        BatchParameterBuffer buffer = new BatchParameterBufferImpl();
-        buffer.addArgument(BatchParameterBuffer.TAG_RECORD_COUNTS, 1);
+        BatchParameterBuffer buffer = new BatchParameterBufferImp();
+        buffer.addArgument(BatchItems.TAG_RECORD_COUNTS, 1);
         FbBatch batch = db.createBatch(transaction, INSERT_QUERY, metadataBuilder.getMessageMetadata(), buffer);
     }
 

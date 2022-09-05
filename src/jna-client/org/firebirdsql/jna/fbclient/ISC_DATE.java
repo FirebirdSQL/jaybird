@@ -5,9 +5,6 @@ import com.sun.jna.Structure;
 import java.util.Arrays;
 import java.util.List;
 
-
-
-
 /**
  * JNA wrapper for ISC_DATE.
  * <p>

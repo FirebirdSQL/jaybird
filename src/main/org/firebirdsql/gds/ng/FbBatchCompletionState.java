@@ -39,7 +39,12 @@ public interface FbBatchCompletionState {
     String printAllStates() throws SQLException;
 
     /**
-     * @return Returns a array with the result of all statements.
+     * @return Returns an array with the result of all statements.
      */
     int[] getAllStates() throws SQLException;
+
+    /**
+     * @return a result of a batch execution.
+     */
+    BatchCompletion getBatchCompletion() throws SQLException;
 }

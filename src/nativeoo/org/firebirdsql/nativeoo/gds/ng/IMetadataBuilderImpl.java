@@ -37,28 +37,21 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
     private static final int SUBTYPE_NUMERIC = 1;
     private static final int SUBTYPE_DECIMAL = 2;
 
-    private IDatabaseImpl database;
-    private IMaster master;
-    private IStatus status;
-    private int fieldCount;
-    private IMetadataBuilder metadataBuilder;
-    private IMessageMetadata messageMetadata;
+    private final IDatabaseImpl database;
+    private final IStatus status;
+    private final IMetadataBuilder metadataBuilder;
 
     public IMetadataBuilderImpl(FbDatabase database, int fieldCount) throws SQLException {
         this.database = (IDatabaseImpl)database;
-        this.master = this.database.getMaster();
+        IMaster master = this.database.getMaster();
         this.status = this.database.getStatus();
-        this.fieldCount = fieldCount;
         this.metadataBuilder = master.getMetadataBuilder(status, fieldCount);
     }
 
     @Override
     public FbMessageMetadata getMessageMetadata() throws SQLException {
 
-        messageMetadata = metadataBuilder.getMetadata(status);
-        IMessageMetadataImpl metadata = new IMessageMetadataImpl(this);
-
-        return metadata;
+        return new IMessageMetadataImpl(this);
     }
 
     public IMetadataBuilder getMetadataBuilder() {
@@ -102,7 +95,7 @@ public class IMetadataBuilderImpl implements FbMetadataBuilder {
 
     @Override
     public void addNumeric(int index, int size, int scale) throws SQLException {
-        int length = 0;
+        int length;
         if (size < 5) {
             metadataBuilder.setType(status, index, SQL_SHORT);
             length = 2;

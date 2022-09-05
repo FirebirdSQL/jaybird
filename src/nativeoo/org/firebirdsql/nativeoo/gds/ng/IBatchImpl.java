@@ -3,6 +3,7 @@ package org.firebirdsql.nativeoo.gds.ng;
 import com.sun.jna.ptr.LongByReference;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.AbstractFbBatch;
 import org.firebirdsql.gds.ng.FbBatchCompletionState;
@@ -21,6 +22,8 @@ import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import static org.firebirdsql.gds.ISCConstants.SQL_BLOB;
+
 /**
  * Implementation of {@link org.firebirdsql.gds.ng.FbBatch} for native OO API.
  *
@@ -38,7 +41,8 @@ public class IBatchImpl extends AbstractFbBatch {
     private IStatementImpl statement;
     private IMessageBuilderImpl messageBuilder;
 
-    public IBatchImpl(FbDatabase database, FbTransaction transaction, String statementText, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
+    public IBatchImpl(FbDatabase database, FbTransaction transaction, String statementText, FbMessageMetadata metadata,
+                      BatchParameterBuffer parameters) throws SQLException {
         super(database, parameters);
         this.transaction = transaction;
         this.attachment = getDatabase().getAttachment();
@@ -50,7 +54,8 @@ public class IBatchImpl extends AbstractFbBatch {
         init();
     }
 
-    public IBatchImpl(FbDatabase database, FbTransaction transaction, String statementText, BatchParameterBuffer parameters) throws SQLException {
+    public IBatchImpl(FbDatabase database, FbTransaction transaction, String statementText,
+                      BatchParameterBuffer parameters) throws SQLException {
         super(database, parameters);
         this.transaction = transaction;
         this.attachment = getDatabase().getAttachment();
@@ -70,6 +75,7 @@ public class IBatchImpl extends AbstractFbBatch {
         this.status = getDatabase().getStatus();
         this.batch = batch;
         this.statement = statement;
+        this.metadata = (IMessageMetadataImpl) statement.getInputMetadata();
         this.statementText = null;
         this.messageBuilder = new IMessageBuilderImpl(this);
         prepareBatch();
@@ -84,9 +90,11 @@ public class IBatchImpl extends AbstractFbBatch {
     private void init() throws SQLException {
         synchronized (getSynchronizationObject()) {
             if (metadata == null) {
-                statement = new IStatementImpl(getDatabase());
-                statement.setTransaction(transaction);
-                statement.prepare(statementText);
+                if (statement == null) {
+                    statement = new IStatementImpl(getDatabase());
+                    statement.setTransaction(transaction);
+                    statement.prepare(statementText);
+                }
                 metadata = (IMessageMetadataImpl) statement.getInputMetadata();
             }
             final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
@@ -115,6 +123,40 @@ public class IBatchImpl extends AbstractFbBatch {
         RowValue fieldValues = getFieldValues();
         for (int i = 0; i < fieldValues.getCount(); i++) {
             messageBuilder.addData(i, fieldValues.getFieldData(i), getParameterDescriptor(i + 1));
+        }
+        byte[] data = messageBuilder.getData();
+        try (CloseableMemory memory = new CloseableMemory(data.length)) {
+            synchronized (getSynchronizationObject()) {
+                memory.write(0, data, 0, data.length);
+                batch.add(getStatus(), 1, memory);
+                processStatus();
+                messageBuilder.clear();
+            }
+        }
+        if (messageBuilder.getBlobStreamData().length != 0) {
+            addBlobStream(messageBuilder.getBlobStreamData());
+            messageBuilder.clearBlobStream();
+        }
+    }
+
+    /**
+     * Build batch message from field values.
+     *
+     * @throws SQLException
+     */
+    @Override
+    public void addBatch(RowValue fieldValues) throws SQLException {
+        for (int i = 0; i < fieldValues.getCount(); i++) {
+            messageBuilder.addData(i, fieldValues.getFieldData(i), getParameterDescriptor(i + 1));
+            if (fieldValues.getFieldData(i) != null && getParameterDescriptor(i + 1).isFbType(SQL_BLOB)) {
+                long l = getParameterDescriptor(i + 1).getDatatypeCoder().decodeLong(fieldValues.getFieldData(i));
+                LongByReference longByReference = new LongByReference(l);
+                LongByReference existLong = new LongByReference(l);
+                synchronized (getSynchronizationObject()) {
+                    batch.registerBlob(getStatus(), existLong, longByReference);
+                    processStatus();
+                }
+            }
         }
         byte[] data = messageBuilder.getData();
         try (CloseableMemory memory = new CloseableMemory(data.length)) {
@@ -226,7 +268,8 @@ public class IBatchImpl extends AbstractFbBatch {
     @Override
     public FbBatchCompletionState execute() throws SQLException {
         synchronized (getSynchronizationObject()) {
-            IBatchCompletionState execute = batch.execute(getStatus(), ((ITransactionImpl) transaction).getTransaction());
+            IBatchCompletionState execute = batch.execute(getStatus(), ((ITransactionImpl)
+                    transaction).getTransaction());
             processStatus();
             return new IBatchCompletionStateImpl(getDatabase(), execute, getDatabase().getStatus());
         }
@@ -265,6 +308,11 @@ public class IBatchImpl extends AbstractFbBatch {
     @Override
     public FbStatement getStatement() throws SQLException {
         return this.statement;
+    }
+
+    @Override
+    public void release() throws SQLException {
+        batch.release();
     }
 
     private IStatus getStatus() {

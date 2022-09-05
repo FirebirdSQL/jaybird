@@ -2,6 +2,7 @@ package org.firebirdsql.gds.ng;
 
 
 import org.firebirdsql.gds.BlobParameterBuffer;
+import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenable;
 
 import java.io.IOException;
@@ -30,9 +31,14 @@ public interface FbBatch extends ExceptionListenable {
     FbDatabase getDatabase();
 
     /**
-     * Add data in this batch.
+     * Add data to this batch.
      */
     void addBatch() throws SQLException;
+
+    /**
+     * Add a row to this batch.
+     */
+    void addBatch(RowValue rowValue) throws SQLException;
 
     /**
      * Add existing blob in this batch.
@@ -109,4 +115,6 @@ public interface FbBatch extends ExceptionListenable {
      * @return The statement that contains prepared fields info.
      */
     FbStatement getStatement() throws SQLException;
+
+    void release() throws SQLException;
 }

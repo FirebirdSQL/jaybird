@@ -271,13 +271,14 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             final byte[] statementArray = getEncoding().encodeToCharset(statementText);
             synchronized (getSynchronizationObject()) {
                 if (attachment == null) {
-                    attachment = util.executeCreateDatabase(getStatus(), statementArray.length, statementArray,
-                            getConnectionDialect(), new boolean[]{false});
+                    attachment = util.executeCreateDatabase(getStatus(), statementArray.length,
+                            statementArray, getConnectionDialect(), new boolean[]{false});
                 } else {
                     attachment.execute(getStatus(),
                             transaction != null ? ((ITransactionImpl) transaction).getTransaction() :
                                     attachment.startTransaction(getStatus(), 0, null),
-                            statementArray.length, statementArray, getConnectionDialect(), null, null,
+                            statementArray.length,
+                            statementArray, getConnectionDialect(), null, null,
                             null, null);
                 }
                 if (!isAttached()) {
@@ -394,12 +395,14 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     }
 
     @Override
-    public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata, BatchParameterBuffer parameters) throws SQLException {
+    public FbBatch createBatch(FbTransaction transaction, String statement, FbMessageMetadata metadata,
+                               BatchParameterBuffer parameters) throws SQLException {
         return new IBatchImpl(this, transaction, statement, metadata, parameters);
     }
 
     @Override
-    public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters) throws SQLException {
+    public FbBatch createBatch(FbTransaction transaction, String statement, BatchParameterBuffer parameters)
+            throws SQLException {
         return new IBatchImpl(this, transaction, statement, parameters);
     }
 
@@ -450,7 +453,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     }
 
     public IStatus getStatus() {
-        status.init();
+        status.clear();
         return status;
     }
 

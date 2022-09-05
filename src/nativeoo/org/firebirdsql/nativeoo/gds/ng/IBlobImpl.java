@@ -103,8 +103,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
                 checkTransactionActive();
                 checkBlobClosed();
 
-                IDatabaseImpl database = (IDatabaseImpl)getDatabase();
-                IAttachment attachment = database.getAttachment();
+                IAttachment attachment = getDatabase().getAttachment();
                 if (isOutput()) {
                     blob = attachment.createBlob(getStatus(), ((ITransactionImpl)getTransaction()).getTransaction(),
                             blobId, bpb.length, bpb);
@@ -135,10 +134,9 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
                         .messageParameter(sizeRequested)
                         .toSQLException();
             }
-            // TODO Honour request for larger sizes by looping?
             sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
             final ByteBuffer responseBuffer;
-            final com.sun.jna.Pointer actualLength = new CloseableMemory(1024);
+            final CloseableMemory actualLength = new CloseableMemory(1024);
             synchronized (getSynchronizationObject()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
@@ -158,7 +156,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
                 }
             }
             final int actualLengthInt = actualLength.getInt(0) & 0xFFFF;
-            ((CloseableMemory) actualLength).close();
+            actualLength.close();
             final byte[] segment = new byte[actualLengthInt];
             responseBuffer.get(segment);
             return segment;
@@ -174,7 +172,6 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             if (segment.length == 0) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentEmpty).toSQLException();
             }
-            // TODO Handle by performing multiple puts? (Wrap in byte buffer, use position to move pointer?)
             if (segment.length > getMaximumSegmentSize()) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }

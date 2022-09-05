@@ -12,9 +12,4 @@ public class CloseableMemory extends Memory implements AutoCloseable {
     public CloseableMemory(long size) {
         super(size);
     }
-
-    @Override
-    public void close() {
-        dispose();
-    }
 }
