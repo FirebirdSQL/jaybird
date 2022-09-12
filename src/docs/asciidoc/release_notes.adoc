@@ -764,6 +764,7 @@ For maintainers of derived drivers, usage of `synchronized (getSynchronizationOb
 The following classes are no longer accessible in Jaybird 5:
 
 * `FBUpdatableCursorFetcher` is now package private.
+* `FBRowUpdater` is now package private and final.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation

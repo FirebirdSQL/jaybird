@@ -62,7 +62,7 @@ import java.util.List;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBRowUpdater implements FirebirdRowUpdater {
+final class FBRowUpdater implements FirebirdRowUpdater {
 
     private static final int PARAMETER_UNUSED = 0;
     private static final int PARAMETER_USED = 1;
@@ -84,16 +84,13 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     private String tableName;
 
-    private FbStatement updateStatement;
-    private FbStatement deleteStatement;
-    private FbStatement insertStatement;
-    private FbStatement selectStatement;
+    private final FbStatement[] statements = new FbStatement[4];
 
     private final FBObjectListener.ResultSetListener rsListener;
     private boolean closed;
     private boolean processing;
 
-    public FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
+    FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
         this.rsListener = rsListener;
 
@@ -180,10 +177,9 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     public void close() throws SQLException {
         SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
-        deallocateStatement(selectStatement, chain);
-        deallocateStatement(insertStatement, chain);
-        deallocateStatement(updateStatement, chain);
-        deallocateStatement(deleteStatement, chain);
+        for (FbStatement statement : statements) {
+            deallocateStatement(statement, chain);
+        }
 
         // TODO: Close not completed by throw at this point?
         if (chain.hasException())
@@ -390,93 +386,60 @@ public class FBRowUpdater implements FirebirdRowUpdater {
         return sb.toString();
     }
 
-    private static final int UPDATE_STATEMENT_TYPE = 1;
-    private static final int DELETE_STATEMENT_TYPE = 2;
-    private static final int INSERT_STATEMENT_TYPE = 3;
-    private static final int SELECT_STATEMENT_TYPE = 4;
+    private static final int UPDATE_STATEMENT_TYPE = 0;
+    private static final int DELETE_STATEMENT_TYPE = 1;
+    private static final int INSERT_STATEMENT_TYPE = 2;
+    private static final int SELECT_STATEMENT_TYPE = 3;
 
-    @Override
-    public void updateRow() throws SQLException {
-        boolean success = false;
-
+    private void modifyRow(int statementType) throws SQLException {
         try (LockCloseable ignored = gdsHelper.withLock()) {
+            boolean success = false;
             try {
                 notifyExecutionStarted();
 
-                if (updateStatement == null) {
-                    updateStatement = gdsHelper.allocateStatement();
-                } else {
-                    updateStatement.setTransaction(gdsHelper.getCurrentTransaction());
-                }
-
-                executeStatement(UPDATE_STATEMENT_TYPE, updateStatement);
-
+                executeStatement(statementType, getStatementWithTransaction(statementType));
+                
                 success = true;
             } finally {
                 notifyExecutionCompleted(success);
             }
         }
+    }
+
+    @SuppressWarnings("resource")
+    private FbStatement getStatementWithTransaction(int statementType) throws SQLException {
+        FbStatement stmt = statements[statementType];
+        if (stmt == null) {
+            return statements[statementType] = gdsHelper.allocateStatement();
+        } else {
+            stmt.setTransaction(gdsHelper.getCurrentTransaction());
+            return stmt;
+        }
+    }
+
+    @Override
+    public void updateRow() throws SQLException {
+        modifyRow(UPDATE_STATEMENT_TYPE);
     }
 
     @Override
     public void deleteRow() throws SQLException {
-        boolean success = false;
-
-        try (LockCloseable ignored = gdsHelper.withLock()) {
-            try {
-                notifyExecutionStarted();
-
-                if (deleteStatement == null) {
-                    deleteStatement = gdsHelper.allocateStatement();
-                } else {
-                    deleteStatement.setTransaction(gdsHelper.getCurrentTransaction());
-                }
-
-                executeStatement(DELETE_STATEMENT_TYPE, deleteStatement);
-
-                success = true;
-            } finally {
-                notifyExecutionCompleted(success);
-            }
-        }
+        modifyRow(DELETE_STATEMENT_TYPE);
     }
 
     @Override
     public void insertRow() throws SQLException {
-        boolean success = false;
-
-        try (LockCloseable ignored = gdsHelper.withLock()) {
-            try {
-                notifyExecutionStarted();
-
-                if (insertStatement == null) {
-                    insertStatement = gdsHelper.allocateStatement();
-                } else {
-                    insertStatement.setTransaction(gdsHelper.getCurrentTransaction());
-                }
-
-                executeStatement(INSERT_STATEMENT_TYPE, insertStatement);
-
-                success = true;
-            } finally {
-                notifyExecutionCompleted(success);
-            }
-        }
+        modifyRow(INSERT_STATEMENT_TYPE);
     }
 
     @Override
     public void refreshRow() throws SQLException {
-        boolean success = false;
-
         try (LockCloseable ignored = gdsHelper.withLock()) {
+            boolean success = false;
             try {
                 notifyExecutionStarted();
 
-                if (selectStatement == null) {
-                    selectStatement = gdsHelper.allocateStatement();
-                } else {
-                    selectStatement.setTransaction(gdsHelper.getCurrentTransaction());
-                }
+                FbStatement selectStatement = getStatementWithTransaction(SELECT_STATEMENT_TYPE);
 
                 final RowListener rowListener = new RowListener();
                 selectStatement.addStatementListener(rowListener);
@@ -595,14 +558,14 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     }
 
     @Override
-    public void moveToInsertRow() throws SQLException {
+    public void moveToInsertRow() {
         inInsertRow = true;
         insertRow = rowDescriptor.createDefaultFieldValues();
         this.updatedFlags = new boolean[rowDescriptor.getCount()];
     }
 
     @Override
-    public void moveToCurrentRow() throws SQLException {
+    public void moveToCurrentRow() {
         inInsertRow = false;
         insertRow = rowDescriptor.createDefaultFieldValues();
         this.updatedFlags = new boolean[rowDescriptor.getCount()];
