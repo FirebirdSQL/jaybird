@@ -6,6 +6,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.IAttachment;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.IBlob;
@@ -47,25 +48,21 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
 
     @Override
     protected void closeImpl() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                blob.close(getStatus());
-                processStatus();
-            } finally {
-                byteBuffer = null;
-            }
+        try (LockCloseable ignored = withLock()) {
+            blob.close(getStatus());
+            processStatus();
+        } finally {
+            byteBuffer = null;
         }
     }
 
     @Override
     protected void cancelImpl() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                blob.cancel(getStatus());
-                processStatus();
-            } finally {
-                byteBuffer = null;
-            }
+        try (LockCloseable ignored = withLock()) {
+            blob.cancel(getStatus());
+            processStatus();
+        } finally {
+            byteBuffer = null;
         }
     }
 
@@ -98,7 +95,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             } else {
                 bpb = new byte[0];
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobClosed();
@@ -137,7 +134,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
             final ByteBuffer responseBuffer;
             final CloseableMemory actualLength = new CloseableMemory(1024);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
@@ -175,7 +172,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
             if (segment.length > getMaximumSegmentSize()) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
@@ -194,15 +191,13 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
 
     @Override
     public void seek(int offset, SeekMode seekMode) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                // result is the current position in the blob
-                // We ignore the result
-                blob.seek(getStatus(), seekMode.getSeekModeId(), offset);
-                processStatus();
-            }
+        try (LockCloseable ignored = withLock()) {
+            checkDatabaseAttached();
+            checkTransactionActive();
+            // result is the current position in the blob
+            // We ignore the result
+            blob.seek(getStatus(), seekMode.getSeekModeId(), offset);
+            processStatus();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -213,7 +208,7 @@ public class IBlobImpl extends AbstractFbBlob implements FbBlob, DatabaseListene
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             byte[] responseArr = new byte[bufferLength];
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkBlobOpen();
                 blob.getInfo(getStatus(), requestItems.length, requestItems, bufferLength, responseArr);

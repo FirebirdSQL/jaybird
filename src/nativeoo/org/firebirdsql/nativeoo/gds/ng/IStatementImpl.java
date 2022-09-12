@@ -13,6 +13,7 @@ import org.firebirdsql.gds.ng.FbBatchCompletionState;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.OperationCloseHandle;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.StatementType;
@@ -35,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 import java.util.Collection;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -56,14 +58,18 @@ public class IStatementImpl extends AbstractFbStatement {
     private FbBatch batch;
 
     public IStatementImpl(IDatabaseImpl database) {
-        super(database.getSynchronizationObject());
-        this.database = database;
+        this.database = requireNonNull(database, "database");
         this.status = this.database.getStatus();
     }
 
     @Override
+    public final LockCloseable withLock() {
+        return database.withLock();
+    }
+
+    @Override
     protected void free(int option) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (option == ISCConstants.DSQL_close) {
                 cursor.close(getStatus());
                 cursor = null;
@@ -97,7 +103,7 @@ public class IStatementImpl extends AbstractFbStatement {
     public void prepare(String statementText) throws SQLException {
         try {
             final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkTransactionActive(getTransaction());
                 final StatementState initialState = getState();
                 if (!isPrepareAllowed(initialState)) {
@@ -150,71 +156,69 @@ public class IStatementImpl extends AbstractFbStatement {
     @Override
     public void execute(RowValue parameters) throws SQLException {
         final StatementState initialState = getState();
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                checkTransactionActive(getTransaction());
-                validateParameters(parameters);
-                reset(false);
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            checkTransactionActive(getTransaction());
+            validateParameters(parameters);
+            reset(false);
 
-                switchState(StatementState.EXECUTING);
-                if (this.statement.vTable.version >= IStatementIntf.VERSION)
-                    updateStatementTimeout();
+            switchState(StatementState.EXECUTING);
+            if (this.statement.vTable.version >= IStatementIntf.VERSION)
+                updateStatementTimeout();
 
-                setMetaData(getParameterDescriptor(), parameters);
+            setMetaData(getParameterDescriptor(), parameters);
 
-                ByteBuffer inMessage = ByteBuffer.allocate(inMetadata.getMessageLength(getStatus()));
-                processStatus();
+            ByteBuffer inMessage = ByteBuffer.allocate(inMetadata.getMessageLength(getStatus()));
+            processStatus();
 
-                setDataToBuffer(getParameterDescriptor(), parameters, inMessage);
+            setDataToBuffer(getParameterDescriptor(), parameters, inMessage);
 
-                final StatementType statementType = getType();
-                final boolean hasSingletonResult = hasSingletonResult();
-                ITransactionImpl transaction = (ITransactionImpl) getTransaction();
+            final StatementType statementType = getType();
+            final boolean hasSingletonResult = hasSingletonResult();
+            ITransactionImpl transaction = (ITransactionImpl) getTransaction();
 
-                Pointer inPtr = null;
-                // Actually the message size may be smaller than previously declared,
-                // so we take pointer position as message size
-                if (inMessage.position() > 0) {
-                    inPtr = new Memory(inMessage.position());
-                    inPtr.write(0, inMessage.array(), 0, inMessage.position());
+            Pointer inPtr = null;
+            // Actually the message size may be smaller than previously declared,
+            // so we take pointer position as message size
+            if (inMessage.position() > 0) {
+                inPtr = new Memory(inMessage.position());
+                inPtr.write(0, inMessage.array(), 0, inMessage.position());
+            }
+            Pointer outPtr = null;
+
+            try (OperationCloseHandle operationCloseHandle = signalExecute()) {
+                if (operationCloseHandle.isCancelled()) {
+                    // operation was synchronously cancelled from an OperationAware implementation
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
                 }
-                Pointer outPtr = null;
-
-                try (OperationCloseHandle operationCloseHandle = signalExecute()) {
-                    if (operationCloseHandle.isCancelled()) {
-                        // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
-                    }
-                    if ((statement.getFlags(getStatus()) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
-                        cursor = statement.openCursor(getStatus(), transaction.getTransaction(), inMetadata, inPtr,
-                                outMetadata, 0);
-                    } else {
-                        ByteBuffer outMessage = ByteBuffer.allocate(getMaxSqlInfoSize());
-                        outPtr = new Memory(outMessage.array().length);
-                        outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
-                        statement.execute(getStatus(), transaction.getTransaction(), inMetadata, inPtr, outMetadata,
-                                outPtr);
-                    }
-
-                    if (hasSingletonResult) {
-                        /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                         * have a result set that will be fetched, instead we have a singleton result if we have fields
-                         */
-                        statementListenerDispatcher.statementExecuted(this, false, true);
-                        processStatus();
-                        queueRowData(toRowValue(getRowDescriptor(), outMetadata, outPtr));
-                        setAfterLast();
-                    } else {
-                        // A normal execute is never a singleton result (even if it only produces a single result)
-                        statementListenerDispatcher.statementExecuted(this, hasFields(), false);
-                        processStatus();
-                    }
+                if ((statement.getFlags(getStatus()) & IStatement.FLAG_HAS_CURSOR) == IStatement.FLAG_HAS_CURSOR) {
+                    cursor = statement.openCursor(getStatus(), transaction.getTransaction(), inMetadata, inPtr,
+                            outMetadata, 0);
+                } else {
+                    ByteBuffer outMessage = ByteBuffer.allocate(getMaxSqlInfoSize());
+                    outPtr = new Memory(outMessage.array().length);
+                    outPtr.write(0, outMessage.array(), 0, outMessage.array().length);
+                    statement.execute(getStatus(), transaction.getTransaction(), inMetadata, inPtr, outMetadata,
+                            outPtr);
                 }
 
-                if (getState() != StatementState.ERROR) {
-                    switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
+                if (hasSingletonResult) {
+                    /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                     * have a result set that will be fetched, instead we have a singleton result if we have fields
+                     */
+                    statementListenerDispatcher.statementExecuted(this, false, true);
+                    processStatus();
+                    queueRowData(toRowValue(getRowDescriptor(), outMetadata, outPtr));
+                    setAfterLast();
+                } else {
+                    // A normal execute is never a singleton result (even if it only produces a single result)
+                    statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                    processStatus();
                 }
+            }
+
+            if (getState() != StatementState.ERROR) {
+                switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
             }
         } catch (SQLException e) {
             if (getState() != StatementState.ERROR) {
@@ -290,35 +294,33 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                if (!getState().isCursorOpen()) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            if (!getState().isCursorOpen()) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+            }
+            if (isAfterLast()) return;
+
+            try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                if (operationCloseHandle.isCancelled()) {
+                    // operation was synchronously cancelled from an OperationAware implementation
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
                 }
-                if (isAfterLast()) return;
 
-                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
-                    if (operationCloseHandle.isCancelled()) {
-                        // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toFlatSQLException();
-                    }
-
-                    ByteBuffer message = ByteBuffer.allocate(outMetadata.getMessageLength(getStatus()) + 1);
-                    processStatus();
-                    Pointer ptr = new Memory(message.array().length);
-                    int fetchStatus = cursor.fetchNext(getStatus(), ptr);
-                    processStatus();
-                    if (fetchStatus == IStatus.RESULT_OK) {
-                        queueRowData(toRowValue(getRowDescriptor(), outMetadata, ptr));
-                    } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
-                        setAfterLast();
-                        // Note: we are not explicitly 'closing' the cursor here
-                    } else {
-                        final String errorMessage = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;
-                        log.error(errorMessage);
-                        throw new SQLException(errorMessage);
-                    }
+                ByteBuffer message = ByteBuffer.allocate(outMetadata.getMessageLength(getStatus()) + 1);
+                processStatus();
+                Pointer ptr = new Memory(message.array().length);
+                int fetchStatus = cursor.fetchNext(getStatus(), ptr);
+                processStatus();
+                if (fetchStatus == IStatus.RESULT_OK) {
+                    queueRowData(toRowValue(getRowDescriptor(), outMetadata, ptr));
+                } else if (fetchStatus == IStatus.RESULT_NO_DATA) {
+                    setAfterLast();
+                    // Note: we are not explicitly 'closing' the cursor here
+                } else {
+                    final String errorMessage = "Unexpected fetch status (expected 0 or 100): " + fetchStatus;
+                    log.error(errorMessage);
+                    throw new SQLException(errorMessage);
                 }
             }
         } catch (SQLException e) {
@@ -358,7 +360,7 @@ public class IStatementImpl extends AbstractFbStatement {
     public byte[] getSqlInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             final byte[] responseArr = new byte[bufferLength];
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkStatementValid();
                 statement.getInfo(getStatus(), requestItems.length, requestItems,
                         bufferLength, responseArr);
@@ -385,12 +387,10 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void setCursorName(String cursorName) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                statement.setCursorName(getStatus(), cursorName + '\0');
-                processStatus();
-            }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            statement.setCursorName(getStatus(), cursorName + '\0');
+            processStatus();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -410,17 +410,15 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void deferredBatchCreate(FbBatchConfig batchConfig, DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    BatchParameterBuffer batchPb = createBatchParameterBuffer();
-                    batchConfig.populateBatchParameterBuffer(batchPb);
-                    batch = createBatch(batchPb);
-                } catch (SQLException e) {
-                    switchState(StatementState.ERROR);
-                    throw e;
-                }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                BatchParameterBuffer batchPb = createBatchParameterBuffer();
+                batchConfig.populateBatchParameterBuffer(batchPb);
+                batch = createBatch(batchPb);
+            } catch (SQLException e) {
+                switchState(StatementState.ERROR);
+                throw e;
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -430,17 +428,15 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    for (RowValue rowValue : rowValues) {
-                        batch.addBatch(rowValue);
-                    }
-                } catch (SQLException e) {
-                    switchState(StatementState.ERROR);
-                    throw e;
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                for (RowValue rowValue : rowValues) {
+                    batch.addBatch(rowValue);
                 }
+            } catch (SQLException e) {
+                switchState(StatementState.ERROR);
+                throw e;
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -450,16 +446,14 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public BatchCompletion batchExecute() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    FbBatchCompletionState state = batch.execute();
-                    return state.getBatchCompletion();
-                } catch (SQLException e) {
-                    switchState(StatementState.ERROR);
-                    throw e;
-                }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                FbBatchCompletionState state = batch.execute();
+                return state.getBatchCompletion();
+            } catch (SQLException e) {
+                switchState(StatementState.ERROR);
+                throw e;
             }
         }  catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -469,15 +463,13 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void batchCancel() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    batch.cancel();
-                } catch (SQLException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e)
-                            .toSQLException();
-                }
+        try (LockCloseable ignored = withLock()) {
+            try {
+                batch.cancel();
+            } catch (SQLException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e)
+                        .toSQLException();
             }
         }  catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -487,15 +479,13 @@ public class IStatementImpl extends AbstractFbStatement {
 
     @Override
     public void deferredBatchRelease(DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    batch.release();
-                } catch (SQLException e) {
-                    switchState(StatementState.ERROR);
-                    throw e;
-                }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                batch.release();
+            } catch (SQLException e) {
+                switchState(StatementState.ERROR);
+                throw e;
             }
         }  catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

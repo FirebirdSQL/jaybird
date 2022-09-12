@@ -9,6 +9,7 @@ import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.FbAttachment;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
@@ -75,7 +76,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
             final byte[] serviceRequestBufferBytes =
                     serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
             final byte[] responseBuffer = new byte[maxBufferLength];
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 service.query(getStatus(), (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
                                 : 0), serviceParameterBufferBytes,
                         (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length
@@ -97,7 +98,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
             final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null
                     ? null
                     : serviceRequestBuffer.toBytes();
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 service.start(getStatus(), (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
                         serviceRequestBufferBytes);
                 processStatus();
@@ -118,7 +119,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
             final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
             final byte[] spbArray = spb.toBytesWithType();
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 try {
                     service = provider.attachServiceManager(getStatus(), connection.getAttachUrl(), spbArray.length, spbArray);
                     processStatus();
@@ -170,7 +171,7 @@ public class IServiceImpl extends AbstractFbService<IServiceConnectionImpl> impl
     @Override
     protected void internalDetach() throws SQLException {
         checkConnected();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 service.detach(getStatus());
                 processStatus();

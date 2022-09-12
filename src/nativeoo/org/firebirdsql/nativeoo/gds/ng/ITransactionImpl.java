@@ -1,6 +1,7 @@
 package org.firebirdsql.nativeoo.gds.ng;
 
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.IStatus;
@@ -47,15 +48,13 @@ public class ITransactionImpl extends AbstractFbTransaction {
 
     @Override
     public void commit() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                final IDatabaseImpl db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.COMMITTING);
-                transaction.commit(getStatus());
-                processStatus();
-                switchState(TransactionState.COMMITTED);
-            }
+        try (LockCloseable ignored = withLock()) {
+            final IDatabaseImpl db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.COMMITTING);
+            transaction.commit(getStatus());
+            processStatus();
+            switchState(TransactionState.COMMITTED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -70,15 +69,13 @@ public class ITransactionImpl extends AbstractFbTransaction {
 
     @Override
     public void rollback() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                final IDatabaseImpl db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.ROLLING_BACK);
-                transaction.rollback(getStatus());
-                processStatus();
-                switchState(TransactionState.ROLLED_BACK);
-            }
+        try (LockCloseable ignored = withLock()) {
+            final IDatabaseImpl db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.ROLLING_BACK);
+            transaction.rollback(getStatus());
+            processStatus();
+            switchState(TransactionState.ROLLED_BACK);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -94,22 +91,20 @@ public class ITransactionImpl extends AbstractFbTransaction {
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
         boolean noRecoveryInfo = recoveryInformation == null || recoveryInformation.length == 0;
-        try {
-            synchronized (getSynchronizationObject()) {
-                final IDatabaseImpl db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.PREPARING);
-                if (noRecoveryInfo) {
-                    // TODO check for recovery information
-                    transaction.prepare(getStatus(), 0,
-                            null);
-                } else {
-                    transaction.prepare(getStatus(), (short) recoveryInformation.length,
-                            recoveryInformation);
-                }
-                processStatus();
-                switchState(TransactionState.PREPARED);
+        try (LockCloseable ignored = withLock()) {
+            final IDatabaseImpl db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.PREPARING);
+            if (noRecoveryInfo) {
+                // TODO check for recovery information
+                transaction.prepare(getStatus(), 0,
+                        null);
+            } else {
+                transaction.prepare(getStatus(), (short) recoveryInformation.length,
+                        recoveryInformation);
             }
+            processStatus();
+            switchState(TransactionState.PREPARED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -124,7 +119,7 @@ public class ITransactionImpl extends AbstractFbTransaction {
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
             final byte[] responseArray = new byte[maxBufferLength];
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 final IDatabaseImpl db = getDatabase();
                 db.checkConnected();
                 transaction.getInfo(getStatus(), (short) requestItems.length, requestItems,

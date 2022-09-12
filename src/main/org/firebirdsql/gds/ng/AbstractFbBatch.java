@@ -35,7 +35,6 @@ public abstract class AbstractFbBatch implements FbBatch {
             "This method is only supported on Statement and not supported on PreparedStatement and CallableStatement";
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
 
-    private final Object syncObject;
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BatchParameterBuffer batchParameterBuffer;
     protected FbTransaction transaction;
@@ -46,7 +45,6 @@ public abstract class AbstractFbBatch implements FbBatch {
     private RowValue fieldValues;
 
     protected AbstractFbBatch(FbDatabase database, BatchParameterBuffer batchParameterBuffer) {
-        this.syncObject = database.getSynchronizationObject();
         this.database = database;
         this.batchParameterBuffer = batchParameterBuffer;
     }
@@ -59,10 +57,6 @@ public abstract class AbstractFbBatch implements FbBatch {
     @Override
     public void removeExceptionListener(ExceptionListener listener) {
         exceptionListenerDispatcher.removeListener(listener);
-    }
-
-    protected final Object getSynchronizationObject() {
-        return syncObject;
     }
 
     public BatchParameterBuffer getBatchParameterBuffer() {
@@ -387,5 +381,9 @@ public abstract class AbstractFbBatch implements FbBatch {
 
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
         getField(parameterIndex).setCharacterStream(reader);
+    }
+
+    public final LockCloseable withLock() {
+        return database.withLock();
     }
 }

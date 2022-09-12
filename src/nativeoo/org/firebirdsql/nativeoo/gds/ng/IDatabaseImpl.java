@@ -17,6 +17,7 @@ import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbMetadataBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
@@ -94,15 +95,13 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
 
     @Override
     protected void internalDetach() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                attachment.detach(getStatus());
-                processStatus();
-            } catch (SQLException e) {
-                throw e;
-            } finally {
-                setDetached();
-            }
+        try (LockCloseable ignored = withLock()) {
+            attachment.detach(getStatus());
+            processStatus();
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            setDetached();
         }
     }
 
@@ -121,12 +120,10 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     public void dropDatabase() throws SQLException {
         try {
             checkConnected();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    attachment.dropDatabase(getStatus());
-                } finally {
-                    setDetached();
-                }
+            try (LockCloseable ignored = withLock()) {
+                attachment.dropDatabase(getStatus());
+            } finally {
+                setDetached();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -160,7 +157,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         try {
             checkConnected();
             final byte[] tpbArray = tpb.toBytesWithType();
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 ITransaction transaction = attachment.startTransaction(getStatus(), tpbArray.length, tpbArray);
                 processStatus();
                 final ITransactionImpl transactionImpl = new ITransactionImpl(this, transaction,
@@ -180,7 +177,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             checkConnected();
             final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 ITransaction iTransaction = attachment.reconnectTransaction(getStatus(), transactionIdBuffer.length,
                         transactionIdBuffer);
                 processStatus();
@@ -237,7 +234,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     public byte[] getDatabaseInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
             final byte[] responseArray = new byte[maxBufferLength];
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 attachment.getInfo(getStatus(), requestItems.length, requestItems, (short) maxBufferLength, responseArray);
             }
             processStatus();
@@ -269,7 +266,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
                         .toFlatSQLException();
             }
             final byte[] statementArray = getEncoding().encodeToCharset(statementText);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 if (attachment == null) {
                     attachment = util.executeCreateDatabase(getStatus(), statementArray.length,
                             statementArray, getConnectionDialect(), new boolean[]{false});
@@ -320,7 +317,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
     @Override
     public IEventImpl createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
         final IEventImpl eventHandle = new IEventImpl(eventName, eventHandler, getEncoding());
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             synchronized (eventHandle) {
                 int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
                         (short) 1, eventHandle.getEventNameMemory());
@@ -335,7 +332,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         try {
             final IEventImpl event = validateEventHandle(eventHandle);
             int count;
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (event) {
                     ISC_STATUS[] status = new ISC_STATUS[20];
                     clientLibrary.isc_event_counts(status, (short) event.getSize(),
@@ -356,7 +353,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             checkConnected();
             final IEventImpl event = validateEventHandle(eventHandle);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (event) {
                     int length = event.getSize();
                     byte[] array = event.getEventBuffer().getValue().getByteArray(0, length);
@@ -378,7 +375,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
             checkConnected();
             final IEventImpl event = validateEventHandle(eventHandle);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (event) {
                     try {
                         IEvents iEvents = events.remove(eventHandle);
@@ -427,7 +424,7 @@ public class IDatabaseImpl extends AbstractFbDatabase<NativeDatabaseConnection>
         final String dbName = connection.getAttachUrl();
         final byte[] dpbArray = dpb.toBytesWithType();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 if (create) {
                     attachment = provider.createDatabase(getStatus(), dbName, (short) dpbArray.length, dpbArray);

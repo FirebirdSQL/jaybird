@@ -3,7 +3,6 @@ package org.firebirdsql.nativeoo.gds.ng;
 import com.sun.jna.ptr.LongByReference;
 import org.firebirdsql.gds.BatchParameterBuffer;
 import org.firebirdsql.gds.BlobParameterBuffer;
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.AbstractFbBatch;
 import org.firebirdsql.gds.ng.FbBatchCompletionState;
@@ -12,6 +11,7 @@ import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.jdbc.FBBlob;
 import org.firebirdsql.nativeoo.gds.ng.FbInterface.IAttachment;
@@ -88,7 +88,7 @@ public class IBatchImpl extends AbstractFbBatch {
      * @throws SQLException
      */
     private void init() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (metadata == null) {
                 if (statement == null) {
                     statement = new IStatementImpl(getDatabase());
@@ -126,7 +126,7 @@ public class IBatchImpl extends AbstractFbBatch {
         }
         byte[] data = messageBuilder.getData();
         try (CloseableMemory memory = new CloseableMemory(data.length)) {
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 memory.write(0, data, 0, data.length);
                 batch.add(getStatus(), 1, memory);
                 processStatus();
@@ -152,7 +152,7 @@ public class IBatchImpl extends AbstractFbBatch {
                 long l = getParameterDescriptor(i + 1).getDatatypeCoder().decodeLong(fieldValues.getFieldData(i));
                 LongByReference longByReference = new LongByReference(l);
                 LongByReference existLong = new LongByReference(l);
-                synchronized (getSynchronizationObject()) {
+                try (LockCloseable ignored = withLock()) {
                     batch.registerBlob(getStatus(), existLong, longByReference);
                     processStatus();
                 }
@@ -160,7 +160,7 @@ public class IBatchImpl extends AbstractFbBatch {
         }
         byte[] data = messageBuilder.getData();
         try (CloseableMemory memory = new CloseableMemory(data.length)) {
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 memory.write(0, data, 0, data.length);
                 batch.add(getStatus(), 1, memory);
                 processStatus();
@@ -198,7 +198,7 @@ public class IBatchImpl extends AbstractFbBatch {
                 memory.write(0, new byte[] {}, 0, 0);
             LongByReference longByReference = new LongByReference(blobId);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 if (buffer == null)
                     batch.addBlob(getStatus(), inBuffer.length, memory, longByReference, 0, null);
                 else
@@ -221,7 +221,7 @@ public class IBatchImpl extends AbstractFbBatch {
     @Override
     public void appendBlobData(byte[] inBuffer) throws SQLException {
         try (CloseableMemory memory = new CloseableMemory(inBuffer.length)) {
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 memory.write(0, inBuffer, 0, inBuffer.length);
                 batch.appendBlobData(getStatus(), inBuffer.length, memory);
                 processStatus();
@@ -246,7 +246,7 @@ public class IBatchImpl extends AbstractFbBatch {
     @Override
     public void addBlobStream(byte[] inBuffer) throws SQLException {
         try (CloseableMemory memory = new CloseableMemory(inBuffer.length)) {
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 memory.write(0, inBuffer, 0, inBuffer.length);
                 batch.addBlobStream(getStatus(), inBuffer.length, memory);
                 processStatus();
@@ -259,7 +259,7 @@ public class IBatchImpl extends AbstractFbBatch {
         addBlob(index, blobId);
         LongByReference longByReference = new LongByReference(blobId);
         LongByReference existLong = new LongByReference(existingBlob);
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             batch.registerBlob(getStatus(), existLong, longByReference);
             processStatus();
         }
@@ -267,7 +267,7 @@ public class IBatchImpl extends AbstractFbBatch {
 
     @Override
     public FbBatchCompletionState execute() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             IBatchCompletionState execute = batch.execute(getStatus(), ((ITransactionImpl)
                     transaction).getTransaction());
             processStatus();
@@ -277,7 +277,7 @@ public class IBatchImpl extends AbstractFbBatch {
 
     @Override
     public void cancel() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             batch.cancel(getStatus());
             processStatus();
         }
@@ -285,7 +285,7 @@ public class IBatchImpl extends AbstractFbBatch {
 
     @Override
     public int getBlobAlignment() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             int result = batch.getBlobAlignment(getStatus());
             processStatus();
             return result;
@@ -299,7 +299,7 @@ public class IBatchImpl extends AbstractFbBatch {
 
     @Override
     public void setDefaultBpb(int parLength, byte[] par) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             batch.setDefaultBpb(getStatus(), parLength, par);
             processStatus();
         }
