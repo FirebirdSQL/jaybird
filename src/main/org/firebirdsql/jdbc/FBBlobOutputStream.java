@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.LockCloseable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,7 +42,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         this.owner = owner;
         buf = new byte[owner.getBufferLength()];
 
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             IConnectionProperties props = owner.getGdsHelper().getConnectionProperties();
             boolean useStreamBlobs = props.isUseStreamBlobs();
             blobHandle = owner.getGdsHelper().createBlob(!useStreamBlobs);
@@ -59,13 +60,11 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
 
     @Override
     public long length() throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
-            try {
-                return blobHandle.length();
-            } catch (SQLException e) {
-                throw new IOException(e);
-            }
+            return blobHandle.length();
+        } catch (SQLException e) {
+            throw new IOException(e);
         }
     }
 
@@ -95,7 +94,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      *         For errors writing to the blob
      */
     private void writeSegment(byte[] buf) throws SQLException {
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             blobHandle.putSegment(buf);
         }
     }
@@ -190,10 +189,8 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         if (blobHandle == null) return;
         flush();
 
-        try {
-            synchronized (owner.getSynchronizationObject()) {
-                blobHandle.close();
-            }
+        try (LockCloseable ignored = owner.withLock()) {
+            blobHandle.close();
             owner.setBlobId(blobHandle.getBlobId());
         } catch (SQLException ge) {
             throw new IOException("could not close blob: " + ge.getMessage(), ge);

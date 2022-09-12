@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jdbc.escape.FBEscapedCallParser;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.TypeConversionException;
@@ -83,13 +84,12 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     @Override
     public ParameterMetaData getParameterMetaData() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
+            return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
         }
-
-        return new FBParameterMetaData(fbStatement.getParameterDescriptor(), connection);
     }
 
     private List<FBProcedureCall> batchList = new ArrayList<>();
@@ -97,7 +97,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public void addBatch() throws SQLException {
         checkValidity();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             procedureCall.checkParameters();
             batchList.add((FBProcedureCall) procedureCall.clone());
         }
@@ -107,7 +107,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public void clearBatch() throws SQLException {
         checkValidity();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             // TODO Find open streams and close them?
             batchList.clear();
         }
@@ -116,7 +116,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     protected List<Long> executeBatchInternal() throws SQLException {
         checkValidity();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             boolean success = false;
             try {
                 notifyStatementStarted();
@@ -209,7 +209,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public ResultSetMetaData getMetaData() throws SQLException {
         checkValidity();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
             notifyStatementStarted(false);
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
@@ -222,7 +222,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     public boolean execute() throws SQLException {
         procedureCall.checkParameters();
         boolean hasResultSet = false;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             notifyStatementStarted();
 
             try {
@@ -245,7 +245,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public ResultSet executeQuery() throws SQLException {
         procedureCall.checkParameters();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             notifyStatementStarted();
             prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));
 
@@ -263,7 +263,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
     @Override
     public int executeUpdate() throws SQLException {
         procedureCall.checkParameters();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 notifyStatementStarted();
                 prepareFixedStatement(procedureCall.getSQL(isSelectableProcedure()));

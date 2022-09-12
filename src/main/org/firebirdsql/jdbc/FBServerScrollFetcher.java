@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ng.CursorFlag;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.FetchType;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
@@ -47,7 +48,6 @@ final class FBServerScrollFetcher implements FBFetcher {
     private static final int CURSOR_SIZE_UNKNOWN = -1;
 
     private final FbStatement stmt;
-    private final Object syncObject;
     private final int maxRows;
 
     private FBObjectListener.FetcherListener fetcherListener;
@@ -66,7 +66,7 @@ final class FBServerScrollFetcher implements FBFetcher {
     // Offset of first row in rows
     private int rowsOffset;
 
-    FBServerScrollFetcher(int initialFetchSize, int maxRows, FbStatement stmt, Synchronizable syncProvider,
+    FBServerScrollFetcher(int initialFetchSize, int maxRows, FbStatement stmt,
             FBObjectListener.FetcherListener fetcherListener) throws SQLException {
         if (!stmt.supportsFetchScroll()) {
             throw new FBDriverNotCapableException("Statement implementation does not support server-side scrollable result sets; this exception indicates a bug in Jaybird");
@@ -78,7 +78,6 @@ final class FBServerScrollFetcher implements FBFetcher {
         this.maxRows = maxRows;
         this.stmt = stmt;
         this.fetcherListener = fetcherListener;
-        this.syncObject = syncProvider.getSynchronizationObject();
     }
 
     private boolean inWindow(int position) throws SQLException {
@@ -155,7 +154,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean first() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int newLocalPosition = 1;
             if (!inWindow(newLocalPosition) && cursorSize != 0) {
@@ -171,7 +170,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean last() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int cursorSize = this.cursorSize;
             int newLocalPosition;
@@ -199,7 +198,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean previous() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             int newLocalPosition = Math.max(1, oldLocalPosition) - 1;
@@ -221,7 +220,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean next() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             boolean hasMaxRows = maxRows > 0;
@@ -256,7 +255,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean absolute(int row) throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             // Overflow beyond cursor size is handled by inWindow returning false
             int newLocalPosition = row >= 0 ? row : Math.max(0, requireCursorSize() + 1 + row);
@@ -293,7 +292,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean relative(int row) throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int oldLocalPosition = localPosition;
             // Overflow beyond cursor size is handled by inWindow returning false
@@ -330,7 +329,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void beforeFirst() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             if (localPosition != 0) {
                 stmt.fetchScroll(FetchType.ABSOLUTE, -1, 0);
@@ -342,7 +341,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void afterLast() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             int afterLastPosition = requireCursorSize() + 1;
             if (localPosition != afterLastPosition) {
@@ -377,7 +376,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public int getRowNum() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             // NOTE Relying on isAfterLast to (indirectly) call checkOpen()
             return isAfterLast() ? 0 : localPosition;
         }
@@ -385,7 +384,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isEmpty() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return cursorSize == 0;
@@ -394,7 +393,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isBeforeFirst() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             return localPosition == 0;
         }
@@ -402,7 +401,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isFirst() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             return localPosition == 1 && requireCursorSize() > 0;
         }
@@ -410,7 +409,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isLast() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
             return localPosition == cursorSize && cursorSize > 0;
@@ -419,7 +418,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public boolean isAfterLast() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             if (localPosition == 0) return false;
             // NOTE Relying on requireCursorSize to call checkOpen()
             int cursorSize = requireCursorSize();
@@ -448,7 +447,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public int getFetchSize() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkOpen();
             return fetchSize;
         }
@@ -456,7 +455,7 @@ final class FBServerScrollFetcher implements FBFetcher {
 
     @Override
     public void setFetchSize(int fetchSize) {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = stmt.withLock()) {
             this.fetchSize = fetchSize;
         }
     }

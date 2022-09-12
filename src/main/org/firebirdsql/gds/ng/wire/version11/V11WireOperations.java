@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.WireConnection;
@@ -36,25 +37,24 @@ import java.util.List;
 public class V11WireOperations extends V10WireOperations {
 
     /**
-     * Actions on this object need to be synchronized on {@link #getSynchronizationObject()}.
+     * Actions on this object need to be locked on {@link #withLock()}.
      */
     private final List<DeferredAction> deferredActions = new ArrayList<>();
 
-    public V11WireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        super(connection, defaultWarningMessageCallback, syncObject);
+    public V11WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
+        super(connection, defaultWarningMessageCallback);
     }
 
     @Override
     public final void enqueueDeferredAction(DeferredAction deferredAction) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             deferredActions.add(deferredAction);
         }
     }
 
     @Override
     public final void processDeferredActions() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (deferredActions.size() == 0) return;
 
             final DeferredAction[] actions = deferredActions.toArray(new DeferredAction[0]);

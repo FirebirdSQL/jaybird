@@ -2,8 +2,8 @@
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 5
+- Published: 2022-09-12
+- Implemented in: Jaybird 5
 
 ## Type
 
@@ -28,18 +28,40 @@ as calling native methods will still cause pinning).
 ## Decision
 
 The usages of `org.firebirdsql.jdbc.Synchronizable`, specifically use of 
-`synchronized` on `getSynchronizationObject()` will be replaced with 
-a `ReentrantLock`.
+`synchronized` on `getSynchronizationObject()`, and other forms of connection
+mutual exclusion (for example. GDS API doesn't use `Synchronizable`, but does 
+apply a similar pattern, e.g. `FbAttachment.getSynchronizationObject()`) will be 
+replaced with a `ReentrantLock`.
 
 Other usages of `synchronized` will be evaluated separately, if necessary.
 
+### Rejected Options
+
+- Defining a `void withLock(ExceptionRunnable)` or similar to use a lambda
+  to define the action taken under lock.
+
+  This would require more methods (e.g. for varieties of exceptions, simply
+  runnable versus returning a value, etc.). In evaluation, the solution
+  with a closeable, allowing use of try-with-resources, looked cleaner.
+
+  Other arguments against might be modification of local variables, but we 
+  didn't check if this actually occurs in the codebase.
+- Define a separate interface with the `withLock()` and `isLockedByCurrentThread()`
+  methods in the GDS-ng API.
+
+  With the chosen solution the methods are defined only where they are needed,
+  reducing access-level where possible. The exposure through `FbAttachment`
+  and `FbStatement` is for simplicity of implementation.
+
 ## Consequences
 
-The interface `org.firebirdsql.jdbc.Synchronizable` will be replaced with 
-an interface `org.firebirdsql.jaybird.concurrent.Lockable` which offers a single
-method, `LockClosable withLock()`. This method will take out a lock, and return
-a `Closable` variant which will unlock on `close()`, so it can be used in
-a try-with-resources.
+The interface `org.firebirdsql.jdbc.Synchronizable` will be removed, and 
+methods `LockClosable withLock()` and `boolean isLockedByCurrentThread()` are 
+introduced were appropriate and needed.`
+
+The `withLock()` method will take out a lock, and return a `AutoClosable` 
+variant which will unlock on `close()`, so it can be used in a 
+try-with-resources.
 
 In that way, current usages of
 
@@ -57,11 +79,17 @@ synchronized (withLock()) {
 }
 ```
 
+The `isLockedByCurrentThread()` returns true if the lock is held by
+the current thread.
+
 The `Lock` (`ReentrantLock`) itself will not be exposed (though this might be
 revisited in the future).
 
 Classes and interfaces in `org.firebirdsql.jdbc` currently implementing 
-`Synchronizable` will not switch to implementing `Lockable` to remove this from
-the public JDBC API, it will only be accessible on internal/semi-internal APIs.
+`Synchronizable` will - if needed - implement a `protected ClosableLock withLocK()`
+wrapping the `withLock()` of the enclosed attachment, statement or other object
+exposing `withLock()`. The intent is to remove locking from the public JDBC API, 
+it will only be accessible on internal/semi-internal APIs.
 
-All these interface, methods, etc., are considered internal API of Jaybird.
+All these interface, methods, etc., are considered internal API of Jaybird, and
+may change in point releases.

@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.CursorFlag;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FetchType;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.OperationCloseHandle;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -61,7 +62,7 @@ public class V18Statement extends V16Statement {
 
     @Override
     protected void fetchScrollImpl(FetchType fetchType, int fetchSize, int position) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkStatementValid();
             if (!getState().isCursorOpen()) {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
@@ -132,21 +133,21 @@ public class V18Statement extends V16Statement {
 
     @Override
     public final void setCursorFlag(CursorFlag flag) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             cursorFlags.add(flag);
         }
     }
 
     @Override
     public final void clearCursorFlag(CursorFlag flag) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             cursorFlags.remove(flag);
         }
     }
 
     @Override
     public final boolean isCursorFlagSet(CursorFlag flag) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return cursorFlags.contains(flag);
         }
     }

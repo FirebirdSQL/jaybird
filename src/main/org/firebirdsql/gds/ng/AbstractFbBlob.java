@@ -1,7 +1,5 @@
 /*
- * $Id$
- * 
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -40,7 +38,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFbBlob.class);
 
-    private final Object syncObject;
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final BlobParameterBuffer blobParameterBuffer;
     private FbTransaction transaction;
@@ -49,7 +46,6 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     private boolean eof;
 
     protected AbstractFbBlob(FbDatabase database, FbTransaction transaction, BlobParameterBuffer blobParameterBuffer) {
-        this.syncObject = database.getSynchronizationObject();
         this.database = database;
         this.transaction = transaction;
         this.blobParameterBuffer = blobParameterBuffer;
@@ -58,15 +54,16 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final boolean isOpen() {
-        synchronized (getSynchronizationObject()) {
+        // NOTE: Class implementation references field open directly under lock, when implementation changes, account for that
+        try (LockCloseable ignored = withLock()) {
             return open;
         }
     }
 
     @Override
     public final boolean isEof() {
-        synchronized (getSynchronizationObject()) {
-            return eof || !isOpen();
+        try (LockCloseable ignored = withLock()) {
+            return eof || !open;
         }
     }
 
@@ -78,7 +75,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected final void setEof() {
         if (isOutput()) return;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             // TODO Can stream blobs be 'reopened' using seek?
             eof = true;
         }
@@ -91,7 +88,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * </p>
      */
     protected final void resetEof() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             eof = false;
         }
     }
@@ -105,7 +102,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      * @param open New value of open.
      */
     protected final void setOpen(boolean open) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             final FbDatabase database = this.database;
             if (open) {
                 database.addWeakDatabaseListener(this);
@@ -122,20 +119,18 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final void close() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                if (!isOpen()) return;
-                try {
-                    if (isEndingTransaction()) {
-                        releaseResources();
-                    } else {
-                        checkDatabaseAttached();
-                        checkTransactionActive();
-                        closeImpl();
-                    }
-                } finally {
-                    setOpen(false);
+        try (LockCloseable ignored = withLock()) {
+            if (!open) return;
+            try {
+                if (isEndingTransaction()) {
+                    releaseResources();
+                } else {
+                    checkDatabaseAttached();
+                    checkTransactionActive();
+                    closeImpl();
                 }
+            } finally {
+                setOpen(false);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -153,19 +148,17 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public final void cancel() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    if (isEndingTransaction()) {
-                        releaseResources();
-                    } else {
-                        checkDatabaseAttached();
-                        checkTransactionActive();
-                        cancelImpl();
-                    }
-                } finally {
-                    setOpen(false);
+        try (LockCloseable ignored = withLock()) {
+            try {
+                if (isEndingTransaction()) {
+                    releaseResources();
+                } else {
+                    checkDatabaseAttached();
+                    checkTransactionActive();
+                    cancelImpl();
                 }
+            } finally {
+                setOpen(false);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -184,9 +177,16 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      */
     protected abstract void releaseResources();
 
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
+    /**
+     * @see FbAttachment#withLock() 
+     */
+    protected final LockCloseable withLock() {
+        FbDatabase database = this.database;
+        if (database != null) {
+            return database.withLock();
+        }
+        // No need or operation to lock, so return a no-op to unlock.
+        return LockCloseable.NO_OP;
     }
 
     @Override
@@ -208,7 +208,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             break;
         case COMMITTED:
         case ROLLED_BACK:
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clearTransaction();
                 setOpen(false);
                 releaseResources();
@@ -227,9 +227,11 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
             database.removeDatabaseListener(this);
             return;
         }
-        synchronized (getSynchronizationObject()) {
-            if (isOpen()) {
-                log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
+        try (LockCloseable ignored = withLock()) {
+            if (open) {
+                if (log.isDebugEnabled()) {
+                    log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
+                }
                 try {
                     close();
                 } catch (SQLException e) {
@@ -241,15 +243,16 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public void detached(FbDatabase database) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (this.database == database) {
                 open = false;
                 clearDatabase();
                 clearTransaction();
                 releaseResources();
             }
+        } finally {
+            database.removeDatabaseListener(this);
         }
-        database.removeDatabaseListener(this);
     }
 
     @Override
@@ -284,10 +287,9 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
      *         When no database is set, or the database is not attached
      */
     protected void checkDatabaseAttached() throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (database == null || !database.isAttached()) {
-                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_wrong_db).toSQLException();
-            }
+        FbDatabase database = this.database;
+        if (database == null || !database.isAttached()) {
+            throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_wrong_db).toSQLException();
         }
     }
 
@@ -313,14 +315,14 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     protected FbTransaction getTransaction() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return transaction;
         }
     }
 
     protected final void clearTransaction() {
         final FbTransaction transaction;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             transaction = this.transaction;
             this.transaction = null;
         }
@@ -331,7 +333,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public FbDatabase getDatabase() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return database;
         }
     }
@@ -350,15 +352,13 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     @Override
     public long length() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkDatabaseAttached();
-                if (getBlobId() == FbBlob.NO_BLOB_ID) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_bad_segstr_id).toSQLException();
-                }
-                final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
-                return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
+        try (LockCloseable ignored = withLock()) {
+            checkDatabaseAttached();
+            if (getBlobId() == FbBlob.NO_BLOB_ID) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_bad_segstr_id).toSQLException();
             }
+            final BlobLengthProcessor blobLengthProcessor = createBlobLengthProcessor();
+            return getBlobInfo(blobLengthProcessor.getBlobLengthItems(), 20, blobLengthProcessor);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -377,7 +377,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
 
     protected final void clearDatabase() {
         final FbDatabase database;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             database = this.database;
             this.database = null;
         }

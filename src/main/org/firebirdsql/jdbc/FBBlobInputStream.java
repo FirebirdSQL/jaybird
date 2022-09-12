@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.LockCloseable;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
         this.owner = owner;
         closed = false;
 
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             blobHandle = owner.getGdsHelper().openBlob(owner.getBlobId(), FBBlob.SEGMENTED);
         }
     }
@@ -72,25 +73,21 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     }
 
     public void seek(int position, FbBlob.SeekMode seekMode) throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
-            try {
-                blobHandle.seek(position, seekMode);
-            } catch (SQLException ex) {
-                throw new IOException(ex.getMessage(), ex);
-            }
+            blobHandle.seek(position, seekMode);
+        } catch (SQLException ex) {
+            throw new IOException(ex.getMessage(), ex);
         }
     }
 
     @Override
     public long length() throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
-            try {
-                return blobHandle.length();
-            } catch (SQLException e) {
-                throw new IOException(e);
-            }
+            return blobHandle.length();
+        } catch (SQLException e) {
+            throw new IOException(e);
         }
     }
 
@@ -108,7 +105,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
      */
     private int checkBuffer() throws IOException {
         assert buffer != null : "Buffer should never be null";
-        synchronized (owner.getSynchronizationObject()) {
+        try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
             if (pos < buffer.length) {
                 return buffer.length - pos;
@@ -117,13 +114,11 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
                 return -1;
             }
 
-            try {
-                buffer = blobHandle.getSegment(owner.getBufferLength());
-                pos = 0;
-                return buffer.length != 0 ? buffer.length : -1;
-            } catch (SQLException ge) {
-                throw new IOException("Blob read problem: " + ge.toString(), ge);
-            }
+            buffer = blobHandle.getSegment(owner.getBufferLength());
+            pos = 0;
+            return buffer.length != 0 ? buffer.length : -1;
+        } catch (SQLException ge) {
+            throw new IOException("Blob read problem: " + ge, ge);
         }
     }
 
@@ -187,14 +182,16 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public void close() throws IOException {
-        synchronized (owner.getSynchronizationObject()) {
-            if (blobHandle != null) {
-                try {
-                    blobHandle.close();
-                    owner.notifyClosed(this);
-                } catch (SQLException ge) {
-                    throw new IOException("couldn't close blob: " + ge);
-                }
+        try (LockCloseable ignored = owner.withLock()) {
+            if (blobHandle == null) {
+                return;
+            }
+            try {
+                blobHandle.close();
+                owner.notifyClosed(this);
+            } catch (SQLException ge) {
+                throw new IOException("couldn't close blob: " + ge);
+            } finally {
                 blobHandle = null;
                 closed = true;
                 buffer = EMPTY_BUFFER;

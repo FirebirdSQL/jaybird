@@ -20,6 +20,7 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -37,7 +38,7 @@ import java.util.List;
 
 /**
  * Class responsible for modifying updatable result sets.
- *
+ * <p>
  * A result set is updatable if and only if:
  * <ul>
  * <li>It is a subset of a single table and includes all columns from the
@@ -52,9 +53,11 @@ import java.util.List;
  * DISTINCT predicate, a HAVING clause, aggregate functions, joined tables,
  * user-defined functions, or stored procedures.
  * </ul>
- *
+ * </p>
+ * <p>
  * If the result set definition does not meet these conditions, it is considered
  * read-only.
+ * </p>
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -68,7 +71,6 @@ public class FBRowUpdater implements FirebirdRowUpdater {
 
     private final FBConnection connection;
     private final GDSHelper gdsHelper;
-    private final Synchronizable syncProvider;
     private final RowDescriptor rowDescriptor;
     private final FBField[] fields;
     private final QuoteStrategy quoteStrategy;
@@ -91,15 +93,12 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     private boolean closed;
     private boolean processing;
 
-    public FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor,
-            Synchronizable syncProvider, boolean cached,
+    public FBRowUpdater(FBConnection connection, RowDescriptor rowDescriptor, boolean cached,
             FBObjectListener.ResultSetListener rsListener) throws SQLException {
-
         this.rsListener = rsListener;
 
         this.connection = connection;
         gdsHelper = connection.getGDSHelper();
-        this.syncProvider = syncProvider;
 
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
@@ -400,7 +399,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     public void updateRow() throws SQLException {
         boolean success = false;
 
-        synchronized (syncProvider.getSynchronizationObject()) {
+        try (LockCloseable ignored = gdsHelper.withLock()) {
             try {
                 notifyExecutionStarted();
 
@@ -423,7 +422,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     public void deleteRow() throws SQLException {
         boolean success = false;
 
-        synchronized (syncProvider.getSynchronizationObject()) {
+        try (LockCloseable ignored = gdsHelper.withLock()) {
             try {
                 notifyExecutionStarted();
 
@@ -446,7 +445,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     public void insertRow() throws SQLException {
         boolean success = false;
 
-        synchronized (syncProvider.getSynchronizationObject()) {
+        try (LockCloseable ignored = gdsHelper.withLock()) {
             try {
                 notifyExecutionStarted();
 
@@ -469,7 +468,7 @@ public class FBRowUpdater implements FirebirdRowUpdater {
     public void refreshRow() throws SQLException {
         boolean success = false;
 
-        synchronized (syncProvider.getSynchronizationObject()) {
+        try (LockCloseable ignored = gdsHelper.withLock()) {
             try {
                 notifyExecutionStarted();
 

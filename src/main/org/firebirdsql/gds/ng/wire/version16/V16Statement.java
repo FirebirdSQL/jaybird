@@ -28,6 +28,7 @@ import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -79,18 +80,15 @@ public class V16Statement extends V13Statement {
 
     @Override
     public void deferredBatchCreate(FbBatchConfig batchConfig, DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    sendBatchCreate(batchConfig);
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
-                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                sendBatchCreate(batchConfig);
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -116,18 +114,15 @@ public class V16Statement extends V13Statement {
 
     @Override
     public void deferredBatchSend(Collection<RowValue> rowValues, DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    sendBatchMsg(rowValues);
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
-                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                sendBatchMsg(rowValues);
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -156,33 +151,29 @@ public class V16Statement extends V13Statement {
 
     @Override
     public BatchCompletion batchExecute() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                FbTransaction transaction = getTransaction();
-                checkTransactionActive(transaction);
-                try {
-                    XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(transaction.getHandle());
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
-                try {
-                    BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
-                            .readResponse(getStatementWarningCallback());
-                    return response.batchCompletion();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            FbTransaction transaction = getTransaction();
+            checkTransactionActive(transaction);
+            try {
+                XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(WireProtocolConstants.op_batch_exec);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(transaction.getHandle());
+                xdrOut.flush();
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
-        }  catch (SQLException e) {
+            try {
+                BatchCompletionResponse response = (BatchCompletionResponse) getDatabase()
+                        .readResponse(getStatementWarningCallback());
+                return response.batchCompletion();
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+            }
+        } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
@@ -190,27 +181,23 @@ public class V16Statement extends V13Statement {
 
     @Override
     public void batchCancel() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                try {
-                    XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
-                try {
-                    getDatabase().readResponse(getStatementWarningCallback());
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e)
-                            .toSQLException();
-                }
+        try (LockCloseable ignored = withLock()) {
+            try {
+                XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(WireProtocolConstants.op_batch_cancel);
+                xdrOut.writeInt(getHandle());
+                xdrOut.flush();
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
-        }  catch (SQLException e) {
+            try {
+                getDatabase().readResponse(getStatementWarningCallback());
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+            }
+        } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }
@@ -218,22 +205,19 @@ public class V16Statement extends V13Statement {
 
     @Override
     public void deferredBatchRelease(DeferredResponse<Void> onResponse) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                try {
-                    XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    switchState(StatementState.ERROR);
-                    throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e)
-                            .toSQLException();
-                }
-                getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            try {
+                XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(WireProtocolConstants.op_batch_rls);
+                xdrOut.writeInt(getHandle());
+                xdrOut.flush();
+            } catch (IOException e) {
+                switchState(StatementState.ERROR);
+                throw FbExceptionBuilder.forException(ISCConstants.isc_net_write_err).cause(e).toSQLException();
             }
-        }  catch (SQLException e) {
+            getDatabase().enqueueDeferredAction(wrapDeferredResponse(onResponse, r -> null));
+        } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         }

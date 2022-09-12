@@ -92,16 +92,14 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
      */
     @Override
     public final void close() throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkConnected();
-            synchronized (getSynchronizationObject()) {
-                serviceListenerDispatcher.detaching(this);
-                try {
-                    internalDetach();
-                } finally {
-                    serviceListenerDispatcher.detached(this);
-                    serviceListenerDispatcher.shutdown();
-                }
+            serviceListenerDispatcher.detaching(this);
+            try {
+                internalDetach();
+            } finally {
+                serviceListenerDispatcher.detached(this);
+                serviceListenerDispatcher.shutdown();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

@@ -31,6 +31,7 @@ import org.firebirdsql.gds.ng.AbstractConnection;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
 import org.firebirdsql.gds.ng.wire.crypt.KnownServerKey;
@@ -134,6 +135,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         this.protocols = protocols;
         clientAuthBlock = new ClientAuthBlock(this.attachProperties);
         dbAttachInfo = toDbAttachInfo(attachProperties);
+    }
+
+    // Allow access to withLock() at package level, without making it public in parent class
+    final LockCloseable withLockProxy() {
+        return withLock();
     }
 
     public final String getServerName() {
@@ -475,7 +481,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private AbstractWireOperations getDefaultWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION10);
-        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null, this);
+        return (AbstractWireOperations) protocolDescriptor.createWireOperations(this, null);
     }
 
     /**
@@ -484,7 +490,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
     private FbWireOperations getCryptKeyCallbackWireOperations() {
         ProtocolDescriptor protocolDescriptor = protocols
                 .getProtocolDescriptor(WireProtocolConstants.PROTOCOL_VERSION15);
-        return protocolDescriptor.createWireOperations(this, null, this);
+        return protocolDescriptor.createWireOperations(this, null);
     }
 
     /**

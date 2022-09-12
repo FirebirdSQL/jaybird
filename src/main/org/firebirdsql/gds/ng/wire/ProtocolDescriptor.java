@@ -217,10 +217,8 @@ public interface ProtocolDescriptor {
      *         WireConnection instance
      * @param defaultWarningMessageCallback
      *         Default warning message callback
-     * @param syncObject
-     *         Object to use for synchronization
      * @return Wire operations implementation
      */
     FbWireOperations createWireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject);
+            WarningMessageCallback defaultWarningMessageCallback);
 }

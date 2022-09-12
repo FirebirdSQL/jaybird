@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -51,7 +52,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
                 throw new SQLException("Already attached to a service");
             }
             final ServiceParameterBuffer spb = protocolDescriptor.createAttachServiceParameterBuffer(connection);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 try {
                     try {
                         sendAttachToBuffer(spb);
@@ -116,7 +117,7 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
 
     @Override
     protected void internalDetach() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
@@ -158,28 +159,26 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
     @Override
     public byte[] getServiceInfo(ServiceParameterBuffer serviceParameterBuffer,
             ServiceRequestBuffer serviceRequestBuffer, int maxBufferLength) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_service_info);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation
-                    xdrOut.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null);
-                    xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
-                    xdrOut.writeInt(maxBufferLength);
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_service_info);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0); // incarnation
+                xdrOut.writeBuffer(serviceParameterBuffer != null ? serviceParameterBuffer.toBytes() : null);
+                xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
+                xdrOut.writeInt(maxBufferLength);
 
-                    xdrOut.flush();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    GenericResponse genericResponse = readGenericResponse(null);
-                    return genericResponse.getData();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
+                xdrOut.flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                GenericResponse genericResponse = readGenericResponse(null);
+                return genericResponse.getData();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -189,25 +188,23 @@ public class V10Service extends AbstractFbWireService implements FbWireService {
 
     @Override
     public void startServiceAction(ServiceRequestBuffer serviceRequestBuffer) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_service_start);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeInt(0); // incarnation
-                    xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_service_start);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeInt(0); // incarnation
+                xdrOut.writeBuffer(serviceRequestBuffer.toBytes());
 
-                    xdrOut.flush();
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-                try {
-                    readGenericResponse(null);
-                } catch (IOException ex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
-                }
+                xdrOut.flush();
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+            try {
+                readGenericResponse(null);
+            } catch (IOException ex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

@@ -20,7 +20,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
-import org.firebirdsql.gds.ng.SyncObject;
 
 import java.sql.SQLException;
 import java.sql.Blob;
@@ -30,14 +29,12 @@ import java.io.*;
  * This class represents a cached blob field.
  */
 @SuppressWarnings("RedundantThrows")
-public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
+public final class FBCachedBlob implements FirebirdBlob {
 
     private static final byte[] BYTES_NULL_VALUE = null;
     private static final InputStream STREAM_NULL_VALUE = null;
     private static final byte[] FREED_MARKER = new byte[0];
     static final String BLOB_READ_ONLY = "Cached blob is read-only";
-
-    private final Object syncObject = new SyncObject();
 
     private volatile byte[] blobData;
 
@@ -176,11 +173,6 @@ public final class FBCachedBlob implements FirebirdBlob, Synchronizable {
     @Override
     public void truncate(long length) throws SQLException {
         throw new FBDriverNotCapableException("Method truncate(long) is not supported");
-    }
-
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
     }
 
     @Override

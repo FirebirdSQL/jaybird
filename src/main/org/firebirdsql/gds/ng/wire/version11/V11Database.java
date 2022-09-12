@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
 import org.firebirdsql.gds.ng.wire.ProtocolDescriptor;
@@ -55,34 +56,32 @@ public class V11Database extends V10Database {
 
     @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
-            try {
-                doReleaseObjectPacket(operation, objectId);
-                // NOTE: Intentionally no flush!
-                switch (operation) {
-                case op_close_blob:
-                case op_cancel_blob:
-                    enqueueDeferredAction(new DeferredAction() {
-                        @Override
-                        public void processResponse(Response response) {
-                            processReleaseObjectResponse(response);
-                        }
+        try (LockCloseable ignored = withLock()) {
+            checkAttached();
+            doReleaseObjectPacket(operation, objectId);
+            // NOTE: Intentionally no flush!
+            switch (operation) {
+            case op_close_blob:
+            case op_cancel_blob:
+                enqueueDeferredAction(new DeferredAction() {
+                    @Override
+                    public void processResponse(Response response) {
+                        processReleaseObjectResponse(response);
+                    }
 
-                        @Override
-                        public WarningMessageCallback getWarningMessageCallback() {
-                            return null;
-                        }
-                    });
-                    return;
-                default:
-                    // According to Firebird source code for other operations we need to process response normally,
-                    // however we only expect calls for op_close_blob and op_cancel_blob
-                    throw new IllegalArgumentException(String.format("Unexpected operation in V11Databsase.releaseObject: %d", operation));
-                }
-            } catch (IOException ex) {
-                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+                    @Override
+                    public WarningMessageCallback getWarningMessageCallback() {
+                        return null;
+                    }
+                });
+                return;
+            default:
+                // According to Firebird source code for other operations we need to process response normally,
+                // however we only expect calls for op_close_blob and op_cancel_blob
+                throw new IllegalArgumentException(String.format("Unexpected operation in V11Databsase.releaseObject: %d", operation));
             }
+        } catch (IOException ex) {
+            throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
         }
     }
 }

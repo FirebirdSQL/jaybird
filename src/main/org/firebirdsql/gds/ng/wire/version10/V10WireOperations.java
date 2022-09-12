@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -37,9 +37,8 @@ public class V10WireOperations extends AbstractWireOperations {
 
     private static final Logger log = LoggerFactory.getLogger(V10WireOperations.class);
 
-    public V10WireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        super(connection, defaultWarningMessageCallback, syncObject);
+    public V10WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
+        super(connection, defaultWarningMessageCallback);
     }
 
     @Override

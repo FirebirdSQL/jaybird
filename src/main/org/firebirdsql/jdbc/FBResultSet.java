@@ -49,7 +49,7 @@ import java.util.Map;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("RedundantThrows")
-public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable, FBObjectListener.FetcherListener {
+public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListener.FetcherListener {
 
     private static final String UNICODE_STREAM_NOT_SUPPORTED = "Unicode stream not supported.";
 
@@ -142,20 +142,18 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
                 fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
                         rsType == ResultSet.TYPE_FORWARD_ONLY);
             } else if (serverSideScrollable && rsType == ResultSet.TYPE_SCROLL_INSENSITIVE) {
-                fbFetcher =
-                        new FBServerScrollFetcher(fbStatement.fetchSize, fbStatement.maxRows, stmt, fbStatement, this);
+                fbFetcher = new FBServerScrollFetcher(fbStatement.fetchSize, fbStatement.maxRows, stmt, this);
             } else if (fbStatement.isUpdatableCursor()) {
-                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.maxRows,
+                fbFetcher = new FBUpdatableCursorFetcher(gdsHelper, stmt, this, fbStatement.maxRows,
                         fbStatement.fetchSize);
             } else {
                 assert rsType == ResultSet.TYPE_FORWARD_ONLY : "Expected TYPE_FORWARD_ONLY";
-                fbFetcher = new FBStatementFetcher(gdsHelper, fbStatement, stmt, this, fbStatement.maxRows,
-                        fbStatement.fetchSize);
+                fbFetcher = new FBStatementFetcher(gdsHelper, stmt, this, fbStatement.maxRows, fbStatement.fetchSize);
             }
 
             if (rsConcurrency == ResultSet.CONCUR_UPDATABLE) {
                 try {
-                    rowUpdater = new FBRowUpdater(connection, rowDescriptor, this, cached, listener);
+                    rowUpdater = new FBRowUpdater(connection, rowDescriptor, cached, listener);
                     if (serverSideScrollable && fbFetcher instanceof FBServerScrollFetcher) {
                         fbFetcher = new FBUpdatableFetcher(fbFetcher, this, rowDescriptor.createDeletedRowMarker());
                     }
@@ -368,11 +366,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, Synchronizable
         if (chain.hasException()) {
             throw chain.getException();
         }
-    }
-
-    @Override
-    public final Object getSynchronizationObject() {
-        return fbStatement.getSynchronizationObject();
     }
 
     @Override

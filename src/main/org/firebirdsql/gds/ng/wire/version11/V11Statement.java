@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version11;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.wire.DeferredAction;
@@ -52,61 +53,59 @@ public class V11Statement extends V10Statement {
 
     @Override
     public void prepare(final String statementText) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkTransactionActive(getTransaction());
-                final StatementState initialState = getState();
-                if (!isPrepareAllowed(initialState)) {
-                    throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", initialState));
-                }
-                resetAll();
+        try (LockCloseable ignored = withLock()) {
+            checkTransactionActive(getTransaction());
+            final StatementState initialState = getState();
+            if (!isPrepareAllowed(initialState)) {
+                throw new SQLNonTransientException(String.format("Current statement state (%s) does not allow call to prepare", initialState));
+            }
+            resetAll();
 
-                int expectedResponseCount = 0;
+            int expectedResponseCount = 0;
+            try {
+                if (initialState == StatementState.NEW) {
+                    sendAllocate();
+                    // We're assuming allocation is successful, as changing it when processing the response breaks
+                    // the state transition in sendPrepare
+                    switchState(StatementState.ALLOCATED);
+                    expectedResponseCount++;
+                } else {
+                    checkStatementValid();
+                }
+                sendPrepare(statementText);
+                expectedResponseCount++;
+
+                getXdrOut().flush();
+            } catch (IOException ex) {
+                switchState(StatementState.ERROR);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
+            }
+
+            try {
+                final FbWireDatabase db = getDatabase();
                 try {
                     if (initialState == StatementState.NEW) {
-                        sendAllocate();
-                        // We're assuming allocation is successful, as changing it when processing the response breaks
-                        // the state transition in sendPrepare
-                        switchState(StatementState.ALLOCATED);
-                        expectedResponseCount++;
-                    } else {
-                        checkStatementValid();
-                    }
-                    sendPrepare(statementText);
-                    expectedResponseCount++;
-
-                    getXdrOut().flush();
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ex).toSQLException();
-                }
-
-                try {
-                    final FbWireDatabase db = getDatabase();
-                    try {
-                        if (initialState == StatementState.NEW) {
-                            try {
-                                expectedResponseCount--;
-                                processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
-                            } catch (SQLException e) {
-                                forceState(StatementState.NEW);
-                                throw e;
-                            }
-                        }
                         try {
                             expectedResponseCount--;
-                            processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                            processAllocateResponse(db.readGenericResponse(getStatementWarningCallback()));
                         } catch (SQLException e) {
-                            switchState(StatementState.ALLOCATED);
+                            forceState(StatementState.NEW);
                             throw e;
                         }
-                    } finally {
-                        db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                     }
-                } catch (IOException ex) {
-                    switchState(StatementState.ERROR);
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
+                    try {
+                        expectedResponseCount--;
+                        processPrepareResponse(db.readGenericResponse(getStatementWarningCallback()));
+                    } catch (SQLException e) {
+                        switchState(StatementState.ALLOCATED);
+                        throw e;
+                    }
+                } finally {
+                    db.consumePackets(expectedResponseCount, getStatementWarningCallback());
                 }
+            } catch (IOException ex) {
+                switchState(StatementState.ERROR);
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ex).toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -116,7 +115,7 @@ public class V11Statement extends V10Statement {
 
     @Override
     protected void free(final int option) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 doFreePacket(option);
                 /*

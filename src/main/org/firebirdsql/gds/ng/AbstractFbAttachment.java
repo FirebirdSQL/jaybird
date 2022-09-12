@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -44,7 +44,6 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     private static final Logger log = LoggerFactory.getLogger(AbstractFbAttachment.class);
 
     private volatile boolean attached;
-    private final Object syncObject = new SyncObject();
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     protected final T connection;
     private final DatatypeCoder datatypeCoder;
@@ -54,6 +53,16 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
     protected AbstractFbAttachment(T connection, DatatypeCoder datatypeCoder) {
         this.connection = requireNonNull(connection, "parameter connection should be non-null");
         this.datatypeCoder = requireNonNull(datatypeCoder, "parameter datatypeCoder should be non-null");
+    }
+
+    @Override
+    public final LockCloseable withLock() {
+        return connection.withLock();
+    }
+
+    @Override
+    public final boolean isLockedByCurrentThread() {
+        return connection.isLockedByCurrentThread();
     }
 
     /**
@@ -120,11 +129,6 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
      */
     protected final void setDetached() {
         attached = false;
-    }
-
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
     }
 
     @Override

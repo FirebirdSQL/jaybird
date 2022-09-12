@@ -88,7 +88,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
 
     @Override
     protected void internalDetach() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 clientLibrary.isc_detach_database(statusVector, handle);
                 processStatusVector();
@@ -125,7 +125,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         final byte[] dbName = getEncoding().encodeToCharset(connection.getAttachUrl());
         final byte[] dpbArray = dpb.toBytesWithType();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 if (create) {
                     clientLibrary.isc_create_database(statusVector, (short) dbName.length, dbName, handle,
@@ -181,7 +181,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public void dropDatabase() throws SQLException {
         try {
             checkConnected();
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 try {
                     clientLibrary.isc_drop_database(statusVector, handle);
                     processStatusVector();
@@ -220,7 +220,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             checkConnected();
             final IntByReference transactionHandle = new IntByReference(0);
             final byte[] tpbArray = tpb.toBytesWithType();
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_start_transaction(statusVector, transactionHandle, (short) 1, handle,
                         (short) tpbArray.length, tpbArray);
                 processStatusVector();
@@ -242,7 +242,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
 
             final IntByReference transactionHandle = new IntByReference(0);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_reconnect_transaction(statusVector, handle, transactionHandle,
                         (short) transactionIdBuffer.length, transactionIdBuffer);
                 processStatusVector();
@@ -312,7 +312,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public byte[] getDatabaseInfo(final byte[] requestItems, final int maxBufferLength) throws SQLException {
         try {
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_database_info(statusVector, handle, (short) requestItems.length, requestItems,
                         (short) maxBufferLength, responseBuffer);
                 processStatusVector();
@@ -348,7 +348,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             }
 
             final byte[] statementArray = getEncoding().encodeToCharset(statementText);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_dsql_execute_immediate(statusVector, handle,
                         transaction != null ? ((JnaTransaction) transaction).getJnaHandle() : new IntByReference(),
                         (short) statementArray.length, statementArray, getConnectionDialect(), null);
@@ -408,7 +408,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public JnaEventHandle createEventHandle(String eventName, EventHandler eventHandler) throws SQLException {
         // TODO Any JNA errors we need to track and convert to SQLException here?
         final JnaEventHandle eventHandle = new JnaEventHandle(eventName, eventHandler, getEncoding());
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             synchronized (eventHandle) {
                 int size = clientLibrary.isc_event_block(eventHandle.getEventBuffer(), eventHandle.getResultBuffer(),
                         (short) 1, eventHandle.getEventNameMemory());
@@ -423,7 +423,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
         try {
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (jnaEventHandle) {
                     clientLibrary.isc_event_counts(statusVector, (short) jnaEventHandle.getSize(),
                             jnaEventHandle.getEventBuffer().getValue(), jnaEventHandle.getResultBuffer().getValue());
@@ -442,7 +442,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             checkConnected();
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (jnaEventHandle) {
                     if (Platform.isWindows()) {
                         ((WinFbClientLibrary) clientLibrary).isc_que_events(statusVector, getJnaHandle(),
@@ -470,7 +470,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
             checkConnected();
             final JnaEventHandle jnaEventHandle = validateEventHandle(eventHandle);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 synchronized (jnaEventHandle) {
                     try {
                         clientLibrary.isc_cancel_events(statusVector, getJnaHandle(), jnaEventHandle.getJnaEventId());

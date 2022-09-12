@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.wire.auth.ClientAuthBlock;
@@ -51,13 +52,11 @@ public abstract class AbstractWireOperations implements FbWireOperations {
 
     private final WireConnection<?, ?> connection;
     private final WarningMessageCallback defaultWarningMessageCallback;
-    private final Object syncObject;
 
     protected AbstractWireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
+            WarningMessageCallback defaultWarningMessageCallback) {
         this.connection = connection;
         this.defaultWarningMessageCallback = defaultWarningMessageCallback;
-        this.syncObject = syncObject;
     }
 
     @Override
@@ -184,7 +183,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      * @throws java.io.IOException For errors reading the operation from the connection
      */
     public final int readNextOperation() throws IOException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             processDeferredActions();
             return connection.readNextOperation();
         }
@@ -319,8 +318,8 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         connection.setSoTimeout(milliseconds);
     }
 
-    protected final Object getSynchronizationObject() {
-        return syncObject;
+    protected final LockCloseable withLock() {
+        return connection.withLockProxy();
     }
 
     protected final void addServerKeys(byte[] serverKeys) throws SQLException {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.field;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.jdbc.FBBlob;
@@ -120,27 +121,26 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField 
         if (blobIdBuffer == null) return null;
 
         final long blobId = getDatatypeCoder().decodeLong(blobIdBuffer);
-        synchronized (gdsHelper.getSynchronizationObject()) {
-            try (FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED)) {
-                final int blobLength = (int) blobHandle.length();
-                final int bufferLength = gdsHelper.getBlobBufferLength();
-                final byte[] resultBuffer = new byte[blobLength];
+        try (LockCloseable ignored = gdsHelper.withLock();
+             FbBlob blobHandle = gdsHelper.openBlob(blobId, FBBlob.SEGMENTED)) {
+            final int blobLength = (int) blobHandle.length();
+            final int bufferLength = gdsHelper.getBlobBufferLength();
+            final byte[] resultBuffer = new byte[blobLength];
 
-                int offset = 0;
+            int offset = 0;
 
-                while (offset < blobLength) {
-                    final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
+            while (offset < blobLength) {
+                final byte[] segmentBuffer = blobHandle.getSegment(bufferLength);
 
-                    if (segmentBuffer.length == 0) {
-                        throw invalidGetConversion("byte[]", "unexpected EOF");
-                    }
-
-                    System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
-                    offset += segmentBuffer.length;
+                if (segmentBuffer.length == 0) {
+                    throw invalidGetConversion("byte[]", "unexpected EOF");
                 }
 
-                return resultBuffer;
+                System.arraycopy(segmentBuffer, 0, resultBuffer, offset, segmentBuffer.length);
+                offset += segmentBuffer.length;
             }
+
+            return resultBuffer;
         }
     }
 

@@ -78,12 +78,10 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     @Override
     public void commit() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                switchState(TransactionState.COMMITTING);
-                finishTransaction(op_commit);
-                switchState(TransactionState.COMMITTED);
-            }
+        try (LockCloseable ignored = withLock()) {
+            switchState(TransactionState.COMMITTING);
+            finishTransaction(op_commit);
+            switchState(TransactionState.COMMITTED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -101,12 +99,10 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     @Override
     public void rollback() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                switchState(TransactionState.ROLLING_BACK);
-                finishTransaction(op_rollback);
-                switchState(TransactionState.ROLLED_BACK);
-            }
+        try (LockCloseable ignored = withLock()) {
+            switchState(TransactionState.ROLLING_BACK);
+            finishTransaction(op_rollback);
+            switchState(TransactionState.ROLLED_BACK);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -142,30 +138,28 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
 
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                switchState(TransactionState.PREPARING);
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    if (recoveryInformation != null) {
-                        xdrOut.writeInt(op_prepare2);
-                        xdrOut.writeInt(handle);
-                        xdrOut.writeBuffer(recoveryInformation);
-                    } else {
-                        xdrOut.writeInt(op_prepare);
-                        xdrOut.writeInt(handle);
-                    }
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+        try (LockCloseable ignored = withLock()) {
+            switchState(TransactionState.PREPARING);
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                if (recoveryInformation != null) {
+                    xdrOut.writeInt(op_prepare2);
+                    xdrOut.writeInt(handle);
+                    xdrOut.writeBuffer(recoveryInformation);
+                } else {
+                    xdrOut.writeInt(op_prepare);
+                    xdrOut.writeInt(handle);
                 }
-                try {
-                    getDatabase().readResponse(null);
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
-                }
-                switchState(TransactionState.PREPARED);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
             }
+            try {
+                getDatabase().readResponse(null);
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
+            }
+            switchState(TransactionState.PREPARED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

@@ -18,12 +18,15 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 import java.sql.SQLException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The class {@code FBLocalTransaction} represent a local, not distributed, transaction. A flag is used to
@@ -38,7 +41,7 @@ public final class FBLocalTransaction {
     private Xid xid = null;
 
     FBLocalTransaction(FBManagedConnection mc) {
-        this.mc = mc;
+        this.mc = requireNonNull(mc, "mc");
     }
 
     /**
@@ -91,7 +94,7 @@ public final class FBLocalTransaction {
         // scenario when managed connection was enlisted in global transaction
         if (xid == null) return;
 
-        synchronized (mc.getSynchronizationObject()) {
+        try (LockCloseable ignored = mc.withLock()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS);
                 mc.internalCommit(xid, true);
@@ -118,7 +121,7 @@ public final class FBLocalTransaction {
         // scenario when managed connection was enlisted in global transaction
         if (xid == null) return;
 
-        synchronized (mc.getSynchronizationObject()) {
+        try (LockCloseable ignored = mc.withLock()) {
             try {
                 mc.internalEnd(xid, XAResource.TMSUCCESS); // ??? on flags
                 // --FBManagedConnection is its own XAResource

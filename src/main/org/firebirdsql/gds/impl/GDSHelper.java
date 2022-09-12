@@ -26,23 +26,22 @@ package org.firebirdsql.gds.impl;
 
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
-import org.firebirdsql.jdbc.Synchronizable;
 import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ng.IConnectionProperties.SESSION_TIME_ZONE_SERVER;
 
 /**
  * Helper class for all GDS-related operations.
  */
-public final class GDSHelper implements Synchronizable {
+public final class GDSHelper {
 
     public static final int DEFAULT_BLOB_BUFFER_SIZE = 16 * 1024;
 
     private final FbDatabase database;
-    private final Object syncObject;
     private FbTransaction transaction;
     private TimeZone sessionTimeZone;
 
@@ -50,18 +49,17 @@ public final class GDSHelper implements Synchronizable {
      * Create instance of this class.
      */
     public GDSHelper(FbDatabase database) {
-        this.database = database;
-        syncObject = database.getSynchronizationObject();
+        this.database = requireNonNull(database, "database");
     }
 
     public FbTransaction getCurrentTransaction() {
-        synchronized (database.getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return transaction;
         }
     }
 
     public void setCurrentTransaction(FbTransaction transaction) {
-        synchronized (database.getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             this.transaction = transaction;
         }
     }
@@ -99,7 +97,7 @@ public final class GDSHelper implements Synchronizable {
      * transaction, <code>false</code> otherwise.
      */
     public boolean inTransaction() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return transaction != null && transaction.getState() == TransactionState.ACTIVE;
         }
     }
@@ -303,8 +301,10 @@ public final class GDSHelper implements Synchronizable {
         return sessionTimeZone = timeZone;
     }
 
-    @Override
-    public Object getSynchronizationObject() {
-        return syncObject;
+    /**
+     * @see FbAttachment#withLock() 
+     */
+    public LockCloseable withLock() {
+        return database.withLock();
     }
 }

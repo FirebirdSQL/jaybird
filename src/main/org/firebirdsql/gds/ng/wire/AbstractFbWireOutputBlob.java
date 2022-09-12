@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 
 import java.sql.SQLException;
 
@@ -53,7 +54,7 @@ public abstract class AbstractFbWireOutputBlob extends AbstractFbWireBlob {
      *         If this is an input blob, or if this is an output blob whose blobId was already set.
      */
     protected final void setBlobId(long blobId) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (getBlobId() != FbBlob.NO_BLOB_ID) {
                 throw new FbExceptionBuilder().nonTransientException(JaybirdErrorCodes.jb_blobIdAlreadySet).toSQLException();
             }

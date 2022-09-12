@@ -683,6 +683,7 @@ there is no direct replacement, though `FBConnection.connectionProperties()` can
 there is no replacement
 ** `isExecuteProcedureStatement(String sql);
 there is no replacement
+* `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
 * `IConnectionProperties.getExtraDatabaseParameters`;
@@ -755,6 +756,10 @@ The following classes have been removed in Jaybird 5:
 These were implementation artifacts to support multiple JDBC versions.
 * `AbstractPreparedStatement`, `AbstractCallableStatement` and `AbstractResultSet`.
 These were implementation artifacts to support multiple JDBC versions.
+* `Synchronizable`, it is no longer possible to synchronize on the lock object of JDBC classes.
+Thread safety and locking is now an internal implementation detail.
++
+For maintainers of derived drivers, usage of `synchronized (getSynchronizationObject()) ++{ .. } ++` need to be replaced with `try (LockCloseable ignored = withLock()) ++{ .. }++`.
 
 The following classes are no longer accessible in Jaybird 5:
 
@@ -825,6 +830,17 @@ As a result, the following methods, constants, properties and others are no long
 
 The following breaking changes were made to the internal API, like the GDS-ng API in `org.firebirdsql.gds.ng` and sub-packages.
 These changes are primarily interesting for implementers of custom GDS-ng implementations, or people using this low-level API directly.
+
+- constructor `AbstractStatement(Object syncObject)` was replaced with a no-arg constructor.
+- `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback, Object syncObject)` was replaced with `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback)`
+- The third parameter, `Object syncObject`, of constructor `AbstractWireOperations` (and its subclasses) was removed
+- Method `getSynchronizationObject()` was removed from various interface, replace use in `synchronized` blocks with `try (LockCloseable ignored = withLock()) ++{ .. }++`
+  - `FbAttachment`
+  - `FbBlob`
+  - `AbstractFbStatement`
+  - `AbstractFbTransaction`
+  - `AbstractWireOperations`
+- Class `SyncObject` has been removed
 
 [#breaking-changes-statement-state]
 ==== Additional statement state `PREPARING`

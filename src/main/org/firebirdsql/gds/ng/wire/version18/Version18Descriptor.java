@@ -122,7 +122,7 @@ public final class Version18Descriptor extends AbstractProtocolDescriptor implem
 
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        return new V16WireOperations(connection, defaultWarningMessageCallback, syncObject);
+            WarningMessageCallback defaultWarningMessageCallback) {
+        return new V16WireOperations(connection, defaultWarningMessageCallback);
     }
 }

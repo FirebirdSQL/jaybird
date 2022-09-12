@@ -355,7 +355,7 @@ class FBUpdatableFetcherTest {
             stmt.prepare("select id, colval from scrolltest order by id");
             stmt.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             stmt.execute(RowValue.EMPTY_ROW_VALUE);
-            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(1, 0, stmt, () -> db, null);
+            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(1, 0, stmt, null);
             FBUpdatableFetcher updatableFetcher = new FBUpdatableFetcher(fetcher, listener, deletedRowMarker);
             assertBeforeFirst(updatableFetcher);
 

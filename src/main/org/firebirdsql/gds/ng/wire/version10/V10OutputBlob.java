@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,6 +23,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 
@@ -50,42 +51,40 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
 
     @Override
     public void open() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
-                checkBlobClosed();
+        try (LockCloseable ignored = withLock()) {
+            checkDatabaseAttached();
+            checkTransactionActive();
+            checkBlobClosed();
 
-                if (getBlobId() != FbBlob.NO_BLOB_ID) {
-                    throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
-                }
-
-                final FbWireDatabase database = getDatabase();
-                try {
-                    final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
-                    final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
-                    if (blobParameterBuffer == null) {
-                        xdrOut.writeInt(op_create_blob);
-                    } else {
-                        xdrOut.writeInt(op_create_blob2);
-                        xdrOut.writeTyped(blobParameterBuffer);
-                    }
-                    xdrOut.writeInt(getTransaction().getHandle());
-                    xdrOut.writeLong(FbBlob.NO_BLOB_ID);
-                    xdrOut.flush();
-                } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
-                }
-                try {
-                    final GenericResponse genericResponse = database.readGenericResponse(null);
-                    setHandle(genericResponse.getObjectHandle());
-                    setBlobId(genericResponse.getBlobId());
-                    setOpen(true);
-                } catch (IOException e) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
-                }
-                // TODO Request information on the blob?
+            if (getBlobId() != FbBlob.NO_BLOB_ID) {
+                throw new FbExceptionBuilder().nonTransientException(ISCConstants.isc_segstr_no_op).toSQLException();
             }
+
+            final FbWireDatabase database = getDatabase();
+            try {
+                final XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                final BlobParameterBuffer blobParameterBuffer = getBlobParameterBuffer();
+                if (blobParameterBuffer == null) {
+                    xdrOut.writeInt(op_create_blob);
+                } else {
+                    xdrOut.writeInt(op_create_blob2);
+                    xdrOut.writeTyped(blobParameterBuffer);
+                }
+                xdrOut.writeInt(getTransaction().getHandle());
+                xdrOut.writeLong(FbBlob.NO_BLOB_ID);
+                xdrOut.flush();
+            } catch (IOException e) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(e).toSQLException();
+            }
+            try {
+                final GenericResponse genericResponse = database.readGenericResponse(null);
+                setHandle(genericResponse.getObjectHandle());
+                setBlobId(genericResponse.getBlobId());
+                setOpen(true);
+            } catch (IOException e) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(e).toSQLException();
+            }
+            // TODO Request information on the blob?
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -102,7 +101,7 @@ public class V10OutputBlob extends AbstractFbWireOutputBlob implements FbWireBlo
             if (segment.length > getMaximumSegmentSize()) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();

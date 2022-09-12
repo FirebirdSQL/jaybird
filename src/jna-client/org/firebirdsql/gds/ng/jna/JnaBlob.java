@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,6 +26,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -102,7 +103,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             } else {
                 bpb = new byte[0];
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobClosed();
@@ -142,7 +143,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             sizeRequested = Math.min(sizeRequested, getMaximumSegmentSize());
             final ByteBuffer responseBuffer;
             final ShortByReference actualLength = new ShortByReference();
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
@@ -180,7 +181,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
             if (segment.length > getMaximumSegmentSize()) {
                 throw new FbExceptionBuilder().exception(jb_blobPutSegmentTooLong).toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkDatabaseAttached();
                 checkTransactionActive();
                 checkBlobOpen();
@@ -196,18 +197,16 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
 
     @Override
     public void seek(int offset, SeekMode seekMode) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkDatabaseAttached();
-                checkTransactionActive();
+        try (LockCloseable ignored = withLock()) {
+            checkDatabaseAttached();
+            checkTransactionActive();
 
-                // result is the current position in the blob (see .NET provider source)
-                // We ignore the result TODO check if useful; not used in wire protocol either
-                IntByReference result = new IntByReference();
-                clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
-                        result);
-                processStatusVector();
-            }
+            // result is the current position in the blob (see .NET provider source)
+            // We ignore the result TODO check if useful; not used in wire protocol either
+            IntByReference result = new IntByReference();
+            clientLibrary.isc_seek_blob(statusVector, getJnaHandle(), (short) seekMode.getSeekModeId(), offset,
+                    result);
+            processStatusVector();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -218,7 +217,7 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
     public byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException {
         try {
             final ByteBuffer responseBuffer;
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 responseBuffer = getByteBuffer(bufferLength);
                 checkDatabaseAttached();
                 clientLibrary.isc_blob_info(statusVector, getJnaHandle(),

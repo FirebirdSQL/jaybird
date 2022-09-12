@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,9 +38,8 @@ import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.op_crypt_key_c
  */
 public class V15WireOperations extends V13WireOperations {
 
-    public V15WireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        super(connection, defaultWarningMessageCallback, syncObject);
+    public V15WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
+        super(connection, defaultWarningMessageCallback);
     }
 
     @Override

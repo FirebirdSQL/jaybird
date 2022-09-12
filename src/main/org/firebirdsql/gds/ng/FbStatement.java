@@ -614,4 +614,16 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     default BatchParameterBuffer createBatchParameterBuffer() throws SQLException {
         throw new FBDriverNotCapableException("implementation does not support createBatchParameterBuffer");
     }
+
+    /**
+     * Locks the lock with {@link java.util.concurrent.locks.Lock#lock()} (or equivalent).
+     * <p>
+     * Implementations are expected to apply the same lock as {@link FbAttachment#withLock()}.
+     * </p>
+     *
+     * @return lock closeable which unlocks the lock on close
+     * @see FbAttachment#withLock() 
+     */
+    LockCloseable withLock();
+
 }
