@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.wire;
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.ng.AbstractFbBlob;
+import org.firebirdsql.gds.ng.LockCloseable;
 
 import java.sql.SQLException;
 
@@ -44,7 +45,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
 
     @Override
     public final int getHandle() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return blobHandle;
         }
     }
@@ -54,7 +55,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
      *         The Firebird blob handle identifier
      */
     protected final void setHandle(int blobHandle) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             this.blobHandle = blobHandle;
         }
     }
@@ -72,7 +73,7 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
      *         For database communication errors.
      */
     protected void releaseBlob(int releaseOperation) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             getDatabase().releaseObject(releaseOperation, getHandle());
         }
     }

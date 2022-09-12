@@ -88,9 +88,8 @@ public class V13WireOperations extends V11WireOperations {
         SUPPORTED_ENCRYPTION_PLUGINS = tempMap.isEmpty() ? emptyMap() : unmodifiableMap(tempMap);
     }
 
-    public V13WireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        super(connection, defaultWarningMessageCallback, syncObject);
+    public V13WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
+        super(connection, defaultWarningMessageCallback);
     }
 
     @Override

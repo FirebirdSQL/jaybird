@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.FbMessageMetadata;
 import org.firebirdsql.gds.ng.FbMetadataBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.dbcrypt.DbCryptCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
@@ -111,7 +112,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         if (isAttached()) {
             throw new SQLException("Already attached to a database");
         }
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 try {
                     sendAttachOrCreateToBuffer(dpb, create);
@@ -205,7 +206,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
     @Override
     protected final void internalDetach() throws SQLException {
         // TODO Move to wire operations as it is almost identical to service detach?
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
@@ -257,31 +258,29 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final void dropDatabase() throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
+            try {
                 try {
-                    try {
-                        final XdrOutputStream xdrOut = getXdrOut();
-                        xdrOut.writeInt(op_drop_database);
-                        xdrOut.writeInt(getHandle());
-                        xdrOut.flush();
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
-                                .toSQLException();
-                    }
-                    try {
-                        readResponse(null);
-                    } catch (IOException ioex) {
-                        throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
-                                .toSQLException();
-                    }
-                } finally {
-                    try {
-                        closeConnection();
-                    } catch (IOException e) {
-                        log.debug("Ignored exception on connection close in dropDatabase()", e);
-                    }
+                    final XdrOutputStream xdrOut = getXdrOut();
+                    xdrOut.writeInt(op_drop_database);
+                    xdrOut.writeInt(getHandle());
+                    xdrOut.flush();
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
+                            .toSQLException();
+                }
+                try {
+                    readResponse(null);
+                } catch (IOException ioex) {
+                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
+                            .toSQLException();
+                }
+            } finally {
+                try {
+                    closeConnection();
+                } catch (IOException e) {
+                    log.debug("Ignored exception on connection close in dropDatabase()", e);
                 }
             }
         } catch (SQLException ex) {
@@ -292,29 +291,25 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final FbWireTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_transaction);
-                    xdrOut.writeInt(getHandle());
-                    xdrOut.writeTyped(tpb);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
-                            .toSQLException();
-                }
-                try {
-                    final GenericResponse response = readGenericResponse(null);
-                    final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
-                            response.getObjectHandle(), TransactionState.ACTIVE);
-                    transactionAdded(transaction);
-                    return transaction;
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
-                            .toSQLException();
-                }
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_transaction);
+                xdrOut.writeInt(getHandle());
+                xdrOut.writeTyped(tpb);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            }
+            try {
+                final GenericResponse response = readGenericResponse(null);
+                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                        response.getObjectHandle(), TransactionState.ACTIVE);
+                transactionAdded(transaction);
+                return transaction;
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
         } catch (SQLException ex) {
             exceptionListenerDispatcher.errorOccurred(ex);
@@ -324,31 +319,27 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public final FbTransaction reconnectTransaction(long transactionId) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                try {
-                    final XdrOutputStream xdrOut = getXdrOut();
-                    xdrOut.writeInt(op_reconnect);
-                    xdrOut.writeInt(getHandle());
-                    final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
-                    xdrOut.writeBuffer(transactionIdBuffer);
-                    xdrOut.flush();
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex)
-                            .toSQLException();
-                }
+            try {
+                final XdrOutputStream xdrOut = getXdrOut();
+                xdrOut.writeInt(op_reconnect);
+                xdrOut.writeInt(getHandle());
+                final byte[] transactionIdBuffer = getTransactionIdBuffer(transactionId);
+                xdrOut.writeBuffer(transactionIdBuffer);
+                xdrOut.flush();
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_write_err).cause(ioex).toSQLException();
+            }
 
-                try {
-                    final GenericResponse response = readGenericResponse(null);
-                    final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
-                            response.getObjectHandle(), TransactionState.PREPARED);
-                    transactionAdded(transaction);
-                    return transaction;
-                } catch (IOException ioex) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex)
-                            .toSQLException();
-                }
+            try {
+                final GenericResponse response = readGenericResponse(null);
+                final FbWireTransaction transaction = protocolDescriptor.createTransaction(this,
+                        response.getObjectHandle(), TransactionState.PREPARED);
+                transactionAdded(transaction);
+                return transaction;
+            } catch (IOException ioex) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_net_read_err).cause(ioex).toSQLException();
             }
         } catch (SQLException ex) {
             exceptionListenerDispatcher.errorOccurred(ex);
@@ -419,7 +410,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
                         .forException(JaybirdErrorCodes.jb_executeImmediateRequiresNoTransactionDetached)
                         .toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 try {
                     final XdrOutputStream xdrOut = getXdrOut();
                     xdrOut.writeInt(op_exec_immediate);
@@ -453,8 +444,8 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
 
     @Override
     public void releaseObject(int operation, int objectId) throws SQLException {
-        checkAttached();
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
+            checkAttached();
             try {
                 doReleaseObjectPacket(operation, objectId);
                 getXdrOut().flush();
@@ -474,7 +465,7 @@ public class V10Database extends AbstractFbWireDatabase implements FbWireDatabas
         checkAttached();
         final int auxHandle;
         final int port;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(op_connect_request);

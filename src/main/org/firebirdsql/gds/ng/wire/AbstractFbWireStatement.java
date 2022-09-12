@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.DeferredResponse;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -36,6 +37,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -44,11 +47,15 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<>());
     private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
-    private FbWireDatabase database;
+    private final FbWireDatabase database;
 
     public AbstractFbWireStatement(FbWireDatabase database) {
-        super(database.getSynchronizationObject());
-        this.database = database;
+        this.database = requireNonNull(database, "database");
+    }
+
+    @Override
+    public final LockCloseable withLock() {
+        return database.withLock();
     }
 
     /**
@@ -148,8 +155,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             super.close();
         } finally {
             // TODO Preferably this should be done elsewhere and AbstractFbStatement.close() should be final
-            synchronized (getSynchronizationObject()) {
-                database = null;
+            try (LockCloseable ignored = withLock()) {
                 blrCache.clear();
             }
         }

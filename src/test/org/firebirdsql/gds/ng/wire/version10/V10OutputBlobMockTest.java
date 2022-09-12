@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.FbBlob;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +38,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Tests for {@link V10OutputBlob} that don't require a connection to the database.
@@ -55,7 +56,7 @@ class V10OutputBlobMockTest {
 
     @BeforeEach
     void setUp() {
-        when(db.getSynchronizationObject()).thenReturn(new Object());
+        lenient().when(db.withLock()).thenReturn(LockCloseable.NO_OP);
     }
 
     /**

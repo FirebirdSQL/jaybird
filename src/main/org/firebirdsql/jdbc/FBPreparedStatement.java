@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbBatchConfig;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -140,7 +141,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         this.standaloneStatement = standaloneStatement;
         this.generatedKeys = generatedKeys;
 
-        synchronized (c.getSynchronizationObject()) {
+        try (LockCloseable ignored = c.withLock()) {
             try {
                 // TODO See http://tracker.firebirdsql.org/browse/JDBC-352
                 notifyStatementStarted();
@@ -178,7 +179,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public ResultSet executeQuery() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
 
@@ -191,7 +192,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public int executeUpdate() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
             try {
@@ -527,7 +528,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public boolean execute() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
             
@@ -552,7 +553,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      *             if something went wrong or no result set was available.
      */
     ResultSet executeMetaDataQuery() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             notifyStatementStarted();
 
@@ -577,7 +578,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     protected boolean internalExecute(boolean sendOutParams) throws SQLException {
         checkAllParametersSet();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             flushFields();
 
             return internalExecute(fieldValues);
@@ -638,7 +639,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
         checkValidity();
         checkAllParametersSet();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             final BatchedRowValue batchedValues = new BatchedRowValue(fieldValues.deepCopy());
             for (int i = 0; i < batchedValues.getCount(); i++) {
                 FBField field = getField(i + 1);
@@ -655,7 +656,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     public void clearBatch() throws SQLException {
         checkValidity();
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             Batch batch = this.batch;
             if (batch != null) {
                 // TODO Find open streams and close them?
@@ -666,7 +667,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     protected List<Long> executeBatchInternal() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             boolean commit = false;
             try {

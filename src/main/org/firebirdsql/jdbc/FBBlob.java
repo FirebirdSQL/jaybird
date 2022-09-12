@@ -26,6 +26,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbBlob;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
 import org.firebirdsql.logging.Logger;
@@ -43,7 +44,7 @@ import java.util.HashSet;
 /**
  * Firebird implementation of {@link java.sql.Blob}.
  */
-public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable {
+public class FBBlob implements FirebirdBlob, TransactionListener {
 
     public static final boolean SEGMENTED = true;
     private static final Logger logger = LoggerFactory.getLogger(FBBlob.class);
@@ -111,17 +112,17 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
         this(c, blob_id, null);
     }
 
-    public final Object getSynchronizationObject() {
-        final GDSHelper gdsHelper = this.gdsHelper;
-        if (gdsHelper == null) {
-            return this;
+    protected final LockCloseable withLock() {
+        GDSHelper gdsHelper = this.gdsHelper;
+        if (gdsHelper != null) {
+            return gdsHelper.withLock();
         }
-        return gdsHelper.getSynchronizationObject();
+        return LockCloseable.NO_OP;
     }
 
     @Override
     public void free() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
 
@@ -170,14 +171,12 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @throws SQLException if something went wrong.
      */
     public byte[] getInfo(byte[] items, int buffer_length) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkClosed();
             blobListener.executionStarted(this);
-            try {
-                // TODO Does it make sense to close blob here?
-                try (FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED)) {
-                    return blob.getBlobInfo(items, buffer_length);
-                }
+            // TODO Does it make sense to close blob here?
+            try (FbBlob blob = gdsHelper.openBlob(blob_id, SEGMENTED)) {
+                return blob.getBlobInfo(items, buffer_length);
             } finally {
                 blobListener.executionCompleted(this);
             }
@@ -224,7 +223,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
 
     @Override
     public FirebirdBlob detach() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkClosed();
             return new FBBlob(gdsHelper, blob_id, blobListener);
         }
@@ -240,7 +239,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
                     "due to isc_seek_blob limitations.",
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             blobListener.executionStarted(this);
             try {
                 FirebirdBlob.BlobInputStream in = (FirebirdBlob.BlobInputStream) getBinaryStream();
@@ -264,7 +263,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
 
     @Override
     public InputStream getBinaryStream() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkClosed();
             FBBlobInputStream blobstream = new FBBlobInputStream(this);
             inputStreams.add(blobstream);
@@ -294,19 +293,18 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
 
     @Override
     public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try (OutputStream out = setBinaryStream(pos)) {
-                out.write(bytes, offset, len);
-                return len;
-            } catch (IOException e) {
-                throw new SQLException("IOException writing bytes to blob", e);
-            }
+        try (LockCloseable ignored = withLock();
+             OutputStream out = setBinaryStream(pos)) {
+            out.write(bytes, offset, len);
+            return len;
+        } catch (IOException e) {
+            throw new SQLException("IOException writing bytes to blob", e);
         }
     }
 
     @Override
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkClosed();
             blobListener.executionStarted(this);
 
@@ -339,7 +337,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @throws SQLException if a database access error occurs
      */
     public long getBlobId() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (isNew)
                 throw new FBSQLException("No Blob ID is available in new Blob object.");
 
@@ -348,7 +346,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
     }
 
     void setBlobId(long blob_id) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             this.blob_id = blob_id;
             if (isNew && gdsHelper != null) {
                 FbTransaction currentTransaction = gdsHelper.getCurrentTransaction();
@@ -361,12 +359,11 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
     }
 
     public void copyBytes(byte[] bytes, int pos, int len) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try (OutputStream out = setBinaryStream(1)) {
-                out.write(bytes, pos, len);
-            } catch (IOException ex) {
-                throw new FBSQLException(ex);
-            }
+        try (LockCloseable ignored = withLock();
+             OutputStream out = setBinaryStream(1)) {
+            out.write(bytes, pos, len);
+        } catch (IOException ex) {
+            throw new FBSQLException(ex);
         }
     }
 
@@ -394,7 +391,7 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @return <code>true</code> when this is an uninitialized output blob, <code>false</code> otherwise.
      */
     boolean isNew() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return isNew;
         }
     }
@@ -415,22 +412,21 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream, long length) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (length == -1L) {
-                copyStream(inputStream);
-                return;
+        if (length == -1L) {
+            copyStream(inputStream);
+            return;
+        }
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1)) {
+            final byte[] buffer = new byte[(int) Math.min(bufferLength, length)];
+            int chunk;
+            while (length > 0
+                    && (chunk = inputStream.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
+                os.write(buffer, 0, chunk);
+                length -= chunk;
             }
-            try (OutputStream os = setBinaryStream(1)) {
-                final byte[] buffer = new byte[(int) Math.min(bufferLength, length)];
-                int chunk;
-                while (length > 0
-                        && (chunk = inputStream.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
-                    os.write(buffer, 0, chunk);
-                    length -= chunk;
-                }
-            } catch (IOException ioe) {
-                throw new SQLException(ioe);
-            }
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
     }
 
@@ -443,16 +439,15 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @throws SQLException if a database access error occurs
      */
     public void copyStream(InputStream inputStream) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try (OutputStream os = setBinaryStream(1)) {
-                final byte[] buffer = new byte[bufferLength];
-                int chunk;
-                while ((chunk = inputStream.read(buffer)) != -1) {
-                    os.write(buffer, 0, chunk);
-                }
-            } catch (IOException ioe) {
-                throw new SQLException(ioe);
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1)) {
+            final byte[] buffer = new byte[bufferLength];
+            int chunk;
+            while ((chunk = inputStream.read(buffer)) != -1) {
+                os.write(buffer, 0, chunk);
             }
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
     }
 
@@ -467,28 +462,27 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @param encoding The encoding used in the character stream
      */
     public void copyCharacterStream(Reader reader, long length, Encoding encoding) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            if (length == -1L) {
-                copyCharacterStream(reader, encoding);
-                return;
-            }
-            try (OutputStream os = setBinaryStream(1);
-                 Writer osw = encoding.createWriter(os)) {
+        if (length == -1L) {
+            copyCharacterStream(reader, encoding);
+            return;
+        }
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1);
+             Writer osw = encoding.createWriter(os)) {
 
-                final char[] buffer = new char[(int) Math.min(bufferLength, length)];
-                int chunk;
-                while (length > 0 && (chunk = reader.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
-                    osw.write(buffer, 0, chunk);
-                    length -= chunk;
-                }
-            } catch (UnsupportedEncodingException ex) {
-                throw new SQLException("Cannot set character stream because " +
-                        "the encoding '" + encoding + "' is unsupported in the JVM. " +
-                        "Please report this to the driver developers."
-                );
-            } catch (IOException ioe) {
-                throw new SQLException(ioe);
+            final char[] buffer = new char[(int) Math.min(bufferLength, length)];
+            int chunk;
+            while (length > 0 && (chunk = reader.read(buffer, 0, (int) Math.min(buffer.length, length))) != -1) {
+                osw.write(buffer, 0, chunk);
+                length -= chunk;
             }
+        } catch (UnsupportedEncodingException ex) {
+            throw new SQLException("Cannot set character stream because " +
+                    "the encoding '" + encoding + "' is unsupported in the JVM. " +
+                    "Please report this to the driver developers."
+            );
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
     }
 
@@ -501,22 +495,21 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
      * @param encoding The encoding used in the character stream
      */
     public void copyCharacterStream(Reader reader, Encoding encoding) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try (OutputStream os = setBinaryStream(1);
-                 Writer osw = encoding.createWriter(os)) {
-                final char[] buffer = new char[bufferLength];
-                int chunk;
-                while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {
-                    osw.write(buffer, 0, chunk);
-                }
-            } catch (UnsupportedEncodingException ex) {
-                throw new SQLException("Cannot set character stream because " +
-                        "the encoding '" + encoding + "' is unsupported in the JVM. " +
-                        "Please report this to the driver developers."
-                );
-            } catch (IOException ioe) {
-                throw new SQLException(ioe);
+        try (LockCloseable ignored = withLock();
+             OutputStream os = setBinaryStream(1);
+             Writer osw = encoding.createWriter(os)) {
+            final char[] buffer = new char[bufferLength];
+            int chunk;
+            while ((chunk = reader.read(buffer, 0, buffer.length)) != -1) {
+                osw.write(buffer, 0, chunk);
             }
+        } catch (UnsupportedEncodingException ex) {
+            throw new SQLException("Cannot set character stream because " +
+                    "the encoding '" + encoding + "' is unsupported in the JVM. " +
+                    "Please report this to the driver developers."
+            );
+        } catch (IOException ioe) {
+            throw new SQLException(ioe);
         }
     }
 
@@ -526,12 +519,10 @@ public class FBBlob implements FirebirdBlob, TransactionListener, Synchronizable
         switch (newState) {
         case COMMITTED:
         case ROLLED_BACK:
-            synchronized (getSynchronizationObject()) {
-                try {
-                    free();
-                } catch (SQLException e) {
-                    logger.error("Error calling free on blob during transaction end", e);
-                }
+            try (LockCloseable ignored = withLock()) {
+                free();
+            } catch (SQLException e) {
+                logger.error("Error calling free on blob during transaction end", e);
             }
             break;
         default:

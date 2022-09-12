@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementType;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
 import org.firebirdsql.jaybird.xca.FBManagedConnection;
@@ -27,24 +28,24 @@ import org.firebirdsql.util.SQLExceptionChainBuilder;
 import java.sql.SQLException;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jaybird.fb.constants.TpbItems.isc_tpb_autocommit;
 
 /**
  * Transaction coordinator for the {@link org.firebirdsql.jdbc.FBConnection} class.
  */
 public final class InternalTransactionCoordinator implements FBObjectListener.StatementListener,
-        FBObjectListener.BlobListener, Synchronizable {
+        FBObjectListener.BlobListener {
 
     private final FBConnection connection;
     private AbstractTransactionCoordinator coordinator;
 
     InternalTransactionCoordinator(FBConnection connection) {
-        this.connection = connection;
+        this.connection = requireNonNull(connection, "connection");
     }
 
-    @Override
-    public final Object getSynchronizationObject() {
-        return connection.getSynchronizationObject();
+    private LockCloseable withLock() {
+        return connection.withLock();
     }
 
     /**
@@ -100,20 +101,20 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     public boolean getAutoCommit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return coordinator != null && coordinator.isAutoCommit();
         }
     }
 
     @Override
     public void executionStarted(FBStatement stmt) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.executionStarted(stmt);
         }
     }
 
     @Override
-    public final FBConnection getConnection() throws SQLException {
+    public FBConnection getConnection() throws SQLException {
         return connection;
     }
 
@@ -129,39 +130,39 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
 
     @Override
     public void statementCompleted(FBStatement stmt, boolean success) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.statementCompleted(stmt, success);
         }
     }
 
     @Override
     public void executionCompleted(FirebirdBlob blob) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.executionCompleted(blob);
         }
     }
 
     @Override
     public void executionStarted(FirebirdBlob blob) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.executionStarted(blob);
         }
     }
 
     public void ensureTransaction() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.ensureTransaction();
         }
     }
 
     public void commit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.commit();
         }
     }
 
     public void rollback() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             coordinator.rollback();
         }
     }
@@ -171,7 +172,7 @@ public final class InternalTransactionCoordinator implements FBObjectListener.St
     }
 
     private void setCoordinator(AbstractTransactionCoordinator coordinator) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (this.coordinator != null) {
                 SQLExceptionChainBuilder<SQLException> chain = new SQLExceptionChainBuilder<>();
                 try {

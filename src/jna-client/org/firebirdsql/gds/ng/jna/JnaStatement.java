@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
@@ -58,15 +59,19 @@ public class JnaStatement extends AbstractFbStatement {
     private XSQLDA outXSqlDa;
 
     public JnaStatement(JnaDatabase database) {
-        super(database.getSynchronizationObject());
-        this.database = database;
+        this.database = requireNonNull(database, "database");
         clientLibrary = database.getClientLibrary();
+    }
+
+    @Override
+    public final LockCloseable withLock() {
+        return database.withLock();
     }
 
     @Override
     protected void setParameterDescriptor(RowDescriptor parameterDescriptor) {
         final XSQLDA xsqlda = allocateXSqlDa(parameterDescriptor);
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             inXSqlDa = xsqlda;
             super.setParameterDescriptor(parameterDescriptor);
         }
@@ -75,7 +80,7 @@ public class JnaStatement extends AbstractFbStatement {
     @Override
     protected void setRowDescriptor(RowDescriptor fieldDescriptor) {
         final XSQLDA xsqlda = allocateXSqlDa(fieldDescriptor);
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             outXSqlDa = xsqlda;
             super.setRowDescriptor(fieldDescriptor);
         }
@@ -83,7 +88,7 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     protected void free(int option) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             clientLibrary.isc_dsql_free_statement(statusVector, handle, (short) option);
             processStatusVector();
             // Reset statement information
@@ -121,7 +126,7 @@ public class JnaStatement extends AbstractFbStatement {
                         .messageParameter(statementArray.length)
                         .toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkTransactionActive(getTransaction());
                 final StatementState initialState = getState();
                 if (!isPrepareAllowed(initialState)) {
@@ -174,51 +179,49 @@ public class JnaStatement extends AbstractFbStatement {
     @Override
     public void execute(RowValue parameters) throws SQLException {
         final StatementState initialState = getState();
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                checkTransactionActive(getTransaction());
-                validateParameters(parameters);
-                reset(false);
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            checkTransactionActive(getTransaction());
+            validateParameters(parameters);
+            reset(false);
 
-                switchState(StatementState.EXECUTING);
-                updateStatementTimeout();
+            switchState(StatementState.EXECUTING);
+            updateStatementTimeout();
 
-                setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
-                final StatementType statementType = getType();
-                final boolean hasSingletonResult = hasSingletonResult();
+            setXSqlDaData(inXSqlDa, getParameterDescriptor(), parameters);
+            final StatementType statementType = getType();
+            final boolean hasSingletonResult = hasSingletonResult();
 
-                try (OperationCloseHandle operationCloseHandle = signalExecute()) {
-                    if (operationCloseHandle.isCancelled()) {
-                        // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
-                    }
-                    if (hasSingletonResult) {
-                        clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
-                                inXSqlDa.version, inXSqlDa, outXSqlDa);
-                    } else {
-                        clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
-                                inXSqlDa.version, inXSqlDa);
-                    }
-
-                    if (hasSingletonResult) {
-                        /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
-                         * have a result set that will be fetched, instead we have a singleton result if we have fields
-                         */
-                        statementListenerDispatcher.statementExecuted(this, false, true);
-                        processStatusVector();
-                        queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
-                        setAfterLast();
-                    } else {
-                        // A normal execute is never a singleton result (even if it only produces a single result)
-                        statementListenerDispatcher.statementExecuted(this, hasFields(), false);
-                        processStatusVector();
-                    }
+            try (OperationCloseHandle operationCloseHandle = signalExecute()) {
+                if (operationCloseHandle.isCancelled()) {
+                    // operation was synchronously cancelled from an OperationAware implementation
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
+                }
+                if (hasSingletonResult) {
+                    clientLibrary.isc_dsql_execute2(statusVector, getTransaction().getJnaHandle(), handle,
+                            inXSqlDa.version, inXSqlDa, outXSqlDa);
+                } else {
+                    clientLibrary.isc_dsql_execute(statusVector, getTransaction().getJnaHandle(), handle,
+                            inXSqlDa.version, inXSqlDa);
                 }
 
-                if (getState() != StatementState.ERROR) {
-                    switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
+                if (hasSingletonResult) {
+                    /* A type with a singleton result (ie an execute procedure with return fields), doesn't actually
+                     * have a result set that will be fetched, instead we have a singleton result if we have fields
+                     */
+                    statementListenerDispatcher.statementExecuted(this, false, true);
+                    processStatusVector();
+                    queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
+                    setAfterLast();
+                } else {
+                    // A normal execute is never a singleton result (even if it only produces a single result)
+                    statementListenerDispatcher.statementExecuted(this, hasFields(), false);
+                    processStatusVector();
                 }
+            }
+
+            if (getState() != StatementState.ERROR) {
+                switchState(statementType.isTypeWithCursor() ? StatementState.CURSOR_OPEN : StatementState.PREPARED);
             }
         } catch (SQLException e) {
             if (getState() != StatementState.ERROR) {
@@ -367,34 +370,32 @@ public class JnaStatement extends AbstractFbStatement {
      */
     @Override
     public void fetchRows(int fetchSize) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                if (!getState().isCursorOpen()) {
-                    throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            if (!getState().isCursorOpen()) {
+                throw new FbExceptionBuilder().exception(ISCConstants.isc_cursor_not_open).toSQLException();
+            }
+            if (isAfterLast()) return;
+
+            try (OperationCloseHandle operationCloseHandle = signalFetch()) {
+                if (operationCloseHandle.isCancelled()) {
+                    // operation was synchronously cancelled from an OperationAware implementation
+                    throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
                 }
-                if (isAfterLast()) return;
+                final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
+                        outXSqlDa);
+                processStatusVector();
 
-                try (OperationCloseHandle operationCloseHandle = signalFetch()) {
-                    if (operationCloseHandle.isCancelled()) {
-                        // operation was synchronously cancelled from an OperationAware implementation
-                        throw FbExceptionBuilder.forException(ISCConstants.isc_cancelled).toSQLException();
-                    }
-                    final ISC_STATUS fetchStatus = clientLibrary.isc_dsql_fetch(statusVector, handle, outXSqlDa.version,
-                            outXSqlDa);
-                    processStatusVector();
-
-                    int fetchStatusInt = fetchStatus.intValue();
-                    if (fetchStatusInt == ISCConstants.FETCH_OK) {
-                        queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
-                    } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
-                        setAfterLast();
-                        // Note: we are not explicitly 'closing' the cursor here
-                    } else {
-                        final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
-                        log.error(message);
-                        throw new SQLException(message);
-                    }
+                int fetchStatusInt = fetchStatus.intValue();
+                if (fetchStatusInt == ISCConstants.FETCH_OK) {
+                    queueRowData(toRowValue(getRowDescriptor(), outXSqlDa));
+                } else if (fetchStatusInt == ISCConstants.FETCH_NO_MORE_ROWS) {
+                    setAfterLast();
+                    // Note: we are not explicitly 'closing' the cursor here
+                } else {
+                    final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
+                    log.error(message);
+                    throw new SQLException(message);
                 }
             }
         } catch (SQLException e) {
@@ -408,7 +409,7 @@ public class JnaStatement extends AbstractFbStatement {
         try {
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(bufferLength);
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkStatementValid();
                 clientLibrary.isc_dsql_sql_info(statusVector, handle,
                         (short) requestItems.length, requestItems,
@@ -439,17 +440,15 @@ public class JnaStatement extends AbstractFbStatement {
 
     @Override
     public void setCursorName(String cursorName) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                checkStatementValid();
-                final JnaDatabase db = getDatabase();
-                clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
-                        // Null termination is needed due to a quirk of the protocol
-                        db.getEncoding().encodeToCharset(cursorName + '\0'),
-                        // Cursor type
-                        (short) 0);
-                processStatusVector();
-            }
+        try (LockCloseable ignored = withLock()) {
+            checkStatementValid();
+            final JnaDatabase db = getDatabase();
+            clientLibrary.isc_dsql_set_cursor_name(statusVector, handle,
+                    // Null termination is needed due to a quirk of the protocol
+                    db.getEncoding().encodeToCharset(cursorName + '\0'),
+                    // Cursor type
+                    (short) 0);
+            processStatusVector();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

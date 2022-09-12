@@ -24,6 +24,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
 import org.firebirdsql.gds.ng.wire.*;
 import org.firebirdsql.logging.Logger;
@@ -41,6 +42,7 @@ import java.sql.SQLNonTransientException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger;
 import static org.firebirdsql.gds.impl.wire.WireProtocolConstants.*;
 
@@ -84,8 +86,15 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     private SocketChannel socketChannel;
 
     public V10AsynchronousChannel(FbWireDatabase database) {
-        this.database = database;
+        this.database = requireNonNull(database, "database");
         database.addDatabaseListener(new ChannelDatabaseListener());
+    }
+
+    /**
+     * @see org.firebirdsql.gds.ng.FbAttachment#withLock()
+     */
+    protected final LockCloseable withLock() {
+        return database.withLock();
     }
 
     @Override
@@ -204,7 +213,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
-        synchronized (database.getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 if (log.isDebugEnabled()) {
                     log.debug("Queue event: " + wireEventHandle);
@@ -235,7 +244,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         final WireEventHandle wireEventHandle = (WireEventHandle) eventHandle;
         removeChannelListener(wireEventHandle);
 
-        synchronized (database.getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
                 dbXdrOut.writeInt(op_cancel_events);

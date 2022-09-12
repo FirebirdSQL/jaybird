@@ -89,13 +89,6 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
     boolean isAttached();
 
     /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be <code>null</code>.
-     */
-    Object getSynchronizationObject();
-
-    /**
      * @return The {@link IEncodingFactory} for this connection
      */
     IEncodingFactory getEncodingFactory();
@@ -135,5 +128,23 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
      *         If this attachment doesn't support network timeout
      */
     int getNetworkTimeout() throws SQLException;
+
+    /**
+     * Locks the lock with {@link java.util.concurrent.locks.Lock#lock()} (or equivalent).
+     * <p>
+     * The returned {@code LockClosable} can be used to unlock, preferably for use in a try-with-resources.
+     * </p>
+     *
+     * @return lock closeable which unlocks the lock on close
+     */
+    LockCloseable withLock();
+
+    /**
+     * Queries if the lock is held by the current thread.
+     *
+     * @return {@code true} if current thread holds this lock and {@code false} otherwise
+     * @see java.util.concurrent.locks.ReentrantLock#isHeldByCurrentThread()
+     */
+    boolean isLockedByCurrentThread();
 
 }

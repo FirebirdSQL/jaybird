@@ -58,7 +58,7 @@ import static java.util.Collections.unmodifiableSet;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBManagedConnection implements ExceptionListener, Synchronizable {
+public class FBManagedConnection implements ExceptionListener {
 
     public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set ";
     public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
@@ -83,7 +83,6 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
     private GDSHelper gdsHelper;
     private final FbDatabase database;
-    private final Object syncObject;
     private XAResource xaResource;
     private final FBConnectionRequestInfo cri;
     private FBTpbMapper transactionMapping;
@@ -126,7 +125,6 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         database.addDatabaseListener(new MCDatabaseListener());
         database.addExceptionListener(this);
         database.attach();
-        syncObject = database.getSynchronizationObject();
 
         gdsHelper = new GDSHelper(database);
     }
@@ -256,7 +254,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      */
     // TODO Consider removing (though might be used to implement XADataSource/ConnectionPoolDataSource without proxies)
     public void cleanup() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             disassociateConnections();
 
             getGDSHelper().setCurrentTransaction(null);
@@ -424,7 +422,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      */
     public XAResource getXAResource() {
         log.debug("XAResource requested from FBManagedConnection");
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             if (xaResource == null) {
                 xaResource = new FbMcXaResource();
             }
@@ -836,9 +834,18 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
         }
     }
 
-    @Override
-    public final Object getSynchronizationObject() {
-        return syncObject;
+    /**
+     * @see FbAttachment#withLock()
+     */
+    public final LockCloseable withLock() {
+        return database.withLock();
+    }
+
+    /**
+     * @see FbAttachment#isLockedByCurrentThread()
+     */
+    public final boolean isLockedByCurrentThread() {
+        return database.isLockedByCurrentThread();
     }
 
     private static final class DataProvider implements StatementListener {
@@ -1045,19 +1052,19 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
     }
 
     public TransactionParameterBuffer getTransactionParameters() {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             return tpb.getTransactionParameterBuffer();
         }
     }
 
     public void setTransactionParameters(TransactionParameterBuffer transactionParameters) {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             tpb.setTransactionParameterBuffer(transactionParameters);
         }
     }
 
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             final FBTpbMapper mapping = transactionMapping;
             if (mapping == null) {
                 return mcf.getTransactionParameters(isolation);
@@ -1068,7 +1075,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
 
     public void setTransactionParameters(int isolation, TransactionParameterBuffer transactionParams)
             throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             FBTpbMapper mapping = transactionMapping;
             if (mapping == null) {
                 mapping = transactionMapping = mcf.getTransactionMappingCopy();
@@ -1142,7 +1149,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      * @see #setTransactionIsolation(int)
      */
     public int getTransactionIsolation() throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             return transactionIsolation;
         }
     }
@@ -1160,7 +1167,7 @@ public class FBManagedConnection implements ExceptionListener, Synchronizable {
      * @see #getTransactionIsolation()
      */
     public void setTransactionIsolation(int isolation) throws SQLException {
-        synchronized (syncObject) {
+        try (LockCloseable ignored = withLock()) {
             transactionIsolation = isolation;
             final FBTpbMapper mapping = transactionMapping;
             tpb = mapping == null

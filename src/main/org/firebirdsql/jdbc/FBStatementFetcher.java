@@ -22,6 +22,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
 
@@ -46,7 +47,6 @@ class FBStatementFetcher implements FBFetcher {
     protected final int maxRows;
     protected int fetchSize;
 
-    protected final Synchronizable syncProvider;
     protected final FbStatement stmt;
 
     private List<RowValue> rows = new ArrayList<>();
@@ -63,12 +63,11 @@ class FBStatementFetcher implements FBFetcher {
     private boolean isLast;
     private boolean isAfterLast;
 
-    FBStatementFetcher(GDSHelper gdsHelper, Synchronizable syncProvider, FbStatement stmth,
-            FBObjectListener.FetcherListener fetcherListener, int maxRows, int fetchSize) throws SQLException {
+    FBStatementFetcher(GDSHelper gdsHelper, FbStatement stmth, FBObjectListener.FetcherListener fetcherListener,
+            int maxRows, int fetchSize) throws SQLException {
         this.gdsHelper = gdsHelper;
         this.stmt = stmth;
         stmt.addStatementListener(rowListener);
-        this.syncProvider = syncProvider;
         this.fetcherListener = fetcherListener;
         this.maxRows = maxRows;
         this.fetchSize = fetchSize;
@@ -168,7 +167,7 @@ class FBStatementFetcher implements FBFetcher {
     }
 
     public void fetch() throws SQLException {
-        synchronized (syncProvider.getSynchronizationObject()) {
+        try (LockCloseable ignored = stmt.withLock()) {
             checkClosed();
             int maxRows = 0;
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -29,6 +29,7 @@ import org.firebirdsql.util.InternalApi;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_dbCryptCallbackInitError;
 
@@ -44,6 +45,9 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
 
     private static final DbCryptCallbackSpi DEFAULT_DB_CRYPT_CALLBACK_SPI = new StaticValueDbCryptCallbackSpi();
 
+    private final ReentrantLock lock = new ReentrantLock();
+    // cache method reference instead of creating a new one for each withLock() operation
+    private final LockCloseable lockCloseable = lock::unlock;
     protected final T attachProperties;
     private final EncodingDefinition encodingDefinition;
     private final IEncodingFactory encodingFactory;
@@ -71,6 +75,21 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
         // Overwrite with normalized values and specify missing values, eg if only charSet was specified, encoding will be set
         this.attachProperties.setEncoding(encodingDefinition.getFirebirdEncodingName());
         this.attachProperties.setCharSet(encodingDefinition.getJavaEncodingName());
+    }
+
+    /**
+     * @see FbAttachment#withLock()
+     */
+    protected final LockCloseable withLock() {
+        lock.lock();
+        return lockCloseable;
+    }
+
+    /**
+     * @see FbAttachment#isLockedByCurrentThread()
+     */
+    protected final boolean isLockedByCurrentThread() {
+        return lock.isHeldByCurrentThread();
     }
 
     /**

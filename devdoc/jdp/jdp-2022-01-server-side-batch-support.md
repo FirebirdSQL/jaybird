@@ -1,4 +1,4 @@
-# jdp-2021-04: Server-side Batch support
+# jdp-2022-01: Server-side Batch support
 
 ## Status
 

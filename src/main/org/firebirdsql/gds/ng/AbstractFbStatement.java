@@ -57,7 +57,6 @@ public abstract class AbstractFbStatement implements FbStatement {
     private static final int IN_CURSOR = 0;
     private static final int AFTER_LAST = 1;
 
-    private final Object syncObject;
     private final WarningMessageCallback warningCallback = new WarningMessageCallback() {
         @Override
         public void processWarning(SQLWarning warning) {
@@ -87,7 +86,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             switch (newState) {
             case COMMITTED:
             case ROLLED_BACK:
-                synchronized (getSynchronizationObject()) {
+                try (LockCloseable ignored = withLock()) {
                     try {
                         if (RESET_TO_PREPARED.contains(getState())) {
                             // Cursor has been closed due to commit, rollback, etc., back to prepared state
@@ -112,8 +111,7 @@ public abstract class AbstractFbStatement implements FbStatement {
         }
     };
 
-    protected AbstractFbStatement(Object syncObject) {
-        this.syncObject = syncObject;
+    protected AbstractFbStatement() {
         exceptionListenerDispatcher.addListener(new StatementCancelledListener());
         statementListenerDispatcher.addListener(new SelfListener());
     }
@@ -140,33 +138,22 @@ public abstract class AbstractFbStatement implements FbStatement {
         return fetched;
     }
 
-    /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be <code>null</code>.
-     */
-    protected final Object getSynchronizationObject() {
-        return syncObject;
-    }
-
     @Override
     public void close() throws SQLException {
         if (getState() == StatementState.CLOSED) return;
-        try {
-            synchronized (getSynchronizationObject()) {
-                // TODO do additional checks (see also old implementation and .NET)
-                try {
-                    final StatementState currentState = getState();
-                    forceState(StatementState.CLOSING);
-                    if (currentState != StatementState.NEW) {
-                        free(ISCConstants.DSQL_drop);
-                    }
-                } finally {
-                    forceState(StatementState.CLOSED);
-                    setType(StatementType.NONE);
-                    statementListenerDispatcher.shutdown();
-                    setTransaction(null);
+        try (LockCloseable ignored = withLock()) {
+            // TODO do additional checks (see also old implementation and .NET)
+            try {
+                final StatementState currentState = getState();
+                forceState(StatementState.CLOSING);
+                if (currentState != StatementState.NEW) {
+                    free(ISCConstants.DSQL_drop);
                 }
+            } finally {
+                forceState(StatementState.CLOSED);
+                setType(StatementType.NONE);
+                statementListenerDispatcher.shutdown();
+                setTransaction(null);
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -183,20 +170,18 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final void closeCursor(boolean transactionEnd) throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                if (!getState().isCursorOpen()) return;
-                try {
-                    if (!transactionEnd && getType().isTypeWithCursor()) {
-                        free(ISCConstants.DSQL_close);
-                    }
-                    // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
-                    switchState(StatementState.PREPARED);
-                } catch (SQLException e) {
-                    // TODO Close in case of exception?
-                    switchState(StatementState.ERROR);
-                    throw e;
+        try (LockCloseable ignored = withLock()) {
+            if (!getState().isCursorOpen()) return;
+            try {
+                if (!transactionEnd && getType().isTypeWithCursor()) {
+                    free(ISCConstants.DSQL_close);
                 }
+                // TODO Any statement types that cannot be prepared and would need to go to ALLOCATED?
+                switchState(StatementState.PREPARED);
+            } catch (SQLException e) {
+                // TODO Close in case of exception?
+                switchState(StatementState.ERROR);
+                throw e;
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -217,16 +202,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     @Override
     public void unprepare() throws SQLException {
         if (getDatabase().getServerVersion().isEqualOrAbove(2, 5)) {
-            try {
-                synchronized (getSynchronizationObject()) {
-                    StatementState currentState = getState();
-                    // Cannot unprepare if NEW, and unpreparing if ALLOCATED makes no sense
-                    if (!(currentState == StatementState.NEW || currentState == StatementState.ALLOCATED)) {
-                        // TODO This throws an exception if a transition to ALLOCATED is not allowed, consider if this
-                        //  is desired, or if checking validity of transition and only logging a warning is better
-                        switchState(StatementState.ALLOCATED);
-                        free(ISCConstants.DSQL_unprepare);
-                    }
+            try (LockCloseable ignored = withLock()) {
+                StatementState currentState = getState();
+                // Cannot unprepare if NEW, and unpreparing if ALLOCATED makes no sense
+                if (!(currentState == StatementState.NEW || currentState == StatementState.ALLOCATED)) {
+                    // TODO This throws an exception if a transition to ALLOCATED is not allowed, consider if this
+                    //  is desired, or if checking validity of transition and only logging a warning is better
+                    switchState(StatementState.ALLOCATED);
+                    free(ISCConstants.DSQL_unprepare);
                 }
             } catch (SQLException e) {
                 exceptionListenerDispatcher.errorOccurred(e);
@@ -251,7 +234,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *         When the state is changed to an illegal next state
      */
     protected final void switchState(final StatementState newState) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
             if (currentState.isValidTransition(newState)) {
@@ -274,7 +257,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      * @see #switchState(StatementState)
      */
     protected void forceState(final StatementState newState) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
             if (log.isDebugEnabled() && !currentState.isValidTransition(newState)) {
@@ -367,14 +350,14 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Resets the statement for next execution. Implementation in derived class must synchronize on
-     * {@link #getSynchronizationObject()} and call {@code super.reset(resetAll)}
+     * Resets the statement for next execution. Implementation in derived class must lock on
+     * {@link #withLock()} and call {@code super.reset(resetAll)}
      *
      * @param resetAll
      *         Also reset field and parameter info
      */
     protected void reset(boolean resetAll) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             StatementType statementType = getType();
             // Don't notify for non result-set types, but ensure the cursor position value is before-first
             setBeforeFirst(statementType.isTypeWithCursor() || statementType.isTypeWithSingletonResult());
@@ -560,7 +543,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public final String getExplainedExecutionPlan() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkExplainedExecutionPlanSupport();
             final ExecutionPlanProcessor processor = createExecutionPlanProcessor();
             return getSqlInfo(processor.getDescribeExplainedPlanInfoItems(), getDefaultSqlInfoSize(), processor);
@@ -742,7 +725,7 @@ public abstract class AbstractFbStatement implements FbStatement {
             if (newTransaction == null || isValidTransactionClass(newTransaction.getClass())) {
                 // TODO Is there a statement or transaction state where we should not be switching transactions?
                 // Probably an error to switch when newTransaction is not null and current state is ERROR, CURSOR_OPEN, EXECUTING, CLOSING or CLOSED
-                synchronized (getSynchronizationObject()) {
+                try (LockCloseable ignored = withLock()) {
                     if (newTransaction == transaction) return;
                     if (transaction != null) {
                         transaction.removeTransactionListener(getTransactionListener());
@@ -770,7 +753,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                         .nonTransientException(JaybirdErrorCodes.jb_invalidTimeout)
                         .toSQLException();
             }
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 checkStatementValid(StatementState.NEW);
                 this.timeout = statementTimeout;
             }
@@ -782,9 +765,12 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     @Override
     public long getTimeout() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkStatementValid(StatementState.NEW);
             return timeout;
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 

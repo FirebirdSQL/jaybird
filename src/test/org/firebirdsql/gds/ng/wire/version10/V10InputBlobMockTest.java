@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng.wire.version10;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.FbWireTransaction;
@@ -37,6 +38,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 /**
@@ -55,7 +57,7 @@ class V10InputBlobMockTest {
 
     @BeforeEach
     void setUp() {
-        when(db.getSynchronizationObject()).thenReturn(new Object());
+        lenient().when(db.withLock()).thenReturn(LockCloseable.NO_OP);
     }
 
     /**

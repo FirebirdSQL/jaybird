@@ -36,9 +36,8 @@ import java.util.List;
  */
 public class V16WireOperations extends V15WireOperations {
 
-    public V16WireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
-        super(connection, defaultWarningMessageCallback, syncObject);
+    public V16WireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback) {
+        super(connection, defaultWarningMessageCallback);
     }
 
     protected BatchCompletionResponse readBatchCompletionResponse(XdrInputStream xdrIn) throws SQLException, IOException {

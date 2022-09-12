@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -97,7 +97,7 @@ public class EmptyProtocolDescriptor extends AbstractProtocolDescriptor {
 
     @Override
     public FbWireOperations createWireOperations(WireConnection<?, ?> connection,
-            WarningMessageCallback defaultWarningMessageCallback, Object syncObject) {
+            WarningMessageCallback defaultWarningMessageCallback) {
         return null;
     }
 

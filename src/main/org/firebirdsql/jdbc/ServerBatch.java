@@ -48,8 +48,8 @@ import static java.util.Collections.emptyList;
 /**
  * Batch implementation using server-side batch updates.
  * <p>
- * This implementation itself is not thread-safe, and expects the caller to synchronize appropriately on the lock
- * object associated with the executing statement ({@link Synchronizable#getSynchronizationObject()})
+ * This implementation itself is not thread-safe, and expects the caller to lock appropriately using
+ * {@link FbStatement#withLock()} of the executing statement.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>

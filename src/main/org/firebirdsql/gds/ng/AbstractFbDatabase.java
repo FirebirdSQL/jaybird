@@ -169,28 +169,26 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      */
     @Override
     public final void close() throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkConnected();
-            synchronized (getSynchronizationObject()) {
-                if (getActiveTransactionCount() > 0) {
-                    // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)
-                    // transactions
-                    // In the case of wire protocol we could ignore this and simply close, but that would be
-                    // inconsistent with fbclient
-                    throw new FbExceptionBuilder()
-                            .exception(ISCConstants.isc_open_trans)
-                            .messageParameter(getActiveTransactionCount())
-                            .toSQLException();
-                }
+            if (getActiveTransactionCount() > 0) {
+                // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)
+                // transactions
+                // In the case of wire protocol we could ignore this and simply close, but that would be
+                // inconsistent with fbclient
+                throw new FbExceptionBuilder()
+                        .exception(ISCConstants.isc_open_trans)
+                        .messageParameter(getActiveTransactionCount())
+                        .toSQLException();
+            }
 
-                databaseListenerDispatcher.detaching(this);
-                try {
-                    internalDetach();
-                } finally {
-                    databaseListenerDispatcher.detached(this);
-                    databaseListenerDispatcher.shutdown();
-                    exceptionListenerDispatcher.shutdown();
-                }
+            databaseListenerDispatcher.detaching(this);
+            try {
+                internalDetach();
+            } finally {
+                databaseListenerDispatcher.detached(this);
+                databaseListenerDispatcher.shutdown();
+                exceptionListenerDispatcher.shutdown();
             }
         } catch (SQLException ex) {
             exceptionListenerDispatcher.errorOccurred(ex);

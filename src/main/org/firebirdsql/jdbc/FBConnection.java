@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.xca.FBLocalTransaction;
@@ -51,7 +52,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @SuppressWarnings("RedundantThrows")
-public class FBConnection implements FirebirdConnection, Synchronizable {
+public class FBConnection implements FirebirdConnection {
 
     private static final Logger log = LoggerFactory.getLogger(FBConnection.class);
 
@@ -108,7 +109,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public int getHoldability() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return resultSetHoldability;
         }
@@ -116,7 +117,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setHoldability(int holdability) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             this.resultSetHoldability = holdability;
         }
@@ -186,7 +187,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      *         The FBManagedConnection around which this connection is based
      */
     public void setManagedConnection(FBManagedConnection mc) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             //close any prepared statements we may have executed.
             if (this.mc != mc && metaData != null) {
                 try {
@@ -200,7 +201,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     public FBManagedConnection getManagedConnection() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             return mc;
         }
     }
@@ -224,7 +225,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     @Deprecated
     @Override
     public void setTransactionParameters(int isolationLevel, int[] parameters) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             TransactionParameterBuffer tpbParams = createTransactionParameterBuffer();
 
@@ -238,7 +239,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public TransactionParameterBuffer getTransactionParameters(int isolationLevel) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return mc.getTransactionParameters(isolationLevel);
         }
@@ -246,7 +247,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public TransactionParameterBuffer createTransactionParameterBuffer() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return getFbDatabase().createTransactionParameterBuffer();
         }
@@ -254,7 +255,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setTransactionParameters(int isolationLevel, TransactionParameterBuffer tpb) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (mc.isManagedEnvironment()) {
                 throw new FBSQLException("Cannot set transaction parameters in managed environment.");
@@ -266,7 +267,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setTransactionParameters(TransactionParameterBuffer tpb) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getLocalTransaction().inTransaction()) {
                 // TODO More specific exception, jaybird error code
@@ -294,7 +295,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public Blob createBlob() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return new FBBlob(getGDSHelper(), txCoordinator);
         }
@@ -320,7 +321,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public String nativeSQL(String sql) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return FBEscapedParser.toNativeSql(sql);
         }
@@ -328,7 +329,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getAutoCommit() == autoCommit) {
                 return;
@@ -340,21 +341,21 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     protected void setTransactionCoordinator(boolean managedConnection, boolean autoCommit) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             txCoordinator.setTransactionCoordinator(managedConnection, autoCommit);
         }
     }
 
     public void setManagedEnvironment(boolean managedConnection) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             setTransactionCoordinator(managedConnection, true);
         }
     }
 
     @Override
     public boolean getAutoCommit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new FBSQLException("You cannot getAutoCommit on an unassociated closed connection.");
             }
@@ -364,7 +365,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void commit() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new FBSQLException(
                         "You cannot commit a closed connection.",
@@ -382,7 +383,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void rollback() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 throw new FBSQLException(
                         "You cannot rollback closed connection.",
@@ -414,11 +415,11 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      */
     @Override
     public void close() throws SQLException {
+        if (log.isTraceEnabled()) {
+            log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
+        }
         SQLExceptionChainBuilder<SQLException> chainBuilder = new SQLExceptionChainBuilder<>();
-        synchronized (getSynchronizationObject()) {
-            if (log.isTraceEnabled()) {
-                log.trace("Connection closed requested at", new RuntimeException("Connection close logging"));
-            }
+        try (LockCloseable ignored = withLock()) {
             try {
                 if (metaData != null) metaData.close();
                 freeStatements();
@@ -465,9 +466,9 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         if (timeout < 0) {
             throw new SQLException("Timeout should be >= 0", SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
-        if (Thread.holdsLock(getSynchronizationObject())) {
+        if (isLockedByCurrentThread()) {
             // Trying to async check validity will not work (this shouldn't normally happen, except maybe when Jaybird
-            // internals call isValid(int) or user code locks on result of getSynchronizationObject())
+            // internals call isValid(int) or user code locks on result of withLock())
             return isValidImpl(timeout);
         }
         return isValidAsync(timeout);
@@ -492,7 +493,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     private boolean isValidImpl(int timeout) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (isClosed()) {
                 return false;
             }
@@ -505,7 +506,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
                         originalNetworkTimeout = db.getNetworkTimeout();
                         db.setNetworkTimeout((int) TimeUnit.SECONDS.toMillis(timeout));
                         networkTimeoutChanged = true;
-                    } catch (SQLFeatureNotSupportedException ignored) {
+                    } catch (SQLFeatureNotSupportedException ignored2) {
                         // Implementation doesn't support network timeout
                     }
                 }
@@ -532,7 +533,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (metaData == null)
                 metaData = new FBDatabaseMetaData(this);
@@ -542,7 +543,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setReadOnly(boolean readOnly) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getLocalTransaction().inTransaction() && !mc.isManagedEnvironment()) {
                 // TODO More specific exception, jaybird error code
@@ -555,7 +556,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public boolean isReadOnly() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return mc.isReadOnly();
         }
@@ -585,7 +586,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void setTransactionIsolation(int level) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (!getAutoCommit() && !mc.isManagedEnvironment()) {
                 txCoordinator.commit();
@@ -594,9 +595,10 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         }
     }
 
+    @SuppressWarnings("MagicConstant")
     @Override
     public int getTransactionIsolation() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return mc.getTransactionIsolation();
         }
@@ -604,7 +606,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public SQLWarning getWarnings() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             return firstWarning;
         }
@@ -612,7 +614,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void clearWarnings() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             firstWarning = null;
         }
@@ -627,7 +629,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
             throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT &&
                     resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
@@ -697,7 +699,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             GeneratedKeysSupport.Query query = getGeneratedKeysSupport()
                     .buildQuery(sql, autoGeneratedKeys);
@@ -707,7 +709,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             GeneratedKeysSupport.Query query = getGeneratedKeysSupport()
                     .buildQuery(sql, columnIndexes);
@@ -717,7 +719,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             GeneratedKeysSupport.Query query = getGeneratedKeysSupport()
                     .buildQuery(sql, columnNames);
@@ -748,7 +750,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     protected PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
             int resultSetHoldability, boolean metaData, boolean generatedKeys) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
                     && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
@@ -788,7 +790,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency,
             int resultSetHoldability) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (resultSetHoldability == ResultSet.HOLD_CURSORS_OVER_COMMIT
                     && resultSetType == ResultSet.TYPE_FORWARD_ONLY) {
@@ -847,7 +849,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public Savepoint setSavepoint() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             FBSavepoint savepoint = new FBSavepoint(getNextSavepointCounter());
             setSavepoint(savepoint);
@@ -910,7 +912,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      */
     @Override
     public Savepoint setSavepoint(String name) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             FBSavepoint savepoint = new FBSavepoint(name);
             setSavepoint(savepoint);
@@ -921,7 +923,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void rollback(Savepoint savepoint) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getAutoCommit()) {
                 throw new SQLException("Connection.rollback(Savepoint) method cannot be used in auto-commit mode.",
@@ -952,7 +954,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
 
     @Override
     public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             if (getAutoCommit()) {
                 throw new SQLException("Connection.releaseSavepoint() method cannot be used in auto-commit mode.",
@@ -984,7 +986,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * Invalidate all savepoints.
      */
     protected void invalidateSavepoints() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             for (FBSavepoint savepoint : savepoints) {
                 savepoint.invalidate();
             }
@@ -998,7 +1000,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
      * demarcate resource manager local transactions on this connection.
      */
     public FBLocalTransaction getLocalTransaction() {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             if (localTransaction == null) {
                 localTransaction = mc.getLocalTransaction();
             }
@@ -1055,7 +1057,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
     }
 
     public void addWarning(SQLWarning warning) {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             // TODO: Find way so this method can be protected (or less visible) again.
             if (firstWarning == null)
                 firstWarning = warning;
@@ -1238,7 +1240,7 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         if (milliseconds < 0) {
             throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTimeout).toSQLException();
         }
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkValidity();
             getFbDatabase().setNetworkTimeout(milliseconds);
         }
@@ -1249,14 +1251,23 @@ public class FBConnection implements FirebirdConnection, Synchronizable {
         return getFbDatabase().getNetworkTimeout();
     }
 
-    @Override
-    public final Object getSynchronizationObject() {
-        final FBManagedConnection managedConnection = mc;
-        if (managedConnection != null) {
-            return managedConnection.getSynchronizationObject();
-        } else {
-            return this;
+    /**
+     * @see org.firebirdsql.gds.ng.FbAttachment#withLock()
+     */
+    protected final LockCloseable withLock() {
+        FBManagedConnection mc = this.mc;
+        if (mc != null) {
+            return mc.withLock();
         }
+        return LockCloseable.NO_OP;
+    }
+
+    protected final boolean isLockedByCurrentThread() {
+        FBManagedConnection mc = this.mc;
+        if (mc != null) {
+            return mc.isLockedByCurrentThread();
+        }
+        return false;
     }
 
     /**

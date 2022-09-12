@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -76,15 +77,13 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     @Override
     public void commit() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                final JnaDatabase db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.COMMITTING);
-                clientLibrary.isc_commit_transaction(statusVector, handle);
-                processStatusVector();
-                switchState(TransactionState.COMMITTED);
-            }
+        try (LockCloseable ignored = withLock()) {
+            final JnaDatabase db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.COMMITTING);
+            clientLibrary.isc_commit_transaction(statusVector, handle);
+            processStatusVector();
+            switchState(TransactionState.COMMITTED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -103,15 +102,13 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     @Override
     public void rollback() throws SQLException {
-        try {
-            synchronized (getSynchronizationObject()) {
-                final JnaDatabase db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.ROLLING_BACK);
-                clientLibrary.isc_rollback_transaction(statusVector, handle);
-                processStatusVector();
-                switchState(TransactionState.ROLLED_BACK);
-            }
+        try (LockCloseable ignored = withLock()) {
+            final JnaDatabase db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.ROLLING_BACK);
+            clientLibrary.isc_rollback_transaction(statusVector, handle);
+            processStatusVector();
+            switchState(TransactionState.ROLLED_BACK);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -131,20 +128,18 @@ public class JnaTransaction extends AbstractFbTransaction {
     @Override
     public void prepare(byte[] recoveryInformation) throws SQLException {
         boolean noRecoveryInfo = recoveryInformation == null || recoveryInformation.length == 0;
-        try {
-            synchronized (getSynchronizationObject()) {
-                final JnaDatabase db = getDatabase();
-                db.checkConnected();
-                switchState(TransactionState.PREPARING);
-                if (noRecoveryInfo) {
-                    clientLibrary.isc_prepare_transaction(statusVector, handle);
-                } else {
-                    clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
-                            recoveryInformation);
-                }
-                processStatusVector();
-                switchState(TransactionState.PREPARED);
+        try (LockCloseable ignored = withLock()) {
+            final JnaDatabase db = getDatabase();
+            db.checkConnected();
+            switchState(TransactionState.PREPARING);
+            if (noRecoveryInfo) {
+                clientLibrary.isc_prepare_transaction(statusVector, handle);
+            } else {
+                clientLibrary.isc_prepare_transaction2(statusVector, handle, (short) recoveryInformation.length,
+                        recoveryInformation);
             }
+            processStatusVector();
+            switchState(TransactionState.PREPARED);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -164,7 +159,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     public byte[] getTransactionInfo(byte[] requestItems, int maxBufferLength) throws SQLException {
         try {
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 final JnaDatabase db = getDatabase();
                 db.checkConnected();
                 clientLibrary.isc_transaction_info(statusVector, handle, (short) requestItems.length, requestItems,

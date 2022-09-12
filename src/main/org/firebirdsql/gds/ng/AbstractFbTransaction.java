@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
@@ -42,9 +43,8 @@ public abstract class AbstractFbTransaction implements FbTransaction {
             EnumSet.of(TransactionState.ACTIVE, TransactionState.PREPARED));
     protected final ExceptionListenerDispatcher exceptionListenerDispatcher = new ExceptionListenerDispatcher(this);
     private final FbDatabase database;
-    private final Object syncObject;
     protected final TransactionListenerDispatcher transactionListenerDispatcher = new TransactionListenerDispatcher();
-    private volatile TransactionState state = TransactionState.ACTIVE;
+    private volatile TransactionState state;
 
     /**
      * Initializes AbstractFbTransaction.
@@ -59,9 +59,8 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         if (!ALLOWED_INITIAL_STATES.contains(initialState)) {
             throw new IllegalArgumentException(String.format("Illegal initial transaction state: %s, allowed states are: %s", initialState, ALLOWED_INITIAL_STATES));
         }
-        this.syncObject = database.getSynchronizationObject();
         this.state = initialState;
-        this.database = database;
+        this.database = requireNonNull(database, "database");
     }
 
     @Override
@@ -79,7 +78,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *         current state is also changed in a concurrent thread.
      */
     protected final void switchState(final TransactionState newState) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             final TransactionState currentState = state;
             if (currentState == newState) return;
             if (currentState.isValidTransition(newState)) {
@@ -144,12 +143,10 @@ public abstract class AbstractFbTransaction implements FbTransaction {
     }
 
     /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be <code>null</code>.
+     * @see FbAttachment#withLock()
      */
-    protected final Object getSynchronizationObject() {
-        return syncObject;
+    protected final LockCloseable withLock() {
+        return database.withLock();
     }
 
     @Override

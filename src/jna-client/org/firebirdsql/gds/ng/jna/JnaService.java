@@ -27,6 +27,7 @@ import org.firebirdsql.gds.impl.ServiceParameterBufferImp;
 import org.firebirdsql.gds.impl.ServiceRequestBufferImp;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
@@ -86,7 +87,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             final byte[] serviceRequestBufferBytes =
                     serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
             final ByteBuffer responseBuffer = ByteBuffer.allocateDirect(maxBufferLength);
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 clientLibrary.isc_service_query(statusVector, handle, new IntByReference(0),
                         (short) (serviceParameterBufferBytes != null ? serviceParameterBufferBytes.length
                                 : 0), serviceParameterBufferBytes,
@@ -106,16 +107,12 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     @Override
     public void startServiceAction(ServiceRequestBuffer serviceRequestBuffer) throws SQLException {
-        try {
-            final byte[] serviceRequestBufferBytes = serviceRequestBuffer == null
-                    ? null
-                    : serviceRequestBuffer.toBytes();
-            synchronized (getSynchronizationObject()) {
-                clientLibrary.isc_service_start(statusVector, handle, new IntByReference(0),
-                        (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
-                        serviceRequestBufferBytes);
-                processStatusVector();
-            }
+        byte[] serviceRequestBufferBytes = serviceRequestBuffer == null ? null : serviceRequestBuffer.toBytes();
+        try (LockCloseable ignored = withLock()) {
+            clientLibrary.isc_service_start(statusVector, handle, new IntByReference(0),
+                    (short) (serviceRequestBufferBytes != null ? serviceRequestBufferBytes.length : 0),
+                    serviceRequestBufferBytes);
+            processStatusVector();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -132,7 +129,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
             final byte[] serviceName = getEncoding().encodeToCharset(connection.getAttachUrl());
             final byte[] spbArray = spb.toBytesWithType();
 
-            synchronized (getSynchronizationObject()) {
+            try (LockCloseable ignored = withLock()) {
                 try {
                     clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
                             (short) spbArray.length, spbArray);
@@ -173,22 +170,22 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
 
     @Override
     protected void internalDetach() throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 clientLibrary.isc_service_detach(statusVector, handle);
                 processStatusVector();
-            } catch (SQLException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                // TODO Replace with specific error (eg native client error)
-                throw new FbExceptionBuilder()
-                        .exception(ISCConstants.isc_network_error)
-                        .messageParameter(connection.getAttachUrl())
-                        .cause(ex)
-                        .toSQLException();
             } finally {
                 setDetached();
             }
+        } catch (SQLException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            // TODO Replace with specific error (eg native client error)
+            throw new FbExceptionBuilder()
+                    .exception(ISCConstants.isc_network_error)
+                    .messageParameter(connection.getAttachUrl())
+                    .cause(ex)
+                    .toSQLException();
         }
     }
 

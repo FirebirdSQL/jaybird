@@ -60,8 +60,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     protected AbstractFbWireDatabase(WireDatabaseConnection connection, ProtocolDescriptor descriptor) {
         super(connection, DefaultDatatypeCoder.forEncodingFactory(connection.getEncodingFactory()));
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
-        wireOperations = descriptor.createWireOperations(connection, getDatabaseWarningCallback(),
-                getSynchronizationObject());
+        wireOperations = descriptor.createWireOperations(connection, getDatabaseWarningCallback());
     }
 
     @Override
@@ -158,7 +157,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
      */
     protected final void closeConnection() throws IOException {
         if (!connection.isConnected()) return;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 connection.close();
             } finally {
@@ -169,14 +168,12 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     @Override
     public void setNetworkTimeout(int milliseconds) throws SQLException {
-        synchronized (getSynchronizationObject()) {
-            try {
-                checkConnected();
-                wireOperations.setNetworkTimeout(milliseconds);
-            } catch (SQLException e) {
-                exceptionListenerDispatcher.errorOccurred(e);
-                throw e;
-            }
+        try (LockCloseable ignored = withLock()) {
+            checkConnected();
+            wireOperations.setNetworkTimeout(milliseconds);
+        } catch (SQLException e) {
+            exceptionListenerDispatcher.errorOccurred(e);
+            throw e;
         }
     }
 
@@ -231,15 +228,13 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     @Override
     public final void queueEvent(EventHandle eventHandle) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                    asynchronousChannel = initAsynchronousChannel();
-                    AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
-                }
-                asynchronousChannel.queueEvent(eventHandle);
+            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                asynchronousChannel = initAsynchronousChannel();
+                AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
             }
+            asynchronousChannel.queueEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -248,16 +243,14 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
 
     @Override
     public final void cancelEvent(EventHandle eventHandle) throws SQLException {
-        try {
+        try (LockCloseable ignored = withLock()) {
             checkAttached();
-            synchronized (getSynchronizationObject()) {
-                if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                    throw new FbExceptionBuilder()
-                            .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
-                            .toSQLException();
-                }
-                asynchronousChannel.cancelEvent(eventHandle);
+            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+                throw new FbExceptionBuilder()
+                        .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
+                        .toSQLException();
             }
+            asynchronousChannel.cancelEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -295,7 +288,7 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
                 || operation == op_info_transaction || operation == op_info_request
                 || operation == op_info_cursor && protocolDescriptor.getVersion() >= PROTOCOL_VERSION18
                 : "Unsupported operation code for info request " + operation;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 final XdrOutputStream xdrOut = getXdrOut();
                 xdrOut.writeInt(operation);

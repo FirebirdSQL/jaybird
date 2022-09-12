@@ -267,18 +267,6 @@ class FBCachedBlobTest {
     }
 
     /**
-     * Test if repeated calls to {@link FBCachedBlob#getSynchronizationObject()} return the same object.
-     */
-    @Test
-    void testGetSynchronizationObject() {
-        FBCachedBlob blob = new FBCachedBlob(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-
-        final Object sync1 = blob.getSynchronizationObject();
-        assertSame(sync1, blob.getSynchronizationObject(),
-                "Invocations of getSynchronizationObject() should return same object");
-    }
-
-    /**
      * Test if {@link FBCachedBlob#free()} releases the data held internally.
      */
     @Test

@@ -108,13 +108,6 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      */
     boolean isOutput();
 
-    /**
-     * Get synchronization object.
-     *
-     * @return object, cannot be {@code null}.
-     */
-    Object getSynchronizationObject();
-
     // TODO Consider different blob api, eg more like InputStream / OutputStream methods taking a buffer with offset and length?
 
     /**

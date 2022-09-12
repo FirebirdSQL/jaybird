@@ -493,7 +493,7 @@ class FBServerScrollFetcherTest {
             stmt.prepare("select id from scrolltest order by id");
             stmt.setCursorFlag(CursorFlag.CURSOR_TYPE_SCROLLABLE);
             stmt.execute(RowValue.EMPTY_ROW_VALUE);
-            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchSize, maxRows, stmt, () -> db, listener);
+            FBServerScrollFetcher fetcher = new FBServerScrollFetcher(fetchSize, maxRows, stmt, listener);
 
             exceptionalConsumer.accept(stmt, fetcher);
         } finally {

@@ -27,6 +27,7 @@ import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbService;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
 
 import java.io.IOException;
@@ -58,8 +59,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
     protected AbstractFbWireService(WireServiceConnection connection, ProtocolDescriptor descriptor) {
         super(connection, DefaultDatatypeCoder.forEncodingFactory(connection.getEncodingFactory()));
         protocolDescriptor = requireNonNull(descriptor, "parameter descriptor should be non-null");
-        wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback(),
-                getSynchronizationObject());
+        wireOperations = descriptor.createWireOperations(connection, getServiceWarningCallback());
     }
 
     @Override
@@ -130,7 +130,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
 
     @Override
     public void setNetworkTimeout(int milliseconds) throws SQLException {
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             checkConnected();
             wireOperations.setNetworkTimeout(milliseconds);
         }
@@ -179,7 +179,7 @@ public abstract class AbstractFbWireService extends AbstractFbService<WireServic
      */
     protected final void closeConnection() throws IOException {
         if (!connection.isConnected()) return;
-        synchronized (getSynchronizationObject()) {
+        try (LockCloseable ignored = withLock()) {
             try {
                 connection.close();
             } finally {
