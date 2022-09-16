@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jdbc.parser;
 
 import org.firebirdsql.util.InternalApi;
@@ -27,23 +26,30 @@ import java.util.TreeMap;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * Detects if the visited statement is a non-{@code SELECT} DML statement.
+ * Detects the type of statement, and - optionally - whether a DML statement has a {@code RETURNING} clause.
  * <p>
- * The detected statement types are {@code UPDATE}, {@code DELETE}, {@code INSERT}, {@code UPDATE OR INSERT} and
- * {@code MERGE}, including the affected table and whether or not a {@code RETURNING} clause is present (delegated to
- * a {@link ReturningClauseDetector}).
+ * If the detected statement type is {@code UPDATE}, {@code DELETE}, {@code INSERT}, {@code UPDATE OR INSERT} and
+ * {@code MERGE}, it identifies the affected table and - optionally - whether or not a {@code RETURNING} clause is
+ * present (delegated to a {@link ReturningClauseDetector}).
+ * </p>
+ * <p>
+ * The types of statements detected are informed by the needs of Jaybird, and may change between point releases.
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
 @InternalApi
-public final class DmlStatementDetector implements TokenVisitor {
+public final class StatementDetector implements TokenVisitor {
 
     private static final Map<String, ParserState> NEXT_AFTER_START;
 
     static {
         TreeMap<String, ParserState> nextAfterStart = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        nextAfterStart.put("SELECT", ParserState.SELECT);
+        // NOTE: This is a shortcut, if WITH is ever allowed as the first token of another statement type,
+        // this must be changed to detect the first keyword after the entire WITH clause
+        nextAfterStart.put("WITH", ParserState.SELECT);
         nextAfterStart.put("UPDATE", ParserState.UPDATE);
         nextAfterStart.put("DELETE", ParserState.DELETE);
         nextAfterStart.put("INSERT", ParserState.INSERT);
@@ -51,25 +57,47 @@ public final class DmlStatementDetector implements TokenVisitor {
         NEXT_AFTER_START = unmodifiableMap(nextAfterStart);
     }
 
-    private DmlStatementType statementType = DmlStatementType.UNKNOWN;
+    private final boolean detectReturning;
+    private StatementType statementType = StatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
     private Token tableNameToken;
     private ReturningClauseDetector returningClauseDetector;
 
+    /**
+     * Detect statement type and returning clause.
+     *
+     * @see #StatementDetector(boolean)
+     */
+    public StatementDetector() {
+        this(true);
+    }
+
+    /**
+     * Detect statement type and - optionally - returning clause.
+     *
+     * @param detectReturning
+     *         {@code true} detect returning clause, {@code false} do not detect returning clause
+     */
+    public StatementDetector(boolean detectReturning) {
+        this.detectReturning = detectReturning;
+    }
+
     @Override
     public void visitToken(Token token, VisitorRegistrar visitorRegistrar) {
         parserState = parserState.next(token, this);
-        if (parserState == ParserState.OTHER) {
+        if (parserState.isFinalState()) {
             // We're not interested anymore
             visitorRegistrar.removeVisitor(this);
         } else if (parserState == ParserState.FIND_RETURNING) {
             // We're not interested anymore
             visitorRegistrar.removeVisitor(this);
-            // Use ReturningClauseDetector to handle detection
-            returningClauseDetector = new ReturningClauseDetector();
-            visitorRegistrar.addVisitor(returningClauseDetector);
-            // Forward current token; if the current token is RETURNING, it is correctly detected
-            returningClauseDetector.visitToken(token, visitorRegistrar);
+            if (detectReturning) {
+                // Use ReturningClauseDetector to handle detection
+                returningClauseDetector = new ReturningClauseDetector();
+                visitorRegistrar.addVisitor(returningClauseDetector);
+                // Forward current token; if the current token is RETURNING, it is correctly detected
+                returningClauseDetector.visitToken(token, visitorRegistrar);
+            }
         }
     }
 
@@ -87,7 +115,7 @@ public final class DmlStatementDetector implements TokenVisitor {
         return returningClauseDetector != null && returningClauseDetector.returningClauseDetected();
     }
 
-    DmlStatementType getStatementType() {
+    StatementType getStatementType() {
         return statementType;
     }
 
@@ -95,9 +123,9 @@ public final class DmlStatementDetector implements TokenVisitor {
         return tableNameToken;
     }
 
-    private void updateStatementType(DmlStatementType statementType) {
+    private void updateStatementType(StatementType statementType) {
         this.statementType = statementType;
-        if (statementType == DmlStatementType.OTHER) {
+        if (statementType == StatementType.OTHER) {
             // clear any previously set table name
             setTableNameToken(null);
         }
@@ -110,38 +138,42 @@ public final class DmlStatementDetector implements TokenVisitor {
     private enum ParserState {
         START {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken)) {
-                    detector.updateStatementType(DmlStatementType.OTHER);
+                    detector.updateStatementType(StatementType.OTHER);
                     return OTHER;
                 }
                 ParserState nextState = NEXT_AFTER_START.getOrDefault(token.text(), ParserState.OTHER);
                 switch (nextState) {
+                case SELECT:
+                    detector.updateStatementType(StatementType.SELECT);
+                    break;
                 case UPDATE:
                     // Might be UPDATE OR INSERT
-                    detector.updateStatementType(DmlStatementType.UPDATE);
+                    detector.updateStatementType(StatementType.UPDATE);
                     break;
                 case DELETE:
-                    detector.updateStatementType(DmlStatementType.DELETE);
+                    detector.updateStatementType(StatementType.DELETE);
                     break;
                 case INSERT:
-                    detector.updateStatementType(DmlStatementType.INSERT);
+                    detector.updateStatementType(StatementType.INSERT);
                     break;
                 case MERGE:
-                    detector.updateStatementType(DmlStatementType.MERGE);
+                    detector.updateStatementType(StatementType.MERGE);
                     break;
                 default:
-                    detector.updateStatementType(DmlStatementType.OTHER);
+                    detector.updateStatementType(StatementType.OTHER);
                     break;
                 }
                 return nextState;
             }
         },
+        SELECT(true),
         UPDATE {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof OperatorToken && token.equalsIgnoreCase("OR")) {
-                    detector.updateStatementType(DmlStatementType.UNKNOWN);
+                    detector.updateStatementType(StatementType.UNKNOWN);
                     return POSSIBLY_UPDATE_OR_INSERT;
                 } else {
                     return DML_TARGET.next0(token, detector);
@@ -150,21 +182,21 @@ public final class DmlStatementDetector implements TokenVisitor {
         },
         POSSIBLY_UPDATE_OR_INSERT {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INSERT")) {
-                    detector.updateStatementType(DmlStatementType.UPDATE_OR_INSERT);
+                    detector.updateStatementType(StatementType.UPDATE_OR_INSERT);
                     // Further detection can use the insert path
                     return INSERT;
                 }
-                detector.updateStatementType(DmlStatementType.OTHER);
+                detector.updateStatementType(StatementType.OTHER);
                 return OTHER;
             }
         },
         DELETE {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken && token.equalsIgnoreCase("FROM"))) {
-                    detector.updateStatementType(DmlStatementType.OTHER);
+                    detector.updateStatementType(StatementType.OTHER);
                     return OTHER;
                 }
                 return DML_TARGET;
@@ -173,12 +205,12 @@ public final class DmlStatementDetector implements TokenVisitor {
         // Shared by UPDATE, DELETE and MERGE
         DML_TARGET {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
                     return DML_POSSIBLE_ALIAS;
                 } else {
-                    detector.updateStatementType(DmlStatementType.OTHER);
+                    detector.updateStatementType(StatementType.OTHER);
                     return OTHER;
                 }
             }
@@ -186,7 +218,7 @@ public final class DmlStatementDetector implements TokenVisitor {
         // Shared by UPDATE, DELETE and MERGE
         DML_POSSIBLE_ALIAS {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     // either alias or possibly returning clause
                     return FIND_RETURNING;
@@ -197,72 +229,74 @@ public final class DmlStatementDetector implements TokenVisitor {
                     return FIND_RETURNING;
                 } else {
                     // Unexpected or invalid token at this point
-                    detector.updateStatementType(DmlStatementType.OTHER);
+                    detector.updateStatementType(StatementType.OTHER);
                     return OTHER;
                 }
             }
         },
         DML_ALIAS {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     return FIND_RETURNING;
                 }
                 // syntax error
-                detector.updateStatementType(DmlStatementType.OTHER);
+                detector.updateStatementType(StatementType.OTHER);
                 return OTHER;
             }
         },
         INSERT {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return INSERT_INTO;
                 }
-                detector.updateStatementType(DmlStatementType.OTHER);
+                detector.updateStatementType(StatementType.OTHER);
                 return OTHER;
             }
         },
         INSERT_INTO {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token.isValidIdentifier()) {
                     detector.setTableNameToken(token);
                     return FIND_RETURNING;
                 }
                 // Syntax error
-                detector.updateStatementType(DmlStatementType.OTHER);
+                detector.updateStatementType(StatementType.OTHER);
                 return OTHER;
             }
         },
         MERGE {
             @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
+            ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return DML_TARGET;
                 }
                 // Syntax error
-                detector.updateStatementType(DmlStatementType.OTHER);
+                detector.updateStatementType(StatementType.OTHER);
                 return OTHER;
             }
         },
-        FIND_RETURNING {
-            @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
-                // finding itself is offloaded to ReturningClauseDetector
-                throw new IllegalStateException(
-                        "State " + this + " is a terminal state and next(..) should not be invoked");
-            }
-        },
-        OTHER {
-            @Override
-            ParserState next0(Token token, DmlStatementDetector detector) {
-                throw new IllegalStateException(
-                        "State " + this + " is a terminal state and next(..) should not be invoked");
-            }
-        };
+        // finding itself is offloaded to ReturningClauseDetector
+        FIND_RETURNING,
+        OTHER(true);
 
-        final ParserState next(Token token, DmlStatementDetector detector) {
+        private final boolean finalState;
+
+        ParserState() {
+            this(false);
+        }
+
+        ParserState(boolean finalState) {
+            this.finalState = finalState;
+        }
+
+        final boolean isFinalState() {
+            return finalState;
+        }
+
+        final ParserState next(Token token, StatementDetector detector) {
             if (token.isWhitespaceOrComment()) {
                 // Ignore whitespace and comments
                 return this;
@@ -270,7 +304,10 @@ public final class DmlStatementDetector implements TokenVisitor {
             return next0(token, detector);
         }
 
-        abstract ParserState next0(Token token, DmlStatementDetector detector);
+        ParserState next0(Token token, StatementDetector detector) {
+            throw new IllegalStateException(
+                    "State " + this + " is a terminal state and next(..) should not be invoked");
+        }
 
     }
 

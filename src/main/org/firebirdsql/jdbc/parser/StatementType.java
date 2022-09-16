@@ -22,17 +22,28 @@ package org.firebirdsql.jdbc.parser;
 import org.firebirdsql.util.InternalApi;
 
 /**
- * DML statement types.
+ * Statement types.
+ * <p>
+ * NOTE: Jaybird may take shortcuts during detection (e.g. only look at first keyword), so an invalid statement
+ * might be classified anyway.
+ * </p>
+ * <p>
+ * The types of this enum are decided by the needs of Jaybird, and do not necessarily cover all statement types.
+ * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
 @InternalApi
-public enum DmlStatementType {
+public enum StatementType {
     /**
      * Null-state before detection.
      */
     UNKNOWN,
+    /**
+     * Select statement, including selectable stored procedures.
+     */
+    SELECT,
     /**
      * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete)
      */
@@ -54,7 +65,7 @@ public enum DmlStatementType {
      */
     MERGE,
     /**
-     * Any other statement (e.g. {@code SELECT}, DDL or management statements).
+     * No specific classification applied (i.e. Jaybird is not (yet) interested in this type), or detection failed.
      */
     OTHER
 }

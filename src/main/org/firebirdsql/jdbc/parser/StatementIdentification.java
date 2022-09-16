@@ -23,28 +23,33 @@ import org.firebirdsql.util.InternalApi;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Statement identification (primarily for generated keys support).
+ * Statement type identification.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
 @InternalApi
-public class StatementIdentification {
+public final class StatementIdentification {
 
-    private final DmlStatementType dmlStatementType;
+    private final StatementType statementType;
     private final String tableName;
     private final boolean returningClauseDetected;
 
-    StatementIdentification(DmlStatementType dmlStatementType, String tableName, boolean returningClauseDetected) {
-        this.dmlStatementType = requireNonNull(dmlStatementType, "dmlStatementType");
+    StatementIdentification(StatementType statementType, String tableName, boolean returningClauseDetected) {
+        this.statementType = requireNonNull(statementType, "statementType");
         this.tableName = tableName;
         this.returningClauseDetected = returningClauseDetected;
     }
 
-    public DmlStatementType getDmlStatementType() {
-        return dmlStatementType;
+    public StatementType getStatementType() {
+        return statementType;
     }
 
+    /**
+     * Table name, if this is a DML statement (other than {@code SELECT}).
+     *
+     * @return Table name, {@code null} for {@code SELECT} and other non-DML statements
+     */
     public String getTableName() {
         return tableName;
     }

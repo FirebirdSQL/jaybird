@@ -24,12 +24,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static org.firebirdsql.jdbc.parser.DmlStatementType.DELETE;
-import static org.firebirdsql.jdbc.parser.DmlStatementType.INSERT;
-import static org.firebirdsql.jdbc.parser.DmlStatementType.MERGE;
-import static org.firebirdsql.jdbc.parser.DmlStatementType.OTHER;
-import static org.firebirdsql.jdbc.parser.DmlStatementType.UPDATE;
-import static org.firebirdsql.jdbc.parser.DmlStatementType.UPDATE_OR_INSERT;
+import static org.firebirdsql.jdbc.parser.StatementType.DELETE;
+import static org.firebirdsql.jdbc.parser.StatementType.INSERT;
+import static org.firebirdsql.jdbc.parser.StatementType.MERGE;
+import static org.firebirdsql.jdbc.parser.StatementType.SELECT;
+import static org.firebirdsql.jdbc.parser.StatementType.UPDATE;
+import static org.firebirdsql.jdbc.parser.StatementType.UPDATE_OR_INSERT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GrammarParameterizedTest {
@@ -38,21 +38,21 @@ class GrammarParameterizedTest {
 
     @ParameterizedTest
     @MethodSource("testData")
-    void testParser(boolean expectedReturning, DmlStatementType expectedStatementType, String expectedTableName,
+    void testParser(boolean expectedReturning, StatementType expectedStatementType, String expectedTableName,
             String statementText) {
         StatementIdentification statementIdentification = parseStatement(statementText);
 
         assertEquals(expectedReturning, statementIdentification.returningClauseDetected(),
                 "returningClauseDetected for: " + statementText);
-        assertEquals(expectedStatementType, statementIdentification.getDmlStatementType(),
-                "dmlStatementType for: " + statementText);
+        assertEquals(expectedStatementType, statementIdentification.getStatementType(),
+                "statementType for: " + statementText);
         assertEquals(expectedTableName, statementIdentification.getTableName(), "tableName for: " + statementText);
     }
 
     static Stream<Arguments> testData() {
         return Stream.of(
 // @formatter:off
-    /*  0 */    testCase(false, OTHER, null, "select * from rdb$database"),
+    /*  0 */    testCase(false, SELECT, null, "select * from rdb$database"),
     /*  1 */    testCase(false, INSERT, "\"TABLE\"", "insert into \"TABLE\" (x, y, z) values ('ab', ?, Q'[xyz]')"),
     /*  2 */    testCase(true, INSERT, "\"TABLE\"", "insert into \"TABLE\" (x, y, z) values ('ab', ?, Q'[xyz]') returning id"),
     /*  3 */    testCase(false, UPDATE, "sometable", "update sometable set x = ?, y = Q'[xy'z]' where a and b > 1"),
@@ -153,17 +153,17 @@ class GrammarParameterizedTest {
         );
     }
 
-    private static Arguments testCase(boolean expectedReturning, DmlStatementType expectedStatementType,
+    private static Arguments testCase(boolean expectedReturning, StatementType expectedStatementType,
             String expectedTableName, String statementText) {
         return Arguments.of(expectedReturning, expectedStatementType, expectedTableName, statementText);
     }
 
     private StatementIdentification parseStatement(String testString) {
-        DmlStatementDetector dmlStatementDetector = new DmlStatementDetector();
+        StatementDetector statementDetector = new StatementDetector();
         SqlParser.withReservedWords(FirebirdReservedWords.latest())
-                .withVisitor(dmlStatementDetector)
+                .withVisitor(statementDetector)
                 .of(testString)
                 .parse();
-        return dmlStatementDetector.toStatementIdentification();
+        return statementDetector.toStatementIdentification();
     }
 }
