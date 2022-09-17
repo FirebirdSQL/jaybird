@@ -1319,6 +1319,28 @@ class FBPreparedStatementTest {
         }
     }
 
+    @Test
+    void testSelectHasNoUpdateCount() throws Exception {
+        executeCreateTable(con, CREATE_TABLE);
+        prepareTestData();
+
+        try (PreparedStatement stmt = con.prepareStatement(SELECT_DATA)) {
+            assertTrue(stmt.execute(), "expected a result set");
+            ResultSet rs = stmt.getResultSet();
+            int count = 0;
+            while (rs.next()) {
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
+                assertEquals(count, rs.getInt(1));
+                count++;
+            }
+            assertEquals(DATA_ITEMS, count);
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {

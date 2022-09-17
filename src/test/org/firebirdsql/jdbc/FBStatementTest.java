@@ -140,7 +140,7 @@ class FBStatementTest {
     void testNoCloseOnCompletion_StatementOpen_afterImplicitResultSetClose() throws SQLException {
         prepareTestData();
         try (Statement stmt = con.createStatement()) {
-            stmt.execute(SELECT_DATA);
+            assertTrue(stmt.execute(SELECT_DATA), "expected a result set");
             ResultSet rs = stmt.getResultSet();
             int count = 0;
             while (rs.next()) {
@@ -151,6 +151,9 @@ class FBStatementTest {
             }
             assertEquals(DATA_ITEMS, count);
             assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.isClosed(), "Statement should be open");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
             assertFalse(stmt.isClosed(), "Statement should be open");
         }
     }
@@ -983,6 +986,26 @@ class FBStatementTest {
             assertEquals(2, stmt.getUpdateCount());
 
             con.commit();
+        }
+    }
+
+    @Test
+    void testSelectHasNoUpdateCount() throws SQLException {
+        prepareTestData();
+        try (Statement stmt = con.createStatement()) {
+            assertTrue(stmt.execute(SELECT_DATA), "expected a result set");
+            ResultSet rs = stmt.getResultSet();
+            int count = 0;
+            while (rs.next()) {
+                assertFalse(rs.isClosed(), "Result set should be open");
+                assertFalse(stmt.isClosed(), "Statement should be open");
+                assertEquals(count, rs.getInt(1));
+                count++;
+            }
+            assertEquals(DATA_ITEMS, count);
+            assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
+            assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
+            assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
         }
     }
 

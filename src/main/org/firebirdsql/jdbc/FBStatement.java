@@ -23,6 +23,9 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.parser.SqlParser;
+import org.firebirdsql.jaybird.parser.StatementDetector;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.escape.FBEscapedParser;
 import org.firebirdsql.logging.LoggerFactory;
@@ -69,6 +72,8 @@ public class FBStatement implements FirebirdStatement {
 
 	protected SQLWarning firstWarning;
 
+    // Currently only determined for Firebird statement type SELECT
+    private org.firebirdsql.jaybird.parser.StatementType jbStatementType = org.firebirdsql.jaybird.parser.StatementType.OTHER;
     protected StatementResult currentStatementResult = StatementResult.NO_MORE_RESULTS;
 
     // Singleton result indicates it is a stored procedure or singleton [INSERT | UPDATE | DELETE] ... RETURNING ...
@@ -535,7 +540,7 @@ public class FBStatement implements FirebirdStatement {
 
         // A generated keys query does not produce a normal result set (but EXECUTE PROCEDURE or INSERT ... RETURNING without Statement.RETURN_GENERATED_KEYS do)
         // TODO Behavior might not be correct for callable statement implementation
-        if (!isGeneratedKeyQuery() && currentStatementResult == StatementResult.RESULT_SET) {
+        if (!isGeneratedKeyQuery() && currentStatementResult.isResultSet()) {
             if (!isSingletonResult) {
                 currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
@@ -621,13 +626,13 @@ public class FBStatement implements FirebirdStatement {
         boolean closeResultSet = mode == Statement.CLOSE_ALL_RESULTS
                 || mode == Statement.CLOSE_CURRENT_RESULT;
 
-        if (currentStatementResult == StatementResult.RESULT_SET && closeResultSet) {
+        if (currentStatementResult.isResultSet() && closeResultSet) {
             closeResultSet(true);
         }
         currentStatementResult = currentStatementResult.nextResult();
 
         // Technically the statement below is always false, as only the first result is ever a ResultSet
-        return currentStatementResult == StatementResult.RESULT_SET;
+        return currentStatementResult.isResultSet();
     }
 
     @Override
@@ -835,7 +840,7 @@ public class FBStatement implements FirebirdStatement {
     protected boolean internalExecute(RowValue rowValue) throws SQLException {
         try {
             fbStatement.execute(rowValue);
-            boolean hasResultSet = currentStatementResult == StatementResult.RESULT_SET;
+            boolean hasResultSet = currentStatementResult.isResultSet();
             if (hasResultSet && isGeneratedKeyQuery()) {
                 fetchMultiRowGeneratedKeys();
                 return false;
@@ -868,7 +873,20 @@ public class FBStatement implements FirebirdStatement {
         } else {
             fbStatement.setTransaction(gdsHelper.getCurrentTransaction());
         }
-        fbStatement.prepare(escapedProcessing ? nativeSQL(sql) : sql);
+        String statementText = escapedProcessing ? nativeSQL(sql) : sql;
+        fbStatement.prepare(statementText);
+        jbStatementType = fbStatement.getType() == StatementType.SELECT
+                ? determineJaybirdStatementType(statementText)
+                : org.firebirdsql.jaybird.parser.StatementType.OTHER;
+    }
+
+    private static org.firebirdsql.jaybird.parser.StatementType determineJaybirdStatementType(String statementText) {
+        StatementDetector detector = new StatementDetector(false);
+        SqlParser.withReservedWords(FirebirdReservedWords.latest())
+                .withVisitor(detector)
+                .of(statementText)
+                .parse();
+        return detector.getStatementType();
     }
 
     protected FbStatement requireStatement() throws SQLException {
@@ -1160,29 +1178,47 @@ public class FBStatement implements FirebirdStatement {
      * The current result of a statement.
      */
     protected enum StatementResult {
-        RESULT_SET {
-            @Override
-            public StatementResult nextResult() {
-                return UPDATE_COUNT;
-            }
-        },
-        UPDATE_COUNT {
+        // Normal SELECT (including selectable stored procedures) don't have an update count
+        RESULT_SET(true) {
             @Override
             public StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         },
-        NO_MORE_RESULTS {
+        // Statements like EXECUTE BLOCK with SUSPEND and (Firebird 5) DML with RETURNING have an update count
+        RESULT_SET_WITH_UPDATE_COUNT(true) {
+            @Override
+            public StatementResult nextResult() {
+                return UPDATE_COUNT;
+            }
+        },
+        UPDATE_COUNT(false) {
+            @Override
+            public StatementResult nextResult() {
+                return NO_MORE_RESULTS;
+            }
+        },
+        NO_MORE_RESULTS(false) {
             @Override
             public StatementResult nextResult() {
                 return NO_MORE_RESULTS;
             }
         };
 
+        private final boolean resultSet;
+
+        StatementResult(boolean resultSet) {
+            this.resultSet = resultSet;
+        }
+
         /**
          * @return Next result
          */
         public abstract StatementResult nextResult();
+
+        public final boolean isResultSet() {
+            return resultSet;
+        }
     }
 
     /**
@@ -1212,9 +1248,13 @@ public class FBStatement implements FirebirdStatement {
         public void statementExecuted(FbStatement sender, boolean hasResultSet, boolean hasSingletonResult) {
             if (isUnexpectedSender(sender)) return;
             // TODO If true create ResultSet and attach listener to sender
-            currentStatementResult = hasResultSet || hasSingletonResult && !isGeneratedKeyQuery()
-                    ? StatementResult.RESULT_SET
-                    : StatementResult.UPDATE_COUNT;
+            if (hasResultSet || hasSingletonResult && !isGeneratedKeyQuery()) {
+                currentStatementResult = jbStatementType == org.firebirdsql.jaybird.parser.StatementType.SELECT
+                        ? StatementResult.RESULT_SET
+                        : StatementResult.RESULT_SET_WITH_UPDATE_COUNT;
+            } else {
+                currentStatementResult = StatementResult.UPDATE_COUNT;
+            }
             isSingletonResult = hasSingletonResult;
         }
 

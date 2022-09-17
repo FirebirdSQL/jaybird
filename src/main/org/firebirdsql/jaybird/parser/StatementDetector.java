@@ -115,7 +115,10 @@ public final class StatementDetector implements TokenVisitor {
         return returningClauseDetector != null && returningClauseDetector.returningClauseDetected();
     }
 
-    StatementType getStatementType() {
+    /**
+     * @return detected statement type, {@code UNKNOWN} when no tokens have been received (nothing was parsed)
+     */
+    public StatementType getStatementType() {
         return statementType;
     }
 
