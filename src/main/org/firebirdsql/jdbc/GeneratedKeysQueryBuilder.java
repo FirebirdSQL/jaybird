@@ -21,11 +21,11 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
-import org.firebirdsql.jdbc.parser.StatementDetector;
-import org.firebirdsql.jdbc.parser.StatementType;
-import org.firebirdsql.jdbc.parser.FirebirdReservedWords;
-import org.firebirdsql.jdbc.parser.SqlParser;
-import org.firebirdsql.jdbc.parser.StatementIdentification;
+import org.firebirdsql.jaybird.parser.StatementDetector;
+import org.firebirdsql.jaybird.parser.StatementType;
+import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
+import org.firebirdsql.jaybird.parser.SqlParser;
+import org.firebirdsql.jaybird.parser.StatementIdentification;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
