@@ -33,6 +33,7 @@ import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
+import org.firebirdsql.util.ByteArrayHelper;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -49,6 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableSet;
 
 /**
@@ -569,9 +571,14 @@ public class FBManagedConnection implements ExceptionListener {
         }
     }
 
+    /*
+     TODO Ideally, we want to cast RDB$TRANSACTION_DESCRIPTION to VARBINARY to reduce overhead of retrieval, but
+      Firebird 2.5 doesn't handle that correctly (a textual representation is generated, and an intermediate cast to
+      SUB_TYPE BINARY and then to VARCHAR OCTETS (or any other character set), replaces non-printable characters with
+      a '.'). Consider introducing a version-sensitive strategy. See https://github.com/FirebirdSQL/jaybird/issues/704
+    */
     private static final String FIND_TRANSACTION_FRAGMENT =
-            "SELECT RDB$TRANSACTION_ID, cast(RDB$TRANSACTION_DESCRIPTION as varchar(32764) character set octets) "
-                    + "FROM RDB$TRANSACTIONS ";
+            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION FROM RDB$TRANSACTIONS ";
     private static final String FORGET_FIND_QUERY = FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
             + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
     private static final String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
@@ -761,11 +768,9 @@ public class FBManagedConnection implements ExceptionListener {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
-                try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                FBXid xid = extractXid(inLimboMessage, inLimboTxId);
+                if (xid != null) {
                     xids.add(xid);
-                } catch (FBIncorrectXidException ex) {
-                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
                 }
             }
 
@@ -776,6 +781,19 @@ public class FBManagedConnection implements ExceptionListener {
         } catch (SQLException | IOException e) {
             throw new FBXAException("can't perform query to fetch xids", XAException.XAER_RMFAIL, e);
         }
+    }
+
+    private static FBXid extractXid(byte[] xidData, long txId) throws IOException {
+        try {
+            return new FBXid(new ByteArrayInputStream(xidData), txId);
+        } catch (FBIncorrectXidException e) {
+            if (log.isWarnEnabled()) {
+                log.warn(format(
+                        "ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=%d: %s",
+                        txId, ByteArrayHelper.toHexString(xidData)));
+            }
+        }
+        return null;
     }
 
     private static final String RECOVERY_QUERY_PARAMETRIZED = FIND_TRANSACTION_FRAGMENT
@@ -818,11 +836,7 @@ public class FBManagedConnection implements ExceptionListener {
                 long inLimboTxId = field0.getLong();
                 byte[] inLimboMessage = field1.getBytes();
 
-                try {
-                    xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
-                } catch (FBIncorrectXidException ex) {
-                    log.warn("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=" + inLimboTxId);
-                }
+                xid = extractXid(inLimboMessage, inLimboTxId);
             }
 
             stmtHandle2.close();
