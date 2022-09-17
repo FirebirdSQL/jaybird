@@ -20,6 +20,7 @@ package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.util.InternalApi;
 
+import java.nio.CharBuffer;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -37,14 +38,12 @@ import static java.lang.String.format;
 public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
     private final String src;
-    private final char[] srcChars;
     private final ReservedWords reservedWords;
     private int pos = 0;
     private Token next;
 
     private SqlTokenizer(String src, ReservedWords reservedWords) {
         this.src = src;
-        this.srcChars = src.toCharArray();
         this.reservedWords = reservedWords;
     }
 
@@ -93,10 +92,11 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private int read() {
-        if (pos < srcChars.length) {
-            return srcChars[pos++];
+        int length = src.length();
+        if (pos < length) {
+            return src.charAt(pos++);
         } else {
-            pos = srcChars.length;
+            pos = length;
             return -1;
         }
     }
@@ -113,7 +113,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private void skip() {
-        if (pos < srcChars.length) {
+        if (pos < src.length()) {
             pos++;
         } else {
             throw new UnexpectedEndOfInputException(
@@ -122,10 +122,11 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private void skip(int amount) {
-        if (pos + amount <= srcChars.length) {
+        int length = src.length();
+        if (pos + amount <= length) {
             pos += amount;
         } else {
-            pos = srcChars.length;
+            pos = length;
             throw new UnexpectedEndOfInputException(
                     format("Reached end of input after position %d while skipping", pos));
         }
@@ -145,7 +146,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     }
 
     private int peek() {
-        return pos < srcChars.length ? srcChars[pos] : -1;
+        return pos < src.length() ? src.charAt(pos) : -1;
     }
 
     private Token nextToken() {
@@ -186,35 +187,35 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         case '+':
         case '*': // Can also signify 'all' (as in select * or select alias.*)
         case '=':
-            return new OperatorToken(start, srcChars, start, pos);
+            return new OperatorToken(start, src, start, pos);
         case '-':
             if (peek() == '-') {
                 return readLineComment(start);
             }
-            return new OperatorToken(start, srcChars, start, pos);
+            return new OperatorToken(start, src, start, pos);
         case '/':
             if (peek() == '*') {
                 return readBlockComment(start);
             }
-            return new OperatorToken(start, srcChars, start, pos);
+            return new OperatorToken(start, src, start, pos);
         case '<': {
             int cNext = read();
             switch (cNext) {
             case '>':
             case '=':
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             default:
                 unread(cNext);
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             }
         }
         case '>': {
             int cNext = read();
             if (cNext == '=') {
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             }
             unread(cNext);
-            return new OperatorToken(start, srcChars, start, pos);
+            return new OperatorToken(start, src, start, pos);
         }
         case '!':
         case '~':
@@ -224,21 +225,21 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             case '=':
             case '>':
             case '<':
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             default:
                 unread(cNext);
                 // shouldn't occur, but handle as singular operator
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             }
         }
         case '|': {
             int cNext = read();
             if (cNext == '|') {
-                return new OperatorToken(start, srcChars, start, pos);
+                return new OperatorToken(start, src, start, pos);
             }
             unread(cNext);
             // shouldn't occur, but handle as singular operator
-            return new OperatorToken(start, srcChars, start, pos);
+            return new OperatorToken(start, src, start, pos);
         }
         case '0':
         case '1':
@@ -393,7 +394,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         while (isWhitespace(c = read())) {
         }
         unread(c);
-        return new WhitespaceToken(start, srcChars, start, pos);
+        return new WhitespaceToken(start, src, start, pos);
     }
 
     private CommentToken readLineComment(int start) {
@@ -404,7 +405,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         while (!isEndOfLine(c = read())) {
         }
         unread(c);
-        return new CommentToken(start, srcChars, start, pos);
+        return new CommentToken(start, src, start, pos);
     }
 
     private CommentToken readBlockComment(int start) {
@@ -418,7 +419,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
                 break;
             }
         }
-        return new CommentToken(start, srcChars, start, pos);
+        return new CommentToken(start, src, start, pos);
     }
 
     private NumericLiteralToken readNumericLiteral(int start, char firstChar) {
@@ -443,7 +444,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
             }
         }
         unread(c);
-        return new NumericLiteralToken(start, srcChars, start, pos);
+        return new NumericLiteralToken(start, src, start, pos);
     }
 
     private NumericLiteralToken continueBinaryNumericLiteral(int start) {
@@ -453,7 +454,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         while (isHexDigit(c = read())) {
         }
         unread(c);
-        return new NumericLiteralToken(start, srcChars, start, pos);
+        return new NumericLiteralToken(start, src, start, pos);
     }
 
     private StringLiteralToken readHexStringLiteral(int start) {
@@ -469,7 +470,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
                 skip();
             }
         }
-        return new StringLiteralToken(start, srcChars, start, pos);
+        return new StringLiteralToken(start, src, start, pos);
     }
 
     private StringLiteralToken readQStringLiteral(int start) {
@@ -482,7 +483,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
                 break;
             }
         }
-        return new StringLiteralToken(start, srcChars, start, pos);
+        return new StringLiteralToken(start, src, start, pos);
     }
 
     private char computeCloseQuote(char specialChar) {
@@ -507,7 +508,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
                 skip();
             }
         }
-        return new QuotedIdentifierToken(start, srcChars, start, pos);
+        return new QuotedIdentifierToken(start, src, start, pos);
     }
 
     private Token readOtherToken(int start) {
@@ -517,7 +518,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
         }
         unread(c);
         int end = pos;
-        String tokenText = src.substring(start, end);
+        CharSequence tokenText = CharBuffer.wrap(src, start, end);
         if (reservedWords.isReservedWord(tokenText)) {
             return new ReservedToken(start, tokenText);
         }
@@ -526,7 +527,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
 
     private <T extends Token> T readTokenByLength(int start, int remainingChars, TokenConstructor<T> tokenConstructor) {
         skip(remainingChars);
-        return tokenConstructor.construct(start, srcChars, start, pos);
+        return tokenConstructor.construct(start, src, start, pos);
     }
 
     private boolean detectToken(char[][] expectedChars) {
@@ -620,7 +621,7 @@ public final class SqlTokenizer implements Iterator<Token>, AutoCloseable {
     @FunctionalInterface
     private interface TokenConstructor<T extends Token> {
 
-        T construct(int pos, char[] srcChars, int start, int end);
+        T construct(int pos, CharSequence src, int start, int end);
 
     }
 

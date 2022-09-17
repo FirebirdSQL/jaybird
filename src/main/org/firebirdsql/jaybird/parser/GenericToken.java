@@ -36,8 +36,8 @@ final class GenericToken extends AbstractToken {
             Pattern.compile("[A-Z][A-Z0-9_$]*", Pattern.CASE_INSENSITIVE);
 
     @SuppressWarnings("unused")
-    GenericToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    GenericToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public GenericToken(int pos, CharSequence tokenText) {

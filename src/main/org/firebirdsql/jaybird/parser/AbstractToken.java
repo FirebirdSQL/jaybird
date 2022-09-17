@@ -31,16 +31,21 @@ import static java.util.Objects.requireNonNull;
 abstract class AbstractToken implements Token {
 
     private final int pos;
-    private final CharSequence srcChars;
+    private final CharSequence src;
     private String cachedText;
 
-    AbstractToken(int pos, char[] srcChars, int start, int end) {
-        this(pos, CharBuffer.wrap(requireNonNull(srcChars, "srcChars"), start, end - start));
+    AbstractToken(int pos, CharSequence src, int start, int end) {
+        this.pos = pos;
+        if (start == 0 && end == src.length()) {
+            this.src = src;
+        } else {
+            this.src = CharBuffer.wrap(requireNonNull(src, "src"), start, end);
+        }
     }
 
     AbstractToken(int pos, CharSequence tokenText) {
         this.pos = pos;
-        srcChars = tokenText;
+        src = tokenText;
     }
 
     @Override
@@ -48,12 +53,12 @@ abstract class AbstractToken implements Token {
         if (this.cachedText != null) {
             return this.cachedText;
         }
-        return this.cachedText = srcChars.toString();
+        return this.cachedText = src.toString();
     }
 
     @Override
     public void appendTo(StringBuilder sb) {
-        sb.append(srcChars);
+        sb.append(src);
     }
 
     @Override
@@ -63,15 +68,15 @@ abstract class AbstractToken implements Token {
 
     @Override
     public int length() {
-        return srcChars.length();
+        return src.length();
     }
 
     CharSequence subSequence(int start, int end) {
-        return srcChars.subSequence(start, end);
+        return src.subSequence(start, end);
     }
 
     char charAt(int index) {
-        return srcChars.charAt(index);
+        return src.charAt(index);
     }
 
     @Override
@@ -94,11 +99,11 @@ abstract class AbstractToken implements Token {
     }
 
     private boolean srcCharsEquals(AbstractToken that) {
-        int length = srcChars.length();
-        if (length != that.srcChars.length()) return false;
+        int length = src.length();
+        if (length != that.src.length()) return false;
 
         for (int idx = 0; idx < length; idx++) {
-            if (srcChars.charAt(idx) != that.srcChars.charAt(idx)) {
+            if (src.charAt(idx) != that.src.charAt(idx)) {
                 return false;
             }
         }
@@ -108,14 +113,14 @@ abstract class AbstractToken implements Token {
     @Override
     public int hashCode() {
         int result = pos;
-        result = 31 * result + srcCharsHashCode();
+        result = 31 * result + srcHashCode();
         return result;
     }
 
-    private int srcCharsHashCode() {
+    private int srcHashCode() {
         int result = 1;
-        for (int idx = 0, end = srcChars.length(); idx < end; idx++) {
-            result = 31 * result + srcChars.charAt(idx);
+        for (int idx = 0, end = src.length(); idx < end; idx++) {
+            result = 31 * result + src.charAt(idx);
         }
         return result;
     }

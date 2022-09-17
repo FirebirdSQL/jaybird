@@ -28,8 +28,8 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
 
     private final BooleanType type;
 
-    private BooleanLiteralToken(BooleanType type, int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    private BooleanLiteralToken(BooleanType type, int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
         this.type = type;
     }
 
@@ -67,27 +67,27 @@ final class BooleanLiteralToken extends AbstractToken implements LiteralToken {
         return type == BooleanType.UNKNOWN;
     }
 
-    static BooleanLiteralToken trueToken(int pos, char[] srcChars, int start, int end) {
-        return new BooleanLiteralToken(BooleanType.TRUE, pos, srcChars, start, end);
+    static BooleanLiteralToken trueToken(int pos, CharSequence src, int start, int end) {
+        return new BooleanLiteralToken(BooleanType.TRUE, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken trueToken(int pos, String tokenText) {
+    public static BooleanLiteralToken trueToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.TRUE, pos, tokenText);
     }
 
-    static BooleanLiteralToken falseToken(int pos, char[] srcChars, int start, int end) {
-        return new BooleanLiteralToken(BooleanType.FALSE, pos, srcChars, start, end);
+    static BooleanLiteralToken falseToken(int pos, CharSequence src, int start, int end) {
+        return new BooleanLiteralToken(BooleanType.FALSE, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken falseToken(int pos, String tokenText) {
+    public static BooleanLiteralToken falseToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.FALSE, pos, tokenText);
     }
 
-    static BooleanLiteralToken unknownToken(int pos, char[] srcChars, int start, int end) {
-        return new BooleanLiteralToken(BooleanType.UNKNOWN, pos, srcChars, start, end);
+    static BooleanLiteralToken unknownToken(int pos, CharSequence src, int start, int end) {
+        return new BooleanLiteralToken(BooleanType.UNKNOWN, pos, src, start, end);
     }
 
-    public static BooleanLiteralToken unknownToken(int pos, String tokenText) {
+    public static BooleanLiteralToken unknownToken(int pos, CharSequence tokenText) {
         return new BooleanLiteralToken(BooleanType.UNKNOWN, pos, tokenText);
     }
 

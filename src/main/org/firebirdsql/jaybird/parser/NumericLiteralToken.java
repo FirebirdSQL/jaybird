@@ -32,8 +32,8 @@ package org.firebirdsql.jaybird.parser;
  */
 final class NumericLiteralToken extends AbstractToken implements LiteralToken {
 
-    NumericLiteralToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    NumericLiteralToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public NumericLiteralToken(int pos, CharSequence tokenText) {

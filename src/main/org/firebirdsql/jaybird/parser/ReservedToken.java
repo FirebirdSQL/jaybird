@@ -38,8 +38,8 @@ package org.firebirdsql.jaybird.parser;
 final class ReservedToken extends AbstractToken {
 
     @SuppressWarnings("unused")
-    ReservedToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    ReservedToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public ReservedToken(int pos, CharSequence tokenText) {

@@ -31,8 +31,8 @@ package org.firebirdsql.jaybird.parser;
  */
 final class OperatorToken extends AbstractToken {
 
-    OperatorToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    OperatorToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public OperatorToken(int pos, CharSequence tokenText) {

@@ -37,6 +37,6 @@ public interface ReservedWords {
      *         Token text to check
      * @return {@code true} if the token text is a reserved word, {@code false} otherwise
      */
-    boolean isReservedWord(String tokenText);
+    boolean isReservedWord(CharSequence tokenText);
 
 }

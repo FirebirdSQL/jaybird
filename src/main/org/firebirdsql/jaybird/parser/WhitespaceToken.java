@@ -26,8 +26,8 @@ package org.firebirdsql.jaybird.parser;
  */
 final class WhitespaceToken extends AbstractToken {
 
-    WhitespaceToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    WhitespaceToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public WhitespaceToken(int pos, CharSequence tokenText) {

@@ -26,8 +26,8 @@ package org.firebirdsql.jaybird.parser;
  */
 final class QuotedIdentifierToken extends AbstractToken {
 
-    QuotedIdentifierToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    QuotedIdentifierToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public QuotedIdentifierToken(int pos, CharSequence tokenText) {

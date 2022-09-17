@@ -27,7 +27,7 @@ class BooleanLiteralTokenTest {
 
     @Test
     void trueToken_chars() {
-        BooleanLiteralToken token = BooleanLiteralToken.trueToken(0, "true".toCharArray(), 0, 4);
+        BooleanLiteralToken token = BooleanLiteralToken.trueToken(0, "true", 0, 4);
 
         assertTrue(token.isTrue(), "isTrue");
         assertFalse(token.isFalse(), "isFalse");
@@ -45,7 +45,7 @@ class BooleanLiteralTokenTest {
 
     @Test
     void falseToken_charArray() {
-        BooleanLiteralToken token = BooleanLiteralToken.falseToken(0, "false".toCharArray(), 0, 5);
+        BooleanLiteralToken token = BooleanLiteralToken.falseToken(0, "false", 0, 5);
 
         assertFalse(token.isTrue(), "isTrue");
         assertTrue(token.isFalse(), "isFalse");
@@ -63,7 +63,7 @@ class BooleanLiteralTokenTest {
 
     @Test
     void unknownToken_charArray() {
-        BooleanLiteralToken token = BooleanLiteralToken.unknownToken(0, "unknown".toCharArray(), 0, 7);
+        BooleanLiteralToken token = BooleanLiteralToken.unknownToken(0, "unknown", 0, 7);
 
         assertFalse(token.isTrue(), "isTrue");
         assertFalse(token.isFalse(), "isFalse");

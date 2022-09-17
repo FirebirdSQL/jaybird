@@ -27,8 +27,8 @@ package org.firebirdsql.jaybird.parser;
  */
 final class CommentToken extends AbstractToken {
 
-    CommentToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    CommentToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public CommentToken(int pos, CharSequence tokenText) {

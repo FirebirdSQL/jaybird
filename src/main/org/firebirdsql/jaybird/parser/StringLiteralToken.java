@@ -42,8 +42,8 @@ final class StringLiteralToken extends AbstractToken implements LiteralToken {
     // X<quote><quote>
     private static final int X_LITERAL_MIN_SIZE = 3;
 
-    StringLiteralToken(int pos, char[] srcChars, int start, int end) {
-        super(pos, srcChars, start, end);
+    StringLiteralToken(int pos, CharSequence src, int start, int end) {
+        super(pos, src, start, end);
     }
 
     public StringLiteralToken(int pos, CharSequence tokenText) {
