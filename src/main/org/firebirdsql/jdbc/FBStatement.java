@@ -81,7 +81,7 @@ public class FBStatement implements FirebirdStatement {
     // are all singleton.
     protected boolean isSingletonResult;
     // Used for singleton or batch results for getGeneratedKeys, and singleton results of stored procedures
-    protected final List<RowValue> specialResult = new LinkedList<>();
+    protected final List<RowValue> specialResult = new ArrayList<>();
 
     protected int maxRows;
     protected int fetchSize;
