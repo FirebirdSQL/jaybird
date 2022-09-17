@@ -22,7 +22,7 @@ import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jdbc.metadata.MetadataPattern;
 import org.firebirdsql.jaybird.parser.StatementDetector;
-import org.firebirdsql.jaybird.parser.StatementType;
+import org.firebirdsql.jaybird.parser.LocalStatementType;
 import org.firebirdsql.jaybird.parser.FirebirdReservedWords;
 import org.firebirdsql.jaybird.parser.SqlParser;
 import org.firebirdsql.jaybird.parser.StatementIdentification;
@@ -44,14 +44,14 @@ final class GeneratedKeysQueryBuilder {
     // TODO Add caching for column info
 
     private static final Logger logger = LoggerFactory.getLogger(GeneratedKeysQueryBuilder.class);
-    private static final Map<StatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
+    private static final Map<LocalStatementType, GeneratedKeysSupport.QueryType> statementTypeToQueryType;
     static {
-        Map<StatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(StatementType.class);
-        temp.put(StatementType.INSERT, GeneratedKeysSupport.QueryType.INSERT);
-        temp.put(StatementType.UPDATE, GeneratedKeysSupport.QueryType.UPDATE);
-        temp.put(StatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
-        temp.put(StatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
-        temp.put(StatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
+        Map<LocalStatementType, GeneratedKeysSupport.QueryType> temp = new EnumMap<>(LocalStatementType.class);
+        temp.put(LocalStatementType.INSERT, GeneratedKeysSupport.QueryType.INSERT);
+        temp.put(LocalStatementType.UPDATE, GeneratedKeysSupport.QueryType.UPDATE);
+        temp.put(LocalStatementType.DELETE, GeneratedKeysSupport.QueryType.DELETE);
+        temp.put(LocalStatementType.UPDATE_OR_INSERT, GeneratedKeysSupport.QueryType.UPDATE_OR_INSERT);
+        temp.put(LocalStatementType.MERGE, GeneratedKeysSupport.QueryType.MERGE);
         statementTypeToQueryType = Collections.unmodifiableMap(temp);
     }
 
@@ -122,7 +122,7 @@ final class GeneratedKeysQueryBuilder {
         if (statementIdentification == null) {
             return false;
         }
-        StatementType statementType = statementIdentification.getStatementType();
+        LocalStatementType statementType = statementIdentification.getStatementType();
         GeneratedKeysSupport.QueryType queryType =
                 statementTypeToQueryType.getOrDefault(statementType, GeneratedKeysSupport.QueryType.UNSUPPORTED);
         return supportedQueryTypes.contains(queryType);

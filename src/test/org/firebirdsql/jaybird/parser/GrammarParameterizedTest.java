@@ -24,12 +24,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static org.firebirdsql.jaybird.parser.StatementType.DELETE;
-import static org.firebirdsql.jaybird.parser.StatementType.INSERT;
-import static org.firebirdsql.jaybird.parser.StatementType.MERGE;
-import static org.firebirdsql.jaybird.parser.StatementType.SELECT;
-import static org.firebirdsql.jaybird.parser.StatementType.UPDATE;
-import static org.firebirdsql.jaybird.parser.StatementType.UPDATE_OR_INSERT;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.DELETE;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.INSERT;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.MERGE;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.SELECT;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.UPDATE;
+import static org.firebirdsql.jaybird.parser.LocalStatementType.UPDATE_OR_INSERT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GrammarParameterizedTest {
@@ -38,7 +38,7 @@ class GrammarParameterizedTest {
 
     @ParameterizedTest
     @MethodSource("testData")
-    void testParser(boolean expectedReturning, StatementType expectedStatementType, String expectedTableName,
+    void testParser(boolean expectedReturning, LocalStatementType expectedStatementType, String expectedTableName,
             String statementText) {
         StatementIdentification statementIdentification = parseStatement(statementText);
 
@@ -153,7 +153,7 @@ class GrammarParameterizedTest {
         );
     }
 
-    private static Arguments testCase(boolean expectedReturning, StatementType expectedStatementType,
+    private static Arguments testCase(boolean expectedReturning, LocalStatementType expectedStatementType,
             String expectedTableName, String statementText) {
         return Arguments.of(expectedReturning, expectedStatementType, expectedTableName, statementText);
     }

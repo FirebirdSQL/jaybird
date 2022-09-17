@@ -50,6 +50,7 @@ public final class StatementDetector implements TokenVisitor {
         // NOTE: This is a shortcut, if WITH is ever allowed as the first token of another statement type,
         // this must be changed to detect the first keyword after the entire WITH clause
         nextAfterStart.put("WITH", ParserState.SELECT);
+        nextAfterStart.put("EXECUTE", ParserState.EXECUTE);
         nextAfterStart.put("UPDATE", ParserState.UPDATE);
         nextAfterStart.put("DELETE", ParserState.DELETE);
         nextAfterStart.put("INSERT", ParserState.INSERT);
@@ -58,7 +59,7 @@ public final class StatementDetector implements TokenVisitor {
     }
 
     private final boolean detectReturning;
-    private StatementType statementType = StatementType.UNKNOWN;
+    private LocalStatementType statementType = LocalStatementType.UNKNOWN;
     private ParserState parserState = ParserState.START;
     private Token tableNameToken;
     private ReturningClauseDetector returningClauseDetector;
@@ -118,7 +119,7 @@ public final class StatementDetector implements TokenVisitor {
     /**
      * @return detected statement type, {@code UNKNOWN} when no tokens have been received (nothing was parsed)
      */
-    public StatementType getStatementType() {
+    public LocalStatementType getStatementType() {
         return statementType;
     }
 
@@ -126,9 +127,9 @@ public final class StatementDetector implements TokenVisitor {
         return tableNameToken;
     }
 
-    private void updateStatementType(StatementType statementType) {
+    private void updateStatementType(LocalStatementType statementType) {
         this.statementType = statementType;
-        if (statementType == StatementType.OTHER) {
+        if (statementType == LocalStatementType.OTHER) {
             // clear any previously set table name
             setTableNameToken(null);
         }
@@ -143,40 +144,51 @@ public final class StatementDetector implements TokenVisitor {
             @Override
             ParserState next0(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken)) {
-                    detector.updateStatementType(StatementType.OTHER);
+                    detector.updateStatementType(LocalStatementType.OTHER);
                     return OTHER;
                 }
                 ParserState nextState = NEXT_AFTER_START.getOrDefault(token.text(), ParserState.OTHER);
                 switch (nextState) {
                 case SELECT:
-                    detector.updateStatementType(StatementType.SELECT);
+                    detector.updateStatementType(LocalStatementType.SELECT);
                     break;
                 case UPDATE:
                     // Might be UPDATE OR INSERT
-                    detector.updateStatementType(StatementType.UPDATE);
+                    detector.updateStatementType(LocalStatementType.UPDATE);
                     break;
                 case DELETE:
-                    detector.updateStatementType(StatementType.DELETE);
+                    detector.updateStatementType(LocalStatementType.DELETE);
                     break;
                 case INSERT:
-                    detector.updateStatementType(StatementType.INSERT);
+                    detector.updateStatementType(LocalStatementType.INSERT);
                     break;
                 case MERGE:
-                    detector.updateStatementType(StatementType.MERGE);
+                    detector.updateStatementType(LocalStatementType.MERGE);
                     break;
                 default:
-                    detector.updateStatementType(StatementType.OTHER);
+                    detector.updateStatementType(LocalStatementType.OTHER);
                     break;
                 }
                 return nextState;
             }
         },
         SELECT(true),
+        EXECUTE {
+            @Override
+            ParserState next0(Token token, StatementDetector detector) {
+                if (token instanceof ReservedToken && token.equalsIgnoreCase("PROCEDURE")) {
+                    detector.updateStatementType(LocalStatementType.EXECUTE_PROCEDURE);
+                    return EXECUTE_PROCEDURE;
+                }
+                return OTHER;
+            }
+        },
+        EXECUTE_PROCEDURE(true),
         UPDATE {
             @Override
             ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof OperatorToken && token.equalsIgnoreCase("OR")) {
-                    detector.updateStatementType(StatementType.UNKNOWN);
+                    detector.updateStatementType(LocalStatementType.UNKNOWN);
                     return POSSIBLY_UPDATE_OR_INSERT;
                 } else {
                     return DML_TARGET.next0(token, detector);
@@ -187,11 +199,11 @@ public final class StatementDetector implements TokenVisitor {
             @Override
             ParserState next0(Token token, StatementDetector detector) {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INSERT")) {
-                    detector.updateStatementType(StatementType.UPDATE_OR_INSERT);
+                    detector.updateStatementType(LocalStatementType.UPDATE_OR_INSERT);
                     // Further detection can use the insert path
                     return INSERT;
                 }
-                detector.updateStatementType(StatementType.OTHER);
+                detector.updateStatementType(LocalStatementType.OTHER);
                 return OTHER;
             }
         },
@@ -199,7 +211,7 @@ public final class StatementDetector implements TokenVisitor {
             @Override
             ParserState next0(Token token, StatementDetector detector) {
                 if (!(token instanceof ReservedToken && token.equalsIgnoreCase("FROM"))) {
-                    detector.updateStatementType(StatementType.OTHER);
+                    detector.updateStatementType(LocalStatementType.OTHER);
                     return OTHER;
                 }
                 return DML_TARGET;
@@ -213,7 +225,7 @@ public final class StatementDetector implements TokenVisitor {
                     detector.setTableNameToken(token);
                     return DML_POSSIBLE_ALIAS;
                 } else {
-                    detector.updateStatementType(StatementType.OTHER);
+                    detector.updateStatementType(LocalStatementType.OTHER);
                     return OTHER;
                 }
             }
@@ -232,7 +244,7 @@ public final class StatementDetector implements TokenVisitor {
                     return FIND_RETURNING;
                 } else {
                     // Unexpected or invalid token at this point
-                    detector.updateStatementType(StatementType.OTHER);
+                    detector.updateStatementType(LocalStatementType.OTHER);
                     return OTHER;
                 }
             }
@@ -244,7 +256,7 @@ public final class StatementDetector implements TokenVisitor {
                     return FIND_RETURNING;
                 }
                 // syntax error
-                detector.updateStatementType(StatementType.OTHER);
+                detector.updateStatementType(LocalStatementType.OTHER);
                 return OTHER;
             }
         },
@@ -254,7 +266,7 @@ public final class StatementDetector implements TokenVisitor {
                 if (token instanceof ReservedToken && token.equalsIgnoreCase("INTO")) {
                     return INSERT_INTO;
                 }
-                detector.updateStatementType(StatementType.OTHER);
+                detector.updateStatementType(LocalStatementType.OTHER);
                 return OTHER;
             }
         },
@@ -266,7 +278,7 @@ public final class StatementDetector implements TokenVisitor {
                     return FIND_RETURNING;
                 }
                 // Syntax error
-                detector.updateStatementType(StatementType.OTHER);
+                detector.updateStatementType(LocalStatementType.OTHER);
                 return OTHER;
             }
         },
@@ -277,7 +289,7 @@ public final class StatementDetector implements TokenVisitor {
                     return DML_TARGET;
                 }
                 // Syntax error
-                detector.updateStatementType(StatementType.OTHER);
+                detector.updateStatementType(LocalStatementType.OTHER);
                 return OTHER;
             }
         },

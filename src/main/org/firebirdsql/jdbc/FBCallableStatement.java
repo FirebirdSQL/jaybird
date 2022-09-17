@@ -152,7 +152,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
         }
 
-        results.add(getLargeUpdateCount());
+        results.add(getLargeUpdateCountMinZero());
     }
 
     @Override
@@ -283,7 +283,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
                     setRequiredTypes();
                 }
 
-                return getUpdateCount();
+                return getUpdateCountMinZero();
             } finally {
                 notifyStatementCompleted();
             }

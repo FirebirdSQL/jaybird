@@ -564,11 +564,13 @@ Now, after an exception, attempting to retrieve the update count with `getUpdate
 As part of this change, queries were changed to convert the `RDB$TRANSACTION_DESCRIPTION` to an octets varchar field (to avoid additional roundtrips for blob fields), and -- when applicable -- only query transactions that have a transaction description written by Jaybird
 +
 As a result of this change, Xid forget and recovery no longer work on Firebird 2.1 or earlier (these versions were already not supported by Jaybird).
-* Change: Select statements no longer produce an update count (https://github.com/FirebirdSQL/jaybird/issues/703[jaybird#703])
+* Change: Stop reporting `0` update count with `getUpdateCount()` for statement types that never produce an update count (https://github.com/FirebirdSQL/jaybird/issues/703[jaybird#703])
 +
-Jaybird will no longer report an update count of `0` after `getMoreResults()` on a statement that executed a select, but immediately report `-1` (which it previously only did after a second call to `getMoreResults()`).
+`getUpdateCount()` will no longer report an update count of `0` for statements that never have a non-zero update count (e.g. `select`, `execute procedure`, DDL, management statements).
+Now, it will immediately report `-1` (which it previously only did after another call to `getMoreResults()`).
 +
-Other statements that produce result sets, like `EXECUTE BLOCK` with `SUSPEND` and Firebird 5.0 or higher DML with a `RETURNING` clause, will still report an update count.
+The `executeUpdate` and `executeLargeUpdate` methods will continue to report an update count of `0`, as required by the JDBC API documentation.
+For consistency with server-side batch execution, emulated batch execution will also report update counts of `0` where `getUpdateCount()` would report `-1`.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages

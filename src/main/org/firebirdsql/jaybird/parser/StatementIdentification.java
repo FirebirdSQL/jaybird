@@ -31,17 +31,17 @@ import static java.util.Objects.requireNonNull;
 @InternalApi
 public final class StatementIdentification {
 
-    private final StatementType statementType;
+    private final LocalStatementType statementType;
     private final String tableName;
     private final boolean returningClauseDetected;
 
-    StatementIdentification(StatementType statementType, String tableName, boolean returningClauseDetected) {
+    StatementIdentification(LocalStatementType statementType, String tableName, boolean returningClauseDetected) {
         this.statementType = requireNonNull(statementType, "statementType");
         this.tableName = tableName;
         this.returningClauseDetected = returningClauseDetected;
     }
 
-    public StatementType getStatementType() {
+    public LocalStatementType getStatementType() {
         return statementType;
     }
 

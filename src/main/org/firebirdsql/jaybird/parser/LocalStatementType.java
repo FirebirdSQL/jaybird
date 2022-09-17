@@ -16,7 +16,6 @@
  *
  * All rights reserved.
  */
-
 package org.firebirdsql.jaybird.parser;
 
 import org.firebirdsql.util.InternalApi;
@@ -35,15 +34,19 @@ import org.firebirdsql.util.InternalApi;
  * @since 5
  */
 @InternalApi
-public enum StatementType {
+public enum LocalStatementType {
     /**
      * Null-state before detection.
      */
     UNKNOWN,
     /**
-     * Select statement, including selectable stored procedures.
+     * {@code SELECT} statement, including selectable stored procedures.
      */
     SELECT,
+    /**
+     * {@code EXECUTE PROCEDURE} statement.
+     */
+    EXECUTE_PROCEDURE,
     /**
      * {@code UPDATE} statement (or {@code UPDATE OR INSERT} before detection is complete)
      */

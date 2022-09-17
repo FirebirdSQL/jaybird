@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +41,7 @@ public enum StatementType {
         }
         @Override
         public boolean isTypeWithUpdateCounts() {
+            // Not true for actual selects, but only for EXECUTE BLOCK and Firebird 5+ DML with RETURNING
             return true;
         }
     },
@@ -74,6 +73,7 @@ public enum StatementType {
         }
         @Override
         public boolean isTypeWithUpdateCounts() {
+            // Not true for EXECUTE PROCEDURE, but only true for EXECUTE BLOCK or DML with RETURNING
             return true;
         }
     },
@@ -83,10 +83,6 @@ public enum StatementType {
     SELECT_FOR_UPDATE(ISCConstants.isc_info_sql_stmt_select_for_upd) {
         @Override
         public boolean isTypeWithCursor() {
-            return true;
-        }
-        @Override
-        public boolean isTypeWithUpdateCounts() {
             return true;
         }
     },
@@ -110,7 +106,7 @@ public enum StatementType {
 
     private final int statementTypeCode;
 
-    private StatementType(int statementTypeCode) {
+    StatementType(int statementTypeCode) {
         this.statementTypeCode = statementTypeCode;
     }
 
@@ -127,7 +123,7 @@ public enum StatementType {
      * Implementation assumes that this is the same for all Firebird versions.
      * </p>
      *
-     * @return <code>true</code> statement type has a cursor.
+     * @return {@code true} statement type has a cursor
      */
     public boolean isTypeWithCursor() {
         return false;
@@ -139,7 +135,7 @@ public enum StatementType {
      * Implementation assumes that this is the same for all Firebird versions.
      * </p>
      *
-     * @return <code>true</code> statement type will produce a singleton result.
+     * @return {@code true} statement type will produce a singleton result
      */
     public boolean isTypeWithSingletonResult() {
         return false;
@@ -148,10 +144,10 @@ public enum StatementType {
     /**
      * Indicates whether this statement type can produce update counts.
      * <p>
-     * Note that in some cases (eg a select) the update count might not be available immediately.
+     * Note that in some cases (e.g. an EXECUTE BLOCK) the update count might only be correct after retrieving all rows.
      * </p>
      *
-     * @return <code>true</code> of this statement type produces an update count.
+     * @return {@code true} of this statement type produces an update count
      */
     public boolean isTypeWithUpdateCounts() {
         return false;

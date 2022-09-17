@@ -42,7 +42,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, \"\u0442\u0435\"\"\u0441\u0442\", aaa) values('a', -1.23, a(a,aa))");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
@@ -52,7 +52,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into \"someTable\"(a, b, c) values('a', -1.23, a(a,aa))");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"someTable\"", statementModel.getTableName(), "Unexpected table name");
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
@@ -62,7 +62,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) returning id");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -72,7 +72,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) returning id as \"ID\", b,c no_as");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -82,7 +82,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) -- returning id");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -92,7 +92,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "insert into someTable(a, b, c) values('a', -1.23, a(a,aa)) /* returning id */");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName(), "Unexpected table name");
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -101,7 +101,7 @@ class GrammarTest {
     void insertIntoSelect() {
         StatementIdentification statementModel = parseStatement("Insert Into someTable Select * From anotherTable");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
@@ -111,7 +111,7 @@ class GrammarTest {
         StatementIdentification statementModel =
                 parseStatement("Insert Into someTable Select * From anotherTable returning id");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -121,7 +121,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2)");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
@@ -131,7 +131,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Insert Into someTable ( col1, col2) values((case when a = 1 Then 2 else 3 end), 2) returning id");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -140,7 +140,7 @@ class GrammarTest {
     void insertDefaultValues() {
         StatementIdentification statementModel = parseStatement("INSERT INTO someTable DEFAULT VALUES");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should have no returning");
     }
@@ -150,7 +150,7 @@ class GrammarTest {
         StatementIdentification statementModel =
                 parseStatement("INSERT INTO someTable DEFAULT VALUES RETURNING \"ID\"");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -160,7 +160,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0");
 
-        assertEquals(StatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -170,7 +170,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Update \"someTable\" Set col1 = 25, col2 = 'abc' Where 1=0");
 
-        assertEquals(StatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"someTable\"", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -180,7 +180,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Update \"some Table\" Set col1 = 25, col2 = 'abc' Where 1=0");
 
-        assertEquals(StatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"some Table\"", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -190,7 +190,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "Update someTable Set col1 = 25, col2 = 'abc' Where 1=0 Returning col3");
 
-        assertEquals(StatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.UPDATE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -200,7 +200,7 @@ class GrammarTest {
         StatementIdentification statementModel = parseStatement(
                 "DELETE FROM someTable Where 1=0");
 
-        assertEquals(StatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -209,7 +209,7 @@ class GrammarTest {
     void delete_quotedTableName() {
         StatementIdentification statementModel = parseStatement("delete from \"someTable\"");
 
-        assertEquals(StatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"someTable\"", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -218,7 +218,7 @@ class GrammarTest {
     void delete_withReturning() {
         StatementIdentification statementModel = parseStatement("Delete From someTable Returning col3");
 
-        assertEquals(StatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -227,7 +227,7 @@ class GrammarTest {
     void delete_withWhere_withReturning() {
         StatementIdentification statementModel = parseStatement("Delete From someTable where 1 = 1 Returning col3");
 
-        assertEquals(StatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.DELETE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }
@@ -236,7 +236,7 @@ class GrammarTest {
     void select() {
         StatementIdentification statementModel = parseStatement("select * from RDB$DATABASE");
 
-        assertEquals(StatementType.SELECT, statementModel.getStatementType(), "Expected SELECT statement type");
+        assertEquals(LocalStatementType.SELECT, statementModel.getStatementType(), "Expected SELECT statement type");
         assertNull(statementModel.getTableName(), "Expected no table name");
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -245,7 +245,7 @@ class GrammarTest {
     void insertWithQString() {
         StatementIdentification statementModel = parseStatement("insert into someTable values (Q'[a'bc]')");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -255,7 +255,7 @@ class GrammarTest {
         StatementIdentification statementModel =
                 parseStatement("insert into someTable values (Q'[a'bc]') returning id, \"ABC\"");
 
-        assertEquals(StatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.INSERT, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("someTable", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -295,7 +295,7 @@ class GrammarTest {
                         + "  WHEN NOT MATCHED THEN\n"
                         + "    INSERT (title, desc, bought) values (p.title, p.desc, p.bought)");
 
-        assertEquals(StatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("books", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -311,7 +311,7 @@ class GrammarTest {
                         + "  WHEN NOT MATCHED THEN\n"
                         + "    INSERT (title, desc, bought) values (p.title, p.desc, p.bought)");
 
-        assertEquals(StatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"books\"", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -327,7 +327,7 @@ class GrammarTest {
                         + "  WHEN NOT MATCHED THEN\n"
                         + "    INSERT (title, desc, bought) values (p.title, p.desc, p.bought)");
 
-        assertEquals(StatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("\"more books\"", statementModel.getTableName());
         assertFalse(statementModel.returningClauseDetected(), "Statement should not have returning");
     }
@@ -344,7 +344,7 @@ class GrammarTest {
                         + "    INSERT (title, desc, bought) values (p.title, p.desc, p.bought)\n"
                         + "  RETURNING id, \"OTHER COLUMN\"");
 
-        assertEquals(StatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
+        assertEquals(LocalStatementType.MERGE, statementModel.getStatementType(), "Unexpected statement type");
         assertEquals("books", statementModel.getTableName());
         assertTrue(statementModel.returningClauseDetected(), "Statement should have returning");
     }

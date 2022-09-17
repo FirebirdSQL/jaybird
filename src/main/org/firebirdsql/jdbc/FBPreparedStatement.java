@@ -199,7 +199,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                 if (internalExecute(isExecuteProcedureStatement) && !isGeneratedKeyQuery()) {
                     throw new FBSQLException("Update statement returned results.");
                 }
-                return getUpdateCount();
+                return getUpdateCountMinZero();
             } finally {
                 notifyStatementCompleted();
             }
@@ -932,7 +932,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     public long executeLargeUpdate() throws SQLException {
         executeUpdate();
-        return getLargeUpdateCount();
+        return getLargeUpdateCountMinZero();
     }
 
     /**
@@ -1064,7 +1064,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
                         throw new SQLException("Statements executed as batch should not produce a result set",
                                 SQLStateConstants.SQL_STATE_INVALID_STMT_TYPE);
                     }
-                    results.add(getLargeUpdateCount());
+                    results.add(getLargeUpdateCountMinZero());
                 }
                 return results;
             } catch (BatchUpdateException ex) {

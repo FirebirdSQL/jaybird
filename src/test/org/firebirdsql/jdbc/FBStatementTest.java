@@ -1009,6 +1009,26 @@ class FBStatementTest {
         }
     }
 
+    @Test
+    void updateCountOfDDL() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            assertFalse(stmt.execute(CREATE_TABLE), "expected no result set");
+            assertEquals(-1, stmt.getUpdateCount());
+        }
+    }
+
+    @Test
+    void updateCountOfExecuteProcedure() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            con.setAutoCommit(false);
+            stmt.execute(CREATE_TABLE);
+            stmt.execute("recreate procedure insert_proc as begin INSERT INTO test(col1) VALUES(1); end");
+            con.commit();
+            assertFalse(stmt.execute("execute procedure insert_proc"), "expected no result set");
+            assertEquals(-1, stmt.getUpdateCount());
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 
