@@ -31,7 +31,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 /**
  * Also serves as test for {@link ReturningClauseDetector}.
  */
-class DmlStatementDetectorTest {
+class StatementDetectorTest {
 
     private StatementDetector detector = new StatementDetector();
 
