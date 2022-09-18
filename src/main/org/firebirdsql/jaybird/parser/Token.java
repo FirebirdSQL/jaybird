@@ -41,8 +41,23 @@ public interface Token {
      * Token text.
      *
      * @return the text of the token; this is the original text from the source
+     * @see #textAsCharSequence()
      */
     String text();
+
+    /**
+     * Token text as {@link CharSequence}.
+     * <p>
+     * Default implementation returns {@link #text()}. As an optimization, implementations may return their contained
+     * {@code CharSequence} to avoid unnecessary conversion to string.
+     * </p>
+     *
+     * @return the text of the token; this is the original text from the source
+     * @see #text()
+     */
+    default CharSequence textAsCharSequence() {
+        return text();
+    }
 
     /**
      * Appends the current token to the supplied String builder.
@@ -76,7 +91,7 @@ public interface Token {
     }
 
     /**
-     * Case-insensitive equality of this tokens text ({@link #text()} using {@link String#equalsIgnoreCase(String)}.
+     * Case-insensitive equality of this tokens text using an equivalent of {@link String#equalsIgnoreCase(String)}.
      *
      * @param tokenText
      *         Token text to compare

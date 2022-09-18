@@ -46,7 +46,7 @@ final class GenericToken extends AbstractToken {
 
     @Override
     public boolean isValidIdentifier() {
-        return VALID_IDENTIFIER_PATTERN.matcher(text()).matches();
+        return VALID_IDENTIFIER_PATTERN.matcher(textAsCharSequence()).matches();
     }
 
 }

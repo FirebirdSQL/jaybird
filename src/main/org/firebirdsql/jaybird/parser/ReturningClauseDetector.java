@@ -58,27 +58,29 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
         }
     };
 
-    private static final Set<String> NOT_IN_RETURNING_TOKEN_TEXT;
-    private static final Set<String> NOT_IMMEDIATELY_BEFORE_RETURNING_TOKEN_TEXT;
-    private static final Set<String> NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT;
+    private static final Set<CharSequence> NOT_IN_RETURNING_TOKEN_TEXT;
+    private static final Set<CharSequence> NOT_IMMEDIATELY_BEFORE_RETURNING_TOKEN_TEXT;
+    private static final Set<CharSequence> NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT;
 
     static {
         // Token text that cannot occur in RETURNING at a top-level (some of them may occur nested within parentheses)
         // See also notImmediatelyAfterReturningTokenText for tokens that can occur, but not as first token
-        TreeSet<String> notInReturningTokenText = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        TreeSet<CharSequence> notInReturningTokenText =
+                new TreeSet<>(CharSequenceComparison.caseInsensitiveComparator());
         notInReturningTokenText.addAll(Arrays.asList(
                 "VALUES", "SELECT", "INSERT", "UPDATE", "DELETE", "MERGE", "WHERE", "PLAN", "ORDER", "ROWS", "SET"));
         NOT_IN_RETURNING_TOKEN_TEXT = unmodifiableSet(notInReturningTokenText);
 
         // Token text that cannot occur immediately before RETURNING
-        TreeSet<String> notImmediatelyBeforeReturningTokenText = new TreeSet<>(notInReturningTokenText);
+        TreeSet<CharSequence> notImmediatelyBeforeReturningTokenText = new TreeSet<>(notInReturningTokenText);
         // VALUES can occur in INSERT INTO tbl DEFAULT VALUES RETURNING ...
         notImmediatelyBeforeReturningTokenText.remove("VALUES");
         notImmediatelyBeforeReturningTokenText.addAll(Arrays.asList("WITH", "CONTAINING", "TO", "FROM", "BETWEEN"));
         NOT_IMMEDIATELY_BEFORE_RETURNING_TOKEN_TEXT = unmodifiableSet(notImmediatelyBeforeReturningTokenText);
 
         // Token text that cannot occur immediately after RETURNING
-        TreeSet<String> notImmediatelyAfterReturningTokenText = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        TreeSet<CharSequence> notImmediatelyAfterReturningTokenText =
+                new TreeSet<>(CharSequenceComparison.caseInsensitiveComparator());
         notImmediatelyAfterReturningTokenText.addAll(Arrays.asList("FROM", "AS", "TO"));
         NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT = unmodifiableSet(notImmediatelyAfterReturningTokenText);
     }
@@ -126,7 +128,7 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
      */
     private boolean cannotOccurInReturning(Token token) {
         return !hasReturningClauseTokens() && cannotOccurAsFirstReturningToken(token)
-                || token instanceof ReservedToken && NOT_IN_RETURNING_TOKEN_TEXT.contains(token.text());
+                || token instanceof ReservedToken && NOT_IN_RETURNING_TOKEN_TEXT.contains(token.textAsCharSequence());
     }
 
     /**
@@ -140,7 +142,7 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
     private boolean cannotOccurAsFirstReturningToken(Token token) {
         return token instanceof OperatorToken
                 && !(isPossibleUnaryOperator((OperatorToken) token) || token.equalsIgnoreCase("*"))
-                || NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT.contains(token.text());
+                || NOT_IMMEDIATELY_AFTER_RETURNING_TOKEN_TEXT.contains(token.textAsCharSequence());
     }
 
     /**
@@ -156,12 +158,11 @@ class ReturningClauseDetector extends AbstractTokenVisitor {
                 || previousToken instanceof OpenToken) {
             return false;
         }
-        return !NOT_IMMEDIATELY_BEFORE_RETURNING_TOKEN_TEXT.contains(previousToken.text());
+        return !NOT_IMMEDIATELY_BEFORE_RETURNING_TOKEN_TEXT.contains(previousToken.textAsCharSequence());
     }
 
     private static boolean isPossibleUnaryOperator(OperatorToken token) {
-        String tokenText = token.text();
-        return tokenText.equals("+") || tokenText.equals("-") || tokenText.equalsIgnoreCase("not");
+        return token.equalsIgnoreCase("+") || token.equalsIgnoreCase("-") || token.equalsIgnoreCase("NOT");
     }
 
     /**

@@ -57,6 +57,11 @@ abstract class AbstractToken implements Token {
     }
 
     @Override
+    public final CharSequence textAsCharSequence() {
+        return src;
+    }
+
+    @Override
     public void appendTo(StringBuilder sb) {
         sb.append(src);
     }
@@ -96,6 +101,11 @@ abstract class AbstractToken implements Token {
 
         if (pos != that.pos) return false;
         return srcCharsEquals(that);
+    }
+
+    @Override
+    public boolean equalsIgnoreCase(String tokenText) {
+        return CharSequenceComparison.equalsIgnoreCase(src, tokenText);
     }
 
     private boolean srcCharsEquals(AbstractToken that) {

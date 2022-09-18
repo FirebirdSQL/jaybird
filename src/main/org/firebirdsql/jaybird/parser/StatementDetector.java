@@ -42,10 +42,11 @@ import static java.util.Collections.unmodifiableMap;
 @InternalApi
 public final class StatementDetector implements TokenVisitor {
 
-    private static final Map<String, ParserState> NEXT_AFTER_START;
+    private static final Map<CharSequence, ParserState> NEXT_AFTER_START;
 
     static {
-        TreeMap<String, ParserState> nextAfterStart = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        TreeMap<CharSequence, ParserState> nextAfterStart =
+                new TreeMap<>(CharSequenceComparison.caseInsensitiveComparator());
         nextAfterStart.put("SELECT", ParserState.SELECT);
         // NOTE: This is a shortcut, if WITH is ever allowed as the first token of another statement type,
         // this must be changed to detect the first keyword after the entire WITH clause
@@ -147,7 +148,7 @@ public final class StatementDetector implements TokenVisitor {
                     detector.updateStatementType(LocalStatementType.OTHER);
                     return OTHER;
                 }
-                ParserState nextState = NEXT_AFTER_START.getOrDefault(token.text(), ParserState.OTHER);
+                ParserState nextState = NEXT_AFTER_START.getOrDefault(token.textAsCharSequence(), ParserState.OTHER);
                 switch (nextState) {
                 case SELECT:
                     detector.updateStatementType(LocalStatementType.SELECT);
