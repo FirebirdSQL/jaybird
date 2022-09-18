@@ -32,7 +32,6 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -68,7 +67,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     // @formatter:on
 
     protected final DatabaseListenerDispatcher databaseListenerDispatcher = new DatabaseListenerDispatcher();
-    private final Set<FbTransaction> activeTransactions = Collections.synchronizedSet(new HashSet<>());
+    private final Set<FbTransaction> activeTransactions = new HashSet<>();
     private final WarningMessageCallback warningCallback =
             warning -> databaseListenerDispatcher.warningReceived(AbstractFbDatabase.this, warning);
     private final RowDescriptor emptyRowDescriptor;
@@ -92,7 +91,9 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      * @return Number of active (not prepared or committed/rolled back) transactions
      */
     public final int getActiveTransactionCount() {
-        return activeTransactions.size();
+        try (LockCloseable ignored = withLock()) {
+            return activeTransactions.size();
+        }
     }
 
     /**
@@ -102,7 +103,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
      * </p>
      */
     protected final void transactionAdded(FbTransaction transaction) {
-        synchronized (activeTransactions) {
+        try (LockCloseable ignored = withLock()) {
             if (transaction.getState() == TransactionState.ACTIVE) {
                 activeTransactions.add(transaction);
             }
@@ -171,14 +172,15 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     public final void close() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkConnected();
-            if (getActiveTransactionCount() > 0) {
+            int activeTransactionCount = getActiveTransactionCount();
+            if (activeTransactionCount > 0) {
                 // Throw open transactions as exception, fbclient doesn't disconnect with outstanding (unprepared)
                 // transactions
                 // In the case of wire protocol we could ignore this and simply close, but that would be
                 // inconsistent with fbclient
                 throw new FbExceptionBuilder()
                         .exception(ISCConstants.isc_open_trans)
-                        .messageParameter(getActiveTransactionCount())
+                        .messageParameter(activeTransactionCount)
                         .toSQLException();
             }
 
@@ -276,9 +278,6 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     public final void transactionStateChanged(FbTransaction transaction, TransactionState newState,
             TransactionState previousState) {
         switch (newState) {
-        case PREPARED:
-            activeTransactions.remove(transaction);
-            break;
         case COMMITTING:
         case ROLLING_BACK:
             /* Even if the commit or rollback fails, we no longer consider it an active transaction
@@ -289,12 +288,18 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                the server, or the transaction was already committed or rolled back.
             */
             // TODO "register" transaction as pendingEnd for debugging?
-            activeTransactions.remove(transaction);
+        case PREPARED:
+            try (LockCloseable ignored = withLock()) {
+                activeTransactions.remove(transaction);
+            }
             break;
         case COMMITTED:
         case ROLLED_BACK:
-            activeTransactions.remove(transaction);
-            transaction.removeTransactionListener(this);
+            try (LockCloseable ignored = withLock()) {
+                activeTransactions.remove(transaction);
+                transaction.removeTransactionListener(this);
+                transaction.removeExceptionListener(exceptionListenerDispatcher);
+            }
             break;
         default:
             // do nothing
