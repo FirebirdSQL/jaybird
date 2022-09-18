@@ -33,13 +33,23 @@ import java.util.Map;
  * Type-safe "enumeration" of the GDS types registered in the system. 
  */
 public final class GDSType implements Serializable {
-    
+
+    /*
+     NOTE: We currently synchronize on typeMap in registerType (r/w), but not getType (r only). The chance of this
+     causing issues are slim to none as generally writes should only occur while loading GDSFactory. Otherwise, writes
+     can only occur when explicitly registering plugins with GDSFactory.registerPlugin or deserializing GDSType when
+     the name is not already registered. The chances of this occurring are slim to none, and the expectation is that
+     serializing registerType is sufficient protection in general.
+    */
     private static final Map<String, GDSType> typeMap = new HashMap<>();
+    private static final long serialVersionUID = 817804953480527534L;
 
     // DO NOT REMOVE: needed to initiate static initialization of the GDSFactory
-    @SuppressWarnings("unused")
-    private static final GDSFactory factory = new GDSFactory();
-    
+    static {
+        //noinspection ResultOfMethodCallIgnored
+        GDSFactory.getDefaultGDSType();
+    }
+
     /**
      * Factory method for instances of this class. There's only three possible
      * instances of this class, however linking to them directly is not always
@@ -66,7 +76,6 @@ public final class GDSType implements Serializable {
         if (type == null) {
             return null;
         }
-            
         return typeMap.get(type.toUpperCase(Locale.ROOT));
     }
     
@@ -80,26 +89,21 @@ public final class GDSType implements Serializable {
      * name.
      */
     static GDSType registerType(String typeName) {
-        synchronized(typeMap) {
-            if (typeMap.containsKey(typeName)) {
-                return typeMap.get(typeName);
-            }
-            
-            GDSType type = new GDSType(typeName);
-            typeMap.put(typeName, type);
-            
-            return type;
+        // NOTE: See also comment on typeMap
+        synchronized (typeMap) {
+            return typeMap.computeIfAbsent(typeName.toUpperCase(Locale.ROOT), GDSType::new);
         }
     }
     
-    private GDSType(String s) {
-        name = s;
+    private GDSType(String name) {
+        this.name = name;
     }
 
-    protected Object readResolve() {
+    private Object readResolve() {
         return registerType(name);
     }
 
+    @Override
     public String toString() {
         return name;
     }

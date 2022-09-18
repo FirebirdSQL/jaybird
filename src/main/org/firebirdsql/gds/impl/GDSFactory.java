@@ -43,7 +43,7 @@ import java.util.Map.Entry;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class GDSFactory {
+public final class GDSFactory {
 
     private static final Logger log = LoggerFactory.getLogger(GDSFactory.class);
 
@@ -52,7 +52,9 @@ public class GDSFactory {
      * puts the shortest JDBC URLs at the end of the list, so the correct
      * default protocol handling can be implemented.
      */
-    private static class ReversedStringComparator implements Comparator<String>, Serializable {
+    private static final class ReversedStringComparator implements Comparator<String>, Serializable {
+
+        private static final long serialVersionUID = 8861240319376746440L;
 
         public int compare(String s1, String s2) {
             // note, we compare here s2 to s1,
@@ -62,9 +64,7 @@ public class GDSFactory {
     }
 
     private static final Set<GDSFactoryPlugin> registeredPlugins = new HashSet<>();
-
     private static final Map<GDSType, GDSFactoryPlugin> typeToPluginMap = new HashMap<>();
-
     private static final TreeMap<String, GDSFactoryPlugin> jdbcUrlToPluginMap = new TreeMap<>(new ReversedStringComparator());
 
     private static GDSType defaultType;
@@ -87,6 +87,10 @@ public class GDSFactory {
                 loadPluginsFallback(classLoader);
             }
         }
+    }
+
+    private GDSFactory() {
+        // no instances
     }
 
     /**
