@@ -27,8 +27,6 @@ import org.firebirdsql.jdbc.FBDataSource;
 
 import javax.naming.*;
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -57,7 +55,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     static final String REF_MCF = "mcf";
 
     protected final FBManagedConnectionFactory mcf;
-    private transient ReadWriteLock dsLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock dsLock = new ReentrantReadWriteLock();
     protected transient FBDataSource ds;
 
     protected String description;
@@ -268,10 +266,5 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         }
 
         return iface.cast(this);
-    }
-
-    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        dsLock = new ReentrantReadWriteLock();
     }
 }
