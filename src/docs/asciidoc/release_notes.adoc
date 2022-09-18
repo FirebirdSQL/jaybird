@@ -773,6 +773,11 @@ The following classes are no longer accessible in Jaybird 5:
 * `FBUpdatableCursorFetcher` is now package private.
 * `FBRowUpdater` is now package private and final.
 
+The following classes can no longer be subclassed in Jaybird 5:
+
+* `DefaultEncodingSet` is now final.
+In practice, this class was already defined in a way that it couldn't be subclassed in a useful way, but it was documented that it could because of an earlier design iteration.
+
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
 

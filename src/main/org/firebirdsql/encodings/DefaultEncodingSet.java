@@ -29,20 +29,13 @@ import static org.firebirdsql.gds.ISCConstants.CS_NONE;
 
 /**
  * The default encoding set for Jaybird.
- * <p>
- * This {@link EncodingSet} loads the definitions from the file <code>default-firebird-encodings.xml</code> in
- * <code>org.firebirdsql.encodings</code>
- * </p>
- * <p>
- * This class can be subclassed to load other definitions
- * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class DefaultEncodingSet implements EncodingSet {
+public final class DefaultEncodingSet implements EncodingSet {
 
-    private List<EncodingDefinition> encodingDefinitions = null;
+    private final List<EncodingDefinition> encodingDefinitions = createEncodingDefinitions();
 
     @Override
     public int getPreferenceWeight() {
@@ -50,10 +43,7 @@ public class DefaultEncodingSet implements EncodingSet {
     }
 
     @Override
-    public final synchronized List<EncodingDefinition> getEncodings() {
-        if (encodingDefinitions == null) {
-            encodingDefinitions = createEncodingDefinitions();
-        }
+    public List<EncodingDefinition> getEncodings() {
         return encodingDefinitions;
     }
 
