@@ -27,10 +27,15 @@ import org.firebirdsql.jdbc.FBDataSource;
 
 import javax.naming.*;
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This is a simple implementation of {@link DataSource} interface. Connections
@@ -52,6 +57,7 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
     static final String REF_MCF = "mcf";
 
     protected final FBManagedConnectionFactory mcf;
+    private transient ReadWriteLock dsLock = new ReentrantReadWriteLock();
     protected transient FBDataSource ds;
 
     protected String description;
@@ -222,18 +228,30 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      * @throws SQLException
      *         if something went wrong.
      */
-    protected synchronized DataSource getDataSource() throws SQLException {
-        if (ds != null) {
-            return ds;
+    protected DataSource getDataSource() throws SQLException {
+        Lock readLock = dsLock.readLock();
+        readLock.lock();
+        try {
+            if (ds != null) {
+                return ds;
+            }
+        } finally {
+            readLock.unlock();
         }
+        Lock writeLock = dsLock.writeLock();
+        writeLock.lock();
+        try {
+            if (ds != null) {
+                return ds;
+            }
 
-        if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
-            throw new SQLException("Database was not specified. Cannot provide connections.");
+            if (mcf.getDatabaseName() == null || "".equals(mcf.getDatabaseName().trim())) {
+                throw new SQLException("Database was not specified. Cannot provide connections.");
+            }
+            return ds = (FBDataSource) mcf.createConnectionFactory();
+        } finally {
+            writeLock.unlock();
         }
-
-        ds = (FBDataSource) mcf.createConnectionFactory();
-
-        return ds;
     }
 
     // JDBC 4.0
@@ -250,5 +268,10 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         }
 
         return iface.cast(this);
+    }
+
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        dsLock = new ReentrantReadWriteLock();
     }
 }

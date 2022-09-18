@@ -20,6 +20,7 @@ package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSType;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.xca.*;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDataSource;
@@ -62,7 +63,7 @@ public class FBXADataSource extends FBAbstractCommonDataSource implements XAData
     }
 
     private void initialize() throws SQLException {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             if (internalDs != null) {
                 return;
             }

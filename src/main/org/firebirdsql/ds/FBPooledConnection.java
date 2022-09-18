@@ -22,12 +22,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
 import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jdbc.FBSQLException;
 import org.firebirdsql.jdbc.SQLStateConstants;
 
@@ -41,6 +44,8 @@ public class FBPooledConnection implements PooledConnection {
 
     private final List<ConnectionEventListener> connectionEventListeners = new CopyOnWriteArrayList<>();
 
+    private final Lock lock = new ReentrantLock();
+    private final LockCloseable unlock = lock::unlock;
     private Connection connection;
     private PooledConnectionHandler handler;
 
@@ -48,26 +53,33 @@ public class FBPooledConnection implements PooledConnection {
         this.connection = connection;
     }
 
-    @Override
-    public synchronized Connection getConnection() throws SQLException {
-        if (connection == null) {
-            FBSQLException ex = new FBSQLException("The PooledConnection has been closed",
-                    SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
-            fireFatalConnectionError(ex);
-            throw ex;
-        }
-        try {
-            if (handler != null) {
-                handler.close();
-            }
-            resetConnection(connection);
-        } catch (SQLException ex) {
-            fireFatalConnectionError(ex);
-            throw ex;
-        }
-        handler = createConnectionHandler(connection);
+    protected LockCloseable withLock() {
+        lock.lock();
+        return unlock;
+    }
 
-        return handler.getProxy();
+    @Override
+    public Connection getConnection() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            if (connection == null) {
+                FBSQLException ex = new FBSQLException("The PooledConnection has been closed",
+                        SQLStateConstants.SQL_STATE_CONNECTION_CLOSED);
+                fireFatalConnectionError(ex);
+                throw ex;
+            }
+            try {
+                if (handler != null) {
+                    handler.close();
+                }
+                resetConnection(connection);
+            } catch (SQLException ex) {
+                fireFatalConnectionError(ex);
+                throw ex;
+            }
+            handler = createConnectionHandler(connection);
+
+            return handler.getProxy();
+        }
     }
 
     protected void resetConnection(Connection connection) throws SQLException {
@@ -88,30 +100,32 @@ public class FBPooledConnection implements PooledConnection {
     }
 
     @Override
-    public synchronized void close() throws SQLException {
-    	SQLException receivedException = null;
-        if (handler != null) {
-            try {
-                handler.close();
-            } catch (SQLException se) {
-            	receivedException = se;
-            }
-        }
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException se) {
-            	// We want the exception of closing the physical connection to be the first
-            	if (receivedException != null) {
-                    se.setNextException(receivedException);
+    public void close() throws SQLException {
+        try (LockCloseable ignored = withLock()) {
+            SQLException receivedException = null;
+            if (handler != null) {
+                try {
+                    handler.close();
+                } catch (SQLException se) {
+                    receivedException = se;
                 }
-                receivedException = se;
-            } finally {
-                connection = null;
             }
-        }
-        if (receivedException != null) {
-            throw receivedException;
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException se) {
+                    // We want the exception of closing the physical connection to be the first
+                    if (receivedException != null) {
+                        se.setNextException(receivedException);
+                    }
+                    receivedException = se;
+                } finally {
+                    connection = null;
+                }
+            }
+            if (receivedException != null) {
+                throw receivedException;
+            }
         }
     }
 
@@ -202,9 +216,11 @@ public class FBPooledConnection implements PooledConnection {
      * 
      * @param pch PooledConnectionHandler to release.
      */
-    protected synchronized void releaseConnectionHandler(PooledConnectionHandler pch) {
-        if (handler == pch) {
-            handler = null;
+    protected void releaseConnectionHandler(PooledConnectionHandler pch) {
+        try (LockCloseable ignored = withLock()) {
+            if (handler == pch) {
+                handler = null;
+            }
         }
     }
 

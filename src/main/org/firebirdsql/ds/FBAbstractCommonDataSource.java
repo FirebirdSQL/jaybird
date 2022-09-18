@@ -19,6 +19,7 @@
 package org.firebirdsql.ds;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jdbc.FBConnectionProperties;
 
@@ -27,6 +28,8 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Abstract class for properties and behaviour common to DataSources, XADataSources and ConnectionPoolDataSources
@@ -40,8 +43,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
     protected static final String REF_PROPERTIES = "properties";
 
     private String description;
-    protected final Object lock = new Object();
+    private final Lock lock = new ReentrantLock();
+    private final LockCloseable unlock = lock::unlock;
     private FBConnectionProperties connectionProperties = new FBConnectionProperties();
+
+    protected final LockCloseable withLock() {
+        lock.lock();
+        return unlock;
+    }
 
     /**
      * Method to check if this DataSource has not yet started.
@@ -65,14 +74,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     @Override
     public TransactionParameterBuffer getTransactionParameters(int isolation) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties.getTransactionParameters(isolation);
         }
     }
 
     @Override
     public void setTransactionParameters(int isolation, TransactionParameterBuffer tpb) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setTransactionParameters(isolation, tpb);
         }
@@ -91,7 +100,7 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
      */
     @Override
     public final void setNonStandardProperty(String propertyMapping) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setNonStandardProperty(propertyMapping);
         }
@@ -99,14 +108,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     @Override
     public String getProperty(String name) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties.getProperty(name);
         }
     }
 
     @Override
     public void setProperty(String name, String value) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setProperty(name, value);
         }
@@ -114,14 +123,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     @Override
     public Integer getIntProperty(String name) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties.getIntProperty(name);
         }
     }
 
     @Override
     public void setIntProperty(String name, Integer value) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setIntProperty(name, value);
         }
@@ -129,14 +138,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     @Override
     public Boolean getBooleanProperty(String name) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties.getBooleanProperty(name);
         }
     }
 
     @Override
     public void setBooleanProperty(String name, Boolean value) {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             connectionProperties.setBooleanProperty(name, value);
         }
@@ -144,7 +153,7 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
 
     @Override
     public Map<ConnectionProperty, Object> connectionPropertyValues() {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties.connectionPropertyValues();
         }
     }
@@ -153,14 +162,14 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
         if (connectionProperties == null) {
             throw new NullPointerException("null value not allowed for connectionProperties");
         }
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             checkNotStarted();
             this.connectionProperties = connectionProperties;
         }
     }
 
     protected final FBConnectionProperties getConnectionProperties() {
-        synchronized (lock) {
+        try (LockCloseable ignored = withLock()) {
             return connectionProperties;
         }
     }
@@ -174,7 +183,7 @@ public abstract class FBAbstractCommonDataSource extends AbstractConnectionPrope
      *         Instance of this class to obtain values
      */
     protected static void updateReference(Reference ref, FBAbstractCommonDataSource instance) throws NamingException {
-        synchronized (instance.lock) {
+        try (LockCloseable ignored = instance.withLock()) {
             ref.add(new StringRefAddr(REF_DESCRIPTION, instance.getDescription()));
             byte[] data = DataSourceFactory.serialize(instance.connectionProperties);
             ref.add(new BinaryRefAddr(REF_PROPERTIES, data));
