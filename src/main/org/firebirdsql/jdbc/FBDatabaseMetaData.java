@@ -24,6 +24,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -133,7 +134,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public void close() {
-        synchronized (statements) {
+        try (LockCloseable ignored = connection.withLock()) {
             if (statements.isEmpty()) {
                 return;
             }
@@ -3514,7 +3515,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private FBPreparedStatement getStatement(String sql, boolean standalone) throws SQLException {
-        synchronized (statements) {
+        try (LockCloseable ignored = connection.withLock()) {
             if (!standalone) {
                 // Check cache
                 FBPreparedStatement cachedStatement = statements.get(sql);
