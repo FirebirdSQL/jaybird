@@ -83,7 +83,7 @@ class BoundaryTest {
         assertTrue(results.waitForCompletionOrTimeout(), "Operation should have completed by now");
     }
 
-    private synchronized Results createResults() {
+    private Results createResults() {
         return new Results();
     }
 

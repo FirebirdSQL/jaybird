@@ -84,7 +84,7 @@ public class XidImpl implements Xid, Serializable {
     /**
      * Return a new unique transaction id to use on this host.
      */
-    private static synchronized int getNextId() {
+    private static int getNextId() {
         return nextId.getAndIncrement();
     }
 
