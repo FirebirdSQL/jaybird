@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.sql.*;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 
@@ -208,7 +208,7 @@ class ReconnectTest {
         if (con.getAutoCommit())
             con.setAutoCommit(false);
         log.info("Populating test tables ...");
-        Random random = new Random();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int i = 1; i <= TABLE_COUNT; i++) {
             StringBuilder sql = new StringBuilder(100);
             sql.append("INSERT INTO ");
@@ -232,8 +232,9 @@ class ReconnectTest {
                     stmt.setString(5, "X3." + row + "." + rndValue);
                     if (i > 1)
                         stmt.setInt(6, row);
-                    stmt.execute();
+                    stmt.addBatch();
                 }
+                stmt.executeBatch();
             }
             con.commit();
         }

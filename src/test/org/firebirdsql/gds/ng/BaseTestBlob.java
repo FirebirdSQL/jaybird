@@ -37,7 +37,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
-import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -235,17 +234,13 @@ public abstract class BaseTestBlob {
      */
     @SuppressWarnings("SameParameterValue")
     protected void populateBlob(int id, byte[] baseContent, int requiredSize) throws SQLException {
-        Connection con = getConnectionViaDriverManager();
-        CallableStatement cstmt = null;
-        try {
-            cstmt = con.prepareCall(EXECUTE_FILL_BINARY_BLOB);
+        try (Connection con = getConnectionViaDriverManager();
+             CallableStatement cstmt = con.prepareCall(EXECUTE_FILL_BINARY_BLOB)) {
             cstmt.setInt(1, id);
             cstmt.setBytes(2, baseContent);
             cstmt.setInt(3, requiredSize);
 
             cstmt.execute();
-        } finally {
-            closeQuietly(cstmt, con);
         }
     }
 

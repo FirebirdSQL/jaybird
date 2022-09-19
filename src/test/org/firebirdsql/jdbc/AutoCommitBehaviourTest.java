@@ -66,8 +66,9 @@ class AutoCommitBehaviourTest {
             stmt.execute("delete from ID_TABLE");
             for (int idValue = 1; idValue <= MAX_ID; idValue++) {
                 pstmt.setInt(1, idValue);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         } finally {
             connection.setAutoCommit(true);
         }

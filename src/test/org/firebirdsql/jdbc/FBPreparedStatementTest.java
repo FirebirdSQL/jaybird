@@ -1346,8 +1346,9 @@ class FBPreparedStatementTest {
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
             for (int i = 0; i < DATA_ITEMS; i++) {
                 pstmt.setInt(1, i);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         } finally {
             con.setAutoCommit(true);
         }

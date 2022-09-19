@@ -393,9 +393,9 @@ class FBUpdatableFetcherTest {
     }
 
     private void setupTableForTest(int numberOfRecords) throws SQLException {
-        try (Connection connection = getConnectionViaDriverManager()) {
-            try (PreparedStatement pstmt = connection.prepareStatement(
-                    // @formatter:off
+        try (Connection connection = getConnectionViaDriverManager();
+             PreparedStatement pstmt = connection.prepareStatement(
+                     // @formatter:off
                     "execute block (records INTEGER = ?)\n" +
                     "as\n" +
                     "  declare id integer = 1;\n" +
@@ -408,10 +408,9 @@ class FBUpdatableFetcherTest {
                     "  end\n" +
                     "end"
                     // @formatter:on
-            )) {
-                pstmt.setInt(1, numberOfRecords);
-                pstmt.execute();
-            }
+             )) {
+            pstmt.setInt(1, numberOfRecords);
+            pstmt.execute();
         }
     }
 

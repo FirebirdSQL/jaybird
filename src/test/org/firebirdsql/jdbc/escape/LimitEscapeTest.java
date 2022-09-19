@@ -55,8 +55,9 @@ class LimitEscapeTest {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO TAB1 (ID) VALUES (?)")) {
             for (int id = 1; id <= ROW_COUNT; id++) {
                 pstmt.setInt(1, id);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         }
         con.commit();
     }

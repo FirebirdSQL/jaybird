@@ -63,8 +63,9 @@ class LikeEscapeTest {
             for (int idx = 0; idx < TEST_DATA.length; idx++) {
                 pstmt.setInt(1, idx + 1);
                 pstmt.setString(2, TEST_DATA[idx]);
-                pstmt.execute();
+                pstmt.addBatch();
             }
+            pstmt.executeBatch();
         }
         con.commit();
     }
