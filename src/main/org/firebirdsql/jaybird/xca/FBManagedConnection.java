@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSHelper;
+import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.DatabaseListener;
@@ -571,17 +572,9 @@ public class FBManagedConnection implements ExceptionListener {
         }
     }
 
-    /*
-     TODO Ideally, we want to cast RDB$TRANSACTION_DESCRIPTION to VARBINARY to reduce overhead of retrieval, but
-      Firebird 2.5 doesn't handle that correctly (a textual representation is generated, and an intermediate cast to
-      SUB_TYPE BINARY and then to VARCHAR OCTETS (or any other character set), replaces non-printable characters with
-      a '.'). Consider introducing a version-sensitive strategy. See https://github.com/FirebirdSQL/jaybird/issues/704
-    */
-    private static final String FIND_TRANSACTION_FRAGMENT =
-            "SELECT RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION FROM RDB$TRANSACTIONS ";
-    private static final String FORGET_FIND_QUERY = FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
-            + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
-    private static final String FORGET_DELETE_QUERY = "DELETE FROM RDB$TRANSACTIONS WHERE RDB$TRANSACTION_ID = ";
+    private XidQueries getXidQueries() {
+        return XidQueries.forVersion(database.getServerVersion());
+    }
 
     /**
      * Indicates that no further action will be taken on behalf of this
@@ -604,7 +597,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(FORGET_FIND_QUERY);
+            stmtHandle2.prepare(getXidQueries().forgetFindQuery());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -650,7 +643,7 @@ public class FBManagedConnection implements ExceptionListener {
 
             FbStatement stmtHandle2 = database.createStatement(trHandle2);
 
-            stmtHandle2.prepare(FORGET_DELETE_QUERY + inLimboId);
+            stmtHandle2.prepare(getXidQueries().forgetDelete() + inLimboId);
             stmtHandle2.execute(RowValue.EMPTY_ROW_VALUE);
 
             stmtHandle2.close();
@@ -716,9 +709,6 @@ public class FBManagedConnection implements ExceptionListener {
         return XAResource.XA_OK;
     }
 
-    private static final String RECOVERY_QUERY = FIND_TRANSACTION_FRAGMENT
-            + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
-
     /**
      * Obtain a list of prepared transaction branches from a resource manager.
      * The transaction manager calls this method during recovery to obtain the
@@ -753,7 +743,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(RECOVERY_QUERY);
+            stmtHandle2.prepare(getXidQueries().recoveryQuery());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -796,9 +786,6 @@ public class FBManagedConnection implements ExceptionListener {
         return null;
     }
 
-    private static final String RECOVERY_QUERY_PARAMETRIZED = FIND_TRANSACTION_FRAGMENT
-            + "WHERE RDB$TRANSACTION_DESCRIPTION = CAST(? AS VARCHAR(32764) CHARACTER SET OCTETS)";
-
     /**
      * Obtain a single prepared transaction branch from a resource manager, based on a Xid
      *
@@ -818,7 +805,7 @@ public class FBManagedConnection implements ExceptionListener {
             GDSHelper gdsHelper2 = new GDSHelper(database);
             gdsHelper2.setCurrentTransaction(trHandle2);
 
-            stmtHandle2.prepare(RECOVERY_QUERY_PARAMETRIZED);
+            stmtHandle2.prepare(getXidQueries().recoveryQueryParameterized());
 
             DataProvider dataProvider = new DataProvider(stmtHandle2);
             stmtHandle2.addStatementListener(dataProvider);
@@ -1337,6 +1324,119 @@ public class FBManagedConnection implements ExceptionListener {
         @Override
         public boolean setTransactionTimeout(int seconds) throws XAException {
             return FBManagedConnection.this.setTransactionTimeout(seconds);
+        }
+    }
+
+    private interface XidQueries {
+        String forgetFindQuery();
+        String forgetDelete();
+        String recoveryQuery();
+        String recoveryQueryParameterized();
+
+        static XidQueries forVersion(GDSServerVersion version) {
+            if (version.isEqualOrAbove(3, 0)) {
+                return XidQueriesFB30.INSTANCE;
+            }
+            if (version.isEqualOrAbove(2, 5)) {
+                return XidQueriesFB25.INSTANCE;
+            }
+            return XidQueriesFB21.INSTANCE;
+        }
+    }
+
+    /**
+     * Relatively efficient XID queries that work with Firebird 3.0 and higher.
+     */
+    private static final class XidQueriesFB30 implements XidQueries {
+
+        static final XidQueriesFB30 INSTANCE = new XidQueriesFB30();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, cast(RDB$TRANSACTION_DESCRIPTION as varchar(32764) character set octets) "
+                        + "from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
+                    + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
+        }
+    }
+
+    /**
+     * Less efficient XID queries that work with Firebird 2.5.
+     */
+    private static final class XidQueriesFB25 implements XidQueries {
+
+        static final XidQueriesFB25 INSTANCE = new XidQueriesFB25();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3) "
+                    + "and RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT + " where RDB$TRANSACTION_DESCRIPTION starting with x'0105'";
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
+        }
+    }
+
+    /**
+     * Even less efficient queries that work with Firebird 2.1 and older (unsupported versions).
+     */
+    private static final class XidQueriesFB21 implements XidQueries {
+
+        static final XidQueriesFB21 INSTANCE = new XidQueriesFB21();
+        private static final String FIND_TRANSACTION_FRAGMENT =
+                "select RDB$TRANSACTION_ID, RDB$TRANSACTION_DESCRIPTION from RDB$TRANSACTIONS ";
+
+        @Override
+        public String forgetFindQuery() {
+            return FIND_TRANSACTION_FRAGMENT + "WHERE RDB$TRANSACTION_STATE IN (2, 3)";
+        }
+
+        @Override
+        public String forgetDelete() {
+            return "delete from RDB$TRANSACTIONS where RDB$TRANSACTION_ID = ";
+        }
+
+        @Override
+        public String recoveryQuery() {
+            return FIND_TRANSACTION_FRAGMENT;
+        }
+
+        @Override
+        public String recoveryQueryParameterized() {
+            return FIND_TRANSACTION_FRAGMENT
+                    + "where RDB$TRANSACTION_DESCRIPTION = cast(? AS varchar(32764) character set octets)";
         }
     }
 }

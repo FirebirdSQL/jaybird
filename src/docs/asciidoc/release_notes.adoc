@@ -561,9 +561,7 @@ Now, after an exception, attempting to retrieve the update count with `getUpdate
 * Change: Removed finalization from `FBConnection` and `FBStatement` (https://github.com/FirebirdSQL/jaybird/issues/699[jaybird#699])
 * Fix: XAResource checks at most 10 records for forget or recovery operations (https://github.com/FirebirdSQL/jaybird/issues/701[jaybird#701])
 +
-As part of this change, queries were changed to -- when applicable -- only query transactions that have a transaction description written by Jaybird
-+
-As a result of this change, Xid forget and recovery no longer work on Firebird 2.1 or earlier (these versions were already not supported by Jaybird).
+As part of this change, -- for Firebird 3.0 and higher -- queries were changed to convert the `RDB$TRANSACTION_DESCRIPTION` to an octets varchar field (to avoid additional roundtrips for blob fields), and -- when applicable, for Firebird 2.5 and higher -- only query transactions that have a transaction description written by Jaybird
 * Change: Stop reporting `0` update count with `getUpdateCount()` for statement types that never produce an update count (https://github.com/FirebirdSQL/jaybird/issues/703[jaybird#703])
 +
 `getUpdateCount()` will no longer report an update count of `0` for statements that never have a non-zero update count (e.g. `select`, `execute procedure`, DDL, management statements).
