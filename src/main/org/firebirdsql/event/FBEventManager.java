@@ -604,11 +604,11 @@ class OneTimeEventListener implements EventListener {
 
     @Override
     public void eventOccurred(DatabaseEvent event) {
-        if (eventCount == -1) {
-            eventCount = event.getEventCount();
-        }
         lock.lock();
         try {
+            if (eventCount == -1) {
+                eventCount = event.getEventCount();
+            }
             receivedEvent.signalAll();
         } finally {
             lock.unlock();
@@ -618,6 +618,8 @@ class OneTimeEventListener implements EventListener {
     public void await(long time, TimeUnit unit) throws InterruptedException {
         lock.lock();
         try {
+            // Event already received, no need to wait
+            if (eventCount != -1) return;
             if (time == 0) {
                 receivedEvent.await();
             } else {
