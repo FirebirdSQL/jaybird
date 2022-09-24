@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -138,7 +138,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * @param fileName
      *         File name or alias of the database
      */
-    void setFileName(final String fileName);
+    void setFileName(String fileName);
 
     /**
      * @return GDS plugin type name (default is {@link GDSFactory#getDefaultGDSType()})
@@ -164,7 +164,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * @param userName
      *         User name
      */
-    void setUserName(final String userName);
+    void setUserName(String userName);
 
     /**
      * @return password
@@ -177,7 +177,18 @@ public interface FBManagerMBean extends AutoCloseable {
      * @param password
      *         Password
      */
-    void setPassword(final String password);
+    void setPassword(String password);
+
+    /**
+     * @return SQL role to use.
+     */
+    String getRoleName();
+
+    /**
+     * @param roleName
+     *         SQL role to use.
+     */
+    void setRoleName(String roleName);
 
     /**
      * Set the database dialect to use when creating a new database.
@@ -264,7 +275,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * @param createOnStart
      *         {@code true} to create the database on start, {@code false} to not create on start (default)
      */
-    void setCreateOnStart(final boolean createOnStart);
+    void setCreateOnStart(boolean createOnStart);
 
     /**
      * Get if the database will be created when calling {@link #stop()}.
@@ -279,7 +290,7 @@ public interface FBManagerMBean extends AutoCloseable {
      * @param dropOnStop
      *         {@code true} to drop the database on stop, {@code false} to not drop on stop (default)
      */
-    void setDropOnStop(final boolean dropOnStop);
+    void setDropOnStop(boolean dropOnStop);
 
     /**
      * Get if the database will be be dropped if exists when creating a database.
@@ -297,7 +308,7 @@ public interface FBManagerMBean extends AutoCloseable {
     void setForceCreate(boolean forceCreate);
 
     /**
-     * Create a database with the specified file name, user name and password on the specified {@code server}
+     * Create a database with the specified file name, username and password on the specified {@code server}
      * and {@code port}.
      * <p>
      * On creation, the following properties will used to configure the database: {@code dialect}, {@code pageSize},
@@ -322,6 +333,33 @@ public interface FBManagerMBean extends AutoCloseable {
     void createDatabase(String fileName, String user, String password) throws Exception;
 
     /**
+     * Create a database with the specified file name, username, password and role on the specified {@code server}
+     * and {@code port}.
+     * <p>
+     * On creation, the following properties will used to configure the database: {@code dialect}, {@code pageSize},
+     * {@code defaultCharacterSet}.
+     * </p>
+     * <p>
+     * If the database already exists, and {@code forceCreate} is {@code true}, the database will be dropped. If
+     * {@code false}, no database will be created.
+     * </p>
+     *
+     * @param fileName
+     *         Database file name or alias
+     * @param user
+     *         User name
+     * @param password
+     *         Password
+     * @param roleName
+     *         Role name (or {@code null} for no role)
+     * @throws IllegalStateException
+     *         If this manager is not started
+     * @throws Exception
+     *         If database creation fails.
+     */
+    void createDatabase(String fileName, String user, String password, String roleName) throws Exception;
+
+    /**
      * Drop a database with the specified file name, user name and password on the specified {@code server}
      * and {@code port}.
      *
@@ -337,7 +375,24 @@ public interface FBManagerMBean extends AutoCloseable {
     void dropDatabase(String fileName, String user, String password) throws Exception;
 
     /**
-     * Check if a database exists with the specified file name, user name and password on the specified {@code server}
+     * Drop a database with the specified file name, username, password and role on the specified {@code server}
+     * and {@code port}.
+     *
+     * @param fileName
+     *         Database file name or alias
+     * @param user
+     *         User name
+     * @param password
+     *         Password
+     * @param roleName
+     *         Role name (or {@code null} for no role)
+     * @throws Exception
+     *         If this manager is not started or database drop fails.
+     */
+    void dropDatabase(String fileName, String user, String password, String roleName) throws Exception;
+
+    /**
+     * Check if a database exists with the specified file name, username and password on the specified {@code server}
      * and {@code port}.
      * <p>
      * Existence is checked by connecting to the database, so any connection error, including invalid credentials, will
