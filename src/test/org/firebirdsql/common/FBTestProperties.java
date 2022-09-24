@@ -280,13 +280,7 @@ public final class FBTestProperties {
                 getDefaultPropertiesForConnection());
     }
 
-    /**
-     * Creates the default test database, and configures the passed in FBManager with the server and type of test.
-     *
-     * @param fbManager
-     *         instance used for creation of the database
-     */
-    public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
+    public static void configureFBManager(FBManager fbManager) throws Exception {
         final GDSType gdsType = getGdsType();
         if (gdsType == GDSType.getType("PURE_JAVA")
                 || gdsType == GDSType.getType("NATIVE")
@@ -298,6 +292,16 @@ public final class FBTestProperties {
         fbManager.setForceCreate(true);
         // disable force write for minor increase in test throughput
         fbManager.setForceWrite(false);
+    }
+
+    /**
+     * Creates the default test database, and configures the passed in FBManager with the server and type of test.
+     *
+     * @param fbManager
+     *         instance used for creation of the database
+     */
+    public static void defaultDatabaseSetUp(FBManager fbManager) throws Exception {
+        configureFBManager(fbManager);
         fbManager.createDatabase(getDatabasePath(), DB_USER, DB_PASSWORD);
     }
 

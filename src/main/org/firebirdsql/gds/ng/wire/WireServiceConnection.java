@@ -60,6 +60,15 @@ public class WireServiceConnection extends WireConnection<IServiceProperties, Fb
     }
 
     @Override
+    protected String getCnctFile() {
+        String expectedDb = attachProperties.getExpectedDb();
+        if (expectedDb != null) {
+            return expectedDb;
+        }
+        return super.getCnctFile();
+    }
+
+    @Override
     protected DbAttachInfo toDbAttachInfo(IServiceProperties attachProperties) throws SQLException {
         final DbAttachInfo initialDbAttachInfo = DbAttachInfo.of(attachProperties);
 

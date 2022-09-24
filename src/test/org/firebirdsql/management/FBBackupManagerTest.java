@@ -240,7 +240,6 @@ class FBBackupManagerTest {
         backupManager.clearBackupPaths();
         backupManager.clearRestorePaths();
 
-
         final Path backupPath1Path = tempFolder.resolve("testbackup1.fbk");
         String backupPath1 = backupPath1Path.toString();
         final Path backupPath2Path = tempFolder.resolve("testbackup2.fbk");
@@ -259,7 +258,6 @@ class FBBackupManagerTest {
         backupManager.addBackupPath(backupPath1);
         backupManager.addBackupPath(backupPath2);
 
-
         final Path restorePath1Path = tempFolder.resolve("testrestore1.fdb");
         String restorePath1 = restorePath1Path.toString();
         final Path restorePath2Path = tempFolder.resolve("testrestore2.fdb");
@@ -273,7 +271,44 @@ class FBBackupManagerTest {
         //Remove test files from filesystem.
         assertTrue(Files.exists(restorePath1Path), () -> format("File %s should exist", restorePath1));
         assertTrue(Files.exists(restorePath2Path), () -> format("File %s should exist.", restorePath2));
-   }
+    }
+
+    /*
+     The following tests require a custom security database configured for the alias test_with_custom_sec_db, where
+     the custom security database was initialized with:
+     create user sysdba password 'masterkey' using plugin srp;
+     create user custom_sec password 'custom_sec' grant admin role using plugin srp;
+
+     The SYSDBA password must match the value of the system property test.password (or masterkey if not set).
+
+     These tests are ignored (if possible) or fail when this hasn't been set up.
+     */
+
+    @Test
+    void testBackupReplace_customSecurityDb() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsCustomSecurityDb(), "Requires custom security DB support");
+        try (FBManager mgr = new FBManager(getGdsType())) {
+            if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
+                mgr.setServer(DB_SERVER_URL);
+                mgr.setPort(DB_SERVER_PORT);
+            }
+            mgr.start();
+            mgr.createDatabase("test_with_custom_sec_db", "custom_sec", "custom_sec", "RDB$ADMIN");
+        } catch (SQLException e) {
+            // We assume that the exception occurred because the custom security database wasn't set up
+            assumeTrue(false, "Test requires custom security database for alias test_with_custom_sec_db with admin user custom_sec: " + e);
+        }
+        usesDatabase.addDatabase("test_with_custom_sec_db");
+        
+        backupManager.clearRestorePaths();
+        backupManager.setDatabase("test_with_custom_sec_db");
+        backupManager.setUser("custom_sec");
+        backupManager.setPassword("custom_sec");
+        backupManager.backupDatabase();
+
+        backupManager.setRestoreReplace(true);
+        backupManager.restoreDatabase();
+    }
 
     private static boolean isLocalHost(String hostName) {
         return "localhost".equalsIgnoreCase(hostName)

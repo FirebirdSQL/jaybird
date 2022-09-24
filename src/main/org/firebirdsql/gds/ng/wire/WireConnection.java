@@ -150,6 +150,13 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
         return dbAttachInfo.getPortNumber();
     }
 
+    /**
+     * @return The file name to use in the p_cnct_file of the op_connect request
+     */
+    protected String getCnctFile() {
+        return getAttachObjectName();
+    }
+
     public final String getAttachObjectName() {
         return dbAttachInfo.getAttachObjectName();
     }
@@ -280,11 +287,11 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
             xdrOut = new XdrOutputStream(socket.getOutputStream());
 
             xdrOut.writeInt(op_connect);
-            xdrOut.writeInt(op_attach);
-            xdrOut.writeInt(CONNECT_VERSION3);
-            xdrOut.writeInt(arch_generic);
+            xdrOut.writeInt(op_attach); // p_cnct_operation
+            xdrOut.writeInt(CONNECT_VERSION3); // p_cnct_cversion
+            xdrOut.writeInt(arch_generic); // p_cnct_client
 
-            xdrOut.writeString(getAttachObjectName(), getEncoding());
+            xdrOut.writeString(getCnctFile(), getEncoding()); // p_cnct_file
             xdrOut.writeInt(protocols.getProtocolCount()); // Count of protocols understood
             xdrOut.writeBuffer(createUserIdentificationBlock());
 

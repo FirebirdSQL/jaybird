@@ -80,6 +80,9 @@ public abstract class UsesDatabaseExtension {
 
     void sharedAfter() {
         try {
+            if (fbManager.getState().equals("Stopped")) {
+                FBTestProperties.configureFBManager(fbManager);
+            }
             for (String databasePath : databasesToDrop) {
                 try {
                     fbManager.dropDatabase(databasePath, FBTestProperties.DB_USER, FBTestProperties.DB_PASSWORD);

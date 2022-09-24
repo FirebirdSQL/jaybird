@@ -81,9 +81,38 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * <li>{@code null}</li>
      * </ul>
      *
-     * @param serviceName service name
+     * @param serviceName
+     *         service name
      */
     default void setServiceName(String serviceName) {
         setProperty(PropertyNames.serviceName, serviceName);
+    }
+
+    /**
+     * Gets the expected db ({@code isc_spb_expected_db}; defaults to {@code null}).
+     *
+     * @return expected database
+     * @see #setExpectedDb(String)
+     */
+    default String getExpectedDb() {
+        return getProperty(PropertyNames.expectedDb);
+    }
+
+    /**
+     * Filename or alias of the database expected to be accessed by the service operation ({@code isc_spb_expected_db}).
+     * <p>
+     * For Firebird 3.0 and higher when using a non-default security database, so Firebird knows which database to use
+     * to authenticate. When using the default security database, this property does not need to be set.
+     * </p>
+     * <p>
+     * Some service implementations (e.g. {@link org.firebirdsql.management.BackupManager})
+     * may explicitly set this as part of their operation when its current value is {@code null}.
+     * </p>
+     *
+     * @param expectedDb
+     *         Expected database
+     */
+    default void setExpectedDb(String expectedDb) {
+        setProperty(PropertyNames.expectedDb, expectedDb);
     }
 }

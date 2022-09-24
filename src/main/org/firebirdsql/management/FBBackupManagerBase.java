@@ -43,8 +43,8 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * size of the file in megabytes, in case of restore - size of the database file in pages).
      */
     protected static class PathSizeStruct {
-        private int size;
-        private String path;
+        private final int size;
+        private final String path;
 
         protected PathSizeStruct(String path, int size) {
             this.path = path;
@@ -77,15 +77,15 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         }
     }
 
-    protected boolean noLimitRestore = false;
+    protected boolean noLimitRestore;
     protected List<PathSizeStruct> restorePaths = new ArrayList<>();
 
-    protected boolean verbose = false;
+    protected boolean verbose;
 
     private int restoreBufferCount = -1;
     private int restorePageSize = -1;
-    private boolean restoreReadOnly = false;
-    private boolean restoreReplace = false;
+    private boolean restoreReadOnly;
+    private boolean restoreReplace;
 
     private static final int RESTORE_REPLACE = isc_spb_res_replace;
     private static final int RESTORE_CREATE = isc_spb_res_create;
@@ -116,16 +116,19 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         super(gdsType);
     }
 
+    @Override
     public void addBackupPath(String path) {
         addBackupPath(path, -1);
     }
 
+    @Override
     public void setDatabase(String database) {
         super.setDatabase(database);
         addRestorePath(database, -1);
         noLimitRestore = true;
     }
 
+    @Override
     public void addRestorePath(String path, int size) {
         if (noLimitRestore) {
             throw new IllegalArgumentException(
@@ -134,15 +137,18 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         restorePaths.add(new PathSizeStruct(path, size));
     }
 
+    @Override
     public void clearRestorePaths() {
         restorePaths.clear();
         noLimitRestore = false;
     }
 
+    @Override
     public void backupDatabase() throws SQLException {
         backupDatabase(0);
     }
 
+    @Override
     public void backupMetadata() throws SQLException {
         backupDatabase(BACKUP_METADATA_ONLY);
     }
@@ -171,6 +177,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
         return backupSPB;
     }
 
+    @Override
     public void restoreDatabase() throws SQLException {
         restoreDatabase(0);
     }
@@ -181,6 +188,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * @param verbose
      *         If <code>true</code>, operations will be logged verbosely, otherwise they will not be logged verbosely
      */
+    @Override
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
@@ -191,6 +199,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * @param bufferCount
      *         The page-buffer size to be used, a positive value
      */
+    @Override
     public void setRestorePageBufferCount(int bufferCount) {
         if (bufferCount < 0) {
             throw new IllegalArgumentException("Buffer count must be positive");
@@ -209,6 +218,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      *         The page size to be used in a restored database, see {@link PageSizeConstants}
      * @see PageSizeConstants
      */
+    @Override
     public void setRestorePageSize(int pageSize) {
         this.restorePageSize = PageSizeConstants.requireValidPageSize(pageSize);
     }
@@ -221,6 +231,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      *         If <code>true</code>, the restore operation will attempt to create a new database, otherwise the restore
      *         operation will overwrite an existing database
      */
+    @Override
     public void setRestoreReplace(boolean replace) {
         this.restoreReplace = replace;
     }
@@ -231,6 +242,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
      * @param readOnly
      *         If <code>true</code>, a restored database will be read-only, otherwise it will be read-write.
      */
+    @Override
     public void setRestoreReadOnly(boolean readOnly) {
         this.restoreReadOnly = readOnly;
     }

@@ -112,7 +112,7 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder("filename_charset"),
 
                 // Service properties
-                // Nothing so far
+                builder(expectedDb).spbItem(isc_spb_expected_db),
 
                 // Formally unsupported properties that will need explicit type mapping other than string to work
                 builder("page_size").type(INT).aliases("isc_dpb_page_size").dpbItem(isc_dpb_page_size),

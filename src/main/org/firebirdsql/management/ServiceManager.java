@@ -43,6 +43,10 @@ public interface ServiceManager extends ServiceConnectionProperties {
 
     /**
      * Sets the database path for the connection to the service manager.
+     * <p>
+     * Will also set the {@code expectedDb} property. If a different value must be used, it must be set <em>after</em>
+     * calling this method.
+     * </p>
      *
      * @param database
      *         path for the connection to the service manager.

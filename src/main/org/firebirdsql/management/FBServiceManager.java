@@ -104,36 +104,22 @@ public class FBServiceManager implements ServiceManager {
         return ServiceManager.super.getCharSet();
     }
 
-    /**
-     * Set the name of the user that performs the operation.
-     *
-     * @param user
-     *         name of the user.
-     */
+    @Override
     public void setUser(String user) {
         ServiceManager.super.setUser(user);
     }
 
-    /**
-     * Get name of the user that performs the operation.
-     *
-     * @return name of the user that performs the operation.
-     */
+    @Override
     public String getUser() {
         return ServiceManager.super.getUser();
     }
 
-    /**
-     * @param password
-     *         The password to set.
-     */
+    @Override
     public void setPassword(String password) {
         ServiceManager.super.setPassword(password);
     }
 
-    /**
-     * @return Returns the password.
-     */
+    @Override
     public String getPassword() {
         return ServiceManager.super.getPassword();
     }
@@ -168,9 +154,27 @@ public class FBServiceManager implements ServiceManager {
         ServiceManager.super.setServiceName(serviceName);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * NOTE: The {@link #setDatabase(String)} property will also set this property, so in general this property doesn't
+     * need to be set explicitly.
+     * </p>
+     */
+    @Override
+    public void setExpectedDb(String expectedDb) {
+        ServiceManager.super.setExpectedDb(expectedDb);
+    }
+
+    @Override
+    public String getExpectedDb() {
+        return ServiceManager.super.getExpectedDb();
+    }
+
     @Override
     public void setDatabase(String database) {
         this.database = database;
+        setExpectedDb(database);
     }
 
     @Override

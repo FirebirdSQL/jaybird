@@ -80,6 +80,9 @@ public final class PropertyNames {
     public static final String useServerBatch = "useServerBatch";
     public static final String serverBatchBufferSize = "serverBatchBufferSize";
 
+    // service connection
+    public static final String expectedDb = "expectedDb";
+
     /**
      * @deprecated This property has unclear semantics and will be removed in a future version (Jaybird 6 or later)
      */
