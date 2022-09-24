@@ -235,7 +235,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
      *         If the underlying stream is already set up for decompression
      */
     @InternalApi
-    public synchronized void enableDecompression() throws IOException {
+    public void enableDecompression() throws IOException {
         if (compressed) {
             throw new IOException("Input stream already compressed");
         }
@@ -244,7 +244,7 @@ public final class XdrInputStream extends FilterInputStream implements Encrypted
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }

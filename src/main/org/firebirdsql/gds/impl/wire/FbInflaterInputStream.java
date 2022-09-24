@@ -65,7 +65,7 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Input stream already encrypted");
         }

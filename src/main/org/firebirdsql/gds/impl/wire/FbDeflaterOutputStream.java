@@ -65,7 +65,7 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Output stream already encrypted");
         }

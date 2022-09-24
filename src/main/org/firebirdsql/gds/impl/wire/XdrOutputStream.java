@@ -318,7 +318,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
      *         If the underlying stream is already set up for compression
      */
     @InternalApi
-    public synchronized void enableCompression() throws IOException {
+    public void enableCompression() throws IOException {
         if (compressed) {
             throw new IOException("Output stream already compressed");
         }
@@ -327,7 +327,7 @@ public final class XdrOutputStream extends BufferedOutputStream implements Encry
     }
 
     @Override
-    public synchronized void setCipher(Cipher cipher) throws IOException {
+    public void setCipher(Cipher cipher) throws IOException {
         if (encrypted) {
             throw new IOException("Output stream already encrypted");
         }
