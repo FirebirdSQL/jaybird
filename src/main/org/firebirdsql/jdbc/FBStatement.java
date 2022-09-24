@@ -788,18 +788,23 @@ public class FBStatement implements FirebirdStatement {
         boolean wasCompleted = completed;
 
         try {
+            FBResultSet currentRs = this.currentRs;
             if (currentRs != null) {
-                try {
-                    currentRs.close(notifyListener, completionReason);
-                } finally {
-                    currentRs = null;
-                }
-            } else if (fbStatement != null) {
-                fbStatement.ensureClosedCursor(completionReason.isTransactionEnd());
+                this.currentRs = null;
+                currentRs.close(notifyListener, completionReason);
             }
         } finally {
-            if (notifyListener && !wasCompleted)
-                statementListener.statementCompleted(this);
+            try {
+                if (fbStatement != null) {
+                    // Primarily for execute() cases where getResultSet() was never called, ensures cursor is closed for
+                    // all code paths (a no-op if there is no open cursor)
+                    fbStatement.ensureClosedCursor(completionReason.isTransactionEnd());
+                }
+            } finally {
+                if (notifyListener && !wasCompleted) {
+                    statementListener.statementCompleted(this);
+                }
+            }
         }
     }
 

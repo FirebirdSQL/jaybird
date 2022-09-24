@@ -395,13 +395,8 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
     RowDescriptor emptyRowDescriptor();
 
     /**
-     * Ensures that the statement cursor is closed. Resets a statement so it is ready to be reused for re-execute or
+     * Ensures that the statement cursor is closed. Resets a statement, so it is ready to be reused for re-execute or
      * prepare.
-     * <p>
-     * Implementations should only close an open cursor and log this fact with a stacktrace on debug. This is a stopgap
-     * measure for situations where the code using this statement handle has not been able to properly close the
-     * cursor.
-     * </p>
      *
      * @param transactionEnd
      *         Close is in response to a transaction end
