@@ -3601,8 +3601,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         try {
             String javaImplementation = getSystemPropertyPrivileged("java.specification.version");
             if (javaImplementation == null) {
-                // Assume minimum: JDBC 4.2
-                tempVersion = 2;
+                // Assume common case: JDBC 4.3
+                tempVersion = 3;
             } else {
                 int javaVersionMajor;
                 try {
@@ -3619,8 +3619,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 }
             }
         } catch (RuntimeException ex) {
-            // default to 2 (JDBC 4.2) when privileged call fails
-            tempVersion = 2;
+            // default to 3 (JDBC 4.3) when privileged call fails
+            tempVersion = 3;
         }
         JDBC_MINOR_VERSION = tempVersion;
     }
