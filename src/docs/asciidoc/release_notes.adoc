@@ -695,7 +695,7 @@ there is no direct replacement, though `FBConnection.connectionProperties()` can
 ** `toLargeArray(Collection<Long> updateCounts)` -- use `org.firebirdsql.util.Primitives.toLongArray(List<? extends Number>)`
 ** `forgetResultSet()`;
 there is no replacement
-** `isExecuteProcedureStatement(String sql);
+** `isExecuteProcedureStatement(String sql)`;
 there is no replacement
 * `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
@@ -716,11 +716,6 @@ there is no replacement.
 This method was previously deprecated, but not for removal.
 ** `parseDpbString(String, String)`;
 there is no replacement.
-* `AbstractParameterConverter.populateNonStandardProperties`;
-there is no direct replacement.
-The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
-* `FBConnectionRequestInfo.deepCopy()` (internal API);
-if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
 * `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
 * `setWireCrypt(WireCrypt)` in `ServiceManager`, `EventManager` and `IAttachProperties`;
@@ -728,30 +723,6 @@ replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
 * `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
 handling of database coordinates is now considered internal to the protocol implementation.
 There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also jdp-2021-01).
-* `DatatypeCoder` (and implementations; these are informally considered internal implementation artifacts)
-// TODO Some of the replacement methods might get removed as well later on
-** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
-** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
-** `decodeTimestamp(Timestamp, Calendar)` -- use `decodeTimestamp(Timestamp, Calendar, boolean)`
-** `decodeTimestamp(byte[]`) -- use `decodeTimestampCalendar(byte[], Calendar)`
-** `encodeTime(Time)` -- use `encodeTimeCalendar(Time, Calendar)`
-** `decodeTime(byte[])` -- use `decodeTimeCalendar(byte[], Calendar)`
-** `encodeDate(Date)` -- use `encodeDateCalendar(Date, Calendar)`
-** `decodeDate(byte[])` -- use `decodeDateCalendar(byte[], Calendar)`
-** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
-** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
-** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
-* `V10Statement` (this is internal implementation, but might be used by custom protocol implementations)
-** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
-** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
-** `writeSqlData(RowDescriptor, RowValue)` -- use `writeSqlData(RowDescriptor, RowValue, boolean)`, with the third parameter `true` for the equivalent behaviour
-* `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
-* `AbstractFbStatement` (this is internal implementation, but might be used by custom protocol implementations)
-** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
-** `isAllRowsFetched()` -- `isAfterLast()`
-* `FbWireOperations.readSingleResponse` -- use `FbWireOperations.readResponse`
-+
-Contrary to `readSingleResponse`, `readResponse` throws the `SQLException` reported in a `GenericResponse`
 
 The following methods had their visibility reduced:
 
@@ -849,18 +820,49 @@ As a result, the following methods, constants, properties and others are no long
 === Breaking changes internal API
 
 The following breaking changes were made to the internal API, like the GDS-ng API in `org.firebirdsql.gds.ng` and sub-packages.
-These changes are primarily interesting for implementers of custom GDS-ng implementations, or people using this low-level API directly.
+These changes are primarily interesting for implementers of custom GDS-ng implementations or forks of Jaybird, or people using these low-level APIs directly.
 
-- constructor `AbstractStatement(Object syncObject)` was replaced with a no-arg constructor.
-- `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback, Object syncObject)` was replaced with `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback)`
-- The third parameter, `Object syncObject`, of constructor `AbstractWireOperations` (and its subclasses) was removed
-- Method `getSynchronizationObject()` was removed from various interface, replace use in `synchronized` blocks with `try (LockCloseable ignored = withLock()) ++{ .. }++`
-  - `FbAttachment`
-  - `FbBlob`
-  - `AbstractFbStatement`
-  - `AbstractFbTransaction`
-  - `AbstractWireOperations`
-- Class `SyncObject` has been removed
+* constructor `AbstractStatement(Object syncObject)` was replaced with a no-arg constructor.
+* `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback, Object syncObject)` was replaced with `ProtocolDescriptor.createWireOperations(WireConnection<?, ?> connection, WarningMessageCallback defaultWarningMessageCallback)`
+* The third parameter, `Object syncObject`, of constructor `AbstractWireOperations` (and its subclasses) was removed
+* Method `getSynchronizationObject()` was removed from various interface, replace use of `synchronized` blocks with `try (LockCloseable ignored = withLock()) ++{ .. }++`
+** `FbAttachment`
+** `FbBlob`
+** `AbstractFbStatement`
+** `AbstractFbTransaction`
+** `AbstractWireOperations`
+* Class `SyncObject` has been removed
+* `AbstractParameterConverter.populateNonStandardProperties`;
+there is no direct replacement.
+The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
+* `FBConnectionRequestInfo.deepCopy()` (internal API);
+if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
+* `DatatypeCoder`
+// TODO Some of the replacement methods might get removed as well later on
+** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
+** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
+** `decodeTimestamp(Timestamp, Calendar)` -- use `decodeTimestamp(Timestamp, Calendar, boolean)`
+** `decodeTimestamp(byte[]`) -- use `decodeTimestampCalendar(byte[], Calendar)`
+** `encodeTime(Time)` -- use `encodeTimeCalendar(Time, Calendar)`
+** `decodeTime(byte[])` -- use `decodeTimeCalendar(byte[], Calendar)`
+** `encodeDate(Date)` -- use `encodeDateCalendar(Date, Calendar)`
+** `decodeDate(byte[])` -- use `decodeDateCalendar(byte[], Calendar)`
+** `encodeLocalTime(int, int, int, int)` -- use `encodeLocalTime(LocalTime)`
+** `encodeLocalDate(int, int, int)` -- use `encodeLocalDate(LocalDate)`
+** `encodeLocalDateTime(int, int, int, int, int, int, int)` -- use `encodeLocalDateTime(LocalDateTime)`
+* `V10Statement`
+** `sendInfoSql(byte[], int)` -- use `getInfo(int, byte[], int)` (which sends and receives)
+** `processInfoSqlResponse(GenericResponse)` -- use `GenericResponse.getData()`
+** `writeSqlData(RowDescriptor, RowValue)` -- use `writeSqlData(RowDescriptor, RowValue, boolean)`, with the third parameter `true` for the equivalent behaviour
+* `StatementListener.allRowsFetched(FbStatement)` -- use `afterLast(FbStatement)`
+* `AbstractFbStatement`
+** `setAllRowsFetched(boolean)` -- use `setAfterLast()`
+** `isAllRowsFetched()` -- `isAfterLast()`
+* `FbWireOperations.readSingleResponse` -- use `FbWireOperations.readResponse`
++
+Contrary to `readSingleResponse`, `readResponse` throws the `SQLException` reported in a `GenericResponse`
+* `FBWorkaroundStringField.setTrimString` -- use `StringTrimmable.setTrimTrailing` (implemented by `FBStringField` and subclasses).
+The replacement only trims trailing spaces.
 
 [#breaking-changes-statement-state]
 ==== Additional statement state `PREPARING`
@@ -869,6 +871,22 @@ To be able to detect preparing a new statement text on a statement handle, the s
 The state transition `ALLOCATED` -> `PREPARED` is no longer valid, and must now be `ALLOCATED` -> `PREPARING` -> `PREPARED`.
 
 Custom statement implementations need to add a state transition to `PREPARING` before preparing a new statement text.
+
+[#breaking-changes-unlikely]
+=== Unlikely breaking changes
+
+The following changes might cause issues, though we think this is unlikely:
+
+* The trim behaviour of metadata queries (e.g. for `DatabaseMetaData`) was changed.
+Previously it used `stringValue.trim()` _only_ through `ResultSet.getString(..)`.
+This was changed to use a custom trim to trim only trailing spaces, but only for (non-`OCTETS`) `CHAR`, `VARCHAR`, `BLOB SUB_TYPE TEXT`.
+This trim is now applied for code paths calling `getString()` on the underlying field.
++
+This change can have two potentially breaking effects:
++
+. Values from metadata queries can now have leading spaces, where previously those were removed
+. Some -- but not all -- metadata ``ResultSet``s would previously return the untrimmed value through `getObject(..)`, but now return the trimmed value.
+
 
 [#breaking-changes-for-jaybird-6]
 === Breaking changes for Jaybird 6

@@ -28,6 +28,7 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jdbc.field.FBCloseableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
+import org.firebirdsql.jdbc.field.TrimmableField;
 import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.io.InputStream;
@@ -68,10 +69,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     private boolean wasNullValid = false;
     // closed is false until the close method is invoked;
     private volatile boolean closed = false;
-
-    //might be a bit of a kludge, or a useful feature.
-    // TODO Consider subclassing for metadata resultsets (instead of using metaDataQuery parameter and/or parameter taking xsqlvars and rows)
-    private final boolean trimStrings;
 
     private SQLWarning firstWarning;
 
@@ -120,7 +117,6 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
             this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
             cursorName = fbStatement.getCursorName();
             this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
-            trimStrings = metaDataQuery;
             rowDescriptor = stmt.getRowDescriptor();
             fields = new FBField[rowDescriptor.getCount()];
             colNames = new HashMap<>(rowDescriptor.getCount(), 1);
@@ -137,7 +133,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
                         && stmt.supportsFetchScroll();
             cached = cached || metaDataQuery || !(rsType == TYPE_FORWARD_ONLY || serverSideScrollable);
 
-            prepareVars(cached);
+            prepareVars(cached, metaDataQuery);
             if (cached) {
                 fbFetcher = new FBCachedFetcher(gdsHelper, fbStatement.fetchSize, fbStatement.maxRows, stmt, this,
                         rsType == ResultSet.TYPE_FORWARD_ONLY);
@@ -202,11 +198,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
         fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, null, false);
-        trimStrings = false;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true);
+        prepareVars(true, false);
         // TODO Set specific types (see also previous todo)
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
@@ -228,7 +223,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
      *         Row data
      */
     public FBResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
-        this(rowDescriptor, null, rows, false);
+        this(rowDescriptor, rows, null);
     }
 
     /**
@@ -257,17 +252,16 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
         listener = FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
         fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
-        trimStrings = true;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true);
+        prepareVars(true, true);
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
-    private void prepareVars(boolean cached) throws SQLException {
+    private void prepareVars(boolean cached, boolean trimStrings) throws SQLException {
         for (int i = 0; i < rowDescriptor.getCount(); i++) {
             final int fieldPosition = i;
 
@@ -287,6 +281,10 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
             if (field instanceof FBCloseableField) {
                 closeableFields.add((FBCloseableField) field);
+            }
+
+            if (trimStrings && field instanceof TrimmableField) {
+                ((TrimmableField) field).setTrimTrailing(true);
             }
 
             fields[i] = field;
@@ -527,11 +525,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public String getString(int columnIndex) throws SQLException {
-        if (trimStrings) {
-            String result = getField(columnIndex).getString();
-            return result != null ? result.trim() : null;
-        } else
-            return getField(columnIndex).getString();
+        return getField(columnIndex).getString();
     }
 
     /**
@@ -666,11 +660,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
 
     @Override
     public String getString(String columnName) throws SQLException {
-        String result = getField(columnName).getString();
-        if (trimStrings) {
-            return result != null ? result.trim() : null;
-        }
-        return result;
+        return getField(columnName).getString();
     }
 
     /**

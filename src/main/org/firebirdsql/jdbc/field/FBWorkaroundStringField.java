@@ -21,8 +21,13 @@ package org.firebirdsql.jdbc.field;
 import java.sql.DataTruncation;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Class implementing workaround for "operation was cancelled" bug in server.
@@ -31,9 +36,9 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
  * of "arithmetic exception..." error. This makes code debugging harder, since
  * error message is not very informative.
  * <p>
- * However we cannot simply check length locally. Maximum allowed length in bytes 
+ * However, we cannot simply check length locally. Maximum allowed length in bytes
  * is connected with the character set of the field as defined lengh * maximum
- * number of bytes per character in that encoding. However this does not work
+ * number of bytes per character in that encoding. However, this does not work
  * for system tables which have defined length 31, character set UNICODE_FSS and
  * maximum allowed length of 31 (instead of 31 * 3 = 63).
  * <p>
@@ -45,11 +50,8 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
  */
 public final class FBWorkaroundStringField extends FBStringField {
 
-    private boolean trimString;
-    
     /**
      * Create instance of this class for the specified field and result set.
-     * 
      *
      * @param fieldDescriptor Field descriptor
      * @param dataProvider data provider for this field
@@ -60,10 +62,6 @@ public final class FBWorkaroundStringField extends FBStringField {
     FBWorkaroundStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
         super(fieldDescriptor, dataProvider, requiredType);
-    }
-    
-    public void setTrimString(boolean trimString) {
-        this.trimString = trimString;
     }
 
     public void setString(String value) throws SQLException {
@@ -104,81 +102,43 @@ public final class FBWorkaroundStringField extends FBStringField {
     public String getString() throws SQLException {
         String result = super.getString();
         
-        if (result == null)
-            return null;
-
-        if (JdbcTypeConverter.isJdbcType(fieldDescriptor, Types.VARCHAR))
+        if (result == null || JdbcTypeConverter.isJdbcType(fieldDescriptor, Types.VARCHAR) || isTrimTrailing()) {
             return result;
-        
+        }
+
         // fix incorrect padding done by the database for multibyte charsets
         final int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
-        if ((fieldDescriptor.getLength() % maxBytesPerChar) == 0
-                && result.length() > possibleCharLength)
+        if ((fieldDescriptor.getLength() % maxBytesPerChar) == 0 && result.length() > possibleCharLength) {
             result = result.substring(0, possibleCharLength);
-        
-        if (trimString)
-            result = result.trim();
-        
+        }
+
         return result;
     }
 
     /**
-     * List of system tables from Firebird 1.5
+     * List of system tables (source from Firebird 5.0.0.762).
      */
-    private static final String[] SYSTEM_TABLES = new String[] {
-        "RDB$CHARACTER_SETS", 
-        "RDB$CHECK_CONSTRAINTS", 
-        "RDB$COLLATIONS", 
-        "RDB$DATABASE", 
-        "RDB$DEPENDENCIES", 
-        "RDB$EXCEPTIONS", 
-        "RDB$FIELDS", 
-        "RDB$FIELD_DIMENSIONS", 
-        "RDB$FILES", 
-        "RDB$FILTERS", 
-        "RDB$FORMATS", 
-        "RDB$FUNCTIONS", 
-        "RDB$FUNCTION_ARGUMENTS", 
-        "RDB$GENERATORS", 
-        "RDB$INDEX_SEGMENTS", 
-        "RDB$INDICES", 
-        "RDB$LOG_FILES", 
-        "RDB$PAGES", 
-        "RDB$PROCEDURES", 
-        "RDB$PROCEDURE_PARAMETERS", 
-        "RDB$REF_CONSTRAINTS", 
-        "RDB$RELATIONS", 
-        "RDB$RELATION_CONSTRAINTS", 
-        "RDB$RELATION_FIELDS", 
-        "RDB$ROLES", 
-        "RDB$SECURITY_CLASSES", 
-        "RDB$TRANSACTIONS", 
-        "RDB$TRIGGERS", 
-        "RDB$TRIGGER_MESSAGES", 
-        "RDB$TYPES", 
-        "RDB$USER_PRIVILEGES", 
-        "RDB$VIEW_RELATIONS"
-    };
-    
+    private static final Set<String> SYSTEM_TABLES = unmodifiableSet(new HashSet<>(Arrays.asList("MON$ATTACHMENTS",
+            "MON$CALL_STACK", "MON$COMPILED_STATEMENTS", "MON$CONTEXT_VARIABLES", "MON$DATABASE", "MON$IO_STATS",
+            "MON$MEMORY_USAGE", "MON$RECORD_STATS", "MON$STATEMENTS", "MON$TABLE_STATS", "MON$TRANSACTIONS",
+            "RDB$AUTH_MAPPING", "RDB$BACKUP_HISTORY", "RDB$CHARACTER_SETS", "RDB$CHECK_CONSTRAINTS", "RDB$COLLATIONS",
+            "RDB$CONFIG", "RDB$DATABASE", "RDB$DB_CREATORS", "RDB$DEPENDENCIES", "RDB$EXCEPTIONS", "RDB$FIELDS",
+            "RDB$FIELD_DIMENSIONS", "RDB$FILES", "RDB$FILTERS", "RDB$FORMATS", "RDB$FUNCTIONS",
+            "RDB$FUNCTION_ARGUMENTS", "RDB$GENERATORS", "RDB$INDEX_SEGMENTS", "RDB$INDICES", "RDB$KEYWORDS",
+            "RDB$LOG_FILES", "RDB$PACKAGES", "RDB$PAGES", "RDB$PROCEDURES", "RDB$PROCEDURE_PARAMETERS",
+            "RDB$PUBLICATIONS", "RDB$PUBLICATION_TABLES", "RDB$REF_CONSTRAINTS", "RDB$RELATIONS",
+            "RDB$RELATION_CONSTRAINTS", "RDB$RELATION_FIELDS", "RDB$ROLES", "RDB$SECURITY_CLASSES", "RDB$TIME_ZONES",
+            "RDB$TRANSACTIONS", "RDB$TRIGGERS", "RDB$TRIGGER_MESSAGES", "RDB$TYPES", "RDB$USER_PRIVILEGES",
+            "RDB$VIEW_RELATIONS", "SEC$DB_CREATORS", "SEC$GLOBAL_AUTH_MAPPING", "SEC$USERS", "SEC$USER_ATTRIBUTES")));
+
     /**
-     * Check if specified table is system table. This method simply traverses
-     * hardcoded list of system tables and compares table names.
-     * 
-     * @param tableName name of the table to check.
-     * 
-     * @return <code>true</code> if specified table is system, otherwise
-     * <code>false</code>
+     * Check if specified table is a system table.
+     *
+     * @param tableName
+     *         name of the table to check.
+     * @return {@code true} if specified table is a system table, otherwise {@code false}
      */
     private boolean isSystemTable(String tableName) {
-        boolean result = false;
-
-        for (String systemTable : SYSTEM_TABLES) {
-            if (systemTable.equals(tableName)) {
-                result = true;
-                break;
-            }
-        }
-        
-        return result;
+        return SYSTEM_TABLES.contains(tableName);
     }
 }

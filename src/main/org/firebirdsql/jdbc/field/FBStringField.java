@@ -49,7 +49,7 @@ import java.util.function.Function;
  * <p>
  * TODO check if the setBinaryStream(null) is allowed by specs.
  */
-class FBStringField extends FBField {
+class FBStringField extends FBField implements TrimmableField {
     
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";
@@ -59,6 +59,7 @@ class FBStringField extends FBField {
     static final String SHORT_TRUE_3 = "1";
 
     protected final int possibleCharLength;
+    private boolean trimTrailing;
 
     FBStringField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
             throws SQLException {
@@ -68,6 +69,16 @@ class FBStringField extends FBField {
         // TODO This might wreak havoc if field is a FBLongVarcharField
         // TODO currently avoiding -1 to avoid problems in FBLongVarcharField (eg with setBoolean); need to fix that
         possibleCharLength = charLength != -1 ? charLength : fieldDescriptor.getLength();
+    }
+
+    @Override
+    public void setTrimTrailing(boolean trimTrailing) {
+        this.trimTrailing = trimTrailing;
+    }
+
+    @Override
+    public boolean isTrimTrailing() {
+        return trimTrailing;
     }
 
     @Override
@@ -180,7 +191,18 @@ class FBStringField extends FBField {
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return getDatatypeCoder().decodeString(getFieldData());
+        return applyTrimTrailing(getDatatypeCoder().decodeString(getFieldData()));
+    }
+
+    /**
+     * Applies trim trailing if enabled.
+     *
+     * @param value
+     *         value to trim
+     * @return {@code value} when trim trailing is disabled, or trimmed value when enabled
+     */
+    final String applyTrimTrailing(String value) {
+        return trimTrailing ? TrimmableField.trimTrailing(value) : value;
     }
 
     //----- getXXXStream code

@@ -1187,7 +1187,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURES_START = "select "
-        + "cast(RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
+        + "RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
         + "RDB$DESCRIPTION as REMARKS,"
         + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
         + "from "
@@ -1245,8 +1245,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "cast(PP.RDB$PROCEDURE_NAME as " + OBJECT_NAME_TYPE + ") as PROCEDURE_NAME,"
-        + "cast(PP.RDB$PARAMETER_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
+        + "PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
+        + "PP.RDB$PARAMETER_NAME as COLUMN_NAME,"
         + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
         + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
         + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
@@ -1478,21 +1478,21 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final String TABLE_COLUMNS_2_5 =
             " select cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_CAT,"
             + "cast(null as " + OBJECT_NAME_TYPE + ") as TABLE_SCHEM,"
-            + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
-            + "cast(case"
+            + "trim(trailing from RDB$RELATION_NAME) as TABLE_NAME,"
+            + "trim(trailing from case"
             + "  when rdb$relation_type = 0 or " + LEGACY_IS_TABLE + " then case when RDB$SYSTEM_FLAG = 1 then '" + SYSTEM_TABLE + "' else '" + TABLE + "' end"
             + "  when rdb$relation_type = 1 or " + LEGACY_IS_VIEW + " then '" + VIEW + "'"
             + "  when rdb$relation_type = 2 then '" + TABLE + "'" // external table; assume as normal table
             + "  when rdb$relation_type = 3 then '" + SYSTEM_TABLE + "'" // virtual (monitoring) table: assume system
             + "  when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'"
-            + "end as varchar(31)) as TABLE_TYPE,"
+            + "end) as TABLE_TYPE,"
             + "RDB$DESCRIPTION as REMARKS,"
             + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_CAT,"
             + "cast(null as " + OBJECT_NAME_TYPE + ") as TYPE_SCHEM,"
             + "cast(null as varchar(31)) as TYPE_NAME,"
             + "cast(null as " + OBJECT_NAME_TYPE + ") as SELF_REFERENCING_COL_NAME,"
             + "cast(null as varchar(31)) as REF_GENERATION,"
-            + "cast(RDB$OWNER_NAME as " + OBJECT_NAME_TYPE + ") as OWNER_NAME "
+            + "trim(trailing from RDB$OWNER_NAME) as OWNER_NAME "
             + "from RDB$RELATIONS ";
     //@formatter:on
 
@@ -1723,8 +1723,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     //@formatter:off
     private static final String GET_COLUMNS_COMMON =
-            "SELECT cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS RELATION_NAME," +
-            "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") AS FIELD_NAME," +
+            "SELECT RF.RDB$RELATION_NAME AS RELATION_NAME," +
+            "RF.RDB$FIELD_NAME AS FIELD_NAME," +
             "F.RDB$FIELD_TYPE AS FIELD_TYPE," +
             "F.RDB$FIELD_SUB_TYPE AS FIELD_SUB_TYPE," +
             "F.RDB$FIELD_PRECISION AS FIELD_PRECISION," +
@@ -2016,11 +2016,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_COLUMN_PRIVILEGES_START = "select "
-        + "cast(RF.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
-        + "cast(RF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
-        + "cast(UP.RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
-        + "cast(UP.RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
-        + "cast(UP.RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
+        + "RF.RDB$RELATION_NAME as TABLE_NAME,"
+        + "RF.RDB$FIELD_NAME as COLUMN_NAME,"
+        + "UP.RDB$GRANTOR as GRANTOR,"
+        + "UP.RDB$USER as GRANTEE,"
+        + "UP.RDB$PRIVILEGE as PRIVILEGE,"
         + "UP.RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from "
         + "RDB$RELATION_FIELDS RF,"
@@ -2110,10 +2110,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_TABLE_PRIVILEGES_START = "select "
-        + "cast(RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
-        + "cast(RDB$GRANTOR as " + OBJECT_NAME_TYPE + ") as GRANTOR,"
-        + "cast(RDB$USER as " + OBJECT_NAME_TYPE + ") as GRANTEE,"
-        + "cast(RDB$PRIVILEGE as varchar(6)) as PRIVILEGE,"
+        + "RDB$RELATION_NAME as TABLE_NAME,"
+        + "RDB$GRANTOR as GRANTOR,"
+        + "RDB$USER as GRANTEE,"
+        + "RDB$PRIVILEGE as PRIVILEGE,"
         + "RDB$GRANT_OPTION as IS_GRANTABLE "
         + "from"
         + " RDB$USER_PRIVILEGES "
@@ -2178,7 +2178,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     //@formatter:off
     private static final String GET_BEST_ROW_IDENT =
             "SELECT " +
-            "CAST(rf.rdb$field_name AS " + OBJECT_NAME_TYPE + ") AS column_name," +
+            "rf.rdb$field_name AS column_name," +
             "f.rdb$field_type AS field_type," +
             "f.rdb$field_sub_type AS field_sub_type," +
             "f.rdb$field_scale AS field_scale," +
@@ -2348,10 +2348,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_PRIMARY_KEYS = "select "
-        + "cast(RC.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as TABLE_NAME,"
-        + "cast(ISGMT.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME,"
+        + "RC.RDB$RELATION_NAME as TABLE_NAME,"
+        + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME,"
         + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "cast(RC.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME "
+        + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
         + "from "
         + "RDB$RELATION_CONSTRAINTS RC "
         + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
@@ -2394,15 +2394,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_IMPORTED_KEYS = "select "
-    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
-    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
+    +" PK.RDB$RELATION_NAME as PKTABLE_NAME"
+    +",ISP.RDB$FIELD_NAME as PKCOLUMN_NAME"
+    +",FK.RDB$RELATION_NAME as FKTABLE_NAME"
+    +",ISF.RDB$FIELD_NAME as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
-    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
-    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
+    +",RC.RDB$UPDATE_RULE as UPDATE_RULE"
+    +",RC.RDB$DELETE_RULE as DELETE_RULE"
+    +",PK.RDB$CONSTRAINT_NAME as PK_NAME"
+    +",FK.RDB$CONSTRAINT_NAME as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
@@ -2488,15 +2488,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_EXPORTED_KEYS = "select "
-    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
-    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
+    +" PK.RDB$RELATION_NAME as PKTABLE_NAME"
+    +",ISP.RDB$FIELD_NAME as PKCOLUMN_NAME"
+    +",FK.RDB$RELATION_NAME as FKTABLE_NAME"
+    +",ISF.RDB$FIELD_NAME as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
-    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
-    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME "
+    +",RC.RDB$UPDATE_RULE as UPDATE_RULE"
+    +",RC.RDB$DELETE_RULE as DELETE_RULE"
+    +",PK.RDB$CONSTRAINT_NAME as PK_NAME"
+    +",FK.RDB$CONSTRAINT_NAME as FK_NAME "
     +"from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
@@ -2560,15 +2560,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_CROSS_KEYS = "select "
-    +"cast(PK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as PKTABLE_NAME"
-    +",cast(ISP.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as PKCOLUMN_NAME"
-    +",cast(FK.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") as FKTABLE_NAME"
-    +",cast(ISF.RDB$FIELD_NAME as " + OBJECT_NAME_TYPE + ") as FKCOLUMN_NAME"
+    +" PK.RDB$RELATION_NAME as PKTABLE_NAME"
+    +",ISP.RDB$FIELD_NAME as PKCOLUMN_NAME"
+    +",FK.RDB$RELATION_NAME as FKTABLE_NAME"
+    +",ISF.RDB$FIELD_NAME as FKCOLUMN_NAME"
     +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
-    +",cast(RC.RDB$UPDATE_RULE as varchar(11)) as UPDATE_RULE"
-    +",cast(RC.RDB$DELETE_RULE as varchar(11)) as DELETE_RULE"
-    +",cast(PK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as PK_NAME"
-    +",cast(FK.RDB$CONSTRAINT_NAME as " + OBJECT_NAME_TYPE + ") as FK_NAME"
+    +",RC.RDB$UPDATE_RULE as UPDATE_RULE"
+    +",RC.RDB$DELETE_RULE as DELETE_RULE"
+    +",PK.RDB$CONSTRAINT_NAME as PK_NAME"
+    +",FK.RDB$CONSTRAINT_NAME as FK_NAME"
     +" from "
     +"RDB$RELATION_CONSTRAINTS PK"
     +",RDB$RELATION_CONSTRAINTS FK"
@@ -2854,11 +2854,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     private static final String GET_INDEX_INFO = "SELECT "
-        + "cast(ind.RDB$RELATION_NAME as " + OBJECT_NAME_TYPE + ") AS TABLE_NAME"
+        + " ind.RDB$RELATION_NAME AS TABLE_NAME"
         + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",cast(ind.RDB$INDEX_NAME as " + OBJECT_NAME_TYPE + ") as INDEX_NAME"
+        + ",ind.RDB$INDEX_NAME as INDEX_NAME"
         + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",cast(ise.rdb$field_name as " + OBJECT_NAME_TYPE + ") as COLUMN_NAME"
+        + ",ise.rdb$field_name as COLUMN_NAME"
         + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
         + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
         + "FROM "

@@ -154,7 +154,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
         byte[] data = getBytes();
         if (data == null) return null;
         
-        return getDatatypeCoder().decodeString(data);
+        return applyTrimTrailing(getDatatypeCoder().decodeString(data));
     }
 
     @Override
