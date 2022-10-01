@@ -154,7 +154,7 @@ public abstract class GetFunctionColumns {
         //@formatter:off
         private static final String GET_FUNCTION_COLUMNS_FRAGMENT_2_5 =
                 "select\n"
-                + "  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
+                + "  FUN.RDB$FUNCTION_NAME as FUNCTION_NAME,\n"
                 + "  -- Firebird 2.5 and earlier have no parameter name: derive one\n"
                 + "  'PARAM_' || FUNA.RDB$ARGUMENT_POSITION as COLUMN_NAME,\n"
                 + "  FUNA.RDB$FIELD_TYPE as FIELD_TYPE,\n"

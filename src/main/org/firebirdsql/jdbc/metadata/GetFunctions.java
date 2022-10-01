@@ -135,7 +135,7 @@ public abstract class GetFunctions {
         //@formatter:off
         private static final String GET_FUNCTIONS_FRAGMENT_2_5 =
                 "select\n"
-                + "  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
+                + "  RDB$FUNCTION_NAME as FUNCTION_NAME,\n"
                 + "  RDB$DESCRIPTION as REMARKS,\n"
                 + "  cast(null as blob sub_type text) as JB_FUNCTION_SOURCE,\n"
                 + "  'UDF' as JB_FUNCTION_KIND,\n"
