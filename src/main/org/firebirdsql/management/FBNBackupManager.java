@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.firebirdsql.gds.ISCConstants.*;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_dbname;
+import static org.firebirdsql.jaybird.fb.constants.SpbItems.isc_spb_options;
 
 /**
  * Implements the incremental backup and restore functionality of NBackup via the Firebird Services API.
@@ -47,6 +49,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     /**
      * Create a new instance of {@code FBNBackupManager} based on the default GDSType.
      */
+    @SuppressWarnings("unused")
     public FBNBackupManager() {
     }
 
@@ -56,6 +59,7 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
      */
+    @SuppressWarnings("unused")
     public FBNBackupManager(String gdsType) {
         super(gdsType);
     }
