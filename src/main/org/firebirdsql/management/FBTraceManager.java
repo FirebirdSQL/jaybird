@@ -37,7 +37,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  */
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 
-    private Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<String, Integer>());
+    private final Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<String, Integer>());
 
     private class TraceTask implements Runnable {
 

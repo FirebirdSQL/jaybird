@@ -836,7 +836,7 @@ public class FBConnection implements FirebirdConnection {
         throw new FBDriverNotCapableException();
     }
 
-    private Set<String> clientInfoPropNames = new HashSet<>();
+    private final Set<String> clientInfoPropNames = new HashSet<>();
 
     private static final AtomicIntegerFieldUpdater<FBConnection> SAVEPOINT_COUNTER_UPDATE =
             AtomicIntegerFieldUpdater.newUpdater(FBConnection.class, "savepointCounter");

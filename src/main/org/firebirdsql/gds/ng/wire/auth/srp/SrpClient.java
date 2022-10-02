@@ -271,7 +271,8 @@ public final class SrpClient {
     }
 
     static class KeyPair {
-        private BigInteger pub, secret;
+        private final BigInteger pub;
+        private final BigInteger secret;
 
         private KeyPair(BigInteger pub, BigInteger secret) {
             this.pub = pub;

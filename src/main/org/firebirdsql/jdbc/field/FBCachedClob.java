@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -44,8 +44,8 @@ import org.firebirdsql.jdbc.FBSQLException;
  */
 public class FBCachedClob implements Clob, NClob {
 	
-	private FBCachedBlob wrappedBlob;
-	private String javaEncoding;
+	private final FBCachedBlob wrappedBlob;
+	private final String javaEncoding;
 
 	public FBCachedClob(FBCachedBlob blob, String javaEncoding) {
 		this.wrappedBlob = blob;

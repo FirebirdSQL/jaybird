@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -100,7 +100,7 @@ public final class LoggerFactory {
 
     private static class JulLoggerCreator implements LoggerCreator {
 
-        private static JulLoggerCreator INSTANCE = new JulLoggerCreator();
+        private static final JulLoggerCreator INSTANCE = new JulLoggerCreator();
 
         @Override
         public Logger createLogger(String name) {

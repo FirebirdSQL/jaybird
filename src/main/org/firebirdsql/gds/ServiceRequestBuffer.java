@@ -277,5 +277,5 @@ public interface ServiceRequestBuffer extends ParameterBuffer {
      * @param value
      *         The value to the set for the given parameter
      */
-    public void addArgument(int argumentType, byte value);
+    void addArgument(int argumentType, byte value);
 }

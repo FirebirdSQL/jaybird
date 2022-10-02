@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -79,7 +79,7 @@ public final class KnownServerKey {
     public static final class PluginSpecificData {
 
         private final EncryptionIdentifier encryptionIdentifier;
-        private byte[] specificData;
+        private final byte[] specificData;
 
         private PluginSpecificData(EncryptionIdentifier encryptionIdentifier, byte[] specificData) {
             this.encryptionIdentifier = requireNonNull(encryptionIdentifier, "encryptionIdentifier");
