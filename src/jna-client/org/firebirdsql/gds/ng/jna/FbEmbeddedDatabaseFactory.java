@@ -68,9 +68,9 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         for (String libraryName : librariesToTry) {
             try {
                 if (Platform.isWindows()) {
-                    return Native.loadLibrary(libraryName, WinFbClientLibrary.class);
+                    return Native.load(libraryName, WinFbClientLibrary.class);
                 } else {
-                    return Native.loadLibrary(libraryName, FbClientLibrary.class);
+                    return Native.load(libraryName, FbClientLibrary.class);
                 }
             } catch (RuntimeException | UnsatisfiedLinkError e) {
                 throwables.add(e);
