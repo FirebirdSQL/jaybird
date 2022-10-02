@@ -36,10 +36,7 @@ final class ConsoleLogger implements Logger {
     
     public ConsoleLogger(String name){
         int lastPoint = name.lastIndexOf('.');
-        if (lastPoint == -1)
-            this.name = name;
-        else
-            this.name = name.substring(lastPoint + 1);
+        this.name = name.substring(lastPoint + 1);
     }
     
     private void out(Object message, Throwable t) {

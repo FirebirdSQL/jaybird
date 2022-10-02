@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.impl.oo;
 
-import org.firebirdsql.gds.GDSException;
 import org.firebirdsql.gds.impl.BaseGDSFactoryPlugin;
 import org.firebirdsql.gds.ng.wire.FbWireDatabaseFactory;
 import org.firebirdsql.jdbc.oo.OOConnection;

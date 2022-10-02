@@ -32,7 +32,6 @@ import org.firebirdsql.util.NumericHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;

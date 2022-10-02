@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -32,10 +32,10 @@ import java.sql.SQLException;
 public interface FBFlushableField {
 
     class CachedObject {
-        public byte[] bytes;
-        public InputStream binaryStream;
-        public Reader characterStream;
-        public long length;
+        public final byte[] bytes;
+        public final InputStream binaryStream;
+        public final Reader characterStream;
+        public final long length;
 
         public CachedObject(byte[] bytes, InputStream binaryStream, Reader characterStream, long length) {
             this.bytes = bytes;

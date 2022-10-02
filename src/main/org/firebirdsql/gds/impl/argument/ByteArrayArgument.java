@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.gds.impl.argument;
 
-import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ParameterBuffer;
 

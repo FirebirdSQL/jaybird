@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -61,7 +61,7 @@ public final class BigIntArgument extends Argument {
         return 9 + argumentType.getLengthSize();
     }
 
-    protected void writeValue(final OutputStream outputStream, final long value) throws IOException {
+    private void writeValue(final OutputStream outputStream, final long value) throws IOException {
         if (argumentType == ArgumentType.IntSpb) {
             argumentType.writeLength(4, outputStream);
             VaxEncoding.encodeVaxIntegerWithoutLength(outputStream, (int) value);

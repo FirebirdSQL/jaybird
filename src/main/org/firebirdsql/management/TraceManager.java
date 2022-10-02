@@ -24,7 +24,6 @@
  */
 package org.firebirdsql.management;
 
-import java.io.IOException;
 import java.sql.SQLException;
 
 /**

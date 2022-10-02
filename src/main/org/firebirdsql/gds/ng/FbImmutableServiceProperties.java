@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.gds.ng;
 
-import java.util.Objects;
-
 /**
  * Immutable implementation of {@link org.firebirdsql.gds.ng.IServiceProperties}.
  *

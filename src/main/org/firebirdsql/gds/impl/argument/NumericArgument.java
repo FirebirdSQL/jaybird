@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -59,7 +59,7 @@ public final class NumericArgument extends Argument {
         return 5 + argumentType.getLengthSize();
     }
 
-    protected void writeValue(final OutputStream outputStream, final int value) throws IOException {
+    private void writeValue(final OutputStream outputStream, final int value) throws IOException {
         if (argumentType == ArgumentType.ByteSpb) {
             outputStream.write(value);
         } else {
@@ -69,7 +69,7 @@ public final class NumericArgument extends Argument {
     }
 
     @Override
-    public final int getValueAsInt() {
+    public int getValueAsInt() {
         return value;
     }
 

@@ -50,13 +50,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FBStringFieldTest extends BaseJUnit5TestFBField<FBStringField, String> {
 
-    static short TEST_STRING_SIZE = 40;
+    private static final short TEST_STRING_SIZE = 40;
 
     // TEST_STRING_LONG should be shorter than TEST_STRING_SIZE
-    static String TEST_STRING_SHORT = "This is short string.";
+    private static final String TEST_STRING_SHORT = "This is short string.";
 
     // TEST_STRING_LONG should be longer than TEST_STRING_SIZE
-    static String TEST_STRING_LONG = "And this string should be longer than short one.";
+    private static final String TEST_STRING_LONG = "And this string should be longer than short one.";
 
     private static final Encoding encoding = EncodingFactory.getPlatformEncoding();
 

@@ -78,7 +78,7 @@ public abstract class FBBackupManagerBase extends FBServiceManager implements Ba
     }
 
     protected boolean noLimitRestore;
-    protected List<PathSizeStruct> restorePaths = new ArrayList<>();
+    protected final List<PathSizeStruct> restorePaths = new ArrayList<>();
 
     protected boolean verbose;
 

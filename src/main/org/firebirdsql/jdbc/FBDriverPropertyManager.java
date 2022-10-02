@@ -25,8 +25,6 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.*;
 
-import static java.util.Collections.singletonList;
-
 /**
  * Manager of the DPB properties.
  */
