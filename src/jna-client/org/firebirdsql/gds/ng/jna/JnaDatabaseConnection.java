@@ -82,7 +82,6 @@ public class JnaDatabaseConnection extends JnaConnection<IConnectionProperties, 
      * Contrary to the description in the super class, this will simply return an unconnected instance.
      *
      * @return FbDatabase instance
-     * @throws SQLException
      */
     @Override
     public JnaDatabase identify() throws SQLException {

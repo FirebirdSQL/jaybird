@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * Tests for {@link org.firebirdsql.gds.ng.wire.version10.V10OutputBlob}. This test class can
  * be sub-classed for tests running on newer protocol versions.
  * <p>
- * Tests from this class are also copied to {@link org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
+ * Tests from this class are also copied to {@code org.firebirdsql.gds.ng.jna.JnaBlobTest} TODO: Consider refactoring test hierarchy
  * </p>
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>

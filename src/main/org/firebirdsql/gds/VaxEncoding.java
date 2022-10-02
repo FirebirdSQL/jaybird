@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -71,7 +71,6 @@ public final class VaxEncoding {
      *
      * @param stream Output stream to write
      * @param value Value to encode
-     * @throws IOException
      */
     public static void encodeVaxInteger(OutputStream stream, int value) throws IOException {
         stream.write(4);
@@ -83,7 +82,6 @@ public final class VaxEncoding {
      *
      * @param stream Output stream to write
      * @param value Value to encode
-     * @throws IOException
      */
     public static void encodeVaxIntegerWithoutLength(OutputStream stream, int value) throws IOException {
         stream.write(value);
@@ -129,7 +127,6 @@ public final class VaxEncoding {
      *
      * @param stream Output stream to write
      * @param value Value to encode
-     * @throws IOException
      */
     public static void encodeVaxLong(OutputStream stream, long value) throws IOException {
         stream.write(8);
@@ -141,7 +138,6 @@ public final class VaxEncoding {
      *
      * @param stream Output stream to write
      * @param value Value to encode
-     * @throws IOException
      */
     public static void encodeVaxLongWithoutLength(OutputStream stream, long value) throws IOException {
         stream.write((int) value);
@@ -174,7 +170,6 @@ public final class VaxEncoding {
      *
      * @param stream Output stream to write
      * @param value Value to encode
-     * @throws IOException
      */
     public static void encodeVaxInteger2WithoutLength(OutputStream stream, int value) throws IOException {
         stream.write(value);

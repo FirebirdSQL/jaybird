@@ -83,7 +83,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param option
      *         Free statement option
-     * @throws SQLException
      */
     protected void doFreePacket(int option) throws SQLException, IOException {
         sendFree(option);
@@ -97,8 +96,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param option
      *         Free statement option
-     * @throws IOException
-     * @throws SQLException
      */
     protected void sendFree(int option) throws IOException, SQLException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -195,7 +192,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param genericResponse
      *         GenericResponse
-     * @throws SQLException
      */
     protected void processPrepareResponse(final GenericResponse genericResponse) throws SQLException {
         parseStatementInfo(genericResponse.getData());
@@ -365,8 +361,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      *
      * @param sqlResponse
      *         SQL response object
-     * @throws SQLException
-     * @throws IOException
      */
     protected void processExecuteSingletonResponse(SqlResponse sqlResponse) throws SQLException, IOException {
         if (sqlResponse.getCount() > 0) {
@@ -463,8 +457,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
      * Sends the fetch request to the database.
      *
      * @param fetchSize Number of rows to fetch.
-     * @throws SQLException
-     * @throws IOException
      */
     protected void sendFetch(int fetchSize) throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -592,9 +584,6 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
 
     /**
      * Sends the allocate request to the server.
-     *
-     * @throws SQLException
-     * @throws IOException
      */
     protected void sendAllocate() throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();

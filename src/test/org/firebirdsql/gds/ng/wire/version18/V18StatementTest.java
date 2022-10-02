@@ -508,9 +508,8 @@ public class V18StatementTest extends V16StatementTest {
 
     /**
      * Holds information and data on a statement.
-     *
-     * TODO Consider if it makes sense to move this up in the StatementTest hierarchy for reuse in other tests
      */
+    // TODO Consider if it makes sense to move this up in the StatementTest hierarchy for reuse in other tests
     protected static final class StatementInfo {
 
         private final FbStatement statement;

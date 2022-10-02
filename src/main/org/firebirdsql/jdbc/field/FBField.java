@@ -828,7 +828,6 @@ public abstract class FBField {
      *
      * @param decimal
      *         Value to set
-     * @throws SQLException
      */
     public void setDecimal(Decimal<?> decimal) throws SQLException {
         try {

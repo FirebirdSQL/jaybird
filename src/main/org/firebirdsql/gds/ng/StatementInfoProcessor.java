@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,7 +12,7 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a source repository history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
@@ -92,7 +92,6 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
      *
      * @param info
      *         StatementInfo
-     * @throws SQLException
      */
     private void handleTruncatedInfo(final StatementInfo info) throws SQLException {
         final byte[] originalInfo = statement.getStatementInfoRequestItems();

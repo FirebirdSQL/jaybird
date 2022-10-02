@@ -56,8 +56,7 @@ public interface FbWireDatabase extends FbDatabase, FbWireAttachment {
      * @param operation
      *         Operation
      * @param objectId
-     *         Id of the object to release
-     * @throws SQLException
+     *         ID of the object to release
      */
     void releaseObject(int operation, int objectId) throws SQLException;
 

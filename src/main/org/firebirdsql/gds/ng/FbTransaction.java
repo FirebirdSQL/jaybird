@@ -80,15 +80,11 @@ public interface FbTransaction extends ExceptionListenable {
 
     /**
      * Commit the transaction
-     *
-     * @throws SQLException
      */
     void commit() throws SQLException;
 
     /**
      * Roll back the transaction
-     *
-     * @throws SQLException
      */
     void rollback() throws SQLException;
 
@@ -98,7 +94,6 @@ public interface FbTransaction extends ExceptionListenable {
      * @param recoveryInformation
      *         Transaction recovery information (stored in RDB$TRANSACTION_DESCRIPTION of RDB$TRANSACTIONS),
      *         or {@code null} to prepare without recovery information.
-     * @throws SQLException
      */
     void prepare(byte[] recoveryInformation) throws SQLException;
 
@@ -141,7 +136,6 @@ public interface FbTransaction extends ExceptionListenable {
      * </p>
      *
      * @return Database transaction id.
-     * @throws SQLException
      */
     long getTransactionId() throws SQLException;
 }

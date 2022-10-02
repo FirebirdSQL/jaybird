@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -60,7 +60,6 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * @return The input stream of the open connection
-     * @throws IOException
      */
     public InputStream getInputStream() throws IOException {
         if (!isConnected()) throw new IllegalStateException("Not connected");
@@ -69,7 +68,6 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * @return The output stream of the open connection
-     * @throws IOException
      */
     public OutputStream getOutputStream() throws IOException {
         if (!isConnected()) throw new IllegalStateException("Not connected");
@@ -81,8 +79,6 @@ public final class SimpleServer implements AutoCloseable {
      * <p>
      * Important: when testing the client connect and this accept should run on separate threads.
      * </p>
-     *
-     * @throws IOException
      */
     public void acceptConnection() throws IOException {
         if (isConnected()) throw new IllegalStateException("Already connected");
@@ -91,8 +87,6 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * Closes the open connection only. The server socket remains open.
-     *
-     * @throws IOException
      */
     public void closeConnection() throws IOException {
         if (!isConnected()) return;
@@ -101,11 +95,9 @@ public final class SimpleServer implements AutoCloseable {
 
     /**
      * Closes the open connection and the server socket.
-     *
-     * @throws IOException
      */
     public void close() throws IOException {
-        try (ServerSocket refServerSocket = serverSocket){
+        try (ServerSocket ignored = serverSocket){
             closeConnection();
         }
     }

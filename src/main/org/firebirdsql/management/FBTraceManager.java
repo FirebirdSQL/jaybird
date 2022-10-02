@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,9 +23,6 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbService;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -98,9 +95,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @param action
      *         The isc_action_svc_trace_* action to be used
      * @return the "trace" service request buffer for the Service Manager.
-     * @throws SQLException
      */
-    private ServiceRequestBuffer getTraceSPB(FbService service, int action) throws SQLException {
+    private ServiceRequestBuffer getTraceSPB(FbService service, int action) {
         ServiceRequestBuffer traceSPB = service.createServiceRequestBuffer();
         traceSPB.addArgument(action);
         return traceSPB;
@@ -116,9 +112,8 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @param traceSessionId
      *         The trace session ID
      * @return the "trace" service request buffer for the Service Manager.
-     * @throws SQLException
      */
-    private ServiceRequestBuffer getTraceSPB(FbService service, int action, int traceSessionId) throws SQLException {
+    private ServiceRequestBuffer getTraceSPB(FbService service, int action, int traceSessionId) {
         ServiceRequestBuffer traceSPB = getTraceSPB(service, action);
         traceSPB.addArgument(isc_spb_trc_id, traceSessionId);
         return traceSPB;
@@ -136,10 +131,9 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your Firebird
      *         installation
      * @return the "trace" service request buffer for the Service Manager.
-     * @throws SQLException
      */
     private ServiceRequestBuffer getTraceSPB(FbService service, int action, String traceSessionName,
-            String configuration) throws SQLException {
+            String configuration) {
         ServiceRequestBuffer traceSPB = getTraceSPB(service, action);
         traceSPB.addArgument(isc_spb_trc_name, traceSessionName);
         traceSPB.addArgument(isc_spb_trc_cfg, configuration);
@@ -154,7 +148,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      * @param configuration
      *         The trace configuration. For an example, look into fbtrace.conf in the root directory of your
      *         Firebird installation
-     * @throws SQLException
      */
     public void startTraceSession(String traceSessionName, String configuration) throws SQLException {
         if (configuration == null || configuration.equals("")) {
@@ -185,7 +178,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     public void stopTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
@@ -201,7 +193,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     public void suspendTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
@@ -217,7 +208,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
      *
      * @param traceSessionId
      *         The trace session ID
-     * @throws SQLException
      */
     public void resumeTraceSession(int traceSessionId) throws SQLException {
         try (FbService service = attachServiceManager()) {
@@ -230,8 +220,6 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
 
     /**
      * List all currently registered trace sessions
-     *
-     * @throws SQLException
      */
     public void listTraceSessions() throws SQLException {
         try (FbService service = attachServiceManager()) {
@@ -270,7 +258,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
             this.sessionName = sessionName;
         }
 
-        public void write(byte b[], int off, int len) throws IOException {
+        public void write(byte[] b, int off, int len) throws IOException {
             if (lookForSessionId) {
                 findSessionId(b, off, len);
                 lookForSessionId = false;

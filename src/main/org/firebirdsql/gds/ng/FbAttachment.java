@@ -46,8 +46,6 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
 
     /**
      * Attach to the attachment type.
-     *
-     * @throws SQLException
      */
     void attach() throws SQLException;
 

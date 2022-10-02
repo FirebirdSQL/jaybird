@@ -204,7 +204,6 @@ public interface FbBlob extends ExceptionListenable, AutoCloseable {
      * @param bufferLength
      *         Response buffer length to use
      * @return Response buffer
-     * @throws SQLException
      */
     byte[] getBlobInfo(byte[] requestItems, int bufferLength) throws SQLException;
 

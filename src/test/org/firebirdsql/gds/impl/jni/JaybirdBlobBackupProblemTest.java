@@ -55,7 +55,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
+/*
  * Demonstrates a problem backing up a database which has been created using streamed blobs(As far as my testing shows
  * it does not occur when segmented blobs are used ).
  *

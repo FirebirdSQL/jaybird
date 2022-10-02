@@ -49,15 +49,11 @@ public interface FbDatabase extends FbAttachment {
 
     /**
      * Creates a new database, connection remains attached to database.
-     *
-     * @throws SQLException
      */
     void createDatabase() throws SQLException;
 
     /**
      * Drops (and deletes) the currently attached database.
-     *
-     * @throws SQLException
      */
     void dropDatabase() throws SQLException;
 
@@ -96,7 +92,6 @@ public interface FbDatabase extends FbAttachment {
      *         TransactionParameterBuffer with the required transaction
      *         options
      * @return FbTransaction
-     * @throws SQLException
      */
     FbTransaction startTransaction(TransactionParameterBuffer tpb) throws SQLException;
 
@@ -120,7 +115,6 @@ public interface FbDatabase extends FbAttachment {
      * @param transaction
      *         FbTransaction to associate with this statement (can be <code>null</code>).
      * @return FbStatement
-     * @throws SQLException
      */
     FbStatement createStatement(FbTransaction transaction) throws SQLException;
 

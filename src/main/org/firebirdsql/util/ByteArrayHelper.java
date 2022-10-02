@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -56,7 +56,8 @@ public final class ByteArrayHelper {
     /**
      * Converts the provided byte array to a hexadecimal string
      * <p>
-     * Adapted from http://stackoverflow.com/a/21429909/466862 by <a href="http://stackoverflow.com/users/1182868/higginse">higginse</a>
+     * Adapted from <a href="https://stackoverflow.com/a/21429909/466862">https://stackoverflow.com/a/21429909/466862</a>
+     * by <a href="https://stackoverflow.com/users/1182868/higginse">higginse</a>
      * </p>
      *
      * @param bytes

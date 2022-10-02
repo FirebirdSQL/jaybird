@@ -100,7 +100,6 @@ class FBCachedFetcher implements FBFetcher {
      *         {@code true} when the blobs need to be retrieved from the server and the current column values in
      *         {@code rows} of a blob is the blobid, otherwise the column values in {@code rows} for a blob should be
      *         the blob data.
-     * @throws SQLException
      */
     FBCachedFetcher(List<RowValue> rows, FBObjectListener.FetcherListener fetcherListener, RowDescriptor rowDescriptor,
             GDSHelper gdsHelper, boolean retrieveBlobs) throws SQLException {

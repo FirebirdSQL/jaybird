@@ -123,9 +123,8 @@ class PooledConnectionHandlerMockTest {
      * that was closed by closing the handler should throw an SQLException
      * mentioning the connection was forcibly closed; the owner should not be
      * notified of the exception.
-     *
-     * TODO: Consider testing for all Connection methods
      */
+    // TODO: Consider testing for all Connection methods
     @Test
     void testClosedHandler_throwsException() throws SQLException {
         setupConnectionHandleRelease();
@@ -145,9 +144,8 @@ class PooledConnectionHandlerMockTest {
      * Calling any Connection method (except isClosed() and close()) on a proxy
      * that was closed itself should throw an SQLException mentioning the
      * connection was closed; the owner should not be notified of the exception.
-     *
-     * TODO: Consider testing for all Connection methods
      */
+    // TODO: Consider testing for all Connection methods
     @Test
     void testClosedProxy_throwsException() throws SQLException {
         setupConnectionHandleRelease();

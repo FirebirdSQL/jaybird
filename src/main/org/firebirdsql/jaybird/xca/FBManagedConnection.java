@@ -1012,7 +1012,6 @@ public class FBManagedConnection implements ExceptionListener {
      * @throws XAException
      *         If the transaction is already started, or this connection cannot participate in the distributed
      *         transaction
-     * @throws SQLException
      * @see #start(Xid, int)
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
