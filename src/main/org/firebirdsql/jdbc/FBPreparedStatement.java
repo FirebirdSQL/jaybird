@@ -601,6 +601,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
      * 
      * @throws SQLException if something went wrong.
      */
+    @SuppressWarnings("ForLoopReplaceableByForEach")
     private void flushFields() throws SQLException {
         // flush any cached data that can be hanging
         for (int i = 0; i < fields.length; i++) {

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -378,12 +379,9 @@ public class FBProcedureCall implements Cloneable {
 
         FBProcedureCall that = (FBProcedureCall) obj;
 
-        boolean result = this.name != null ? this.name.equals(that.name) : that.name == null;
-
-        result &= this.inputParams.equals(that.inputParams);
-        result &= this.outputParams.equals(that.outputParams);
-
-        return result;
+        return Objects.equals(name, that.name)
+                && inputParams.equals(that.inputParams)
+                && outputParams.equals(that.outputParams);
     }
 
     public int hashCode() {

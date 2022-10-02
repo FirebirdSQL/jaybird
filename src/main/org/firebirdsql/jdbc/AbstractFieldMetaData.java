@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.sql.Wrapper;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
@@ -480,8 +481,7 @@ public abstract class AbstractFieldMetaData implements Wrapper {
 
             FieldKey that = (FieldKey) obj;
 
-            return (relationName != null ? relationName.equals(that.relationName) : that.relationName == null)
-                    && (fieldName != null ? fieldName.equals(that.fieldName) : that.fieldName == null);
+            return Objects.equals(relationName, that.relationName) && Objects.equals(fieldName, that.fieldName);
         }
 
         /**

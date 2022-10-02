@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.Locale;
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -229,11 +230,11 @@ public abstract class Decimal<T extends Decimal<T>> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Decimal decimal = (Decimal) o;
+        Decimal<?> decimal = (Decimal<?>) o;
 
         if (signum != decimal.signum) return false;
         if (type != decimal.type) return false;
-        return bigDecimal != null ? bigDecimal.equals(decimal.bigDecimal) : decimal.bigDecimal == null;
+        return Objects.equals(bigDecimal, decimal.bigDecimal);
     }
 
     @Override
