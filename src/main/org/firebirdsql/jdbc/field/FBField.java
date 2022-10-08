@@ -178,16 +178,7 @@ public abstract class FBField {
             return new FBTimeTzField(fieldDescriptor, dataProvider, jdbcType);
         case Types.CHAR:
         case Types.VARCHAR:
-            /*
-             * TODO: Remove workaround
-             * Commented by R.Rokytskyy. Until the bug is fixed in the server
-             * we use "workaround" implementation of the string field. Should
-             * be replaced with original one as soon as bug is fixed in the
-             * engine.
-             *
-             * return new FBStringField(field, dataProvider, jdbcType);
-             */
-            return new FBWorkaroundStringField(fieldDescriptor, dataProvider, jdbcType);
+            return new FBStringField(fieldDescriptor, dataProvider, jdbcType);
         case Types.LONGVARCHAR:
             if (cached) {
                 return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, jdbcType);

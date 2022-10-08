@@ -553,22 +553,24 @@ class FBPreparedStatementTest {
     }
 
     /**
-     * Test if failure in setting the parameter leaves the driver in correct state (i.e. "not all params were set").
+     * Test if failure in setting the parameter leaves the driver in correct
+     * state (i.e. "Parameter with index 1 was not set").
      */
-    @Test
-    @Disabled("Currently not working as expected due to implementation change (or bug in original implementation/expectation)")
-    void testLikeParameter() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "a%", "%a", "%a%" })
+    void testLikeParameter(String tooLongValue) throws Exception {
         executeCreateTable(con, CREATE_TEST_CHARS_TABLE);
         con.setAutoCommit(false);
 
         try (PreparedStatement ps = con.prepareStatement("SELECT * FROM testtab WHERE field7 LIKE ?")) {
-            ps.setString(1, "%a%");
-            ps.executeQuery();
-            // fail("should throw data truncation");
-        } catch (DataTruncation ex) {
-            // ignore
+            assertThrows(DataTruncation.class, () -> ps.setString(1, tooLongValue),
+                    "expected not to be able to set too long value");
+
+            SQLException exception = assertThrows(SQLException.class, ps::execute, "expected exception on execute");
+            assertThat(exception, message(startsWith("Parameter with index 1 was not set")));
         }
 
+        // verify connection still valid
         try (Statement stmt = con.createStatement()) {
             stmt.execute("SELECT 1 FROM RDB$DATABASE");
         }

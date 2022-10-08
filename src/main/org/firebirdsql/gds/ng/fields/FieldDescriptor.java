@@ -85,12 +85,10 @@ public final class FieldDescriptor {
      * @param ownerName
      *         Owner of the column/table
      */
-    public FieldDescriptor(final int position, final DatatypeCoder datatypeCoder,
-            final int type, final int subType,
-            final int scale, int length,
-            final String fieldName, final String tableAlias, 
-            final String originalName, final String originalTableName,
-            final String ownerName) {
+    public FieldDescriptor(int position, DatatypeCoder datatypeCoder,
+            int type, int subType, int scale, int length,
+            String fieldName, String tableAlias, String originalName, String originalTableName,
+            String ownerName) {
         assert datatypeCoder != null : "dataTypeCoder should not be null";
         this.position = position;
         this.datatypeCoder = datatypeCoderForType(datatypeCoder, type, subType, scale);
@@ -246,8 +244,12 @@ public final class FieldDescriptor {
     public int getCharacterLength() {
         switch (type & ~1) {
         case SQL_TEXT:
-        case SQL_VARYING:
-            return length / getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+        case SQL_VARYING: {
+            int maxBytesPerChar = getDatatypeCoder().getEncodingDefinition().getMaxBytesPerChar();
+            // In Firebird 1.5 and earlier, the CHAR(31) metadata columns are reported with a byte length of 31,
+            // while UNICODE_FSS has maxBytesPerChar 3
+            return maxBytesPerChar > 1 && length % maxBytesPerChar == 0 ? length / maxBytesPerChar : length;
+        }
         default:
             return -1;
         }
@@ -306,6 +308,16 @@ public final class FieldDescriptor {
     }
 
     /**
+     * Determines the character set id (without collation id).
+     *
+     * @return Character set id for the type, if the type has no character set, than {@link ISCConstants#CS_dynamic}
+     * is returned
+     */
+    public int getCharacterSetId() {
+        return getCharacterSetId(type, subType, scale);
+    }
+
+    /**
      * Limited equals that only checks if the data type in the provided field descriptor is the same as this descriptor.
      * <p>
      * The fields checked are:
@@ -342,7 +354,7 @@ public final class FieldDescriptor {
         switch (type & ~1) {
         case SQL_TEXT:
         case SQL_VARYING:
-            if (getCharacterSetId(type, subType, scale) == CS_BINARY) {
+            if (getCharacterSetId() == CS_BINARY) {
                 return 0x00;
             }
             return 0x20;

@@ -697,6 +697,9 @@ there is no direct replacement, though `FBConnection.connectionProperties()` can
 there is no replacement
 ** `isExecuteProcedureStatement(String sql)`;
 there is no replacement
+* `FBPreparedStatement`
+** `setStringForced(int, String);
+there is no replacement
 * `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
@@ -886,7 +889,11 @@ This change can have two potentially breaking effects:
 +
 . Values from metadata queries can now have leading spaces, where previously those were removed
 . Some -- but not all -- metadata ``ResultSet``s would previously return the untrimmed value through `getObject(..)`, but now return the trimmed value.
-
+* Setting a string on a `PreparedStatement` (or updatable `ResultSet`), had a weird boundary check that tried to exploit a benign buffer overflow if the value started and/or ended with "```%```", and was one or two bytes too long.
+This odd boundary check has been removed, and will now throw a `DataTruncation` if the byte length is longer than the declared length (in bytes) of the field.
+Previously, in Jaybird 3.0 and 4.0, this had the following effects:
+** For pure-java, this would throw a "`string truncation error`" on execute
+** For native/embedded, it would be silently accepted with truncation of the value (one byte too long), or throw an `IndexOutOfBoundsException` (two bytes too long)
 
 [#breaking-changes-for-jaybird-6]
 === Breaking changes for Jaybird 6

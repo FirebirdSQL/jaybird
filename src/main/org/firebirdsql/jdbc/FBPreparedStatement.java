@@ -30,7 +30,6 @@ import org.firebirdsql.gds.ng.listeners.StatementListener;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
-import org.firebirdsql.jdbc.field.FBWorkaroundStringField;
 import org.firebirdsql.jdbc.field.FieldDataProvider;
 import org.firebirdsql.util.Primitives;
 
@@ -320,28 +319,6 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
     @Override
     public void setString(int parameterIndex, String x) throws SQLException {
         getField(parameterIndex).setString(x);
-    }
-
-    /**
-     * Sets the designated parameter to the given String value. This is a
-     * workaround for the ambiguous "operation was cancelled" response from the
-     * server for when an oversized string is set for a limited-size field. This
-     * method sets the string parameter without checking size constraints.
-     * 
-     * @param parameterIndex
-     *            the first parameter is 1, the second is 2, ...
-     * @param x
-     *            The String value to be set
-     * @throws SQLException
-     *             if a database access occurs
-     */
-    public void setStringForced(int parameterIndex, String x) throws SQLException {
-        FBField field = getField(parameterIndex);
-        if (field instanceof FBWorkaroundStringField) {
-            ((FBWorkaroundStringField) field).setStringForced(x);
-        } else {
-            field.setString(x);
-        }
     }
 
     @Override

@@ -51,7 +51,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -584,6 +586,10 @@ abstract class BaseJUnit5TestFBField<T extends FBField, O> {
      */
     final void verifySetValue(byte[] data) {
         verify(fieldData).setFieldData(data);
+    }
+
+    final void verifyNotSet() {
+        verify(fieldData, never()).setFieldData(any());
     }
 
     /**

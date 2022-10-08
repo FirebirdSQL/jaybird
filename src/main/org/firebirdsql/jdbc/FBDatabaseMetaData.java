@@ -3575,7 +3575,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         FBPreparedStatement s = getStatement(sql, standalone);
 
         for (int i = 0; i < params.size(); i++) {
-            s.setStringForced(i + 1, params.get(i));
+            s.setString(i + 1, params.get(i));
         }
 
         return s.executeMetaDataQuery();

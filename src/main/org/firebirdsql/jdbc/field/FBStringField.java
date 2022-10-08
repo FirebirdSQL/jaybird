@@ -72,12 +72,12 @@ class FBStringField extends FBField implements TrimmableField {
     }
 
     @Override
-    public void setTrimTrailing(boolean trimTrailing) {
+    public final void setTrimTrailing(boolean trimTrailing) {
         this.trimTrailing = trimTrailing;
     }
 
     @Override
-    public boolean isTrimTrailing() {
+    public final boolean isTrimTrailing() {
         return trimTrailing;
     }
 
@@ -191,7 +191,23 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public String getString() throws SQLException {
         if (isNull()) return null;
-        return applyTrimTrailing(getDatatypeCoder().decodeString(getFieldData()));
+        String result = applyTrimTrailing(getDatatypeCoder().decodeString(getFieldData()));
+        if (requiredType == Types.VARCHAR || isTrimTrailing()) {
+            return result;
+        }
+
+        return fixPadding(result);
+    }
+
+    private String fixPadding(String result) {
+        // fix incorrect padding of multibyte charsets (e.g. a CHAR(5) UTF8 can have upto 20 spaces, instead of 5)
+        // NOTE: For Firebird 3.0 and earlier, this prevents access to oversized CHAR(n) CHARACTER SET UNICODE_FSS.
+        // We accept that limitation because the workaround is to cast to VARCHAR, and because Firebird 4.0 no longer
+        // allows storing oversized UNICODE_FSS values
+        if (result.length() > possibleCharLength) {
+            return result.substring(0, possibleCharLength);
+        }
+        return result;
     }
 
     /**
@@ -357,7 +373,14 @@ class FBStringField extends FBField implements TrimmableField {
     @Override
     public void setString(String value) throws SQLException {
         if (setWhenNull(value)) return;
-        setFieldData(getDatatypeCoder().encodeString(value));
+        byte[] data = getDatatypeCoder().encodeString(value);
+        if (data.length > fieldDescriptor.getLength()) {
+            // NOTE: This doesn't catch truncation errors for oversized strings with multibyte character sets that
+            // still fit, those are handled by the server on execute.
+            throw new DataTruncation(fieldDescriptor.getPosition() + 1, true, false, data.length,
+                    fieldDescriptor.getLength());
+        }
+        setFieldData(data);
     }
 
     //----- setXXXStream code
