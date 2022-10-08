@@ -135,4 +135,50 @@ public interface NBackupManager extends ServiceManager {
      * @since 4.0.4
      */
     void setInPlaceRestore(boolean inPlaceRestore);
+    
+    /**
+     * Enables clean history on backup.
+     * <p>
+     * The backup will fail if {@link #setKeepDays(int)} or {@link #setKeepRows(int)} has not been called.
+     * </p>
+     *
+     * @param cleanHistory
+     *         {@code true} to enable clean history
+     */
+    void setCleanHistory(boolean cleanHistory);
+
+    /**
+     * Sets the number of days of backup history to keep.
+     * <p>
+     * Server-side, this option is mutually exclusive with {@link #setKeepRows(int)}, this is not enforced by the Java
+     * code.
+     * </p>
+     * <p>
+     * This option only has effect when {@code setCleanHistory(true)} has been called.
+     * </p>
+     *
+     * @param days
+     *         number of days to keep history when cleaning, or {@code -1} to clear current value
+     * @see #setCleanHistory(boolean)
+     * @see #setKeepRows(int)
+     */
+    void setKeepDays(int days);
+
+    /**
+     * Sets the number of rows of backup history to keep (this includes the row created by the backup).
+     * <p>
+     * Server-side, this option is mutually exclusive with {@link #setKeepDays(int)}, this is not enforced by the Java
+     * code.
+     * </p>
+     * <p>
+     * This option only has effect when {@code setCleanHistory(true)} has been called.
+     * </p>
+     *
+     * @param rows
+     *         number of rows to keep history when cleaning, or {@code -1} to clear current value
+     * @see #setCleanHistory(boolean)
+     * @see #setKeepDays(int)
+     */
+    void setKeepRows(int rows);
+
 }

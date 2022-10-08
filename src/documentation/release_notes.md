@@ -13,6 +13,9 @@ The following has been changed or fixed since Jaybird 4.0.6
   `blr_text2` which includes the character set information ([jaybird#692](https://github.com/FirebirdSQL/jaybird/issues/692))
 - Changed: Usages of `String.toUpperCase` and `String.toLowerCase` now use 
   `Locale.ROOT` to prevent locale-sensitivity issues ([jaybird#697](https://github.com/FirebirdSQL/jaybird/issues/697))
+- New feature: Support for NBackup "clean history" option ([jaybird#706](https://github.com/FirebirdSQL/jaybird/issues/706)) \
+  The `org.firebirdsql.management.NBackupManager` interface has three new methods: `setCleanHistory(boolean)` to enable (or disable) cleaning of history during backup, and `setKeepDays(int)` and `setKeepRows(int)` to specify the number of days or rows to keep history. These options require Firebird 4.0.3 or higher. \
+  This feature was backported from Jaybird 5.
 
 Jaybird 4.0.6
 -------------

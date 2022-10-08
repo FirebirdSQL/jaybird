@@ -19,6 +19,7 @@
 package org.firebirdsql.management;
 
 import org.firebirdsql.common.rules.UsesDatabase;
+import org.firebirdsql.gds.ISCConstants;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,12 +30,16 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -161,6 +166,70 @@ public class FBNBackupManagerTest {
             assertTrue("expected second row", rs.next());
             assertEquals("second row", "second", rs.getString(1));
             assertFalse("expected no more rows", rs.next());
+        }
+    }
+
+    @Test
+    public void backupCleanHistoryWithKeepDays() throws Exception {
+        assumeTrue("Requires NBackup clean history support", getDefaultSupportInfo().supportsNBackupCleanHistory());
+        manager.setCleanHistory(true);
+        manager.setKeepDays(5);
+
+        String backup1 = tempFile("backup1.nbk");
+        manager.setBackupFile(backup1);
+        manager.setDatabase(getDatabasePath());
+        manager.backupDatabase();
+
+        // NOTE: We are not checking if the server actually cleaned history
+    }
+
+    @Test
+    public void backupCleanHistoryWithKeepRows() throws Exception {
+        assumeTrue("Requires NBackup clean history support", getDefaultSupportInfo().supportsNBackupCleanHistory());
+        manager.setCleanHistory(true);
+        manager.setKeepRows(5);
+
+        String backup1 = tempFile("backup1.nbk");
+        manager.setBackupFile(backup1);
+        manager.setDatabase(getDatabasePath());
+        manager.backupDatabase();
+
+        // NOTE: We are not checking if the server actually cleaned history
+    }
+
+    @Test
+    public void backupCleanHistoryWithoutKeep() {
+        assumeTrue("Requires NBackup clean history support", getDefaultSupportInfo().supportsNBackupCleanHistory());
+        manager.setCleanHistory(true);
+
+        String backup1 = tempFile("backup1.nbk");
+        manager.setBackupFile(backup1);
+        manager.setDatabase(getDatabasePath());
+        try {
+            manager.backupDatabase();
+            fail("expected exception to be thrown");
+        } catch (SQLException e) {
+            assertThat(e, fbMessageStartsWith(
+                    ISCConstants.isc_missing_required_spb, "isc_spb_nbk_keep_days or isc_spb_nbk_keep_rows"));
+        }
+    }
+
+    @Test
+    public void backupCleanHistoryBothKeeps() {
+        assumeTrue("Requires NBackup clean history support", getDefaultSupportInfo().supportsNBackupCleanHistory());
+        manager.setCleanHistory(true);
+        manager.setKeepDays(5);
+        manager.setKeepRows(5);
+
+        String backup1 = tempFile("backup1.nbk");
+        manager.setBackupFile(backup1);
+        manager.setDatabase(getDatabasePath());
+        try {
+            manager.backupDatabase();
+            fail("expected exception to be thrown");
+        } catch (SQLException e) {
+            assertThat(e, fbMessageStartsWith(
+                    ISCConstants.isc_unexp_spb_form, "only one isc_spb_nbk_keep_days or isc_spb_nbk_keep_rows"));
         }
     }
 

@@ -42,6 +42,9 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     private String backupGuid;
     private boolean noDBTriggers;
     private boolean inPlaceRestore;
+    private boolean cleanHistory;
+    private int keepDays = -1;
+    private int keepRows = -1;
 
     /**
      * Create a new instance of <code>FBNBackupManager</code> based on the default GDSType.
@@ -118,6 +121,16 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
         if (options != 0) {
             backupSPB.addArgument(isc_spb_options, options);
         }
+        if (cleanHistory) {
+            backupSPB.addArgument(isc_spb_nbk_clean_history);
+            // NOTE: The keepXXX are mutually exclusive, but we leave it to the server to enforce that
+            if (keepDays != -1) {
+                backupSPB.addArgument(isc_spb_nbk_keep_days, keepDays);
+            }
+            if (keepRows != -1) {
+                backupSPB.addArgument(isc_spb_nbk_keep_rows, keepRows);
+            }
+        }
 
         return backupSPB;
     }
@@ -185,6 +198,21 @@ public class FBNBackupManager extends FBServiceManager implements NBackupManager
     @Override
     public void setInPlaceRestore(boolean inPlaceRestore) {
         this.inPlaceRestore = inPlaceRestore;
+    }
+
+    @Override
+    public void setCleanHistory(boolean cleanHistory) {
+        this.cleanHistory = cleanHistory;
+    }
+
+    @Override
+    public void setKeepDays(int days) {
+        keepDays = days;
+    }
+
+    @Override
+    public void setKeepRows(int rows) {
+        keepRows = rows;
     }
 
 }

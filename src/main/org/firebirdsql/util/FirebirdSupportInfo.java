@@ -576,6 +576,13 @@ public final class FirebirdSupportInfo {
     }
 
     /**
+     * @return {@code true} when this Firebird version supports NBackup clean history
+     */
+    public boolean supportsNBackupCleanHistory() {
+        return isVersionEqualOrAbove(4, 0, 3);
+    }
+
+    /**
      * @param serverVersion
      *         Server version
      * @return FirebirdVersionSupport instance

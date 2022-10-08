@@ -251,7 +251,11 @@ public class ClumpletReader {
                     return ClumpletType.StringSpb;
                 case isc_spb_nbk_level:
                 case isc_spb_options:
+                case isc_spb_nbk_keep_days:
+                case isc_spb_nbk_keep_rows:
                     return ClumpletType.IntSpb;
+                case isc_spb_nbk_clean_history:
+                    return ClumpletType.SingleTpb;
                 }
                 throw invalidStructure("unknown parameter for nbackup");
             case isc_action_svc_trace_start:
