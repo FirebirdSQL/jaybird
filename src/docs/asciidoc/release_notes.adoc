@@ -578,6 +578,10 @@ Now, it will immediately report `-1` (which it previously only did after another
 The `executeUpdate` and `executeLargeUpdate` methods will continue to report an update count of `0`, as required by the JDBC API documentation.
 For consistency with server-side batch execution, emulated batch execution will also report update counts of `0` where `getUpdateCount()` would report `-1`.
 * New feature: Support for role name on FBManager (https://github.com/FirebirdSQL/jaybird/issues/705[jaybird#705])
+* New feature: Support for NBackup "`clean history`" option (https://github.com/FirebirdSQL/jaybird/issues/706[jaybird#706])
++
+The `org.firebirdsql.management.NBackupManager` interface has three new methods: `setCleanHistory(boolean)` to enable (or disable) cleaning of history during backup, and `setKeepDays(int)` and `setKeepRows(int)` to specify the number of days or rows to keep history.
+These options require Firebird 4.0.3 or higher.
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages

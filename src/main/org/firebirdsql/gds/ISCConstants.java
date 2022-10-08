@@ -394,13 +394,15 @@ public interface ISCConstants {
 
     /*****************************************
      * Parameters for isc_action_svc_nbak    *
-     * New with Firebird 2.5
      *****************************************/
 
     int isc_spb_nbk_level  = 5;
     int isc_spb_nbk_file   = 6;
     int isc_spb_nbk_direct = 7;
     int isc_spb_nbk_guid   = 8;
+    int isc_spb_nbk_clean_history = 9;
+    int isc_spb_nbk_keep_days     = 10;
+    int isc_spb_nbk_keep_rows     = 11;
     int isc_spb_nbk_no_triggers = 0x01;
     int isc_spb_nbk_inplace     = 0x02;
     int isc_spb_nbk_sequence    = 0x04;
