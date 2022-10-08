@@ -24,6 +24,7 @@ import org.firebirdsql.ds.FBSimpleDataSource;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.jaybird.props.PropertyConstants;
 import org.firebirdsql.jaybird.props.PropertyNames;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -163,12 +164,17 @@ class DatabaseUrlFormatsTest {
                 // NOTE: This test assumes a Firebird 3.0 or higher client library is used
                 urlFormats.add("inet://%1$s:%2$d/%3$s");
                 // Not testing inet4/inet6
-                if (getDefaultSupportInfo().isWindows() && isWindowsSystem()) {
-                    // NOTE: This assumes the default WNET service name is used
-                    urlFormats.add("wnet://%1$s/%3$s");
-                    urlFormats.add("\\\\%4$s\\%3$s");
+                FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+                if (supportInfo.isWindows() && isWindowsSystem()) {
+                    if (supportInfo.supportsWnet()) {
+                        // NOTE: This assumes the default WNET service name is used
+                        urlFormats.add("wnet://%1$s/%3$s");
+                        urlFormats.add("\\\\%4$s\\%3$s");
+                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                            urlFormats.add("wnet://%3$s");
+                        }
+                    }
                     if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                        urlFormats.add("wnet://%3$s");
                         urlFormats.add("xnet://%3$s");
                     }
                 }

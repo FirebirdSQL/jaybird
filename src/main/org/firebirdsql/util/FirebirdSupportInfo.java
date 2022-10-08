@@ -638,6 +638,11 @@ public final class FirebirdSupportInfo {
         return isVersionEqualOrAbove(3, 0);
     }
 
+    public boolean supportsWnet() {
+        // NOTE: There is probably a lower boundary as well (2.0?), but not checking that
+        return isVersionBelow(5, 0);
+    }
+
     /**
      * @return {@code true} if the default ODS of this Firebird version has column {@code RDB$PROCEDURE_TYPE}
      */

@@ -21,6 +21,7 @@ package org.firebirdsql.management;
 import org.firebirdsql.common.FBTestProperties;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.jaybird.props.PropertyConstants;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -111,17 +112,22 @@ class FBServiceManagerTest {
                 urlFormats.add("inet://%1$s:%2$d/");
                 urlFormats.add("inet://%1$s:%2$d");
                 // Not testing inet4/inet6
-                if (getDefaultSupportInfo().isWindows() && isWindowsSystem()) {
-                    // NOTE: This assumes the default WNET service name is used
-                    urlFormats.add("wnet://%1$s/%3$s");
-                    urlFormats.add("wnet://%1$s/");
-                    urlFormats.add("wnet://%1$s");
-                    urlFormats.add("\\\\%4$s\\%3$s");
-                    urlFormats.add("\\\\%4$s\\");
-                    urlFormats.add("\\\\%4$s");
+                FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+                if (supportInfo.isWindows() && isWindowsSystem()) {
+                    if (supportInfo.supportsWnet()) {
+                        // NOTE: This assumes the default WNET service name is used
+                        urlFormats.add("wnet://%1$s/%3$s");
+                        urlFormats.add("wnet://%1$s/");
+                        urlFormats.add("wnet://%1$s");
+                        urlFormats.add("\\\\%4$s\\%3$s");
+                        urlFormats.add("\\\\%4$s\\");
+                        urlFormats.add("\\\\%4$s");
+                        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+                            urlFormats.add("wnet://%3$s");
+                            urlFormats.add("wnet://");
+                        }
+                    }
                     if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
-                        urlFormats.add("wnet://%3$s");
-                        urlFormats.add("wnet://");
                         urlFormats.add("xnet://%3$s");
                         urlFormats.add("xnet://");
                     }
