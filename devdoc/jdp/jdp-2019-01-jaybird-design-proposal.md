@@ -102,10 +102,14 @@ The type of document. Possible values:
   without being replaced.
 - Feature-Specification : Specification of features, architecture and other code
   related things
+- Experimental : Feature is experimental and might be modified or dropped in
+  point releases (only for use with _Feature-Specification_)
 - .. (we'll likely find new types to add once we're using this)
 
 A document can have multiple types. The types _Project-Specification_ and 
-_Feature-Specification_ are mutually exclusive.
+_Feature-Specification_ are mutually exclusive. The type _Experimental_ can only
+occur with _Feature-Specification_. Modifications to _Experimental_ JDPs must 
+be published as separate JDPs.
 
 The _Living document_ type should generally only be used for 
 _Project-Specification_ documents like this document, and not for features.

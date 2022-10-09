@@ -519,6 +519,19 @@ This will be corrected when we retrofit the new behaviour for _emulated_ as well
 
 See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-04-real-scrollable-cursor-support.md.md[jdp-2021-04].
 
+[#embedded-locator-service-provider]
+=== Firebird Embedded locator service provider (experimental)
+
+The Firebird Embedded locator service provider is an experimental feature to load Firebird Embedded from the classpath.
+This requires an additional library implementing the service provider interface (SPI) and providing the necessary Firebird Embedded binaries for the runtime platform.
+
+This feature should be considered highly experimental.
+It may change in point releases, and may get dropped in future Jaybird major versions.
+The project does not provide libraries implementing the SPI at this time.
+As we have only successfully tested this on Windows, it is possible that -- at least initially -- only Windows versions of such a library will be released by the project.
+
+For details, see https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2020-05-firebird-embedded-locator-service-provider.md[jdp-2020-05: Firebird Embedded locator service provider^].
+
 [#potentially-breaking-changes]
 === Potentially breaking changes
 

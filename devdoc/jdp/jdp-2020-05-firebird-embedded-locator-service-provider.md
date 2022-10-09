@@ -2,11 +2,12 @@
 
 ## Status
 
-- Draft
+- Published: 2022-10-09
 - Implemented in: Jaybird 5
 
 ## Type
 
+- Experimental
 - Feature-specification
 
 ## Context
@@ -30,7 +31,7 @@ library based on version requirements.
 
 ### Open questions
 
-1. Will this work for using Firebird Embedded on Linux and MacOS?
+1. Will this work for using Firebird Embedded on Linux and macOS?
 
 ## Consequences
 
