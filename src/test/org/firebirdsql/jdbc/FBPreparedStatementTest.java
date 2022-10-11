@@ -1344,19 +1344,11 @@ class FBPreparedStatementTest {
         }
     }
 
-    @Test
-    void testSetClobNullClob_onSubTypeText() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
-            pstmt.setClob(1, (Clob) null);
-            ResultSet rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
-            assertNull(rs.getClob(1));
-        }
-    }
-
-    @Test
-    void testSetClobNullClob_onSubTypeBinary() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+    @ParameterizedTest
+    @ValueSource(strings = { "binary", "text" })
+    void testSetClobNullClob(String subType) throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setClob(1, (Clob) null);
             ResultSet rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
@@ -1384,9 +1376,11 @@ class FBPreparedStatementTest {
         }
     }
 
-    @Test
-    void testSetBlobNullBlob_onSubTypeText() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+    @ParameterizedTest
+    @ValueSource(strings = { "binary", "text" })
+    void testSetBlobNullBlob(String subType) throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type " + subType + ") from rdb$database")) {
             pstmt.setBlob(1, (Blob) null);
             ResultSet rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
@@ -1396,7 +1390,8 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetBlobNullInputStream() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, (InputStream) null);
             ResultSet rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
@@ -1406,18 +1401,9 @@ class FBPreparedStatementTest {
 
     @Test
     void testSetBlobNullInputStreamWithLength() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+        try (PreparedStatement pstmt = con.prepareStatement(
+                "select cast(? as blob sub_type binary) from rdb$database")) {
             pstmt.setBlob(1, null, 1);
-            ResultSet rs = pstmt.executeQuery();
-            assertTrue(rs.next(), "expected a row");
-            assertNull(rs.getBlob(1));
-        }
-    }
-
-    @Test
-    void testSetBlobNullBlob_onSubTypeBinary() throws Exception {
-        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
-            pstmt.setBlob(1, (Blob) null);
             ResultSet rs = pstmt.executeQuery();
             assertTrue(rs.next(), "expected a row");
             assertNull(rs.getBlob(1));
