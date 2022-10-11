@@ -691,7 +691,7 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     @Override
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        // if the passed BLOB is not instance of our class, copy its content into our BLOB
         if (blob != null && !(blob instanceof FBBlob)) {
             FBBlob fbb = new FBBlob(gdsHelper, blobListener);
             fbb.copyStream(blob.getBinaryStream());
@@ -703,22 +703,18 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        FBBlob blob = new FBBlob(gdsHelper, blobListener);
-        blob.copyStream(inputStream, length);
-        setBlob(parameterIndex, blob);
+        setBinaryStream(parameterIndex, inputStream, length);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-        FBBlob blob = new FBBlob(gdsHelper, blobListener);
-        blob.copyStream(inputStream);
-        setBlob(parameterIndex, blob);
+        setBinaryStream(parameterIndex, inputStream);
     }
 
     @Override
     public void setClob(int parameterIndex, Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
-        if (!(clob instanceof FBClob)) {
+        // if the passed BLOB is not instance of our class, copy its content into our CLOB
+        if (clob != null && !(clob instanceof FBClob)) {
             FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
             fbc.copyCharacterStream(clob.getCharacterStream());
             clob = fbc;
@@ -729,16 +725,12 @@ public abstract class AbstractPreparedStatement extends FBStatement implements F
 
     @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
-        clob.copyCharacterStream(reader, length);
-        setClob(parameterIndex, clob);
+        setCharacterStream(parameterIndex, reader, length);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        FBClob clob = new FBClob(new FBBlob(gdsHelper, blobListener));
-        clob.copyCharacterStream(reader);
-        setClob(parameterIndex, clob);
+        setCharacterStream(parameterIndex, reader);
     }
 
     /**

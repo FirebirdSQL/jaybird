@@ -20,6 +20,15 @@ The following has been changed or fixed since Jaybird 4.0.6
   the number of days or rows to keep history. These options require Firebird
   4.0.3 or higher. \
   This feature was backported from Jaybird 5.
+- Fixed: Calling `PreparedStatement.setClob` or `PreparedStatement.setBlob` with
+  a `null` `Clob`, `Reader`, `Blob`, or `InputStream` would result in 
+  a `NullPointerException` ([jaybird#712](https://github.com/FirebirdSQL/jaybird/issues/712)) \
+  As part of this change the behaviour of `setClob` methods accepting a `Reader`
+  was changed to be identical to `setCharacterStream`, and `setBlob` accepting 
+  an `InputStream` to `setBinaryStream`. The end result before and after 
+  this change is identical, but it can result in different memory and 
+  performance characteristics, as the stream is now consumed on execute, and not
+  on set.
 
 Jaybird 4.0.6
 -------------
