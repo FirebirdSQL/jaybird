@@ -38,6 +38,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
@@ -1340,6 +1341,86 @@ class FBPreparedStatementTest {
             assertTrue(rs.isClosed(), "Result set should be closed (automatically closed after last result read)");
             assertFalse(stmt.getMoreResults(), "expected no result set for getMoreResults");
             assertEquals(-1, stmt.getUpdateCount(), "no update count (-1) was expected");
+        }
+    }
+
+    @Test
+    void testSetClobNullClob_onSubTypeText() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setClob(1, (Clob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetClobNullClob_onSubTypeBinary() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setClob(1, (Clob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetClobNullReader() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setClob(1, (Reader) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetClobNullReaderWithLength() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setClob(1, null, 1);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getClob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullBlob_onSubTypeText() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type text) from rdb$database")) {
+            pstmt.setBlob(1, (Blob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullInputStream() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setBlob(1, (InputStream) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullInputStreamWithLength() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setBlob(1, null, 1);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
+        }
+    }
+
+    @Test
+    void testSetBlobNullBlob_onSubTypeBinary() throws Exception {
+        try (PreparedStatement pstmt = con.prepareStatement("select cast(? as blob sub_type binary) from rdb$database")) {
+            pstmt.setBlob(1, (Blob) null);
+            ResultSet rs = pstmt.executeQuery();
+            assertTrue(rs.next(), "expected a row");
+            assertNull(rs.getBlob(1));
         }
     }
 

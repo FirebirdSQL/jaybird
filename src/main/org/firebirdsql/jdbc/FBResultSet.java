@@ -1663,7 +1663,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     private FBBlob asFBBlob(Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        // if the passed BLOB is not instance of our class, copy its content into our BLOB
         if (blob == null) {
             return null;
         }
@@ -1712,7 +1712,7 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     }
 
     private FBClob asFBClob(Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into the our BLOB
+        // if the passed BLOB is not instance of our class, copy its content into our CLOB
         if (clob == null) {
             return null;
         }

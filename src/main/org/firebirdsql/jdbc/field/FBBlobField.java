@@ -273,15 +273,21 @@ class FBBlobField extends FBField implements FBCloseableField, FBFlushableField 
     public void setBlob(FBBlob blob) throws SQLException {
         // setNull() to reset field to empty state
         setNull();
-        setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
-        this.blob = blob;
-        blobExplicitNull = false;
+        if (blob != null) {
+            setFieldData(getDatatypeCoder().encodeLong(blob.getBlobId()));
+            this.blob = blob;
+            blobExplicitNull = false;
+        }
     }
 
     @Override
     public void setClob(FBClob clob) throws SQLException {
-        FBBlob blob = clob.getWrappedBlob();
-        setBlob(blob);
+        if (clob != null) {
+            FBBlob blob = clob.getWrappedBlob();
+            setBlob(blob);
+        } else {
+            setNull();
+        }
     }
 
     @Override
