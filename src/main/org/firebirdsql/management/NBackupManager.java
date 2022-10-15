@@ -104,7 +104,7 @@ public interface NBackupManager extends ServiceManager {
     /**
      * Perform the nbackup fixup operation.
      * <p>
-     * A fixup will switch the database backup to 'normal' state without merging the delta, so this is a potentially
+     * A fixup will switch a locked database to 'normal' state without merging the delta, so this is a potentially
      * destructive action. The normal use-case of this option is to unlock a copy of a database file where the source
      * database file was locked with {@code nbackup -L} or {@code ALTER DATABASE BEGIN BACKUP}.
      * </p>
@@ -114,6 +114,7 @@ public interface NBackupManager extends ServiceManager {
      *
      * @throws SQLException
      *         if a database error occurs during the fixup
+     * @since 5
      */
     void fixupDatabase() throws SQLException;
 
@@ -166,6 +167,7 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param preserveSequence
      *         {@code true} to enable preserve sequence
+     * @since 5
      */
     void setPreserveSequence(boolean preserveSequence);
 
@@ -177,6 +179,7 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param cleanHistory
      *         {@code true} to enable clean history
+     * @since 4.0.7
      */
     void setCleanHistory(boolean cleanHistory);
 
@@ -194,6 +197,7 @@ public interface NBackupManager extends ServiceManager {
      *         number of days to keep history when cleaning, or {@code -1} to clear current value
      * @see #setCleanHistory(boolean)
      * @see #setKeepRows(int)
+     * @since 4.0.7
      */
     void setKeepDays(int days);
 
@@ -211,6 +215,7 @@ public interface NBackupManager extends ServiceManager {
      *         number of rows to keep history when cleaning, or {@code -1} to clear current value
      * @see #setCleanHistory(boolean)
      * @see #setKeepDays(int)
+     * @since 4.0.7
      */
     void setKeepRows(int rows);
     
