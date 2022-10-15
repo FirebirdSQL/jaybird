@@ -144,6 +144,7 @@ public interface NBackupManager extends ServiceManager {
      *
      * @param cleanHistory
      *         {@code true} to enable clean history
+     * @since 4.0.7
      */
     void setCleanHistory(boolean cleanHistory);
 
@@ -161,6 +162,7 @@ public interface NBackupManager extends ServiceManager {
      *         number of days to keep history when cleaning, or {@code -1} to clear current value
      * @see #setCleanHistory(boolean)
      * @see #setKeepRows(int)
+     * @since 4.0.7
      */
     void setKeepDays(int days);
 
@@ -178,6 +180,7 @@ public interface NBackupManager extends ServiceManager {
      *         number of rows to keep history when cleaning, or {@code -1} to clear current value
      * @see #setCleanHistory(boolean)
      * @see #setKeepDays(int)
+     * @since 4.0.7
      */
     void setKeepRows(int rows);
 
