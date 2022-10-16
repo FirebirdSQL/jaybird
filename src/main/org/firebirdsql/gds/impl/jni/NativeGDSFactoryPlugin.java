@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,11 +27,11 @@ import java.util.Arrays;
 public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String NATIVE_TYPE_NAME = "NATIVE";
-
     // NOTE Alias LOCAL is deprecated, as are the *:local: JDBC protocols. They may be removed in Jaybird 6 or later
     private static final String[] TYPE_ALIASES = new String[] { "TYPE2", "LOCAL" };
+    private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:native:";
     private static final String[] JDBC_PROTOCOLS = new String[] {
-            "jdbc:firebirdsql:native:", "jdbc:firebird:native:",
+            DEFAULT_PROTOCOL, "jdbc:firebird:native:",
             // For backwards compatibility
             "jdbc:firebirdsql:local:", "jdbc:firebird:local:"
     };
@@ -54,6 +54,11 @@ public class NativeGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     @Override
     public String[] getSupportedProtocols() {
         return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
+    }
+
+    @Override
+    public String getDefaultProtocol() {
+        return DEFAULT_PROTOCOL;
     }
 
     @Override

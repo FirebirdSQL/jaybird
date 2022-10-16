@@ -27,10 +27,9 @@ import java.util.Arrays;
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String TYPE_NAME = "OOREMOTE";
-
     private static final String[] TYPE_ALIASES = new String[] {};
-
-    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebird:oo:", "jdbc:firebirdsql:oo:"};
+    private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:oo:";
+    private static final String[] JDBC_PROTOCOLS = new String[] { "jdbc:firebird:oo:", DEFAULT_PROTOCOL };
 
     @Override
     public String getPluginName() {
@@ -55,6 +54,11 @@ public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
     @Override
     public String[] getSupportedProtocols() {
         return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
+    }
+
+    @Override
+    public String getDefaultProtocol() {
+        return DEFAULT_PROTOCOL;
     }
 
     @Override

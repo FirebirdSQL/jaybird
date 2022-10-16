@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -27,29 +27,38 @@ import java.util.Arrays;
 public class EmbeddedGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String EMBEDDED_TYPE_NAME = "EMBEDDED";
-
     private static final String[] TYPE_ALIASES = new String[0];
-
-    private static final String[] JDBC_PROTOCOLS = new String[] { 
-        "jdbc:firebirdsql:embedded:", "jdbc:firebird:embedded:"
+    private static final String DEFAULT_PROTOCOL = "jdbc:firebirdsql:embedded:";
+    private static final String[] JDBC_PROTOCOLS = new String[] {
+            DEFAULT_PROTOCOL, "jdbc:firebird:embedded:"
     };
 
+    @Override
     public String getPluginName() {
         return "GDS implementation for embedded server.";
     }
 
+    @Override
     public String getTypeName() {
         return EMBEDDED_TYPE_NAME;
     }
 
+    @Override
     public String[] getTypeAliases() {
         return TYPE_ALIASES;
     }
 
+    @Override
     public String[] getSupportedProtocols() {
         return Arrays.copyOf(JDBC_PROTOCOLS, JDBC_PROTOCOLS.length);
     }
-    
+
+    @Override
+    public String getDefaultProtocol() {
+        return DEFAULT_PROTOCOL;
+    }
+
+    @Override
     public String getDatabasePath(String server, Integer port, String path) throws GDSException {
         if (path == null) {
             throw new GDSException("Database name/path is required.");
