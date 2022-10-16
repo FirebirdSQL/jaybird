@@ -426,16 +426,12 @@ public final class FirebirdSupportInfo {
     public boolean supportsPageSize(int pageSize) {
         switch (pageSize) {
         case PageSizeConstants.SIZE_1K:
-            return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_2K:
             return !isVersionEqualOrAbove(2, 1);
         case PageSizeConstants.SIZE_4K:
-            return true;
         case PageSizeConstants.SIZE_8K:
-            return true;
         case PageSizeConstants.SIZE_16K:
-            // TODO check
-            return isVersionEqualOrAbove(2, 0);
+            return true;
         case PageSizeConstants.SIZE_32K:
             return isVersionEqualOrAbove(4, 0);
         }
