@@ -24,8 +24,10 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Objects;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Definition of a Firebird encoding. This is the default implementation of {@link EncodingDefinition}.
@@ -94,7 +96,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      */
     public DefaultEncodingDefinition(String firebirdEncodingName, String charsetName, int maxBytesPerChar,
             int firebirdCharacterSetId, boolean firebirdOnly) {
-        this.firebirdEncodingName = firebirdEncodingName;
+        this.firebirdEncodingName = requireNonNull(firebirdEncodingName, "firebirdEncodingName");
         this.charsetName = charsetName;
         if (charsetName == null) {
             encoding = null;
@@ -167,6 +169,25 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
                 "firebirdOnly=" + isFirebirdOnly() + "," +
                 "firebirdCharacterSetId=" + getFirebirdCharacterSetId() +
                 "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DefaultEncodingDefinition that = (DefaultEncodingDefinition) o;
+        return maxBytesPerChar == that.maxBytesPerChar
+                && firebirdCharacterSetId == that.firebirdCharacterSetId
+                && firebirdOnly == that.firebirdOnly
+                && Objects.equals(charsetName, that.charsetName)
+                && firebirdEncodingName.equals(that.firebirdEncodingName);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = charsetName != null ? charsetName.hashCode() : 0;
+        result = 31 * result + firebirdCharacterSetId;
+        return result;
     }
 
     private void initCharset() {

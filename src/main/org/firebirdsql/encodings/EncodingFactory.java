@@ -78,6 +78,8 @@ public final class EncodingFactory implements IEncodingFactory {
     private final EncodingDefinition defaultEncodingDefinition;
     private final ConcurrentMap<Class<? extends DatatypeCoder>, DatatypeCoder> datatypeCoderCache
             = new ConcurrentHashMap<>(3);
+    private final Map<EncodingDefinition, ConnectionEncodingFactory> connectionEncodingFactoryCache
+            = new ConcurrentHashMap<>();
 
     /**
      * Initializes EncodingFactory by processing the encodingSets using the provided iterator.
@@ -301,8 +303,8 @@ public final class EncodingFactory implements IEncodingFactory {
                 encodingDefinition != null && !encodingDefinition.isInformationOnly()
                         ? encodingDefinition
                         : getDefaultEncodingDefinition();
-        // TODO Add (weak?) cache for encoding factory instances?
-        return new ConnectionEncodingFactory(this, resolvedEncodingDefinition);
+        return connectionEncodingFactoryCache.computeIfAbsent(resolvedEncodingDefinition,
+                def -> new ConnectionEncodingFactory(this, def));
     }
 
     /**
@@ -320,15 +322,11 @@ public final class EncodingFactory implements IEncodingFactory {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
-        DatatypeCoder coder = datatypeCoderCache.get(datatypeCoderClass);
-        if (coder == null) {
-            T newCoder = createNewDatatypeCoder(datatypeCoderClass, this);
-            coder = datatypeCoderCache.putIfAbsent(datatypeCoderClass, newCoder);
-            if (coder == null) {
-                return newCoder;
-            }
-        }
-        return (T) coder;
+        return (T) datatypeCoderCache.computeIfAbsent(datatypeCoderClass, this::createNewDatatypeCoder);
+    }
+
+    private <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass) {
+        return createNewDatatypeCoder(datatypeCoderClass, this);
     }
 
     @SuppressWarnings({ "unchecked" })

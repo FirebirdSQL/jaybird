@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -173,21 +173,16 @@ class ConnectionEncodingFactory implements IEncodingFactory {
 
     @Override
     public IEncodingFactory withDefaultEncodingDefinition(Charset charset) {
-        // TODO This might misbehave if there is no EncodingDefinition for charset (it will then revert to the default)
         return withDefaultEncodingDefinition(getEncodingDefinitionByCharset(charset));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends DatatypeCoder> T getOrCreateDatatypeCoder(Class<T> datatypeCoderClass) {
-        DatatypeCoder coder = datatypeCoderCache.get(datatypeCoderClass);
-        if (coder == null) {
-            T newCoder = EncodingFactory.createNewDatatypeCoder(datatypeCoderClass, this);
-            coder = datatypeCoderCache.putIfAbsent(datatypeCoderClass, newCoder);
-            if (coder == null) {
-                return newCoder;
-            }
-        }
-        return (T) coder;
+        return (T) datatypeCoderCache.computeIfAbsent(datatypeCoderClass, this::createNewDatatypeCoder);
+    }
+
+    private <T extends DatatypeCoder> T createNewDatatypeCoder(Class<T> datatypeCoderClass) {
+        return EncodingFactory.createNewDatatypeCoder(datatypeCoderClass, this);
     }
 }
