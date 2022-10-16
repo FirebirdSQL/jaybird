@@ -823,6 +823,15 @@ The following methods have been removed in Jaybird 5:
 * `FbStatement.getFieldDescriptor()`, use `FbStatement.getRowDescriptor()`
 * `AbstractFbStatement.setFieldDescriptor(RowDescriptor fieldDescriptor)`,  use `AbstractFbStatement.setRowDescriptor(RowDescriptor rowDescriptor)`
 * `FBField.isType(FieldDescriptor, int)`, use  `JdbcTypeConverter.isJdbcType(FieldDescriptor, int)`
+* `EncodingFactory`
+** `getCharacterSetSize(int)`, use `getEncodingDefinitionByCharacterSetId(int)` and then `getMaxBytesPerChar()`
+** `getEncoding(String)`, use `getEncodingForCharsetAlias(String, Encoding)`
+** `getEncoding(Charset)`, use `getEncodingForCharset(Charset, Encoding)` or `getOrCreateEncodingForCharset(Charset)`
+** `getIscEncoding(String)`, use `getEncodingDefinitionByCharsetAlias(String)` and then `getFirebirdEncodingName()`
+** `getIscEncoding(Charset)`, use `getEncodingDefinitionByCharset(Charset)` and then `getFirebirdEncodingName()`
+** `getIscEncodingSize(String)`, use `getEncodingDefinitionByFirebirdName(String)` and then `getMaxBytesPerChar()`
+** `getJavaEncoding(String)`, use `getEncodingDefinitionByFirebirdName(String)` and then `getJavaEncodingName()`
+** `getJavaEncodingForAlias(String)`, use `getEncodingDefinitionByCharsetAlias(String)` and then `getJavaEncodingName()`
 
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
