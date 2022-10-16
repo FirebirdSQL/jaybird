@@ -650,7 +650,7 @@ public final class FirebirdSupportInfo {
      * @return {@code true} when this Firebird version supports statement texts longer than 64KB
      */
     public boolean supportsStatementTextLongerThan64K() {
-        return isVersionEqualOrAbove(4, 0);
+        return isVersionEqualOrAbove(3, 0);
     }
 
     /**
