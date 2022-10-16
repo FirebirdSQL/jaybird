@@ -37,6 +37,7 @@ import org.firebirdsql.logging.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
+import java.util.Arrays;
 
 import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
@@ -119,12 +120,20 @@ public class JnaStatement extends AbstractFbStatement {
     @Override
     public void prepare(String statementText) throws SQLException {
         try {
-            final byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
+            boolean useNulTerminated = false;
+            byte[] statementArray = getDatabase().getEncoding().encodeToCharset(statementText);
             if (statementArray.length > JnaDatabase.MAX_STATEMENT_LENGTH) {
-                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
-                        .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
-                        .messageParameter(statementArray.length)
-                        .toSQLException();
+                if (database.hasFeature(FbClientFeature.FB_PING)) {
+                    // Presence of FB_PING feature means this is a Firebird 3.0 or higher fbclient,
+                    // so we can use null-termination to send statement texts longer than 64KB
+                    statementArray = Arrays.copyOf(statementArray, statementArray.length + 1);
+                    useNulTerminated = true;
+                } else {
+                    throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_maxStatementLengthExceeded)
+                            .messageParameter(JnaDatabase.MAX_STATEMENT_LENGTH)
+                            .messageParameter(statementArray.length)
+                            .toSQLException();
+                }
             }
             try (LockCloseable ignored = withLock()) {
                 checkTransactionActive(getTransaction());
@@ -157,7 +166,8 @@ public class JnaStatement extends AbstractFbStatement {
                     final XSQLDA tempXSqlDa = new XSQLDA();
                     tempXSqlDa.setAutoRead(false);
                     clientLibrary.isc_dsql_prepare(statusVector, getTransaction().getJnaHandle(), handle,
-                            (short) statementArray.length, statementArray, db.getConnectionDialect(), tempXSqlDa);
+                            useNulTerminated ? 0 : (short) statementArray.length, statementArray,
+                            db.getConnectionDialect(), tempXSqlDa);
                     processStatusVector();
 
                     final byte[] statementInfoRequestItems = getStatementInfoRequestItems();

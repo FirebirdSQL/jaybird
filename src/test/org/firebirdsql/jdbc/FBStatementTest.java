@@ -1029,6 +1029,32 @@ class FBStatementTest {
         }
     }
 
+    /**
+     * Test statement execution with statement text longer than 64KB (requires Firebird 3.0 or higher).
+     * <p>
+     * NOTE: For native, this also requires a Firebird 3.0 or higher fbclient.dll
+     * </p>
+     */
+    @Test
+    void statementTextLongerThan64KB() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsStatementTextLongerThan64K(), "requires long statement text support");
+        // For some reason the native implementation can't handle exactly 32KB values, but it can handle 32KB - 1
+        char[] symbols = new char[32 * 1024 - 1];
+        Arrays.fill(symbols, 'X');
+        String text32kb = new String(symbols);
+
+        try (Statement stmt = con.createStatement()) {
+            ResultSet rs = stmt.executeQuery(
+                    "select '" + text32kb + "' val from rdb$database "
+                    + "union all "
+                    + "select '" + text32kb + "' from rdb$database");
+            assertTrue(rs.next(), "expected row");
+            assertEquals(text32kb, rs.getString(1));
+            assertTrue(rs.next(), "expected row");
+            assertEquals(text32kb, rs.getString(1));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         executeCreateTable(con, CREATE_TABLE);
 

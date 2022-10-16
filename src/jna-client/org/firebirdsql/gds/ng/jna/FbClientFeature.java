@@ -34,7 +34,9 @@ import static java.util.Collections.singletonList;
 @InternalApi
 public enum FbClientFeature {
     
-    STATEMENT_TIMEOUT("fb_dsql_set_timeout");
+    STATEMENT_TIMEOUT("fb_dsql_set_timeout"),
+    // Can be used to identify Firebird 3.0 or higher fbclient
+    FB_PING("fb_ping");
 
     // If a feature depends on multiple methods, consider changing this to a list or set
     private final String featureMethod;
