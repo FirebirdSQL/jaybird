@@ -55,10 +55,6 @@ import static org.firebirdsql.common.FBTestProperties.getDatabasePath;
  */
 public abstract class UsesDatabaseExtension {
 
-    // TODO Split into having a UsesDatabaseExtension and a UsesDatabaseForAllExtension or similar to avoid warnings
-    //  when registering non-static "per-test" variant, and having exceptions on cleanup when registering static for
-    //  a "per-test" variant
-
     private final boolean initialCreate;
     private FBManager fbManager = null;
     private final List<String> initStatements;
