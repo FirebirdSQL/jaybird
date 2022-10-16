@@ -212,24 +212,15 @@ public final class FBTestProperties {
         }
     }
 
-    private static final Map<GDSType, String> gdsTypeToUrlPrefixMap = new HashMap<>();
-    static {
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("PURE_JAVA"), "jdbc:firebirdsql:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("EMBEDDED"), "jdbc:firebirdsql:embedded:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NATIVE"), "jdbc:firebirdsql:native:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("OOREMOTE"), "jdbc:firebirdsql:oo:");
-
-        // TODO Replace with an external definition/way to add additional types for third party plugins?
-        // Not part of Jaybird:
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("ORACLE_MODE"), "jdbc:firebirdsql:oracle:");
-        gdsTypeToUrlPrefixMap.put(GDSType.getType("NIO"), "jdbc:firebirdsql:nio:");
+    private static String getProtocolPrefix() {
+        return GDSFactory.getPlugin(getGdsType()).getDefaultProtocol();
     }
 
     /**
      * @return JDBC URL (without parameters) for this testrun
      */
     public static String getUrl() {
-        return gdsTypeToUrlPrefixMap.get(getGdsType()) + getdbpath(DB_NAME);
+        return getProtocolPrefix() + getdbpath(DB_NAME);
     }
 
     /**
@@ -238,9 +229,9 @@ public final class FBTestProperties {
      */
     public static String getUrl(String dbPath) {
         if ("EMBEDDED".equalsIgnoreCase(GDS_TYPE)) {
-            return gdsTypeToUrlPrefixMap.get(getGdsType()) + dbPath;
+            return getProtocolPrefix() + dbPath;
         } else {
-            return gdsTypeToUrlPrefixMap.get(getGdsType()) + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
+            return getProtocolPrefix() + DB_SERVER_URL + "/" + DB_SERVER_PORT + ":" + dbPath;
         }
     }
 
