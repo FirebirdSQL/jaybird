@@ -304,8 +304,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public String getIdentifierQuoteString() throws SQLException {
-        // TODO Return " " when connected with dialect 1?
-        return "\"";
+        return getDatabaseDialect() == 1 ? " " : "\"";
     }
 
     @Override

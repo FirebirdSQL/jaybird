@@ -619,6 +619,7 @@ This feature was also backported to Jaybird 4.0.7.
 +
 This requires Firebird 3.0 or higher server and a Firebird 3.0 or higher fbclient.
 Longer statement texts were already supported for pure-java connections.
+* Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for dialect 1 database (https://github.com/FirebirdSQL/jaybird/issues/714[jaybird#714])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
