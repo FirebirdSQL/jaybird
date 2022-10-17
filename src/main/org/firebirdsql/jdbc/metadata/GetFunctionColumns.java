@@ -78,17 +78,18 @@ public abstract class GetFunctionColumns {
     /**
      * @see java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)
      */
+    @SuppressWarnings("unused")
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         if ("".equals(functionNamePattern) || "".equals(columnNamePattern)) {
             // Matching function name or column name not possible
-            return new FBResultSet(FUNCTION_COLUMNS_ROW_DESCRIPTOR, Collections.<RowValue>emptyList());
+            return new FBResultSet(FUNCTION_COLUMNS_ROW_DESCRIPTOR, Collections.emptyList());
         }
 
         MetadataQuery metadataQuery = createGetFunctionColumnsQuery(functionNamePattern, columnNamePattern);
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
-                return new FBResultSet(FUNCTION_COLUMNS_ROW_DESCRIPTOR, Collections.<RowValue>emptyList());
+                return new FBResultSet(FUNCTION_COLUMNS_ROW_DESCRIPTOR, Collections.emptyList());
             }
 
             final byte[] functionColumnIn = mediator.createShort(DatabaseMetaData.functionColumnIn);
@@ -143,13 +144,13 @@ public abstract class GetFunctionColumns {
     public static GetFunctionColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new GetFunctionColumnsFirebird3_0(mediator);
+            return new GetFunctionColumnsFirebird3(mediator);
         } else {
             return new GetFunctionColumnsFirebird2_5(mediator);
         }
     }
 
-    private static class GetFunctionColumnsFirebird2_5 extends GetFunctionColumns {
+    private static final class GetFunctionColumnsFirebird2_5 extends GetFunctionColumns {
 
         //@formatter:off
         private static final String GET_FUNCTION_COLUMNS_FRAGMENT_2_5 =
@@ -203,10 +204,10 @@ public abstract class GetFunctionColumns {
         }
     }
 
-    private static class GetFunctionColumnsFirebird3_0 extends GetFunctionColumns {
+    private static final class GetFunctionColumnsFirebird3 extends GetFunctionColumns {
 
         //@formatter:off
-        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3_0 =
+        private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3 =
                 "select\n"
                 + "  trim(trailing from FUN.RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
                 + "  -- legacy UDF and return value have no parameter name: derive one\n"
@@ -236,7 +237,8 @@ public abstract class GetFunctionColumns {
                 + "  on F.RDB$FIELD_NAME = FUNA.RDB$FIELD_SOURCE\n"
                 + "where FUN.RDB$PACKAGE_NAME is null\n";
 
-        private static final String GET_FUNCTION_COLUMNS_ORDER_BY_3_0 =
+        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
+        private static final String GET_FUNCTION_COLUMNS_ORDER_BY_3 =
                 "order by FUN.RDB$PACKAGE_NAME, FUN.RDB$FUNCTION_NAME,\n"
                 + "  case\n"
                 + "    when FUN.RDB$RETURN_ARGUMENT = FUNA.RDB$ARGUMENT_POSITION then -1\n"
@@ -244,7 +246,7 @@ public abstract class GetFunctionColumns {
                 + "  end";
         //@formatter:on
 
-        private GetFunctionColumnsFirebird3_0(DbMetadataMediator mediator) {
+        private GetFunctionColumnsFirebird3(DbMetadataMediator mediator) {
             super(mediator);
         }
 
@@ -253,10 +255,10 @@ public abstract class GetFunctionColumns {
             Clause functionNameClause = new Clause("FUN.RDB$FUNCTION_NAME", functionNamePattern);
             Clause columnNameClause = new Clause(
                     "coalesce(FUNA.RDB$ARGUMENT_NAME, 'PARAM_' || FUNA.RDB$ARGUMENT_POSITION)", columnNamePattern);
-            String query = GET_FUNCTION_COLUMNS_FRAGMENT_3_0
+            String query = GET_FUNCTION_COLUMNS_FRAGMENT_3
                     + functionNameClause.getCondition("and ", "\n")
                     + columnNameClause.getCondition("and ", "\n")
-                    + GET_FUNCTION_COLUMNS_ORDER_BY_3_0;
+                    + GET_FUNCTION_COLUMNS_ORDER_BY_3;
             return new MetadataQuery(query, Clause.parameters(functionNameClause, columnNameClause));
         }
     }

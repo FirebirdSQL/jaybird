@@ -73,17 +73,18 @@ public abstract class GetFunctions {
     /**
      * @see java.sql.DatabaseMetaData#getFunctions(String, String, String)
      */
+    @SuppressWarnings("unused")
     public final ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
-            return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.<RowValue>emptyList());
+            return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.emptyList());
         }
 
         MetadataQuery metadataQuery = createGetFunctionsQuery(functionNamePattern);
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
-                return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.<RowValue>emptyList());
+                return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
@@ -130,7 +131,7 @@ public abstract class GetFunctions {
     /**
      * Implementation suitable for Firebird 2.5 and earlier.
      */
-    private static class GetFunctionsFirebird2_5 extends GetFunctions {
+    private static final class GetFunctionsFirebird2_5 extends GetFunctions {
 
         //@formatter:off
         private static final String GET_FUNCTIONS_FRAGMENT_2_5 =
@@ -165,10 +166,10 @@ public abstract class GetFunctions {
     /**
      * Implementation suitable for Firebird 3 and higher; filters out functions in packages.
      */
-    private static class GetFunctionsFirebird3 extends GetFunctions {
+    private static final class GetFunctionsFirebird3 extends GetFunctions {
 
         //@formatter:off
-        private static final String GET_FUNCTIONS_FRAGMENT_3_0 =
+        private static final String GET_FUNCTIONS_FRAGMENT_3 =
                 "select\n"
                 + "  trim(trailing from RDB$FUNCTION_NAME) as FUNCTION_NAME,\n"
                 + "  RDB$DESCRIPTION as REMARKS,\n"
@@ -184,8 +185,9 @@ public abstract class GetFunctions {
                 + "from RDB$FUNCTIONS\n"
                 + "where RDB$PACKAGE_NAME is null\n";
         //@formatter:on
-
-        private static final String GET_FUNCTIONS_ORDER_BY_3_0 =
+        
+        // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort
+        private static final String GET_FUNCTIONS_ORDER_BY_3 =
                 "order by RDB$PACKAGE_NAME, RDB$FUNCTION_NAME";
 
         private GetFunctionsFirebird3(DbMetadataMediator mediator) {
@@ -195,9 +197,9 @@ public abstract class GetFunctions {
         @Override
         MetadataQuery createGetFunctionsQuery(String functionNamePattern) {
             Clause functionNameClause = new Clause("RDB$FUNCTION_NAME", functionNamePattern);
-            String queryText = GET_FUNCTIONS_FRAGMENT_3_0
+            String queryText = GET_FUNCTIONS_FRAGMENT_3
                     + functionNameClause.getCondition("and ", "\n")
-                    + GET_FUNCTIONS_ORDER_BY_3_0;
+                    + GET_FUNCTIONS_ORDER_BY_3;
             return new MetadataQuery(queryText, Clause.parameters(functionNameClause));
         }
     }
