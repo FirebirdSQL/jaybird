@@ -89,8 +89,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] TYPE_PRED_BASIC = createShort(DatabaseMetaData.typePredBasic);
     private static final byte[] TYPE_SEARCHABLE = createShort(DatabaseMetaData.typeSearchable);
     private static final byte[] TYPE_NULLABLE = createShort(DatabaseMetaData.typeNullable);
-    private static final byte[] PROCEDURE_NO_RESULT = createShort(DatabaseMetaData.procedureNoResult);
-    private static final byte[] PROCEDURE_RETURNS_RESULT = createShort(DatabaseMetaData.procedureReturnsResult);
     private static final byte[] PROCEDURE_NO_NULLS = createShort(DatabaseMetaData.procedureNoNulls);
     private static final byte[] PROCEDURE_NULLABLE = createShort(DatabaseMetaData.procedureNullable);
     private static final byte[] PROCEDURE_COLUMN_IN = createShort(DatabaseMetaData.procedureColumnIn);
@@ -1185,62 +1183,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return false;
     }
 
-    private static final String GET_PROCEDURES_START = "select "
-        + "RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + "RDB$DESCRIPTION as REMARKS,"
-        + "RDB$PROCEDURE_OUTPUTS as PROCEDURE_TYPE "
-        + "from "
-        + "RDB$PROCEDURES "
-        + "where ";
-    private static final String GET_PROCEDURES_END = "1 = 1 order by 1";
-
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(9, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "PROCEDURES").addField()
-                .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
-                .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()
-                .at(5).simple(SQL_VARYING, 31, "FUTURE3", "PROCEDURES").addField()
-                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(6).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "PROCEDURES").addField()
-                .at(7).simple(SQL_SHORT, 0, "PROCEDURE_TYPE", "PROCEDURES").addField()
-                .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "PROCEDURES").addField()
-                .toRowDescriptor();
-
-        Clause procedureClause = new Clause("RDB$PROCEDURE_NAME", procedureNamePattern);
-
-        String sql = GET_PROCEDURES_START;
-        sql += procedureClause.getCondition();
-        if (firebirdSupportInfo.supportsPackages()) {
-            sql += "RDB$PACKAGE_NAME is null and ";
-        }
-        sql += GET_PROCEDURES_END;
-
-        List<String> params = procedureClause.hasCondition()
-                ? Collections.singletonList(procedureClause.getValue())
-                : Collections.emptyList();
-
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                rows.add(valueBuilder
-                        .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
-                        .at(6).set(getBytes(rs.getString("REMARKS")))
-                        .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? PROCEDURE_NO_RESULT : PROCEDURE_RETURNS_RESULT)
-                        .at(8).set(valueBuilder.get(2))
-                        .toRowValue(true)
-                );
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetProcedures.create(getDbMetadataMediator())
+                .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
 
     private static final String GET_PROCEDURE_COLUMNS_START = "select "
