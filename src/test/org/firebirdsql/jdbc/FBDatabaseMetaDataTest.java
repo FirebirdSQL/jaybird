@@ -26,10 +26,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
 import static java.lang.String.format;
@@ -869,6 +872,25 @@ class FBDatabaseMetaDataTest {
         }
 
         assertEquals(expectedMinor, dmd.getJDBCMinorVersion(), "JDBCMinorVersion");
+    }
+
+    /**
+     * @see FBDatabaseMetaDataDialect1Test#testGetIdentifierQuoteString_dialect1Db(String, String)
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "1, ' '",
+            "2, \"",
+            "3, \""
+    })
+    void testGetIdentifierQuoteString_dialect3Db(String connectionDialect, String expectedIdentifierQuote)
+            throws Exception {
+        Properties props = getDefaultPropertiesForConnection();
+        props.setProperty("sqlDialect", connectionDialect);
+        try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
+            DatabaseMetaData md = connection.getMetaData();
+            assertEquals(expectedIdentifierQuote, md.getIdentifierQuoteString());
+        }
     }
 
     @SuppressWarnings("SameParameterValue")
