@@ -1136,12 +1136,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
         switch (level) {
-            case Connection.TRANSACTION_NONE: return false;
-            case Connection.TRANSACTION_READ_COMMITTED: return true;
-            case Connection.TRANSACTION_READ_UNCOMMITTED: return false;
-            case Connection.TRANSACTION_REPEATABLE_READ: return true;
-            case Connection.TRANSACTION_SERIALIZABLE: return true;
-            default: return false;
+        case Connection.TRANSACTION_READ_COMMITTED:
+        case Connection.TRANSACTION_REPEATABLE_READ:
+        case Connection.TRANSACTION_SERIALIZABLE:
+            return true;
+        default:
+            return false;
         }
     }
 
