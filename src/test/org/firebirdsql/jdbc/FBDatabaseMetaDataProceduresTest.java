@@ -42,9 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class FBDatabaseMetaDataProceduresTest {
 
-    // TODO Temporary fix for RDB$TIME_ZONE_UTIL.TRANSITIONS in Firebird 4
-    private static final Set<String> PROCEDURES_TO_IGNORE = Collections.singleton("TRANSITIONS");
-
     //@formatter:off
     private static final String CREATE_NORMAL_PROC_NO_RETURN =
             "CREATE PROCEDURE normal_proc_no_return\n" +
@@ -185,11 +182,6 @@ class FBDatabaseMetaDataProceduresTest {
         try {
             int procedureCount = 0;
             while(procedures.next()) {
-                String name = procedures.getString("PROCEDURE_NAME");
-                if (PROCEDURES_TO_IGNORE.contains(name)) {
-                    // TODO Temporary workaround
-                    continue;
-                }
                 if (procedureCount < expectedProcedures.size()) {
                     ProcedureTestData expectedProcedure = expectedProcedures.get(procedureCount);
                     Map<ProcedureMetaData, Object> rules = expectedProcedure.getSpecificValidationRules(getDefaultValueValidationRules());
