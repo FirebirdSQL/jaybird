@@ -144,13 +144,13 @@ public abstract class GetFunctionColumns {
     public static GetFunctionColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new GetFunctionColumnsFirebird3(mediator);
+            return new FB3(mediator);
         } else {
-            return new GetFunctionColumnsFirebird2_5(mediator);
+            return new FB2_5(mediator);
         }
     }
 
-    private static final class GetFunctionColumnsFirebird2_5 extends GetFunctionColumns {
+    private static final class FB2_5 extends GetFunctionColumns {
 
         //@formatter:off
         private static final String GET_FUNCTION_COLUMNS_FRAGMENT_2_5 =
@@ -186,7 +186,7 @@ public abstract class GetFunctionColumns {
                 + "  end";
         //@formatter:on
 
-        private GetFunctionColumnsFirebird2_5(DbMetadataMediator mediator) {
+        private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
         }
 
@@ -204,7 +204,7 @@ public abstract class GetFunctionColumns {
         }
     }
 
-    private static final class GetFunctionColumnsFirebird3 extends GetFunctionColumns {
+    private static final class FB3 extends GetFunctionColumns {
 
         //@formatter:off
         private static final String GET_FUNCTION_COLUMNS_FRAGMENT_3 =
@@ -246,7 +246,7 @@ public abstract class GetFunctionColumns {
                 + "  end";
         //@formatter:on
 
-        private GetFunctionColumnsFirebird3(DbMetadataMediator mediator) {
+        private FB3(DbMetadataMediator mediator) {
             super(mediator);
         }
 

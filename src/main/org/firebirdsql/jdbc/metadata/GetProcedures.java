@@ -104,13 +104,13 @@ public abstract class GetProcedures {
     public static GetProcedures create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new GetProceduresFirebird3(mediator);
+            return new FB3(mediator);
         } else {
-            return new GetProceduresFirebird2_5(mediator);
+            return new FB2_5(mediator);
         }
     }
 
-    private static final class GetProceduresFirebird2_5 extends GetProcedures {
+    private static final class FB2_5 extends GetProcedures {
 
         //@formatter:off
         private static final String GET_PROCEDURES_FRAGMENT_2_5 =
@@ -123,7 +123,7 @@ public abstract class GetProcedures {
         private static final String GET_PROCEDURES_ORDER_BY_2_5 =
                 "order by RDB$PROCEDURE_NAME";
 
-        private GetProceduresFirebird2_5(DbMetadataMediator mediator) {
+        private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
         }
 
@@ -137,7 +137,7 @@ public abstract class GetProcedures {
         }
     }
 
-    private static final class GetProceduresFirebird3 extends GetProcedures {
+    private static final class FB3 extends GetProcedures {
 
         //@formatter:off
         private static final String GET_PROCEDURES_FRAGMENT_3 =
@@ -153,7 +153,7 @@ public abstract class GetProcedures {
         private static final String GET_PROCEDURES_ORDER_BY_3 =
                 "order by RDB$PACKAGE_NAME, RDB$PROCEDURE_NAME";
 
-        private GetProceduresFirebird3(DbMetadataMediator mediator) {
+        private FB3(DbMetadataMediator mediator) {
             super(mediator);
         }
 
