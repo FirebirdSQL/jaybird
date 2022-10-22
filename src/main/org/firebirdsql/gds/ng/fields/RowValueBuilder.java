@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,6 +18,8 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.gds.ng.DatatypeCoder;
+
 /**
  * Builder for {@link RowValue} instances.
  * <p>
@@ -37,6 +37,7 @@ package org.firebirdsql.gds.ng.fields;
 public class RowValueBuilder {
 
     private final RowDescriptor rowDescriptor;
+    private final DatatypeCoder datatypeCoder;
     private RowValue rowValue;
 
     private int currentIndex;
@@ -50,6 +51,7 @@ public class RowValueBuilder {
     public RowValueBuilder(RowDescriptor rowDescriptor) {
         this.rowDescriptor = rowDescriptor;
         rowValue = rowDescriptor.createDefaultFieldValues();
+        datatypeCoder = rowDescriptor.getDatatypeCoder();
     }
 
     /**
@@ -89,6 +91,81 @@ public class RowValueBuilder {
     public RowValueBuilder set(byte[] fieldData) {
         rowValue.setFieldData(currentIndex, fieldData);
         return this;
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code int}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @since 5
+     */
+    public RowValueBuilder setInt(int value) {
+        return set(datatypeCoder.encodeInt(value));
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code Number} or {@code null}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @since 5
+     */
+    public RowValueBuilder setInt(Number value) {
+        return set(value != null ? datatypeCoder.encodeInt(value.intValue()) : null);
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code int} as a {@code short}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @see #setShort(short)
+     * @since 5
+     */
+    public RowValueBuilder setShort(int value) {
+        return set(datatypeCoder.encodeShort(value));
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code Number} as a {@code short} or {@code null}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @see #setShort(short)
+     * @since 5
+     */
+    public RowValueBuilder setShort(Number value) {
+        return set(value != null ? datatypeCoder.encodeShort(value.intValue()) : null);
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code short}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @see #setShort(int)
+     * @since 5
+     */
+    public RowValueBuilder setShort(short value) {
+        return set(datatypeCoder.encodeShort(value));
+    }
+
+    /**
+     * Sets the field data by encoding the provided {@code String}.
+     *
+     * @param value
+     *         value
+     * @return this builder
+     * @since 5
+     */
+    public RowValueBuilder setString(String value) {
+        return set(value != null ? datatypeCoder.encodeString(value) : null);
     }
 
     /**

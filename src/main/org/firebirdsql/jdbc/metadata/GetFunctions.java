@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -47,7 +47,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 @InternalApi
 public abstract class GetFunctions {
 
-    private static final RowDescriptor FUNCTIONS_ROW_DESCRIPTOR =
+    private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
                     .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_CAT", "FUNCTIONS").addField()
                     .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "FUNCTION_SCHEM", "FUNCTIONS").addField()
@@ -78,17 +78,17 @@ public abstract class GetFunctions {
             throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
-            return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.emptyList());
+            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
         }
 
         MetadataQuery metadataQuery = createGetFunctionsQuery(functionNamePattern);
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
-                return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, Collections.emptyList());
+                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
             }
 
             final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(FUNCTIONS_ROW_DESCRIPTOR);
+            final RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
             final byte[] functionNoTableBytes = mediator.createShort(DatabaseMetaData.functionNoTable);
             do {
                 byte[] functionNameBytes = mediator.createString(rs.getString("FUNCTION_NAME"));
@@ -106,7 +106,7 @@ public abstract class GetFunctions {
                         .at(10).set(mediator.createString(rs.getString("JB_ENGINE_NAME")));
                 rows.add(valueBuilder.toRowValue(false));
             } while (rs.next());
-            return new FBResultSet(FUNCTIONS_ROW_DESCRIPTOR, rows);
+            return new FBResultSet(ROW_DESCRIPTOR, rows);
         }
     }
 

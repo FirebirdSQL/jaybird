@@ -25,10 +25,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 import java.util.*;
 
+import static java.util.Collections.singletonList;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
@@ -254,6 +257,14 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         validateExpectedFunctionColumns(PSQL_EXAMPLE_1, null, getPsqlExample1Columns());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { "C$04$VARCHAR15", "C$04%", "C$04$VARCHAR__" })
+    void testFunctionColumnMetaData_PsqlExample1_onlyParam4(String columnNamePattern) throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPsqlFunctions(), "Requires PSQL function support");
+        validateExpectedFunctionColumns(PSQL_EXAMPLE_1, columnNamePattern,
+                singletonList(createStringType(Types.VARCHAR, PSQL_EXAMPLE_1, "C$04$VARCHAR15", 4, 15, false)));
+    }
+
     @Test
     void testFunctionColumnMetaData_PsqlExample2() throws Exception {
         assumeTrue(getDefaultSupportInfo().isVersionEqualOrAbove(4, 0), "Requires Firebird 4");
@@ -263,6 +274,13 @@ class FBDatabaseMetaDataFunctionColumnsTest {
     @Test
     void testFunctionColumnMetaData_UdfExample1() throws Exception {
         validateExpectedFunctionColumns(UDF_EXAMPLE_1, null, getUdfExample1Columns());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "PARAM\\_4", "%\\_4", "PARAM_4" })
+    void testFunctionColumnMetaData_UdfExample1_onlyParam4(String columnNamePattern) throws Exception {
+        validateExpectedFunctionColumns(UDF_EXAMPLE_1, columnNamePattern,
+                singletonList(createStringType(Types.VARCHAR, UDF_EXAMPLE_1, "PARAM_4", 4, 15, true)));
     }
 
     @Test

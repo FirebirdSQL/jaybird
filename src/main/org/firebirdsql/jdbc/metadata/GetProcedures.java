@@ -47,7 +47,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 @InternalApi
 public abstract class GetProcedures {
 
-    private static final RowDescriptor PROCEDURES_ROW_DESCRIPTOR =
+    private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
                     .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
                     .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
@@ -71,20 +71,20 @@ public abstract class GetProcedures {
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
         if ("".equals(procedureNamePattern)) {
-            return new FBResultSet(PROCEDURES_ROW_DESCRIPTOR, Collections.emptyList());
+            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
         }
 
         MetadataQuery metadataQuery = createGetProceduresQuery(procedureNamePattern);
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
-                return new FBResultSet(PROCEDURES_ROW_DESCRIPTOR, Collections.emptyList());
+                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
             }
 
             byte[] procedureNoResult = mediator.createShort(DatabaseMetaData.procedureNoResult);
             byte[] procedureReturnsResult = mediator.createShort(DatabaseMetaData.procedureReturnsResult);
 
             List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(PROCEDURES_ROW_DESCRIPTOR);
+            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
             do {
                 byte[] procedureNameBytes = mediator.createString(rs.getString("PROCEDURE_NAME"));
                 rows.add(valueBuilder
@@ -95,7 +95,7 @@ public abstract class GetProcedures {
                         .toRowValue(true)
                 );
             } while (rs.next());
-            return new FBResultSet(PROCEDURES_ROW_DESCRIPTOR, rows);
+            return new FBResultSet(ROW_DESCRIPTOR, rows);
         }
     }
 

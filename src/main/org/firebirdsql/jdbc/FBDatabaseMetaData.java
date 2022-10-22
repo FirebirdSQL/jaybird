@@ -83,27 +83,24 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] SHORT_ONE = createShort(1);
     private static final byte[] RADIX_BINARY = createInt(2);
     private static final byte[] RADIX_TEN = createInt(10);
-    private static final byte[] RADIX_TEN_SHORT = createShort(10);
-    private static final byte[] RADIX_BINARY_SHORT = createShort(2);
     private static final byte[] TYPE_PRED_NONE = createShort(DatabaseMetaData.typePredNone);
     private static final byte[] TYPE_PRED_BASIC = createShort(DatabaseMetaData.typePredBasic);
     private static final byte[] TYPE_SEARCHABLE = createShort(DatabaseMetaData.typeSearchable);
     private static final byte[] TYPE_NULLABLE = createShort(DatabaseMetaData.typeNullable);
-    private static final byte[] PROCEDURE_NO_NULLS = createShort(DatabaseMetaData.procedureNoNulls);
-    private static final byte[] PROCEDURE_NULLABLE = createShort(DatabaseMetaData.procedureNullable);
-    private static final byte[] PROCEDURE_COLUMN_IN = createShort(DatabaseMetaData.procedureColumnIn);
-    private static final byte[] PROCEDURE_COLUMN_OUT = createShort(DatabaseMetaData.procedureColumnOut);
-    private static final byte[] BIGINT_PRECISION = createInt(19);
-    private static final byte[] INTEGER_PRECISION = createInt(10);
-    private static final byte[] SMALLINT_PRECISION = createInt(5);
-    private static final byte[] DATE_PRECISION = createInt(10);
+    private static final byte[] BIGINT_PRECISION = createInt(FbMetadataConstants.BIGINT_PRECISION);
+    private static final byte[] INTEGER_PRECISION = createInt(FbMetadataConstants.INTEGER_PRECISION);
+    private static final byte[] SMALLINT_PRECISION = createInt(FbMetadataConstants.SMALLINT_PRECISION);
+    private static final byte[] DATE_PRECISION = createInt(FbMetadataConstants.DATE_PRECISION);
+    // TODO: Reconcile/unify precision information
+    // NOTE: Value of 8 differs from FbMetadataConstants.TIME_PRECISION (=13), as this value is based on HH:mm:ss
     private static final byte[] TIME_PRECISION = createInt(8);
+    // NOTE: Value of 19 differs from FbMetadataConstants.TIMESTAMP_PRECISION (=24), as this value is based on yyyy-MM-dd HH:mm:ss
     private static final byte[] TIMESTAMP_PRECISION = createInt(19);
-    private static final byte[] TIME_WITH_TIMEZONE_PRECISION = createInt(19);
-    private static final byte[] TIMESTAMP_WITH_TIMEZONE_PRECISION = createInt(30);
-    private static final byte[] BOOLEAN_PRECISION = createInt(1);
-    private static final byte[] DECFLOAT_16_PRECISION = createInt(16);
-    private static final byte[] DECFLOAT_34_PRECISION = createInt(34);
+    private static final byte[] TIME_WITH_TIMEZONE_PRECISION = createInt(FbMetadataConstants.TIME_WITH_TIMEZONE_PRECISION);
+    private static final byte[] TIMESTAMP_WITH_TIMEZONE_PRECISION = createInt(FbMetadataConstants.TIMESTAMP_WITH_TIMEZONE_PRECISION);
+    private static final byte[] BOOLEAN_PRECISION = createInt(FbMetadataConstants.BOOLEAN_BINARY_PRECISION);
+    private static final byte[] DECFLOAT_16_PRECISION = createInt(FbMetadataConstants.DECFLOAT_16_PRECISION);
+    private static final byte[] DECFLOAT_34_PRECISION = createInt(FbMetadataConstants.DECFLOAT_34_PRECISION);
     private static final byte[] COLUMN_NO_NULLS = createInt(DatabaseMetaData.columnNoNulls);
     private static final byte[] COLUMN_NULLABLE = createInt(DatabaseMetaData.columnNullable);
     private static final byte[] IMPORTED_KEY_NO_ACTION = createShort(DatabaseMetaData.importedKeyNoAction);
@@ -1190,206 +1187,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .getProcedures(catalog, schemaPattern, procedureNamePattern);
     }
 
-    private static final String GET_PROCEDURE_COLUMNS_START = "select "
-        + "PP.RDB$PROCEDURE_NAME as PROCEDURE_NAME,"
-        + "PP.RDB$PARAMETER_NAME as COLUMN_NAME,"
-        + "PP.RDB$PARAMETER_TYPE as COLUMN_TYPE,"
-        + "F.RDB$FIELD_TYPE as FIELD_TYPE,"
-        + "F.RDB$FIELD_SUB_TYPE as FIELD_SUB_TYPE,"
-        + "F.RDB$FIELD_PRECISION as FIELD_PRECISION,"
-        + "F.RDB$FIELD_SCALE as FIELD_SCALE,"
-        + "F.RDB$FIELD_LENGTH as FIELD_LENGTH,"
-        + "F.RDB$NULL_FLAG as NULL_FLAG,"
-        + "PP.RDB$DESCRIPTION as REMARKS,"
-        + "F.RDB$CHARACTER_LENGTH AS CHAR_LEN,"
-        + "PP.RDB$PARAMETER_NUMBER + 1 AS PARAMETER_NUMBER,"
-        + "F.RDB$CHARACTER_SET_ID "
-        + "from "
-        + "RDB$PROCEDURE_PARAMETERS PP,"
-        + "RDB$FIELDS F "
-        + "where ";
-    private static final String GET_PROCEDURE_COLUMNS_END = " PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME "
-        + "order by "
-        + "PP.RDB$PROCEDURE_NAME,"
-        + "PP.RDB$PARAMETER_TYPE desc,"
-        + "PP.RDB$PARAMETER_NUMBER ";
-
     @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(20, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_SHORT, 0, "COLUMN_TYPE", "COLUMNINFO").addField()
-                .at(5).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, 31, "TYPE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_LONG, 0, "PRECISION", "COLUMNINFO").addField()
-                .at(8).simple(SQL_LONG, 0, "LENGTH", "COLUMNINFO").addField()
-                .at(9).simple(SQL_SHORT, 0, "SCALE", "COLUMNINFO").addField()
-                .at(10).simple(SQL_SHORT, 0, "RADIX", "COLUMNINFO").addField()
-                .at(11).simple(SQL_SHORT, 0, "NULLABLE", "COLUMNINFO").addField()
-                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(12).simple(SQL_VARYING, Integer.MAX_VALUE, "REMARKS", "COLUMNINFO").addField()
-                .at(13).simple(SQL_VARYING, 31, "COLUMN_DEF", "COLUMNINFO").addField()
-                .at(14).simple(SQL_LONG, 0, "SQL_DATA_TYPE", "COLUMNINFO").addField()
-                .at(15).simple(SQL_LONG, 0, "SQL_DATETIME_SUB", "COLUMNINFO").addField()
-                .at(16).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "COLUMNINFO").addField()
-                .at(17).simple(SQL_LONG, 0, "ORDINAL_POSITION", "COLUMNINFO").addField()
-                .at(18).simple(SQL_VARYING, 3, "IS_NULLABLE", "COLUMNINFO").addField()
-                .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "COLUMNINFO").addField()
-                .toRowDescriptor();
-
-        Clause procedureClause = new Clause("PP.RDB$PROCEDURE_NAME", procedureNamePattern);
-        Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
-
-        String sql = GET_PROCEDURE_COLUMNS_START;
-        sql += procedureClause.getCondition();
-        sql += columnClause.getCondition();
-        if (firebirdSupportInfo.supportsPackages()) {
-            sql += "PP.RDB$PACKAGE_NAME is null and ";
-        }
-        sql += GET_PROCEDURE_COLUMNS_END;
-
-        List<String> params = new ArrayList<>(2);
-        if (procedureClause.hasCondition()) {
-            params.add(procedureClause.getValue());
-        }
-        if (columnClause.hasCondition()) {
-            params.add(columnClause.getValue());
-        }
-
-        try (ResultSet rs = doQuery(sql, params)) {
-            // if nothing found, return an empty result set
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            final boolean supportsFloatBinaryPrecision = firebirdSupportInfo.supportsFloatBinaryPrecision();
-            do {
-                final short columnType = rs.getShort("COLUMN_TYPE");
-                final short fieldType = rs.getShort("FIELD_TYPE");
-                final short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
-                final short fieldScale = rs.getShort("FIELD_SCALE");
-                final int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
-                // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent)
-                final short nullFlag = rs.getShort("NULL_FLAG");
-                final int dataType = getDataType(fieldType, fieldSubType, fieldScale, characterSetId);
-                valueBuilder
-                        .at(2).set(getBytes(rs.getString("PROCEDURE_NAME")))
-                        .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
-                        // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
-                        // TODO: ResultSet columns should not be first according to JDBC 4.3 description
-                        .at(4).set(columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT)
-                        .at(5).set(createInt(dataType))
-                        .at(6).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
-                        .at(8).set(createInt(rs.getShort("FIELD_LENGTH")))
-                        .at(10).set(RADIX_TEN_SHORT)
-                        .at(11).set(nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE)
-                        .at(12).set(getBytes(rs.getString("REMARKS")))
-                        // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters), 14 and 15
-                        // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
-                        .at(17).set(createInt(rs.getInt("PARAMETER_NUMBER")))
-                        // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
-                        .at(18).set(nullFlag == 1 ? NO_BYTES : YES_BYTES)
-                        .at(19).set(valueBuilder.get(2));
-
-                switch (dataType) {
-                case Types.DECIMAL:
-                case Types.NUMERIC: {
-                    short precision = rs.getShort("FIELD_PRECISION");
-                    if (precision == 0 && fieldType == int128_type) {
-                        precision = NUMERIC_INT128_PRECISION;
-                    }
-                    valueBuilder
-                            .at(7).set(createInt(precision))
-                            .at(9).set(createShort(-1 * fieldScale));
-                }
-                    break;
-                case Types.CHAR:
-                case Types.VARCHAR:
-                case Types.BINARY:
-                case Types.VARBINARY:
-                    short charLen = rs.getShort("CHAR_LEN");
-                    if (!rs.wasNull()) {
-                        valueBuilder.at(7).set(createInt(charLen));
-                    } else {
-                        valueBuilder.at(8).set(valueBuilder.get(8));
-                    }
-                    valueBuilder.at(16).set(valueBuilder.get(8));
-                    break;
-                case Types.FLOAT:
-                    if (supportsFloatBinaryPrecision) {
-                        valueBuilder
-                                .at(7).set(createInt(FLOAT_BINARY_PRECISION))
-                                .at(10).set(RADIX_BINARY_SHORT);
-                    } else {
-                        valueBuilder.at(7).set(createInt(FLOAT_DECIMAL_PRECISION));
-                    }
-                    break;
-                case Types.DOUBLE:
-                    if (supportsFloatBinaryPrecision) {
-                        valueBuilder
-                                .at(7).set(createInt(DOUBLE_BINARY_PRECISION))
-                                .at(10).set(RADIX_BINARY_SHORT);
-                    } else {
-                        valueBuilder.at(7).set(createInt(DOUBLE_DECIMAL_PRECISION));
-                    }
-                    break;
-                case Types.BIGINT:
-                    valueBuilder
-                            .at(7).set(BIGINT_PRECISION)
-                            .at(9).set(SHORT_ZERO);
-                    break;
-                case Types.INTEGER:
-                    valueBuilder
-                            .at(7).set(INTEGER_PRECISION)
-                            .at(9).set(SHORT_ZERO);
-                    break;
-                case Types.SMALLINT:
-                    valueBuilder
-                            .at(7).set(SMALLINT_PRECISION)
-                            .at(9).set(SHORT_ZERO);
-                    break;
-                case Types.DATE:
-                    valueBuilder.at(7).set(DATE_PRECISION);
-                    break;
-                case Types.TIME:
-                    valueBuilder.at(7).set(TIME_PRECISION);
-                    break;
-                case Types.TIMESTAMP:
-                    valueBuilder.at(7).set(TIMESTAMP_PRECISION);
-                    break;
-                case Types.TIME_WITH_TIMEZONE:
-                    valueBuilder.at(7).set(TIME_WITH_TIMEZONE_PRECISION);
-                    break;
-                case Types.TIMESTAMP_WITH_TIMEZONE:
-                    valueBuilder.at(7).set(TIMESTAMP_WITH_TIMEZONE_PRECISION);
-                    break;
-                case Types.BOOLEAN:
-                    valueBuilder
-                            .at(7).set(BOOLEAN_PRECISION)
-                            .at(10).set(RADIX_BINARY_SHORT);
-                    break;
-                case JaybirdTypeCodes.DECFLOAT:
-                    switch (fieldType) {
-                    case dec16_type:
-                        valueBuilder.at(7).set(DECFLOAT_16_PRECISION);
-                        break;
-                    case dec34_type:
-                        valueBuilder.at(7).set(DECFLOAT_34_PRECISION);
-                        break;
-                    }
-                    break;
-                }
-
-                rows.add(valueBuilder.toRowValue(true));
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetProcedureColumns.create(getDbMetadataMediator())
+                .getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
     }
 
     public static final String TABLE = "TABLE";

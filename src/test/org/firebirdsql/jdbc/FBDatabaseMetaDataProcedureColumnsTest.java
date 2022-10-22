@@ -20,17 +20,22 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.common.extension.UsesDatabaseExtension;
 import org.firebirdsql.jdbc.MetaDataValidator.MetaDataInfo;
+import org.firebirdsql.jdbc.metadata.FbMetadataConstants;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.sql.*;
 import java.util.*;
 
+import static java.util.Collections.singletonList;
 import static org.firebirdsql.common.FBTestProperties.getConnectionViaDriverManager;
 import static org.firebirdsql.common.FBTestProperties.getDefaultSupportInfo;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -144,138 +149,61 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     @Test
     void testProcedureColumns_noArg_noReturn() throws Exception {
         try (ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "proc_no_arg_no_return", "%")) {
-            assertFalse(procedureColumns.next(), "Expected empty resultset for procedure with arguments or return values");
+            assertFalse(procedureColumns.next(), "Expected empty result set for procedure with arguments or return values");
         }
     }
     
     /**
-     * Tests getProcedureColumn with normal_proc_no_return using all columnPattern, expecting resultset with all defined rows.
+     * Tests getProcedureColumn with normal_proc_no_return using all columnPattern, expecting result set with all defined rows.
      */
     @Test
     void testProcedureColumns_normalProc_noReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(2);
-        Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM1");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "VARCHAR");
-        column.put(ProcedureColumnMetaData.PRECISION, 100);
-        column.put(ProcedureColumnMetaData.LENGTH, 100);
-        column.put(ProcedureColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 1);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_NO_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "param2");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.INTEGER);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "INTEGER");
-        column.put(ProcedureColumnMetaData.PRECISION, 10);
-        column.put(ProcedureColumnMetaData.LENGTH, 4);
-        column.put(ProcedureColumnMetaData.SCALE, 0);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
+                createStringType(Types.VARCHAR, "NORMAL_PROC_NO_RETURN", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn),
+                createNumericalType(Types.INTEGER, "NORMAL_PROC_NO_RETURN", "param2", 2, INTEGER_PRECISION, 0, true,
+                        DatabaseMetaData.procedureColumnIn));
         
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", "%");
         validate(procedureColumns, expectedColumns);        
     }
 
     /**
-     * Tests getProcedureColumn with normal_proc_with_return using columnPattern all (%) string, expecting resultset with all defined rows.
+     * Tests getProcedureColumn with normal_proc_no_return and specific column pattern, expecting result set with one row.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = { "param2", "%2", "param_" })
+    void testProcedureColumns_normalProc_noReturn_secondColumn(String columnNamePattern) throws Exception {
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = singletonList(
+                createNumericalType(Types.INTEGER, "NORMAL_PROC_NO_RETURN", "param2", 2, INTEGER_PRECISION, 0, true,
+                        DatabaseMetaData.procedureColumnIn));
+
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_NO_RETURN", columnNamePattern);
+        validate(procedureColumns, expectedColumns);
+    }
+
+    /**
+     * Tests getProcedureColumn with normal_proc_with_return using columnPattern all (%) string, expecting result set with all defined rows.
      */
     @Test
     void testProcedureColumns_normalProc_withReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(7);
-        Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
-        final boolean supportsFloatBinaryPrecision = getDefaultSupportInfo().supportsFloatBinaryPrecision();
-        // TODO Having result columns first might be against JDBC spec
-        // TODO Describing result columns as procedureColumnOut might be against JDBC spec
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "RETURN1");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnOut);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "VARCHAR");
-        column.put(ProcedureColumnMetaData.PRECISION, 200);
-        column.put(ProcedureColumnMetaData.LENGTH, 200);
-        column.put(ProcedureColumnMetaData.CHAR_OCTET_LENGTH, 200);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 1);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "RETURN2");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnOut);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.INTEGER);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "INTEGER");
-        column.put(ProcedureColumnMetaData.PRECISION, 10);
-        column.put(ProcedureColumnMetaData.LENGTH, 4);
-        column.put(ProcedureColumnMetaData.SCALE, 0);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "return3");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnOut);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.DOUBLE);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
-        column.put(ProcedureColumnMetaData.PRECISION, supportsFloatBinaryPrecision ? 53 : 15);
-        column.put(ProcedureColumnMetaData.RADIX, supportsFloatBinaryPrecision ? 2 : 10);
-        column.put(ProcedureColumnMetaData.LENGTH, 8);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 3);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM1");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "VARCHAR");
-        column.put(ProcedureColumnMetaData.PRECISION, 100);
-        column.put(ProcedureColumnMetaData.LENGTH, 100);
-        column.put(ProcedureColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 1);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM2");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.DECIMAL);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "DECIMAL");
-        column.put(ProcedureColumnMetaData.PRECISION, 18);
-        column.put(ProcedureColumnMetaData.LENGTH, 8);
-        column.put(ProcedureColumnMetaData.SCALE, 2);
-        column.put(ProcedureColumnMetaData.REMARKS, "Some comment");
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 2);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM3");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.NUMERIC);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "NUMERIC");
-        column.put(ProcedureColumnMetaData.PRECISION, 4);
-        column.put(ProcedureColumnMetaData.LENGTH, 2);
-        column.put(ProcedureColumnMetaData.SCALE, 3);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 3);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
-        column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "NORMAL_PROC_WITH_RETURN");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM4");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.TIMESTAMP);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "TIMESTAMP");
-        column.put(ProcedureColumnMetaData.PRECISION, 19);
-        column.put(ProcedureColumnMetaData.LENGTH, 8);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 4);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
+                // TODO Having result columns first might be against JDBC spec
+                // TODO Describing result columns as procedureColumnOut might be against JDBC spec
+                createStringType(Types.VARCHAR, "NORMAL_PROC_WITH_RETURN", "RETURN1", 1, 200, true,
+                        DatabaseMetaData.procedureColumnOut),
+                createNumericalType(Types.INTEGER, "NORMAL_PROC_WITH_RETURN", "RETURN2", 2, INTEGER_PRECISION, 0, true,
+                        DatabaseMetaData.procedureColumnOut),
+                createDouble("NORMAL_PROC_WITH_RETURN", "return3", 3, true, DatabaseMetaData.procedureColumnOut),
+                createStringType(Types.VARCHAR, "NORMAL_PROC_WITH_RETURN", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn),
+                withRemark(createNumericalType(Types.DECIMAL, "NORMAL_PROC_WITH_RETURN", "PARAM2", 2,
+                                NUMERIC_BIGINT_PRECISION, 2, true, DatabaseMetaData.procedureColumnIn),
+                        "Some comment"),
+                createNumericalType(Types.NUMERIC, "NORMAL_PROC_WITH_RETURN", "PARAM3", 3, NUMERIC_SMALLINT_PRECISION,
+                        3, true, DatabaseMetaData.procedureColumnIn),
+                createDateTime(Types.TIMESTAMP, "NORMAL_PROC_WITH_RETURN", "PARAM4", 4, true,
+                        DatabaseMetaData.procedureColumnIn));
         
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "NORMAL_PROC_WITH_RETURN", "%");
         validate(procedureColumns, expectedColumns); 
@@ -286,19 +214,9 @@ class FBDatabaseMetaDataProcedureColumnsTest {
      */
     @Test
     void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = new ArrayList<>(1);
-        Map<ProcedureColumnMetaData, Object> column = getDefaultValueValidationRules();
-        column.put(ProcedureColumnMetaData.PROCEDURE_NAME, "quoted_proc_no_return");
-        column.put(ProcedureColumnMetaData.COLUMN_NAME, "PARAM1");
-        column.put(ProcedureColumnMetaData.COLUMN_TYPE, DatabaseMetaData.procedureColumnIn);
-        column.put(ProcedureColumnMetaData.DATA_TYPE, Types.VARCHAR);
-        column.put(ProcedureColumnMetaData.TYPE_NAME, "VARCHAR");
-        column.put(ProcedureColumnMetaData.PRECISION, 100);
-        column.put(ProcedureColumnMetaData.LENGTH, 100);
-        column.put(ProcedureColumnMetaData.CHAR_OCTET_LENGTH, 100);
-        column.put(ProcedureColumnMetaData.ORDINAL_POSITION, 1);
-        column.put(ProcedureColumnMetaData.SPECIFIC_NAME, column.get(ProcedureColumnMetaData.PROCEDURE_NAME));
-        expectedColumns.add(column);
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = singletonList(
+                createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn));
         
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "quoted_proc_no_return", "%");
         validate(procedureColumns, expectedColumns);        
@@ -306,7 +224,8 @@ class FBDatabaseMetaDataProcedureColumnsTest {
     
     // TODO Add tests for more complex patterns for procedure and column
     
-    private void validate(ResultSet procedureColumns, List<Map<ProcedureColumnMetaData, Object>> expectedColumns) throws Exception {
+    private void validate(ResultSet procedureColumns, List<Map<ProcedureColumnMetaData, Object>> expectedColumns)
+            throws Exception {
         try {
             int parameterCount = 0;
             while(procedureColumns.next()) {
@@ -322,6 +241,154 @@ class FBDatabaseMetaDataProcedureColumnsTest {
             closeQuietly(procedureColumns);
         }
     }
+
+    private static Map<ProcedureColumnMetaData, Object> createColumn(String procedureName, String columnName,
+            int ordinalPosition, boolean nullable, int columnType) {
+        Map<ProcedureColumnMetaData, Object> rules = getDefaultValueValidationRules();
+        rules.put(ProcedureColumnMetaData.PROCEDURE_NAME, procedureName);
+        rules.put(ProcedureColumnMetaData.SPECIFIC_NAME, procedureName);
+        rules.put(ProcedureColumnMetaData.COLUMN_NAME, columnName);
+        rules.put(ProcedureColumnMetaData.ORDINAL_POSITION, ordinalPosition);
+        rules.put(ProcedureColumnMetaData.COLUMN_TYPE, columnType);
+        if (!nullable) {
+            rules.put(ProcedureColumnMetaData.NULLABLE, DatabaseMetaData.procedureNoNulls);
+            rules.put(ProcedureColumnMetaData.IS_NULLABLE, "NO");
+        }
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> createStringType(int jdbcType, String procedureName,
+            String columnName, int ordinalPosition, int length, boolean nullable, int columnType) {
+        Map<ProcedureColumnMetaData, Object> rules =
+                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+        rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
+        String typeName;
+        switch (jdbcType) {
+        case Types.CHAR:
+        case Types.BINARY:
+            typeName = "CHAR";
+            break;
+        case Types.VARCHAR:
+        case Types.VARBINARY:
+            typeName = "VARCHAR";
+            break;
+        default:
+            throw new IllegalArgumentException("Wrong type code for createStringType: " + jdbcType);
+        }
+        rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
+        rules.put(ProcedureColumnMetaData.PRECISION, length);
+        rules.put(ProcedureColumnMetaData.LENGTH, length);
+        rules.put(ProcedureColumnMetaData.CHAR_OCTET_LENGTH, length);
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> createNumericalType(int jdbcType, String procedureName,
+            String columnName, int ordinalPosition, int precision, int scale, boolean nullable, int columnType) {
+        Map<ProcedureColumnMetaData, Object> rules =
+                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+        rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
+        String typeName;
+        int length;
+        switch (jdbcType) {
+        case Types.BIGINT:
+            typeName = "BIGINT";
+            length = 8;
+            break;
+        case Types.INTEGER:
+            typeName = "INTEGER";
+            length = 4;
+            break;
+        case Types.SMALLINT:
+            typeName = "SMALLINT";
+            length = 2;
+            break;
+        case Types.NUMERIC:
+            typeName = "NUMERIC";
+            length = precision > 5 ? (precision > 9 ? (precision > 18 ? 16 : 8) : 4) : 2;
+            break;
+        case Types.DECIMAL:
+            typeName = "DECIMAL";
+            length = precision > 9 ? (precision > 18 ? 16 : 8) : 4;
+            break;
+        default:
+            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
+        rules.put(ProcedureColumnMetaData.PRECISION, precision);
+        rules.put(ProcedureColumnMetaData.SCALE, scale);
+        rules.put(ProcedureColumnMetaData.LENGTH, length);
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> createDateTime(int jdbcType, String procedureName,
+            String columnName, int ordinalPosition, boolean nullable, int columnType) {
+        Map<ProcedureColumnMetaData, Object> rules =
+                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+        rules.put(ProcedureColumnMetaData.DATA_TYPE, jdbcType);
+        String typeName;
+        int precision;
+        int length;
+        switch (jdbcType) {
+        case Types.DATE:
+            typeName = "DATE";
+            precision = DATE_PRECISION;
+            length = 4;
+            break;
+        case Types.TIME:
+            typeName = "TIME";
+            precision = TIME_PRECISION;
+            length = 4;
+            break;
+        case Types.TIMESTAMP:
+            typeName = "TIMESTAMP";
+            precision = TIMESTAMP_PRECISION;
+            length = 8;
+            break;
+        case Types.TIME_WITH_TIMEZONE:
+            typeName = "TIME WITH TIME ZONE";
+            precision = TIME_WITH_TIMEZONE_PRECISION;
+            length = 8; // TODO Possibly 6
+            break;
+        case Types.TIMESTAMP_WITH_TIMEZONE:
+            typeName = "TIMESTAMP WITH TIME ZONE";
+            precision = TIMESTAMP_WITH_TIMEZONE_PRECISION;
+            length = 12; // TODO Possibly 10
+            break;
+        default:
+            throw new IllegalArgumentException("Wrong type code for createNumericalType: " + jdbcType);
+        }
+        rules.put(ProcedureColumnMetaData.TYPE_NAME, typeName);
+        rules.put(ProcedureColumnMetaData.PRECISION, precision);
+        rules.put(ProcedureColumnMetaData.LENGTH, length);
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> createDouble(String procedureName, String columnName,
+            int ordinalPosition, boolean nullable, int columnType) {
+        Map<ProcedureColumnMetaData, Object> rules =
+                createColumn(procedureName, columnName, ordinalPosition, nullable, columnType);
+        rules.put(ProcedureColumnMetaData.DATA_TYPE, Types.DOUBLE);
+        rules.put(ProcedureColumnMetaData.TYPE_NAME, "DOUBLE PRECISION");
+        if (getDefaultSupportInfo().supportsFloatBinaryPrecision()) {
+            rules.put(ProcedureColumnMetaData.PRECISION, 53);
+            rules.put(ProcedureColumnMetaData.RADIX, 2);
+        } else {
+            rules.put(ProcedureColumnMetaData.PRECISION, 15);
+        }
+        rules.put(ProcedureColumnMetaData.LENGTH, 8);
+        return rules;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static Map<ProcedureColumnMetaData, Object> withRemark(Map<ProcedureColumnMetaData, Object> column,
+            String remark) {
+        column.put(ProcedureColumnMetaData.REMARKS, remark);
+        return column;
+    }
     
     private static final Map<ProcedureColumnMetaData, Object> DEFAULT_COLUMN_VALUES;
     static {
@@ -329,7 +396,7 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         defaults.put(ProcedureColumnMetaData.PROCEDURE_CAT, null);
         defaults.put(ProcedureColumnMetaData.PROCEDURE_SCHEM, null);
         defaults.put(ProcedureColumnMetaData.SCALE, null);
-        defaults.put(ProcedureColumnMetaData.RADIX, 10);
+        defaults.put(ProcedureColumnMetaData.RADIX, FbMetadataConstants.RADIX_DECIMAL);
         defaults.put(ProcedureColumnMetaData.NULLABLE, DatabaseMetaData.procedureNullable);
         defaults.put(ProcedureColumnMetaData.REMARKS, null);
         defaults.put(ProcedureColumnMetaData.COLUMN_DEF, null);
