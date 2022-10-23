@@ -117,6 +117,8 @@ public abstract class GetProcedureColumns {
                         .build();
 
                 valueBuilder
+                        .at(0).set(null)
+                        .at(1).set(null)
                         .at(2).setString(rs.getString("PROCEDURE_NAME"))
                         .at(3).setString(rs.getString("COLUMN_NAME"))
                         // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
@@ -130,15 +132,19 @@ public abstract class GetProcedureColumns {
                         .at(10).setShort(typeMetadata.getRadix())
                         .at(11).set(nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE)
                         .at(12).setString(rs.getString("REMARKS"))
-                        // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters), 14 and 15
+                        // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters)
+                        .at(13).set(null)
+                        // JDBC reserves 14 and 15 for future use and are always NULL
+                        .at(14).set(null)
+                        .at(15).set(null)
+                        .at(16).setInt(typeMetadata.getCharOctetLength())
                         // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
                         .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
-                        .at(16).setInt(typeMetadata.getCharOctetLength())
                         // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
                         .at(18).set(nullFlag == 1 ? NO_BYTES : YES_BYTES)
                         .at(19).set(valueBuilder.get(2));
 
-                rows.add(valueBuilder.toRowValue(true));
+                rows.add(valueBuilder.toRowValue(false));
             } while (rs.next());
             return new FBResultSet(ROW_DESCRIPTOR, rows);
         }

@@ -149,4 +149,14 @@ public final class Clause {
         }
         return list;
     }
+
+    public static List<String> parameters(List<Clause> clauses) {
+        List<String> list = new ArrayList<>(clauses.size());
+        for (Clause clause : clauses) {
+            if (clause.hasCondition()) {
+                list.add(clause.getValue());
+            }
+        }
+        return list;
+    }
 }

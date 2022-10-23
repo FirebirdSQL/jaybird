@@ -86,14 +86,12 @@ public abstract class GetProcedures {
             List<RowValue> rows = new ArrayList<>();
             RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
             do {
-                byte[] procedureNameBytes = mediator.createString(rs.getString("PROCEDURE_NAME"));
-                rows.add(valueBuilder
-                        .at(2).set(procedureNameBytes)
-                        .at(6).set(mediator.createString(rs.getString("REMARKS")))
+                valueBuilder
+                        .at(2).setString(rs.getString("PROCEDURE_NAME"))
+                        .at(6).setString(rs.getString("REMARKS"))
                         .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
-                        .at(8).set(procedureNameBytes)
-                        .toRowValue(true)
-                );
+                        .at(8).set(valueBuilder.get(2));
+                rows.add(valueBuilder.toRowValue(true));
             } while (rs.next());
             return new FBResultSet(ROW_DESCRIPTOR, rows);
         }
