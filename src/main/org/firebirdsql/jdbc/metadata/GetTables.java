@@ -78,15 +78,18 @@ public abstract class GetTables {
         this.mediator = mediator;
     }
 
+    /**
+     * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[]) 
+     */
     @SuppressWarnings("unused")
-    public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
+    public final ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
         if ("".equals(tableNamePattern) || types != null && types.length == 0) {
             // Matching table name not possible
             return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
         }
 
-        MetadataQuery metadataQuery = createTablesQuery(tableNamePattern, toTypesSet(types));
+        MetadataQuery metadataQuery = createGetTablesQuery(tableNamePattern, toTypesSet(types));
         try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
             if (!rs.next()) {
                 return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
@@ -110,7 +113,7 @@ public abstract class GetTables {
         return types != null ? new HashSet<>(Arrays.asList(types)) : allTableTypes();
     }
 
-    abstract MetadataQuery createTablesQuery(String tableNamePattern, Set<String> types);
+    abstract MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types);
 
     abstract Set<String> allTableTypes();
 
@@ -152,7 +155,7 @@ public abstract class GetTables {
         }
 
         @Override
-        MetadataQuery createTablesQuery(String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
             Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
             List<Clause> clauses = new ArrayList<>(types.size());
             StringBuilder queryBuilder = new StringBuilder(2000);
@@ -225,7 +228,7 @@ public abstract class GetTables {
         }
 
         @Override
-        MetadataQuery createTablesQuery(String tableNamePattern, Set<String> types) {
+        MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types) {
             Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
 
             StringBuilder queryBuilder = new StringBuilder(1000).append(TABLE_COLUMNS_2_5);

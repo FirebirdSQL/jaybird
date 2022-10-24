@@ -81,6 +81,13 @@ public final class TypeMetadata {
     }
 
     /**
+     * @return Firebird type number
+     */
+    int getType() {
+        return type;
+    }
+
+    /**
      * @return The {@link java.sql.Types} or {@link JaybirdTypeCodes} code for this datatype
      */
     int getJdbcType() {
@@ -140,6 +147,10 @@ public final class TypeMetadata {
             case smallint_type:
                 return coalesce(precision, NUMERIC_SMALLINT_PRECISION);
             case int128_type:
+                if (precision == 0) {
+                    // INT128 (precision reported as 38, not 39 to avoid issues with tools using type name as NUMERIC)
+                    return NUMERIC_INT128_PRECISION;
+                }
                 return coalesce(precision, NUMERIC_INT128_PRECISION);
             default:
                 throw new IllegalStateException(String.format(

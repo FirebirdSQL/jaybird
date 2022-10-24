@@ -67,8 +67,11 @@ public abstract class GetProcedures {
         this.mediator = mediator;
     }
 
+    /**
+     * @see DatabaseMetaData#getProcedures(String, String, String) 
+     */
     @SuppressWarnings("unused")
-    public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
+    public final ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
         if ("".equals(procedureNamePattern)) {
             return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());

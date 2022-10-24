@@ -564,8 +564,7 @@ class FBDatabaseMetaDataColumnsTest {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIME);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIME");
-        // TODO: Verify if current value matches JDBC spec
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 8);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 13);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 19);
 
         validate(TEST_TABLE, "COL_TIME", validationRules);
@@ -580,8 +579,7 @@ class FBDatabaseMetaDataColumnsTest {
         Map<ColumnMetaData, Object> validationRules = getDefaultValueValidationRules();
         validationRules.put(ColumnMetaData.DATA_TYPE, Types.TIMESTAMP);
         validationRules.put(ColumnMetaData.TYPE_NAME, "TIMESTAMP");
-        // TODO: Verify if current value matches JDBC spec
-        validationRules.put(ColumnMetaData.COLUMN_SIZE, 19);
+        validationRules.put(ColumnMetaData.COLUMN_SIZE, 24);
         validationRules.put(ColumnMetaData.ORDINAL_POSITION, 20);
 
         validate(TEST_TABLE, "COL_TIMESTAMP", validationRules);
