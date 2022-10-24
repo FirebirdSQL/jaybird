@@ -86,7 +86,7 @@ public abstract class GetFunctionColumns {
      * @see java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)
      */
     @SuppressWarnings("unused")
-    public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
+    public final ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         if ("".equals(functionNamePattern) || "".equals(columnNamePattern)) {
             // Matching function name or column name not possible
@@ -197,8 +197,8 @@ public abstract class GetFunctionColumns {
             Clause columnNameClause = new Clause("'PARAM_' || FUNA.RDB$ARGUMENT_POSITION", columnNamePattern);
             String query = GET_FUNCTION_COLUMNS_FRAGMENT_2_5
                     + (anyCondition(functionNameClause, columnNameClause)
-                    ? "\nwhere " + functionNameClause.getCondition(false)
-                    + columnNameClause.getCondition("\nand ", "")
+                    ? "\nwhere " + functionNameClause.getCondition(columnNameClause.hasCondition())
+                    + columnNameClause.getCondition(false)
                     : "")
                     + GET_FUNCTION_COLUMNS_ORDER_BY_2_5;
             return new MetadataQuery(query, Clause.parameters(functionNameClause, columnNameClause));

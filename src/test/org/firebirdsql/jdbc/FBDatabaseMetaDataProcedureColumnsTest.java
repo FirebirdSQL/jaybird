@@ -221,6 +221,15 @@ class FBDatabaseMetaDataProcedureColumnsTest {
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "quoted_proc_no_return", "%");
         validate(procedureColumns, expectedColumns);        
     }
+
+    @Test
+    void testProcedureColumns_byColumnNameOnly() throws Exception {
+        ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, null, "PARAM4");
+
+        validate(procedureColumns,
+                singletonList(createDateTime(Types.TIMESTAMP, "NORMAL_PROC_WITH_RETURN", "PARAM4", 4, true,
+                        DatabaseMetaData.procedureColumnIn)));
+    }
     
     // TODO Add tests for more complex patterns for procedure and column
     

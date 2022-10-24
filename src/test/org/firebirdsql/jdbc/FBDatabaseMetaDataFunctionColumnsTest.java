@@ -257,6 +257,13 @@ class FBDatabaseMetaDataFunctionColumnsTest {
         validateExpectedFunctionColumns(PSQL_EXAMPLE_1, null, getPsqlExample1Columns());
     }
 
+    @Test
+    void testFunctionColumnMetaData_byColumnNameOnly() throws Exception {
+        assumeTrue(getDefaultSupportInfo().supportsPsqlFunctions(), "Requires PSQL function support");
+        validateExpectedFunctionColumns(null, "C$19$BOOLEAN",
+                singletonList(createBoolean(PSQL_EXAMPLE_1, "C$19$BOOLEAN", 19, true)));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = { "C$04$VARCHAR15", "C$04%", "C$04$VARCHAR__" })
     void testFunctionColumnMetaData_PsqlExample1_onlyParam4(String columnNamePattern) throws Exception {

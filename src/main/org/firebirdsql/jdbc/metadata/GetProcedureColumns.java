@@ -84,8 +84,11 @@ public abstract class GetProcedureColumns {
         this.mediator = mediator;
     }
 
+    /**
+     * @see DatabaseMetaData#getProcedureColumns(String, String, String, String) 
+     */
     @SuppressWarnings("unused")
-    public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
+    public final ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         if ("".equals(procedureNamePattern) || "".equals(columnNamePattern)) {
             // Matching procedure name or column name not possible
@@ -99,12 +102,12 @@ public abstract class GetProcedureColumns {
                 return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
             }
 
-            byte[] PROCEDURE_NO_NULLS = mediator.createShort(DatabaseMetaData.procedureNoNulls);
-            byte[] PROCEDURE_NULLABLE = mediator.createShort(DatabaseMetaData.procedureNullable);
-            byte[] PROCEDURE_COLUMN_IN = mediator.createShort(DatabaseMetaData.procedureColumnIn);
-            byte[] PROCEDURE_COLUMN_OUT = mediator.createShort(DatabaseMetaData.procedureColumnOut);
-            byte[] YES_BYTES = mediator.createString("YES");
-            byte[] NO_BYTES = mediator.createString("NO");
+            byte[] procedureNoNulls = mediator.createShort(DatabaseMetaData.procedureNoNulls);
+            byte[] procedureNullable = mediator.createShort(DatabaseMetaData.procedureNullable);
+            byte[] procedureColumnIn = mediator.createShort(DatabaseMetaData.procedureColumnIn);
+            byte[] procedureColumnOut = mediator.createShort(DatabaseMetaData.procedureColumnOut);
+            byte[] yesBytes = mediator.createString("YES");
+            byte[] noBytes = mediator.createString("NO");
 
             List<RowValue> rows = new ArrayList<>();
             RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
@@ -123,14 +126,14 @@ public abstract class GetProcedureColumns {
                         .at(3).setString(rs.getString("COLUMN_NAME"))
                         // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
                         // TODO: ResultSet columns should not be first according to JDBC 4.3 description
-                        .at(4).set(columnType == 0 ? PROCEDURE_COLUMN_IN : PROCEDURE_COLUMN_OUT)
+                        .at(4).set(columnType == 0 ? procedureColumnIn : procedureColumnOut)
                         .at(5).setInt(typeMetadata.getJdbcType())
                         .at(6).setString(typeMetadata.getSqlTypeName())
                         .at(7).setInt(typeMetadata.getColumnSize())
                         .at(8).setInt(typeMetadata.getLength())
                         .at(9).setShort(typeMetadata.getScale())
                         .at(10).setShort(typeMetadata.getRadix())
-                        .at(11).set(nullFlag == 1 ? PROCEDURE_NO_NULLS : PROCEDURE_NULLABLE)
+                        .at(11).set(nullFlag == 1 ? procedureNoNulls : procedureNullable)
                         .at(12).setString(rs.getString("REMARKS"))
                         // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters)
                         .at(13).set(null)
@@ -141,7 +144,7 @@ public abstract class GetProcedureColumns {
                         // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
                         .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
                         // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
-                        .at(18).set(nullFlag == 1 ? NO_BYTES : YES_BYTES)
+                        .at(18).set(nullFlag == 1 ? noBytes : yesBytes)
                         .at(19).set(valueBuilder.get(2));
 
                 rows.add(valueBuilder.toRowValue(false));
@@ -194,8 +197,8 @@ public abstract class GetProcedureColumns {
             Clause columnClause = new Clause("PP.RDB$PARAMETER_NAME", columnNamePattern);
             String query = GET_PROCEDURE_COLUMNS_FRAGMENT_2_5
                     + (anyCondition(procedureClause, columnClause)
-                    ? "\nwhere " + procedureClause.getCondition(false)
-                    + columnClause.getCondition("\nand ", "")
+                    ? "\nwhere " + procedureClause.getCondition(columnClause.hasCondition())
+                    + columnClause.getCondition(false)
                     : "")
                     + GET_PROCEDURE_COLUMNS_END_2_5;
             return new MetadataQuery(query, Clause.parameters(procedureClause, columnClause));
