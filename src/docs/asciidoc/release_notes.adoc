@@ -620,6 +620,10 @@ This feature was also backported to Jaybird 4.0.7.
 This requires Firebird 3.0 or higher server and a Firebird 3.0 or higher fbclient.
 Longer statement texts were already supported for pure-java connections.
 * Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for connection dialect 1 (https://github.com/FirebirdSQL/jaybird/issues/714[jaybird#714])
+* Improvement: A column `JB_GRANTEE_TYPE` was added to `getColumnPrivileges` in `DatabaseMetaData`.
+It returns the object type of the grantee (e.g. `USER`, `ROLE`).
+This is a Jaybird specific extension, we recommend retrieving it by name only.
+// TODO Also getTablePrivileges once migrated
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -718,6 +722,14 @@ There are two possible solutions for this error:
 . Disable server-side batch updates by setting connection property `useServerBatch` to `false`.
 
 The maximum server-side batch buffer should be sufficient to have a batch of around 4000 rows with the maximum row size (around 64KB), more rows are possible for smaller row sizes.
+
+[#metadata-compat-changes]
+=== Changes affecting metadata compatibility
+
+// TODO Also getTablePrivileges once migrated
+
+The method `getColumnPrivileges` previously returned the privilege name `REFERENCE` in result set column `PRIVILEGE`.
+This has been changed to `REFERENCES` to match both the name of the privilege in the `GRANT` statement, and the name used in the JDBC 4.3 documentation.
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation

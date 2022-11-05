@@ -113,6 +113,16 @@ public final class MetadataPattern {
     }
 
     /**
+     * Creates a {@code MetadataPattern} explicit for an <em>equals</em> ({@code =}) condition.
+     *
+     * @param value value for equals condition
+     * @return MetadataPattern of type {@code SQL_EQUALS}
+     */
+    static MetadataPattern equalsCondition(String value) {
+        return new MetadataPattern(ConditionType.SQL_EQUALS, value);
+    }
+
+    /**
      * Scans string to determine if string contains any of {@code \_%} that indicates additional processing is needed.
      *
      * @param pattern

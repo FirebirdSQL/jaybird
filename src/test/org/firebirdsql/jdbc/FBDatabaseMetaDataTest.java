@@ -466,14 +466,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetColumnPrivileges() throws Exception {
-        try (ResultSet rs = dmd.getColumnPrivileges(null, null, "RDB$RELATIONS", "%")) {
-            assertNotNull(rs, "No result set returned from getColumnPrivileges");
-            // TODO Actual test?
-        }
-    }
-
-    @Test
     void testGetTablePrivileges() throws Exception {
         try (ResultSet rs = dmd.getTablePrivileges(null, null, "%")) {
             assertNotNull(rs, "No result set returned from getTablePrivileges");

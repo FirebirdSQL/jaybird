@@ -46,9 +46,25 @@ public final class Clause {
      *         Metadata pattern
      */
     public Clause(String columnName, String pattern) {
-        MetadataPattern metadataPattern = MetadataPattern.compile(pattern);
+        this(columnName, MetadataPattern.compile(pattern));
+    }
+
+    private Clause(String columnName, MetadataPattern metadataPattern) {
         condition = metadataPattern.renderCondition(columnName);
         value = metadataPattern.getConditionValue();
+    }
+
+    /**
+     * Creates an equals clause.
+     *
+     * @param columnName
+     *         Column name or expression resulting in a string value
+     * @param value
+     *         value for equals condition
+     * @return clause for a SQL equals ({@code =}) condition
+     */
+    static Clause equalsClause(String columnName, String value) {
+        return new Clause(columnName, MetadataPattern.equalsCondition(value));
     }
 
     /**
