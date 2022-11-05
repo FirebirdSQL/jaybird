@@ -49,8 +49,8 @@ public abstract class GetProcedures {
 
     private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
-                    .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
-                    .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
+                    .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "PROCEDURES").addField()
+                    .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_SCHEM", "ROCEDURES").addField()
                     .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PROCEDURE_NAME", "PROCEDURES").addField()
                     .at(3).simple(SQL_VARYING, 31, "FUTURE1", "PROCEDURES").addField()
                     .at(4).simple(SQL_VARYING, 31, "FUTURE2", "PROCEDURES").addField()

@@ -57,8 +57,8 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
 public abstract class GetColumns {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(26, DbMetadataMediator.datatypeCoder)
-            .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
-            .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
+            .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
+            .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
             .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
             .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "COLUMNINFO").addField()
