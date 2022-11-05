@@ -2538,33 +2538,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return MetadataPattern.escapeWildcards(objectName);
     }
 
-    protected String getWantsSystemTables(String[] types) {
-        for (String type : types) {
-            if (SYSTEM_TABLE.equals(type)) {
-                return "T";
-            }
-        }
-        return "F";
-    }
-
-    protected String getWantsTables(String[] types) {
-        for (String type : types) {
-            if (TABLE.equals(type)) {
-                return "T";
-            }
-        }
-        return "F";
-    }
-
-    protected String getWantsViews(String[] types) {
-        for (String type : types) {
-            if (VIEW.equals(type)) {
-                return "T";
-            }
-        }
-        return "F";
-    }
-
     //@formatter:off
 
     // Suitable for Firebird 2.5 and earlier
