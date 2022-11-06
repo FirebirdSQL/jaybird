@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +49,9 @@ import static org.firebirdsql.jdbc.FBDatabaseMetaData.VIEW;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
- * Provides the implementation for {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])}
+ * Provides the implementation for {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])},
+ * {@link java.sql.DatabaseMetaData#getTableTypes()} and
+ * {@link org.firebirdsql.jdbc.FirebirdDatabaseMetaData#getTableTypeNames()}
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
@@ -72,6 +75,11 @@ public abstract class GetTables {
             .at(10).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "OWNER_NAME", "TABLES").addField()
             .toRowDescriptor();
 
+    private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES =
+            new RowDescriptorBuilder(1, DbMetadataMediator.datatypeCoder)
+                    .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
+                    .toRowDescriptor();
+
     private final DbMetadataMediator mediator;
 
     private GetTables(DbMetadataMediator mediator) {
@@ -79,7 +87,7 @@ public abstract class GetTables {
     }
 
     /**
-     * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[]) 
+     * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[])
      */
     @SuppressWarnings("unused")
     public final ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
@@ -109,12 +117,36 @@ public abstract class GetTables {
         }
     }
 
+    public final ResultSet getTableTypes() throws SQLException {
+        RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR_TABLE_TYPES);
+        Set<String> tableTypes = allTableTypes();
+        List<RowValue> rows = new ArrayList<>(tableTypes.size());
+        for (String tableType : tableTypes) {
+            valueBuilder
+                    .at(0).setString(tableType);
+            rows.add(valueBuilder.toRowValue(false));
+        }
+        return new FBResultSet(ROW_DESCRIPTOR_TABLE_TYPES, rows);
+    }
+
+    public final String[] getTableTypeNames() {
+        return allTableTypes().toArray(new String[0]);
+    }
+
     private Set<String> toTypesSet(String[] types) {
         return types != null ? new HashSet<>(Arrays.asList(types)) : allTableTypes();
     }
 
     abstract MetadataQuery createGetTablesQuery(String tableNamePattern, Set<String> types);
 
+    /**
+     * All supported table types.
+     * <p>
+     * Implementation expects a set sorted in ascending order (e.g. backed by a {@code LinkedHashSet}).
+     * </p>
+     *
+     * @return supported table types
+     */
     abstract Set<String> allTableTypes();
 
     public static GetTables create(DbMetadataMediator mediator) {
@@ -147,8 +179,8 @@ public abstract class GetTables {
         /**
          * All table types supported for Firebird 2.1 and lower
          */
-        private static final Set<String> ALL_TYPES_2_1 = unmodifiableSet(new HashSet<>(
-                Arrays.asList(TABLE, SYSTEM_TABLE, VIEW)));
+        private static final Set<String> ALL_TYPES_2_1 = unmodifiableSet(new LinkedHashSet<>(
+                Arrays.asList(SYSTEM_TABLE, TABLE, VIEW)));
 
         private FB2_1(DbMetadataMediator mediator) {
             super(mediator);
@@ -220,8 +252,8 @@ public abstract class GetTables {
         /**
          * All table types supported for Firebird 2.5 and higher
          */
-        private static final Set<String> ALL_TYPES_2_5 = unmodifiableSet(new HashSet<>(
-                Arrays.asList(TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY)));
+        private static final Set<String> ALL_TYPES_2_5 = unmodifiableSet(new LinkedHashSet<>(
+                Arrays.asList(GLOBAL_TEMPORARY, SYSTEM_TABLE, TABLE, VIEW)));
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);

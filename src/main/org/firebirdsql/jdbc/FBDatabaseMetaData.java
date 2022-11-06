@@ -1193,20 +1193,15 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public static final String SYSTEM_TABLE = "SYSTEM TABLE";
     public static final String VIEW = "VIEW";
     public static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
-    /**
-     * Table types supported for Firebird 2.5 and up (will also work with 2.1 and earlier though)
-     */
-    private static final String[] ALL_TYPES_2_5 = {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY};
-    /**
-     * Table types supported for Firebird 2.1 and lower
-     */
-    private static final String[] ALL_TYPES_2_1 = {TABLE, SYSTEM_TABLE, VIEW};
 
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
-        return GetTables.create(getDbMetadataMediator())
-                .getTables(catalog, schemaPattern, tableNamePattern, types);
+        return createGetTablesInstance().getTables(catalog, schemaPattern, tableNamePattern, types);
+    }
+
+    private GetTables createGetTablesInstance() {
+        return GetTables.create(getDbMetadataMediator());
     }
 
     @Override
@@ -1225,32 +1220,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getTableTypes() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
-                .toRowDescriptor();
-
-        final String[] types = hasGlobalTemporaryTables()
-                ? ALL_TYPES_2_5
-                : ALL_TYPES_2_1;
-
-        final List<RowValue> rows = new ArrayList<>(types.length);
-        for (String type : types) {
-            rows.add(RowValue.of(rowDescriptor, getBytes(type)));
-        }
-
-        return new FBResultSet(rowDescriptor, rows);
+        return createGetTablesInstance().getTableTypes();
     }
 
     @Override
     public String[] getTableTypeNames() throws SQLException {
-        String[] allTypes = hasGlobalTemporaryTables()
-                ? ALL_TYPES_2_5
-                : ALL_TYPES_2_1;
-        return Arrays.copyOf(allTypes, allTypes.length);
-    }
-
-    private boolean hasGlobalTemporaryTables() throws SQLException {
-        return getOdsMajorVersion() == 11 && getOdsMinorVersion() >= 2 || getOdsMajorVersion() > 11;
+        return createGetTablesInstance().getTableTypeNames();
     }
 
     /**

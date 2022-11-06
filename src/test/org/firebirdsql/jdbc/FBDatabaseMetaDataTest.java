@@ -30,8 +30,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -98,18 +100,26 @@ class FBDatabaseMetaDataTest {
 
     @Test
     void testGetTableTypes() throws Exception {
-        final Set<String> expected = new HashSet<>(Arrays.asList(
-                getDefaultSupportInfo().supportsGlobalTemporaryTables()
-                        ? new String[] {TABLE, SYSTEM_TABLE, VIEW, GLOBAL_TEMPORARY}
-                        : new String[] {TABLE, SYSTEM_TABLE, VIEW}));
-        final Set<String> retrieved = new HashSet<>();
-
+        List<String> retrieved = new ArrayList<>();
         ResultSet rs = dmd.getTableTypes();
         while (rs.next()) {
             retrieved.add(rs.getString(1));
         }
 
-        assertEquals(expected, retrieved, "Unexpected result for getTableTypes");
+        assertEquals(getExpectedTableTypes(), retrieved, "Unexpected result for getTableTypes");
+    }
+
+    private static List<String> getExpectedTableTypes() {
+        return getDefaultSupportInfo().supportsGlobalTemporaryTables()
+                ? Arrays.asList(GLOBAL_TEMPORARY, SYSTEM_TABLE, TABLE, VIEW)
+                : Arrays.asList(SYSTEM_TABLE, TABLE, VIEW);
+    }
+
+    @Test
+    void testGetTableTypeNames() throws Exception {
+        List<String> retrieved = Arrays.asList(dmd.unwrap(FirebirdDatabaseMetaData.class).getTableTypeNames());
+
+        assertEquals(getExpectedTableTypes(), retrieved, "Unexpected result for getTableTypeNames");
     }
 
     @Test
