@@ -355,8 +355,8 @@ or reported on the issue tracker <https://github.com/FirebirdSQL/jaybird/issues/
 Supported Firebird versions
 ---------------------------
 
-Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.9, and
-4.0.1, but should also support other Firebird versions from 2.5 and up.
+Jaybird @VERSION_WO_TARGET@ was tested against Firebird 2.5.9, 3.0.10, and
+4.0.2, but should also support other Firebird versions from 2.5 and up.
 
 Formal support for Firebird 2.0 and 2.1 has been dropped (although in general we 
 expect the driver to work). The Type 2 and embedded server JDBC drivers use JNA to
@@ -383,8 +383,8 @@ Jaybird 4 supports the extended numeric precision types introduced after
 Firebird 4 beta 1 (4.0.0.1436), you will need version 4.0.0.1604 to be able to
 use `NUMERIC` or `DECIMAL` with a precision higher than 18.
 
-Jaybird does not support the ChaCha wire encryption plugin. This may be added in
-a future major or point release.
+Jaybird does not support the ChaCha and ChaCha64 wire encryption plugins. This 
+may be added in a future major or point release.
 
 Supported Java versions
 -----------------------
@@ -392,11 +392,9 @@ Supported Java versions
 Jaybird 4 supports Java 7 (JDBC 4.1), Java 8 (JDBC 4.2), and Java 9 and higher 
 (JDBC 4.3). Support for earlier Java versions has been dropped.
 
-Given the limited support period for Java 9 and higher versions, we will limit
-support on those versions to the most recent LTS version and the latest release.
-As of December 2021, we support Java 11 and Java 17. For the time being, both 
-Java 11 and Java 17 are supported, but support for Java 11 may be dropped in 
-a future point release.
+Given the limited support period for Java 9 and higher versions, we limit 
+support to Java 8, 11, 17 and the most recent LTS version after Java 17 and 
+the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
 
 Jaybird 4 provides libraries for Java 7, Java 8 and Java 11. The Java 8 builds 
 have the same source and all JDBC 4.3 related functionality and can be used on
@@ -643,10 +641,8 @@ Jaybird needs the `java.xml.bind` module, where the Java 8 and higher versions
 do not need that module.
 
 Given the limited support period for Java 9 and higher versions, we limit 
-support on those versions to the most recent LTS version and the latest release.
-As of December 2021, we support Java 11 and Java 17. For the time being, both
-Java 11 and Java 17 are supported, but support for Java 11 may be dropped in
-a future point release.
+support to Java 8, 11, 17 and the most recent LTS version after Java 17 and 
+the latest Java release. Currently, that means we support Java 8, 11, 17 and 19.
 
 For compatibility with Java 9 modules, Jaybird defines the automatic module name 
 `org.firebirdsql.jaybird`. This guarantees a stable module name for Jaybird, and 
@@ -696,7 +692,8 @@ made some preparations to support this. If you want to develop such a plugin,
 contact us on the Firebird-Java mailing list so we can work out the details of 
 adding plugin support.
 
-The new ChaCha wire encryption introduced in Firebird 4 is not yet supported.
+The new ChaCha and ChaCha64 wire encryption introduced in Firebird 4 is not yet 
+supported.
 
 **WARNING**
 
@@ -1158,8 +1155,7 @@ special values.
 
 11. Retrieving as `boolean` will return `true` for `1` (exactly `1E+0`) and
 `false` for **all other values**. Be aware that this means that `1.0E+0` (or 
-`10E-1`) etc will be **`false`** (_this may change before Jaybird 4 final to 
-`getLong() == 1L` or similar, which truncates the value_). 
+`10E-1`) etc will be **`false`**. 
 
     This behavior may change in the future and only allow `0` for `false` and 
 exactly `1` for `true` and throw an `SQLException` for all other values, or 
@@ -1177,8 +1173,8 @@ cause. Out of range values are handled as described in [Precision and range](#pr
 with extra support for the special values mentioned in the previous note.
 
 14. As mentioned in earlier notes, support for the special values is under
-discussion, and may be removed in the final Jaybird 4 or Firebird 4 release,
-or might change in future versions.
+discussion, and may be removed or change in future versions of Jaybird 
+and/or Firebird.
 
 15. Getting as `BigInteger` will behave as `BigDecimal.toBigInteger()`, which
 discards the fractional part (rounding by truncation), and may add 
@@ -1540,7 +1536,7 @@ In addition to the standard-defined types, it also supports the type names
 Firebird 4 statement timeout support
 ------------------------------------
 
-Supports was added for Firebird 4 statement timeouts through 
+Support was added for Firebird 4 statement timeouts through 
 `java.sql.setQueryTimeout`. On Firebird 3 and earlier or a native connection
 with a Firebird 3 or earlier client library, the timeout is silently ignored.
 
@@ -2395,9 +2391,7 @@ Jaybird 5 will drop support for Java 7.
 
 ### Dropping support for Java 8 (tentative) ###
 
-Jaybird 5 may drop support for Java 8, depending on the actual release timeline.
-
-This decision is not final yet.
+Jaybird 5 will continue to support Java 8.
 
 ### Dropping JCA support ###
 
