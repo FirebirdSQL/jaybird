@@ -246,7 +246,7 @@
                 <!-- test dependencies for Java 8 and higher -->
                 <exclude name="objenesis-3.0.1.jar" if:set="jdbc.41"/>
                 <exclude name="jmock-imposters-2.10.0-RC3.jar" if:set="jdbc.41"/>
-                <exclude name="byte-buddy-1.10.22.jar" if:set="jdbc.41"/>
+                <exclude name="byte-buddy-1.12.18.jar" if:set="jdbc.41"/>
             </fileset>
         </path>
 

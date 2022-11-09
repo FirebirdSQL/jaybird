@@ -20,7 +20,7 @@
 	<classpathentry kind="lib" path="src/lib/antlr-runtime-4.7.2.jar"/>
 	<classpathentry kind="lib" path="src/lib/jna-5.5.0.jar"/>
 	<classpathentry kind="lib" path="src/lib/servlet-api.jar"/>
-	<classpathentry kind="lib" path="lib/test/byte-buddy-1.10.22.jar"/>
+	<classpathentry kind="lib" path="lib/test/byte-buddy-1.12.18.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-2.10.0-RC3.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-imposters-2.10.0-RC3.jar"/>
 	<classpathentry kind="lib" path="lib/test/jmock-junit4-2.10.0-RC3.jar"/>
