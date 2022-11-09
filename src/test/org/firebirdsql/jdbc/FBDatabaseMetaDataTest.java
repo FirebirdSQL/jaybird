@@ -894,19 +894,11 @@ public class FBDatabaseMetaDataTest {
         case "1.8":
             expectedMinor = 2;
             break;
-        case "9":
-        case "10":
-        case "11":
-        case "12":
-        case "13":
-        case "14":
-        case "15":
-        case "16":
-        case "17":
-            expectedMinor = 3;
-            break;
         default:
-            throw new AssertionError("Unexpected java.specification.version: " + javaVersion + " revise test case");
+            if (javaVersion.startsWith("1.")) {
+                throw new AssertionError("Unexpected java.specification.version: " + javaVersion + " revise test case");
+            }
+            expectedMinor = 3;
         }
 
         assertEquals("JDBCMinorVersion", expectedMinor, dmd.getJDBCMinorVersion());
