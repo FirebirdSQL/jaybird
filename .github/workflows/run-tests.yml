@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: juarezr/firebirdsql-github-action@v1.1.1
+      - uses: juarezr/firebirdsql-github-action@v1.2.0
         with:
           version: 'v4.0'
           isc_password: 'masterkey'
@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+        uses: gradle/wrapper-validation-action@55e685c48d84285a5b0418cd094606e199cca3b6
       - name: Build with Gradle
         run: ./gradlew test -PbuildProfile=java11 -Ptest.dbondocker=true -Ptest.db.dir=/firebird/data
       - name: Cleanup Gradle Cache
