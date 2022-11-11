@@ -510,10 +510,12 @@ public final class FirebirdSupportInfo {
             return 40;
         } else if (databaseMajorVersion == 2 && databaseMinorVersion == 5) {
             return 42;
-        } else if (databaseMajorVersion == 3 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 3) {
             return 50;
-        } else if (databaseMajorVersion == 4 && databaseMinorVersion == 0) {
+        } else if (databaseMajorVersion == 4) {
             return 54;
+        } else if (databaseMajorVersion == 5) {
+            return 56;
         } else {
             return -1;
         }
