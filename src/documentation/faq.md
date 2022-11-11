@@ -47,7 +47,7 @@ Jaybird 4 is available from Maven central:
 
 Groupid: `org.firebirdsql.jdbc`, \
 Artifactid: `jaybird`, \
-Version: `4.0.6.javaXX` (where `XX` is `7`, `8` or `11`)
+Version: `4.0.7.javaXX` (where `XX` is `7`, `8` or `11`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with
 artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`). However, we
@@ -59,7 +59,7 @@ For example, for Java 8:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.6.java8</version>
+    <version>4.0.7.java8</version>
 </dependency>
 ~~~
 
@@ -71,7 +71,7 @@ dependency:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.6.java8</version>
+    <version>4.0.7.java8</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
