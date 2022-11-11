@@ -386,6 +386,17 @@ use `NUMERIC` or `DECIMAL` with a precision higher than 18.
 Jaybird does not support the ChaCha and ChaCha64 wire encryption plugins. This 
 may be added in a future major or point release.
 
+### Notes on Firebird 5 support
+
+Jaybird 4 does not provide full support for Firebird 5.0. In general, it offers
+support at the Firebird 4.0 feature set, but there are some caveats. 
+
+Most notably, the generated-keys support will not work for DML statements that 
+now use multi-row `RETURNING` (all DML except `insert ... values (..) returning ...`).
+Full support for multi-row `RETURNING` with generated-keys will be provided in 
+Jaybird 5. As a workaround, use `executeQuery()` with an explicit `RETURNING`
+clause.
+
 Supported Java versions
 -----------------------
 
