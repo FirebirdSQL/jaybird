@@ -21,7 +21,6 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
 import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
@@ -57,7 +56,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @since 5
  */
 @InternalApi
-public abstract class GetTables {
+public abstract class GetTables extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLES").addField()
@@ -80,41 +79,31 @@ public abstract class GetTables {
                     .at(0).simple(SQL_VARYING, 31, "TABLE_TYPE", "TABLETYPES").addField()
                     .toRowDescriptor();
 
-    private final DbMetadataMediator mediator;
-
     private GetTables(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see java.sql.DatabaseMetaData#getTables(String, String, String, String[])
      */
-    @SuppressWarnings("unused")
-    public final ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
-            throws SQLException {
+    public final ResultSet getTables(String tableNamePattern, String[] types) throws SQLException {
         if ("".equals(tableNamePattern) || types != null && types.length == 0) {
             // Matching table name not possible
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetTablesQuery(tableNamePattern, toTypesSet(types));
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                valueBuilder
-                        .at(2).setString(rs.getString("TABLE_NAME"))
-                        .at(3).setString(rs.getString("TABLE_TYPE"))
-                        .at(4).setString(rs.getString("REMARKS"))
-                        .at(10).setString(rs.getString("OWNER_NAME"));
-                rows.add(valueBuilder.toRowValue(true));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        valueBuilder
+                .at(2).setString(rs.getString("TABLE_NAME"))
+                .at(3).setString(rs.getString("TABLE_TYPE"))
+                .at(4).setString(rs.getString("REMARKS"))
+                .at(10).setString(rs.getString("OWNER_NAME"));
+        return valueBuilder.toRowValue(true);
     }
 
     public final ResultSet getTableTypes() throws SQLException {
@@ -151,10 +140,11 @@ public abstract class GetTables {
 
     public static GetTables create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(2, 5)) {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         } else {
-            return new FB2_1(mediator);
+            return FB2_1.createInstance(mediator);
         }
     }
 
@@ -184,6 +174,10 @@ public abstract class GetTables {
 
         private FB2_1(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetTables createInstance(DbMetadataMediator mediator) {
+            return new FB2_1(mediator);
         }
 
         @Override
@@ -257,6 +251,10 @@ public abstract class GetTables {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetTables createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override

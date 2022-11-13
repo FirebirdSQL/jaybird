@@ -933,6 +933,8 @@ The replacement only trims trailing spaces.
 ** `getWantsSystemTables(String[])` -- there is no replacement
 ** `getWantsTables(String[])` -- there is no replacement
 ** `getWantsViews(String[])` -- there is no replacement
+* `RowValueBuilder` was moved to another package and (will be) made package private
+// TODO Change once refactor of FBDatabaseMetaData is complete
 
 [#breaking-changes-statement-state]
 ==== Additional statement state `PREPARING`

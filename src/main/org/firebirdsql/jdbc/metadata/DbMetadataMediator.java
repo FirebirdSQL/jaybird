@@ -61,34 +61,6 @@ public abstract class DbMetadataMediator {
      */
     protected abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
 
-    byte[] createInt(int intValue) {
-        return datatypeCoder.encodeInt(intValue);
-    }
-
-    byte[] createInt(Number intValue) {
-        return intValue == null ? null : createInt(intValue.intValue());
-    }
-
-    byte[] createShort(int shortValue) {
-        return datatypeCoder.encodeShort(shortValue);
-    }
-
-    byte[] createShort(Number shortValue) {
-        return shortValue == null ? null : createShort(shortValue.intValue());
-    }
-
-    byte[] createString(String value) {
-        return value != null ? value.getBytes(StandardCharsets.UTF_8) : null;
-    }
-
-    /**
-     * @deprecated Use {@link #createString(String)} instead; provided for ease of migration from FBDatabaseMetaData
-     */
-    @Deprecated
-    byte[] getBytes(String value) {
-        return createString(value);
-    }
-
     /**
      * Holder class for query text and parameters.
      */

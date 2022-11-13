@@ -21,18 +21,10 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
@@ -50,7 +42,7 @@ import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public final class GetColumnPrivileges {
+public final class GetColumnPrivileges extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNPRIV").addField()
@@ -91,17 +83,16 @@ public final class GetColumnPrivileges {
             "\norder by RF.RDB$FIELD_NAME, UP.RDB$PRIVILEGE, UP.RDB$USER";
     //@formatter:on
 
-    private final DbMetadataMediator mediator;
-
     GetColumnPrivileges(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
-    @SuppressWarnings("unused")
-    public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
-            throws SQLException  {
+    /**
+     * @see java.sql.DatabaseMetaData#getColumnPrivileges(String, String, String, String) 
+     */
+    public ResultSet getColumnPrivileges(String table, String columnNamePattern) throws SQLException  {
         if (table == null || "".equals(columnNamePattern)) {
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
         Clause tableClause = Clause.equalsClause("RF.RDB$RELATION_NAME", table);
         Clause columnNameClause = new Clause("RF.RDB$FIELD_NAME", columnNamePattern);
@@ -111,32 +102,22 @@ public final class GetColumnPrivileges {
                 + columnNameClause.getCondition(false)
                 + GET_COLUMN_PRIVILEGES_END;
         MetadataQuery metadataQuery = new MetadataQuery(sql, Clause.parameters(tableClause, columnNameClause));
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            // TODO Consider moving caching of bytes into RowValueBuilder (or maybe a metadata-specific sub-class)
-            Map<String, byte[]> cachedBytes = new HashMap<>();
-            Function<String, byte[]> cache = value -> cachedBytes.computeIfAbsent(value, mediator::createString);
-
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                valueBuilder
-                        .at(0).set(null)
-                        .at(1).set(null)
-                        .at(2).set(cache.apply(rs.getString("TABLE_NAME")))
-                        .at(3).set(cache.apply(rs.getString("COLUMN_NAME")))
-                        .at(4).set(cache.apply(rs.getString("GRANTOR")))
-                        .at(5).set(cache.apply(rs.getString("GRANTEE")) )
-                        .at(6).set(cache.apply(mapPrivilege(rs.getString("PRIVILEGE"))))
-                        .at(7).set(cache.apply(rs.getBoolean("IS_GRANTABLE") ? "YES" : "NO"))
-                        .at(8).set(cache.apply(rs.getString("JB_GRANTEE_TYPE")));
-                rows.add(valueBuilder.toRowValue(false));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+    @Override
+    RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        valueBuilder
+                .at(0).set(null)
+                .at(1).set(null)
+                .at(2).setString(rs.getString("TABLE_NAME"))
+                .at(3).setString(rs.getString("COLUMN_NAME"))
+                .at(4).setString(rs.getString("GRANTOR"))
+                .at(5).setString(rs.getString("GRANTEE"))
+                .at(6).setString(mapPrivilege(rs.getString("PRIVILEGE")))
+                .at(7).setString(rs.getBoolean("IS_GRANTABLE") ? "YES" : "NO")
+                .at(8).setString(rs.getString("JB_GRANTEE_TYPE"));
+        return valueBuilder.toRowValue(false);
     }
 
     public static GetColumnPrivileges create(DbMetadataMediator mediator) {

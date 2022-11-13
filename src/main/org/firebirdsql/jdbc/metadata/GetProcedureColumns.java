@@ -21,18 +21,17 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
+import static java.sql.DatabaseMetaData.procedureColumnIn;
+import static java.sql.DatabaseMetaData.procedureColumnOut;
+import static java.sql.DatabaseMetaData.procedureNoNulls;
+import static java.sql.DatabaseMetaData.procedureNullable;
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
@@ -52,7 +51,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public abstract class GetProcedureColumns {
+public abstract class GetProcedureColumns extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(20, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "PROCEDURE_CAT", "COLUMNINFO").addField()
@@ -78,89 +77,73 @@ public abstract class GetProcedureColumns {
             .at(19).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "COLUMNINFO").addField()
             .toRowDescriptor();
 
-    private final DbMetadataMediator mediator;
-
     private GetProcedureColumns(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see DatabaseMetaData#getProcedureColumns(String, String, String, String) 
      */
-    @SuppressWarnings("unused")
-    public final ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
-            String columnNamePattern) throws SQLException {
+    public final ResultSet getProcedureColumns(String procedureNamePattern, String columnNamePattern)
+            throws SQLException {
         if ("".equals(procedureNamePattern) || "".equals(columnNamePattern)) {
             // Matching procedure name or column name not possible
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetProcedureColumnsQuery(procedureNamePattern, columnNamePattern);
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            // if nothing found, return an empty result set
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            byte[] procedureNoNulls = mediator.createShort(DatabaseMetaData.procedureNoNulls);
-            byte[] procedureNullable = mediator.createShort(DatabaseMetaData.procedureNullable);
-            byte[] procedureColumnIn = mediator.createShort(DatabaseMetaData.procedureColumnIn);
-            byte[] procedureColumnOut = mediator.createShort(DatabaseMetaData.procedureColumnOut);
-            byte[] yesBytes = mediator.createString("YES");
-            byte[] noBytes = mediator.createString("NO");
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        final short columnType = rs.getShort("COLUMN_TYPE");
+        // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent)
+        final short nullFlag = rs.getShort("NULL_FLAG");
+        TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
+                .fromCurrentRow(rs)
+                .build();
 
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                final short columnType = rs.getShort("COLUMN_TYPE");
-                // TODO: Find out what the difference is with NULL_FLAG in RDB$PROCEDURE_PARAMETERS (might be ODS dependent)
-                final short nullFlag = rs.getShort("NULL_FLAG");
-                TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
-                        .fromCurrentRow(rs)
-                        .build();
+        valueBuilder
+                .at(0).set(null)
+                .at(1).set(null)
+                .at(2).setString(rs.getString("PROCEDURE_NAME"))
+                .at(3).setString(rs.getString("COLUMN_NAME"))
+                // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
+                // TODO: ResultSet columns should not be first according to JDBC 4.3 description
+                .at(4).setShort(columnType == 0 ? procedureColumnIn : procedureColumnOut)
+                .at(5).setInt(typeMetadata.getJdbcType())
+                .at(6).setString(typeMetadata.getSqlTypeName())
+                .at(7).setInt(typeMetadata.getColumnSize())
+                .at(8).setInt(typeMetadata.getLength())
+                .at(9).setShort(typeMetadata.getScale())
+                .at(10).setShort(typeMetadata.getRadix())
+                .at(11).setShort(nullFlag == 1 ? procedureNoNulls : procedureNullable)
+                .at(12).setString(rs.getString("REMARKS"))
+                // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters)
+                .at(13).set(null)
+                // JDBC reserves 14 and 15 for future use and are always NULL
+                .at(14).set(null)
+                .at(15).set(null)
+                .at(16).setInt(typeMetadata.getCharOctetLength())
+                // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
+                .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
+                // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
+                .at(18).setString(nullFlag == 1 ? "NO" : "YES")
+                .at(19).set(valueBuilder.get(2));
 
-                valueBuilder
-                        .at(0).set(null)
-                        .at(1).set(null)
-                        .at(2).setString(rs.getString("PROCEDURE_NAME"))
-                        .at(3).setString(rs.getString("COLUMN_NAME"))
-                        // TODO: Unsure if procedureColumnOut is correct, maybe procedureColumnResult, or need ODS dependent use of RDB$PROCEDURE_TYPE to decide on selectable or executable?
-                        // TODO: ResultSet columns should not be first according to JDBC 4.3 description
-                        .at(4).set(columnType == 0 ? procedureColumnIn : procedureColumnOut)
-                        .at(5).setInt(typeMetadata.getJdbcType())
-                        .at(6).setString(typeMetadata.getSqlTypeName())
-                        .at(7).setInt(typeMetadata.getColumnSize())
-                        .at(8).setInt(typeMetadata.getLength())
-                        .at(9).setShort(typeMetadata.getScale())
-                        .at(10).setShort(typeMetadata.getRadix())
-                        .at(11).set(nullFlag == 1 ? procedureNoNulls : procedureNullable)
-                        .at(12).setString(rs.getString("REMARKS"))
-                        // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters)
-                        .at(13).set(null)
-                        // JDBC reserves 14 and 15 for future use and are always NULL
-                        .at(14).set(null)
-                        .at(15).set(null)
-                        .at(16).setInt(typeMetadata.getCharOctetLength())
-                        // TODO: Find correct value for ORDINAL_POSITION (+ order of columns and intent, see JDBC-229)
-                        .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
-                        // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
-                        .at(18).set(nullFlag == 1 ? noBytes : yesBytes)
-                        .at(19).set(valueBuilder.get(2));
-
-                rows.add(valueBuilder.toRowValue(false));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+        return valueBuilder.toRowValue(false);
     }
 
     abstract MetadataQuery createGetProcedureColumnsQuery(String procedureNamePattern, String columnNamePattern);
 
     public static GetProcedureColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new FB3(mediator);
+            return FB3.createInstance(mediator);
         } else {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         }
     }
 
@@ -189,6 +172,10 @@ public abstract class GetProcedureColumns {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetProcedureColumns createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override
@@ -233,6 +220,10 @@ public abstract class GetProcedureColumns {
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetProcedureColumns createInstance(DbMetadataMediator mediator) {
+            return new FB3(mediator);
         }
 
         @Override

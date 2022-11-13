@@ -21,20 +21,16 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
+import static java.sql.DatabaseMetaData.columnNoNulls;
+import static java.sql.DatabaseMetaData.columnNullable;
 import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
@@ -54,7 +50,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public abstract class GetColumns {
+public abstract class GetColumns extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(26, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
@@ -87,74 +83,57 @@ public abstract class GetColumns {
             .at(25).simple(SQL_VARYING, 10, "JB_IDENTITY_TYPE", "COLUMNINFO").addField()
             .toRowDescriptor();
 
-    private static final byte[] EMPTY_BYTES = new byte[0];
-
-    private final DbMetadataMediator mediator;
-
     private GetColumns(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see java.sql.DatabaseMetaData#getColumns(String, String, String, String)
      * @see org.firebirdsql.jdbc.FBDatabaseMetaData#getColumns(String, String, String, String) 
      */
-    public final ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern,
-            String columnNamePattern) throws SQLException {
+    public final ResultSet getColumns(String tableNamePattern, String columnNamePattern) throws SQLException {
         if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
             // Matching table name or column not possible
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetColumnsQuery(tableNamePattern, columnNamePattern);
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
-
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
-                        .fromCurrentRow(rs)
-                        .build();
-
-                byte[] columnNullable = mediator.createInt(DatabaseMetaData.columnNullable);
-                byte[] columnNoNulls = mediator.createInt(DatabaseMetaData.columnNoNulls);
-                byte[] yesBytes = mediator.createString("YES");
-                byte[] noBytes = mediator.createString("NO");
-
-                boolean isNullable = rs.getBoolean("IS_NULLABLE");
-                boolean isComputed = rs.getBoolean("IS_COMPUTED");
-                boolean isIdentity = rs.getBoolean("IS_IDENTITY");
-                valueBuilder
-                        .at(2).setString(rs.getString("RELATION_NAME"))
-                        .at(3).setString(rs.getString("FIELD_NAME"))
-                        .at(4).setInt(typeMetadata.getJdbcType())
-                        .at(5).setString(typeMetadata.getSqlTypeName())
-                        .at(6).setInt(typeMetadata.getColumnSize())
-                        .at(8).setInt(typeMetadata.getScale())
-                        .at(9).setInt(typeMetadata.getRadix())
-                        .at(10).set(isNullable ? columnNullable : columnNoNulls)
-                        .at(11).setString(rs.getString("REMARKS"))
-                        .at(12).setString(extractDefault(rs.getString("DEFAULT_SOURCE")))
-                        .at(15).setInt(typeMetadata.getCharOctetLength())
-                        .at(16).setInt(rs.getInt("FIELD_POSITION"))
-                        .at(17).set(isNullable ? yesBytes : noBytes)
-                        .at(22).set(getIsAutoIncrementValue(isIdentity, typeMetadata, yesBytes, noBytes))
-                        .at(23).set(isComputed || isIdentity ? yesBytes : noBytes)
-                        .at(24).set(isIdentity ? yesBytes : noBytes)
-                        .at(25).setString(rs.getString("JB_IDENTITY_TYPE"));
-                rows.add(valueBuilder.toRowValue(true));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+        return createMetaDataResultSet(metadataQuery);
     }
 
-    private byte[] getIsAutoIncrementValue(boolean isIdentity, TypeMetadata typeMetadata, byte[] yesBytes,
-            byte[] noBytes) {
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
+                .fromCurrentRow(rs)
+                .build();
+
+        boolean isNullable = rs.getBoolean("IS_NULLABLE");
+        boolean isComputed = rs.getBoolean("IS_COMPUTED");
+        boolean isIdentity = rs.getBoolean("IS_IDENTITY");
+        valueBuilder
+                .at(2).setString(rs.getString("RELATION_NAME"))
+                .at(3).setString(rs.getString("FIELD_NAME"))
+                .at(4).setInt(typeMetadata.getJdbcType())
+                .at(5).setString(typeMetadata.getSqlTypeName())
+                .at(6).setInt(typeMetadata.getColumnSize())
+                .at(8).setInt(typeMetadata.getScale())
+                .at(9).setInt(typeMetadata.getRadix())
+                .at(10).setInt(isNullable ? columnNullable : columnNoNulls)
+                .at(11).setString(rs.getString("REMARKS"))
+                .at(12).setString(extractDefault(rs.getString("DEFAULT_SOURCE")))
+                .at(15).setInt(typeMetadata.getCharOctetLength())
+                .at(16).setInt(rs.getInt("FIELD_POSITION"))
+                .at(17).setString(isNullable ? "YES" : "NO")
+                .at(22).setString(getIsAutoIncrementValue(isIdentity, typeMetadata))
+                .at(23).setString(isComputed || isIdentity ? "YES" : "NO")
+                .at(24).setString(isIdentity ? "YES" : "NO")
+                .at(25).setString(rs.getString("JB_IDENTITY_TYPE"));
+        return valueBuilder.toRowValue(true);
+    }
+
+    private String getIsAutoIncrementValue(boolean isIdentity, TypeMetadata typeMetadata) {
         if (isIdentity) {
-            return yesBytes;
+            return "YES";
         }
         switch (typeMetadata.getJdbcType()) {
         case Types.INTEGER:
@@ -162,18 +141,18 @@ public abstract class GetColumns {
         case Types.BIGINT:
         case Types.SMALLINT:
             // Could be autoincrement by trigger, but we simply don't know
-            return EMPTY_BYTES;
+            return "";
         case Types.NUMERIC:
         case Types.DECIMAL:
             if (Objects.equals(typeMetadata.getScale(), 0) && typeMetadata.getType() != int128_type) {
                 // Could be autoincrement by trigger, but we simply don't know
-                return EMPTY_BYTES;
+                return "";
             }
             // Scaled NUMERIC/DECIMAL or INT128-based: definitely not autoincrement
-            return noBytes;
+            return "NO";
         default:
             // All other types are never autoincrement
-            return noBytes;
+            return "NO";
         }
     }
 
@@ -194,10 +173,11 @@ public abstract class GetColumns {
 
     public static GetColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new FB3(mediator);
+            return FB3.createInstance(mediator);
         } else {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         }
     }
 
@@ -229,6 +209,10 @@ public abstract class GetColumns {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetColumns createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override
@@ -273,6 +257,10 @@ public abstract class GetColumns {
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetColumns createInstance(DbMetadataMediator mediator) {
+            return new FB3(mediator);
         }
 
         @Override

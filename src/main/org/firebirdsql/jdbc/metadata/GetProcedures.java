@@ -21,8 +21,6 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
@@ -30,10 +28,9 @@ import org.firebirdsql.util.InternalApi;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
+import static java.sql.DatabaseMetaData.procedureNoResult;
+import static java.sql.DatabaseMetaData.procedureReturnsResult;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
@@ -45,7 +42,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @since 5
  */
 @InternalApi
-public abstract class GetProcedures {
+public abstract class GetProcedures extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(9, DbMetadataMediator.datatypeCoder)
@@ -61,53 +58,41 @@ public abstract class GetProcedures {
                     .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "PROCEDURES").addField()
                     .toRowDescriptor();
 
-    private final DbMetadataMediator mediator;
-
     private GetProcedures(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see DatabaseMetaData#getProcedures(String, String, String) 
      */
-    @SuppressWarnings("unused")
-    public final ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
-            throws SQLException {
+    public final ResultSet getProcedures(String procedureNamePattern) throws SQLException {
         if ("".equals(procedureNamePattern)) {
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetProceduresQuery(procedureNamePattern);
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            byte[] procedureNoResult = mediator.createShort(DatabaseMetaData.procedureNoResult);
-            byte[] procedureReturnsResult = mediator.createShort(DatabaseMetaData.procedureReturnsResult);
-
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                valueBuilder
-                        .at(2).setString(rs.getString("PROCEDURE_NAME"))
-                        .at(6).setString(rs.getString("REMARKS"))
-                        .at(7).set(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
-                        .at(8).set(valueBuilder.get(2));
-                rows.add(valueBuilder.toRowValue(true));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        valueBuilder
+                .at(2).setString(rs.getString("PROCEDURE_NAME"))
+                .at(6).setString(rs.getString("REMARKS"))
+                .at(7).setShort(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
+                .at(8).set(valueBuilder.get(2));
+        return valueBuilder.toRowValue(true);
     }
 
     abstract MetadataQuery createGetProceduresQuery(String procedureNamePattern);
 
     public static GetProcedures create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new FB3(mediator);
+            return FB3.createInstance(mediator);
         } else {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         }
     }
 
@@ -126,6 +111,10 @@ public abstract class GetProcedures {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetProcedures createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override
@@ -156,6 +145,10 @@ public abstract class GetProcedures {
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetProcedures createInstance(DbMetadataMediator mediator) {
+            return new FB3(mediator);
         }
 
         @Override

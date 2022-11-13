@@ -21,19 +21,14 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
+import static java.sql.DatabaseMetaData.functionNoTable;
 import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
@@ -45,7 +40,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
  * @since 4.0
  */
 @InternalApi
-public abstract class GetFunctions {
+public abstract class GetFunctions extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
@@ -64,50 +59,38 @@ public abstract class GetFunctions {
                     .at(10).simple(SQL_VARYING | 1, 255, "JB_ENGINE_NAME", "FUNCTIONS").addField()
                     .toRowDescriptor();
 
-    private final DbMetadataMediator mediator;
-
     private GetFunctions(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see java.sql.DatabaseMetaData#getFunctions(String, String, String)
      */
-    @SuppressWarnings("unused")
-    public final ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
-            throws SQLException {
+    public final ResultSet getFunctions(String functionNamePattern) throws SQLException {
         if ("".equals(functionNamePattern)) {
             // Matching function name not possible
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetFunctionsQuery(functionNamePattern);
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            final byte[] functionNoTableBytes = mediator.createShort(DatabaseMetaData.functionNoTable);
-            do {
-                byte[] functionNameBytes = mediator.createString(rs.getString("FUNCTION_NAME"));
-                valueBuilder
-                        .at(0).set(null)
-                        .at(1).set(null)
-                        .at(2).set(functionNameBytes)
-                        .at(3).set(mediator.createString(rs.getString("REMARKS")))
-                        .at(4).set(functionNoTableBytes)
-                        .at(5).set(functionNameBytes)
-                        .at(6).set(mediator.createString(rs.getString("JB_FUNCTION_SOURCE")))
-                        .at(7).set(mediator.createString(rs.getString("JB_FUNCTION_KIND")))
-                        .at(8).set(mediator.createString(rs.getString("JB_MODULE_NAME")))
-                        .at(9).set(mediator.createString(rs.getString("JB_ENTRYPOINT")))
-                        .at(10).set(mediator.createString(rs.getString("JB_ENGINE_NAME")));
-                rows.add(valueBuilder.toRowValue(false));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        valueBuilder
+                .at(0).set(null)
+                .at(1).set(null)
+                .at(2).setString(rs.getString("FUNCTION_NAME"))
+                .at(3).setString(rs.getString("REMARKS"))
+                .at(4).setShort(functionNoTable)
+                .at(5).setString(rs.getString("FUNCTION_NAME"))
+                .at(6).setString(rs.getString("JB_FUNCTION_SOURCE"))
+                .at(7).setString(rs.getString("JB_FUNCTION_KIND"))
+                .at(8).setString(rs.getString("JB_MODULE_NAME"))
+                .at(9).setString(rs.getString("JB_ENTRYPOINT"))
+                .at(10).setString(rs.getString("JB_ENGINE_NAME"));
+        return valueBuilder.toRowValue(false);
     }
 
     abstract MetadataQuery createGetFunctionsQuery(String functionNamePattern);
@@ -121,10 +104,11 @@ public abstract class GetFunctions {
      */
     public static GetFunctions create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new FB3(mediator);
+            return FB3.createInstance(mediator);
         } else {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         }
     }
 
@@ -151,6 +135,10 @@ public abstract class GetFunctions {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetFunctions createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override
@@ -192,6 +180,10 @@ public abstract class GetFunctions {
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetFunctions createInstance(DbMetadataMediator mediator) {
+            return new FB3(mediator);
         }
 
         @Override

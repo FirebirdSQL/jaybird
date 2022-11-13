@@ -18,6 +18,8 @@
  */
 package org.firebirdsql.gds.ng.fields;
 
+import org.firebirdsql.jdbc.metadata.RowValueBuilder;
+
 import java.util.Arrays;
 
 /**
@@ -116,7 +118,7 @@ public class RowValue {
     /**
      * Initializes uninitialized fields with {@code null}.
      */
-    final void initializeFields() {
+    public final void initializeFields() {
         for (int idx = 0; idx < fieldData.length; idx++) {
             if (fieldData[idx] == NOT_INITIALIZED) {
                 fieldData[idx] = null;
@@ -155,7 +157,7 @@ public class RowValue {
     /**
      * Convenience method for populating a row value from a RowDescriptor and byte arrays.
      * <p>
-     * Note this method, and the similar {@link org.firebirdsql.gds.ng.fields.RowValueBuilder} are mainly intended for
+     * Note this method, and the similar {@link RowValueBuilder} are mainly intended for
      * use in {@link org.firebirdsql.jdbc.FBDatabaseMetaData}.
      * </p>
      * <p>
@@ -170,7 +172,7 @@ public class RowValue {
      * @return new {@code RowValue} object
      * @throws IllegalArgumentException
      *         If the {@code rowData} byte array count does not match field count of the row descriptor
-     * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
+     * @see RowValueBuilder
      */
     public static RowValue of(RowDescriptor rowDescriptor, byte[]... rowData) {
         final int size = rowDescriptor.getCount();
@@ -209,7 +211,7 @@ public class RowValue {
      * @param rowData
      *         An array of byte arrays with the field data.
      * @return new {@code RowValue} object
-     * @see org.firebirdsql.gds.ng.fields.RowValueBuilder
+     * @see RowValueBuilder
      * @see #of(RowDescriptor, byte[][])
      */
     public static RowValue of(byte[]... rowData) {

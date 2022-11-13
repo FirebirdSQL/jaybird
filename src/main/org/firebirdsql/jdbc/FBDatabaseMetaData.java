@@ -28,7 +28,7 @@ import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
+import org.firebirdsql.jdbc.metadata.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
@@ -1178,15 +1178,14 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern)
             throws SQLException {
-        return GetProcedures.create(getDbMetadataMediator())
-                .getProcedures(catalog, schemaPattern, procedureNamePattern);
+        return GetProcedures.create(getDbMetadataMediator()).getProcedures(procedureNamePattern);
     }
 
     @Override
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern,
             String columnNamePattern) throws SQLException {
         return GetProcedureColumns.create(getDbMetadataMediator())
-                .getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern);
+                .getProcedureColumns(procedureNamePattern, columnNamePattern);
     }
 
     public static final String TABLE = "TABLE";
@@ -1197,7 +1196,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
-        return createGetTablesInstance().getTables(catalog, schemaPattern, tableNamePattern, types);
+        return createGetTablesInstance().getTables(tableNamePattern, types);
     }
 
     private GetTables createGetTablesInstance() {
@@ -1257,8 +1256,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern)
             throws SQLException {
-        return GetColumns.create(getDbMetadataMediator())
-                .getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern);
+        return GetColumns.create(getDbMetadataMediator()).getColumns(tableNamePattern, columnNamePattern);
     }
 
     private static final Map<String, byte[]> PRIVILEGE_MAPPING;
@@ -1309,8 +1307,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnNamePattern)
             throws SQLException {
-        return GetColumnPrivileges.create(getDbMetadataMediator())
-                .getColumnPrivileges(catalog, schema, table, columnNamePattern);
+        return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(table, columnNamePattern);
     }
 
     private static final String GET_TABLE_PRIVILEGES_START = "select "
@@ -2446,7 +2443,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
             String columnNamePattern) throws SQLException {
         return GetFunctionColumns.create(getDbMetadataMediator())
-                .getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern);
+                .getFunctionColumns(functionNamePattern, columnNamePattern);
     }
 
     /**
@@ -2472,7 +2469,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getFunctions(String catalog, String schemaPattern, String functionNamePattern)
             throws SQLException {
-        return GetFunctions.create(getDbMetadataMediator()).getFunctions(catalog, schemaPattern, functionNamePattern);
+        return GetFunctions.create(getDbMetadataMediator()).getFunctions(functionNamePattern);
     }
 
     @Override

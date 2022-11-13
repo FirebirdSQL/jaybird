@@ -16,9 +16,14 @@
  *
  * All rights reserved.
  */
-package org.firebirdsql.gds.ng.fields;
+package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.fields.RowDescriptor;
+import org.firebirdsql.gds.ng.fields.RowValue;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Builder for {@link RowValue} instances.
@@ -34,10 +39,14 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[][])
  */
-public class RowValueBuilder {
+public final class RowValueBuilder {
+
+    // TODO Make package private once all references in org.firebirdsql.jdbc are gone
 
     private final RowDescriptor rowDescriptor;
     private final DatatypeCoder datatypeCoder;
+    // The number of 50 for number of encoded strings to cache is pretty much an arbitrary choice
+    private final LruEncodedStringCache stringCache = new LruEncodedStringCache(50);
     private RowValue rowValue;
 
     private int currentIndex;
@@ -101,7 +110,7 @@ public class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setInt(int value) {
+    RowValueBuilder setInt(int value) {
         return set(datatypeCoder.encodeInt(value));
     }
 
@@ -113,8 +122,12 @@ public class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setInt(Number value) {
-        return set(value != null ? datatypeCoder.encodeInt(value.intValue()) : null);
+    RowValueBuilder setInt(Number value) {
+        if (value != null) {
+            return setInt(value.intValue());
+        } else {
+            return set(null);
+        }
     }
 
     /**
@@ -126,8 +139,8 @@ public class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    public RowValueBuilder setShort(int value) {
-        return set(datatypeCoder.encodeShort(value));
+    RowValueBuilder setShort(int value) {
+        return setShort((short) value);
     }
 
     /**
@@ -139,8 +152,12 @@ public class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    public RowValueBuilder setShort(Number value) {
-        return set(value != null ? datatypeCoder.encodeShort(value.intValue()) : null);
+    RowValueBuilder setShort(Number value) {
+        if (value != null) {
+            return setShort(value.shortValue());
+        } else {
+            return set(null);
+        }
     }
 
     /**
@@ -152,7 +169,7 @@ public class RowValueBuilder {
      * @see #setShort(int)
      * @since 5
      */
-    public RowValueBuilder setShort(short value) {
+    RowValueBuilder setShort(short value) {
         return set(datatypeCoder.encodeShort(value));
     }
 
@@ -164,8 +181,10 @@ public class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setString(String value) {
-        return set(value != null ? datatypeCoder.encodeString(value) : null);
+    RowValueBuilder setString(String value) {
+        return set(value != null
+                ? stringCache.computeIfAbsent(value, key -> datatypeCoder.encodeString((String) key))
+                : null);
     }
 
     /**
@@ -227,4 +246,19 @@ public class RowValueBuilder {
         }
     }
 
+    private static class LruEncodedStringCache extends LinkedHashMap<String, byte[]> {
+
+        private static final long serialVersionUID = -901927526404254328L;
+        private final int maxCapacity;
+
+        private LruEncodedStringCache(int maxCapacity) {
+            super(maxCapacity, 0.75f, true);
+            this.maxCapacity = maxCapacity;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, byte[]> eldest) {
+            return size() > maxCapacity;
+        }
+    }
 }

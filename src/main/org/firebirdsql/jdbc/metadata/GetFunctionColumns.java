@@ -21,22 +21,22 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.gds.ng.fields.RowValueBuilder;
-import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.DbMetadataMediator.MetadataQuery;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
+import static java.sql.DatabaseMetaData.functionColumnIn;
+import static java.sql.DatabaseMetaData.functionNoNulls;
+import static java.sql.DatabaseMetaData.functionNullable;
+import static java.sql.DatabaseMetaData.functionReturn;
+import static org.firebirdsql.gds.ISCConstants.SQL_LONG;
+import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
+import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.Clause.anyCondition;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.TypeMetadata.CHARSET_ID;
 import static org.firebirdsql.jdbc.metadata.TypeMetadata.CHAR_LEN;
 import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_LENGTH;
@@ -52,7 +52,7 @@ import static org.firebirdsql.jdbc.metadata.TypeMetadata.FIELD_TYPE;
  * @since 4.0
  */
 @InternalApi
-public abstract class GetFunctionColumns {
+public abstract class GetFunctionColumns extends AbstractMetadataMethod {
 
     private static final RowDescriptor ROW_DESCRIPTOR =
             new RowDescriptorBuilder(17, DbMetadataMediator.datatypeCoder)
@@ -76,78 +76,62 @@ public abstract class GetFunctionColumns {
                     .at(16).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SPECIFIC_NAME", "FUNCTION_COLUMNS").addField()
                     .toRowDescriptor();
 
-    private final DbMetadataMediator mediator;
-
     private GetFunctionColumns(DbMetadataMediator mediator) {
-        this.mediator = mediator;
+        super(ROW_DESCRIPTOR, mediator);
     }
 
     /**
      * @see java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)
      */
-    @SuppressWarnings("unused")
-    public final ResultSet getFunctionColumns(String catalog, String schemaPattern, String functionNamePattern,
-            String columnNamePattern) throws SQLException {
+    public final ResultSet getFunctionColumns(String functionNamePattern, String columnNamePattern)
+            throws SQLException {
         if ("".equals(functionNamePattern) || "".equals(columnNamePattern)) {
             // Matching function name or column name not possible
-            return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
+            return createEmpty();
         }
 
         MetadataQuery metadataQuery = createGetFunctionColumnsQuery(functionNamePattern, columnNamePattern);
-        try (ResultSet rs = mediator.performMetaDataQuery(metadataQuery)) {
-            if (!rs.next()) {
-                return new FBResultSet(ROW_DESCRIPTOR, Collections.emptyList());
-            }
+        return createMetaDataResultSet(metadataQuery);
+    }
 
-            final byte[] functionColumnIn = mediator.createShort(DatabaseMetaData.functionColumnIn);
-            final byte[] functionColumnReturn = mediator.createShort(DatabaseMetaData.functionReturn);
-            final byte[] functionNoNulls = mediator.createShort(DatabaseMetaData.functionNoNulls);
-            final byte[] functionNullable = mediator.createShort(DatabaseMetaData.functionNullable);
-            final byte[] nullableYes = mediator.createString("YES");
-            final byte[] nullableNo = mediator.createString("NO");
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(ROW_DESCRIPTOR);
-            do {
-                byte[] functionNameBytes = mediator.createString(rs.getString("FUNCTION_NAME"));
-                TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
-                        .fromCurrentRow(rs)
-                        .build();
-                int ordinalPosition = rs.getInt("ORDINAL_POSITION");
-                boolean nullable = rs.getBoolean("IS_NULLABLE");
-                valueBuilder
-                        .at(0).set(null)
-                        .at(1).set(null)
-                        .at(2).set(functionNameBytes)
-                        .at(3).set(mediator.createString(rs.getString("COLUMN_NAME")))
-                        .at(4).set(ordinalPosition == 0 ? functionColumnReturn : functionColumnIn)
-                        .at(5).set(mediator.createInt(typeMetadata.getJdbcType()))
-                        .at(6).set(mediator.createString(typeMetadata.getSqlTypeName()))
-                        .at(7).set(mediator.createInt(typeMetadata.getColumnSize()))
-                        .at(8).set(mediator.createInt(typeMetadata.getLength()))
-                        .at(9).set(mediator.createShort(typeMetadata.getScale()))
-                        .at(10).set(mediator.createShort(typeMetadata.getRadix()))
-                        .at(11).set(nullable ? functionNullable : functionNoNulls)
-                        // No remarks on parameters possible
-                        .at(12).set(null)
-                        .at(13).set(mediator.createInt(typeMetadata.getCharOctetLength()))
-                        .at(14).set(mediator.createInt(ordinalPosition))
-                        .at(15).set(nullable ? nullableYes : nullableNo)
-                        .at(16).set(functionNameBytes);
-                rows.add(valueBuilder.toRowValue(false));
-            } while (rs.next());
-            return new FBResultSet(ROW_DESCRIPTOR, rows);
-        }
+    @Override
+    final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
+        TypeMetadata typeMetadata = TypeMetadata.builder(mediator.getFirebirdSupportInfo())
+                .fromCurrentRow(rs)
+                .build();
+        int ordinalPosition = rs.getInt("ORDINAL_POSITION");
+        boolean nullable = rs.getBoolean("IS_NULLABLE");
+        valueBuilder
+                .at(0).set(null)
+                .at(1).set(null)
+                .at(2).setString(rs.getString("FUNCTION_NAME"))
+                .at(3).setString(rs.getString("COLUMN_NAME"))
+                .at(4).setShort(ordinalPosition == 0 ? functionReturn : functionColumnIn)
+                .at(5).setInt(typeMetadata.getJdbcType())
+                .at(6).setString(typeMetadata.getSqlTypeName())
+                .at(7).setInt(typeMetadata.getColumnSize())
+                .at(8).setInt(typeMetadata.getLength())
+                .at(9).setShort(typeMetadata.getScale())
+                .at(10).setShort(typeMetadata.getRadix())
+                .at(11).setShort(nullable ? functionNullable : functionNoNulls)
+                // No remarks on parameters possible
+                .at(12).set(null)
+                .at(13).setInt(typeMetadata.getCharOctetLength())
+                .at(14).setInt(ordinalPosition)
+                .at(15).setString(nullable ? "YES" : "NO")
+                .at(16).setString(rs.getString("FUNCTION_NAME"));
+        return valueBuilder.toRowValue(false);
     }
 
     abstract MetadataQuery createGetFunctionColumnsQuery(String functionNamePattern, String columnNamePattern);
 
     public static GetFunctionColumns create(DbMetadataMediator mediator) {
         FirebirdSupportInfo firebirdSupportInfo = mediator.getFirebirdSupportInfo();
+        // NOTE: Indirection through static method prevents unnecessary classloading
         if (firebirdSupportInfo.isVersionEqualOrAbove(3, 0)) {
-            return new FB3(mediator);
+            return FB3.createInstance(mediator);
         } else {
-            return new FB2_5(mediator);
+            return FB2_5.createInstance(mediator);
         }
     }
 
@@ -189,6 +173,10 @@ public abstract class GetFunctionColumns {
 
         private FB2_5(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetFunctionColumns createInstance(DbMetadataMediator mediator) {
+            return new FB2_5(mediator);
         }
 
         @Override
@@ -249,6 +237,10 @@ public abstract class GetFunctionColumns {
 
         private FB3(DbMetadataMediator mediator) {
             super(mediator);
+        }
+
+        private static GetFunctionColumns createInstance(DbMetadataMediator mediator) {
+            return new FB3(mediator);
         }
 
         @Override
