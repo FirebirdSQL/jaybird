@@ -44,8 +44,6 @@ import java.util.*;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
-import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataType;
-import static org.firebirdsql.jdbc.metadata.TypeMetadata.getDataTypeName;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
 /**
@@ -1309,25 +1307,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(tableNamePattern);
     }
 
-    //@formatter:off
-    private static final String GET_BEST_ROW_IDENT =
-            "SELECT " +
-            "rf.rdb$field_name AS column_name," +
-            "f.rdb$field_type AS field_type," +
-            "f.rdb$field_sub_type AS field_sub_type," +
-            "f.rdb$field_scale AS field_scale," +
-            "f.rdb$field_precision AS field_precision," +
-            "f.RDB$CHARACTER_SET_ID " +
-            "FROM rdb$relation_constraints rc " +
-            "INNER JOIN rdb$index_segments idx ON idx.rdb$index_name = rc.rdb$index_name " +
-            "INNER JOIN rdb$relation_fields rf ON rf.rdb$field_name = idx.rdb$field_name " +
-            "    AND rf.rdb$relation_name = rc.rdb$relation_name " +
-            "INNER JOIN rdb$fields f ON f.rdb$field_name = rf.rdb$field_source " +
-            "WHERE " +
-            "rc.rdb$relation_name = " + OBJECT_NAME_PARAMETER +
-            "AND rc.rdb$constraint_type = 'PRIMARY KEY'";
-    //@formatter:on
-
     /**
      * {@inheritDoc}
      * <p>
@@ -1343,85 +1322,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable)
             throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
-                .at(0).simple(SQL_SHORT, 0, "SCOPE", "ROWIDENTIFIER").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "ROWIDENTIFIER").addField()
-                .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "ROWIDENTIFIER").addField()
-                .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "ROWIDENTIFIER").addField()
-                .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "ROWIDENTIFIER").addField()
-                .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "ROWIDENTIFIER").addField()
-                .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "ROWIDENTIFIER").addField()
-                .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "ROWIDENTIFIER").addField()
-                .toRowDescriptor();
-
-        final RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
-
-        final List<RowValue> rows = getPrimaryKeyIdentifier(table, rowValueBuilder);
-
-        // if no primary key exists, add RDB$DB_KEY as pseudo-column
-        if (rows.size() == 0) {
-            // NOTE: Currently is always ROWID_VALID_TRANSACTION
-            final RowIdLifetime rowIdLifetime = getRowIdLifetime();
-            if (rowIdLifetime == RowIdLifetime.ROWID_VALID_TRANSACTION && scope == DatabaseMetaData.bestRowSession) {
-                // consider RDB$DB_KEY scope transaction
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "RDB$DB\\_KEY")) {
-                if (!pseudoColumns.next()) {
-                    return new FBResultSet(rowDescriptor, Collections.emptyList());
-                }
-                rows.add(rowValueBuilder
-                        .at(0).set(createShort(
-                                rowIdLifetime == RowIdLifetime.ROWID_VALID_TRANSACTION
-                                        ? DatabaseMetaData.bestRowTransaction
-                                        : DatabaseMetaData.bestRowSession))
-                        .at(1).set(getBytes("RDB$DB_KEY"))
-                        .at(2).set(createInt(Types.ROWID))
-                        .at(3).set(getBytes(getDataTypeName(char_type, 0, CS_BINARY)))
-                        .at(4).set(createInt(pseudoColumns.getInt(6)))
-                        .at(7).set(createShort(DatabaseMetaData.bestRowPseudo))
-                        .toRowValue(true));
-            }
-        }
-
-        return new FBResultSet(rowDescriptor, rows);
-    }
-
-    /**
-     * Get primary key of the table as best row identifier.
-     *
-     * @param table
-     *         name of the table.
-     * @param valueBuilder
-     *         Builder for row values
-     * @return list of result set values, when empty, no primary key has been defined for a table or the table does not
-     * exist. The returned list can be modified by caller if needed.
-     * @throws SQLException
-     *         if something went wrong.
-     */
-    private List<RowValue> getPrimaryKeyIdentifier(String table, final RowValueBuilder valueBuilder)
-            throws SQLException {
-        try (ResultSet rs = doQuery(GET_BEST_ROW_IDENT, Collections.singletonList(table))) {
-            final List<RowValue> rows = new ArrayList<>();
-            while (rs.next()) {
-                short fieldType = rs.getShort("FIELD_TYPE");
-                short fieldSubType = rs.getShort("FIELD_SUB_TYPE");
-                short fieldScale = rs.getShort("FIELD_SCALE");
-                int characterSetId = rs.getInt("RDB$CHARACTER_SET_ID");
-                rows.add(valueBuilder
-                        .at(0).set(createShort(DatabaseMetaData.bestRowSession))
-                        .at(1).set(getBytes(rs.getString("COLUMN_NAME")))
-                        .at(2).set(createShort(getDataType(fieldType, fieldSubType, fieldScale, characterSetId)))
-                        .at(3).set(getBytes(getDataTypeName(fieldType, fieldSubType, fieldScale)))
-                        .at(4).set(createInt(rs.getInt("FIELD_PRECISION")))
-                        .at(6).set(createShort(fieldScale))
-                        .at(7).set(createShort(bestRowNotPseudo))
-                        .toRowValue(true)
-                );
-            }
-            return rows;
-        }
+        return GetBestRowIdentifier.create(getDbMetadataMediator())
+                .getBestRowIdentifier(catalog, schema, table, scope, nullable);
     }
 
     /**
@@ -2785,6 +2687,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         @Override
         protected ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException {
             return doQuery(metadataQuery.getQueryText(), metadataQuery.getParameters(), metadataQuery.isStandalone());
+        }
+
+        @Override
+        protected FBDatabaseMetaData getMetaData() {
+            return FBDatabaseMetaData.this;
         }
     }
 }

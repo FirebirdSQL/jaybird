@@ -21,6 +21,7 @@ package org.firebirdsql.jdbc.metadata;
 import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
+import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.util.FirebirdSupportInfo;
 import org.firebirdsql.util.InternalApi;
 
@@ -60,6 +61,13 @@ public abstract class DbMetadataMediator {
      *         For failures to execute the query
      */
     protected abstract ResultSet performMetaDataQuery(MetadataQuery metadataQuery) throws SQLException;
+
+    /**
+     * A {@code FBDatabaseMetaData} instance of the connection that created this mediator.
+     *
+     * @return metadata instance
+     */
+    protected abstract FBDatabaseMetaData getMetaData();
 
     /**
      * Holder class for query text and parameters.
