@@ -1339,48 +1339,8 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(8, datatypeCoder)
-                .at(0).simple(SQL_SHORT, 0, "SCOPE", "VERSIONCOL").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "VERSIONCOL").addField()
-                .at(2).simple(SQL_LONG, 0, "DATA_TYPE", "VERSIONCOL").addField()
-                .at(3).simple(SQL_VARYING, 31, "TYPE_NAME", "VERSIONCOL").addField()
-                .at(4).simple(SQL_LONG, 0, "COLUMN_SIZE", "VERSIONCOL").addField()
-                .at(5).simple(SQL_LONG, 0, "BUFFER_LENGTH", "VERSIONCOL").addField()
-                .at(6).simple(SQL_SHORT, 0, "DECIMAL_DIGITS", "VERSIONCOL").addField()
-                .at(7).simple(SQL_SHORT, 0, "PSEUDO_COLUMN", "VERSIONCOL").addField()
-                .toRowDescriptor();
-
-        if (table == null || "".equals(table)) {
-            return new FBResultSet(rowDescriptor, Collections.emptyList());
-        }
-
-        try (ResultSet pseudoColumns = getPseudoColumns(catalog, schema, escapeWildcards(table), "%")) {
-            if (!pseudoColumns.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            List<RowValue> rowValues = new ArrayList<>(2);
-            RowValueBuilder rowValueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                String columnName = pseudoColumns.getString(4);
-                boolean isDbKey = "RDB$DB_KEY".equals(columnName);
-                boolean isRecordVersion = !isDbKey && "RDB$RECORD_VERSION".equals(columnName);
-                // Protect against future addition of other pseudo columns
-                if (!(isDbKey || isRecordVersion)) continue;
-
-                rowValueBuilder
-                        .at(1).set(getBytes(columnName))
-                        .at(2).set(createInt(pseudoColumns.getInt(5)))
-                        .at(3).set(getBytes(isDbKey ? "CHAR" : "BIGINT"))
-                        .at(4).set(createInt(pseudoColumns.getInt(6)))
-                        .at(5).set(createInt(isDbKey ? pseudoColumns.getInt(11) : 8))
-                        .at(6).set(isRecordVersion ? SHORT_ZERO : null)
-                        .at(7).set(createShort(DatabaseMetaData.versionColumnPseudo));
-                rowValues.add(rowValueBuilder.toRowValue(true));
-            } while (pseudoColumns.next());
-
-            return new FBResultSet(rowDescriptor, rowValues);
-        }
+        return GetVersionColumns.create(getDbMetadataMediator())
+                .getVersionColumns(catalog, schema, table);
     }
 
     private static final String GET_PRIMARY_KEYS = "select "
