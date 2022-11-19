@@ -28,7 +28,7 @@ import java.util.Map;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-final class PrivilegeMapping {
+public final class PrivilegeMapping {
 
     private static final Map<String, String> PRIVILEGE_MAPPING;
     static {
@@ -65,7 +65,7 @@ final class PrivilegeMapping {
      *         Firebird privilege character
      * @return privilege name or {@code "UNKNOWN"} when the privilege is not known
      */
-    static String mapPrivilege(String firebirdPrivilege) {
+    public static String mapPrivilege(String firebirdPrivilege) {
         return PRIVILEGE_MAPPING.getOrDefault(firebirdPrivilege, "UNKNOWN");
     }
 }

@@ -21,10 +21,11 @@ package org.firebirdsql.jdbc.oo;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.Clause;
 import org.firebirdsql.jdbc.FBConnection;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
 import org.firebirdsql.jdbc.FBResultSet;
+import org.firebirdsql.jdbc.metadata.Clause;
+import org.firebirdsql.jdbc.metadata.RowValueBuilder;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,6 +35,8 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
+import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
+import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
@@ -44,6 +47,8 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
     }
 
     private static final String DEFAULT_SCHEMA = "DEFAULT";
+
+    // TODO Rewrite OO metadata methods as special variant of the org.firebirdsql.jdbc.metadata implementations
 
     @Override
     public ResultSet getSchemas() throws SQLException {
@@ -168,10 +173,38 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
         try (ResultSet rs = doQuery(sql, params)) {
             // if nothing found, return an empty result set
             if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.<RowValue>emptyList());
+                return new FBResultSet(rowDescriptor, Collections.emptyList());
             }
 
             return processTablePrivileges(rowDescriptor, rs);
         }
+    }
+
+    private RowDescriptor buildTablePrivilegeRSMetaData() {
+        return new RowDescriptorBuilder(7, datatypeCoder)
+                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLEPRIV").addField()
+                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLEPRIV").addField()
+                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLEPRIV").addField()
+                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "TABLEPRIV").addField()
+                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "TABLEPRIV").addField()
+                .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV").addField()
+                .at(6).simple(SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV").addField()
+                .toRowDescriptor();
+    }
+
+    private FBResultSet processTablePrivileges(final RowDescriptor rowDescriptor, final ResultSet fbTablePrivileges) throws SQLException {
+        final List<RowValue> rows = new ArrayList<>();
+        final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
+        do {
+            rows.add(valueBuilder
+                    .at(2).setString(fbTablePrivileges.getString("TABLE_NAME"))
+                    .at(3).setString(fbTablePrivileges.getString("GRANTOR"))
+                    .at(4).setString(fbTablePrivileges.getString("GRANTEE"))
+                    .at(5).setString(mapPrivilege(fbTablePrivileges.getString("PRIVILEGE")))
+                    .at(6).setString(fbTablePrivileges.getShort("IS_GRANTABLE") == 0 ? "NO" : "YES")
+                    .toRowValue(true)
+            );
+        } while (fbTablePrivileges.next());
+        return new FBResultSet(rowDescriptor, rows);
     }
 }

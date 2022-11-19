@@ -98,12 +98,12 @@ public abstract class GetTables extends AbstractMetadataMethod {
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
-        valueBuilder
+        return valueBuilder
                 .at(2).setString(rs.getString("TABLE_NAME"))
                 .at(3).setString(rs.getString("TABLE_TYPE"))
                 .at(4).setString(rs.getString("REMARKS"))
-                .at(10).setString(rs.getString("OWNER_NAME"));
-        return valueBuilder.toRowValue(true);
+                .at(10).setString(rs.getString("OWNER_NAME"))
+                .toRowValue(true);
     }
 
     public final ResultSet getTableTypes() throws SQLException {

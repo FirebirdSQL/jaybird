@@ -110,7 +110,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    RowValueBuilder setInt(int value) {
+    public RowValueBuilder setInt(int value) {
         return set(datatypeCoder.encodeInt(value));
     }
 
@@ -122,7 +122,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    RowValueBuilder setInt(Number value) {
+    public RowValueBuilder setInt(Number value) {
         if (value != null) {
             return setInt(value.intValue());
         } else {
@@ -139,7 +139,7 @@ public final class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    RowValueBuilder setShort(int value) {
+    public RowValueBuilder setShort(int value) {
         return setShort((short) value);
     }
 
@@ -152,7 +152,7 @@ public final class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    RowValueBuilder setShort(Number value) {
+    public RowValueBuilder setShort(Number value) {
         if (value != null) {
             return setShort(value.shortValue());
         } else {
@@ -169,7 +169,7 @@ public final class RowValueBuilder {
      * @see #setShort(int)
      * @since 5
      */
-    RowValueBuilder setShort(short value) {
+    public RowValueBuilder setShort(short value) {
         return set(datatypeCoder.encodeShort(value));
     }
 
@@ -181,7 +181,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    RowValueBuilder setString(String value) {
+    public RowValueBuilder setString(String value) {
         return set(value != null
                 ? stringCache.computeIfAbsent(value, key -> datatypeCoder.encodeString((String) key))
                 : null);

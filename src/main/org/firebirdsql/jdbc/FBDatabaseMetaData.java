@@ -67,7 +67,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private static final byte[] TRUE_BYTES = getBytes("T");
     private static final byte[] FALSE_BYTES = getBytes("F");
-    private static final byte[] YES_BYTES = getBytes("YES");
     private static final byte[] NO_BYTES = getBytes("NO");
     private static final byte[] CASESENSITIVE = TRUE_BYTES;
     private static final byte[] CASEINSENSITIVE = FALSE_BYTES;
@@ -1259,30 +1258,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetColumns.create(getDbMetadataMediator()).getColumns(tableNamePattern, columnNamePattern);
     }
 
-    private static final Map<String, byte[]> PRIVILEGE_MAPPING;
-    static {
-        Map<String, byte[]> tempMapping = new HashMap<>();
-        tempMapping.put("A", getBytes("ALL"));
-        tempMapping.put("S", getBytes("SELECT"));
-        tempMapping.put("D", getBytes("DELETE"));
-        tempMapping.put("I", getBytes("INSERT"));
-        tempMapping.put("U", getBytes("UPDATE"));
-        tempMapping.put("R", getBytes("REFERENCE")); // TODO: JDBC apidoc specifies REFRENCES (yes: typo and + S)
-        tempMapping.put("M", getBytes("MEMBEROF"));
-        PRIVILEGE_MAPPING = Collections.unmodifiableMap(tempMapping);
-    }
-
-    /**
-     * Maps the (one character) Firebird privilege to the equivalent JDBC privilege.
-     *
-     * @param firebirdPrivilege
-     *         Firebird privilege
-     * @return JDBC privilege encoded as byte array
-     */
-    private static byte[] mapPrivilege(String firebirdPrivilege) {
-        return PRIVILEGE_MAPPING.get(firebirdPrivilege);
-    }
-
     /**
      * {@inheritDoc}
      *
@@ -1310,70 +1285,28 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetColumnPrivileges.create(getDbMetadataMediator()).getColumnPrivileges(table, columnNamePattern);
     }
 
-    private static final String GET_TABLE_PRIVILEGES_START = "select "
-        + "RDB$RELATION_NAME as TABLE_NAME,"
-        + "RDB$GRANTOR as GRANTOR,"
-        + "RDB$USER as GRANTEE,"
-        + "RDB$PRIVILEGE as PRIVILEGE,"
-        + "RDB$GRANT_OPTION as IS_GRANTABLE "
-        + "from"
-        + " RDB$USER_PRIVILEGES "
-        + "where ";
-    private static final String GET_TABLE_PRIVILEGES_END = " RDB$OBJECT_TYPE = 0 and"
-        + " RDB$FIELD_NAME is null "
-        + "order by 1, 4";
-
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Jaybird defines an additional column:
+     * <ol start="8">
+     * <li><b>JB_GRANTEE_TYPE</b> String  =&gt; Object type of {@code GRANTEE} (<b>NOTE: Jaybird specific column;
+     * retrieve by name!</b>).</li>
+     * </ol>
+     * </p>
+     * <p>
+     * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
+     * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
+     * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles. This note does not
+     * apply to the {@code OOREMOTE} sub-protocol, which already restricts privileges to the current user and
+     * {@code PUBLIC}.
+     * </p>
+     */
     @Override
     public ResultSet getTablePrivileges(String catalog, String schemaPattern, String tableNamePattern)
             throws SQLException {
-        final RowDescriptor rowDescriptor = buildTablePrivilegeRSMetaData();
-
-        Clause tableClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-
-        String sql = GET_TABLE_PRIVILEGES_START;
-        sql += tableClause.getCondition();
-        sql += GET_TABLE_PRIVILEGES_END;
-
-        List<String> params = tableClause.hasCondition()
-                ? Collections.singletonList(tableClause.getValue())
-                : Collections.emptyList();
-
-        try (ResultSet rs = doQuery(sql, params)) {
-            // if nothing found, return an empty result set
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            return processTablePrivileges(rowDescriptor, rs);
-        }
-    }
-
-    protected final RowDescriptor buildTablePrivilegeRSMetaData() {
-        return new RowDescriptorBuilder(7, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLEPRIV").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLEPRIV").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLEPRIV").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTOR", "TABLEPRIV").addField()
-                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "TABLEPRIV").addField()
-                .at(5).simple(SQL_VARYING, 31, "PRIVILEGE", "TABLEPRIV").addField()
-                .at(6).simple(SQL_VARYING, 31, "IS_GRANTABLE", "TABLEPRIV").addField()
-                .toRowDescriptor();
-    }
-
-    protected final FBResultSet processTablePrivileges(final RowDescriptor rowDescriptor, final ResultSet fbTablePrivileges) throws SQLException {
-        final List<RowValue> rows = new ArrayList<>();
-        final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-        do {
-            rows.add(valueBuilder
-                    .at(2).set(getBytes(fbTablePrivileges.getString("TABLE_NAME")))
-                    .at(3).set(getBytes(fbTablePrivileges.getString("GRANTOR")))
-                    .at(4).set(getBytes(fbTablePrivileges.getString("GRANTEE")))
-                    .at(5).set(mapPrivilege(fbTablePrivileges.getString("PRIVILEGE")))
-                    .at(6).set(fbTablePrivileges.getShort("IS_GRANTABLE") == 0 ? NO_BYTES : YES_BYTES)
-                    .toRowValue(true)
-            );
-        } while (fbTablePrivileges.next());
-        return new FBResultSet(rowDescriptor, rows);
+        return GetTablePrivileges.create(getDbMetadataMediator()).getTablePrivileges(tableNamePattern);
     }
 
     //@formatter:off

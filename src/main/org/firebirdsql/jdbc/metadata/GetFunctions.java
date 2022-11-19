@@ -78,7 +78,7 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
-        valueBuilder
+        return valueBuilder
                 .at(0).set(null)
                 .at(1).set(null)
                 .at(2).setString(rs.getString("FUNCTION_NAME"))
@@ -89,8 +89,8 @@ public abstract class GetFunctions extends AbstractMetadataMethod {
                 .at(7).setString(rs.getString("JB_FUNCTION_KIND"))
                 .at(8).setString(rs.getString("JB_MODULE_NAME"))
                 .at(9).setString(rs.getString("JB_ENTRYPOINT"))
-                .at(10).setString(rs.getString("JB_ENGINE_NAME"));
-        return valueBuilder.toRowValue(false);
+                .at(10).setString(rs.getString("JB_ENGINE_NAME"))
+                .toRowValue(false);
     }
 
     abstract MetadataQuery createGetFunctionsQuery(String functionNamePattern);

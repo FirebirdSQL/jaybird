@@ -476,14 +476,6 @@ class FBDatabaseMetaDataTest {
     }
 
     @Test
-    void testGetTablePrivileges() throws Exception {
-        try (ResultSet rs = dmd.getTablePrivileges(null, null, "%")) {
-            assertNotNull(rs, "No result set returned from getTablePrivileges");
-            // TODO Actual test?
-        }
-    }
-
-    @Test
     void testGetTypeInfo() throws Exception {
         try (ResultSet rs = dmd.getTypeInfo()) {
             assertNotNull(rs, "No result set returned from getTypeInfo");

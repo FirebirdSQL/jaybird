@@ -53,7 +53,7 @@ public final class GetColumnPrivileges extends AbstractMetadataMethod {
             .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "GRANTEE", "COLUMNPRIV").addField()
             .at(6).simple(SQL_VARYING, 31, "PRIVILEGE", "COLUMNPRIV").addField()
             .at(7).simple(SQL_VARYING, 3, "IS_GRANTABLE", "COLUMNPRIV").addField()
-            .at(8).simple(SQL_VARYING, 63, "JB_GRANTEE_TYPE", "COLUMNPRIV").addField()
+            .at(8).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "JB_GRANTEE_TYPE", "COLUMNPRIV").addField()
             .toRowDescriptor();
 
     //@formatter:off
@@ -107,7 +107,7 @@ public final class GetColumnPrivileges extends AbstractMetadataMethod {
 
     @Override
     RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
-        valueBuilder
+        return valueBuilder
                 .at(0).set(null)
                 .at(1).set(null)
                 .at(2).setString(rs.getString("TABLE_NAME"))
@@ -116,8 +116,8 @@ public final class GetColumnPrivileges extends AbstractMetadataMethod {
                 .at(5).setString(rs.getString("GRANTEE"))
                 .at(6).setString(mapPrivilege(rs.getString("PRIVILEGE")))
                 .at(7).setString(rs.getBoolean("IS_GRANTABLE") ? "YES" : "NO")
-                .at(8).setString(rs.getString("JB_GRANTEE_TYPE"));
-        return valueBuilder.toRowValue(false);
+                .at(8).setString(rs.getString("JB_GRANTEE_TYPE"))
+                .toRowValue(false);
     }
 
     public static GetColumnPrivileges create(DbMetadataMediator mediator) {

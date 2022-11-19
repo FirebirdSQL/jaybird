@@ -110,7 +110,7 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         boolean isNullable = rs.getBoolean("IS_NULLABLE");
         boolean isComputed = rs.getBoolean("IS_COMPUTED");
         boolean isIdentity = rs.getBoolean("IS_IDENTITY");
-        valueBuilder
+        return valueBuilder
                 .at(2).setString(rs.getString("RELATION_NAME"))
                 .at(3).setString(rs.getString("FIELD_NAME"))
                 .at(4).setInt(typeMetadata.getJdbcType())
@@ -127,8 +127,8 @@ public abstract class GetColumns extends AbstractMetadataMethod {
                 .at(22).setString(getIsAutoIncrementValue(isIdentity, typeMetadata))
                 .at(23).setString(isComputed || isIdentity ? "YES" : "NO")
                 .at(24).setString(isIdentity ? "YES" : "NO")
-                .at(25).setString(rs.getString("JB_IDENTITY_TYPE"));
-        return valueBuilder.toRowValue(true);
+                .at(25).setString(rs.getString("JB_IDENTITY_TYPE"))
+                .toRowValue(true);
     }
 
     private String getIsAutoIncrementValue(boolean isIdentity, TypeMetadata typeMetadata) {

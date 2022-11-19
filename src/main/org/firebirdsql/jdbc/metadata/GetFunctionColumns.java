@@ -101,7 +101,7 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
                 .build();
         int ordinalPosition = rs.getInt("ORDINAL_POSITION");
         boolean nullable = rs.getBoolean("IS_NULLABLE");
-        valueBuilder
+        return valueBuilder
                 .at(0).set(null)
                 .at(1).set(null)
                 .at(2).setString(rs.getString("FUNCTION_NAME"))
@@ -119,8 +119,8 @@ public abstract class GetFunctionColumns extends AbstractMetadataMethod {
                 .at(13).setInt(typeMetadata.getCharOctetLength())
                 .at(14).setInt(ordinalPosition)
                 .at(15).setString(nullable ? "YES" : "NO")
-                .at(16).setString(rs.getString("FUNCTION_NAME"));
-        return valueBuilder.toRowValue(false);
+                .at(16).setString(rs.getString("FUNCTION_NAME"))
+                .toRowValue(false);
     }
 
     abstract MetadataQuery createGetFunctionColumnsQuery(String functionNamePattern, String columnNamePattern);

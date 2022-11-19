@@ -76,12 +76,12 @@ public abstract class GetProcedures extends AbstractMetadataMethod {
 
     @Override
     final RowValue createMetadataRow(ResultSet rs, RowValueBuilder valueBuilder) throws SQLException {
-        valueBuilder
+        return valueBuilder
                 .at(2).setString(rs.getString("PROCEDURE_NAME"))
                 .at(6).setString(rs.getString("REMARKS"))
                 .at(7).setShort(rs.getShort("PROCEDURE_TYPE") == 0 ? procedureNoResult : procedureReturnsResult)
-                .at(8).set(valueBuilder.get(2));
-        return valueBuilder.toRowValue(true);
+                .at(8).set(valueBuilder.get(2))
+                .toRowValue(true);
     }
 
     abstract MetadataQuery createGetProceduresQuery(String procedureNamePattern);

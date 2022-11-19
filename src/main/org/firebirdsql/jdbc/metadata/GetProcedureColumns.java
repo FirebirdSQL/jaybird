@@ -104,7 +104,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 .fromCurrentRow(rs)
                 .build();
 
-        valueBuilder
+        return valueBuilder
                 .at(0).set(null)
                 .at(1).set(null)
                 .at(2).setString(rs.getString("PROCEDURE_NAME"))
@@ -130,9 +130,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 .at(17).setInt(rs.getInt("PARAMETER_NUMBER"))
                 // TODO: Find out if there is a conceptual difference with NULLABLE (idx 11)
                 .at(18).setString(nullFlag == 1 ? "NO" : "YES")
-                .at(19).set(valueBuilder.get(2));
-
-        return valueBuilder.toRowValue(false);
+                .at(19).set(valueBuilder.get(2))
+                .toRowValue(false);
     }
 
     abstract MetadataQuery createGetProcedureColumnsQuery(String procedureNamePattern, String columnNamePattern);
