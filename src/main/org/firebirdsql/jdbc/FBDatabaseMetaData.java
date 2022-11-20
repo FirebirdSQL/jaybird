@@ -56,23 +56,14 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
-    // Extra space to allow for longer patterns (avoids string right truncation errors)
-    private static final int OBJECT_NAME_PARAMETER_LENGTH = OBJECT_NAME_LENGTH + 10;
-    private static final String OBJECT_NAME_PARAMETER = "cast(? as varchar(" + OBJECT_NAME_PARAMETER_LENGTH + ")) ";
 
     protected static final DatatypeCoder datatypeCoder =
             DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
-    private static final byte[] TRUE_BYTES = getBytes("T");
-    private static final byte[] FALSE_BYTES = getBytes("F");
     private static final byte[] NO_BYTES = getBytes("NO");
     private static final byte[] INT_ZERO = createInt(0);
-    private static final byte[] SHORT_ONE = createShort(1);
     private static final byte[] RADIX_TEN = createInt(10);
     private static final byte[] BIGINT_PRECISION = createInt(FbMetadataConstants.BIGINT_PRECISION);
-    private static final byte[] TABLE_INDEX_OTHER = createShort(DatabaseMetaData.tableIndexOther);
-    private static final byte[] ASC_BYTES = getBytes("A");
-    private static final byte[] DESC_BYTES = getBytes("D");
 
     private final GDSHelper gdsHelper;
     private final FBConnection connection;
@@ -1336,18 +1327,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Function to convert integer values to encoded byte arrays for shorts.
-     *
-     * @param value
-     *         integer value to convert
-     * @return encoded byte array representing the value
-     */
-    private static byte[] createShort(int value) {
-        assert (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) : String.format("Value \"%d\" outside range of short", value);
-        return datatypeCoder.encodeShort(value);
-    }
-
-    /**
      * Function to convert integer values to encoded byte arrays for integers.
      *
      * @param value
@@ -1363,87 +1342,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetTypeInfo.create(getDbMetadataMediator()).getTypeInfo();
     }
 
-    private static final String GET_INDEX_INFO = "SELECT "
-        + " ind.RDB$RELATION_NAME AS TABLE_NAME"
-        + ",ind.RDB$UNIQUE_FLAG AS UNIQUE_FLAG"
-        + ",ind.RDB$INDEX_NAME as INDEX_NAME"
-        + ",ise.rdb$field_position + 1 as ORDINAL_POSITION"
-        + ",ise.rdb$field_name as COLUMN_NAME"
-        + ",ind.RDB$EXPRESSION_SOURCE as EXPRESSION_SOURCE"
-        + ",ind.RDB$INDEX_TYPE as ASC_OR_DESC "
-        + "FROM "
-        + "rdb$indices ind "
-        + "LEFT JOIN rdb$index_segments ise ON ind.rdb$index_name = ise.rdb$index_name "
-        + "WHERE "
-        + "ind.rdb$relation_name = " + OBJECT_NAME_PARAMETER
-        + "ORDER BY 2, 3, 4";
-
     @Override
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate)
             throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(13, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "INDEXINFO").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "INDEXINFO").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "INDEXINFO").addField()
-                .at(3).simple(SQL_TEXT, 1, "NON_UNIQUE", "INDEXINFO").addField()
-                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_QUALIFIER", "INDEXINFO").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "INDEX_NAME", "INDEXINFO").addField()
-                .at(6).simple(SQL_SHORT, 0, "TYPE", "INDEXINFO").addField()
-                .at(7).simple(SQL_SHORT, 0, "ORDINAL_POSITION", "INDEXINFO").addField()
-                // Field with EXPRESSION_SOURCE (used for expression indexes) in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(8).simple(SQL_VARYING, Integer.MAX_VALUE, "COLUMN_NAME", "INDEXINFO").addField()
-                .at(9).simple(SQL_VARYING, 31, "ASC_OR_DESC", "INDEXINFO").addField()
-                .at(10).simple(SQL_LONG, 0, "CARDINALITY", "INDEXINFO").addField()
-                .at(11).simple(SQL_LONG, 0, "PAGES", "INDEXINFO").addField()
-                .at(12).simple(SQL_VARYING, 31, "FILTER_CONDITION", "INDEXINFO").addField()
-                .toRowDescriptor();
-
-        List<String> params = Collections.singletonList(table);
-
-        try (ResultSet rs = doQuery(GET_INDEX_INFO, params)) {
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                final boolean isNotUnique = rs.getInt("UNIQUE_FLAG") == 0;
-                if (unique && isNotUnique) {
-                    // Skip indices that are not unique, as requested
-                    continue;
-                }
-                valueBuilder
-                        .at(2).set(getBytes(rs.getString("TABLE_NAME")))
-                        .at(3).set(isNotUnique ? TRUE_BYTES : FALSE_BYTES)
-                        .at(5).set(getBytes(rs.getString("INDEX_NAME")))
-                        .at(6).set(TABLE_INDEX_OTHER);
-                String columnName = rs.getString("COLUMN_NAME");
-                if (rs.wasNull()) {
-                    valueBuilder.at(7).set(SHORT_ONE);
-                    String expressionSource = rs.getString("EXPRESSION_SOURCE");
-                    if (expressionSource != null) {
-                        valueBuilder.at(8).set(getBytes(expressionSource));
-                    }
-                } else {
-                    valueBuilder
-                            .at(7).set(createShort(rs.getShort("ORDINAL_POSITION")))
-                            .at(8).set(getBytes(columnName));
-                }
-                int ascOrDesc = rs.getInt("ASC_OR_DESC");
-                if (ascOrDesc == 0) {
-                    valueBuilder.at(9).set(ASC_BYTES);
-                } else if (ascOrDesc == 1) {
-                    valueBuilder.at(9).set(DESC_BYTES);
-                }
-                // NOTE: We are setting CARDINALITY and PAGES to NULL as we don't have this info; might contravene JDBC spec
-                // TODO index 10: use 1 / RDB$STATISTICS for approximation of CARDINALITY?
-                // TODO index 11: query RDB$PAGES for PAGES information?
-
-                rows.add(valueBuilder.toRowValue(true));
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetIndexInfo.create(getDbMetadataMediator()).getIndexInfo(table, unique, approximate);
     }
 
     @Override
