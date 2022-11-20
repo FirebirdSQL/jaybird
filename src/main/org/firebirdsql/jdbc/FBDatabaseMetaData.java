@@ -1343,50 +1343,9 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
                 .getVersionColumns(catalog, schema, table);
     }
 
-    private static final String GET_PRIMARY_KEYS = "select "
-        + "RC.RDB$RELATION_NAME as TABLE_NAME,"
-        + "ISGMT.RDB$FIELD_NAME as COLUMN_NAME,"
-        + "CAST((ISGMT.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ,"
-        + "RC.RDB$CONSTRAINT_NAME as PK_NAME "
-        + "from "
-        + "RDB$RELATION_CONSTRAINTS RC "
-        + "INNER JOIN RDB$INDEX_SEGMENTS ISGMT ON RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME "
-        + "where RC.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
-        + "and RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' "
-        + "order by ISGMT.RDB$FIELD_NAME ";
-
     @Override
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-        RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
-                .toRowDescriptor();
-
-        List<String> params = Collections.singletonList(table);
-
-        try (ResultSet rs = doQuery(GET_PRIMARY_KEYS, params)) {
-            // if nothing found, return empty result set
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                rows.add(valueBuilder
-                        .at(2).set(getBytes(rs.getString("TABLE_NAME")))
-                        .at(3).set(getBytes(rs.getString("COLUMN_NAME")))
-                        .at(4).set(createShort(rs.getShort("KEY_SEQ")))
-                        .at(5).set(getBytes(rs.getString("PK_NAME")))
-                        .toRowValue(true)
-                );
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
     }
 
     private static final String GET_IMPORTED_KEYS = "select "
