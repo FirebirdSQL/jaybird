@@ -1348,30 +1348,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
     }
 
-    private static final String GET_IMPORTED_KEYS = "select "
-    +" PK.RDB$RELATION_NAME as PKTABLE_NAME"
-    +",ISP.RDB$FIELD_NAME as PKCOLUMN_NAME"
-    +",FK.RDB$RELATION_NAME as FKTABLE_NAME"
-    +",ISF.RDB$FIELD_NAME as FKCOLUMN_NAME"
-    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
-    +",RC.RDB$UPDATE_RULE as UPDATE_RULE"
-    +",RC.RDB$DELETE_RULE as DELETE_RULE"
-    +",PK.RDB$CONSTRAINT_NAME as PK_NAME"
-    +",FK.RDB$CONSTRAINT_NAME as FK_NAME "
-    +"from "
-    +"RDB$RELATION_CONSTRAINTS PK"
-    +",RDB$RELATION_CONSTRAINTS FK"
-    +",RDB$REF_CONSTRAINTS RC"
-    +",RDB$INDEX_SEGMENTS ISP"
-    +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
-    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +"order by 1, 5 ";
-
     private static final Map<String, byte[]> ACTION_MAPPING;
     static {
         Map<String, byte[]> tempMap = new HashMap<>();
@@ -1396,50 +1372,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
-                .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
-                .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-                .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
-                .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
-                .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
-                .toRowDescriptor();
-
-        List<String> params = Collections.singletonList(table);
-
-        try (ResultSet rs = doQuery(GET_IMPORTED_KEYS, params)) {
-            // if nothing found, return an empty result set
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                rows.add(valueBuilder
-                        .at(2).set(getBytes(rs.getString("PKTABLE_NAME")))
-                        .at(3).set(getBytes(rs.getString("PKCOLUMN_NAME")))
-                        .at(6).set(getBytes(rs.getString("FKTABLE_NAME")))
-                        .at(7).set(getBytes(rs.getString("FKCOLUMN_NAME")))
-                        .at(8).set(createShort(rs.getShort("KEY_SEQ")))
-                        .at(9).set(mapAction(rs.getString("UPDATE_RULE")))
-                        .at(10).set(mapAction(rs.getString("DELETE_RULE")))
-                        .at(11).set(getBytes(rs.getString("FK_NAME")))
-                        .at(12).set(getBytes(rs.getString("PK_NAME")))
-                        .at(13).set(IMPORTED_KEY_NOT_DEFERRABLE)
-                        .toRowValue(true)
-                );
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(table);
     }
 
     private static final String GET_EXPORTED_KEYS = "select "

@@ -183,7 +183,7 @@ public final class RowValueBuilder {
      */
     public RowValueBuilder setString(String value) {
         return set(value != null
-                ? stringCache.computeIfAbsent(value, key -> datatypeCoder.encodeString((String) key))
+                ? stringCache.computeIfAbsent(value, datatypeCoder::encodeString)
                 : null);
     }
 

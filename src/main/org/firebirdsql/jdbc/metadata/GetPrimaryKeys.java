@@ -59,6 +59,7 @@ public final class GetPrimaryKeys extends AbstractMetadataMethod {
             + "  on RC.RDB$INDEX_NAME = ISGMT.RDB$INDEX_NAME\n"
             + "where RC.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'\n"
             + "and ";
+
     private static final String GET_PRIMARY_KEYS_END =
             "\norder by ISGMT.RDB$FIELD_NAME ";
     //@formatter:on
