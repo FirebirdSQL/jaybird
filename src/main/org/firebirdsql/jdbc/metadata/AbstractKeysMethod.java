@@ -31,7 +31,7 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 
 /**
- * Common implementation for {@link GetExportedKeys}, {@link GetImportedKeys}, and ...
+ * Common implementation for {@link GetExportedKeys}, {@link GetImportedKeys}, and {@link GetCrossReference}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5

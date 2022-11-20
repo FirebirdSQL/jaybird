@@ -95,11 +95,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     private static final byte[] TIMESTAMP_WITH_TIMEZONE_PRECISION = createInt(FbMetadataConstants.TIMESTAMP_WITH_TIMEZONE_PRECISION);
     private static final byte[] BOOLEAN_PRECISION = createInt(FbMetadataConstants.BOOLEAN_BINARY_PRECISION);
     private static final byte[] DECFLOAT_34_PRECISION = createInt(FbMetadataConstants.DECFLOAT_34_PRECISION);
-    private static final byte[] IMPORTED_KEY_NO_ACTION = createShort(DatabaseMetaData.importedKeyNoAction);
-    private static final byte[] IMPORTED_KEY_CASCADE = createShort(DatabaseMetaData.importedKeyCascade);
-    private static final byte[] IMPORTED_KEY_SET_NULL = createShort(DatabaseMetaData.importedKeySetNull);
-    private static final byte[] IMPORTED_KEY_SET_DEFAULT = createShort(DatabaseMetaData.importedKeySetDefault);
-    private static final byte[] IMPORTED_KEY_NOT_DEFERRABLE = createShort(DatabaseMetaData.importedKeyNotDeferrable);
     private static final byte[] TABLE_INDEX_OTHER = createShort(DatabaseMetaData.tableIndexOther);
     private static final byte[] ASC_BYTES = getBytes("A");
     private static final byte[] DESC_BYTES = getBytes("D");
@@ -1348,28 +1343,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetPrimaryKeys.create(getDbMetadataMediator()).getPrimaryKeys(table);
     }
 
-    private static final Map<String, byte[]> ACTION_MAPPING;
-    static {
-        Map<String, byte[]> tempMap = new HashMap<>();
-        tempMap.put("NO ACTION", IMPORTED_KEY_NO_ACTION);
-        tempMap.put("RESTRICT", IMPORTED_KEY_NO_ACTION);
-        tempMap.put("CASCADE", IMPORTED_KEY_CASCADE);
-        tempMap.put("SET NULL", IMPORTED_KEY_SET_NULL);
-        tempMap.put("SET DEFAULT", IMPORTED_KEY_SET_DEFAULT);
-        ACTION_MAPPING = Collections.unmodifiableMap(tempMap);
-    }
-
-    /**
-     * Maps the Firebird action name to the equivalent JDBC action.
-     *
-     * @param fbAction
-     *         Firebird action
-     * @return JDBC action encoded as byte array
-     */
-    private static byte[] mapAction(String fbAction) {
-        return ACTION_MAPPING.get(fbAction);
-    }
-
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
         return GetImportedKeys.create(getDbMetadataMediator()).getImportedKeys(table);
@@ -1380,79 +1353,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetExportedKeys.create(getDbMetadataMediator()).getExportedKeys(table);
     }
 
-    private static final String GET_CROSS_KEYS = "select "
-    +" PK.RDB$RELATION_NAME as PKTABLE_NAME"
-    +",ISP.RDB$FIELD_NAME as PKCOLUMN_NAME"
-    +",FK.RDB$RELATION_NAME as FKTABLE_NAME"
-    +",ISF.RDB$FIELD_NAME as FKCOLUMN_NAME"
-    +",CAST((ISP.RDB$FIELD_POSITION + 1) as SMALLINT) as KEY_SEQ"
-    +",RC.RDB$UPDATE_RULE as UPDATE_RULE"
-    +",RC.RDB$DELETE_RULE as DELETE_RULE"
-    +",PK.RDB$CONSTRAINT_NAME as PK_NAME"
-    +",FK.RDB$CONSTRAINT_NAME as FK_NAME"
-    +" from "
-    +"RDB$RELATION_CONSTRAINTS PK"
-    +",RDB$RELATION_CONSTRAINTS FK"
-    +",RDB$REF_CONSTRAINTS RC"
-    +",RDB$INDEX_SEGMENTS ISP"
-    +",RDB$INDEX_SEGMENTS ISF "
-    +"WHERE PK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
-    +"and FK.RDB$RELATION_NAME = " + OBJECT_NAME_PARAMETER
-    +"and FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME "
-    +"and PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ "
-    +"and ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME "
-    +"and ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME "
-    +"and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION "
-    +"order by 3, 5 ";
-
     @Override
     public ResultSet getCrossReference(
             String primaryCatalog, String primarySchema, String primaryTable,
             String foreignCatalog, String foreignSchema, String foreignTable) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(14, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_CAT", "COLUMNINFO").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKTABLE_NAME", "COLUMNINFO").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_CAT", "COLUMNINFO").addField()
-                .at(5).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_SCHEM", "COLUMNINFO").addField()
-                .at(6).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKTABLE_NAME", "COLUMNINFO").addField()
-                .at(7).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FKCOLUMN_NAME", "COLUMNINFO").addField()
-                .at(8).simple(SQL_SHORT, 0, "KEY_SEQ", "COLUMNINFO").addField()
-                .at(9).simple(SQL_SHORT, 0, "UPDATE_RULE", "COLUMNINFO").addField()
-                .at(10).simple(SQL_SHORT, 0, "DELETE_RULE", "COLUMNINFO").addField()
-                .at(11).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "FK_NAME", "COLUMNINFO").addField()
-                .at(12).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "PK_NAME", "COLUMNINFO").addField()
-                .at(13).simple(SQL_SHORT, 0, "DEFERRABILITY", "COLUMNINFO").addField()
-                .toRowDescriptor();
-
-        final List<String> params = Arrays.asList(primaryTable, foreignTable);
-
-        try (ResultSet rs = doQuery(GET_CROSS_KEYS, params)) {
-            // return empty result set if nothing found
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            final List<RowValue> rows = new ArrayList<>();
-            final RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                rows.add(valueBuilder
-                        .at(2).set(getBytes(rs.getString("PKTABLE_NAME")))
-                        .at(3).set(getBytes(rs.getString("PKCOLUMN_NAME")))
-                        .at(6).set(getBytes(rs.getString("FKTABLE_NAME")))
-                        .at(7).set(getBytes(rs.getString("FKCOLUMN_NAME")))
-                        .at(8).set(createShort(rs.getShort("KEY_SEQ")))
-                        .at(9).set(mapAction(rs.getString("UPDATE_RULE")))
-                        .at(10).set(mapAction(rs.getString("DELETE_RULE")))
-                        .at(11).set(getBytes(rs.getString("FK_NAME")))
-                        .at(12).set(getBytes(rs.getString("PK_NAME")))
-                        .at(13).set(IMPORTED_KEY_NOT_DEFERRABLE)
-                        .toRowValue(true)
-                );
-            } while (rs.next());
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetCrossReference.create(getDbMetadataMediator()).getCrossReference(primaryTable, foreignTable);
     }
 
     /**
