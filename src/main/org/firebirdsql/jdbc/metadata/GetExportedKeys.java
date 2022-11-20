@@ -24,15 +24,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Provides the implementation for {@link java.sql.DatabaseMetaData#getImportedKeys(String, String, String)}.
+ * Provides the implementation for {@link java.sql.DatabaseMetaData#getExportedKeys(String, String, String)}.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
-public final class GetImportedKeys extends AbstractKeysMethod {
+public final class GetExportedKeys extends AbstractKeysMethod {
 
-    //@formatter:off
-    private static final String GET_IMPORTED_KEYS_START =
+    //@formatter:on
+    private static final String GET_EXPORTED_KEYS_START =
             "select\n"
             + "  PK.RDB$RELATION_NAME as PKTABLE_NAME,\n"
             + "  ISP.RDB$FIELD_NAME as PKCOLUMN_NAME,\n"
@@ -43,39 +43,39 @@ public final class GetImportedKeys extends AbstractKeysMethod {
             + "  RC.RDB$DELETE_RULE as DELETE_RULE,\n"
             + "  PK.RDB$CONSTRAINT_NAME as PK_NAME,\n"
             + "  FK.RDB$CONSTRAINT_NAME as FK_NAME\n"
-            + "from RDB$RELATION_CONSTRAINTS FK\n"
+            + "from RDB$RELATION_CONSTRAINTS PK\n"
             + "inner join RDB$REF_CONSTRAINTS RC\n"
-            + "  on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME\n"
-            + "inner join RDB$RELATION_CONSTRAINTS PK\n"
             + "  on PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ\n"
+            + "inner join RDB$RELATION_CONSTRAINTS FK\n"
+            + "  on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME\n"
             + "inner join RDB$INDEX_SEGMENTS ISP\n"
-            + " on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME\n"
+            + "  on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME\n"
             + "inner join RDB$INDEX_SEGMENTS ISF\n"
-            + " on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION\n"
+            + "  on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION\n"
             + "where ";
 
-    private static final String GET_IMPORTED_KEYS_END =
-            "\norder by PK.RDB$RELATION_NAME, ISP.RDB$FIELD_POSITION";
-    //@formatter:on
+    private static final String GET_EXPORTED_KEYS_END =
+            "\norder by FK.RDB$RELATION_NAME, ISP.RDB$FIELD_POSITION";
+    //@formatter:off
 
-    private GetImportedKeys(DbMetadataMediator mediator) {
+    private GetExportedKeys(DbMetadataMediator mediator) {
         super(mediator);
     }
 
-    public ResultSet getImportedKeys(String table) throws SQLException {
+    public ResultSet getExportedKeys(String table) throws SQLException {
         if (table == null || "".equals(table)) {
             return createEmpty();
         }
 
-        Clause tableClause = Clause.equalsClause("FK.RDB$RELATION_NAME", table);
-        String sql = GET_IMPORTED_KEYS_START
+        Clause tableClause = Clause.equalsClause("PK.RDB$RELATION_NAME", table);
+        String sql = GET_EXPORTED_KEYS_START
                 + tableClause.getCondition(false)
-                + GET_IMPORTED_KEYS_END;
+                + GET_EXPORTED_KEYS_END;
         MetadataQuery metadataQuery = new MetadataQuery(sql, Clause.parameters(tableClause));
         return createMetaDataResultSet(metadataQuery);
     }
 
-    public static GetImportedKeys create(DbMetadataMediator mediator) {
-        return new GetImportedKeys(mediator);
+    public static GetExportedKeys create(DbMetadataMediator mediator) {
+        return new GetExportedKeys(mediator);
     }
 }
