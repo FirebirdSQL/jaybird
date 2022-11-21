@@ -19,6 +19,7 @@
 package org.firebirdsql.jdbc.metadata;
 
 import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.jdbc.FBDatabaseMetaData;
@@ -68,6 +69,11 @@ public abstract class DbMetadataMediator {
      * @return metadata instance
      */
     protected abstract FBDatabaseMetaData getMetaData();
+
+    /**
+     * @return GDSType of the current connection
+     */
+    protected abstract GDSType getGDSType();
 
     /**
      * Holder class for query text and parameters.

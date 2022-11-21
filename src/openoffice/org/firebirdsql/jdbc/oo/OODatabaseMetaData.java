@@ -58,17 +58,6 @@ public class OODatabaseMetaData extends FBDatabaseMetaData {
     // TODO Rewrite OO metadata methods as special variant of the org.firebirdsql.jdbc.metadata implementations
 
     @Override
-    public ResultSet getSchemas() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "TABLE_SCHEM", "TABLESCHEMAS").addField()
-                .at(1).simple(SQL_VARYING, 31, "TABLE_CATALOG", "TABLESCHEMAS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor,
-                Collections.singletonList(RowValue.of(rowDescriptor, getBytes(DEFAULT_SCHEMA), null)));
-    }
-
-    @Override
     public ResultSet getTables(String catalog, String schemaPattern,
             String tableNamePattern, String[] types) throws SQLException {
 

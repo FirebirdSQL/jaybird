@@ -99,8 +99,12 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public String getURL() throws SQLException {
         // TODO Think of a less complex way to obtain the url or just return null?
-        GDSType gdsType = connection.mc.getManagedConnectionFactory().getGDSType();
+        GDSType gdsType = getGDSType();
         return GDSFactory.getJdbcUrl(gdsType, gdsHelper.getConnectionProperties());
+    }
+
+    private GDSType getGDSType() {
+        return connection.mc.getManagedConnectionFactory().getGDSType();
     }
 
     @Override
@@ -1596,7 +1600,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        return GetSchemas.create(getDbMetadataMediator()).getSchemas();
+        return GetSchemas.create(getDbMetadataMediator()).getSchemas(schemaPattern);
     }
 
     @Override
@@ -1852,6 +1856,11 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         @Override
         protected FBDatabaseMetaData getMetaData() {
             return FBDatabaseMetaData.this;
+        }
+
+        @Override
+        protected GDSType getGDSType() {
+            return FBDatabaseMetaData.this.getGDSType();
         }
     }
 }
