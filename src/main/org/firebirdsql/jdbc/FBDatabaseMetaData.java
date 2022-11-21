@@ -1623,12 +1623,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(2, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLESCHEMAS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CATALOG", "TABLESCHEMAS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.emptyList());
+        return GetSchemas.create(getDbMetadataMediator()).getSchemas();
     }
 
     @Override
