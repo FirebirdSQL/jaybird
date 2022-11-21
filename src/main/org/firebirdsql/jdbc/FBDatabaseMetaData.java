@@ -18,17 +18,10 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.gds.impl.GDSFactory;
 import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
-import org.firebirdsql.gds.ng.DatatypeCoder;
-import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.gds.ng.fields.RowDescriptor;
-import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
-import org.firebirdsql.gds.ng.fields.RowValue;
-import org.firebirdsql.jdbc.metadata.RowValueBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jdbc.escape.FBEscapedFunctionHelper;
 import org.firebirdsql.jdbc.metadata.*;
@@ -42,7 +35,6 @@ import java.security.PrivilegedAction;
 import java.sql.*;
 import java.util.*;
 
-import static org.firebirdsql.gds.ISCConstants.*;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.*;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -56,14 +48,6 @@ import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     private final static Logger log = LoggerFactory.getLogger(FBDatabaseMetaData.class);
-
-    protected static final DatatypeCoder datatypeCoder =
-            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
-
-    private static final byte[] NO_BYTES = getBytes("NO");
-    private static final byte[] INT_ZERO = createInt(0);
-    private static final byte[] RADIX_TEN = createInt(10);
-    private static final byte[] BIGINT_PRECISION = createInt(FbMetadataConstants.BIGINT_PRECISION);
 
     private final GDSHelper gdsHelper;
     private final FBConnection connection;
@@ -1322,17 +1306,6 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return GetCrossReference.create(getDbMetadataMediator()).getCrossReference(primaryTable, foreignTable);
     }
 
-    /**
-     * Function to convert integer values to encoded byte arrays for integers.
-     *
-     * @param value
-     *         integer value to convert
-     * @return encoded byte array representing the value
-     */
-    private static byte[] createInt(int value) {
-        return datatypeCoder.encodeInt(value);
-    }
-
     @Override
     public ResultSet getTypeInfo() throws SQLException {
         return GetTypeInfo.create(getDbMetadataMediator()).getTypeInfo();
@@ -1654,132 +1627,10 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
         return MetadataPattern.escapeWildcards(objectName);
     }
 
-    //@formatter:off
-
-    // Suitable for Firebird 2.5 and earlier
-    private static final String GET_PSEUDO_COLUMNS_FRAGMENT_FB_25 =
-            "select "
-            + " RDB$RELATION_NAME, "
-            + " RDB$DBKEY_LENGTH, "
-            + " 'F' AS HAS_RECORD_VERSION, "
-            + " '' AS RECORD_VERSION_NULLABLE " // unknown nullability (and doesn't matter, no RDB$RECORD_VERSION)
-            + "from rdb$relations ";
-
-    // Suitable for Firebird 3 and higher
-    private static final String GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 =
-            "select "
-            + " RDB$RELATION_NAME, "
-            + " RDB$DBKEY_LENGTH, "
-            + " RDB$DBKEY_LENGTH = 8 as HAS_RECORD_VERSION, "
-            + " case "
-            + "   when RDB$RELATION_TYPE in (0, 1, 4, 5) then 'NO' " // table, view, GTT preserve + delete: never null
-            + "   when RDB$RELATION_TYPE in (2, 3) then 'YES' " // external + virtual: always null
-            + "   else ''" // unknown or unsupported (by Jaybird) type: unknown nullability
-            + " end as RECORD_VERSION_NULLABLE "
-            + "from rdb$relations ";
-
-    private static final String GET_PSEUDO_COLUMNS_END = " order by RDB$RELATION_NAME";
-
-    //@formatter:on
-
     @Override
     public ResultSet getPseudoColumns(String catalog, String schemaPattern, String tableNamePattern,
             String columnNamePattern) throws SQLException {
-
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(12, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "PSEUDOCOLUMNS").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "PSEUDOCOLUMNS").addField()
-                .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "PSEUDOCOLUMNS").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "COLUMN_NAME", "PSEUDOCOLUMNS").addField()
-                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "PSEUDOCOLUMNS").addField()
-                .at(5).simple(SQL_LONG, 0, "COLUMN_SIZE", "PSEUDOCOLUMNS").addField()
-                .at(6).simple(SQL_LONG, 0, "DECIMAL_DIGITS", "PSEUDOCOLUMNS").addField()
-                .at(7).simple(SQL_LONG, 0, "NUM_PREC_RADIX", "PSEUDOCOLUMNS").addField()
-                .at(8).simple(SQL_VARYING, 50, "COLUMN_USAGE", "PSEUDOCOLUMNS").addField()
-                // Field in Firebird is actually a blob, using Integer.MAX_VALUE for length
-                .at(9).simple(SQL_VARYING | 1, Integer.MAX_VALUE, "REMARKS", "PSEUDOCOLUMNS").addField()
-                .at(10).simple(SQL_LONG, 0, "CHAR_OCTET_LENGTH", "PSEUDOCOLUMNS").addField()
-                .at(11).simple(SQL_VARYING, 3, "IS_NULLABLE", "PSEUDOCOLUMNS").addField()
-                .toRowDescriptor();
-
-        if ("".equals(tableNamePattern) || "".equals(columnNamePattern)) {
-            // Matching table and/or column not possible
-            return new FBResultSet(rowDescriptor, Collections.emptyList());
-        }
-
-        final boolean supportsRecordVersion = firebirdSupportInfo.supportsRecordVersionPseudoColumn();
-        final MetadataPatternMatcher matcher = MetadataPattern.compile(columnNamePattern).toMetadataPatternMatcher();
-        final boolean retrieveDbKey = matcher.matches("RDB$DB_KEY");
-        final boolean retrieveRecordVersion = supportsRecordVersion && matcher.matches("RDB$RECORD_VERSION");
-
-        if (!(retrieveDbKey || retrieveRecordVersion)) {
-            // No matching columns
-            return new FBResultSet(rowDescriptor, Collections.emptyList());
-        }
-
-        Clause tableNameClause = new Clause("RDB$RELATION_NAME", tableNamePattern);
-        String sql = (supportsRecordVersion ? GET_PSEUDO_COLUMNS_FRAGMENT_FB_30 : GET_PSEUDO_COLUMNS_FRAGMENT_FB_25);
-        if (tableNameClause.hasCondition()) {
-            sql += " where " + tableNameClause.getCondition(false);
-        }
-        sql += GET_PSEUDO_COLUMNS_END;
-        List<String> params = tableNameClause.hasCondition()
-                ? Collections.singletonList(tableNameClause.getValue())
-                : Collections.emptyList();
-
-        try (ResultSet rs = doQuery(sql, params)) {
-            if (!rs.next()) {
-                return new FBResultSet(rowDescriptor, Collections.emptyList());
-            }
-
-            byte[] dbKeyBytes = retrieveDbKey ? getBytes("RDB$DB_KEY") : null;
-            byte[] dbKeyRemark = retrieveDbKey
-                    ? getBytes("The RDB$DB_KEY column in a select list will be renamed by Firebird to DB_KEY in the "
-                    + "result set (both as column name and label). Result set getters in Jaybird will map this, but "
-                    + "in introspection of ResultSetMetaData, DB_KEY will be reported. Identification as a "
-                    + "Types.ROWID will only work in a select list (ResultSetMetaData), not for parameters "
-                    + "(ParameterMetaData), but Jaybird will allow setting a RowId value.")
-                    : null;
-            byte[] recordVersionBytes = retrieveRecordVersion ? getBytes("RDB$RECORD_VERSION") : null;
-            byte[] noUsageRestrictions = getBytes(PseudoColumnUsage.NO_USAGE_RESTRICTIONS.name());
-
-            List<RowValue> rows = new ArrayList<>();
-            RowValueBuilder valueBuilder = new RowValueBuilder(rowDescriptor);
-            do {
-                byte[] tableNameBytes = getBytes(rs.getString("RDB$RELATION_NAME"));
-
-                if (retrieveDbKey) {
-                    int dbKeyLength = rs.getInt("RDB$DBKEY_LENGTH");
-                    byte[] dbKeyLengthBytes = createInt(dbKeyLength);
-                    valueBuilder
-                            .at(2).set(tableNameBytes)
-                            .at(3).set(dbKeyBytes)
-                            .at(4).set(createInt(Types.ROWID))
-                            .at(5).set(dbKeyLengthBytes)
-                            .at(7).set(RADIX_TEN)
-                            .at(8).set(noUsageRestrictions)
-                            .at(9).set(dbKeyRemark)
-                            .at(10).set(dbKeyLengthBytes)
-                            .at(11).set(NO_BYTES);
-                    rows.add(valueBuilder.toRowValue(true));
-                }
-
-                if (retrieveRecordVersion && rs.getBoolean("HAS_RECORD_VERSION")) {
-                    valueBuilder
-                            .at(2).set(tableNameBytes)
-                            .at(3).set(recordVersionBytes)
-                            .at(4).set(createInt(Types.BIGINT))
-                            .at(5).set(BIGINT_PRECISION)
-                            .at(6).set(INT_ZERO)
-                            .at(7).set(RADIX_TEN)
-                            .at(8).set(noUsageRestrictions)
-                            .at(11).set(getBytes(rs.getString("RECORD_VERSION_NULLABLE")));
-                    rows.add(valueBuilder.toRowValue(true));
-                }
-            } while (rs.next());
-
-            return new FBResultSet(rowDescriptor, rows);
-        }
+        return GetPseudoColumns.create(getDbMetadataMediator()).getPseudoColumns(tableNamePattern, columnNamePattern);
     }
 
     @Override

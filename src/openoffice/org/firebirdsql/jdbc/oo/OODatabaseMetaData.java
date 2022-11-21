@@ -18,6 +18,9 @@
  */
 package org.firebirdsql.jdbc.oo;
 
+import org.firebirdsql.encodings.EncodingFactory;
+import org.firebirdsql.gds.ng.DatatypeCoder;
+import org.firebirdsql.gds.ng.DefaultDatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptorBuilder;
 import org.firebirdsql.gds.ng.fields.RowValue;
@@ -27,6 +30,7 @@ import org.firebirdsql.jdbc.FBResultSet;
 import org.firebirdsql.jdbc.metadata.Clause;
 import org.firebirdsql.jdbc.metadata.RowValueBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -39,6 +43,9 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
 
 public class OODatabaseMetaData extends FBDatabaseMetaData {
+
+    private static final DatatypeCoder datatypeCoder =
+            DefaultDatatypeCoder.forEncodingFactory(EncodingFactory.createInstance(StandardCharsets.UTF_8));
 
     // TODO Review metadata methods use of toUpperCase
 
