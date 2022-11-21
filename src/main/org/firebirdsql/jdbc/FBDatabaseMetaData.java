@@ -1168,11 +1168,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getCatalogs() throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(1, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLECATALOGS").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.emptyList());
+        return GetCatalogs.create(getDbMetadataMediator()).getCatalogs();
     }
 
     @Override
