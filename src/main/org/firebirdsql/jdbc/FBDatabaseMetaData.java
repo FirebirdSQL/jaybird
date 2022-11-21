@@ -1578,15 +1578,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getClientInfoProperties() throws SQLException {
-        // TODO Return context info?
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(4, datatypeCoder)
-                .at(0).simple(SQL_VARYING, 31, "NAME", "CLIENTINFO").addField()
-                .at(1).simple(SQL_LONG, 4, "MAX_LEN", "CLIENTINFO").addField()
-                .at(2).simple(SQL_VARYING, 31, "DEFAULT", "CLIENTINFO").addField()
-                .at(3).simple(SQL_VARYING, 31, "DESCRIPTION", "CLIENTINFO").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.emptyList());
+        return GetClientInfoProperties.create(getDbMetadataMediator()).getClientInfoProperties();
     }
 
     /**
