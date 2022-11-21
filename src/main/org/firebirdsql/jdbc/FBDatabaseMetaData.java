@@ -1491,16 +1491,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      */
     @Override
     public ResultSet getSuperTypes(String catalog, String schemaPattern, String tableNamePattern) throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(6, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "SUPERTYPES").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "SUPERTYPES").addField()
-                .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "SUPERTYPES").addField()
-                .at(3).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_CAT", "SUPERTYPES").addField()
-                .at(4).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "SUPERTYPE_SCHEM", "SUPERTYPES").addField()
-                .at(5).simple(SQL_VARYING, 31, "SUPERTYPE_NAME", "SUPERTYPES").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.emptyList());
+        return GetSuperTypes.create(getDbMetadataMediator()).getSuperTypes();
     }
 
     /**
