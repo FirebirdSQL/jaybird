@@ -1442,17 +1442,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     @Override
     public ResultSet getUDTs(String catalog, String schemaPattern, String typeNamePattern, int[] types)
             throws SQLException {
-        final RowDescriptor rowDescriptor = new RowDescriptorBuilder(7, datatypeCoder)
-                .at(0).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_CAT", "UDT").addField()
-                .at(1).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TYPE_SCHEM", "UDT").addField()
-                .at(2).simple(SQL_VARYING, 31, "TYPE_NAME", "UDT").addField()
-                .at(3).simple(SQL_VARYING, 31, "CLASS_NAME", "UDT").addField()
-                .at(4).simple(SQL_LONG, 0, "DATA_TYPE", "UDT").addField()
-                .at(5).simple(SQL_VARYING, 31, "REMARKS", "UDT").addField()
-                .at(6).simple(SQL_SHORT, 0, "BASE_TYPE", "UDT").addField()
-                .toRowDescriptor();
-
-        return new FBResultSet(rowDescriptor, Collections.emptyList());
+        return GetUDTs.create(getDbMetadataMediator()).getUDTs();
     }
 
     @Override
