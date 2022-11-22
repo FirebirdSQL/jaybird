@@ -43,15 +43,15 @@ public final class GetImportedKeys extends AbstractKeysMethod {
             + "  RC.RDB$DELETE_RULE as DELETE_RULE,\n"
             + "  PK.RDB$CONSTRAINT_NAME as PK_NAME,\n"
             + "  FK.RDB$CONSTRAINT_NAME as FK_NAME\n"
-            + "from RDB$RELATION_CONSTRAINTS FK\n"
+            + "from RDB$RELATION_CONSTRAINTS PK\n"
             + "inner join RDB$REF_CONSTRAINTS RC\n"
-            + "  on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME\n"
-            + "inner join RDB$RELATION_CONSTRAINTS PK\n"
             + "  on PK.RDB$CONSTRAINT_NAME = RC.RDB$CONST_NAME_UQ\n"
+            + "inner join RDB$RELATION_CONSTRAINTS FK\n"
+            + "  on FK.RDB$CONSTRAINT_NAME = RC.RDB$CONSTRAINT_NAME\n"
             + "inner join RDB$INDEX_SEGMENTS ISP\n"
-            + " on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME\n"
+            + "  on ISP.RDB$INDEX_NAME = PK.RDB$INDEX_NAME\n"
             + "inner join RDB$INDEX_SEGMENTS ISF\n"
-            + " on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION\n"
+            + "  on ISF.RDB$INDEX_NAME = FK.RDB$INDEX_NAME and ISP.RDB$FIELD_POSITION = ISF.RDB$FIELD_POSITION\n"
             + "where ";
 
     private static final String GET_IMPORTED_KEYS_END =
