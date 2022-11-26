@@ -17,7 +17,7 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 plugins {
     id 'java-library'
-    id 'nu.studer.credentials' version '2.1'
+    id 'nu.studer.credentials' version '3.0'
     id 'maven-publish'
     id 'signing'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'

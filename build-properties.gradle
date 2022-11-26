@@ -46,8 +46,8 @@ if (findProperty('buildProfile') == 'java17') {
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
 ext.'version.maven' = "${project.'version.simple'}.${project.'maven.jdkversion'}${project.'version.tag'}".toString()
 
-ext.'signing.password' = credentials.'signing.password'
-ext.ossrhPassword = credentials.ossrhPassword
+ext.'signing.password' = credentials.forKey('signing.password')
+ext.ossrhPassword = credentials.forKey('ossrhPassword')
 
 ext.isReleaseVersion = provider {
     !version.endsWith("SNAPSHOT")
