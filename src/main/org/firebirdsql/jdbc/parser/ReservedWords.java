@@ -17,17 +17,26 @@
  * All rights reserved.
  */
 
-/**
- * Statement parser for generated keys support.
- * <p>
- * <b>DO NOT USE!</b> This packages is for driver-internal purposes only.
- * </p>
- * <p>
- * The parser in this package is not a full implementation of the Firebird SQL dialect. It only serves to obtain the
- * statement information necessary for internal purposes of Jaybird (like generated keys support).
- * </p>
- */
-@InternalApi
 package org.firebirdsql.jdbc.parser;
 
 import org.firebirdsql.util.InternalApi;
+
+/**
+ * Interface for reserved words checks.
+ *
+ * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
+ * @since 4.0.8
+ */
+@InternalApi
+public interface ReservedWords {
+
+    /**
+     * Checks case-insensitively if the supplied token text is a reserved word.
+     *
+     * @param tokenText
+     *         Token text to check
+     * @return {@code true} if the token text is a reserved word, {@code false} otherwise
+     */
+    boolean isReservedWord(CharSequence tokenText);
+
+}

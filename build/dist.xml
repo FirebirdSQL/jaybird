@@ -75,9 +75,6 @@
                 <include name="connector-api-1.5.jar"/>
             </zipfileset>
             <zipfileset dir="${module.thirdparty}" prefix="lib">
-                <include name="antlr-runtime-4.7.2.jar"/>
-            </zipfileset>
-            <zipfileset dir="${module.thirdparty}" prefix="lib">
                 <include name="jna-5.5.0.jar"/>
             </zipfileset>
             <zipfileset dir="${build.documentation}" prefix="docs">

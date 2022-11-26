@@ -9,7 +9,12 @@ Jaybird 4.0.8
 
 The following has been changed or fixed since Jaybird 4.0.7
 
-- ...
+- Improvement: Backported new generated keys parser from Jaybird 5 to remove
+  dependency on ANTLR ([jaybird#718](https://github.com/FirebirdSQL/jaybird/issues/718)) \
+  With this change, Jaybird no longer relies on `antlr-runtime-4.7.2.jar`, if
+  you don't need it yourself, you can remove this library from the classpath.
+  See [New parser for generated keys handling][#generated-keys-parser-replaced] 
+  for more information.
 
 Jaybird 4.0.7
 -------------
@@ -521,9 +526,6 @@ use `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar` (not `-full`!), and **not
 include `connector-api-1.5.jar` as this dependency will be provided by your
 application server.
 
-For `getGeneratedKeys` support you will need to include 
-`antlr-runtime-4.7.2.jar` on your classpath.
-
 For native, local or embedded support, you will need to include `jna-5.5.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver](#type-2-native-and-embedded-driver).
 
@@ -556,9 +558,9 @@ If you manage your dependencies manually, you need to do the following:
     (where `XX` is `7`, `8` or `11`) 
     - `jaybird-full-3.0.x.jar` with `jaybird-full-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar`
     
-2.  If installed, remove `antlr-runtime-4.7.jar` and replace it with 
-    `antlr-runtime-4.7.2.jar`. This library is necessary for `getGeneratedKeys`
-    support.
+2.  If installed, remove `antlr-runtime-4.7.jar` or `antlr-runtime-4.7.2.jar` 
+    (unless of course your application itself needs these libraries). Since 
+    Jaybird 4.0.8, Jaybird no longer relies on ANTLR.
     
 3.  If installed, remove `jna-4.4.0.jar` and replace it with `jna-5.5.0.jar`.
     This library is only necessary for native, local or embedded connections.
@@ -2028,6 +2030,35 @@ See also [jdp-2019-06: Ability to monitor driver operations](https://github.com/
 
 This feature was contributed by [Vasiliy Yashkov](https://github.com/vasiliy-yashkov).
 
+New parser for generated keys handling {#generated-keys-parser-replaced}
+--------------------------------------
+
+Added in Jaybird 4.0.8, backported from Jaybird 5.
+
+The "`generated keys`" parser has been replaced. This parser is used to detect
+statement types, the table name, and presence or absence of a `RETURNING` 
+clause. The new parser has no external dependencies, so Jaybird no longer 
+depends on the ANTLR runtime (`org.antlr:antlr4-runtime`).
+
+As a result of this change, it is possible that detection of some statements has
+changed, especially detection of the presence of a `RETURNING` clause. Please 
+report any incorrect changes in detection on https://groups.google.com/g/firebird-java[the firebird-java list] 
+or on https://github.com/FirebirdSQL/jaybird/issues.
+
+If you were relying on disabling generated keys support by excluding 
+the antlr4-runtime library from the classpath, you will now need to explicitly 
+disable it. Disabling generated keys can be done using the connection property 
+`generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want 
+an exception thrown when calling a generated-keys-related execute or prepare 
+method.
+
+This backport was prompted by the fact that Jaybird 4 still used ANTLR 4.7.2, 
+while ANTLR 4.10 has introduced a backwards incompatible change, which, for 
+example, causes problems when using Jaybird with Hibernate 6. Instead of 
+upgrading ANTLR, we decided that replacing the parser was less invasive as it
+was less likely to introduce compatibility issues for users depending on older
+versions of ANTLR.
+
 Potentially breaking changes
 ----------------------------
 
@@ -2330,6 +2361,19 @@ implementation have been removed (note that most are internal to Jaybird):
 -   `FirebirdConnectionProperties#setUseTranslation(String translationPath)` (and on data sources)
 -   `FirebirdConnectionProperties#getUseTranslation` (and on data sources)
 -   `IEncodingFactory#getCharacterTranslator(String mappingPath)`
+
+Generated keys support always available {#generated-keys-always}
+---------------------------------------
+
+Since Jaybird 4.0.8.
+
+Previously, support for generated keys depended on the presence of 
+the antlr4-runtime library on the classpath. With [New parser for generated keys handling][#generated-keys-parser-replaced], 
+generated keys support is now always available.
+
+See [New parser for generated keys handling][#generated-keys-parser-replaced] 
+for information on disabling or ignoring generated keys support if you relied on
+this behaviour.
 
 Removal of constants without deprecation
 ----------------------------------------
