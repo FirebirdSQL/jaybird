@@ -66,6 +66,13 @@ between versions.
 For purposes of code organization, these implementation classes will be put in a
 separate package, `org.firebirdsql.jdbc.metadata`.
 
+### OOREMOTE protocol
+
+For the OOREMOTE protocol, we currently use a separate `DatabaseMetaData` 
+implementation (`OODatabaseMetaData`). If possible, this should be replaced with
+an OOREMOTE specific method implementation, similar as is done for Firebird 
+version specific method implementations.
+
 ### Testing
 
 The individual metadata implementation classes will be tested through the 
