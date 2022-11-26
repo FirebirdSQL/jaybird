@@ -451,6 +451,8 @@ Please report any incorrect changes in detection on https://groups.google.com/g/
 If you were relying on disabling generated keys support by excluding the antlr4-runtime library from the classpath, you will now need to explicitly disable it.
 Disabling generated keys can be done using the connection property `generatedKeysEnabled` with value `disabled`, or `ignored` if you don't want an exception thrown when calling a generated-keys-related execute or prepare method.
 
+This change was also backported to Jaybird 4.0.8.
+
 [#server-batch-updates]
 === Firebird 4.0 server-side batch updates
 
