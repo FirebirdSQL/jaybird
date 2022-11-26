@@ -63,7 +63,6 @@ import static java.util.Collections.unmodifiableSet;
  */
 public class FBManagedConnection implements ExceptionListener {
 
-    public static final String WARNING_NO_CHARSET = "WARNING: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding), defaulting to character set ";
     public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
             + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
 
@@ -113,10 +112,6 @@ public class FBManagedConnection implements ExceptionListener {
                         SQLStateConstants.SQL_STATE_CONNECTION_ERROR);
             }
             connectionProperties.setEncoding(defaultEncoding);
-
-            String warningMessage = WARNING_NO_CHARSET + defaultEncoding;
-            log.warn(warningMessage);
-            notifyWarning(new SQLWarning(warningMessage));
         }
 
         if (connectionProperties.getConnectTimeout() == PropertyConstants.TIMEOUT_NOT_SET

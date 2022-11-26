@@ -324,11 +324,11 @@ class FBConnectionTest {
     }
 
     /**
-     * Test if not explicitly specifying a connection character set results in a warning on the connection when
-     * system property {@code org.firebirdsql.jdbc.defaultConnectionEncoding} has been set.
+     * Test if not explicitly specifying a connection character set connects with the character set specified in system
+     * property {@code org.firebirdsql.jdbc.defaultConnectionEncoding}.
      */
     @Test
-    void testNoCharacterSetWarningWithDefaultConnectionEncoding() throws Exception {
+    void testNoCharacterSetWithDefaultConnectionEncoding() throws Exception {
         String defaultConnectionEncoding = System.getProperty("org.firebirdsql.jdbc.defaultConnectionEncoding");
         assumeThat("Test only works if org.firebirdsql.jdbc.defaultConnectionEncoding has not been specified",
                 defaultConnectionEncoding, nullValue());
@@ -338,10 +338,8 @@ class FBConnectionTest {
             Properties props = getDefaultPropertiesForConnection();
             props.remove("lc_ctype");
             try (Connection con = DriverManager.getConnection(getUrl(), props)) {
-                SQLWarning warnings = con.getWarnings();
-                assertNotNull(warnings, "Expected a warning for not specifying connection character set");
-                assertEquals(FBManagedConnection.WARNING_NO_CHARSET + "WIN1252", warnings.getMessage(),
-                        "Unexpected warning message for not specifying connection character set");
+                // Previously, a warning was registered, verify that doesn't happen
+                assertNull(con.getWarnings(), "Expected no warning for not specifying connection character set");
                 IConnectionProperties connectionProperties =
                         con.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
                 assertEquals("WIN1252", connectionProperties.getEncoding(), "Unexpected connection encoding");
@@ -368,10 +366,8 @@ class FBConnectionTest {
         props.remove("lc_ctype");
 
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
-            SQLWarning warnings = connection.getWarnings();
-            assertNotNull(warnings, "Expected a warning for not specifying connection character set");
-            assertEquals(FBManagedConnection.WARNING_NO_CHARSET + "NONE", warnings.getMessage(),
-                    "Unexpected warning message for not specifying connection character set");
+            // Previously, a warning was registered, verify that doesn't happen
+            assertNull(connection.getWarnings(), "Expected no warning for not specifying connection character set");
             IConnectionProperties connectionProperties =
                     connection.unwrap(FirebirdConnection.class).getFbDatabase().getConnectionProperties();
             assertEquals("NONE", connectionProperties.getEncoding(), "Unexpected connection encoding");
