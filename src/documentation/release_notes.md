@@ -4,6 +4,13 @@ Jaybird 4.0.x changelog
 Changes per Jaybird 4 release. See also [What's new in Jaybird 4](#whats-new-in-jaybird-4).
 For known issues, consult [Known Issues](#known-issues).
 
+Jaybird 4.0.9
+-------------
+
+The following has been changed or fixed since Jaybird 4.0.8
+
+- ...
+
 Jaybird 4.0.8
 -------------
 
