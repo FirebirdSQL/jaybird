@@ -729,9 +729,7 @@ The maximum server-side batch buffer should be sufficient to have a batch of aro
 [#metadata-compat-changes]
 === Changes affecting metadata compatibility
 
-// TODO Also getTablePrivileges once migrated
-
-The method `getColumnPrivileges` previously returned the privilege name `REFERENCE` in result set column `PRIVILEGE`.
+The methods `DatabaseMetaData.getColumnPrivileges` and `DatabaseMetaData.getTablePrivileges` previously returned the privilege name `REFERENCE` in result set column `PRIVILEGE`.
 This has been changed to `REFERENCES` to match both the name of the privilege in the `GRANT` statement, and the name used in the JDBC 4.3 documentation.
 
 [#removal-of-classes-packages-and-methods-without-deprecation]
@@ -755,7 +753,7 @@ there is no replacement
 there is no replacement
 * `FBPreparedStatement`
 ** `setStringForced(int, String)`;
-there is no replacement
+there is no replacement with the same behaviour, use `setString(int, String)`
 * `FBRowUpdater`, parameter `Synchronizable syncProvider` was removed from constructor
 * `GDSHelper.getDatabaseParameterBuffer()`, the significant refactoring of Jaybird's internals resulted in this method no longer making any sense.
 There is no direct replacement, though `GDSHelper.getConnectionProperties()` can be considered its successor.
@@ -1068,4 +1066,4 @@ Be aware that this dependency does not support `embedded`.
 </dependency>
 ----
 
-In the future we will move the Type 2 support to a separate library and provide  JNA-compatible jars that provide the embedded libraries of a specific Firebird  version.
+In the future we will move the Type 2 support to a separate library and provide JNA-compatible jars that provide the embedded libraries of a specific Firebird version.
