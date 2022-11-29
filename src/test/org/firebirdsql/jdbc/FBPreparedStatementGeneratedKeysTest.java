@@ -66,6 +66,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement not to produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -94,6 +95,37 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
+
+                assertEquals(1, stmt.getUpdateCount(), "Update count should be directly available");
+                assertFalse(rs.isClosed(), "Generated keys result set should be open");
+
+                ResultSetMetaData metaData = rs.getMetaData();
+                assertEquals(3, metaData.getColumnCount(), "Expected result set with 3 columns");
+                assertEquals("ID", metaData.getColumnName(1), "Unexpected first column");
+                assertEquals("TEXT", metaData.getColumnName(2), "Unexpected second column");
+
+                assertTrue(rs.next(), "Expected first row in result set");
+                assertEquals(513, rs.getInt(1));
+                assertEquals(TEXT_VALUE, rs.getString(2));
+                assertFalse(rs.next(), "Expected no second row");
+            }
+        }
+    }
+
+    /**
+     * The same test as {@link #testPrepare_INSERT_returnGeneratedKeys()}, but with {@code executeUpdate}.
+     */
+    @Test
+    void testPrepare_INSERT_returnGeneratedKeys_executeUpdate() throws Exception {
+        try (PreparedStatement stmt = con.prepareStatement(TEST_INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+            assertEquals(FirebirdPreparedStatement.TYPE_EXEC_PROCEDURE, ((FirebirdPreparedStatement) stmt).getStatementType());
+
+            stmt.setString(1, TEXT_VALUE);
+            assertEquals(1, stmt.executeUpdate(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -144,7 +176,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
             }
 
             stmt.setString(1, TEXT_VALUE);
-            stmt.executeUpdate();
+            assertEquals(1, stmt.executeUpdate(), "expected update count of 1");
 
             // Checking that generated keys result set of a normal execute doesn't contain the rows from executeBatch
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -169,6 +201,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -202,6 +235,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -258,6 +292,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -289,6 +324,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -324,6 +360,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
 
             stmt.setString(1, TEXT_VALUE);
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(1, stmt.getUpdateCount(), "expected update count of 1");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
@@ -409,6 +446,7 @@ class FBPreparedStatementGeneratedKeysTest extends FBTestGeneratedKeysBase {
             stmt.setString(1, TEXT_VALUE + "_1");
             stmt.setString(2, TEXT_VALUE + "_2");
             assertFalse(stmt.execute(), "Expected statement to not produce a result set");
+            assertEquals(2, stmt.getUpdateCount(), "expected update count of 2");
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 assertNotNull(rs, "Expected a non-null result set from getGeneratedKeys");
