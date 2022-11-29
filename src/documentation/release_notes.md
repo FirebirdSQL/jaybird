@@ -2042,15 +2042,15 @@ New parser for generated keys handling {#generated-keys-parser-replaced}
 
 Added in Jaybird 4.0.8, backported from Jaybird 5.
 
-The "`generated keys`" parser has been replaced. This parser is used to detect
+The "generated keys" parser has been replaced. This parser is used to detect
 statement types, the table name, and presence or absence of a `RETURNING` 
 clause. The new parser has no external dependencies, so Jaybird no longer 
 depends on the ANTLR runtime (`org.antlr:antlr4-runtime`).
 
 As a result of this change, it is possible that detection of some statements has
 changed, especially detection of the presence of a `RETURNING` clause. Please 
-report any incorrect changes in detection on https://groups.google.com/g/firebird-java[the firebird-java list] 
-or on https://github.com/FirebirdSQL/jaybird/issues.
+report any incorrect changes in detection on [the firebird-java list](https://groups.google.com/g/firebird-java) 
+or on <https://github.com/FirebirdSQL/jaybird/issues>.
 
 If you were relying on disabling generated keys support by excluding 
 the antlr4-runtime library from the classpath, you will now need to explicitly 
