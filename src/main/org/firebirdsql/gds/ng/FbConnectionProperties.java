@@ -29,6 +29,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Mutable implementation of {@link IConnectionProperties}
@@ -39,6 +41,8 @@ import java.util.TimeZone;
  */
 public final class FbConnectionProperties extends AbstractAttachProperties<IConnectionProperties>
         implements IConnectionProperties, Serializable {
+
+    private static final Pattern GMT_WITH_OFFSET = Pattern.compile("^GMT([+-]\\d{2}:\\d{2})$");
 
     private FbImmutableConnectionProperties immutableConnectionPropertiesCache;
 
@@ -95,7 +99,14 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     }
 
     private static String defaultTimeZone() {
-        return TimeZone.getDefault().getID();
+        String timeZone = TimeZone.getDefault().getID();
+        if (timeZone.startsWith("GMT") && timeZone.length() > 3) {
+            Matcher matcher = GMT_WITH_OFFSET.matcher(timeZone);
+            if (matcher.matches()) {
+                return matcher.group(1);
+            }
+        }
+        return timeZone;
     }
 
     @Override

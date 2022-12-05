@@ -241,4 +241,17 @@ class FbConnectionPropertiesTest {
                 .isEqualTo(Arrays.<Object>asList("testValue", "xyz", 1203));
         assertThat(info.connectionPropertyValues()).isEqualTo(immutable.connectionPropertyValues());
     }
+
+    @Test
+    void testSessionTimeZoneSpecialGmtOffsetHandling() {
+        final TimeZone before = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("GMT-08:00"));
+            // Need to create new instance after initializing TZ
+            FbConnectionProperties info = new FbConnectionProperties();
+            assertEquals("-08:00", info.getSessionTimeZone(), "Expected sessionTimeZone without GMT prefix");
+        } finally {
+            TimeZone.setDefault(before);
+        }
+    }
 }
