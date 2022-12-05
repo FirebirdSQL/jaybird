@@ -374,6 +374,22 @@ public class TestFBClob extends FBJUnit4TestBase {
         }
     }
 
+    @Test
+    public void testSQLExceptionAfterFree() throws Exception {
+        final String TEST_VALUE = "TEST_STRING";
+        addTestValues(con, 1, TEST_VALUE, PLAIN_BLOB);
+        try (Statement stmt = con.createStatement();
+             ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
+            resultSet.next();
+            Clob clob = resultSet.getClob(1);
+            clob.free();
+
+            assertThrows(SQLException.class, clob::getCharacterStream);
+            assertThrows(SQLException.class, () -> clob.getCharacterStream(1, 1));
+            assertThrows(SQLException.class, () -> { try (Writer ignored = clob.setCharacterStream(1)) { } });
+        }
+    }
+
     private void runHoldableClobTest(String colName, String testString, String javaEncoding, String fbEncoding)
             throws Exception {
         Clob clob;
