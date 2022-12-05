@@ -396,7 +396,15 @@ public class FBBlob implements FirebirdBlob, TransactionListener {
         }
     }
 
-    public GDSHelper getGdsHelper() {
+    /**
+     * Returns the GDSHelper of this blob.
+     *
+     * @return GDSHelper
+     * @throws SQLException
+     *         If this blob has been freed (closed)
+     */
+    GDSHelper getGdsHelper() throws SQLException {
+        checkClosed();
         return gdsHelper;
     }
 

@@ -170,12 +170,7 @@ public class FBLongVarCharField extends FBStringField implements FBCloseableFiel
 
     @Override
     public void setClob(FBClob clob) throws SQLException {
-        if (clob != null) {
-            FBBlob blob = clob.getWrappedBlob();
-            setBlob(blob);
-        } else {
-            setNull();
-        }
+        setBlob(clob != null ? clob.getWrappedBlob() : null);
     }
 
     @Override

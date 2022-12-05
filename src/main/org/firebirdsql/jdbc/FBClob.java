@@ -86,13 +86,13 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Reader getCharacterStream() throws SQLException {
-		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
 		InputStream inputStream = wrappedBlob.getBinaryStream();
+		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		if (encoding == null) {
 			return new InputStreamReader(inputStream);
 		} else {
 			try {
-				return new InputStreamReader(wrappedBlob.getBinaryStream(), encoding);
+				return new InputStreamReader(inputStream, encoding);
 			} catch (IOException ioe) {
 				throw new FBSQLException(ioe);
 			}
@@ -101,11 +101,7 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public InputStream getAsciiStream() throws SQLException {
-		InputStream inputStream = null;
-		if (wrappedBlob != null) {
-			inputStream = wrappedBlob.getBinaryStream();
-		}
-		return inputStream;
+		return wrappedBlob.getBinaryStream();
 	}
 
 	/**
@@ -164,9 +160,9 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Writer setCharacterStream(long position) throws SQLException {
-		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
 		OutputStream outputStream = wrappedBlob.setBinaryStream(position);
+		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		if (encoding == null) {
 			return new OutputStreamWriter(outputStream);
 		} else {
@@ -187,7 +183,7 @@ public class FBClob implements Clob, NClob {
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
 	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
 		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
-		String encoding = getWrappedBlob().getGdsHelper().getJavaEncoding();
+		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		if (encoding == null) {
 			return new InputStreamReader(inputStream);
 		} else {

@@ -936,6 +936,7 @@ The replacement only trims trailing spaces.
 ** `getWantsViews(String[])` -- there is no replacement
 * `RowValueBuilder` was moved to another package and (will be) made package private
 // TODO Change once refactor of FBDatabaseMetaData is complete
+* `FBBlob.getGdsHelper()` has been made package private
 
 [#breaking-changes-statement-state]
 ==== Additional statement state `PREPARING`
