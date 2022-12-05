@@ -28,6 +28,8 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.firebirdsql.gds.ISCConstants.*;
 
@@ -42,13 +44,14 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
         implements IConnectionProperties {
 
     private static final Logger log = LoggerFactory.getLogger(FbConnectionProperties.class);
+    private static final Pattern GMT_WITH_OFFSET = Pattern.compile("^GMT([+-]\\d{2}:\\d{2})$");
 
     private String databaseName;
     private short connectionDialect = IConnectionProperties.DEFAULT_DIALECT;
     private int pageCacheSize;
     private boolean resultSetDefaultHoldable;
     private boolean columnLabelForName;
-    private String sessionTimeZone = TimeZone.getDefault().getID();
+    private String sessionTimeZone = defaultTimeZone();
     private final DatabaseParameterBuffer extraDatabaseParameters = new DatabaseParameterBufferImp(
             DatabaseParameterBufferImp.DpbMetaData.DPB_VERSION_1,
             EncodingFactory.getPlatformEncoding());
@@ -174,6 +177,17 @@ public final class FbConnectionProperties extends AbstractAttachProperties<IConn
     @Override
     public IConnectionProperties asNewMutable() {
         return new FbConnectionProperties(this);
+    }
+
+    private static String defaultTimeZone() {
+        String timeZone = TimeZone.getDefault().getID();
+        if (timeZone.startsWith("GMT") && timeZone.length() > 3) {
+            Matcher matcher = GMT_WITH_OFFSET.matcher(timeZone);
+            if (matcher.matches()) {
+                return matcher.group(1);
+            }
+        }
+        return timeZone;
     }
 
     /**

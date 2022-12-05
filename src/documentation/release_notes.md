@@ -9,7 +9,8 @@ Jaybird 4.0.9
 
 The following has been changed or fixed since Jaybird 4.0.8
 
-- ...
+- Improvement: If the default JVM time zone is a GMT offset, e.g. `GMT-08:00`,
+  configure `sessionTimeZone` with offset only, e.g. `-08:00` ([jaybird#720](https://github.com/FirebirdSQL/jaybird/issues/720)) 
 
 Jaybird 4.0.8
 -------------
