@@ -622,10 +622,10 @@ This feature was also backported to Jaybird 4.0.7.
 This requires Firebird 3.0 or higher server and a Firebird 3.0 or higher fbclient.
 Longer statement texts were already supported for pure-java connections.
 * Fixed: `DatabaseMetaData.getIdentifierQuoteString()` should return `" "` (space) for connection dialect 1 (https://github.com/FirebirdSQL/jaybird/issues/714[jaybird#714])
-* Improvement: A column `JB_GRANTEE_TYPE` was added to `getColumnPrivileges` in `DatabaseMetaData`.
+* Improvement: A column `JB_GRANTEE_TYPE` was added to `getColumnPrivileges` and `getTablePrivileges` in `DatabaseMetaData`.
 It returns the object type of the grantee (e.g. `USER`, `ROLE`).
 This is a Jaybird specific extension, we recommend retrieving it by name only.
-// TODO Also getTablePrivileges once migrated
+* Improvement: Populate `COLUMN_DEF` of `DatabaseMetaData.getProcedureColumns` with the default of the parameter (https://github.com/FirebirdSQL/jaybird/issues/715[jaybird#715])
 * Change: Jaybird no longer registers a `SQLWarning` nor logs a warning when connecting without an explicit connection character set (https://github.com/FirebirdSQL/jaybird/issues/717[jaybird#717])
 
 [#removal-of-deprecated-classes-and-packages]

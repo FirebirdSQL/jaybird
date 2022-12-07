@@ -121,7 +121,7 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 .at(11).setShort(nullFlag == 1 ? procedureNoNulls : procedureNullable)
                 .at(12).setString(rs.getString("REMARKS"))
                 // TODO: Need to write ODS version dependent method to retrieve some of the info for indexes 13 (From 2.0 defaults for procedure parameters)
-                .at(13).set(null)
+                .at(13).setString(extractDefault(rs.getString("COLUMN_DEF")))
                 // JDBC reserves 14 and 15 for future use and are always NULL
                 .at(14).set(null)
                 .at(15).set(null)
@@ -163,7 +163,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
                 + "  F.RDB$NULL_FLAG as NULL_FLAG,\n"
                 + "  PP.RDB$DESCRIPTION as REMARKS,\n"
-                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER\n"
+                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,\n"
+                + "  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF\n"
                 + "from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME";
         private static final String GET_PROCEDURE_COLUMNS_END_2_5 =
                 "\norder by PP.RDB$PROCEDURE_NAME, PP.RDB$PARAMETER_TYPE desc, PP.RDB$PARAMETER_NUMBER";
@@ -208,7 +209,8 @@ public abstract class GetProcedureColumns extends AbstractMetadataMethod {
                 + "  F.RDB$CHARACTER_SET_ID as " + CHARSET_ID + ",\n"
                 + "  F.RDB$NULL_FLAG as NULL_FLAG,\n"
                 + "  PP.RDB$DESCRIPTION as REMARKS,\n"
-                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER\n"
+                + "  PP.RDB$PARAMETER_NUMBER + 1 as PARAMETER_NUMBER,\n"
+                + "  coalesce(PP.RDB$DEFAULT_SOURCE, F.RDB$DEFAULT_SOURCE) as COLUMN_DEF\n"
                 + "from RDB$PROCEDURE_PARAMETERS PP inner join RDB$FIELDS F on PP.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME\n"
                 + "where PP.RDB$PACKAGE_NAME is null";
         // NOTE: Including RDB$PACKAGE_NAME so index can be used to sort

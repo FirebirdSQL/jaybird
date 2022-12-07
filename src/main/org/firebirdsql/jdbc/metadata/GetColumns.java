@@ -156,19 +156,6 @@ public abstract class GetColumns extends AbstractMetadataMethod {
         }
     }
 
-    private static String extractDefault(String defaultDefinition) {
-        if (defaultDefinition == null || defaultDefinition.isEmpty()) {
-            return null;
-        }
-        if (defaultDefinition.length() > 7) {
-            String prefix = defaultDefinition.substring(0, 7);
-            if (prefix.equalsIgnoreCase("DEFAULT")) {
-                return defaultDefinition.substring(7).trim();
-            }
-        }
-        return defaultDefinition.trim();
-    }
-
     abstract MetadataQuery createGetColumnsQuery(String tableNamePattern, String columnNamePattern);
 
     public static GetColumns create(DbMetadataMediator mediator) {

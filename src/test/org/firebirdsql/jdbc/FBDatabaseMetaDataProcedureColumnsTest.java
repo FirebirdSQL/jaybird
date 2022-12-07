@@ -83,7 +83,8 @@ class FBDatabaseMetaDataProcedureColumnsTest {
 
     private static final String CREATE_QUOTED_PROC_NO_RETURN =
             "CREATE PROCEDURE \"quoted_proc_no_return\"\n" +
-            " ( param1 VARCHAR(100))\n" +
+            " ( param1 VARCHAR(100),\n" +
+            "   param2 VARCHAR(100) default 'param2 default')\n" +
             "AS\n" +
             "DECLARE VARIABLE dummy INTEGER;\n" +
             "BEGIN\n" +
@@ -214,9 +215,12 @@ class FBDatabaseMetaDataProcedureColumnsTest {
      */
     @Test
     void testProcedureColumns_quotedProc_noReturn_allPattern() throws Exception {
-        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = singletonList(
+        List<Map<ProcedureColumnMetaData, Object>> expectedColumns = Arrays.asList(
                 createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM1", 1, 100, true,
+                        DatabaseMetaData.procedureColumnIn),
+                createStringType(Types.VARCHAR, "quoted_proc_no_return", "PARAM2", 2, 100, true,
                         DatabaseMetaData.procedureColumnIn));
+        expectedColumns.get(1).put(ProcedureColumnMetaData.COLUMN_DEF, "'param2 default'");
         
         ResultSet procedureColumns = dbmd.getProcedureColumns(null, null, "quoted_proc_no_return", "%");
         validate(procedureColumns, expectedColumns);        
