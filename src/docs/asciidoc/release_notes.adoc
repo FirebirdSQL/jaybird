@@ -984,6 +984,14 @@ Jaybird 6 will drop support for Java 8 and 11, making Java 17 the baseline versi
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
 
+==== Dropping support for OOREMOTE (OpenOffice/LibreOffice driver)
+
+The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) are deprecated in Jaybird 5 and will be removed in Jaybird 6.
+
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
+
+The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
+
 [#removal-of-deprecated-classes-packages-and-methods-6]
 ==== Removal of deprecated classes, packages and methods
 

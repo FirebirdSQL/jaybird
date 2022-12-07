@@ -29,6 +29,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 
+/**
+ * OpenOffice/LibreOffice specific implementation of {@link java.sql.Connection}.
+ *
+ * @deprecated Switch to using "Firebird External" in LibreOffice, will be removed in Jaybird 6.
+ */
+@Deprecated
 public class OOConnection extends FBConnection {
 
     private static final Logger log = LoggerFactory.getLogger(OOConnection.class);

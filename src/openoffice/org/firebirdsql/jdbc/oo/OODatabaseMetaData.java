@@ -42,6 +42,12 @@ import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENGTH;
 import static org.firebirdsql.jdbc.metadata.PrivilegeMapping.mapPrivilege;
 
+/**
+ * OpenOffice/LibreOffice specific implementation of {@link java.sql.DatabaseMetaData}.
+ *
+ * @deprecated Switch to using "Firebird External" in LibreOffice, will be removed in Jaybird 6.
+ */
+@Deprecated
 public class OODatabaseMetaData extends FBDatabaseMetaData {
 
     private static final DatatypeCoder datatypeCoder =

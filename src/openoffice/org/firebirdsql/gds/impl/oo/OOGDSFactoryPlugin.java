@@ -24,6 +24,12 @@ import org.firebirdsql.jdbc.oo.OOConnection;
 
 import java.util.Arrays;
 
+/**
+ * OpenOffice/LibreOffice specific implementation of {@link org.firebirdsql.gds.impl.GDSFactoryPlugin}.
+ *
+ * @deprecated Switch to using "Firebird External" in LibreOffice, will be removed in Jaybird 6.
+ */
+@Deprecated
 public class OOGDSFactoryPlugin extends BaseGDSFactoryPlugin {
 
     public static final String TYPE_NAME = "OOREMOTE";

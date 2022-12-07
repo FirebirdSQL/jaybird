@@ -53,7 +53,7 @@ public class GetSchemas {
         return new FBResultSet(ROW_DESCRIPTOR, emptyList());
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "deprecation" })
     public static GetSchemas create(DbMetadataMediator mediator) {
         if (OOGDSFactoryPlugin.TYPE_NAME.equals(mediator.getGDSType().toString())) {
             return new OO();

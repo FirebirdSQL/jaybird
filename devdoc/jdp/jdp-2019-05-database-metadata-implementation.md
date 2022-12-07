@@ -2,8 +2,8 @@
 
 ## Status
 
-- Draft
-- Proposed for: Jaybird 4/Jaybird 5
+- Published: 2022-12-07
+- Implemented in: Jaybird 5
 
 ## Type
 
@@ -69,9 +69,9 @@ separate package, `org.firebirdsql.jdbc.metadata`.
 ### OOREMOTE protocol
 
 For the OOREMOTE protocol, we currently use a separate `DatabaseMetaData` 
-implementation (`OODatabaseMetaData`). If possible, this should be replaced with
-an OOREMOTE specific method implementation, similar as is done for Firebird 
-version specific method implementations.
+implementation (`OODatabaseMetaData`). Instead of replacing/refactoring this
+implementation, the decision was made to deprecate the protocol for removal in
+Jaybird 6 (see jdp-2022-04).
 
 ### Testing
 

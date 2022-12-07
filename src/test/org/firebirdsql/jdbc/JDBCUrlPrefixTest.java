@@ -53,6 +53,7 @@ class JDBCUrlPrefixTest {
     @RegisterExtension
     static final UsesDatabaseExtension.UsesDatabaseForAll usesDatabase = UsesDatabaseExtension.usesDatabaseForAll();
 
+    @SuppressWarnings("deprecation")
     static Stream<Arguments> parameters() {
         return Stream.of(
                 testCase("jdbc:firebirdsql:", WireGDSFactoryPlugin.PURE_JAVA_TYPE_NAME),
