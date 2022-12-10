@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jdbc;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +30,7 @@ import java.io.Writer;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.sql.SQLNonTransientException;
 
 /**
  * Implementation of {@link Clob}.
@@ -69,7 +71,11 @@ public class FBClob implements Clob, NClob {
 		try (Reader reader = getCharacterStream()) {
 			long toSkip = pos - 1; // 1-based index
 			while (toSkip > 0) {
-				toSkip -= reader.skip(toSkip);
+				long skipped = reader.skip(toSkip);
+				if (skipped == 0) {
+					throw new EOFException("end of stream was reached at position " + (pos - toSkip));
+				}
+				toSkip -= skipped;
 			}
 			int n;
 			char[] buffer = new char[Math.min(length, 1024)];
@@ -129,7 +135,7 @@ public class FBClob implements Clob, NClob {
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird currently does not support this method.
+     * Jaybird currently only supports this method for {@code position == 1}.
      * </p>
      */
 	@Override
@@ -140,7 +146,7 @@ public class FBClob implements Clob, NClob {
     /**
      * {@inheritDoc}
      * <p>
-     * Jaybird currently does not support this method.
+     * Jaybird currently only supports this method for {@code position == 1}.
      * </p>
      */
 	@Override
@@ -160,8 +166,14 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Writer setCharacterStream(long position) throws SQLException {
-		// FIXME: This is wrong for multibyte charactersets; doesn't matter right now as setBinaryStream isn't implemented for position > 1
-		OutputStream outputStream = wrappedBlob.setBinaryStream(position);
+		if (position < 1) {
+			throw new SQLNonTransientException("You can't start before the beginning of the blob",
+					SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
+		}
+		if (position > 1) {
+			throw new FBDriverNotCapableException("Offset start positions are not supported.");
+		}
+		OutputStream outputStream = wrappedBlob.setBinaryStream(1);
 		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
 		if (encoding == null) {
 			return new OutputStreamWriter(outputStream);
@@ -181,18 +193,7 @@ public class FBClob implements Clob, NClob {
 
 	@Override
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
-	    // FIXME: This is wrong for multibyte charactersets; doesn't matter right now as getBinaryStream isn't implemented
-		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
-		String encoding = wrappedBlob.getGdsHelper().getJavaEncoding();
-		if (encoding == null) {
-			return new InputStreamReader(inputStream);
-		} else {
-			try {
-				return new InputStreamReader(inputStream, encoding);
-			} catch (IOException ioe) {
-				throw new FBSQLException(ioe);
-			}
-		}
+		throw new FBDriverNotCapableException("Method getCharacterStream(long, long) is not supported");
 	}
 
 	/**
