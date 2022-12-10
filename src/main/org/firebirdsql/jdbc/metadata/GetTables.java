@@ -40,6 +40,7 @@ import java.util.Set;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static org.firebirdsql.gds.ISCConstants.SQL_SHORT;
 import static org.firebirdsql.gds.ISCConstants.SQL_VARYING;
 import static org.firebirdsql.jdbc.FBDatabaseMetaData.GLOBAL_TEMPORARY;
 import static org.firebirdsql.jdbc.FBDatabaseMetaData.SYSTEM_TABLE;
@@ -58,7 +59,7 @@ import static org.firebirdsql.jdbc.metadata.FbMetadataConstants.OBJECT_NAME_LENG
 @InternalApi
 public abstract class GetTables extends AbstractMetadataMethod {
 
-    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(11, DbMetadataMediator.datatypeCoder)
+    private static final RowDescriptor ROW_DESCRIPTOR = new RowDescriptorBuilder(12, DbMetadataMediator.datatypeCoder)
             .at(0).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_CAT", "TABLES").addField()
             .at(1).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "TABLE_SCHEM", "TABLES").addField()
             .at(2).simple(SQL_VARYING, OBJECT_NAME_LENGTH, "TABLE_NAME", "TABLES").addField()
@@ -72,6 +73,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
             .at(9).simple(SQL_VARYING | 1, 10, "REF_GENERATION", "TABLES").addField()
             // Jaybird extensions
             .at(10).simple(SQL_VARYING | 1, OBJECT_NAME_LENGTH, "OWNER_NAME", "TABLES").addField()
+            .at(11).simple(SQL_SHORT, 0, "JB_RELATION_ID", "TABLES").addField()
             .toRowDescriptor();
 
     private static final RowDescriptor ROW_DESCRIPTOR_TABLE_TYPES =
@@ -103,6 +105,7 @@ public abstract class GetTables extends AbstractMetadataMethod {
                 .at(3).setString(rs.getString("TABLE_TYPE"))
                 .at(4).setString(rs.getString("REMARKS"))
                 .at(10).setString(rs.getString("OWNER_NAME"))
+                .at(11).setShort(rs.getShort("JB_RELATION_ID"))
                 .toRowValue(true);
     }
 
@@ -212,7 +215,8 @@ public abstract class GetTables extends AbstractMetadataMethod {
                     + "  RDB$RELATION_NAME as TABLE_NAME,\n"
                     + "  cast('%s' as varchar(31)) as TABLE_TYPE,\n"
                     + "  RDB$DESCRIPTION as REMARKS,\n"
-                    + "  RDB$OWNER_NAME as OWNER_NAME\n"
+                    + "  RDB$OWNER_NAME as OWNER_NAME,\n"
+                    + "  RDB$RELATION_ID as JB_RELATION_ID\n"
                     + "from RDB$RELATIONS\n"
                     + "where %s",
                     tableType, condition);
@@ -239,7 +243,8 @@ public abstract class GetTables extends AbstractMetadataMethod {
                 + "    when rdb$relation_type in (4, 5) then '" + GLOBAL_TEMPORARY + "'\n"
                 + "  end) as TABLE_TYPE,\n"
                 + "  RDB$DESCRIPTION as REMARKS,\n"
-                + "  trim(trailing from RDB$OWNER_NAME) as OWNER_NAME\n"
+                + "  trim(trailing from RDB$OWNER_NAME) as OWNER_NAME,\n"
+                + "  RDB$RELATION_ID as JB_RELATION_ID\n"
                 + "from RDB$RELATIONS";
         //@formatter:on
 

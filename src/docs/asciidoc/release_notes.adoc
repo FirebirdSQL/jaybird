@@ -626,6 +626,12 @@ Longer statement texts were already supported for pure-java connections.
 It returns the object type of the grantee (e.g. `USER`, `ROLE`).
 This is a Jaybird specific extension, we recommend retrieving it by name only.
 * Improvement: Populate `COLUMN_DEF` of `DatabaseMetaData.getProcedureColumns` with the default of the parameter (https://github.com/FirebirdSQL/jaybird/issues/715[jaybird#715])
+* New Feature: `org.firebirdsql.managemen.FBTableStatisticsManager` to retrieve the table execution statistics of a connection (https://github.com/FirebirdSQL/jaybird/issues/716[jaybird#716])
++
+Create an instance with `FBTableStatisticsManager#of(java.sql.Connection)` -- the connection must unwrap to a `FirebirdConnection` -- and retrieve a snapshot of the statistics with `FBTableStatisticsManager#getTableStatistics()`.
++
+This is an experimental feature.
+Its API may change in point releases, or it may be removed or replaced entirely in a future major release.
 * Change: Jaybird no longer registers a `SQLWarning` nor logs a warning when connecting without an explicit connection character set (https://github.com/FirebirdSQL/jaybird/issues/717[jaybird#717])
 
 [#removal-of-deprecated-classes-and-packages]

@@ -28,6 +28,7 @@ package org.firebirdsql.jdbc;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
+import org.firebirdsql.util.InternalApi;
 
 import java.sql.Blob;
 import java.sql.Connection;
@@ -157,6 +158,7 @@ public interface FirebirdConnection extends Connection {
      *
      * @return The low-level connection handle.
      */
+    @InternalApi
     FbDatabase getFbDatabase() throws SQLException;
 
 }

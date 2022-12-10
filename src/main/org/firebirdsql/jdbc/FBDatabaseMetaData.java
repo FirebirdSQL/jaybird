@@ -1139,6 +1139,16 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     public static final String VIEW = "VIEW";
     public static final String GLOBAL_TEMPORARY = "GLOBAL TEMPORARY";
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Jaybird defines these additional columns:
+     * <ol start="11">
+     * <li><b>OWNER_NAME</b> String  =&gt; Owner of the table</li>
+     * <li><b>JB_RELATION_ID</b> Short =&gt; Value of {@code RDB$RELATIONS.RDB$RELATION_ID} of the table</li>
+     * </ol>
+     * </p>
+     */
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types)
             throws SQLException {
