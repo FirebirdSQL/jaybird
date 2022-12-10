@@ -149,7 +149,7 @@ public final class TableStatistics {
         return new TableStatisticsBuilder(tableName);
     }
 
-    static class TableStatisticsBuilder {
+    static final class TableStatisticsBuilder {
 
         private final String tableName;
         private long readSeqCount;

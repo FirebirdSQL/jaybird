@@ -65,7 +65,7 @@ import static org.firebirdsql.gds.ISCConstants.isc_info_update_count;
  * @since 5
  */
 @Volatile(reason = "Experimental")
-public class FBTableStatisticsManager implements AutoCloseable {
+public final class FBTableStatisticsManager implements AutoCloseable {
 
     private Map<Integer, String> tableMapping = new HashMap<>();
     private FirebirdConnection connection;
@@ -180,7 +180,7 @@ public class FBTableStatisticsManager implements AutoCloseable {
         };
     }
 
-    private class TableStatisticsProcessor implements InfoProcessor<Map<String, TableStatistics>> {
+    private final class TableStatisticsProcessor implements InfoProcessor<Map<String, TableStatistics>> {
 
         private final Map<String, TableStatistics.TableStatisticsBuilder> statisticsBuilders = new HashMap<>();
 
