@@ -117,7 +117,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
 
                 blob.open();
@@ -136,7 +136,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -156,7 +156,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -184,7 +184,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
             try {
                 final FbStatement statement = db.createStatement(transaction);
                 statement.addStatementListener(listener);
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -226,7 +226,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -257,7 +257,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
         try (FbWireDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
                 assertThat(exception, allOf(

@@ -74,7 +74,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -107,7 +107,7 @@ class JnaBlobTest extends BaseTestBlob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 int offset = baseContent.length / 2;
 
@@ -138,7 +138,7 @@ class JnaBlobTest extends BaseTestBlob {
                 long blobId = getBlobId(testId, db);
 
                 // NOTE: What matters is if the blob on the server is stream or segment
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 final int offset = requiredSize / 2;
 
@@ -170,7 +170,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(requiredSize);
                 while (!blob.isEof()) {
@@ -209,7 +209,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 long blobId = getBlobId(testId, db);
 
-                final FbBlob blob = db.createBlobForInput(transaction, null, blobId);
+                final FbBlob blob = db.createBlobForInput(transaction, blobId);
                 blob.open();
                 // Double open
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
@@ -268,7 +268,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
 
                 blob.open();
@@ -287,7 +287,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -307,7 +307,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                FbBlob blob = db.createBlobForOutput(transaction, null);
+                FbBlob blob = db.createBlobForOutput(transaction);
                 assumeTrue(blob.isEof(), "Output blob before open should be eof");
                 blob.open();
 
@@ -335,7 +335,7 @@ class JnaBlobTest extends BaseTestBlob {
             try {
                 final FbStatement statement = db.createStatement(transaction);
                 statement.addStatementListener(listener);
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -376,7 +376,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 int bytesWritten = 0;
                 while (bytesWritten < testBytes.length) {
@@ -407,7 +407,7 @@ class JnaBlobTest extends BaseTestBlob {
         try (JnaDatabase db = createDatabaseConnection()) {
             final FbTransaction transaction = getTransaction(db);
             try {
-                final FbBlob blob = db.createBlobForOutput(transaction, null);
+                final FbBlob blob = db.createBlobForOutput(transaction);
                 blob.open();
                 SQLException exception = assertThrows(SQLNonTransientException.class, blob::open);
                 assertThat(exception, allOf(
