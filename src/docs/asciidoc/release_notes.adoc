@@ -1005,21 +1005,21 @@ The recommended replacement is to use LibreOffice and the builtin "`Firebird Ext
 
 The following methods will be removed in Jaybird 6:
 
-* `FirebirdConnectionProperties.getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
-* `FirebirdConnectionProperties.setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
-* `FirebirdConnectionProperties.getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`.
-* `FirebirdConnectionProperties.setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`.
-* `short FirebirdConnectionProperties.getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`.
-* `IConnectionProperties.setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`.
-* `FirebirdConnectionProperties.getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`.
-* `FirebirdConnectionProperties.setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`.
+* `FirebirdConnectionProperties` +
+Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
+** `getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
+** `setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
+** `getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`
+** `setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`
+** `short getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`
+** `getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`
+** `setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`
+* `IConnectionProperties.setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`
 * `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
 * `EventManager.get/setHost`, use `get/setServerName`
 * `EventManager.get/setPort`, use `get/setPortNumber`
 * `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
 * `ManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
-
-Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
 
 [#removal-of-deprecated-classes-6]
 ===== Removal of deprecated classes
@@ -1028,6 +1028,7 @@ The following classes have been deprecated and will be removed in Jaybird 6:
 
 * `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
 * `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
 
 [#removal-of-deprecated-constants-6]
 ==== Removal of deprecated constants
@@ -1045,6 +1046,7 @@ The replacement for most constants can be found in `org.firebirdsql.jaybird.prop
 * All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.param.TpbItems`.
 * All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
 The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
+* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API
 
 [#compatibility-notes]
 == Compatibility notes

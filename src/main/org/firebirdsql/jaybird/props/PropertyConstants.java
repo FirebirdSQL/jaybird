@@ -51,7 +51,7 @@ public final class PropertyConstants {
     static final boolean DEFAULT_USE_FIREBIRD_AUTO_COMMIT = false;
     static final boolean DEFAULT_IGNORE_PROCEDURE_TYPE = false;
     static final boolean DEFAULT_WIRE_COMPRESSION = false;
-    static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
+    public static final int DEFAULT_BLOB_BUFFER_SIZE = 16384;
     public static final int DEFAULT_PAGE_CACHE_SIZE = 0;
     static final boolean DEFAULT_USE_SERVER_BATCH = true;
     public static final int DEFAULT_SERVER_BATCH_BUFFER_SIZE = 0;
