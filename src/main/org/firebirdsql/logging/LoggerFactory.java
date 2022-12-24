@@ -19,16 +19,17 @@
 package org.firebirdsql.logging;
 
 import org.firebirdsql.gds.JaybirdSystemProperties;
+import org.firebirdsql.util.InternalApi;
 
 import java.lang.reflect.Constructor;
 
 /**
- * Factory for Logger instances
+ * Factory for Logger instances.
  * 
  * @author <a href="mailto:brodsom@users.sourceforge.net">Blas Rodriguez Somoza</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
  */
+@InternalApi
 public final class LoggerFactory {
 
     /**

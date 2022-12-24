@@ -92,7 +92,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *         connection that will be used to write data to blob
      * @param blobListener
      *         Blob listener instance
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
      */
     @Deprecated
     public FBBlob(GDSHelper c, FBObjectListener.BlobListener blobListener) {
@@ -120,7 +120,7 @@ public final class FBBlob implements FirebirdBlob, TransactionListener {
      *
      * @param c
      *         connection that will be used to write data to blob.
-     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)
+     * @deprecated will be removed in Jaybird 6, use {@link #FBBlob(GDSHelper, FBObjectListener.BlobListener, Config)}
      */
     @Deprecated
     public FBBlob(GDSHelper c) {
