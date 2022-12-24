@@ -29,6 +29,7 @@ import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.FbWireDatabase;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -102,7 +103,7 @@ public class V10OutputBlobTest extends BaseTestV10Blob {
 
         try (FbWireDatabase db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+            blobParameterBuffer.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_stream);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         }
 

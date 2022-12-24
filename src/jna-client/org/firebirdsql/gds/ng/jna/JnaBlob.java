@@ -153,12 +153,10 @@ public class JnaBlob extends AbstractFbBlob implements FbBlob, DatabaseListener 
                         responseBuffer);
                 final int status = statusVector[1].intValue();
                 // status 0 means: more to come, isc_segment means: buffer was too small, rest will be returned on next call
-                if (!(status == 0 || status == ISCConstants.isc_segment)) {
-                    if (status == ISCConstants.isc_segstr_eof) {
-                        setEof();
-                    } else {
-                        processStatusVector();
-                    }
+                if (status == ISCConstants.isc_segstr_eof) {
+                    setEof();
+                } else if (!(status == 0 || status == ISCConstants.isc_segment)) {
+                    processStatusVector();
                 }
             }
             final int actualLengthInt = ((int) actualLength.getValue()) & 0xFFFF;

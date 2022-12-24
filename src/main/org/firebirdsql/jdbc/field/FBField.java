@@ -41,7 +41,7 @@ import static java.util.Objects.requireNonNull;
 import static org.firebirdsql.jdbc.JavaTypeNameConstants.*;
 
 /**
- * Describe class <code>FBField</code> here.
+ * Base class for fields (for use by prepared statement and result set to represent columns and parameters).
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
@@ -132,19 +132,35 @@ public abstract class FBField {
 
     /**
      * This is a factory method that creates appropriate instance of the
-     * <code>FBField</code> class according to the SQL datatype. This instance
+     * {@code FBField} class according to the SQL datatype. This instance
      * knows how to perform all necessary type conversions.
      */
     public static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
             GDSHelper gdsHelper, boolean cached) throws SQLException {
-        final FBField result = FBField.createField(fieldDescriptor, dataProvider, cached);
-        result.setConnection(gdsHelper);
-        return result;
+        final int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
+        switch (jdbcType) {
+        case Types.LONGVARCHAR:
+            if (cached) {
+                return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
+            } else {
+                return new FBLongVarCharField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
+            }
+        case Types.BLOB:
+        case Types.LONGVARBINARY:
+            if (cached) {
+                return new FBCachedBlobField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
+            } else {
+                return new FBBlobField(fieldDescriptor, dataProvider, jdbcType, gdsHelper);
+            }
+        default:
+            final FBField result = FBField.createField(jdbcType, fieldDescriptor, dataProvider);
+            result.setConnection(gdsHelper);
+            return result;
+        }
     }
 
-    private static FBField createField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider,
-            boolean cached) throws SQLException {
-        final int jdbcType = JdbcTypeConverter.toJdbcType(fieldDescriptor);
+    private static FBField createField(int jdbcType, FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider)
+            throws SQLException {
         switch (jdbcType) {
         case Types.SMALLINT:
             return new FBShortField(fieldDescriptor, dataProvider, jdbcType);
@@ -179,22 +195,9 @@ public abstract class FBField {
         case Types.CHAR:
         case Types.VARCHAR:
             return new FBStringField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.LONGVARCHAR:
-            if (cached) {
-                return new FBCachedLongVarCharField(fieldDescriptor, dataProvider, jdbcType);
-            } else {
-                return new FBLongVarCharField(fieldDescriptor, dataProvider, jdbcType);
-            }
         case Types.VARBINARY:
         case Types.BINARY:
             return new FBBinaryField(fieldDescriptor, dataProvider, jdbcType);
-        case Types.BLOB:
-        case Types.LONGVARBINARY:
-            if (cached) {
-                return new FBCachedBlobField(fieldDescriptor, dataProvider, jdbcType);
-            } else {
-                return new FBBlobField(fieldDescriptor, dataProvider, jdbcType);
-            }
         case Types.BOOLEAN:
             return new FBBooleanField(fieldDescriptor, dataProvider, jdbcType);
         case Types.NULL:
@@ -740,8 +743,24 @@ public abstract class FBField {
         throw invalidSetConversion(Blob.class);
     }
 
+    public void setBlob(Blob blob) throws SQLException {
+        throw invalidSetConversion(Blob.class);
+    }
+
+    FBBlob createBlob() throws SQLException {
+        throw invalidSetConversion(Blob.class);
+    }
+
     public void setClob(FBClob clob) throws SQLException {
         throw invalidSetConversion(Clob.class);
+    }
+
+    public void setClob(Clob clob) throws SQLException {
+        throw invalidSetConversion(Clob.class);
+    }
+
+    final FBClob createClob() throws SQLException {
+        return new FBClob(createBlob());
     }
 
     public void setRowId(RowId rowId) throws SQLException {

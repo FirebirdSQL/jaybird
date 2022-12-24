@@ -98,8 +98,7 @@ public final class GDSHelper {
     /**
      * Retrieve whether this connection is currently involved in a transaction
      *
-     * @return <code>true</code> if this connection is currently in a
-     * transaction, <code>false</code> otherwise.
+     * @return {@code true} if this connection is currently in a transaction, {@code false} otherwise.
      */
     public boolean inTransaction() {
         try (LockCloseable ignored = withLock()) {
@@ -120,48 +119,32 @@ public final class GDSHelper {
     }
 
     /**
-     * Open a handle to a new blob within the current transaction with the given
-     * id.
+     * Open a handle to a new blob within the current transaction with the given id.
      *
-     * @param blob_id
-     *         The identifier to be given to the blob
-     * @param segmented
-     *         If <code>true</code>, the blob will be segmented, otherwise
-     *         is will be streamed
+     * @param blobId
+     *         the identifier to be given to the blob
+     * @param blobConfig
+     *         blob configuration
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
-    public FbBlob openBlob(long blob_id, boolean segmented) throws SQLException {
-        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
-        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                        : BlobParameterBuffer.TYPE_STREAM);
-
-        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobParameterBuffer, blob_id);
+    public FbBlob openBlob(long blobId, BlobConfig blobConfig) throws SQLException {
+        FbBlob blob = database.createBlobForInput(getCurrentTransaction(), blobConfig, blobId);
         blob.open();
-
         return blob;
     }
 
     /**
      * Create a new blob within the current transaction.
      *
-     * @param segmented
-     *         If <code>true</code> the blob will be segmented, otherwise it will be streamed
+     * @param blobConfig
+     *         blob configuration
      * @throws SQLException
      *         if a Firebird-specific database error occurs
      */
-    public FbBlob createBlob(boolean segmented) throws SQLException {
-        BlobParameterBuffer blobParameterBuffer = database.createBlobParameterBuffer();
-
-        blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE,
-                segmented ? BlobParameterBuffer.TYPE_SEGMENTED
-                        : BlobParameterBuffer.TYPE_STREAM);
-
-        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobParameterBuffer);
+    public FbBlob createBlob(BlobConfig blobConfig) throws SQLException {
+        FbBlob blob = database.createBlobForOutput(getCurrentTransaction(), blobConfig);
         blob.open();
-
         return blob;
     }
 
@@ -255,25 +238,14 @@ public final class GDSHelper {
     }
 
     /**
-     * Get the buffer length for blobs for this connection.
-     *
-     * @return The length of blob buffers
-     */
-    public int getBlobBufferLength() {
-        return database.getConnectionProperties().getBlobBufferSize();
-    }
-
-    /**
      * Get the encoding used for this connection.
      *
      * @return The name of the encoding used
+     * @deprecated Will be removed in Jaybird 6
      */
+    @Deprecated
     public String getIscEncoding() {
         return database.getEncodingFactory().getDefaultEncodingDefinition().getFirebirdEncodingName();
-    }
-
-    public String getJavaEncoding() {
-        return database.getEncodingFactory().getDefaultEncodingDefinition().getJavaEncodingName();
     }
 
     /**

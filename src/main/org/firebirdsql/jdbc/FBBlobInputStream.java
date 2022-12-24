@@ -31,10 +31,6 @@ import java.sql.SQLException;
  */
 public final class FBBlobInputStream extends InputStream implements FirebirdBlob.BlobInputStream {
 
-    /**
-     * Maximum blob segment size, see IB 6 Data Definition Guide, page 78 ("BLOB segment length")
-     */
-    private static final int READ_FULLY_BUFFER_SIZE = 32 * 1024;
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
     private byte[] buffer = EMPTY_BUFFER;
@@ -46,14 +42,15 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     private final FBBlob owner;
 
     FBBlobInputStream(FBBlob owner) throws SQLException {
-        if (owner.isNew())
+        if (owner.isNew()) {
             throw new FBSQLException("You can't read a new blob");
+        }
 
         this.owner = owner;
         closed = false;
 
         try (LockCloseable ignored = owner.withLock()) {
-            blobHandle = owner.getGdsHelper().openBlob(owner.getBlobId(), FBBlob.SEGMENTED);
+            blobHandle = owner.openBlob();
         }
     }
 
@@ -100,11 +97,10 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
     /**
      * Checks the available buffer size, retrieving a segment from the server if necessary.
      *
-     * @return The number of bytes available in the buffer, or <code>-1</code> if the end of the stream is reached.
+     * @return The number of bytes available in the buffer, or {@code -1} if the end of the stream is reached.
      * @throws IOException if an I/O error occurs, or if the stream has been closed.
      */
     private int checkBuffer() throws IOException {
-        assert buffer != null : "Buffer should never be null";
         try (LockCloseable ignored = owner.withLock()) {
             checkClosed();
             if (pos < buffer.length) {
@@ -161,7 +157,7 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
         int counter = 0;
         int pos = off;
-        byte[] buffer = new byte[Math.min(READ_FULLY_BUFFER_SIZE, len)];
+        byte[] buffer = new byte[Math.min(owner.getBufferLength(), len)];
 
         int toRead = len;
 

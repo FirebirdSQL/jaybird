@@ -125,10 +125,10 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
+     *         transaction associated with the blob
      * @param blobParameterBuffer
-     *         Blob Parameter Buffer
-     * @return Instance of {@link FbBlob}
+     *         blob parameter buffer
+     * @return instance of {@link FbBlob}
      */
     FbBlob createBlobForOutput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer);
 
@@ -143,11 +143,31 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
-     * @return Instance of {@link FbBlob}
+     *         transaction associated with the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
      */
     default FbBlob createBlobForOutput(FbTransaction transaction) {
         return createBlobForOutput(transaction, (BlobParameterBuffer) null);
+    }
+
+    /**
+     * Creates a blob for write access to a new blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @param blobConfig
+     *         blob config (cannot be {@code null})
+     * @return instance of {@link FbBlob}
+     * @Since 5
+     */
+    default FbBlob createBlobForOutput(FbTransaction transaction, BlobConfig blobConfig) {
+        BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
+        blobConfig.writeOutputConfig(blobParameterBuffer);
+        return createBlobForOutput(transaction, blobParameterBuffer);
     }
 
     /**
@@ -157,12 +177,12 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
+     *         transaction associated with the blob
      * @param blobParameterBuffer
-     *         Blob Parameter Buffer
+     *         blob parameter buffer
      * @param blobId
-     *         Handle id of the blob
-     * @return Instance of {@link FbBlob}
+     *         id of the blob
+     * @return instance of {@link FbBlob}
      */
     FbBlob createBlobForInput(FbTransaction transaction, BlobParameterBuffer blobParameterBuffer, long blobId);
 
@@ -177,13 +197,35 @@ public interface FbDatabase extends FbAttachment {
      * </p>
      *
      * @param transaction
-     *         Transaction associated with the blob.
+     *         transaction associated with the blob
      * @param blobId
-     *         Handle id of the blob
-     * @return Instance of {@link FbBlob}
+     *         id of the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
      */
     default FbBlob createBlobForInput(FbTransaction transaction, long blobId) {
         return createBlobForInput(transaction, (BlobParameterBuffer) null, blobId);
+    }
+
+    /**
+     * Creates a blob for read access to an existing blob on the server.
+     * <p>
+     * The blob is initially closed.
+     * </p>
+     *
+     * @param transaction
+     *         transaction associated with the blob
+     * @param blobConfig
+     *         blob config (cannot be {@code null})
+     * @param blobId
+     *         handle id of the blob
+     * @return instance of {@link FbBlob}
+     * @since 5
+     */
+    default FbBlob createBlobForInput(FbTransaction transaction, BlobConfig blobConfig, long blobId) {
+        BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
+        blobConfig.writeInputConfig(blobParameterBuffer);
+        return createBlobForInput(transaction, blobParameterBuffer, blobId);
     }
 
     /**

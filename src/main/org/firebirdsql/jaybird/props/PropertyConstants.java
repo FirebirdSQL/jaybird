@@ -45,7 +45,7 @@ public final class PropertyConstants {
 
     public static final int DEFAULT_DIALECT = ISCConstants.SQL_DIALECT_V6;
 
-    static final boolean DEFAULT_STREAM_BLOBS = true;
+    public static final boolean DEFAULT_STREAM_BLOBS = true;
     static final boolean DEFAULT_RESULT_SET_HOLDABLE = false;
     static final boolean DEFAULT_COLUMN_LABEL_FOR_NAME = false;
     static final boolean DEFAULT_USE_FIREBIRD_AUTO_COMMIT = false;

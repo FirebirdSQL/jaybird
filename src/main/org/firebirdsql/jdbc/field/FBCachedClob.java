@@ -18,19 +18,18 @@
  */
 package org.firebirdsql.jdbc.field;
 
-import java.io.IOException;
+import org.firebirdsql.jdbc.FBBlob;
+import org.firebirdsql.jdbc.FBCachedBlob;
+import org.firebirdsql.jdbc.FBDriverNotCapableException;
+import org.firebirdsql.jdbc.FBSQLException;
+
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
-
-import org.firebirdsql.jdbc.FBCachedBlob;
-import org.firebirdsql.jdbc.FBDriverNotCapableException;
-import org.firebirdsql.jdbc.FBSQLException;
 
 /**
  * Clob implementation that is cached client-side.
@@ -42,14 +41,14 @@ import org.firebirdsql.jdbc.FBSQLException;
  * transparently. It technically does not conform to the JDBC requirements for {@code NClob}.
  * </p>
  */
-public class FBCachedClob implements Clob, NClob {
+public final class FBCachedClob implements Clob, NClob {
 	
 	private final FBCachedBlob wrappedBlob;
-	private final String javaEncoding;
+	private final FBBlob.Config blobConfig;
 
-	public FBCachedClob(FBCachedBlob blob, String javaEncoding) {
+	public FBCachedClob(FBCachedBlob blob, FBBlob.Config blobConfig) {
 		this.wrappedBlob = blob;
-		this.javaEncoding = javaEncoding;
+		this.blobConfig = blobConfig;
 	}
 
 	public void free() throws SQLException {
@@ -61,30 +60,13 @@ public class FBCachedClob implements Clob, NClob {
 	}
 
 	public Reader getCharacterStream() throws SQLException {
-		InputStream inputStream = wrappedBlob.getBinaryStream();
-		if (javaEncoding == null) {
-			return new InputStreamReader(inputStream);
-		} else {
-			try {
-				return new InputStreamReader(wrappedBlob.getBinaryStream(),
-						javaEncoding);
-			} catch (IOException ioe) {
-				throw new FBSQLException(ioe);
-			}
-		}
+		return blobConfig.createReader(
+				wrappedBlob.getBinaryStream());
 	}
 
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
-		InputStream inputStream = wrappedBlob.getBinaryStream(pos, length);
-		if (javaEncoding == null) {
-			return new InputStreamReader(inputStream);
-		} else {
-			try {
-				return new InputStreamReader(inputStream, javaEncoding);
-			} catch (IOException ioe) {
-				throw new FBSQLException(ioe);
-			}
-		}
+		return blobConfig.createReader(
+				wrappedBlob.getBinaryStream(pos, length));
 	}
 
 	public String getSubString(long pos, int length) throws SQLException {

@@ -24,6 +24,8 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
+
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
  * Firebird API documentation and specifies attributes for
@@ -44,18 +46,26 @@ package org.firebirdsql.gds;
  * </ul>
  */
 public interface BlobParameterBuffer extends ParameterBuffer {
-    
-    int SOURCE_TYPE             =  ISCConstants.isc_bpb_source_type;
-    int TARGET_TYPE             =  ISCConstants.isc_bpb_target_type;
 
-    int SOURCE_INTERP           =  ISCConstants.isc_bpb_source_interp;
-    int TARGET_INTERP           =  ISCConstants.isc_bpb_target_interp;
-    
-    int FILTER_PARAMETER        =  ISCConstants.isc_bpb_filter_parameter;
+    @Deprecated
+    int SOURCE_TYPE             =  BpbItems.isc_bpb_source_type;
+    @Deprecated
+    int TARGET_TYPE             =  BpbItems.isc_bpb_target_type;
 
-    int TYPE                    =  ISCConstants.isc_bpb_type;
-    int TYPE_SEGMENTED          =  ISCConstants.isc_bpb_type_segmented;
-    int TYPE_STREAM             =  ISCConstants.isc_bpb_type_stream;
+    @Deprecated
+    int SOURCE_INTERP           =  BpbItems.isc_bpb_source_interp;
+    @Deprecated
+    int TARGET_INTERP           =  BpbItems.isc_bpb_target_interp;
+
+    @Deprecated
+    int FILTER_PARAMETER        =  BpbItems.isc_bpb_filter_parameter;
+
+    @Deprecated
+    int TYPE                    =  BpbItems.isc_bpb_type;
+    @Deprecated
+    int TYPE_SEGMENTED          =  BpbItems.TypeValues.isc_bpb_type_segmented;
+    @Deprecated
+    int TYPE_STREAM             =  BpbItems.TypeValues.isc_bpb_type_stream;
 
     /**
      * Set a void (valueless) parameter on this {@code BlobParameterBuffer}.

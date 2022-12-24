@@ -24,8 +24,10 @@
  */
 package org.firebirdsql.gds;
 
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.firebirdsql.jaybird.fb.constants.DpbItems;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
+import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 
 /**
@@ -951,16 +953,25 @@ public interface ISCConstants {
     /* Blob Parameter Block */
     /************************/
 
-    int isc_bpb_version1                =  1;
-    int isc_bpb_source_type             =  1;
-    int isc_bpb_target_type             =  2;
-    int isc_bpb_type                    =  3;
-    int isc_bpb_source_interp           =  4;
-    int isc_bpb_target_interp           =  5;
-    int isc_bpb_filter_parameter        =  6;
+    @Deprecated
+    int isc_bpb_version1                = BpbItems.isc_bpb_version1;
+    @Deprecated
+    int isc_bpb_source_type             = BpbItems.isc_bpb_source_type;
+    @Deprecated
+    int isc_bpb_target_type             = BpbItems.isc_bpb_target_type;
+    @Deprecated
+    int isc_bpb_type                    = BpbItems.isc_bpb_type;
+    @Deprecated
+    int isc_bpb_source_interp           = BpbItems.isc_bpb_source_interp;
+    @Deprecated
+    int isc_bpb_target_interp           = BpbItems.isc_bpb_target_interp;
+    @Deprecated
+    int isc_bpb_filter_parameter        = BpbItems.isc_bpb_filter_parameter;
 
-    int isc_bpb_type_segmented          =  0;
-    int isc_bpb_type_stream             =  1;
+    @Deprecated
+    int isc_bpb_type_segmented          = BpbItems.TypeValues.isc_bpb_type_segmented;
+    @Deprecated
+    int isc_bpb_type_stream             = BpbItems.TypeValues.isc_bpb_type_stream;
 
     int RBL_eof              = 1;
     int RBL_segment          = 2;
@@ -2514,8 +2525,8 @@ public interface ISCConstants {
     int CS_BINARY  = 1; /* BINARY BYTES */
     int CS_dynamic = 127; // Pseudo number for runtime charset (see intl\charsets.h and references to it in Firebird)
 
-    int BLOB_SUB_TYPE_BINARY = 0;
-    int BLOB_SUB_TYPE_TEXT = 1;
+    int BLOB_SUB_TYPE_BINARY = StandardBlobTypes.isc_blob_untyped;
+    int BLOB_SUB_TYPE_TEXT = StandardBlobTypes.isc_blob_text;
 
     // Fetch related constants
     int FETCH_OK = 0;

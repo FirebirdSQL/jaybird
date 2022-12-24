@@ -297,14 +297,23 @@ public class FBConnection implements FirebirdConnection {
     public Blob createBlob() throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkValidity();
-            return new FBBlob(getGDSHelper(), txCoordinator);
+            return createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_BINARY, connectionProperties(),
+                    getFbDatabase().getDatatypeCoder()));
         }
+    }
+
+    private FBBlob createBlob(FBBlob.Config blobConfig) throws SQLException {
+        return new FBBlob(getGDSHelper(), txCoordinator, blobConfig);
     }
 
     @Override
     public Clob createClob() throws SQLException {
-        FBBlob blob = (FBBlob) createBlob();
-        return new FBClob(blob);
+        try (LockCloseable ignored = withLock()) {
+            checkValidity();
+            FBBlob blob = createBlob(FBBlob.createConfig(ISCConstants.BLOB_SUB_TYPE_TEXT, connectionProperties(),
+                    getFbDatabase().getDatatypeCoder()));
+            return new FBClob(blob);
+        }
     }
 
     @Override
@@ -1051,6 +1060,7 @@ public class FBConnection implements FirebirdConnection {
         return getGDSHelper().inTransaction();
     }
 
+    @Deprecated
     @Override
     public String getIscEncoding() throws SQLException {
         return getGDSHelper().getIscEncoding();

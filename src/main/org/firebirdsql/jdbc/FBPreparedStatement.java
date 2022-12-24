@@ -27,6 +27,7 @@ import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jdbc.field.BlobListenableField;
 import org.firebirdsql.jdbc.field.FBField;
 import org.firebirdsql.jdbc.field.FBFlushableField;
 import org.firebirdsql.jdbc.field.FBFlushableField.CachedObject;
@@ -687,14 +688,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public void setBlob(int parameterIndex, Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into our BLOB
-        if (blob != null && !(blob instanceof FBBlob)) {
-            FBBlob fbb = new FBBlob(gdsHelper, blobListener);
-            fbb.copyStream(blob.getBinaryStream());
-            blob = fbb;
-        } 
-        
-        getField(parameterIndex).setBlob((FBBlob) blob);
+        getField(parameterIndex).setBlob(blob);
     }
 
     @Override
@@ -709,14 +703,7 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
 
     @Override
     public void setClob(int parameterIndex, Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into our CLOB
-        if (clob != null && !(clob instanceof FBClob)) {
-            FBClob fbc = new FBClob(new FBBlob(gdsHelper, blobListener));
-            fbc.copyCharacterStream(clob.getCharacterStream());
-            clob = fbc;
-        } 
-        
-        getField(parameterIndex).setClob((FBClob) clob);
+        getField(parameterIndex).setClob(clob);
     }
 
     @Override
@@ -795,7 +782,11 @@ public class FBPreparedStatement extends FBStatement implements FirebirdPrepared
             };
 
             // FIXME check if we can safely pass cached here
-            fields[i] = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
+            FBField field = FBField.createField(getParameterDescriptor(i + 1), dataProvider, gdsHelper, false);
+            if (field instanceof BlobListenableField) {
+                ((BlobListenableField) field).setBlobListener(blobListener);
+            }
+            fields[i] = field;
         }
 
         this.isExecuteProcedureStatement = fbStatement.getType() == StatementType.STORED_PROCEDURE;

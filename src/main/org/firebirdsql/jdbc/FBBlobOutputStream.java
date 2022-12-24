@@ -19,7 +19,6 @@
 package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.ng.FbBlob;
-import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.LockCloseable;
 
 import java.io.IOException;
@@ -43,13 +42,10 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
         buf = new byte[owner.getBufferLength()];
 
         try (LockCloseable ignored = owner.withLock()) {
-            IConnectionProperties props = owner.getGdsHelper().getConnectionProperties();
-            boolean useStreamBlobs = props.isUseStreamBlobs();
-            blobHandle = owner.getGdsHelper().createBlob(!useStreamBlobs);
-        }
-
-        if (owner.isNew()) {
-            owner.setBlobId(blobHandle.getBlobId());
+            blobHandle = owner.createBlob();
+            if (owner.isNew()) {
+                owner.setBlobId(blobHandle.getBlobId());
+            }
         }
     }
 
@@ -72,7 +68,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      * {@inheritDoc}
      * <p>
      * Writes are buffered up to the buffer length of the blob (optionally specified by the connection
-     * property <code>blobBufferSize</code>).
+     * property {@code blobBufferSize}).
      * </p>
      */
     @Override
@@ -103,7 +99,7 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      * {@inheritDoc}
      * <p>
      * Writes are buffered up to the buffer length of the blob (optionally specified by the connection
-     * property <code>blobBufferSize</code>).
+     * property {@code blobBufferSize}).
      * </p>
      */
     @Override
@@ -143,18 +139,13 @@ public final class FBBlobOutputStream extends OutputStream implements FirebirdBl
      *         If an I/O error occurs.
      */
     private void writeInternal(byte[] b, int off, int len) throws IOException {
+        // TODO Rewrite to use maximum segment size instead of blob buffer length
         try {
             if (off == 0 && len == b.length && len <= owner.getBufferLength()) {
-                /*
-                 * If we are just writing the entire byte array, we need to
-                 * do nothing but just write it over
-                 */
+                // If we are just writing the entire byte array, we need to do nothing but just write it over
                 writeSegment(b);
             } else {
-                /*
-                 * In this case, we need to chunk it over since <code>putBlobSegment</code>
-                 * cannot currently support length and offset.
-                 */
+                // In this case, we need to chunk it over since putBlobSegment cannot currently support length and offset.
                 int chunk = Math.min(owner.getBufferLength(), len);
                 byte[] buffer = new byte[chunk];
                 while (len > 0) {

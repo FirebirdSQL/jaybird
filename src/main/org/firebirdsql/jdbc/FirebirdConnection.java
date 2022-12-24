@@ -1,6 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver, public Firebird-specific
- * JDBC extensions.
+ * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,7 +73,9 @@ public interface FirebirdConnection extends Connection {
      * Get current ISC encoding.
      *
      * @return current ISC encoding.
+     * @deprecated Will be removed in Jaybird 6
      */
+    @Deprecated
     String getIscEncoding() throws SQLException;
 
     /**

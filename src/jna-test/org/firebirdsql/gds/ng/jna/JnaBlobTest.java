@@ -25,6 +25,7 @@ import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.RowValue;
 import org.firebirdsql.gds.ng.wire.SimpleStatementListener;
+import org.firebirdsql.jaybird.fb.constants.BpbItems;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -253,7 +254,7 @@ class JnaBlobTest extends BaseTestBlob {
 
         try (JnaDatabase db = createDatabaseConnection()) {
             final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-            blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+            blobParameterBuffer.addArgument(BpbItems.isc_bpb_type, BpbItems.TypeValues.isc_bpb_type_stream);
             writeBlob(testId, testBytes, db, blobParameterBuffer);
         }
 

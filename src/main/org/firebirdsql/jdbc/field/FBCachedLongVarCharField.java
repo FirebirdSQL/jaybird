@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBCachedBlob;
 
@@ -29,7 +28,7 @@ import java.sql.SQLException;
 
 /**
  * This is Blob-based implementation of {@link FBStringField} for auto-commit case. 
- * It should be used for fields declared in database as <code>BLOB SUB_TYPE 1</code>. 
+ * It should be used for fields declared in database as {@code BLOB SUB_TYPE 1}.
  * This implementation provides all conversion routines {@link FBStringField} has.
  * 
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
@@ -37,9 +36,9 @@ import java.sql.SQLException;
  */
 final class FBCachedLongVarCharField extends FBLongVarCharField {
 
-    FBCachedLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
-        super(fieldDescriptor, dataProvider, requiredType);
+    FBCachedLongVarCharField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
+            GDSHelper gdsHelper) throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType, gdsHelper);
     }
 
     public Blob getBlob() throws SQLException {
@@ -49,6 +48,6 @@ final class FBCachedLongVarCharField extends FBLongVarCharField {
     
     public Clob getClob() throws SQLException {
     	if (isNull()) return null;
-    	return new FBCachedClob((FBCachedBlob)getBlob(), gdsHelper.getJavaEncoding());
+    	return new FBCachedClob((FBCachedBlob)getBlob(), blobConfig);
     }
 }

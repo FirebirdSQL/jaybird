@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -20,6 +18,7 @@
  */
 package org.firebirdsql.jdbc.field;
 
+import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.jdbc.FBCachedBlob;
 import org.firebirdsql.jdbc.FirebirdBlob;
@@ -28,16 +27,16 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 /**
- * Describe class <code>FBBlobField</code> here.
+ * Field implementation for blobs other than {@code BLOB SUB_TYPE TEXT} which caches the blob content locally.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 final class FBCachedBlobField extends FBBlobField {
 
-    FBCachedBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType)
-            throws SQLException {
-        super(fieldDescriptor, dataProvider, requiredType);
+    FBCachedBlobField(FieldDescriptor fieldDescriptor, FieldDataProvider dataProvider, int requiredType,
+            GDSHelper gdsHelper) throws SQLException {
+        super(fieldDescriptor, dataProvider, requiredType, gdsHelper);
     }
 
     @Override
@@ -51,7 +50,7 @@ final class FBCachedBlobField extends FBBlobField {
     
     public Clob getClob() throws SQLException {
     	if (isNull()) return null;
-    	return new FBCachedClob((FBCachedBlob)getBlob(), gdsHelper.getJavaEncoding());
+    	return new FBCachedClob((FBCachedBlob) getBlob(), blobConfig);
     }
 
     public byte[] getBytes() throws SQLException {

@@ -25,7 +25,7 @@
 package org.firebirdsql.jaybird.fb.constants;
 
 /**
- * Constants for SPB items.
+ * Constants for SPB (service parameter buffer) items.
  *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5

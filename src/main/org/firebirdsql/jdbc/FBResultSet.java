@@ -1659,26 +1659,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void updateBlob(int columnIndex, Blob blob) throws SQLException {
         checkUpdatable();
-        getField(columnIndex).setBlob(asFBBlob(blob));
-    }
-
-    private FBBlob asFBBlob(Blob blob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into our BLOB
-        if (blob == null) {
-            return null;
-        }
-        if (blob instanceof FBBlob) {
-            return (FBBlob) blob;
-        }
-        FBBlob fbb = new FBBlob(gdsHelper);
-        fbb.copyStream(blob.getBinaryStream());
-        return fbb;
+        getField(columnIndex).setBlob(blob);
     }
 
     @Override
     public void updateBlob(String columnLabel, Blob blob) throws SQLException {
         checkUpdatable();
-        getField(columnLabel).setBlob(asFBBlob(blob));
+        getField(columnLabel).setBlob(blob);
     }
 
     @Override
@@ -1708,26 +1695,13 @@ public class FBResultSet implements ResultSet, FirebirdResultSet, FBObjectListen
     @Override
     public void updateClob(int columnIndex, java.sql.Clob clob) throws SQLException {
         checkUpdatable();
-        getField(columnIndex).setClob(asFBClob(clob));
-    }
-
-    private FBClob asFBClob(Clob clob) throws SQLException {
-        // if the passed BLOB is not instance of our class, copy its content into our CLOB
-        if (clob == null) {
-            return null;
-        }
-        if (clob instanceof FBClob) {
-            return (FBClob) clob;
-        }
-        FBClob fbc = new FBClob(new FBBlob(gdsHelper));
-        fbc.copyCharacterStream(clob.getCharacterStream());
-        return fbc;
+        getField(columnIndex).setClob(clob);
     }
 
     @Override
     public void updateClob(String columnLabel, Clob clob) throws SQLException {
         checkUpdatable();
-        getField(columnLabel).setClob(asFBClob(clob));
+        getField(columnLabel).setClob(clob);
     }
 
     @Override

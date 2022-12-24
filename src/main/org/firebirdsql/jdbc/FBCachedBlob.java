@@ -28,7 +28,6 @@ import java.io.*;
 /**
  * This class represents a cached blob field.
  */
-@SuppressWarnings("RedundantThrows")
 public final class FBCachedBlob implements FirebirdBlob {
 
     private static final byte[] BYTES_NULL_VALUE = null;

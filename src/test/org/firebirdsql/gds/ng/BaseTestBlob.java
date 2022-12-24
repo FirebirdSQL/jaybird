@@ -37,6 +37,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.firebirdsql.common.FBTestProperties.*;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues.isc_bpb_type_stream;
+import static org.firebirdsql.jaybird.fb.constants.BpbItems.isc_bpb_type;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -261,7 +263,7 @@ public abstract class BaseTestBlob {
                 statement.addStatementListener(listener);
 
                 final BlobParameterBuffer blobParameterBuffer = db.createBlobParameterBuffer();
-                blobParameterBuffer.addArgument(BlobParameterBuffer.TYPE, BlobParameterBuffer.TYPE_STREAM);
+                blobParameterBuffer.addArgument(isc_bpb_type, isc_bpb_type_stream);
                 final FbBlob blob = db.createBlobForOutput(transaction, blobParameterBuffer);
                 blob.open();
                 int bytesWritten = 0;
