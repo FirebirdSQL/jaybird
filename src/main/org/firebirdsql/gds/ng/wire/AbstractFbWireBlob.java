@@ -108,7 +108,6 @@ public abstract class AbstractFbWireBlob extends AbstractFbBlob implements FbWir
     public byte[] getBlobInfo(final byte[] requestItems, final int bufferLength) throws SQLException {
         try {
             return getDatabase()
-                    // TODO: Blob warning callback or just database default?
                     .getInfo(WireProtocolConstants.op_info_blob, getHandle(), requestItems, bufferLength, null);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);

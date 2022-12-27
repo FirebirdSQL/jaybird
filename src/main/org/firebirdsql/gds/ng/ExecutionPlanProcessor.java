@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source J2EE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -12,13 +12,14 @@
  * This file was created by members of the firebird development team.
  * All individual contributions remain the Copyright (C) of those
  * individuals.  Contributors to this file are either listed here or
- * can be obtained from a CVS history command.
+ * can be obtained from a source control history command.
  *
  * All rights reserved.
  */
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 
 import java.sql.SQLException;
 
@@ -30,7 +31,7 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class ExecutionPlanProcessor implements InfoProcessor<String> {
+public final class ExecutionPlanProcessor implements InfoProcessor<String> {
 
     /**
      * Plan information items
@@ -70,7 +71,11 @@ public class ExecutionPlanProcessor implements InfoProcessor<String> {
 
         if (buffer[0] != ISCConstants.isc_info_sql_get_plan && buffer[0] != ISCConstants.isc_info_sql_explain_plan) {
             // We only expect isc_info_sql_get_plan or isc_info_sql_explain_plan
-            throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();
+            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                    .messageParameter("sql", "isc_info_sql_get_plan or isc_info_sql_explain_plan",
+                            ISCConstants.isc_info_sql_get_plan + " or " + ISCConstants.isc_info_sql_explain_plan,
+                            buffer[0])
+                    .toSQLException();
         }
 
         int len = iscVaxInteger2(buffer, 1);

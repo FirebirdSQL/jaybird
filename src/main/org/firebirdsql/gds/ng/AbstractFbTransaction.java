@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.listeners.ExceptionListener;
 import org.firebirdsql.gds.ng.listeners.ExceptionListenerDispatcher;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
@@ -85,9 +86,9 @@ public abstract class AbstractFbTransaction implements FbTransaction {
                 state = newState;
                 transactionListenerDispatcher.transactionStateChanged(this, newState, currentState);
             } else {
-                // TODO Include sqlstate or use ISCConstants.isc_tra_state instead
-                throw new SQLException(String.format("Unable to change transaction state: state %s is not valid after %s",
-                        newState, currentState));
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_invalidTransactionStateTransition)
+                        .messageParameter(newState, currentState)
+                        .toSQLException();
             }
         }
     }
@@ -134,8 +135,10 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         // TODO As separate class?
         return getTransactionInfo(new byte[] { ISCConstants.isc_info_tra_id }, 16, infoResponse -> {
             if (infoResponse[0] != ISCConstants.isc_info_tra_id) {
-                // TODO Message, SQL state, error code?
-                throw new SQLException("Unexpected response buffer");
+                throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                        .messageParameter(
+                                "transaction", "isc_info_tra_id", ISCConstants.isc_info_tra_id, infoResponse[0])
+                        .toSQLException();
             }
             int length = iscVaxInteger2(infoResponse, 1);
             return iscVaxLong(infoResponse, 3, length);

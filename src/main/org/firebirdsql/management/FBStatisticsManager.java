@@ -24,7 +24,9 @@
  */
 package org.firebirdsql.management;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceRequestBuffer;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.fb.constants.SpbItems;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.GDSType;
@@ -202,7 +204,9 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
         @Override
         public DatabaseTransactionInfo process(byte[] info) throws SQLException {
             if (info.length == 0) {
-                throw new SQLException("Response buffer for service information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("database")
+                        .toSQLException();
             }
             DatabaseTransactionInfo databaseTransactionInfo = new DatabaseTransactionInfo();
             int idx = 0;

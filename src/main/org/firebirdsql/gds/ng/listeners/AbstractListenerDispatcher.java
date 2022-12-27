@@ -97,7 +97,6 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
         }
     }
 
-    // TODO Change other listeners to use notify just like StatementListenerDispatcher
     protected final void notify(Consumer<TListener> notificationHandler, String notificationLogName) {
         for (TListener listener : this) {
             try {
@@ -143,11 +142,7 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
     }
 
     private void cleanWeakListeners() {
-        for (WeakReference<TListener> ref : weakListeners) {
-            if (ref.get() == null) {
-                weakListeners.remove(ref);
-            }
-        }
+        weakListeners.removeIf(ref -> ref.get() == null);
     }
 
     /**

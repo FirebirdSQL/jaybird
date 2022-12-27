@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -38,18 +38,17 @@ public final class DdlHelper {
     }
 
     /**
-     * Helper method for executing CREATE TABLE, ignoring <code>isc_no_meta_update</code> errors.
+     * Helper method for executing CREATE TABLE, ignoring {@code isc_no_meta_update} errors.
      *
      * @param connection
      *         Connection to execute statement
      * @param sql
      *         Create table statement
      * @throws SQLException
-     *         SQLException for executing statement, except if there error is <code>isc_no_meta_update</code>
+     *         SQLException for executing statement, except if the error is {@code isc_no_meta_update}
      * @see #executeDDL(java.sql.Connection, String, int...)
      */
     public static void executeCreateTable(final Connection connection, final String sql) throws SQLException {
-        // TODO May actually need to look for message code 335610093
         DdlHelper.executeDDL(connection, sql, ISCConstants.isc_no_meta_update);
     }
 
@@ -64,7 +63,7 @@ public final class DdlHelper {
      *         Firebird error codes to ignore
      * @throws SQLException
      *         SQLException for executing statement, except for errors with the error code listed in
-     *         <code>ignoreErrors</code>
+     *         {@code ignoreErrors}
      * @see org.firebirdsql.gds.ISCConstants
      */
     public static void executeDDL(final Connection connection, final String sql, final int... ignoreErrors)
@@ -95,10 +94,10 @@ public final class DdlHelper {
      * <p>
      * Ignored errors are:
      * <ul>
-     *     <li><code>isc_no_meta_update</code></li>
-     *     <li><code>isc_dsql_table_not_found</code></li>
-     *     <li><code>isc_dsql_view_not_found</code></li>
-     *     <li><code>isc_dsql_error</code> (Firebird 1.5 or earlier only)</li>
+     *     <li>{@code isc_no_meta_update}</li>
+     *     <li>{@code isc_dsql_table_not_found}</li>
+     *     <li>{@code isc_dsql_view_not_found}</li>
+     *     <li>{@code isc_dsql_error} (Firebird 1.5 or earlier only)</li>
      * </ul>
      * </p>
      *
@@ -114,7 +113,7 @@ public final class DdlHelper {
         executeDDL(connection, sql, DdlHelper.getDropIgnoreErrors(connection));
     }
 
-    private static int[] getDropIgnoreErrors(final Connection connection) throws SQLException {
+    private static int[] getDropIgnoreErrors(final Connection connection) {
         if (supportInfoFor(connection).isVersionEqualOrAbove(2, 0)) {
             return new int[] { ISCConstants.isc_no_meta_update, ISCConstants.isc_dsql_table_not_found,
                     ISCConstants.isc_dsql_view_not_found };

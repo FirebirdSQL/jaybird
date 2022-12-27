@@ -20,6 +20,7 @@ package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.BlobParameterBuffer;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.impl.BlobParameterBufferImp;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
@@ -332,7 +333,9 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
         public FbDatabase process(byte[] info) throws SQLException {
             boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
-                throw new SQLException("Response buffer for database information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("database")
+                        .toSQLException();
             }
             if (debug)
                 log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",

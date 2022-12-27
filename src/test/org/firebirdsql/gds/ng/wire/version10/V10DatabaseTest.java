@@ -177,9 +177,7 @@ public class V10DatabaseTest {
                 db.attach();
             }, "Expected the attach to fail because the database doesn't exist");
             assertThat(exception, allOf(
-                    // TODO Is this actually the right SQLState?
                     sqlStateEquals("08001"),
-                    // TODO Seems to be the least specific error, deeper in there is a more specific 335544734 (isc_io_open_err)
                     errorCodeEquals(ISCConstants.isc_io_error)));
             assertFalse(gdsConnection.isConnected());
         }

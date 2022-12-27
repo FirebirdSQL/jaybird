@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -34,35 +34,17 @@ public final class ServiceListenerDispatcher extends AbstractListenerDispatcher<
 
     @Override
     public void detaching(FbService service) {
-        for (ServiceListener listener : this) {
-            try {
-                listener.detaching(service);
-            }  catch (Exception e) {
-                log.error("Error on notify detaching to listener " + listener, e);
-            }
-        }
+        notify(listener -> listener.detaching(service), "detaching");
     }
 
     @Override
     public void detached(FbService service) {
-        for (ServiceListener listener : this) {
-            try {
-                listener.detached(service);
-            } catch (Exception e) {
-                log.error("Error on notify detached to listener " + listener, e);
-            }
-        }
+        notify(listener -> listener.detached(service), "detached");
     }
 
     @Override
     public void warningReceived(FbService service, SQLWarning warning) {
-        for (ServiceListener listener : this) {
-            try {
-                listener.warningReceived(service, warning);
-            } catch (Exception e) {
-                log.error("Error on notify warningReceived to listener " + listener, e);
-            }
-        }
+        notify(listener -> listener.warningReceived(service, warning), "warningReceived");
     }
 
     @Override

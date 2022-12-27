@@ -60,10 +60,8 @@ public abstract class AbstractConnection<T extends IAttachProperties<T>, C exten
         EncodingDefinition tempEncodingDefinition = encodingFactory.getEncodingDefinition(firebirdEncodingName, javaCharsetAlias);
         if (tempEncodingDefinition == null || tempEncodingDefinition.isInformationOnly()) {
             if (firebirdEncodingName == null && javaCharsetAlias == null) {
-                // TODO Use the default encoding (and its matching Firebird encoding) instead of NONE
                 tempEncodingDefinition = encodingFactory.getEncodingDefinition("NONE", null);
             } else {
-                // TODO Don't throw exception if encoding/charSet is null (see also TODO inside EncodingFactory.getEncodingDefinition)
                 throw new SQLNonTransientConnectionException(
                         String.format("No valid encoding definition for Firebird encoding %s and/or Java charset %s",
                                 firebirdEncodingName, javaCharsetAlias),

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,6 +19,7 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 
 import java.sql.SQLException;
 
@@ -40,7 +41,11 @@ public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
 
     @Override
     public SqlCountHolder process(byte[] infoResponse) throws SQLException {
-        assert infoResponse.length > 0 : "Information response buffer should be non-zero length";
+        if (infoResponse.length == 0) {
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                    .messageParameter("sql")
+                    .toSQLException();
+        }
         int pos = 0;
         if (infoResponse[pos++] == ISCConstants.isc_info_sql_records) {
             // Skipping info size
@@ -81,9 +86,9 @@ public final class SqlCountProcessor implements InfoProcessor<SqlCountHolder> {
             // TODO Return all -1 instead?
             return new SqlCountHolder(0, 0, 0, 0);
         } else {
-            // TODO SQL state, better error?
-            throw FbExceptionBuilder.forException(ISCConstants.isc_infunk)
-                    .messageParameter(infoResponse[0])
+            throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                    .messageParameter("sql", "isc_info_sql_records or isc_info_end",
+                            ISCConstants.isc_info_sql_records + " or " + ISCConstants.isc_info_end, infoResponse[0])
                     .toSQLException();
         }
     }

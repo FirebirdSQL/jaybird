@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -40,14 +40,8 @@ import java.util.function.Function;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
- * @todo implement data handling code
- * @todo implement correct exception throwing in all setXXX methods that use
- * setString(String), currently it will raise an exception with string conversion
- * error message, instead it should complain about error coresponding to the XXX.
- * @todo think about the right setBoolean and getBoolean (currently it is "Y"
- * and "N", or "TRUE" and "FALSE").
+ * @todo think about the right setBoolean and getBoolean (currently it is "Y" and "N", or "TRUE" and "FALSE").
  * <p>
- * TODO check if the setBinaryStream(null) is allowed by specs.
  */
 class FBStringField extends FBField implements TrimmableField {
     

@@ -18,8 +18,9 @@
  */
 package org.firebirdsql.jaybird.xca;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.jdbc.SQLStateConstants;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -64,9 +65,7 @@ public final class FBLocalTransaction {
     public void begin() throws SQLException {
         // throw exception only if xid is known to the managed connection
         if (xid != null && mc.isXidActive(xid)) {
-            // TODO More specific exception, Jaybird error code
-            throw new SQLException("Local transaction active: can't begin another",
-                    SQLStateConstants.SQL_STATE_TRANSACTION_ACTIVE);
+            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_localTransactionActive).toSQLException();
         }
 
         xid = new FBLocalXid();

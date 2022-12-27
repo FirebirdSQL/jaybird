@@ -85,6 +85,17 @@ public interface JaybirdErrorCodes {
     int jb_invalidTimeout           = 337248296;
     int jb_invalidExecutor          = 337248297;
     int jb_operationClosed          = 337248298;
+    int jb_closeCursorBeforeCount   = 337248299;
+    int jb_invalidParameterCount    = 337248300;
+    int jb_parameterNotSet          = 337248301;
+    int jb_stmtNotAllocated         = 337248302;
+    int jb_stmtClosed               = 337248303;
+    int jb_stmtInErrorRequireCLose  = 337248304;
+    int jb_invalidTransactionStateTransition             = 337248305;
+    int jb_unexpectedInfoResponse   = 337248306;
+    int jb_infoResponseEmpty        = 337248307;
+    int jb_couldNotChangeSoTimeout  = 337248308;
+    int jb_localTransactionActive   = 337248309;
 
     @SuppressWarnings("unused")
     int jb_range_end                = 337264639;

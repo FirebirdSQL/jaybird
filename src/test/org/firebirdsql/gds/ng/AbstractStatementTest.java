@@ -44,7 +44,6 @@ import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.fbMessageStartsWith;
-import static org.firebirdsql.common.matchers.SQLExceptionMatchers.message;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -386,7 +385,7 @@ public abstract class AbstractStatementTest {
         allocateStatement();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
-        assertThat(exception, message(equalTo("Statement not yet allocated")));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtNotAllocated));
     }
 
     @Test
@@ -398,7 +397,7 @@ public abstract class AbstractStatementTest {
         statement.close();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExecutionPlan);
-        assertThat(exception, message(equalTo("Statement closed")));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtClosed));
     }
 
     @Test
@@ -437,7 +436,7 @@ public abstract class AbstractStatementTest {
         allocateStatement();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
-        assertThat(exception, message(equalTo("Statement not yet allocated")));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtNotAllocated));
     }
 
     @Test
@@ -449,7 +448,7 @@ public abstract class AbstractStatementTest {
         statement.close();
 
         SQLException exception = assertThrows(SQLNonTransientException.class, statement::getExplainedExecutionPlan);
-        assertThat(exception, message(equalTo("Statement closed")));
+        assertThat(exception, fbMessageStartsWith(JaybirdErrorCodes.jb_stmtClosed));
     }
 
     @Test

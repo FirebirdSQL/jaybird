@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -35,14 +35,10 @@ public final class TransactionListenerDispatcher extends AbstractListenerDispatc
     private static final Logger log = LoggerFactory.getLogger(TransactionListenerDispatcher.class);
 
     @Override
-    public void transactionStateChanged(FbTransaction transaction, TransactionState newState, TransactionState previousState) {
-        for (TransactionListener listener : this) {
-            try {
-                listener.transactionStateChanged(transaction, newState, previousState);
-            } catch (Exception e) {
-                log.error("Error on notify transactionStateChanged to listener " + listener, e);
-            }
-        }
+    public void transactionStateChanged(FbTransaction transaction, TransactionState newState,
+            TransactionState previousState) {
+        notify(listener -> listener.transactionStateChanged(transaction, newState, previousState),
+                "transactionStateChanged");
     }
 
     @Override

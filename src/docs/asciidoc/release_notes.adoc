@@ -825,6 +825,8 @@ In practice, this class was already defined in a way that it couldn't be subclas
 * `FBBlob` is now final
 * `FBClob` is now final
 * `FBCachedClob` is now final
+* `ExecutionPlanProcessor` is now final
+* `BlobLenghtProcessor` is now final
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation

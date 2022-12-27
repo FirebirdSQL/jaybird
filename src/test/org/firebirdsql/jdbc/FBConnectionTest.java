@@ -28,6 +28,7 @@ import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.GDSServerVersion;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.IConnectionProperties;
 import org.firebirdsql.gds.ng.InfoProcessor;
 import org.firebirdsql.gds.ng.WireCrypt;
@@ -692,8 +693,16 @@ class FBConnectionTest {
         try (Connection connection = DriverManager.getConnection(getUrl(), props)) {
             FbDatabase fbDatabase = connection.unwrap(FirebirdConnection.class).getFbDatabase();
             InfoProcessor<String> getPluginName = info -> {
-                if (info.length == 0 || (info[0] & 0xFF) != fb_info_wire_crypt) {
-                    throw new SQLException("Response buffer for service information request is empty");
+                if (info.length == 0) {
+                    throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                            .messageParameter("database")
+                            .toSQLException();
+                }
+                if ((info[0] & 0xFF) != fb_info_wire_crypt) {
+                    throw new FbExceptionBuilder().exception(JaybirdErrorCodes.jb_unexpectedInfoResponse)
+                            .messageParameter(
+                                    "transaction", "fb_info_wire_crypt", ISCConstants.fb_info_wire_crypt, info[0])
+                            .toSQLException();
                 }
                 int dataLength = iscVaxInteger2(info, 1);
                 if (dataLength == 0) {

@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.gds.ng;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ServiceParameterBuffer;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.ng.listeners.ServiceListener;
@@ -131,7 +132,9 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
         public FbService process(byte[] info) throws SQLException {
             boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
-                throw new SQLException("Response buffer for service information request is empty");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("service")
+                        .toSQLException();
             }
             if (debug)
                 log.debug(String.format("ServiceInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",

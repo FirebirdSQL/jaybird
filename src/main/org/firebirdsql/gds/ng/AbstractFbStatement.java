@@ -30,7 +30,6 @@ import org.firebirdsql.logging.LoggerFactory;
 
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
-import java.sql.SQLTransientException;
 import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -572,8 +571,9 @@ public abstract class AbstractFbStatement implements FbStatement {
             checkStatementValid();
             if (getState() == StatementState.CURSOR_OPEN && !isAfterLast()) {
                 // We disallow fetching count when we haven't fetched all rows yet.
-                // TODO SQLState
-                throw new SQLNonTransientException("Cursor still open, fetch all rows or close cursor before fetching SQL counts");
+                throw new FbExceptionBuilder()
+                        .nonTransientException(JaybirdErrorCodes.jb_closeCursorBeforeCount)
+                        .toSQLException();
             }
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
@@ -607,18 +607,18 @@ public abstract class AbstractFbStatement implements FbStatement {
         final RowDescriptor parameterDescriptor = getParameterDescriptor();
         final int expectedSize = parameterDescriptor != null ? parameterDescriptor.getCount() : 0;
         final int actualSize = parameters.getCount();
-        // TODO Externalize sqlstates and error messages
         if (actualSize != expectedSize) {
-            // TODO use HY021 (inconsistent descriptor information) instead?
-            throw new SQLNonTransientException(String.format("Invalid number of parameters, expected %d, got %d",
-                    expectedSize, actualSize), "07008"); // invalid descriptor count
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_invalidParameterCount)
+                    .messageParameter(expectedSize, actualSize)
+                    .toSQLException();
         }
         for (int fieldIndex = 0; fieldIndex < actualSize; fieldIndex++) {
             if (!parameters.isInitialized(fieldIndex)) {
                 // Communicating 1-based index, so it doesn't cause confusion when JDBC user sees this.
-                // TODO use HY000 (dynamic parameter value needed) instead?
-                throw new SQLTransientException(String.format("Parameter with index %d was not set",
-                        fieldIndex + 1), "0700C"); // undefined DATA value
+                throw new FbExceptionBuilder().transientException(JaybirdErrorCodes.jb_parameterNotSet)
+                        .messageParameter(fieldIndex + 1)
+                        .toSQLException();
             }
         }
     }
@@ -654,18 +654,18 @@ public abstract class AbstractFbStatement implements FbStatement {
     protected final void checkStatementValid() throws SQLException {
         switch (getState()) {
         case NEW:
-            // TODO Externalize sqlstate
-            // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
-            throw new SQLNonTransientException("Statement not yet allocated", "24000");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtNotAllocated)
+                    .toSQLException();
         case CLOSING:
         case CLOSED:
-            // TODO Externalize sqlstate
-            // TODO See if there is a firebird error code matching this (isc_cursor_not_open is not exactly the same)
-            throw new SQLNonTransientException("Statement closed", "24000");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtClosed)
+                    .toSQLException();
         case ERROR:
-            // TODO SQLState?
-            // TODO See if there is a firebird error code matching this
-            throw new SQLNonTransientException("Statement is in error state and needs to be closed");
+            throw new FbExceptionBuilder()
+                    .nonTransientException(JaybirdErrorCodes.jb_stmtInErrorRequireCLose)
+                    .toSQLException();
         default:
             // Valid state, continue
             break;

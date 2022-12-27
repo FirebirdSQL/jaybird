@@ -18,7 +18,9 @@
  */
 package org.firebirdsql.jdbc;
 
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.ng.CursorFlag;
+import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FetchDirection;
 import org.firebirdsql.gds.ng.FetchType;
@@ -478,7 +480,9 @@ final class FBServerScrollFetcher implements FBFetcher {
     private int retrieveServerCursorSize() throws SQLException {
         return stmt.getCursorInfo(new byte[] { (byte) INF_RECORD_COUNT, isc_info_end }, 10, buffer -> {
             if (buffer[0] != INF_RECORD_COUNT) {
-                throw new SQLException("Unexpected response buffer");
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
+                        .messageParameter("cursor")
+                        .toSQLException();
             }
             int length = iscVaxInteger2(buffer, 1);
             return iscVaxInteger(buffer, 3, length);

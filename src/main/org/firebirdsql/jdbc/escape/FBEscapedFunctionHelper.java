@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE connector - JDBC driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -374,7 +374,6 @@ public class FBEscapedFunctionHelper {
              * functions defined in Appendix D "Scalar Functions". The escape syntax is not
              * intended to be used to invoke user-defined or vendor specific scalar functions."
              */
-            // TODO Consider throwing SQLFeatureNotSupported or a different SQLException
             throw new FBSQLParseException("Unsupported JDBC function escape: " + functionName);
         }
 

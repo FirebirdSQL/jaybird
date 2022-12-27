@@ -79,8 +79,6 @@ class EncodingFactoryTest {
                 format("One or more aliases of %s did not match expected Firebird character set %s", JAVA_TEST_CHARSET, FIREBIRD_TEST_CHARSET));
     }
 
-    // TODO Note exception if looking up java alias for fb alias and java alias matches file.encoding property : maps to null
-
     /**
      * Tests if the alias mapping is case-insensitive.
      */

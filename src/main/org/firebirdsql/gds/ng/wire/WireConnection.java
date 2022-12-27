@@ -22,6 +22,7 @@ import org.firebirdsql.encodings.EncodingFactory;
 import org.firebirdsql.encodings.IEncodingFactory;
 import org.firebirdsql.gds.ClumpletReader;
 import org.firebirdsql.gds.ISCConstants;
+import org.firebirdsql.gds.JaybirdErrorCodes;
 import org.firebirdsql.gds.VaxEncoding;
 import org.firebirdsql.gds.impl.DbAttachInfo;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
@@ -215,8 +216,8 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                     socket.setSoTimeout(desiredTimeout);
                 }
             } catch (SocketException e) {
-                // TODO Add SQLState
-                throw new SQLException("Unable to change socket timeout (SO_TIMEOUT)", e);
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_couldNotChangeSoTimeout).cause(e)
+                        .toSQLException();
             }
         }
     }

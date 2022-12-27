@@ -164,11 +164,25 @@ public final class FbExceptionBuilder {
      * Adds an integer message parameter for the exception message.
      *
      * @param parameter
-     *         Message parameter
+     *         message parameter
      * @return this FbExceptionBuilder
      */
     public FbExceptionBuilder messageParameter(int parameter) {
         return messageParameter(Integer.toString(parameter));
+    }
+
+    /**
+     * Adds two integer message parameters for the exception message.
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(int param1, int param2) {
+        return messageParameter(Integer.toString(param1), Integer.toString(param2));
     }
 
     /**
@@ -181,6 +195,65 @@ public final class FbExceptionBuilder {
     public FbExceptionBuilder messageParameter(String parameter) {
         checkExceptionInformation();
         current.addMessageParameter(parameter);
+        return this;
+    }
+
+    /**
+     * Adds two string message parameters for the exception message.
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(String param1, String param2) {
+        checkExceptionInformation();
+        current.addMessageParameter(param1);
+        current.addMessageParameter(param2);
+        return this;
+    }
+
+    /**
+     * Adds an object message parameter for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param parameter
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object parameter) {
+        return messageParameter(String.valueOf(parameter));
+    }
+
+    /**
+     * Adds two object message parameters for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param param1
+     *         message parameter
+     * @param param2
+     *         message parameter
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object param1, Object param2) {
+        return messageParameter(String.valueOf(param1), String.valueOf(param2));
+    }
+
+    /**
+     * Adds object message parameters for the exception message (applying {@code String.valueOf(parameter)}).
+     *
+     * @param params
+     *         message parameters
+     * @return this FbExceptionBuilder
+     * @since 5
+     */
+    public FbExceptionBuilder messageParameter(Object... params) {
+        checkExceptionInformation();
+        for (int idx = 0; idx < params.length; idx++) {
+            current.addMessageParameter(String.valueOf(params[idx]));
+        }
         return this;
     }
 
@@ -239,20 +312,14 @@ public final class FbExceptionBuilder {
     }
 
     /**
-     * Array of uninteresting error codes.
-     */
-    private static final Integer[] UNINTERESTING_ERROR_CODES_ARR =
-            { 0, isc_dsql_error, isc_dsql_line_col_error, isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err,
-                    isc_arith_except, isc_cancelled };
-
-    /**
-     * Set of uninteresting error codes derived from {@link #UNINTERESTING_ERROR_CODES_ARR}.
+     * Set of uninteresting error codes.
      * <p>
      * This is used by {@link #toFlatSQLException()} to find a more suitable error code.
      * </p>
      */
     private static final Set<Integer> UNINTERESTING_ERROR_CODES =
-            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(UNINTERESTING_ERROR_CODES_ARR)));
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(0, isc_dsql_error, isc_dsql_line_col_error,
+                    isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err, isc_arith_except, isc_cancelled)));
 
     /**
      * SQLState success is linked to some informational error message, we consider those 'not interesting' either.
