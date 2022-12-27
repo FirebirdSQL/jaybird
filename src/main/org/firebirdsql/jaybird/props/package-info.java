@@ -3,7 +3,4 @@
  *
  * @since 5
  */
-@InternalApi
 package org.firebirdsql.jaybird.props;
-
-import org.firebirdsql.util.InternalApi;
