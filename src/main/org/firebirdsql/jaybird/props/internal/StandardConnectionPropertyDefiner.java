@@ -18,6 +18,7 @@
  */
 package org.firebirdsql.jaybird.props.internal;
 
+import org.firebirdsql.jaybird.props.DpbType;
 import org.firebirdsql.jaybird.props.def.ConnectionProperty;
 import org.firebirdsql.jaybird.props.spi.ConnectionPropertyDefinerSpi;
 
@@ -147,7 +148,12 @@ class StandardConnectionPropertyDefiner implements ConnectionPropertyDefinerSpi 
                 builder("debug").type(INT).aliases("isc_dpb_debug").dpbItem(isc_dpb_debug),
                 builder("trace").type(INT).aliases("isc_dpb_trace").dpbItem(isc_dpb_trace),
                 builder("interp").type(INT).aliases("isc_dpb_interp").dpbItem(isc_dpb_interp),
-                builder("ext_call_depth").type(INT).aliases("isc_dpb_ext_call_depth").dpbItem(isc_dpb_ext_call_depth)
+                builder("ext_call_depth").type(INT).aliases("isc_dpb_ext_call_depth").dpbItem(isc_dpb_ext_call_depth),
+                builder("clear_map").type(BOOLEAN).aliases("isc_dpb_clear_map").dpbItem(isc_dpb_clear_map)
+                        .pbType(DpbType.BYTE),
+                builder("parallel_workers").type(INT).aliases("isc_dpb_parallel_workers")
+                        .dpbItem(isc_dpb_parallel_workers),
+                builder("worker_attach").type(BOOLEAN).aliases("isc_dpb_worker_attach").dpbItem(isc_dpb_worker_attach)
 
                 // NOTE: Properties not defined elsewhere will be defined through UnregisteredDpbDefiner as type string
         ).map(ConnectionProperty.Builder::build);

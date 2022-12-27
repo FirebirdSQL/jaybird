@@ -52,6 +52,15 @@ public enum DpbType {
         }
     },
     /**
+     * Parameter value as a byte.
+     */
+    BYTE {
+        @Override
+        public void addValue(ParameterBuffer pb, int pbItem, Object value, ConnectionPropertyType type) {
+            pb.addArgument(pbItem, type.asInteger(value).byteValue());
+        }
+    },
+    /**
      * Parameter value is not sent (just presence or absence of the parameter item), corresponding value must be a
      * {@code Boolean}.
      */

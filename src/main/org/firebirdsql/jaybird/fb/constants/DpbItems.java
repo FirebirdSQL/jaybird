@@ -136,6 +136,11 @@ public final class DpbItems {
     public static final int isc_dpb_set_bind = 93;
     public static final int isc_dpb_decfloat_round = 94;
     public static final int isc_dpb_decfloat_traps = 95;
+    public static final int isc_dpb_clear_map = 96;
+
+    // Firebird 5 constants
+    public static final int isc_dpb_parallel_workers = 100;
+    public static final int isc_dpb_worker_attach = 101;
 
     private DpbItems() {
         // no instances

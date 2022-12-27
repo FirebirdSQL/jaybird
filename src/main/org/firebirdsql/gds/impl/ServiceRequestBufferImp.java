@@ -22,7 +22,6 @@ import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.ServiceRequestBuffer;
 import org.firebirdsql.gds.impl.argument.ArgumentType;
-import org.firebirdsql.gds.impl.argument.NumericArgument;
 
 /**
  * Implementation of ServiceRequestBufferImp.
@@ -31,12 +30,6 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
 
     public ServiceRequestBufferImp(SrbMetaData srbMetaData, Encoding encoding) {
         super(srbMetaData, encoding);
-    }
-
-    @Override
-    public void addArgument(int argumentType, byte value) {
-        // TODO Handle through metadata behavior
-        getArgumentsList().add(new NumericArgument(argumentType, ArgumentType.ByteSpb, value));
     }
 
     public enum SrbMetaData implements ParameterBufferMetaData {
@@ -68,6 +61,11 @@ public class ServiceRequestBufferImp extends ParameterBufferBase implements Serv
             @Override
             public ArgumentType getSingleArgumentType(int tag) {
                 return ArgumentType.SingleTpb;
+            }
+
+            @Override
+            public ArgumentType getByteArgumentType(int tag) {
+                return ArgumentType.ByteSpb;
             }
         };
 

@@ -92,5 +92,18 @@ public interface ParameterBufferMetaData {
      * @return Argument type (never {@code null})
      */
     ArgumentType getSingleArgumentType(int tag);
-    
+
+    /**
+     * Gets the byte argument type for the supplied tag.
+     * <p>
+     * When the tag is not known (or unsupported for string arguments), then the default should be returned.
+     * </p>
+     *
+     * @param tag Tag (item type)
+     * @return Argument type (never {@code null})
+     */
+    default ArgumentType getByteArgumentType(int tag) {
+        return getIntegerArgumentType(tag);
+    }
+
 }

@@ -80,6 +80,16 @@ public interface ParameterBuffer extends Iterable<Parameter> {
     void addArgument(int argumentType, String value, Encoding encoding);
 
     /**
+     * Add a byte argument.
+     *
+     * @param argumentType
+     *         type of argument.
+     * @param value
+     *         byte value to add.
+     */
+    void addArgument(int argumentType, byte value);
+
+    /**
      * Add integer argument.
      *
      * @param argumentType

@@ -104,6 +104,11 @@ public class ServiceParameterBufferImp extends ParameterBufferBase implements Se
             public ArgumentType getSingleArgumentType(int tag) {
                 return ArgumentType.SingleTpb;
             }
+
+            @Override
+            public ArgumentType getByteArgumentType(int tag) {
+                return ArgumentType.ByteSpb;
+            }
         },
         SPB_VERSION_3_ATTACH(ISCConstants.isc_spb_version3) {
             @Override
