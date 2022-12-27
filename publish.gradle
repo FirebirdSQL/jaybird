@@ -118,6 +118,17 @@ publishing {
                     }
                 }
 
+                mailingLists {
+                    mailingList {
+                        name = 'firebird-java'
+                        subscribe = 'firebird-java+subscribe@googlegroups.com'
+                        unsubscribe = 'firebird-java+unsubscribe@googlegroups.com'
+                        post = 'firebird-java@googlegroups.com'
+                        archive = 'https://groups.google.com/g/firebird-java'
+                        otherArchives = ['http://fb-list-archive.s3-website-eu-west-1.amazonaws.com/firebird-java/index.html']
+                    }
+                }
+
                 licenses {
                     license {
                         name = 'GNU Lesser General Public License'
@@ -144,32 +155,6 @@ publishing {
                 issueManagement {
                     system = 'GitHub'
                     url = 'https://github.com/FirebirdSQL/jaybird/issues/'
-                }
-            }
-        }
-
-        // Relocation artifact for Java 8
-        if (findProperty('buildProfile') == 'java8') {
-            mavenRelocation(MavenPublication) {
-                pom {
-                    artifactId = 'jaybird-jdk18'
-                    distributionManagement {
-                        relocation {
-                            artifactId = project.name
-                        }
-                    }
-                    packaging = 'pom'
-                    description = 'JDBC Driver for the Firebird RDBMS'
-                    url = 'https://www.firebirdsql.org/en/devel-jdbc-driver/'
-
-                    developers {
-                        developer {
-                            id = 'mrotteveel'
-                            name = 'Mark Rotteveel'
-                            email = 'mark@lawinegevaar.nl'
-                            roles = ['Administrator', 'Developer']
-                        }
-                    }
                 }
             }
         }
