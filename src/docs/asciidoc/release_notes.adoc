@@ -781,7 +781,7 @@ This has been changed to `REFERENCES` to match both the name of the privilege in
 [#removal-of-packages-without-deprecation]
 ==== Removal of packages without deprecation
 
-The following packages have been removed in Jaybird 5:
+The following packages have been removed in Jaybird 5 without deprecation:
 
 * `org.firebirdsql.jdbc.parser`;
 there is no compatible replacement.
@@ -791,7 +791,7 @@ See also <<generated-keys-parser-replaced>>.
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
 
-The following methods have been removed in Jaybird 5:
+The following methods have been removed in Jaybird 5 without deprecation:
 
 * `FirebirdConnectionProperties.getDatabaseParameterBuffer()`;
 there is no direct replacement, though `BaseProperties.connectionPropertyValues()` can be considered its successor.
@@ -816,26 +816,14 @@ There is no direct replacement, though `GDSHelper.getConnectionProperties()` can
 ** `getJavaEncoding()`;
 there is no replacement
 ** `getBlobBufferLength()`, use `getConnectionProperties().getBlobBufferSize()`
-* `ParameterBufferHelper`
-** `getDpbKey(String)`;
-there is no replacement.
-** `getDpbParameterType(String)`;
-there is no replacement.
-** `getDpbMap()`;
-there is no replacement.
-** `parseDpbString(String, Object)`;
-there is no replacement.
-This method was previously deprecated, but not for removal.
-** `parseDpbString(String, String)`;
-there is no replacement.
 * `WireCrypt getWireCrypt()` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `WireCrypt getWireCryptAsEnum()` or `String getWireCrypt()`.
 * `setWireCrypt(WireCrypt)` in `ServiceManager`, `EventManager` and `IAttachProperties`;
 replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
 * `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
 handling of database coordinates is now considered internal to the protocol implementation.
-There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also jdp-2021-01).
-* `FBCachedClob(FBCachedBlob, String)`, use `FBCacheClob(FBCachedBlob, FBBlob.Config)`
+There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-01-unified-database-coordinates.md[jdp-2021-01]).
+* `FBCachedClob(FBCachedBlob, String)`, use `FBCachedClob(FBCachedBlob, FBBlob.Config)`
 
 The following methods had their visibility reduced:
 
@@ -845,8 +833,9 @@ The following methods had their visibility reduced:
 [#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
 
-The following classes have been removed in Jaybird 5:
+The following classes have been removed in Jaybird 5 without deprecation:
 
+* `ParameterBufferHelper`
 * `ParameterBufferHelper.DpbParameterType`
 * `ParameterBufferHelper.DpbValueType`
 * `DatabaseParameterBufferExtension`
@@ -874,16 +863,15 @@ In practice, this class was already defined in a way that it couldn't be subclas
 * `FBClob` is now final
 * `FBCachedClob` is now final
 * `ExecutionPlanProcessor` is now final
-* `BlobLenghtProcessor` is now final
+* `BlobLengthProcessor` is now final
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
 
-The following constants have been removed in Jaybird 5:
+The following constants have been removed in Jaybird 5 without deprecation:
 
 * `TIME_WITH_TIMEZONE` and `TIMESTAMP_WITH_TIMEZONE` from `org.firebirdsql.jdbc.JaybirdTypeCodes`.
 Use the constants with the same name from `java.sql.Types`.
-* `ParameterBufferHelper.DPB_PREFIX`
 * `ISCConstants`
 ** `isc_dpb_{asterisk}` of Jaybird-specific connection properties, Firebird-specific connection properties have been deprecated for removal in Jaybird 6.
 ** `jaybirdMinIscDpbValue`

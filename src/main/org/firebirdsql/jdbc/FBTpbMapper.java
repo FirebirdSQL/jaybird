@@ -18,12 +18,13 @@
  */
 package org.firebirdsql.jdbc;
 
-import org.firebirdsql.gds.ParameterBufferHelper;
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
+import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -331,7 +332,7 @@ public class FBTpbMapper implements Serializable, Cloneable {
                 }
                 token = parts[0];
             }
-            Integer value = ParameterBufferHelper.getTpbParam(token);
+            Integer value = TpbMapping.getTpbParam(token);
             if (value == null) {
                 // TODO More specific exception, Jaybird error code
                 throw new SQLException("Keyword " + token + " unknown. Please check your mapping.");
@@ -455,6 +456,53 @@ public class FBTpbMapper implements Serializable, Cloneable {
             return clone;
         } catch (CloneNotSupportedException ex) {
             throw new Error("Assertion failure: clone not supported"); // Can't happen
+        }
+    }
+
+    private static final class TpbMapping {
+
+        private static final String TPB_PREFIX = "isc_tpb_";
+
+        private static final Map<String, Integer> tpbTypes;
+
+        // Initialize mappings between TPB constant names and their values; should be executed only once.
+        static {
+            final Map<String, Integer> tempTpbTypes = new HashMap<>(64);
+
+            final Field[] fields = TpbItems.class.getFields();
+
+            for (Field field : fields) {
+                final String name = field.getName();
+                if (!(name.startsWith(TPB_PREFIX) && field.getType().equals(int.class))) {
+                    continue;
+                }
+
+                final Integer value;
+                try {
+                    value = field.getInt(null);
+                } catch (IllegalAccessException iaex) {
+                    continue;
+                }
+
+                // put the correct parameter name
+                tempTpbTypes.put(name.substring(TPB_PREFIX.length()), value);
+                // put the full name to tolerate people's mistakes
+                tempTpbTypes.put(name, value);
+            }
+
+            tpbTypes = Collections.unmodifiableMap(tempTpbTypes);
+        }
+
+        /**
+         * Get value of TPB parameter for the specified name. This method tries to match string representation of
+         * the TPB parameter with its value.
+         *
+         * @param name
+         *         string representation of TPB parameter, can have "isc_tpb_" prefix.
+         * @return value corresponding to the specified parameter name or {@code null} if nothing was found.
+         */
+        private static Integer getTpbParam(String name) {
+            return tpbTypes.get(name);
         }
     }
 }
