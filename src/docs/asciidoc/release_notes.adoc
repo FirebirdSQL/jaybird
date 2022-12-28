@@ -1038,6 +1038,9 @@ With Jaybird 6 the following breaking changes will be introduced.
 Jaybird 6 will drop support for Firebird 2.5 (see also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2021-03-drop-firebird-2-5-support.md[jdp-2021-03: Drop Firebird 2.5 support^]).
 In general, we expect the driver to remain functional, but chances are certain metadata -- e.g. `DatabaseMetaData` -- will break if we use features introduced in newer versions.
 
+Possibly, wire protocol versions for Firebird 2.5 and earlier will be disabled by default to disallow connection for the pure-java protocol.
+If that happens, an option will be provided to re-enable unsupported wire protocol versions.
+
 [#dropping-support-for-java-8-11]
 ==== Dropping support for Java 8 and 11
 
