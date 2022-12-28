@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,9 +20,6 @@ package org.firebirdsql.jna.fbclient;
 
 import com.sun.jna.Structure;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA wrapper for ISC_BLOB_DESC.
  * <p>
@@ -35,6 +30,8 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "blob_desc_subtype", "blob_desc_charset", "blob_desc_segment_size", "blob_desc_field_name",
+		"blob_desc_relation_name" })
 public class ISC_BLOB_DESC extends Structure {
 	public short blob_desc_subtype;
 	public short blob_desc_charset;
@@ -46,11 +43,6 @@ public class ISC_BLOB_DESC extends Structure {
 	public ISC_BLOB_DESC() {
 		super();
 	}
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("blob_desc_subtype", "blob_desc_charset", "blob_desc_segment_size", "blob_desc_field_name", "blob_desc_relation_name");
-    }
 
 	/**
 	 * @param blob_desc_field_name C type : ISC_UCHAR[32]<br>

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,9 +20,6 @@ package org.firebirdsql.jna.fbclient;
 
 import com.sun.jna.Structure;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA wrapper for ISC_ARRAY_BOUND.
  * <p>
@@ -35,17 +30,13 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "array_bound_lower", "array_bound_upper" })
 public class ISC_ARRAY_BOUND extends Structure {
 	public short array_bound_lower;
 	public short array_bound_upper;
 	public ISC_ARRAY_BOUND() {
 		super();
 	}
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("array_bound_lower", "array_bound_upper");
-    }
 
 	public ISC_ARRAY_BOUND(short array_bound_lower, short array_bound_upper) {
 		super();

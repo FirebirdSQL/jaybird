@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,9 +21,6 @@ package org.firebirdsql.jna.fbclient;
 import com.sun.jna.Structure;
 import org.firebirdsql.gds.ISCConstants;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA Wrapper for XSQLDA.
  * <p>
@@ -36,6 +31,7 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "version", "sqldaid", "sqldabc", "sqln", "sqld", "sqlvar" })
 public class XSQLDA extends Structure {
 	/// C type : ISC_SHORT
 	public short version = ISCConstants.SQLDA_VERSION1;
@@ -58,11 +54,6 @@ public class XSQLDA extends Structure {
         sqld = sqln = (short) size;
         sqlvar = (XSQLVAR[]) new XSQLVAR().toArray(size);
         allocateMemory();
-    }
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("version", "sqldaid", "sqldabc", "sqln", "sqld", "sqlvar");
     }
 
 	/**

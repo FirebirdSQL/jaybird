@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -23,9 +21,6 @@ package org.firebirdsql.jna.fbclient;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA wrapper for USER_SEC_DATA.
  * <p>
@@ -36,6 +31,8 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "sec_flags", "uid", "gid", "protocol", "server", "user_name", "password", "group_name",
+		"first_name", "middle_name", "last_name", "dba_user_name", "dba_password" })
 public class USER_SEC_DATA extends Structure {
 	/// which fields are specified
 	public short sec_flags;
@@ -93,11 +90,6 @@ public class USER_SEC_DATA extends Structure {
 	public USER_SEC_DATA() {
 		super();
 	}
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("sec_flags", "uid", "gid", "protocol", "server", "user_name", "password", "group_name", "first_name", "middle_name", "last_name", "dba_user_name", "dba_password");
-    }
 
 	public static class ByReference extends USER_SEC_DATA implements Structure.ByReference {
 	}

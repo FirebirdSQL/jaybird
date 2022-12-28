@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,9 +23,6 @@ import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.ShortByReference;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA wrapper for XSQLVAR.
  * <p>
@@ -38,6 +33,8 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "sqltype", "sqlscale", "sqlsubtype", "sqllen", "sqldata", "sqlind", "sqlname_length", "sqlname",
+		"relname_length", "relname", "ownname_length", "ownname", "aliasname_length", "aliasname" })
 public class XSQLVAR extends Structure {
 
     public static final short SQLIND_NULL = -1;
@@ -75,11 +72,6 @@ public class XSQLVAR extends Structure {
 	public XSQLVAR() {
 		allocateMemory();
 	}
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("sqltype", "sqlscale", "sqlsubtype", "sqllen", "sqldata", "sqlind", "sqlname_length", "sqlname", "relname_length", "relname", "ownname_length", "ownname", "aliasname_length", "aliasname");
-    }
 
     public Memory getSqlData() {
         return (Memory) sqldata;

@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -22,9 +20,6 @@ package org.firebirdsql.jna.fbclient;
 
 import com.sun.jna.Structure;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * JNA wrapper for GDS_QUAD_t.
  * <p>
@@ -35,6 +30,7 @@ import java.util.List;
  * </p>
  * @since 3.0
  */
+@Structure.FieldOrder({ "gds_quad_high", "gds_quad_low" })
 public class GDS_QUAD_t extends Structure {
 	/// C type : ISC_LONG
 	public int gds_quad_high;
@@ -43,11 +39,6 @@ public class GDS_QUAD_t extends Structure {
 	public GDS_QUAD_t() {
 		super();
 	}
-
-    @Override
-    protected List getFieldOrder() {
-        return Arrays.asList("gds_quad_high", "gds_quad_low");
-    }
 
     /**
 	 * @param gds_quad_high C type : ISC_LONG<br>
