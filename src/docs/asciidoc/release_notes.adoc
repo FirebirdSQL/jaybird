@@ -778,6 +778,16 @@ This has been changed to `REFERENCES` to match both the name of the privilege in
 [#removal-of-classes-packages-and-methods-without-deprecation]
 === Removal of classes, packages and methods without deprecation
 
+[#removal-of-packages-without-deprecation]
+==== Removal of packages without deprecation
+
+The following packages have been removed in Jaybird 5:
+
+* `org.firebirdsql.jdbc.parser`;
+there is no compatible replacement.
+Its successor is the internal API in `org.firebirdsql.jaybird.parser`.
+See also <<generated-keys-parser-replaced>>.
+
 [#removal-of-methods-without-deprecation]
 ==== Removal of methods without deprecation
 
@@ -884,6 +894,15 @@ Use the constants with the same name from `java.sql.Types`.
 
 [#removal-of-deprecated-classes-packages-and-methods]
 === Removal of deprecated classes, packages and methods
+
+[#removal-of-deprecated-packages]
+==== Removal of deprecated packages
+
+The following packages have been removed in Jaybird 5:
+
+* `org.firebirdsql.jca`;
+its replacement is in `org.firebirdsql.jaybird.xca`, but this API is not entirely binary compatible and is considered internal API.
+See also <<jca-removed>>.
 
 [#removal-of-deprecated-methods]
 ==== Removal of deprecated methods
