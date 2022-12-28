@@ -968,7 +968,6 @@ The new way of adding non-standard properties is setting the appropriate propert
 * `FBConnectionRequestInfo.deepCopy()` (internal API);
 if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
 * `DatatypeCoder`
-// TODO Some of the replacement methods might get removed as well later on
 ** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
 ** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
 ** `decodeTimestamp(Timestamp, Calendar)` -- use `decodeTimestamp(Timestamp, Calendar, boolean)`
