@@ -29,7 +29,7 @@ import java.util.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
 @InternalApi
-public class FBEscapedFunctionHelper {
+public final class FBEscapedFunctionHelper {
 
     /**
      * This map contains mapping between JDBC function names and Firebird ones.
@@ -97,6 +97,10 @@ public class FBEscapedFunctionHelper {
         // ...none
 
         FUNCTION_MAP = Collections.unmodifiableMap(functionMap);
+    }
+
+    private FBEscapedFunctionHelper() {
+        // no instances
     }
 
     private static Map<String, SQLFunction> getNumericFunctions() {

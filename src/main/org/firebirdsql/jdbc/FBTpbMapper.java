@@ -38,7 +38,7 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBTpbMapper implements Serializable, Cloneable {
+public final class FBTpbMapper implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1690658870275668176L;
 

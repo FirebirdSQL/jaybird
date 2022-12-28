@@ -862,8 +862,14 @@ In practice, this class was already defined in a way that it couldn't be subclas
 * `FBBlob` is now final
 * `FBClob` is now final
 * `FBCachedClob` is now final
+* `FBConnectionProperties` is now final
+* `FBRowId` is now final
+* `FBSavePoint` is now final
+* `FBTpbMapper` is now final
 * `ExecutionPlanProcessor` is now final
 * `BlobLengthProcessor` is now final
+* `FBEscapedFunctionHelper` is now final and can no longer be instantiated
+* `FBEscapedCallParser` is now final, and some previously `protected` methods have been made package private or removed entirely.
 
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation

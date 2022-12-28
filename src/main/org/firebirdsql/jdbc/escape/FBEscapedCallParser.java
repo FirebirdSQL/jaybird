@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,7 +28,7 @@ import java.sql.SQLException;
  * Parser for escaped procedure call.
  */
 @InternalApi
-public class FBEscapedCallParser {
+public final class FBEscapedCallParser {
 
     private static final int NORMAL_STATE = 1;
     private static final int LITERAL_STATE = 2;
@@ -51,79 +51,58 @@ public class FBEscapedCallParser {
     private FBProcedureCall procedureCall;
 
     /**
-     * Returns the current state.
+     * Test the character to be the state switching character and switches the state if necessary.
+     *
+     * @param testChar
+     *         character to test
      */
-    protected int getState() {
-        return state;
-    }
-
-    /**
-     * Sets the current state.
-     * @param state to enter.
-     * @throws java.lang.IllegalStateException if the system cannot enter the desired state.
-     */
-    protected void setState(int state) {
-        this.state = state;
-    }
-
-    /**
-     * Returns if the system is in state <code>state</code>.
-     * @param state we're testing
-     * @return <code>true</code> if the system is in state <code>state</code>.
-     */
-    protected boolean isInState(int state) {
-        return this.state == state;
-    }
-
-    /**
-     * Test the character to be the state switching character and switches
-     * the state if necessary.
-     * @param testChar character to test
-     */
-    protected void switchState(char testChar) throws FBSQLParseException {
-        if (Character.isWhitespace(testChar) && !isInState(LITERAL_STATE)) {
-            setState(SPACE_STATE);
+    void switchState(char testChar) {
+        if (Character.isWhitespace(testChar) && state != LITERAL_STATE) {
+            state = SPACE_STATE;
             return;
         }
 
         switch (testChar) {
         case '\'':
-            if (isInState(NORMAL_STATE))
-                setState(LITERAL_STATE);
-            else if (isInState(LITERAL_STATE))
-                setState(NORMAL_STATE);
+            if (state == NORMAL_STATE) {
+                state = LITERAL_STATE;
+            } else if (state == LITERAL_STATE) {
+                state = NORMAL_STATE;
+            }
             break;
         case ',':
-            if (!isInState(LITERAL_STATE) && !isInState(BRACE_STATE))
-                setState(COMMA_STATE);
-
+            if (state != LITERAL_STATE && state != BRACE_STATE) {
+                state = COMMA_STATE;
+            }
             break;
         case '(':
         case ')':
-            if (!isInState(LITERAL_STATE))
-                setState(BRACE_STATE);
+            if (state != LITERAL_STATE) {
+                state = BRACE_STATE;
+            }
             break;
         case '{':
         case '}':
-            if (!isInState(LITERAL_STATE))
-                setState(CURLY_BRACE_STATE);
-
+            if (state != LITERAL_STATE) {
+                state = CURLY_BRACE_STATE;
+            }
             break;
         default:
-            if (!isInState(LITERAL_STATE) && !isInState(BRACE_STATE))
-                setState(NORMAL_STATE);
+            if (state != LITERAL_STATE && state != BRACE_STATE) {
+                state = NORMAL_STATE;
+            }
         }
     }
 
     /**
-     * Clean the SQL statement. This method removes leading and trailing spaces
-     * and removes leading and trailing curly braces if any.
+     * Clean the SQL statement. This method removes leading and trailing spaces and removes leading and trailing curly
+     * braces if any.
      *
-     * @param sql SQL statement to clean up.
-     *
-     * @return cleaned up statement.
-     *
-     * @throws FBSQLParseException if cleanup resulted in empty statement.
+     * @param sql
+     *         SQL statement to clean up
+     * @return cleaned up statement
+     * @throws FBSQLParseException
+     *         if cleanup resulted in empty statement
      */
     private String cleanUpCall(String sql) throws FBSQLParseException {
         int startIndex = 0;
@@ -155,7 +134,7 @@ public class FBEscapedCallParser {
     /**
      * Check if either "call" keyword or "EXECUTE PROCEDURE" keyword processed.
      *
-     * @return <code>true</code> if either one or another keyword were processed.
+     * @return {@code true} if either one or another keyword were processed.
      */
     private boolean isCallKeywordProcessed() {
         return isCallWordProcessed ||
@@ -163,10 +142,11 @@ public class FBEscapedCallParser {
     }
 
     /**
-     * Converts escaped parts in the passed SQL to native representation.
-     * @param sql to parse
+     * Converts escaped parts in {@code sql} to native representation.
      *
-     * @return native form of the <code>sql</code>.
+     * @param sql
+     *         to parse
+     * @return native form of the {@code sql}
      */
     public FBProcedureCall parseCall(String sql) throws SQLException {
         sql = cleanUpCall(sql);
@@ -182,7 +162,7 @@ public class FBEscapedCallParser {
         int paramCount = 0;
         int paramPosition = 0;
 
-        setState(NORMAL_STATE);
+        state = NORMAL_STATE;
 
         final StringBuilder buffer = new StringBuilder(INITIAL_CAPACITY);
 
@@ -213,12 +193,12 @@ public class FBEscapedCallParser {
                 break;
             case SPACE_STATE:
                 if (buffer.length() == 0) {
-                    setState(NORMAL_STATE);
+                    state = NORMAL_STATE;
                     continue;
                 }
                 if (openBraceCount > 0) {
                     buffer.append(currentChar);
-                    setState(NORMAL_STATE);
+                    state = NORMAL_STATE;
                     continue;
                 }
 
@@ -229,7 +209,7 @@ public class FBEscapedCallParser {
                     boolean tokenProcessed = processToken(buffer.toString().trim());
                     if (tokenProcessed) {
                         buffer.setLength(0);
-                        setState(NORMAL_STATE);
+                        state = NORMAL_STATE;
                         if (isNameProcessed) {
                             // If we just found a name, fast-forward to the 
                             // opening parenthesis, if there is one
@@ -242,7 +222,7 @@ public class FBEscapedCallParser {
                     }
                 } else {
                     buffer.append(currentChar);
-                    setState(NORMAL_STATE);
+                    state = NORMAL_STATE;
                 }
                 break;
             case BRACE_STATE:
@@ -264,16 +244,17 @@ public class FBEscapedCallParser {
                     buffer.setLength(0);
                 } else {
                     buffer.append(currentChar);
-                    if (currentChar == '(')
+                    if (currentChar == '(') {
                         openBraceCount++;
-                    else
+                    } else {
                         openBraceCount--;
+                    }
                 }
-                setState(NORMAL_STATE);
+                state = NORMAL_STATE;
                 break;
             case CURLY_BRACE_STATE:
                 buffer.append(currentChar);
-                setState(NORMAL_STATE);
+                state = NORMAL_STATE;
                 break;
             case COMMA_STATE:
                 if (openBraceCount > 0) {
@@ -291,7 +272,7 @@ public class FBEscapedCallParser {
 
                 paramPosition++;
 
-                setState(NORMAL_STATE);
+                state = NORMAL_STATE;
                 break;
             case LITERAL_STATE:
                 buffer.append(currentChar);
@@ -348,15 +329,14 @@ public class FBEscapedCallParser {
     }
 
     /**
-     * Process token. This method detects procedure call keywords and sets
-     * appropriate flags. Also it detects procedure name and sets appropriate
-     * filed in the procedure call object.
+     * Process token. This method detects procedure call keywords and sets appropriate flags. Also, it detects
+     * procedure name and sets appropriate field in the procedure call object.
      *
-     * @param token token to process.
-     *
-     * @return <code>true</code> if token was understood and processed.
+     * @param token
+     *         token to process.
+     * @return {@code true} if token was understood and processed.
      */
-    protected boolean processToken(String token) {
+    boolean processToken(String token) {
         if ("EXECUTE".equalsIgnoreCase(token) &&
                 !isExecuteWordProcessed && !isProcedureWordProcessed && !isNameProcessed) {
             isExecuteWordProcessed = true;
@@ -384,16 +364,15 @@ public class FBEscapedCallParser {
     }
 
     /**
-     * Pre-process parameter. This method checks if there is escaped call inside
-     * and converts it to the native one.
+     * Pre-process parameter. This method checks if there is escaped call inside and converts it to the native one.
      *
-     * @param param parameter to process.
-     *
-     * @return processed parameter.
-     *
-     * @throws FBSQLParseException if parameter cannot be correctly parsed.
+     * @param param
+     *         parameter to process
+     * @return processed parameter
+     * @throws FBSQLParseException
+     *         if parameter cannot be correctly parsed
      */
-    protected String processParam(String param) throws SQLException {
+    String processParam(String param) throws SQLException {
         return FBEscapedParser.toNativeSql(param);
     }
 }

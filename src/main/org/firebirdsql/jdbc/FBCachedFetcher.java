@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class FBCachedFetcher implements FBFetcher {
+final class FBCachedFetcher implements FBFetcher {
 
     private final boolean forwardOnly;
     private List<RowValue> rows;

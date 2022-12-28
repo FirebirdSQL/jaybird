@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JDBC Driver, public Firebird-specific JDBC extensions.
+ * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,7 +25,7 @@ import java.sql.SQLException;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-public class FBSavepoint implements FirebirdSavepoint {
+public final class FBSavepoint implements FirebirdSavepoint {
 
     private static final String SAVEPOINT_ID_PREFIX = "SVPT";
 

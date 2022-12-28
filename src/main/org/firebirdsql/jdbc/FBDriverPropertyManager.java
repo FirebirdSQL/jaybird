@@ -28,7 +28,11 @@ import java.util.*;
 /**
  * Manager of the DPB properties.
  */
-class FBDriverPropertyManager {
+final class FBDriverPropertyManager {
+
+    private FBDriverPropertyManager() {
+        // no instances
+    }
 
     /**
      * Normalize the properties. This method resolves the aliases to their original names.

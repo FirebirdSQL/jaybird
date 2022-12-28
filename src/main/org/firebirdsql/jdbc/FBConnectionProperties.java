@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
+public final class FBConnectionProperties implements FirebirdConnectionProperties, Serializable, Cloneable {
 
     private static final long serialVersionUID = 611228437520889118L;
 
