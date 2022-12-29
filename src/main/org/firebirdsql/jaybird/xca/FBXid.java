@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -19,31 +19,28 @@
 package org.firebirdsql.jaybird.xca;
 
 import javax.transaction.xa.Xid;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import static org.firebirdsql.util.ByteArrayHelper.nullToEmpty;
+
 /**
- * The class <code>FBXid</code> has methods for serializing xids for
+ * The class {@code FBXid} has methods for serializing xids for
  * firebird use, and reading them back into instances of itself.  It is
  * a key component in adapting xa semantics and recovery to firebird
  * native operations and data format.
  *
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
- * @version 1.0
  */
-class FBXid implements Xid {
-    //Constants from alice.h
-    public static final int TDR_VERSION = 1;
-    public static final int TDR_HOST_SITE = 1;
-    public static final int TDR_DATABASE_PATH = 2;
-    public static final int TDR_TRANSACTION_ID = 3;
-    public static final int TDR_REMOTE_SITE = 4;
-    //new constants for xid encoding
-    public static final int TDR_XID_FORMAT_ID = 5;
-    public static final int TDR_XID_GLOBAL_ID = 6;
-    public static final int TDR_XID_BRANCH_ID = 4;
+final class FBXid implements Xid {
+
+    // Constant from alice.h
+    private static final int TDR_VERSION = 1;
+    // constants for xid encoding as used by Jaybird
+    private static final int TDR_XID_FORMAT_ID = 5;
+    private static final int TDR_XID_GLOBAL_ID = 6;
+    private static final int TDR_XID_BRANCH_ID = 4;
 
     private final int formatId;
 
@@ -77,46 +74,69 @@ class FBXid implements Xid {
     }
 
     /**
-     * Create a new instance copying an existing one.
+     * Create a xid with the specified values.
+     *
+     * @param firebirdTransactionId
+     *         Firebird transaction id
+     * @param formatId
+     *         format id
+     * @param globalId
+     *         global transaction id
+     * @param branchId
+     *         branch qualifier
      */
-    public FBXid(Xid xid) {
-        formatId = xid.getFormatId();
-        globalId = xid.getGlobalTransactionId();
-        branchId = xid.getBranchQualifier();
-        firebirdTransactionId = 0;
+    FBXid(long firebirdTransactionId, int formatId, byte[] globalId, byte[] branchId) {
+        this.firebirdTransactionId = firebirdTransactionId;
+        this.formatId = formatId;
+        this.globalId = globalId.clone();
+        this.branchId = branchId.clone();
     }
 
     /**
-     * Creates a new <code>FBXid</code> instance from the byte representation
-     * supplied. This is called by recover to reconstruct an xid
+     * Create a new instance copying an existing one.
+     *
+     * @param xid
+     *         source xid
+     */
+    FBXid(Xid xid) {
+        // NOTE: The use of nullToEmpty is a safeguard, as the previous implementation would use the array of
+        // the source XID and in theory we might receive null (in practice that means the source XID has a bug).
+        this(0L, xid.getFormatId(), nullToEmpty(xid.getGlobalTransactionId()), nullToEmpty(xid.getBranchQualifier()));
+    }
+
+    /**
+     * Creates a new xid instance from the byte representation supplied. This is called by recover to reconstruct a xid
      * from the toBytes() representation.
      *
      * @param rawIn
-     *         Xid serialized in format of {@link #toBytes()} as {@link java.io.InputStream}
+     *         Xid serialized in format of {@link #toBytes()}
      * @param firebirdTransactionId
      *         The Firebird transactionId of the recovered Xid.
      * @throws FBIncorrectXidException
      *         if an unexpected value is read from the input stream
-     * @throws IOException
-     *         for errors reading from the input stream
      */
-    FBXid(InputStream rawIn, long firebirdTransactionId) throws FBIncorrectXidException, IOException {
+    FBXid(byte[] rawIn, long firebirdTransactionId) throws FBIncorrectXidException {
         this.firebirdTransactionId = firebirdTransactionId;
-        if (read(rawIn) != TDR_VERSION) {
-            throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
+        ByteBuffer buffer = ByteBuffer.wrap(rawIn);
+        try {
+            if (buffer.get() != TDR_VERSION) {
+                throw new FBIncorrectXidException("Wrong TDR_VERSION for xid");
+            }
+            if (buffer.get() != TDR_XID_FORMAT_ID) {
+                throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
+            }
+            formatId = buffer.getInt();
+            if (buffer.get() != TDR_XID_GLOBAL_ID) {
+                throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
+            }
+            globalId = readBuffer(buffer);
+            if (buffer.get() != TDR_XID_BRANCH_ID) {
+                throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
+            }
+            branchId = readBuffer(buffer);
+        } catch (BufferUnderflowException e) {
+            throw new FBIncorrectXidException("Unexpected format or incomplete serialized xid", e);
         }
-        if (read(rawIn) != TDR_XID_FORMAT_ID) {
-            throw new FBIncorrectXidException("Wrong TDR_XID_FORMAT_ID for xid");
-        }
-        formatId = readInt(rawIn);
-        if (read(rawIn) != TDR_XID_GLOBAL_ID) {
-            throw new FBIncorrectXidException("Wrong TDR_XID_GLOBAL_ID for xid");
-        }
-        globalId = readBuffer(rawIn);
-        if (read(rawIn) != TDR_XID_BRANCH_ID) {
-            throw new FBIncorrectXidException("Wrong TDR_XID_BRANCH_ID for xid");
-        }
-        branchId = readBuffer(rawIn);
     }
 
     /**
@@ -153,9 +173,8 @@ class FBXid implements Xid {
     /**
      * Compare for equality.
      * <p>
-     * Instances are considered equal if they are both instances of XidImpl,
-     * and if they have the same global transaction id and transaction
-     * branch qualifier.
+     * Instances are considered equal if they are both instances of FBXid, and if they have the same global
+     * transaction id and transaction branch qualifier.
      * </p>
      */
     public boolean equals(Object obj) {
@@ -185,70 +204,27 @@ class FBXid implements Xid {
         return toString(this);
     }
 
-    //package
-
-    /**
-     * @return Length of the serialized byte representation.
-     */
-    int getLength() {
-        return 1 + 1 + 4 + 1 + 4 + globalId.length + 1 + 4 + branchId.length;
-    }
-
     /**
      * @return Serialized byte representation of this Xid
      */
     byte[] toBytes() {
-        byte[] b = new byte[getLength()];
-        int i = 0;
-        b[i++] = (byte) TDR_VERSION;
-        b[i++] = (byte) TDR_XID_FORMAT_ID;
-        b[i++] = (byte) ((formatId >>> 24) & 0xff);
-        b[i++] = (byte) ((formatId >>> 16) & 0xff);
-        b[i++] = (byte) ((formatId >>> 8) & 0xff);
-        b[i++] = (byte) ((formatId) & 0xff);
-        b[i++] = (byte) TDR_XID_GLOBAL_ID;
-        b[i++] = (byte) ((globalId.length >>> 24) & 0xff);
-        b[i++] = (byte) ((globalId.length >>> 16) & 0xff);
-        b[i++] = (byte) ((globalId.length >>> 8) & 0xff);
-        b[i++] = (byte) ((globalId.length) & 0xff);
-        System.arraycopy(globalId, 0, b, i, globalId.length);
-        i += globalId.length;
-        b[i++] = (byte) TDR_XID_BRANCH_ID;
-        b[i++] = (byte) ((branchId.length >>> 24) & 0xff);
-        b[i++] = (byte) ((branchId.length >>> 16) & 0xff);
-        b[i++] = (byte) ((branchId.length >>> 8) & 0xff);
-        b[i++] = (byte) ((branchId.length) & 0xff);
-        System.arraycopy(branchId, 0, b, i, branchId.length);
+        byte[] b = new byte[1 + 1 + 4 + 1 + 4 + globalId.length + 1 + 4 + branchId.length];
+        ByteBuffer.wrap(b)
+                .put((byte) TDR_VERSION)
+                .put((byte) TDR_XID_FORMAT_ID)
+                .putInt(formatId)
+                .put((byte) TDR_XID_GLOBAL_ID)
+                .putInt(globalId.length)
+                .put(globalId)
+                .put((byte) TDR_XID_BRANCH_ID)
+                .putInt(branchId.length)
+                .put(branchId);
         return b;
     }
 
-    private int read(InputStream in) throws IOException {
-        return in.read();
-    }
-
-    private int readInt(InputStream in) throws IOException {
-        return (read(in) << 24) | (read(in) << 16) | (read(in) << 8) | (read(in));
-    }
-
-    private byte[] readBuffer(InputStream in) throws IOException {
-        int len = readInt(in);
-        byte[] buffer = new byte[len];
-        readFully(in, buffer, 0, len);
-        return buffer;
-    }
-
-    private void readFully(InputStream in, byte[] buffer, int offset, int length) throws IOException {
-        if (length == 0)
-            return;
-
-        do {
-            int counter = in.read(buffer, offset, length);
-            if (counter == -1)
-                throw new EOFException();
-
-            offset += counter;
-            length -= counter;
-        } while (length > 0);
+    private byte[] readBuffer(ByteBuffer buffer) {
+        byte[] content = new byte[buffer.getInt()];
+        buffer.get(content);
+        return content;
     }
 }
-

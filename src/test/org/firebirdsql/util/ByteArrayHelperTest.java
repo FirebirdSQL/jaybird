@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests for {@link ByteArrayHelper}
@@ -139,6 +140,17 @@ class ByteArrayHelperTest {
     @Test
     void indexOf_inArray() {
         assertEquals(1, ByteArrayHelper.indexOf(new byte[] { 2, 1, 3, 4, 1 }, (byte) 1));
+    }
+
+    @Test
+    void nullToEmpty_null() {
+        assertArrayEquals(new byte[0], ByteArrayHelper.nullToEmpty(null));
+    }
+
+    @Test
+    void nullToEmpty_nonNull() {
+        byte[] input = new byte[6];
+        assertSame(input, ByteArrayHelper.nullToEmpty(input));
     }
 
 }

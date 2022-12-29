@@ -39,7 +39,6 @@ import org.firebirdsql.util.ByteArrayHelper;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.sql.DriverManager;
@@ -605,7 +604,7 @@ public class FBManagedConnection implements ExceptionListener {
                 byte[] inLimboMessage = field1.getBytes();
 
                 try {
-                    FBXid xid = new FBXid(new ByteArrayInputStream(inLimboMessage), inLimboTxId);
+                    FBXid xid = new FBXid(inLimboMessage, inLimboTxId);
 
                     boolean gtridEquals = Arrays.equals(xid.getGlobalTransactionId(), id.getGlobalTransactionId());
                     boolean bqualEquals = Arrays.equals(xid.getBranchQualifier(), id.getBranchQualifier());
@@ -622,7 +621,7 @@ public class FBManagedConnection implements ExceptionListener {
 
             stmtHandle2.close();
             trHandle2.commit();
-        } catch (SQLException | IOException ex) {
+        } catch (SQLException ex) {
             log.debug("can't perform query to fetch xids", ex);
             throw new FBXAException(XAException.XAER_RMFAIL, ex);
         }
@@ -770,7 +769,7 @@ public class FBManagedConnection implements ExceptionListener {
 
     private static FBXid extractXid(byte[] xidData, long txId) throws IOException {
         try {
-            return new FBXid(new ByteArrayInputStream(xidData), txId);
+            return new FBXid(xidData, txId);
         } catch (FBIncorrectXidException e) {
             if (log.isWarnEnabled()) {
                 log.warn(format(
