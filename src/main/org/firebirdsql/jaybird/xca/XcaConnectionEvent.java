@@ -33,7 +33,7 @@ import org.firebirdsql.jdbc.FirebirdConnection;
  * {@code CONNECTION_ERROR_OCCURRED}</li>
  * </ul>
  */
-public class XcaConnectionEvent {
+public final class XcaConnectionEvent {
 
     private final FBManagedConnection source;
     private final EventType eventType;

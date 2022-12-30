@@ -704,6 +704,7 @@ Lack of testing as a JCA connector also meant it was unclear if Jaybird actually
 To reduce development overhead, we have decided to remove support for JCA from Jaybird.
 A lot of classes previously in the `org.firebirdsql.jca` package are now in the package `org.firebirdsql.jaybird.xca`.
 This new package is marked as internal API and is not binary compatible with the old JCA implementation.
+Where possible, classes in this package have been declared final.
 Be aware that the API and implementation of the classes in this package can change in any point release.
 
 If there turns out to be actual demand for JCA support in Jaybird after all, we will consider creating new support for JCA in a way that does not require JCA when using Jaybird as a JDBC driver.

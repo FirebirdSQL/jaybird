@@ -60,7 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBManagedConnectionFactory implements FirebirdConnectionProperties, Serializable {
+public final class FBManagedConnectionFactory implements FirebirdConnectionProperties, Serializable {
 
     // This class uses a serialization proxy, see class at end of file
 

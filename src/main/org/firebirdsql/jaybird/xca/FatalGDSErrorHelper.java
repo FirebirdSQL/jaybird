@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 /**
  * Helper class for the exception handling in XCA framework. JCA specification
- * required resource adapter to report an error if it is sure that no other
+ * required resource adapter to report an error if it is certain that no other
  * operations can be executed over that particular managed connection.
  * <p>
  * In case of Firebird, few errors belong to the so-called "fatal errors", after
@@ -37,7 +37,11 @@ import java.util.Arrays;
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  */
-class FatalGDSErrorHelper {
+final class FatalGDSErrorHelper {
+
+    private FatalGDSErrorHelper() {
+        // no instances
+    }
 
     /**
      * Check whether the specified exception is fatal from the XCA point of view.
@@ -60,7 +64,7 @@ class FatalGDSErrorHelper {
      * This list has been kindly reviewed by Ann Harrison, 12/13/2002
      * </p>
      */
-    static final int[] FATAL_ERRORS = new int[] {
+    private static final int[] FATAL_ERRORS = new int[] {
             ISCConstants.isc_network_error,
             ISCConstants.isc_net_read_err,
             ISCConstants.isc_net_write_err,

@@ -32,7 +32,7 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks </a>
  */
 
-public class FBTpb implements Serializable {
+public final class FBTpb implements Serializable {
 
     private TransactionParameterBuffer transactionParams;
 

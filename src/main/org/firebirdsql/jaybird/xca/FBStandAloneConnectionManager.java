@@ -33,7 +33,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
+public final class FBStandAloneConnectionManager implements XcaConnectionManager, XcaConnectionEventListener, Serializable {
 
     private static final long serialVersionUID = 1L;
 

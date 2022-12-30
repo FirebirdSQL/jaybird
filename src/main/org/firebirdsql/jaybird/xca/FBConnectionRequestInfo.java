@@ -30,7 +30,7 @@ import java.io.Serializable;
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
-public class FBConnectionRequestInfo implements Serializable {
+public final class FBConnectionRequestInfo implements Serializable {
 
     private static final long serialVersionUID = 2L;
 

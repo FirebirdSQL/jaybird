@@ -60,7 +60,7 @@ import static java.util.Collections.unmodifiableSet;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @version 1.0
  */
-public class FBManagedConnection implements ExceptionListener {
+public final class FBManagedConnection implements ExceptionListener {
 
     public static final String ERROR_NO_CHARSET = "Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding). "
             + "Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information.";
