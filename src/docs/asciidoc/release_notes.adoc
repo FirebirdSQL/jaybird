@@ -1005,6 +1005,7 @@ The replacement only trims trailing spaces.
 ** `getWantsViews(String[])` -- there is no replacement
 * `RowValueBuilder` was moved to another package and will be made package private in Jaybird 6
 * `FBBlob.getGdsHelper()` has been removed
+* constructor `BlobLengthProcessor(FbBlob)` was replaced by a no-arg constructor
 
 [#breaking-changes-statement-state]
 ==== Additional statement state `PREPARING`

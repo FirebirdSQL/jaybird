@@ -394,10 +394,10 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
     }
 
     /**
-     * @return New instance of {@link BlobLengthProcessor} (or subclass) for this blob.
+     * @return New instance of {@link BlobLengthProcessor} for this blob.
      */
     protected BlobLengthProcessor createBlobLengthProcessor() {
-        return new BlobLengthProcessor(this);
+        return new BlobLengthProcessor();
     }
 
     @Override

@@ -267,7 +267,6 @@ public abstract class AbstractWireOperations implements FbWireOperations {
         }
         if (response instanceof GenericResponse) {
             GenericResponse genericResponse = (GenericResponse) response;
-            @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
             SQLException exception = genericResponse.getException();
             if (exception instanceof SQLWarning) {
                 warningCallback.processWarning((SQLWarning) exception);

@@ -38,12 +38,6 @@ public final class BlobLengthProcessor implements InfoProcessor<Long> {
             ISCConstants.isc_info_blob_total_length
     };
 
-    private final FbBlob blob;
-
-    public BlobLengthProcessor(FbBlob blob) {
-        this.blob = blob;
-    }
-
     @Override
     public Long process(byte[] infoResponse) throws SQLException {
         if (infoResponse.length == 0) {
