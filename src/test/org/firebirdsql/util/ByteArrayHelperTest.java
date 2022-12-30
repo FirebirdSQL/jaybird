@@ -142,15 +142,4 @@ class ByteArrayHelperTest {
         assertEquals(1, ByteArrayHelper.indexOf(new byte[] { 2, 1, 3, 4, 1 }, (byte) 1));
     }
 
-    @Test
-    void nullToEmpty_null() {
-        assertArrayEquals(new byte[0], ByteArrayHelper.nullToEmpty(null));
-    }
-
-    @Test
-    void nullToEmpty_nonNull() {
-        byte[] input = new byte[6];
-        assertSame(input, ByteArrayHelper.nullToEmpty(input));
-    }
-
 }

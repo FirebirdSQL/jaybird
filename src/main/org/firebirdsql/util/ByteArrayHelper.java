@@ -139,11 +139,4 @@ public final class ByteArrayHelper {
         return -1;
     }
 
-    /**
-     * @return an empty byte array if {@code array} is {@code null}, otherwise {@code array}
-     */
-    public static byte[] nullToEmpty(byte[] array) {
-        return array != null ? array : new byte[0];
-    }
-
 }

@@ -23,8 +23,6 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static org.firebirdsql.util.ByteArrayHelper.nullToEmpty;
-
 /**
  * The class {@code FBXid} has methods for serializing xids for
  * firebird use, and reading them back into instances of itself.  It is
@@ -88,8 +86,8 @@ final class FBXid implements Xid {
     FBXid(long firebirdTransactionId, int formatId, byte[] globalId, byte[] branchId) {
         this.firebirdTransactionId = firebirdTransactionId;
         this.formatId = formatId;
-        this.globalId = globalId.clone();
-        this.branchId = branchId.clone();
+        this.globalId = globalId;
+        this.branchId = branchId;
     }
 
     /**
@@ -99,9 +97,7 @@ final class FBXid implements Xid {
      *         source xid
      */
     FBXid(Xid xid) {
-        // NOTE: The use of nullToEmpty is a safeguard, as the previous implementation would use the array of
-        // the source XID and in theory we might receive null (in practice that means the source XID has a bug).
-        this(0L, xid.getFormatId(), nullToEmpty(xid.getGlobalTransactionId()), nullToEmpty(xid.getBranchQualifier()));
+        this(0L, xid.getFormatId(), xid.getGlobalTransactionId(), xid.getBranchQualifier());
     }
 
     /**
