@@ -29,19 +29,19 @@ import java.util.EnumSet;
 /**
  * {@link Argument} implementation for numeric (integer) values
  */
-public final class NumericArgument extends Argument {
+public final class NumericArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.ByteSpb);
-    private final ArgumentType argumentType;
+    private static final long serialVersionUID = -1575745288263119101L;
+    
     private final int value;
 
     public NumericArgument(int type, ArgumentType argumentType, int value) {
-        super(type);
+        super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
-        this.argumentType = argumentType;
         this.value = value;
     }
 

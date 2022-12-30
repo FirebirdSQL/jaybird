@@ -27,21 +27,22 @@ import java.util.EnumSet;
 
 /**
  * {@link Argument} implementation for byte values.
+ *
  * @since 5
  */
-public final class ByteArgument extends Argument {
+public final class ByteArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.ByteSpb);
-    private final ArgumentType argumentType;
+    private static final long serialVersionUID = 3202369601515235550L;
+    
     private final byte value;
 
     public ByteArgument(int type, ArgumentType argumentType, byte value) {
-        super(type);
+        super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
-        this.argumentType = argumentType;
         this.value = value;
     }
 

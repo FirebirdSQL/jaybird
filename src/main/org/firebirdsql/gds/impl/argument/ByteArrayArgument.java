@@ -31,10 +31,11 @@ import java.util.Arrays;
  * This implementation supports byte arrays up to length of the argument type.
  * </p>
  */
-public final class ByteArrayArgument extends Argument {
+public final class ByteArrayArgument extends TypedArgument {
 
+    private static final long serialVersionUID = -8636439991275911102L;
+    
     private final byte[] value;
-    private final ArgumentType argumentType;
 
     /**
      * Initializes an instance of ByteArrayArgument.
@@ -45,8 +46,7 @@ public final class ByteArrayArgument extends Argument {
      *        Byte array with a maximum length defined by {@code argumentType}.
      */
     public ByteArrayArgument(int type, ArgumentType argumentType, byte[] value) {
-        super(type);
-        this.argumentType = argumentType;
+        super(type, argumentType);
         if (argumentType != ArgumentType.TraditionalDpb && argumentType != ArgumentType.Wide
                 && argumentType != ArgumentType.StringSpb) {
             throw new IllegalArgumentException(

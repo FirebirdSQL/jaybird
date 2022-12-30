@@ -31,6 +31,8 @@ import java.io.Serializable;
  */
 public abstract class Argument implements Parameter, Serializable {
 
+    private static final long serialVersionUID = -4547334570142529123L;
+    
     private final int type;
 
     protected Argument(int type) {

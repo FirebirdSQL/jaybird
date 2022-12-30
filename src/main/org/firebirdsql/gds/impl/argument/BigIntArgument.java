@@ -30,20 +30,20 @@ import java.util.EnumSet;
  * {@link Argument} implementation for bigint (long) values.
  * @since 3.0
  */
-public final class BigIntArgument extends Argument {
+public final class BigIntArgument extends TypedArgument {
 
     private static final EnumSet<ArgumentType> SUPPORTED_ARGUMENT_TYPES =
             EnumSet.of(ArgumentType.TraditionalDpb, ArgumentType.Wide, ArgumentType.IntSpb, ArgumentType.BigIntSpb);
-    private final ArgumentType argumentType;
+    private static final long serialVersionUID = -6152038317321572191L;
+
     private final long value;
 
     public BigIntArgument(int type, ArgumentType argumentType, long value) {
-        super(type);
+        super(type, argumentType);
         if (!SUPPORTED_ARGUMENT_TYPES.contains(argumentType)) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
         // TODO Check if value fits if it is an IntSpb?
-        this.argumentType = argumentType;
         this.value = value;
     }
 

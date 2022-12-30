@@ -27,17 +27,16 @@ import java.io.OutputStream;
 /**
  * {@link Argument} implementation for items without a value.
  */
-public final class SingleItem extends Argument {
+public final class SingleItem extends TypedArgument {
 
-    private final ArgumentType argumentType;
-
+    private static final long serialVersionUID = -8732644692849743977L;
+    
     public SingleItem(int item, ArgumentType argumentType) {
-        super(item);
+        super(item, argumentType);
         if (argumentType != ArgumentType.Wide && argumentType != ArgumentType.TraditionalDpb
                 && argumentType != ArgumentType.SingleTpb) {
             throw new IllegalArgumentException("Invalid argument type: " + argumentType);
         }
-        this.argumentType = argumentType;
     }
 
     public void writeTo(OutputStream outputStream) throws IOException {
