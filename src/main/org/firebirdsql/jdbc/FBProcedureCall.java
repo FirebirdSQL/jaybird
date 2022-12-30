@@ -402,10 +402,24 @@ public class FBProcedureCall implements Cloneable {
 
         private static final NullParam NULL_PARAM = new NullParam();
 
+        private NullParam() {
+            super(-1, "NULL");
+        }
+
+        @Override
         public void setValue(Object value) throws SQLException {
-            throw new FBSQLException("You cannot set value of an non-existing parameter.",
+            throw new FBSQLException("You cannot set value of a non-existing parameter.",
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
         }
 
+        @Override
+        public void setIndex(int index) {
+            throw new UnsupportedOperationException("You cannot set index of a non-existing parameter.");
+        }
+
+        @Override
+        public void setType(int type) {
+            throw new UnsupportedOperationException("You cannot set type of a non-existing parameter.");
+        }
     }
 }

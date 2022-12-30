@@ -824,12 +824,17 @@ replacement is `setWireCryptAsEnum(WireCrypt)` or `setWireCrypt(String)`.
 * `getServerName()`, `getPortNumber()` and `getAttachObjectName()` in `org.firebirdsql.gds.ng.AbstractConnection`;
 handling of database coordinates is now considered internal to the protocol implementation.
 There is no direct equivalent beyond accessing the properties with the same name in the attachment properties (though keep in mind that the meaning of those properties has changed in Jaybird 5, see also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2021-01-unified-database-coordinates.md[jdp-2021-01]).
-* `FBCachedClob(FBCachedBlob, String)`, use `FBCachedClob(FBCachedBlob, FBBlob.Config)`
+* constructor `FBCachedClob(FBCachedBlob, String)`, use `FBCachedClob(FBCachedBlob, FBBlob.Config)`
+* constructor `FBProcedureParam()`, use `FBProcedureParam(int, String)`
 
 The following methods had their visibility reduced:
 
 * `FBTpbMapper.getDefaultTransactionIsolation()` to default access.
 * `FBTpbMapper.setDefaultTransactionIsolation(int)` to default access.
+* `FBProcedureParam`
+** `isParam()` made final
+** `getPosition()` made final
+** `getParamValue()` made final
 
 [#removal-of-classes-without-deprecation]
 ==== Removal of classes without deprecation
