@@ -11,7 +11,7 @@
 
 ## Context
 
-Jaybird is a long running project, and its design decisions are currently 
+Jaybird is a long-running project, and its design decisions are currently 
 either implicit or hidden in commits, tracker tickets, code comments, 
 discussions on - for example - Firebird-java, or - even worse - just in the mind 
 of the implementer (and likely long since forgotten).
@@ -57,7 +57,7 @@ For example
 
     jdp-2019-01: Jaybird Design Proposal
 
-The document should be in markdown format, and stored in `devdoc/jdp` with a
+The document should be in Markdown format, and stored in `devdoc/jdp` with a
 filename consisting of the JDP number, followed by the lowercased, dash 
 separated descriptive title:
 
@@ -96,7 +96,7 @@ mutually exclusive.
 
 The type of document. Possible values:
 
-- Project-Specification : Specification for the project itself (eg governance,
+- Project-Specification : Specification for the project itself (e.g. governance,
   way of working, etc)
 - Living document : indicates the document can undergo fundamental changes 
   without being replaced.

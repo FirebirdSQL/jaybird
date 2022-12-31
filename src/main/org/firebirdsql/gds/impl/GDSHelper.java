@@ -178,7 +178,7 @@ public final class GDSHelper {
     }
 
     /**
-     * Get the version of the the database that we're connected to
+     * Get the version of the database that we're connected to.
      *
      * @return the database product version
      */

@@ -53,7 +53,7 @@ public class JnaTransaction extends AbstractFbTransaction {
      *         Transaction handle
      * @param initialState
      *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
-     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
+     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED})
      */
     public JnaTransaction(JnaDatabase database, IntByReference transactionHandle, TransactionState initialState) {
         super(initialState, database);

@@ -298,15 +298,10 @@ public class ClumpletReader {
     }
 
     public void adjustSpbState() throws SQLException {
-        switch (kind) {
-        case SpbStart:
-            if (spbState == 0 &&                              // Just started with service start block ...
-                    getClumpletSize(true, true, true) == 1) { // and this is action_XXX clumplet
-                spbState = getClumpTag();
-            }
-            break;
-        default:
-            break;
+        if (kind == Kind.SpbStart
+                && spbState == 0
+                && getClumpletSize(true, true, true) == 1) {
+            spbState = getClumpTag();
         }
     }
 

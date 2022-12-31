@@ -89,7 +89,7 @@ The naming scheme must be:
     jaybird-<version>
     
 For additional jar files, the naming scheme depends on the function of the jar.
-If the jar file is an extension (eg full, or - historically - pool), then the 
+If the jar file is an extension (e.g. full, or - historically - pool), then the 
 scheme is:
 
     jaybird-<name>-<version>
@@ -97,7 +97,7 @@ scheme is:
 For Maven this would be the equivalent of introducing a new dependency with the 
 name `jaybird-<name>`.
 
-If the jar file is a different aspect of the jar (eg sources or javadoc), then
+If the jar file is a different aspect of the jar (e.g. sources or javadoc), then
 the scheme is:
 
     jaybird-<version>-<aspect>

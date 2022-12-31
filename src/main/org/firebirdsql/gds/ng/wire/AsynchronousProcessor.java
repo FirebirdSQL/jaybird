@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -45,8 +45,7 @@ public class AsynchronousProcessor {
     }
 
     private final AsynchronousChannelListener channelListener = new ProcessorChannelListener();
-    private final List<FbWireAsynchronousChannel> newChannels =
-            Collections.synchronizedList(new ArrayList<FbWireAsynchronousChannel>());
+    private final List<FbWireAsynchronousChannel> newChannels = Collections.synchronizedList(new ArrayList<>());
     private final SelectorTask selectorTask = new SelectorTask();
     private final Selector selector;
 

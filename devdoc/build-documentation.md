@@ -7,7 +7,7 @@ list.
 ## Running the build
 
 The build uses Gradle wrapper, which is included in the repository. The Java
-version running the build restricts the build output (eg Java 8 can't target
+version running the build restricts the build output (e.g. Java 8 can't target
 Java 11).
 
 The target Java version is determined by passing the `-PbuildProfile=javaXX`,
@@ -15,7 +15,7 @@ where `javaXX` is the desired Java version (`java8`, `java11`, etc). The default
 is `java8`.
 
 The build configuration in `build-properties.gradle` restricts the target Java
-versions, and unsupported versions will fallback to `java8`.
+versions, and unsupported versions will fall back to `java8`.
 
 To run with a specific Java version, we suggest creating a Java-specific launch
 script. For example, for windows create a batch file with:

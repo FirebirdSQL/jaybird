@@ -45,8 +45,8 @@ JDBC 4.2 (and 4.3) does not define a mapping for `java.sql.Time`,
 mapping for `java.time.OffsetDateTime` and `java.time.OffsetTime` to the 
 `WITHOUT TIME ZONE` types. See also JDBC 4.3 Appendix B.
 
-The other `java.time` types (eg `ZonedDateTime` or `Instant`) are not mentioned 
-in the JDBC specification.
+The other `java.time` types (e.g. `ZonedDateTime` or `Instant`) are not 
+mentioned in the JDBC specification.
 
 For `WITHOUT TIME ZONE` types, JDBC requires default interpretation in the 
 current JVM time zone.
@@ -237,7 +237,7 @@ Time zone support in Jaybird will not include the following:
 3.  Support `java.time.LocalDate`, `LocalTime` and `LocalDateTime` for 
     `WITH TIME ZONE` types.
     
-    Not specified by JDBC. Possible confusion/ambiguity (eg is local in the 
+    Not specified by JDBC. Possible confusion/ambiguity (e.g. is local in the 
     JVM zone or at the original offset?). See also other items. See also section 
     4.6 in ISO-9075-2:2016.
     

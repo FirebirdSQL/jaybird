@@ -331,14 +331,15 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Reset statement state, equivalent to calling {@link #reset(boolean)} with <code>false</code>
+     * Reset statement state, equivalent to calling {@link #reset(boolean)} with {@code false}.
      */
     protected final void reset() {
         reset(false);
     }
 
     /**
-     * Reset statement state and clear parameter description, equivalent to calling {@link #reset(boolean)} with <code>true</code>
+     * Reset statement state and clear parameter description, equivalent to calling {@link #reset(boolean)} with
+     * {@code true}.
      */
     protected final void resetAll() {
         reset(true);
@@ -373,7 +374,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param state
      *         The statement state
-     * @return <code>true</code> call to <code>prepare</code> is allowed
+     * @return {@code true} call to {@code prepare} is allowed
      */
     protected boolean isPrepareAllowed(final StatementState state) {
         return PREPARE_ALLOWED_STATES.contains(state);
@@ -594,8 +595,8 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Frees the currently allocated statement (either close the cursor with {@link ISCConstants#DSQL_close} or drop the statement
-     * handle using {@link ISCConstants#DSQL_drop}.
+     * Frees the currently allocated statement. Either close the cursor with {@link ISCConstants#DSQL_close} or drop
+     * the statement handle using {@link ISCConstants#DSQL_drop}.
      *
      * @param option
      *         Free option
@@ -646,7 +647,7 @@ public abstract class AbstractFbStatement implements FbStatement {
 
     /**
      * Checks if this statement is not in {@link StatementState#CLOSED}, {@link StatementState#CLOSING},
-     * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an <code>SQLException</code> if it is.
+     * {@link StatementState#NEW} or {@link StatementState#ERROR}, and throws an {@code SQLException} if it is.
      *
      * @throws SQLException
      *         When this statement is closed or in error state.
@@ -710,7 +711,7 @@ public abstract class AbstractFbStatement implements FbStatement {
      *
      * @param transactionClass
      *         Class of the transaction
-     * @return <code>true</code> when the transaction class is valid for the statement implementation.
+     * @return {@code true} when the transaction class is valid for the statement implementation.
      */
     protected abstract boolean isValidTransactionClass(Class<? extends FbTransaction> transactionClass);
 
@@ -784,7 +785,7 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     /**
-     * Parse the statement info response in <code>statementInfoResponse</code>. If the response is truncated, a new
+     * Parse the statement info response in {@code statementInfoResponse}. If the response is truncated, a new
      * request is done using {@link #getStatementInfoRequestItems()}
      *
      * @param statementInfoResponse

@@ -81,8 +81,7 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
     /**
      * Current attachment status.
      *
-     * @return <code>true</code> if connected to the server and attached to a database or service, <code>false</code>
-     * otherwise.
+     * @return {@code true} if connected to the server and attached to a database or service, {@code false} otherwise.
      */
     boolean isAttached();
 
@@ -93,7 +92,7 @@ public interface FbAttachment extends AutoCloseable, ExceptionListenable {
 
     /**
      * @return The connection encoding (should be the same as returned from calling
-     * {@link IEncodingFactory#getDefaultEncoding()} on the result of {@link #getEncodingFactory()}.
+     * {@link IEncodingFactory#getDefaultEncoding()} on the result of {@link #getEncodingFactory()}).
      */
     Encoding getEncoding();
 

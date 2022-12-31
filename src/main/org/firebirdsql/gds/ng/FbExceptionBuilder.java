@@ -466,12 +466,10 @@ public final class FbExceptionBuilder {
      *
      * @param type Requested exception type
      * @param errorCode Error code
-     * @return Upgrade exception type (eg {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
+     * @return Upgrade exception type (e.g. {@code (EXCEPTION, isc_login)} will upgrade to {@code NON_TRANSIENT})
      */
     private static Type upgradeType(final Type type, final int errorCode) {
         switch (type) {
-        case WARNING:
-            return type;
         case EXCEPTION:
             if (Arrays.binarySearch(NON_TRANSIENT_CODES, errorCode) >= 0) {
                 return Type.NON_TRANSIENT;
@@ -480,6 +478,7 @@ public final class FbExceptionBuilder {
                 return Type.TIMEOUT;
             }
             return type;
+        case WARNING:
         default:
             return type;
         }
@@ -512,7 +511,7 @@ public final class FbExceptionBuilder {
         }
 
         /**
-         * Overrides the SQL state. By default the SQL state is decided by the errorCode.
+         * Overrides the SQL state. By default, the SQL state is decided by the errorCode.
          *
          * @param sqlState
          *         New SQL state value
@@ -630,7 +629,7 @@ public final class FbExceptionBuilder {
             }
         },
         /**
-         * Force builder to create exception of {@link java.sql.SQLTimeoutException} or subclass
+         * Force builder to create an exception of {@link java.sql.SQLTimeoutException} or subclass
          */
         // TODO Specific default sqlstate for timeout?
         TIMEOUT(SQLStateConstants.SQL_STATE_GENERAL_ERROR) {

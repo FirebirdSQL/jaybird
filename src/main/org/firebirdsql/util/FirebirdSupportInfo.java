@@ -62,7 +62,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * Check if the major.minor of this version is equal to or larger than the specified version.
+     * Check if the <em>major.minor</em> of this version is equal to or larger than the specified version.
      *
      * @param majorVersion
      *         Major version
@@ -92,7 +92,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * Check if the major.minor of this version is below the specified version.
+     * Check if the <em>major.minor</em> of this version is below the specified version.
      * <p>
      * Equivalent to {@code !isVersionEqualOrAbove(majorVersion, minorVersion)}.
      * </p>
@@ -357,7 +357,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return {@code true} when blobs are fully searchable (eg using `LIKE`).
+     * @return {@code true} when blobs are fully searchable (e.g. using `LIKE`).
      */
     public boolean supportsFullSearchableBlobs() {
         return isVersionEqualOrAbove(2, 1);
@@ -535,7 +535,7 @@ public final class FirebirdSupportInfo {
     }
 
     /**
-     * @return {@code true} when this Firebird version supports case sensitive user names.
+     * @return {@code true} when this Firebird version supports case-sensitive usernames.
      */
     public boolean supportsCaseSensitiveUserNames() {
         return isVersionEqualOrAbove(3, 0);
@@ -685,7 +685,7 @@ public final class FirebirdSupportInfo {
     /**
      * @param connection
      *         A database connection (NOTE: {@link java.sql.Connection} is used, but it must be or unwrap to a
-     *         {@link org.firebirdsql.jdbc.FirebirdConnection}.
+     *         {@link org.firebirdsql.jdbc.FirebirdConnection}).
      * @return FirebirdVersionSupport instance
      * @throws java.lang.IllegalArgumentException
      *         When the provided connection is not an instance of or wrapper for

@@ -13,7 +13,7 @@
 
 At any given time, a different number of statements `org.firebirdsql.gds.ng.FbStatement` 
 can be executed in an application. The two main states in which a statement 
-can be exist are the execution `org.firebirdsql.gds.ngStatementState.EXECUTING` 
+can exist are the execution `org.firebirdsql.gds.ngStatementState.EXECUTING` 
 and fetching `org.firebirdsql.gds.ngStatementState.CURSOR_OPEN`.
 
 The first problem is that these statuses allow us to track the status of the 
@@ -43,7 +43,7 @@ operations, the naming tries to be agnostic of the actual operation monitored.
 At the `org.firebirdsql.gds.ng.monitor` package it is proposed to add the
 `Operation` interface, which contains methods for managing operations. At time
 of writing, we are only interested in canceling the operation, so the interface
-contains only the method for canceling a operation `void cancel()`. Other
+contains only the method for canceling an operation `void cancel()`. Other
 methods may be added later.
 
 The `Operation` interface also exposes the type of operation through the method

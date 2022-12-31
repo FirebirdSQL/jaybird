@@ -37,7 +37,7 @@ import static org.firebirdsql.gds.ISCConstants.*;
  */
 public class FBTraceManager extends FBServiceManager implements TraceManager {
 
-    private final Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<String, Integer>());
+    private final Map<String, Integer> traceSessions = Collections.synchronizedMap(new HashMap<>());
 
     private class TraceTask implements Runnable {
 
@@ -63,13 +63,13 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
     }
 
     /**
-     * Create a new instance of <code>FBTraceManager</code> based on the default GDSType.
+     * Create a new instance of {@code FBTraceManager} based on the default GDSType.
      */
     public FBTraceManager() {
     }
 
     /**
-     * Create a new instance of <code>FBTraceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBTraceManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -79,7 +79,7 @@ public class FBTraceManager extends FBServiceManager implements TraceManager {
     }
 
     /**
-     * Create a new instance of <code>FBTraceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBTraceManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE

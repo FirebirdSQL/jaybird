@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -62,7 +62,7 @@ public enum ArgumentType {
         }
 
         @Override
-        public void writeLength(int length, OutputStream outputStream) throws IOException {
+        public void writeLength(int length, OutputStream outputStream) {
             // Do nothing; no length encoding
         }
     },
@@ -94,7 +94,7 @@ public enum ArgumentType {
         }
 
         @Override
-        public void writeLength(int length, OutputStream outputStream) throws IOException {
+        public void writeLength(int length, OutputStream outputStream) {
             // Do nothing; no length encoding
         }
     },
@@ -110,7 +110,7 @@ public enum ArgumentType {
         }
 
         @Override
-        public void writeLength(int length, OutputStream outputStream) throws IOException {
+        public void writeLength(int length, OutputStream outputStream) {
             // Do nothing; no length encoding
         }
     },
@@ -126,7 +126,7 @@ public enum ArgumentType {
         }
 
         @Override
-        public void writeLength(int length, OutputStream outputStream) throws IOException {
+        public void writeLength(int length, OutputStream outputStream) {
             // Do nothing; no length encoding
         }
     },

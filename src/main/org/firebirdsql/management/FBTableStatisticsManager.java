@@ -38,14 +38,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.firebirdsql.gds.ISCConstants.*;
-import static org.firebirdsql.gds.ISCConstants.isc_info_backout_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_delete_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_expunge_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_insert_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_purge_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_read_idx_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_read_seq_count;
-import static org.firebirdsql.gds.ISCConstants.isc_info_update_count;
 
 /**
  * Provides access to the table statistics of a {@link java.sql.Connection}.

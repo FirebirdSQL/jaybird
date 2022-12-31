@@ -125,8 +125,8 @@ final class ClasspathFirebirdEmbeddedLoader {
      * @param resourceName
      *         relative resource name
      * @throws FirebirdEmbeddedLoadingException
-     *         When the target file escapes the target directory (eg by returning an absolute path or using {@code ..},
-     *         or when the resource does not exist
+     *         When the target file escapes the target directory (e.g. by returning an absolute path or using
+     *         {@code ..}, or when the resource does not exist
      * @throws IOException
      *         For exceptions creating intermediate directories or writing the resource to the target file
      */

@@ -52,7 +52,7 @@ public abstract class AbstractFbTransaction implements FbTransaction {
      *
      * @param initialState
      *         Initial transaction state (allowed values are {@link org.firebirdsql.gds.ng.TransactionState#ACTIVE}
-     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}.
+     *         and {@link org.firebirdsql.gds.ng.TransactionState#PREPARED}).
      * @param database
      *         FbDatabase that created this handle.
      */

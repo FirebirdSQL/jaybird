@@ -159,10 +159,10 @@ public interface FBManagerMBean extends AutoCloseable {
     String getUserName();
 
     /**
-     * Set the user name.
+     * Set the username.
      *
      * @param userName
-     *         User name
+     *         Username
      */
     void setUserName(String userName);
 
@@ -293,14 +293,14 @@ public interface FBManagerMBean extends AutoCloseable {
     void setDropOnStop(boolean dropOnStop);
 
     /**
-     * Get if the database will be be dropped if exists when creating a database.
+     * Get if the database will be dropped if exists when creating a database.
      *
      * @return {@code true} to drop existing database on create, {@code false} to not create a database if it exists.
      */
     boolean isForceCreate();
 
     /**
-     * Set if the database will be be dropped if exists when creating a database.
+     * Set if the database will be dropped if exists when creating a database.
      *
      * @param forceCreate
      *         {@code true} to drop existing database on create, {@code false} to not create a database if it exists.
@@ -360,7 +360,7 @@ public interface FBManagerMBean extends AutoCloseable {
     void createDatabase(String fileName, String user, String password, String roleName) throws Exception;
 
     /**
-     * Drop a database with the specified file name, user name and password on the specified {@code server}
+     * Drop a database with the specified file name, username and password on the specified {@code server}
      * and {@code port}.
      *
      * @param fileName

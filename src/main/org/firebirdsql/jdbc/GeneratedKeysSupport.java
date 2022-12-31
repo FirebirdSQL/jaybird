@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -132,7 +132,7 @@ interface GeneratedKeysSupport {
          * @param sinceMinor
          *         Minor version (of {@code sinceMajor}) that introduced {@code RETURNING} support
          * @param configName
-         *         Name for this query type in config options (should be lower case, but not enforced)
+         *         Name for this query type in config options (should be lowercase, but not enforced)
          */
         QueryType(int sinceMajor, int sinceMinor, String configName) {
             this.sinceMajor = sinceMajor;

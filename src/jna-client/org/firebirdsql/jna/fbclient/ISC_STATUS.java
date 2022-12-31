@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -37,7 +35,7 @@ public class ISC_STATUS extends IntegerType {
         this(0);
     }
 
-    /** Create a ISC_STATUS with the given value. */
+    /** Create an ISC_STATUS with the given value. */
     public ISC_STATUS(long value) {
         super(SIZE, value);
     }

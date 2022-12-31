@@ -31,7 +31,7 @@ import org.firebirdsql.jaybird.fb.constants.DpbItems;
  * Firebird API documentation and specifies the attributes for the
  * current connection.
  * <p/>
- * Additionally it is possible to change some database properties in a permanent
+ * Additionally, it is possible to change some database properties in a permanent
  * way, however this approach is not recommended. Please use instead management
  * API.
  */

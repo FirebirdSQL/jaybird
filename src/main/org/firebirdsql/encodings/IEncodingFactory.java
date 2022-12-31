@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -56,7 +56,7 @@ public interface IEncodingFactory {
      * Looks up the {@link org.firebirdsql.encodings.EncodingDefinition} for the specified Firebird encoding name.
      *
      * @param firebirdEncodingName
-     *         The Firebird encoding name (case insensitive)
+     *         The Firebird encoding name (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the encoding name is unknown
      */
     EncodingDefinition getEncodingDefinitionByFirebirdName(String firebirdEncodingName);
@@ -67,7 +67,7 @@ public interface IEncodingFactory {
      * or the loaded EncodingDefinition is information-only, then the defaultEncoding is used.
      *
      * @param firebirdEncodingName
-     *         The Firebird encoding name (case insensitive)
+     *         The Firebird encoding name (case-insensitive)
      * @return Encoding instance (never null)
      */
     Encoding getEncodingForFirebirdName(final String firebirdEncodingName);
@@ -157,7 +157,7 @@ public interface IEncodingFactory {
      * alias.
      *
      * @param charsetAlias
-     *         Name (or alias) of the Java character set (case insensitive)
+     *         Name (or alias) of the Java character set (case-insensitive)
      * @return EncodingDefinition instance or {@code null} if the character set name is not mapped
      */
     EncodingDefinition getEncodingDefinitionByCharsetAlias(String charsetAlias);

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -35,14 +35,14 @@ public final class NumericHelper {
      * Returns the int as an unsigned long (no sign extension).
      *
      * @param intValue Integer value
-     * @return {@code intValue} as an unsiged long.
+     * @return {@code intValue} as an unsigned long.
      */
     public static long toUnsignedLong(int intValue) {
         return ((long) intValue) & 0xffffffffL;
     }
 
     /**
-     * Checks if the supplied long would fit in an unsigned 32 bit integer.
+     * Checks if the supplied long would fit in an unsigned 32-bit integer.
      * <p>
      * In essence this checks if {@code longValue >= 0 && longValue <= 0xffffffffL}
      * </p>

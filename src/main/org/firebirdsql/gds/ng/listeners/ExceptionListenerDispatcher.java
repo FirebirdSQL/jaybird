@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -39,8 +39,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
     private static final Logger log = LoggerFactory.getLogger(ExceptionListenerDispatcher.class);
 
     private static final Object PRESENT = new Object();
-    private final Map<ExceptionListener, Object> listeners =
-            Collections.synchronizedMap(new WeakHashMap<ExceptionListener, Object>());
+    private final Map<ExceptionListener, Object> listeners = Collections.synchronizedMap(new WeakHashMap<>());
     private final Object source;
     private volatile boolean shutdown = false;
 
@@ -110,7 +109,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
     }
 
     /**
-     * @return <code>true</code> when this dispatcher has been shut down.
+     * @return {@code true} when this dispatcher has been shut down.
      */
     public boolean isShutdown() {
         return shutdown;

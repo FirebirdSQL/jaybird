@@ -285,7 +285,7 @@ public interface AttachmentProperties extends BaseProperties {
     }
 
     /**
-     * Get the connect timeout in seconds.
+     * Get the <em>connect timeout</em> in seconds.
      *
      * @return Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout), or {@code -1} if not set
      */
@@ -294,7 +294,7 @@ public interface AttachmentProperties extends BaseProperties {
     }
 
     /**
-     * Set the connect timeout in seconds.
+     * Set the <em>connect timeout</em> in seconds.
      *
      * @param connectTimeout
      *         Connect timeout in seconds (0 is 'infinite', or better: OS specific timeout)

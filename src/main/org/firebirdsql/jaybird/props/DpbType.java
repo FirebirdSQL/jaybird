@@ -22,7 +22,7 @@ import org.firebirdsql.gds.ParameterBuffer;
 import org.firebirdsql.jaybird.props.def.ConnectionPropertyType;
 
 /**
- * Identifies the database (or service attach) parameter buffer type of a connection property.
+ * Identifies the database (or service attach) <em>parameter buffer type</em> of a connection property.
  * <p>
  * In general, there is a 1-on-1 correspondence with {@link ConnectionPropertyType}, but in some cases mapping might be
  * different (current expectation: boolean connection properties that map to either a single item or a 0 / 1 value).

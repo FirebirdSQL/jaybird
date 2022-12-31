@@ -41,8 +41,8 @@ to `org.firebirdsql.jaybird.xca`, and the entire package will be classified as
 an internal API of Jaybird.
 
 Code changes will be made to remove the dependency on JCA, either by introducing
-similar interfaces, exceptions, etc, or by refactoring to eliminate some parts
-of JCA where this makes sense (eg replace the use of `ResourceException` with
+similar interfaces, exceptions, etc., or by refactoring to eliminate some parts
+of JCA where this makes sense (e.g. replace the use of `ResourceException` with
 for example `SQLException`).
 
 ### Rejected alternatives
@@ -73,10 +73,10 @@ Jaybird 5 will no longer depend on `connector-api-1.5.jar`, and the
 Third-party code relying directly on `org.firebirdsql.jca` will break.
 
 This change will introduce some backwards compatibility issues in the
-`org.firebirdsql.jdbc` package, as some of the classes and interfaces return.
-accept or throw classes from `org.firebirdsql.jca` or `javax.resource`,
-however as these are generally intended as internal API, this backwards
-incompatibility will be limited.
+`org.firebirdsql.jdbc` package, as some classes and interfaces return, accept or
+throw classes from `org.firebirdsql.jca` or `javax.resource`, however as these
+are generally intended as internal API, this backwards incompatibility will be 
+limited.
 
 Removing JCA support will make it simpler to evolve code in Jaybird, and
 hopefully allow us to reduce complexity.

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -83,10 +83,10 @@ public final class RowDescriptorBuilder {
     }
 
     /**
-     * Set the Firebird sub type of the field.
+     * Set the Firebird subtype of the field.
      *
      * @param subType
-     *         Sub type
+     *         Subtype
      * @return this builder
      * @see #setType(int)
      */
@@ -230,7 +230,7 @@ public final class RowDescriptorBuilder {
     }
 
     /**
-     * Convenience method to populate the basic field information used in metadata result sets (eg for use in
+     * Convenience method to populate the basic field information used in metadata result sets (e.g. for use in
      * {@link org.firebirdsql.jdbc.FBDatabaseMetaData}).
      *
      * @param type

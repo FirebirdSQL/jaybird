@@ -411,7 +411,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     /**
-     * Returns an {@code javax.transaction.xa.XAresource} instance. An application server enlists this XAResource
+     * Returns an {@code javax.transaction.xa.XAResource} instance. An application server enlists this XAResource
      * instance with the Transaction Manager if the FBManagedConnection instance is being used in a Java EE transaction
      * that is coordinated by the Transaction Manager.
      *
@@ -790,7 +790,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         An error has occurred. Possible values are XAER_RMERR,
      *         XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
      */
-    protected Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
+    Xid findSingleXid(Xid externalXid) throws javax.transaction.xa.XAException {
         try {
             FbTransaction trHandle2 = database.startTransaction(tpb.getTransactionParameterBuffer());
 
@@ -832,14 +832,14 @@ public final class FBManagedConnection implements ExceptionListener {
     /**
      * @see FbAttachment#withLock()
      */
-    public final LockCloseable withLock() {
+    public LockCloseable withLock() {
         return database.withLock();
     }
 
     /**
      * @see FbAttachment#isLockedByCurrentThread()
      */
-    public final boolean isLockedByCurrentThread() {
+    public boolean isLockedByCurrentThread() {
         return database.isLockedByCurrentThread();
     }
 
@@ -955,7 +955,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * Associates a JDBC connection with a global transaction. We assume that
      * end will be called followed by prepare, commit, or rollback. If start is
      * called after end but before commit or rollback, there is no way to
-     * distinguish work done by different transactions on the same connection).
+     * distinguish work done by different transactions on the same connection.
      * If start is called more than once before end, either it's a duplicate
      * transaction ID or illegal transaction ID (since you can't have two
      * transactions associated with one DB connection).
@@ -1020,7 +1020,7 @@ public final class FBManagedConnection implements ExceptionListener {
     // FB public methods. Could be package if packages reorganized.
 
     /**
-     * Close this connection with regards to a wrapping {@code AbstractConnection}.
+     * Close this connection with regard to a wrapping {@code AbstractConnection}.
      *
      * @param c
      *         The {@code AbstractConnection} that is being closed

@@ -36,6 +36,8 @@ import java.sql.SQLWarning;
 import static org.firebirdsql.gds.ng.TransactionHelper.checkTransactionActive;
 
 /**
+ * {@link org.firebirdsql.gds.ng.wire.FbWireStatement} implementation for the version 10 wire protocol.
+ *
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
@@ -79,10 +81,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Handles sending the free statement packet and associated state changes on this statement
+     * Handles sending the <em>free statement</em> packet and associated state changes on this statement
      *
      * @param option
-     *         Free statement option
+     *         <em>free statement</em> option
      */
     protected void doFreePacket(int option) throws SQLException, IOException {
         sendFree(option);
@@ -92,7 +94,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the free statement to the database
+     * Sends the <em>free statement</em> to the database
      *
      * @param option
      *         Free statement option
@@ -105,7 +107,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the response to the free statement.
+     * Processes the response to the <em>free statement</em>.
      *
      * @param response
      *         Response object
@@ -170,7 +172,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the statement prepare to the connection.
+     * Sends the statement <em>prepare</em> to the connection.
      *
      * @param statementText
      *         Statement
@@ -188,7 +190,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the prepare response from the server.
+     * Processes the <em>prepare</em> response from the server.
      *
      * @param genericResponse
      *         GenericResponse
@@ -323,10 +325,10 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the execute (for <code>op_execute</code> or <code>op_execute2</code>) to the database.
+     * Sends the <em>execute</em> (for {@code op_execute} or {@code op_execute2}) to the database.
      *
      * @param operation
-     *         Operation (<code>op_execute</code> or <code>op_execute2</code>)
+     *         Operation ({@code op_execute} or {@code op_execute2})
      * @param parameters
      *         Parameters
      */
@@ -357,7 +359,8 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the execute response for statements with a singleton response (<code>op_execute2</code>; stored procedures).
+     * Process the <em>execute</em> response for statements with a singleton response ({@code op_execute2}; stored
+     * procedures).
      *
      * @param sqlResponse
      *         SQL response object
@@ -369,7 +372,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the execute response.
+     * Process the <em>execute</em> response.
      *
      * @param genericResponse
      *         Generic response object
@@ -413,7 +416,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Process the fetch response by reading the returned rows and queuing them.
+     * Process the <em>fetch</em> response by reading the returned rows and queuing them.
      *
      * @param direction
      *         fetch direction
@@ -454,7 +457,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the fetch request to the database.
+     * Sends the <em>fetch</em> request to the database.
      *
      * @param fetchSize Number of rows to fetch.
      */
@@ -583,7 +586,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Sends the allocate request to the server.
+     * Sends the <em>allocate</em> request to the server.
      */
     protected void sendAllocate() throws SQLException, IOException {
         final XdrOutputStream xdrOut = getXdrOut();
@@ -592,7 +595,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
     }
 
     /**
-     * Processes the allocate response from the server.
+     * Processes the <em>allocate</em> response from the server.
      *
      * @param response
      *         GenericResponse

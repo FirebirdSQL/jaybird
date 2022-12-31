@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -25,7 +25,7 @@ import javax.servlet.annotation.WebListener;
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
 
 /**
- * Servlet context listener for javax.servlet for unloading native libraries if loaded in the current context.
+ * Servlet context listener for {@code javax.servlet} for unloading native libraries if loaded in the current context.
  * <p>
  * Twin of {@link NativeResourceUnloadWebListenerJakarta}.
  * </p>

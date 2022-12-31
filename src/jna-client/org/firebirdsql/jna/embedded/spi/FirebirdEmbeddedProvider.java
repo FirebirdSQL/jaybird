@@ -45,7 +45,7 @@ public interface FirebirdEmbeddedProvider {
      * Applies the platform naming conventions of JNA.
      * </p>
      *
-     * @return Name of the platform (eg {@code "win32-x86-64"} for Windows 64-bit (x86))
+     * @return Name of the platform (e.g. {@code "win32-x86-64"} for Windows 64-bit (x86))
      */
     String getPlatform();
 

@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -281,7 +281,7 @@ public interface DatatypeCoder {
     Timestamp decodeTimestamp(Timestamp value, Calendar cal, boolean invertTimeZone);
 
     /**
-     * Decode a 8-byte {@code byte} array into a raw date time struct.
+     * Decode an 8-byte {@code byte} array into a raw date time struct.
      *
      * @param byte_long The {@code byte} array to be decoded
      * @return A {@link RawDateTimeStruct}.
@@ -289,7 +289,7 @@ public interface DatatypeCoder {
     RawDateTimeStruct decodeTimestampRaw(byte[] byte_long);
 
     /**
-     * Decode a 8-byte {@code byte} array into a {@code Timestamp}.
+     * Decode an 8-byte {@code byte} array into a {@code Timestamp}.
      *
      * @param byte_long The {@code byte} array to be decoded
      * @param c Calendar to use for time zone calculation
@@ -328,7 +328,7 @@ public interface DatatypeCoder {
      *
      * @param d The {@code Time} to be decoded
      * @param cal The {@code Calendar} to be used in the decoding, may be {@code null}
-     * @return The decooded {@code Time}
+     * @return The decoded {@code Time}
      */
     Time decodeTime(Time d, Calendar cal, boolean invertTimeZone);
 
@@ -542,7 +542,7 @@ public interface DatatypeCoder {
      * Return a derived datatype coder that applies the supplied encoding definition for string conversions.
      *
      * @param encodingDefinition Encoding definition
-     * @return Derived datatype coder (may be this instance if encoding definition is the same)
+     * @return Derived datatype coder (this instance, if encoding definition is the same)
      * @since 4.0
      */
     DatatypeCoder forEncodingDefinition(EncodingDefinition encodingDefinition);

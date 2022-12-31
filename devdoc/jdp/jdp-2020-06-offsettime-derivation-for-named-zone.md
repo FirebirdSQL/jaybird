@@ -44,7 +44,7 @@ Jaybird will switch from using the current date to using 2020-01-01 for
 conversion of `TIME WITH TIME ZONE` values with a named zone to
 `java.time.OffsetTime`.
 
-Given the questionable correctness of `CURRENT_TIME` (eg at '2020-06-02 20:58:00'
+Given the questionable correctness of `CURRENT_TIME` (e.g. at '2020-06-02 20:58:00'
 in Europe/Berlin, the time should be '20:58:00+02:00', but will be derived as
 '20:58:00+01:00'), we should also consider defaulting to, or at minimum
 supporting, derivation of an offset-based session time zone from a named zone.

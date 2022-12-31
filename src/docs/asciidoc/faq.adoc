@@ -29,9 +29,7 @@ Groupid:: `org.firebirdsql.jdbc`
 Artifactid:: `jaybird`,
 Version:: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
 
-For backwards compatibility, we also provide a Maven relocation artifact with
-artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`. However, we
-recommend switching to the `jaybird` artifact.
+Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18`) is no longer provided.
 
 For example, for Java 8:
 
@@ -516,7 +514,7 @@ Jaybird 3.0.2 introduces the system property `org.firebirdsql.jdbc.requireConnec
 === How can I solve the error "Connection rejected: No connection character set specified"
 
 If no character set has been set, Jaybird 3 will reject the connection with an `SQLNonTransientConnectionException` with message _"Connection rejected: No connection character set specified (property lc_ctype, encoding, charSet or localEncoding).
-Please specify a connection character set (eg property charSet=utf-8) or consult the Jaybird documentation for more information."_
+Please specify a connection character set (e.g. property charSet=utf-8) or consult the Jaybird documentation for more information."_
 
 In Jaybird 3.0.0 and 3.0.1 this error will be thrown if the character set has not been set explicitly.
 In Jaybird 3.0.2 and higher this error will only be thrown if system property `org.firebirdsql.jdbc.requireConnectionEncoding` has been set to `true`.

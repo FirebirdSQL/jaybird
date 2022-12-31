@@ -1729,7 +1729,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Execute an sql query with a given set of parameters.
+     * Execute an SQL query with a given set of parameters.
      *
      * @param sql
      *         The sql statement to be used for the query
@@ -1743,7 +1743,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
     }
 
     /**
-     * Execute an sql query with a given set of parameters.
+     * Execute an SQL query with a given set of parameters.
      *
      * @param sql
      *         The sql statement to be used for the query

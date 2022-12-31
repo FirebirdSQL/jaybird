@@ -41,8 +41,8 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxInteger2;
 import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 
 /**
- * The <code>FBMaintenanceManager</code> class is responsible for replicating the functionality provided by
- * the <code>gfix</code> command-line tool.
+ * The {@code FBMaintenanceManager} class is responsible for replicating the functionality provided by
+ * the {@code gfix} command-line tool.
  * <p>
  * Among the responsibilities of this class are:
  * <ul>
@@ -66,14 +66,14 @@ import static org.firebirdsql.gds.VaxEncoding.iscVaxLong;
 public class FBMaintenanceManager extends FBServiceManager implements MaintenanceManager {
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on the default GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on the default GDSType.
      */
     public FBMaintenanceManager() {
         super();
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         type must be PURE_JAVA, EMBEDDED, or NATIVE
@@ -83,7 +83,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     }
 
     /**
-     * Create a new instance of <code>FBMaintenanceManager</code> based on a given GDSType.
+     * Create a new instance of {@code FBMaintenanceManager} based on a given GDSType.
      *
      * @param gdsType
      *         The GDS implementation type to use
@@ -365,7 +365,7 @@ public class FBMaintenanceManager extends FBServiceManager implements Maintenanc
     // ----------- Private implementation methods --------------------
 
     /**
-     * Execute a isc_spb_rpr_* (repair) services operation.
+     * Execute an isc_spb_rpr_* (repair) services operation.
      *
      * @param operation
      *         The identifier for the operation to be executed

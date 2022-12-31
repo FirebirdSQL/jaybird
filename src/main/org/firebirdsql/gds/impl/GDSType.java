@@ -57,20 +57,19 @@ public final class GDSType implements Serializable {
      * This method gives the possibility to translate string representation of
      * the type into correct type instance.
      * 
-     * @param type string representation of the type to match (matching is case
-     * insensitive). Possible values are:
+     * @param type string representation of the type to match (matching is case-insensitive). Possible values are:
      * <ul>
-     * <li><code>"PURE_JAVA"</code> or <code>"TYPE4"</code> for pure Java (type 4)
+     * <li>{@code "PURE_JAVA"} or {@code "TYPE4"} for pure Java (type 4)
      * driver version;
-     * <li><code>"NATIVE"</code> or <code>"TYPE2"</code> for type 2 JDBC driver
+     * <li>{@code "NATIVE"} or {@code "TYPE2"} for type 2 JDBC driver
      * that will use Firebird client library to access the database using JNI 
      * link.
-     * <li><code>"EMBEDDED"</code> for type 2 JDBC driver that will use embedded
+     * <li>{@code "EMBEDDED"} for type 2 JDBC driver that will use embedded
      * version of the server to perform database-related operations. 
      * </ul>
      * 
      * @return instance of {@link GDSType} corresponding to the specified
-     * string representation or <code>null</code> if no match could be found. 
+     * string representation or {@code null} if no match could be found.
      */
     public static GDSType getType(String type) {
         if (type == null) {

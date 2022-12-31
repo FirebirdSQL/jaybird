@@ -188,7 +188,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
 
     /**
      * We allow multiple calls to this method without re-preparing the statement.
-     * This is an workaround to the issue that the statement is actually prepared
+     * This is a workaround to the issue that the statement is actually prepared
      * only after all OUT parameters are registered.
      */
     @Override

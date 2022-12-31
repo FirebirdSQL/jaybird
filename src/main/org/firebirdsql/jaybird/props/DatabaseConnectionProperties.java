@@ -401,7 +401,7 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * For compatibility reasons, if no protocol is specified, classpath is used by default.
      * <p/>
      * Properties file contains a mapping between the transaction isolation level (name of the constant in the
-     * {@link java.sql.Connection} interface and a comma-separated list of TPB parameters.
+     * {@link java.sql.Connection} interface and a comma-separated list of TPB parameters).
      *
      * @param tpbMapping
      *         path to the properties file

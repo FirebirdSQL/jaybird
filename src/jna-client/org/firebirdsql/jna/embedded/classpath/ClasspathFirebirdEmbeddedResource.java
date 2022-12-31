@@ -42,7 +42,7 @@ public interface ClasspathFirebirdEmbeddedResource {
     /**
      * Entry point of the library.
      *
-     * @return The relative path of the library entry point (eg {@code "fbclient.dll"} or {@code "lib/libfbclient.so"})
+     * @return The relative path of the library entry point (e.g. {@code "fbclient.dll"} or {@code "lib/libfbclient.so"})
      */
     String getLibraryEntryPoint();
 

@@ -90,7 +90,6 @@ public final class FBBlobInputStream extends InputStream implements FirebirdBlob
 
     @Override
     public int available() throws IOException {
-        assert buffer != null : "Buffer should never be null";
         return buffer.length - pos;
     }
 

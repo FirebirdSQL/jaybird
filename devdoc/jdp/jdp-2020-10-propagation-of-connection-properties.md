@@ -27,9 +27,9 @@ The API of Jaybird provides connection properties at several levels:
      delegate directly or indirectly to this type)
 3. Through implementations of `org.firebirdsql.management.ServiceManager` (for
    service connections)
-3. Through implementations of `org.firebirdsql.gds.DatabaseParameterBuffer` and
+4. Through implementations of `org.firebirdsql.gds.DatabaseParameterBuffer` and
    `org.firebirdsql.gds.ServiceParameterBuffer`
-4. Implementations of `org.firebirdsql.gds.ng.IConnectionProperties` (and its
+5. Implementations of `org.firebirdsql.gds.ng.IConnectionProperties` (and its
    sibling `org.firebirdsql.gds.ng.IServiceProperties`)
    
 The interaction between these types is complex. For example, when creating a
@@ -55,9 +55,9 @@ The current situation has a number of problems:
    services)
 3. Implementing properties multiple times (eg in data sources, managed
    connection factory, etc)
-3. Impossible to allow 'custom' properties for plugins, as DPB items must be
+4. Impossible to allow 'custom' properties for plugins, as DPB items must be
    declared in Jaybird itself
-4. In `DatabaseParameterBuffer`, the boolean properties are defined by their
+5. In `DatabaseParameterBuffer`, the boolean properties are defined by their
    existence (true) or non-existence (false), which disallows properties with a
    default of true unless the default is made explicit at the edge instead of
    in the core.

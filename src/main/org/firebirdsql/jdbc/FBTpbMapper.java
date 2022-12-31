@@ -153,30 +153,30 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      *
      * @param stringMapping mapping of JDBC transaction isolation to Firebird
      * mapping. Keys and values of this map must be strings. Keys can have
-     * following values:
+     * the following values:
      * <ul>
-     * <li><code>"TRANSACTION_SERIALIZABLE"</code>
-     * <li><code>"TRANSACTION_REPEATABLE_READ"</code>
-     * <li><code>"TRANSACTION_READ_COMMITTED"</code>
-     * <li><code>"TRANSACTION_READ_UNCOMMITTED"</code>
+     * <li>{@code "TRANSACTION_SERIALIZABLE"}
+     * <li>{@code "TRANSACTION_REPEATABLE_READ"}
+     * <li>{@code "TRANSACTION_READ_COMMITTED"}
+     * <li>{@code "TRANSACTION_READ_UNCOMMITTED"}
      * </ul>
      * Values are specified as comma-separated list of following keywords:
      * <ul>
-     * <li><code>"isc_tpb_consistency"</code>
-     * <li><code>"isc_tpb_concurrency"</code>
-     * <li><code>"isc_tpb_read_committed"</code>
-     * <li><code>"isc_tpb_rec_version"</code>
-     * <li><code>"isc_tpb_no_rec_version"</code>
-     * <li><code>"isc_tpb_wait"</code>
-     * <li><code>"isc_tpb_nowait"</code>
-     * <li><code>"isc_tpb_read"</code>
-     * <li><code>"isc_tpb_write"</code>
-     * <li><code>"isc_tpb_lock_read"</code>
-     * <li><code>"isc_tpb_lock_write"</code>
-     * <li><code>"isc_tpb_shared"</code>
-     * <li><code>"isc_tpb_protected"</code>
+     * <li>{@code "isc_tpb_consistency"}
+     * <li>{@code "isc_tpb_concurrency"}
+     * <li>{@code "isc_tpb_read_committed"}
+     * <li>{@code "isc_tpb_rec_version"}
+     * <li>{@code "isc_tpb_no_rec_version"}
+     * <li>{@code "isc_tpb_wait"}
+     * <li>{@code "isc_tpb_nowait"}
+     * <li>{@code "isc_tpb_read"}
+     * <li>{@code "isc_tpb_write"}
+     * <li>{@code "isc_tpb_lock_read"}
+     * <li>{@code "isc_tpb_lock_write"}
+     * <li>{@code "isc_tpb_shared"}
+     * <li>{@code "isc_tpb_protected"}
      * </ul>
-     * It is also allowed to strip "isc_tpb_" prefix from above shown constans.
+     * It is also allowed to strip "isc_tpb_" prefix from above shown constants.
      * Meaning of these constants and possible combinations you can find in a
      * documentation.
      *
@@ -188,8 +188,8 @@ public final class FBTpbMapper implements Serializable, Cloneable {
     }
 
     /**
-     * Process specified string mapping. This method updates default mapping
-     * with values specified in a <code>stringMapping</code>.
+     * Process specified string mapping. This method updates default mapping with values specified in
+     * a {@code stringMapping}.
      *
      * @param stringMapping
      *         mapping to process.

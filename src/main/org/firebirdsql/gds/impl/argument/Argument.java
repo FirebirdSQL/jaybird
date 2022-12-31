@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -83,7 +81,7 @@ public abstract class Argument implements Parameter, Serializable {
 
     /**
      * @return Total length of the buffer item when written to the OutputStream by {@link #writeTo(java.io.OutputStream)}.
-     * This includes the item, the value and other items contributing to the total length (eg the length of the value).
+     * This includes the item, the value and other items contributing to the total length (e.g. the length of the value).
      */
     public abstract int getLength();
 

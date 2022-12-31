@@ -76,7 +76,7 @@ public final class TypeMetadata {
             this.characterLength = characterLength;
         }
         this.typeBehaviours = typeBehaviours.isEmpty()
-                ? Collections.<TypeBehaviour>emptySet()
+                ? Collections.emptySet()
                 : Collections.unmodifiableSet(EnumSet.copyOf(typeBehaviours));
     }
 
@@ -110,7 +110,7 @@ public final class TypeMetadata {
      * {@link java.sql.DatabaseMetaData#getFunctionColumns(String, String, String, String)}.
      * </p>
      * <p>
-     * This method will also return any non-zero precision information stored for other datatypes than those listed in
+     * This method will also return any non-zero precision information stored for other data types than those listed in
      * the {@code COLUMN_SIZE} definition in the JDBC API.
      * </p>
      *
@@ -215,7 +215,7 @@ public final class TypeMetadata {
 
     /**
      * @return The radix of numerical precision (either {@code 2} or {@code 10}; returns {@code 10} for non-numerical,
-     * non-boolean types.
+     * non-boolean types).
      */
     int getRadix() {
         switch (jdbcType) {
@@ -256,7 +256,7 @@ public final class TypeMetadata {
      * @param sqlType
      *         Firebird type code as used in the metadata tables
      * @param sqlSubType
-     *         Firebird sub-type code as used in the metadata tables
+     *         Firebird subtype code as used in the metadata tables
      * @param sqlScale
      *         Firebird scale as used in the metadata tables
      * @param characterSetId
@@ -286,7 +286,7 @@ public final class TypeMetadata {
      * @param sqlType
      *         Firebird type code as used in the metadata tables
      * @param sqlSubType
-     *         Firebird sub-type code as used in the metadata tables
+     *         Firebird subtype code as used in the metadata tables
      * @param sqlScale
      *         Firebird scale as used in the metadata tables
      * @return JDBC/SQL type name
@@ -426,7 +426,7 @@ public final class TypeMetadata {
          * Sets the field sub-type code ({@code RDB$FIELD_SUB_TYPE}).
          *
          * @param subType
-         *         Field sub-type code
+         *         Field subtype code
          * @return this builder
          */
         Builder withSubType(Integer subType) {

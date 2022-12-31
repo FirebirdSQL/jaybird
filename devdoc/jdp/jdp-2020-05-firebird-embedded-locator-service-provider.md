@@ -72,7 +72,7 @@ yet).
 - `getFirebirdEmbeddedLibrary()` to return information on the location of the
 Firebird Embedded library provided (or found) by this provider. \
 If the provider has to perform initialization before the embedded library is
-usable (eg copy resources from the classpath to a temporary location), this must
+usable (e.g. copy resources from the classpath to a temporary location), this must
 be done in this method. \
 Implementations must be able to handle multiple calls to this method. It is
 allowed to return the same library instance on subsequent invocations.
@@ -90,7 +90,7 @@ The library and supporting files should already exist on the filesystem.
 - `getVersion()` to identify the version of Firebird embedded. \
 This should provide the same information as `FirebirdEmbeddedProvider.getVersion()`.
 
-If an implementation requires additional cleanup (eg deletion of files), then
+If an implementation requires additional cleanup (e.g. deletion of files), then
 the interface `org.firebirdsql.jna.embedded.spi.DisposableFirebirdEmbeddedLibrary`
 should be implemented. This interface provides one additional method:
 

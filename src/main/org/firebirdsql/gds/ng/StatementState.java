@@ -74,7 +74,7 @@ public enum StatementState {
     },
     /**
      * Statement is preparing a new statement text, this is an ephemeral state that should only last as long as
-     * the prepare call to the database takes.
+     * the <em>prepare</em> call to the database takes.
      */
     PREPARING {
         @Override
@@ -92,8 +92,8 @@ public enum StatementState {
         }
     },
     /**
-     * A statement is being executed, this is an ephemeral state that should only last as long as the execute call to
-     * the database takes.
+     * A statement is being executed, this is an ephemeral state that should only last as long as the <em>execute</em>
+     * call to the database takes.
      */
     EXECUTING {
         @Override

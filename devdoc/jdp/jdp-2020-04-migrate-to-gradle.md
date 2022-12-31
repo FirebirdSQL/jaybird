@@ -35,8 +35,8 @@ get rid of it, or at least bring it more in-line with the standard layout.
 The following alternatives were considered but rejected.
 
 - Use Ant+Ivy. Rejected given our lack of familiarity with Ivy.
-- Use Maven. Some of the non-standard aspects of our build are hard to do with
-Maven (or at least, we have never done anything similar with Maven)
+- Use Maven. Some non-standard aspects of our build are hard to do with Maven 
+(or at least, we have never done anything similar with Maven)
 
 ## Consequences
 
@@ -44,6 +44,6 @@ Jaybird 5 and higher will be built with Gradle. Jaybird 3 and 4 will continue to
 use Ant for its build.
 
 All old build related files (including dependencies and ant infrastructure) will
-be removed, with the exception of `build-cts.xml` (to be kept as a reference in
+be removed, except for `build-cts.xml` (to be kept as a reference in
 case we want to revive this). 
  

@@ -70,7 +70,7 @@ public abstract class Decimal<T extends Decimal<T>> {
     public final BigDecimal toBigDecimal() {
         if (type != DecimalType.FINITE) {
             throw new DecimalInconvertibleException(
-                    "Value " + toString() + " cannot be converted to a BigDecimal", type, signum);
+                    "Value " + this + " cannot be converted to a BigDecimal", type, signum);
         }
         return bigDecimal;
     }

@@ -41,7 +41,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
 
     /**
      * Marker object to indicate the encoding field of an instance hasn't been initialized yet
-     * (since <code>null</code> is a valid initialization).
+     * (since {@code null} is a valid initialization).
      */
     private static final Encoding NOT_INITIALIZED = new EncodingGeneric(null);
 
@@ -65,7 +65,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      * @param firebirdCharacterSetId
      *         Firebird character set id
      * @param firebirdOnly
-     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (eg Firebird UNICODE-FSS maps
+     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
     public DefaultEncodingDefinition(String firebirdEncodingName, Charset charset, int maxBytesPerChar,
@@ -91,7 +91,7 @@ public final class DefaultEncodingDefinition implements EncodingDefinition {
      * @param firebirdCharacterSetId
      *         Firebird character set id
      * @param firebirdOnly
-     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (eg Firebird UNICODE-FSS maps
+     *         Mapping only applies from Firebird to Java, but not from Java to Firebird (e.g. Firebird UNICODE-FSS maps
      *         to Java UTF-8, but Java UTF-8 does not map to Firebird UNICODE-FSS (but to Firebird UTF8)
      */
     public DefaultEncodingDefinition(String firebirdEncodingName, String charsetName, int maxBytesPerChar,

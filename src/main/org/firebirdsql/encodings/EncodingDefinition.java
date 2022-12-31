@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Public Firebird Java API.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,7 +73,7 @@ public interface EncodingDefinition {
     boolean isFirebirdOnly();
 
     /**
-     * Can this implementation create an {@link Encoding} instance, or does it provide information only (eg about
+     * Can this implementation create an {@link Encoding} instance, or does it provide information only (e.g. about
      * unsupported character sets)
      *
      * @return <code>true</code> if this EncodingDefinition only provides information, and is not capable of building a

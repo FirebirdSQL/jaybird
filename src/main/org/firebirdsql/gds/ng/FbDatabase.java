@@ -113,7 +113,7 @@ public interface FbDatabase extends FbAttachment {
      * Creates a statement associated with a transaction
      *
      * @param transaction
-     *         FbTransaction to associate with this statement (can be <code>null</code>).
+     *         FbTransaction to associate with this statement (can be {@code null})
      * @return FbStatement
      */
     FbStatement createStatement(FbTransaction transaction) throws SQLException;
@@ -162,7 +162,7 @@ public interface FbDatabase extends FbAttachment {
      * @param blobConfig
      *         blob config (cannot be {@code null})
      * @return instance of {@link FbBlob}
-     * @Since 5
+     * @since 5
      */
     default FbBlob createBlobForOutput(FbTransaction transaction, BlobConfig blobConfig) {
         BlobParameterBuffer blobParameterBuffer = createBlobParameterBuffer();
@@ -268,8 +268,7 @@ public interface FbDatabase extends FbAttachment {
      *         Information items to request
      * @param maxBufferLength
      *         Maximum response buffer length to use
-     * @return The response buffer (note: length is the actual length of the
-     * response, not <code>maxBufferLength</code>
+     * @return The response buffer (note: length is the actual length of the response, not {@code maxBufferLength}
      * @throws SQLException
      *         For errors retrieving the information.
      */
@@ -278,16 +277,16 @@ public interface FbDatabase extends FbAttachment {
     /**
      * Performs an execute immediate of a statement.
      * <p>
-     * A call to this method is the equivalent of a <code>isc_dsql_execute_immediate()</code> without parameters.
+     * A call to this method is the equivalent of a {@code isc_dsql_execute_immediate()} without parameters.
      * </p>
      *
      * @param statementText
      *         Statement text
      * @param transaction
-     *         Transaction (<code>null</code> only allowed if database is not attached!)
+     *         Transaction ({@code null} only allowed if database is not attached!)
      * @throws SQLException
-     *         For errors executing the statement, or if <code>transaction</code> is <code>null</code> when the
-     *         database is attached or not <code>null</code> when the database is not attached
+     *         For errors executing the statement, or if {@code transaction} is {@code null} when the database is
+     *         attached or not {@code null} when the database is not attached
      */
     void executeImmediate(String statementText, FbTransaction transaction) throws SQLException;
 

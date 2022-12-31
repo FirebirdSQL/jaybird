@@ -99,7 +99,7 @@ public final class LoggerFactory {
         Logger createLogger(String name);
     }
 
-    private static class JulLoggerCreator implements LoggerCreator {
+    private static final class JulLoggerCreator implements LoggerCreator {
 
         private static final JulLoggerCreator INSTANCE = new JulLoggerCreator();
 
@@ -109,23 +109,22 @@ public final class LoggerFactory {
         }
     }
 
-    private static class NullLoggerCreator implements LoggerCreator {
+    private static final class NullLoggerCreator implements LoggerCreator {
         @Override
         public Logger createLogger(String name) {
             return NULL_LOGGER;
         }
     }
 
-    private static class ConsoleLoggerCreator implements LoggerCreator {
+    private static final class ConsoleLoggerCreator implements LoggerCreator {
         @Override
         public Logger createLogger(String name) {
             return new ConsoleLogger(name);
         }
     }
 
-    private static class ReflectionLoggerCreator implements LoggerCreator {
+    private static final class ReflectionLoggerCreator implements LoggerCreator {
 
-        private final Class<? extends Logger> loggerClass;
         private final Constructor<? extends Logger> loggerConstructor;
 
         ReflectionLoggerCreator(String loggerImplementationClassName) throws ClassNotFoundException, NoSuchMethodException {
@@ -133,7 +132,8 @@ public final class LoggerFactory {
             if (!Logger.class.isAssignableFrom(loggerClassCandidate)) {
                 throw new IllegalArgumentException(loggerImplementationClassName + " does not implement org.firebirdsql.logging.Logger");
             }
-            loggerClass = (Class<? extends Logger>) loggerClassCandidate;
+            @SuppressWarnings("unchecked")
+            Class<? extends Logger> loggerClass = (Class<? extends Logger>) loggerClassCandidate;
             loggerConstructor = loggerClass.getConstructor(String.class);
         }
 

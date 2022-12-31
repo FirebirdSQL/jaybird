@@ -1,26 +1,25 @@
 /*
- * Firebird Open Source J2ee connector - jdbc driver, public Firebird-specific 
- * JDBC extensions.
+ * Public Firebird Java API.
  *
- * Redistribution and use in source and binary forms, with or without 
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *    1. Redistributions of source code must retain the above copyright notice, 
+ *    1. Redistributions of source code must retain the above copyright notice,
  *       this list of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright 
- *       notice, this list of conditions and the following disclaimer in the 
- *       documentation and/or other materials provided with the distribution. 
- *    3. The name of the author may not be used to endorse or promote products 
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *    3. The name of the author may not be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
- * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.firebirdsql.jdbc;
@@ -77,7 +76,7 @@ public interface FirebirdBlob extends Blob {
          * @return number of bytes available without blocking or -1 if end of
          * stream is reached.
          * 
-         * @throws IOException if I/O error occured.
+         * @throws IOException if I/O error occurred.
          */
         int available() throws IOException;
         
@@ -89,8 +88,7 @@ public interface FirebirdBlob extends Blob {
         void close() throws IOException;
         
         /**
-         * Get Blob length. This is shortcut method for the 
-         * <code>inputStream.getBlob().length()</code> call, however is more
+         * Get Blob length. This is shortcut method for the {@code inputStream.getBlob().length()} call, however is more
          * resource friendly, because no new Blob handle is created.
          * 
          * @return length of the blob.
@@ -123,7 +121,7 @@ public interface FirebirdBlob extends Blob {
         int read(byte[] buffer, int offset, int length) throws IOException;
         
         /**
-         * Read <code>length</code> from the stream into the specified buffer.
+         * Read {@code length} from the stream into the specified buffer.
          * This method can block until desired number of bytes is read, it can
          * throw an exception if end of stream was reached during read.
          * 
@@ -137,9 +135,8 @@ public interface FirebirdBlob extends Blob {
         void readFully(byte[] buffer, int offset, int length) throws IOException;
         
         /**
-         * Read <code>buffer.length</code> bytes from the buffer. This is a 
-         * shortcut method for <code>readFully(buffer, 0, buffer.length)</code>
-         * call.
+         * Read {@code buffer.length} bytes from the buffer. This is a shortcut method for
+         * {@code readFully(buffer, 0, buffer.length)} call.
          * 
          * @param buffer buffer where data should be read.
          * 
@@ -173,7 +170,7 @@ public interface FirebirdBlob extends Blob {
          * @param seekMode mode of seek operation, one of {@link #SEEK_MODE_ABSOLUTE},
          * {@link #SEEK_MODE_RELATIVE} or {@link #SEEK_MODE_FROM_TAIL}.
          * 
-         * @throws IOException if I/O erro occurs.
+         * @throws IOException if I/O error occurs.
          */
         void seek(int position, int seekMode) throws IOException;
     }
@@ -244,7 +241,7 @@ public interface FirebirdBlob extends Blob {
      * Detach this blob. This method creates new instance of the same blob 
      * database object that is not under result set control. When result set
      * is closed, all associated resources are also released, including open
-     * blob streams. This method creates an new instance of blob object with
+     * blob streams. This method creates a new instance of blob object with
      * the same blob ID that can be used even when result set is closed.
      * <p>
      * Note, detached blob will not remember the stream position of this object.
@@ -263,8 +260,7 @@ public interface FirebirdBlob extends Blob {
      * Check if blob is segmented. If Blob is segmented, you cannot use 
      * {@link BlobInputStream#seek(int)} method.
      * 
-     * @return <code>true</code> if this blob is segmented, 
-     * otherwise <code>false</code>
+     * @return {@code true} if this blob is segmented, otherwise {@code false}
      */
     boolean isSegmented() throws SQLException;
 

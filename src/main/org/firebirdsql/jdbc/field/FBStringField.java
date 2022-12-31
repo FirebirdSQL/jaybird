@@ -34,16 +34,15 @@ import java.util.Calendar;
 import java.util.function.Function;
 
 /**
- * Describe class <code>FBStringField</code> here.
+ * Field implementation for {@code CHAR} and {@code VARCHAR}.
  *
  * @author <a href="mailto:rrokytskyy@users.sourceforge.net">Roman Rokytskyy</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
- * @version 1.0
- * @todo think about the right setBoolean and getBoolean (currently it is "Y" and "N", or "TRUE" and "FALSE").
- * <p>
  */
 class FBStringField extends FBField implements TrimmableField {
+
+    // TODO think about the right setBoolean and getBoolean (currently it is "Y" and "N", or "TRUE" and "FALSE")
     
     static final String SHORT_TRUE = "Y";
     static final String SHORT_FALSE = "N";

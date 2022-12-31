@@ -34,7 +34,7 @@ import java.util.Objects;
 import static org.firebirdsql.gds.ISCConstants.*;
 
 /**
- * The class <code>FieldDescriptor</code> contains the column metadata of the XSQLVAR server
+ * The class {@code FieldDescriptor} contains the column metadata of the XSQLVAR server
  * data structure used to describe one column for input or output.
  * <p>
  * FieldDescriptor is an immutable type, the value of a field is maintained separately in {@link RowValue}.
@@ -62,7 +62,7 @@ public final class FieldDescriptor {
      * Constructor for metadata FieldDescriptor.
      *
      * @param position
-     *         Position of this field (0-based), or {@code -1} if position is not known (eg for test code)
+     *         Position of this field (0-based), or {@code -1} if position is not known (e.g. for test code)
      * @param datatypeCoder
      *         Instance of DatatypeCoder to use when decoding column data (note that another instance may be derived
      *         internally, which then will be returned by {@link #getDatatypeCoder()})
@@ -169,7 +169,7 @@ public final class FieldDescriptor {
     }
 
     /**
-     * @return The original name of the field (eg the column name in the table)
+     * @return The original name of the field (e.g. the column name in the table)
      */
     public String getOriginalName() {
         return originalName;
@@ -266,7 +266,7 @@ public final class FieldDescriptor {
      * @param type
      *         Firebird type code
      * @param subType
-     *         Firebird sub type code
+     *         Firebird subtype code
      * @param scale
      *         Scale
      * @return type-specific datatype coder
@@ -279,12 +279,12 @@ public final class FieldDescriptor {
     }
 
     /**
-     * Determines the character set id (without collation id) for a combination of type, sub type and scale.
+     * Determines the character set id (without collation id) for a combination of type, subtype and scale.
      *
      * @param type
      *         Firebird type code
      * @param subType
-     *         Firebird sub type code
+     *         Firebird subtype code
      * @param scale
      *         Firebird scale
      * @return Character set id for the type, if the type has no character set, than {@link ISCConstants#CS_dynamic}
@@ -331,8 +331,8 @@ public final class FieldDescriptor {
      *
      * @param other
      *         Field descriptor to check
-     * @return <code>true</code> when <code>other</code> is not null and has the same type definition as this instance,
-     * <code>false</code> otherwise.
+     * @return {@code true} when {@code other} is not null and has the same type definition as this instance,
+     * {@code false} otherwise.
      */
     @SuppressWarnings("unused")
     public boolean typeEquals(final FieldDescriptor other) {
