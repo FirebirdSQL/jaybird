@@ -404,7 +404,7 @@ public class JnaStatement extends AbstractFbStatement {
                     // Note: we are not explicitly 'closing' the cursor here
                 } else {
                     final String message = "Unexpected fetch status (expected 0 or 100): " + fetchStatusInt;
-                    log.error(message);
+                    log.debug(message);
                     throw new SQLException(message);
                 }
             }

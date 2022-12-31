@@ -35,6 +35,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static java.lang.String.format;
+
 /**
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
@@ -236,7 +238,8 @@ public abstract class AbstractFbStatement implements FbStatement {
                 state = newState;
                 statementListenerDispatcher.statementStateChanged(this, newState, currentState);
             } else {
-                throw new SQLNonTransientException(String.format("Statement state %s only allows next states %s, received %s", currentState, currentState.validTransitionSet(), newState));
+                throw new SQLNonTransientException(format("Statement state %s only allows next states %s, received %s",
+                        currentState, currentState.validTransitionSet(), newState));
             }
         }
     }
@@ -256,10 +259,9 @@ public abstract class AbstractFbStatement implements FbStatement {
             final StatementState currentState = state;
             if (currentState == newState || currentState == StatementState.CLOSED) return;
             if (log.isDebugEnabled() && !currentState.isValidTransition(newState)) {
-                log.debug(
-                        String.format("Forced statement transition is invalid; state %s only allows next states %s, forced to set %s",
-                                currentState, currentState.validTransitionSet(), newState),
-                        new IllegalStateException());
+                log.debugfe("Forced statement transition is invalid; state %s only allows next states %s, forced to set %s",
+                                currentState, currentState.validTransitionSet(), newState,
+                        new IllegalStateException("debugging stacktrace"));
             }
             state = newState;
             statementListenerDispatcher.statementStateChanged(this, newState, currentState);
@@ -733,7 +735,7 @@ public abstract class AbstractFbStatement implements FbStatement {
                     }
                 }
             } else {
-                throw new SQLNonTransientException(String.format("Invalid transaction handle type, got \"%s\"",
+                throw new SQLNonTransientException(format("Invalid transaction handle type, got \"%s\"",
                         newTransaction.getClass().getName()), SQLStateConstants.SQL_STATE_GENERAL_ERROR);
             }
         } catch (SQLNonTransientException e) {

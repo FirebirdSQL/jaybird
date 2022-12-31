@@ -331,15 +331,16 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
     private class DatabaseInformationProcessor implements InfoProcessor<FbDatabase> {
         @Override
         public FbDatabase process(byte[] info) throws SQLException {
-            boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
                         .messageParameter("database")
                         .toSQLException();
             }
-            if (debug)
-                log.debug(String.format("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]));
+            final boolean debug = log.isDebugEnabled();
+            if (debug) {
+                log.debugf("DatabaseInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
+                        iscVaxInteger2(info, 0), info[0], info[1]);
+            }
             int value;
             int len;
             int i = 0;
@@ -351,7 +352,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     value = iscVaxInteger(info, i, len);
                     i += len;
                     setDatabaseDialect((short) value);
-                    if (debug) log.debug("isc_info_db_sql_dialect:" + value);
+                    if (debug) log.debugf("isc_info_db_sql_dialect: %d", value);
                     break;
                 case ISCConstants.isc_info_ods_version:
                     len = iscVaxInteger2(info, i);
@@ -359,7 +360,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     value = iscVaxInteger(info, i, len);
                     i += len;
                     setOdsMajor(value);
-                    if (debug) log.debug("isc_info_ods_version:" + value);
+                    if (debug) log.debugf("isc_info_ods_version: %d", value);
                     break;
                 case ISCConstants.isc_info_ods_minor_version:
                     len = iscVaxInteger2(info, i);
@@ -367,7 +368,7 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     value = iscVaxInteger(info, i, len);
                     i += len;
                     setOdsMinor(value);
-                    if (debug) log.debug("isc_info_ods_minor_version:" + value);
+                    if (debug) log.debugf("isc_info_ods_minor_version: %d", value);
                     break;
                 case ISCConstants.isc_info_firebird_version: {
                     len = iscVaxInteger2(info, i);
@@ -382,11 +383,11 @@ public abstract class AbstractFbDatabase<T extends AbstractConnection<IConnectio
                     }
                     assert i == expectedIndex : "Parsing version information lead to wrong index";
                     setServerVersion(versionParts);
-                    if (debug) log.debug("isc_info_firebird_version: " + Arrays.toString(versionParts));
+                    if (debug) log.debugf("isc_info_firebird_version: %s", Arrays.toString(versionParts));
                     break;
                 }
                 case ISCConstants.isc_info_truncated:
-                    if (debug) log.debug("isc_info_truncated ");
+                    log.debug("isc_info_truncated");
                     return AbstractFbDatabase.this;
                 default:
                     throw new FbExceptionBuilder().exception(ISCConstants.isc_infunk).toSQLException();

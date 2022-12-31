@@ -203,15 +203,11 @@ public final class FBTableStatisticsManager implements AutoCloseable {
                         idx += 2;
                         processStatistics(infoItem, infoResponse, idx, idx += length);
                         break;
-                    default: {
-                        Logger logger = LoggerFactory.getLogger(TableStatisticsProcessor.class);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug(
-                                    "Received unexpected info item, this is likely an implementation bug. Info item: "
-                                            + infoItem);
-                        }
+                    default:
+                        LoggerFactory.getLogger(TableStatisticsProcessor.class)
+                                .debugf("Received unexpected info item %d, this is likely an implementation bug.",
+                                        infoItem);
                         break decodeLoop;
-                    }
                     }
                 }
 

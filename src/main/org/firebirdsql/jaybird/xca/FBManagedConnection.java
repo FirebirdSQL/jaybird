@@ -50,7 +50,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableSet;
 
 /**
@@ -457,7 +456,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalCommit(Xid xid, boolean onePhase) throws XAException {
-        if (log.isTraceEnabled()) log.trace("Commit called: " + xid);
+        log.tracef("Commit called: %s", xid);
         FbTransaction committingTr = xidMap.get(xid);
 
         // check that prepare has NOT been called when onePhase = true
@@ -535,7 +534,7 @@ public final class FBManagedConnection implements ExceptionListener {
      *         if an error occurs
      */
     void internalEnd(Xid xid, int flags) throws XAException {
-        if (log.isDebugEnabled()) log.debug("End called: " + xid);
+        log.debugf("End called: %s", xid);
         FbTransaction endingTr = xidMap.get(xid);
 
         if (endingTr == null) {
@@ -663,7 +662,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     int internalPrepare(Xid xid) throws FBXAException {
-        if (log.isTraceEnabled()) log.trace("prepare called: " + xid);
+        log.tracef("prepare called: %s", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Prepare called with unknown transaction", XAException.XAER_NOTA);
@@ -771,11 +770,8 @@ public final class FBManagedConnection implements ExceptionListener {
         try {
             return new FBXid(xidData, txId);
         } catch (FBIncorrectXidException e) {
-            if (log.isWarnEnabled()) {
-                log.warn(format(
-                        "ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=%d: %s",
-                        txId, ByteArrayHelper.toHexString(xidData)));
-            }
+            log.warnf("ignoring XID stored with invalid format in RDB$TRANSACTIONS for RDB$TRANSACTION_ID=%d: %s",
+                    txId, ByteArrayHelper.toHexString(xidData));
         }
         return null;
     }
@@ -913,7 +909,7 @@ public final class FBManagedConnection implements ExceptionListener {
     }
 
     void internalRollback(Xid xid) throws XAException {
-        if (log.isTraceEnabled()) log.trace("rollback called: " + xid);
+        log.tracef("rollback called: %s", xid);
         FbTransaction committingTr = xidMap.get(xid);
         if (committingTr == null) {
             throw new FBXAException("Rollback called with unknown transaction: " + xid);
@@ -1009,7 +1005,7 @@ public final class FBManagedConnection implements ExceptionListener {
      * @see #start(Xid, int)
      */
     public void internalStart(Xid id, int flags) throws XAException, SQLException {
-        if (log.isTraceEnabled()) log.trace("start called: " + id);
+        log.tracef("start called: %s", id);
 
         if (getGDSHelper().getCurrentTransaction() != null)
             throw new FBXAException("Transaction already started", XAException.XAER_PROTO);

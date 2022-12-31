@@ -108,7 +108,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
      * @see FbWireOperations#readStatusVector()
      */
     protected final SQLException readStatusVector(XdrInputStream xdrIn) throws SQLException {
-        boolean debug = log.isDebugEnabled();
+        final boolean debug = log.isDebugEnabled();
         final FbExceptionBuilder builder = new FbExceptionBuilder();
         try {
             while (true) {
@@ -117,14 +117,14 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                 switch (arg) {
                 case isc_arg_gds:
                     errorCode = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
+                    if (debug) log.debugf("readStatusVector arg:isc_arg_gds int: %d", errorCode);
                     if (errorCode != 0) {
                         builder.exception(errorCode);
                     }
                     break;
                 case isc_arg_warning:
                     errorCode = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
+                    if (debug) log.debugf("readStatusVector arg:isc_arg_warning int: %d", errorCode);
                     if (errorCode != 0) {
                         builder.warning(errorCode);
                     }
@@ -132,17 +132,17 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                 case isc_arg_interpreted:
                 case isc_arg_string:
                     String stringValue = xdrIn.readString(getEncoding());
-                    if (debug) log.debug("readStatusVector string: " + stringValue);
+                    log.debugf("readStatusVector string: %s", stringValue);
                     builder.messageParameter(stringValue);
                     break;
                 case isc_arg_sql_state:
                     String sqlState = xdrIn.readString(getEncoding());
-                    if (debug) log.debug("readStatusVector sqlstate: " + sqlState);
+                    log.debugf("readStatusVector sqlstate: %s", sqlState);
                     builder.sqlState(sqlState);
                     break;
                 case isc_arg_number:
                     int intValue = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
+                    if (debug) log.debugf("readStatusVector arg:isc_arg_number int: %d", intValue);
                     builder.messageParameter(intValue);
                     break;
                 case isc_arg_end:
@@ -152,7 +152,7 @@ public abstract class AbstractWireOperations implements FbWireOperations {
                     return builder.toFlatSQLException();
                 default:
                     int e = xdrIn.readInt();
-                    if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
+                    if (debug) log.debugf("readStatusVector arg: %d int: %d", arg, e);
                     builder.messageParameter(e);
                     break;
                 }

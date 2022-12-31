@@ -80,7 +80,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 break;
 
             default:
-                log.debug(String.format("Unexpected item type %d", info.currentItem));
+                log.debugf("Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }
@@ -224,7 +224,7 @@ public final class StatementInfoProcessor implements InfoProcessor<InfoProcessor
                 return;
 
             default:
-                log.debug(String.format("Unexpected item type %d", info.currentItem));
+                log.debugf("Unexpected item type %d", info.currentItem);
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_dsql_sqlda_err).toSQLException();
             }
         }

@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static org.firebirdsql.gds.JaybirdErrorCodes.jb_cryptNoCryptKeyAvailable;
@@ -80,9 +81,9 @@ public class V13WireOperations extends V11WireOperations {
             } catch (Exception e) {
                 if (!(spiName.equals(CHA_CHA_PLUGIN_SPI_CLASS_NAME) && e instanceof ClassNotFoundException)) {
                     // Expected on Java 8 as this class only exists on Java 11+, so don't log it obtrusively
-                    log.info("Could not load EncryptionPluginSpi: " + spiName + "; see debug for details");
+                    log.infof("Could not load EncryptionPluginSpi: %s; see debug for details", spiName);
                 }
-                log.debug("Could not load EncryptionPluginSpi: " + spiName, e);
+                log.debugfe("Could not load EncryptionPluginSpi: %s", spiName, e);
             }
         }
         SUPPORTED_ENCRYPTION_PLUGINS = tempMap.isEmpty() ? emptyMap() : unmodifiableMap(tempMap);
@@ -102,6 +103,7 @@ public class V13WireOperations extends V11WireOperations {
         final XdrOutputStream xdrOut = getXdrOut();
         final ClientAuthBlock clientAuthBlock = getClientAuthBlock();
         final Encoding encoding = getEncoding();
+        final boolean debug = log.isDebugEnabled();
         while (true) {
             String pluginName;
             byte[] data;
@@ -109,8 +111,8 @@ public class V13WireOperations extends V11WireOperations {
                 data = acceptPacket.p_acpt_data;
                 pluginName = acceptPacket.p_acpt_plugin;
                 addServerKeys(acceptPacket.p_acpt_keys);
-                log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                        data.length, pluginName != null ? pluginName.length() : null, pluginName));
+                if (debug) log.debugf("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                        data.length, pluginName != null ? pluginName.length() : null, pluginName);
                 // TODO handle compression
                 acceptPacket = null;
             } else {
@@ -126,11 +128,11 @@ public class V13WireOperations extends V11WireOperations {
                     pluginName = xdrIn.readString(encoding); //p_name
                     xdrIn.readBuffer(); // p_list (ignore?)
                     addServerKeys(xdrIn.readBuffer()); // p_keys
-                    log.debug(String.format("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
-                            data.length, pluginName.length(), pluginName));
+                    if (debug) log.debugf("authReceiveResponse: cont_auth data=%d pluginName=%d '%s'",
+                            data.length, pluginName.length(), pluginName);
                     break;
                 case op_crypt_key_callback:
-                    log.debug("Handling db crypt callback using plugin " + dbCryptCallback.getDbCryptCallbackName());
+                    log.debugf("Handling db crypt callback using plugin %s", dbCryptCallback.getDbCryptCallbackName());
                     handleCryptKeyCallback(dbCryptCallback);
                     continue;
                 case op_cond_accept:
@@ -142,8 +144,8 @@ public class V13WireOperations extends V11WireOperations {
                     pluginName = xdrIn.readString(encoding); // p_acpt_plugin
                     xdrIn.readInt(); // p_acpt_authenticated
                     addServerKeys(xdrIn.readBuffer()); //p_acpt_keys
-                    log.debug(String.format("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
-                            data.length, pluginName.length(), pluginName));
+                    if (debug) log.debugf("authReceiveResponse: cond_accept data=%d pluginName=%d '%s'",
+                            data.length, pluginName.length(), pluginName);
                     // TODO handle compression
                     break;
 
@@ -161,7 +163,7 @@ public class V13WireOperations extends V11WireOperations {
                     }
                     return;
                 default:
-                    throw new SQLException(String.format("Unsupported operation code: %d", operation));
+                    throw new SQLException(format("Unsupported operation code: %d", operation));
                 }
             }
 
@@ -181,7 +183,7 @@ public class V13WireOperations extends V11WireOperations {
             }
 
             clientAuthBlock.setServerData(data);
-            log.debug(String.format("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName()));
+            log.debugf("receiveResponse: authenticate(%s)", clientAuthBlock.getCurrentPluginName());
             clientAuthBlock.authenticate();
 
             xdrOut.writeInt(op_cont_auth);
@@ -233,7 +235,7 @@ public class V13WireOperations extends V11WireOperations {
                     clearServerKeys();
 
                     initializedEncryption = true;
-                    log.debug("Wire encryption established with " + encryptionIdentifier);
+                    log.debugf("Wire encryption established with %s", encryptionIdentifier);
                     break;
                 } else {
                     chainBuilder.append(encryptionInitInfo.getException());
@@ -259,8 +261,8 @@ public class V13WireOperations extends V11WireOperations {
                 log.warn(initializedEncryption
                         ? "Wire encryption established, but some plugins failed; see other loglines for details"
                         : "No wire encryption established because of errors");
-                log.warn("Encryption plugin failed; see debug level for stacktraces:\n"
-                        + ExceptionHelper.collectAllMessages(current));
+                log.warnf("Encryption plugin failed; see debug level for stacktraces:\n%s",
+                        ExceptionHelper.collectAllMessages(current));
             }
             if (log.isDebugEnabled()) {
                 do {

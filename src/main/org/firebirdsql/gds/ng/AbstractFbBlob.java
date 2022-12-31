@@ -229,9 +229,7 @@ public abstract class AbstractFbBlob implements FbBlob, TransactionListener, Dat
         }
         try (LockCloseable ignored = withLock()) {
             if (open) {
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format("blob with blobId %d still open on database detach", getBlobId()));
-                }
+                log.debugf("blob with blobId %d still open on database detach", getBlobId());
                 try {
                     close();
                 } catch (SQLException e) {

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.firebirdsql.util.FirebirdSupportInfo.supportInfoFor;
 
@@ -608,7 +609,7 @@ public class FBStatement implements FirebirdStatement {
         case DELETED_ROWS_COUNT:
             return sqlCountHolder.getIntegerDeleteCount();
         default:
-            throw new IllegalArgumentException(String.format("Specified type %d is unknown.", type));
+            throw new IllegalArgumentException(format("Specified type %d is unknown.", type));
         }
     }
 
@@ -1052,7 +1053,7 @@ public class FBStatement implements FirebirdStatement {
     public void setLargeMaxRows(long max) throws SQLException {
         if (max > Integer.MAX_VALUE) {
             addWarning(new SQLWarning(
-                    String.format("Implementation limit: maxRows cannot exceed Integer.MAX_VALUE, value was %d, reset to 0", max),
+                    format("Implementation limit: maxRows cannot exceed Integer.MAX_VALUE, value was %d, reset to 0", max),
                     SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE));
             max = 0;
         }
@@ -1334,7 +1335,7 @@ public class FBStatement implements FirebirdStatement {
 
         private boolean isUnexpectedSender(FbStatement sender) {
             if (sender != fbStatement) {
-                log.debug(String.format("Received statement listener update from unrelated statement [%s]", sender.toString()));
+                log.debugf("Received statement listener update from unrelated statement [%s]", sender);
                 sender.removeStatementListener(this);
                 return true;
             }

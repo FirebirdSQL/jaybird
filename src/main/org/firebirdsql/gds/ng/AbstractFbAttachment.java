@@ -94,8 +94,8 @@ public abstract class AbstractFbAttachment<T extends AbstractConnection<? extend
         try {
             serverVersion = GDSServerVersion.parseRawVersion(versionStrings);
         } catch (GDSServerVersionException e) {
-            log.error(String.format("Received unsupported server version \"%s\", replacing with dummy invalid version ",
-                    Arrays.toString(versionStrings)), e);
+            log.errorfe("Received unsupported server version \"%s\", replacing with dummy invalid version",
+                    Arrays.toString(versionStrings), e);
             serverVersion = GDSServerVersion.INVALID_VERSION;
         }
         serverVersionInformation = ServerVersionInformation.getForVersion(serverVersion);

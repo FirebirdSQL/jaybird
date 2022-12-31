@@ -115,7 +115,7 @@ public final class ClientAuthBlock {
         while (providerIterator.hasNext()) {
             AuthenticationPluginSpi provider = providerIterator.next();
             AuthenticationPlugin plugin = provider.createPlugin();
-            log.debug("Trying authentication plugin " + plugin);
+            log.debugf("Trying authentication plugin %s", plugin);
             try {
                 switch (plugin.authenticate(this)) {
                 case AUTH_SUCCESS:
@@ -275,12 +275,12 @@ public final class ClientAuthBlock {
             } else {
                 plugin = provider.createPlugin();
             }
-            log.debug("Trying authentication plugin " + plugin);
+            log.debugf("Trying authentication plugin %s", plugin);
             try {
                 switch (plugin.authenticate(this)) {
                 case AUTH_SUCCESS:
                 case AUTH_MORE_DATA:
-                    log.debug("Trying authentication plugin " + plugin + " is OK");
+                    log.debugf("Trying authentication plugin %s is OK", plugin);
                     currentPlugin = plugin;
                     cleanParameterBuffer(pb);
                     extractDataToParameterBuffer(pb);
@@ -293,7 +293,7 @@ public final class ClientAuthBlock {
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).cause(ex).toSQLException();
             }
 
-            log.debug(String.format("try next plugin, %s skipped", plugin));
+            log.debugf("try next plugin, %s skipped", plugin);
         }
     }
 
@@ -379,7 +379,9 @@ public final class ClientAuthBlock {
             log.debug("first time - added plugName & pluginList");
         }
         pb.addArgument(tagMapping.getSpecificAuthDataTag(), clientData);
-        log.debug(String.format("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length));
+        if (log.isDebugEnabled()) {
+            log.debugf("Added %d bytes of spec data with tag isc_dpb_specific_auth_data", clientData.length);
+        }
     }
 
     private void cleanParameterBuffer(ConnectionParameterBuffer pb) {
@@ -397,7 +399,7 @@ public final class ClientAuthBlock {
             if (pluginSpi != null) {
                 pluginProviders.add(pluginSpi);
             } else {
-                log.warn("No authentication plugin available with name " + pluginName);
+                log.warnf("No authentication plugin available with name %s", pluginName);
             }
         }
 
@@ -427,12 +429,12 @@ public final class ClientAuthBlock {
         Map<String, AuthenticationPluginSpi> pluginMapping = new HashMap<>();
         for (AuthenticationPluginSpi pluginSpi : getAvailableAuthenticationPluginSpis()) {
             String pluginName = pluginSpi.getPluginName();
-            if (pluginMapping.containsKey(pluginName)) {
-                log.warn("Authentication plugin provider for " + pluginName + " already registered. Skipping "
-                        + pluginSpi.getClass().getName());
-                continue;
+            if (!pluginMapping.containsKey(pluginName)) {
+                pluginMapping.put(pluginName, pluginSpi);
+            } else {
+                log.warnf("Authentication plugin provider for %s already registered. Skipping %s", pluginName,
+                        pluginSpi.getClass().getName());
             }
-            pluginMapping.put(pluginName, pluginSpi);
         }
         return Collections.unmodifiableMap(pluginMapping);
     }
@@ -452,8 +454,7 @@ public final class ClientAuthBlock {
                             AuthenticationPluginSpi plugin = pluginIterator.next();
                             pluginList.add(plugin);
                         } catch (Exception | ServiceConfigurationError e) {
-                            log.warn("Can't register plugin, see debug level for more information (skipping): " + e);
-                            log.debug("Failed to load plugin with exception", e);
+                            log.warnDebug("Can't register plugin", e);
                         }
                     }
                     break;
@@ -490,9 +491,7 @@ public final class ClientAuthBlock {
                         (AuthenticationPluginSpi) clazz.getDeclaredConstructor().newInstance();
                 fallbackPluginProviders.add(provider);
             } catch (ReflectiveOperationException e) {
-                log.warn("Could not load plugin provider (see debug level for details) " + providerName + ", reason: "
-                        + e);
-                log.debug("Failed to load plugin provider " + providerName + " with exception", e);
+                log.warnDebug("Could not load plugin provider " + providerName, e);
             }
         }
         return fallbackPluginProviders;

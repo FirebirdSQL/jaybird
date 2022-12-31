@@ -125,7 +125,7 @@ public class DatabaseUserExtension implements AfterEachCallback {
             }
             statement.execute(dropUserSql.toString());
         } catch (SQLException e) {
-            log.error("Unable to drop user " + user, e);
+            log.errorfe("Unable to drop user %s", user, e);
         }
     }
 

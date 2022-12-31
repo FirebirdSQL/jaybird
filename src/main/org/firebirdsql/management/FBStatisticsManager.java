@@ -214,8 +214,8 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                 final byte infoItem = info[idx];
                 idx++;
                 if (infoItem == isc_info_truncated) {
-                    log.warn("Transaction information response was truncated at index " + idx + ". Info block size: " +
-                            info.length + ". This could indicate a bug in the implementation.");
+                    log.warnf("Transaction information response was truncated at index %d. Info block size: %d. "
+                            + "This could indicate a bug in the implementation.", idx, info.length);
                     break;
                 }
 
@@ -246,7 +246,7 @@ public class FBStatisticsManager extends FBServiceManager implements StatisticsM
                     break;
                     
                 default:
-                    log.warn("Unknown or unexpected info item: " + infoItem);
+                    log.warnf("Unknown or unexpected info item: %d", infoItem);
                     break;
                 }
             }

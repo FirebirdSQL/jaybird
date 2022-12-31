@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -74,14 +74,16 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
                 }
             } catch (RuntimeException | UnsatisfiedLinkError e) {
                 throwables.add(e);
-                log.debug("Attempt to load " + libraryName + " failed", e);
+                log.debugfe("Attempt to load %s failed", libraryName, e);
                 // continue with next
             }
         }
         assert throwables.size() == librariesToTry.size();
-        log.error("Could not load any of the libraries in " + librariesToTry + ":");
-        for (int idx = 0; idx < librariesToTry.size(); idx++) {
-            log.error("Loading " + librariesToTry.get(idx) + " failed", throwables.get(idx));
+        if (log.isErrorEnabled()) {
+            log.errorf("Could not load any of the libraries in %s:", librariesToTry);
+            for (int idx = 0; idx < librariesToTry.size(); idx++) {
+                log.errorfe("Loading %s failed", librariesToTry.get(idx), throwables.get(idx));
+            }
         }
         throw new NativeLibraryLoadException("Could not load any of " + librariesToTry + "; linking first exception",
                 throwables.get(0));
@@ -91,7 +93,7 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         Optional<FirebirdEmbeddedLibrary> optionalFbEmbeddedInstance = FirebirdEmbeddedLookup.findFirebirdEmbedded();
         if (optionalFbEmbeddedInstance.isPresent()) {
             FirebirdEmbeddedLibrary firebirdEmbeddedLibrary = optionalFbEmbeddedInstance.get();
-            log.info("Found Firebird Embedded " + firebirdEmbeddedLibrary.getVersion() + " on classpath");
+            log.infof("Found Firebird Embedded %s on classpath", firebirdEmbeddedLibrary.getVersion());
             if (firebirdEmbeddedLibrary instanceof DisposableFirebirdEmbeddedLibrary) {
                 NativeResourceTracker.strongRegisterNativeResource(new FirebirdEmbeddedLibraryNativeResource(
                         (DisposableFirebirdEmbeddedLibrary) firebirdEmbeddedLibrary));

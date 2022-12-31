@@ -89,7 +89,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             throw e;
         } finally {
             final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.COMMITTED) {
+            if (transactionState != TransactionState.COMMITTED && log.isWarnEnabled()) {
                 String message = "Commit not completed, state was " + transactionState;
                 if (log.isDebugEnabled()) {
                     log.warnDebug(message, new RuntimeException("Commit not completed"));
@@ -114,7 +114,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             throw e;
         } finally {
             final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.ROLLED_BACK) {
+            if (transactionState != TransactionState.ROLLED_BACK && log.isWarnEnabled()) {
                 String message = "Rollback not completed, state was " + transactionState;
                 if (log.isDebugEnabled()) {
                     log.warnDebug(message, new RuntimeException("Rollback not completed"));
@@ -144,10 +144,11 @@ public class JnaTransaction extends AbstractFbTransaction {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            if (getState() != TransactionState.PREPARED) {
-                String message = "Prepare not completed";
+            final TransactionState transactionState = getState();
+            if (transactionState != TransactionState.PREPARED && log.isWarnEnabled()) {
+                String message = "Prepare not completed, state was " + transactionState;
                 if (log.isDebugEnabled()) {
-                    log.warnDebug(message, new RuntimeException(message));
+                    log.warnDebug(message, new RuntimeException("Prepare not completed"));
                 } else {
                     log.warn(message + "; see debug level for stacktrace");
                 }

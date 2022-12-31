@@ -187,7 +187,8 @@ public class AsynchronousProcessor {
             } catch (CancelledKeyException e) {
                 // ignore; key cancelled as part of close
             } catch (Exception e) {
-                log.error(e.getClass().getName() + " reading from event channel; attempting to close async channel", e);
+                log.errorfe("%s reading from event channel; attempting to close async channel",
+                        e.getClass().getName(), e);
                 FbWireAsynchronousChannel channel = (FbWireAsynchronousChannel) selectionKey.attachment();
                 try {
                     channel.close();
@@ -205,7 +206,7 @@ public class AsynchronousProcessor {
     private static class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            log.error("Jaybird asynchronous processing terminated. Uncaught exception on " + t.getName(), e);
+            log.errorfe("Jaybird asynchronous processing terminated. Uncaught exception on %s", t.getName(), e);
         }
     }
 }

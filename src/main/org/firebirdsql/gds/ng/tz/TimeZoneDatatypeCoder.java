@@ -315,8 +315,7 @@ public class TimeZoneDatatypeCoder {
 
     private static TimeZoneDatatypeCoder createdCachedInstance(DatatypeCoder rootCoder) {
         if (instanceCache.size() > MAX_CACHED) {
-            LoggerFactory.getLogger(TimeZoneDatatypeCoder.class)
-                    .info("Clearing TimeZoneDatatypeCoder.instanceCache");
+            LoggerFactory.getLogger(TimeZoneDatatypeCoder.class).info("Clearing TimeZoneDatatypeCoder.instanceCache");
             instanceCache.clear();
         }
         TimeZoneDatatypeCoder value = new TimeZoneDatatypeCoder(rootCoder);

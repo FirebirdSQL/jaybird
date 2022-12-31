@@ -190,18 +190,16 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
                     }
                     break;
                 default:
-                    if (log.isErrorEnabled()) {
-                        log.error("Unexpected event operation received: " + operation + " position " +
-                                eventBuffer.position() + " limit " + eventBuffer.limit());
-                    }
+                    log.errorf("Unexpected event operation received: %d, position %d, limit %d", operation,
+                            eventBuffer.position(), eventBuffer.limit());
                     break;
                 }
             }
             eventBuffer.compact();
         } catch (SQLException e) {
-            log.fatal("SQLException processing event data: " + e.getMessage(), e);
+            log.fatal("SQLException processing event data", e);
         } catch (Exception e) {
-            log.fatal("Unexpected exception processing events: " + e.getMessage(), e);
+            log.fatal("Unexpected exception processing events", e);
         }
     }
 
@@ -215,9 +213,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
         try (LockCloseable ignored = withLock()) {
             try {
-                if (log.isDebugEnabled()) {
-                    log.debug("Queue event: " + wireEventHandle);
-                }
+                log.debugf("Queue event: %s", wireEventHandle);
                 final XdrOutputStream dbXdrOut = database.getXdrStreamAccess().getXdrOut();
                 dbXdrOut.writeInt(op_que_events);
                 dbXdrOut.writeInt(auxHandle);
@@ -297,7 +293,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
             int eventId = eventBuffer.getInt();
 
             if (log.isDebugEnabled()) {
-                log.debug(String.format("Received event id %d, eventCount %d", eventId, eventCount));
+                log.debugf("Received event id %d, eventCount %d", eventId, eventCount);
             }
 
             channelListenerDispatcher.eventReceived(this, new AsynchronousChannelListener.Event(eventId, eventCount));

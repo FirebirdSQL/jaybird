@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,8 +28,6 @@ import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
-import static java.lang.String.format;
-
 /**
  * {@code DeflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
@@ -57,8 +55,8 @@ class FbDeflaterOutputStream extends DeflaterOutputStream implements EncryptedSt
             super.close();
         } finally {
             if (log.isTraceEnabled()) {
-                log.trace(format("FbDeflaterOutputStream: Uncompressed bytes: %d to compressed bytes: %d",
-                        def.getBytesRead(), def.getBytesWritten()));
+                log.tracef("FbDeflaterOutputStream: Uncompressed bytes: %d to compressed bytes: %d",
+                        def.getBytesRead(), def.getBytesWritten());
             }
             def.end();
         }

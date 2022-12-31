@@ -100,10 +100,10 @@ final class MessageLoader {
             if (in != null) {
                 properties.load(in);
             } else {
-                log.warn("Unable to load resource; resource " + resource + " is not found");
+                log.warnf("Unable to load resource; resource %s is not found", resource);
             }
         } catch (IOException ioex) {
-            log.error("Unable to load resource " + resource, ioex);
+            log.errorfe("Unable to load resource %s", resource, ioex);
             throw ioex;
         }
         return properties;
@@ -137,7 +137,7 @@ final class MessageLoader {
 
     private void storeValue(int errorCode, String value, Vector<String> facilityVector) {
         if (facilityVector == null) {
-            log.warn("Invalid error code " + errorCode + ", no valid facility; skipping");
+            log.warnf("Invalid error code %d, no valid facility; skipping", errorCode);
             return;
         }
         final int code = MessageLookup.getCode(errorCode);

@@ -110,7 +110,7 @@ final class GeneratedKeysQueryBuilder {
                     .parse();
             return new GeneratedKeysQueryBuilder(statementText, detector.toStatementIdentification(), supportedQueryTypes);
         } catch (RuntimeException e) {
-            if (logger.isDebugEnabled()) logger.debug("Exception parsing query: " + statementText, e);
+            logger.debugfe("Exception parsing query: %s", statementText, e);
             return new GeneratedKeysQueryBuilder(statementText);
         }
     }

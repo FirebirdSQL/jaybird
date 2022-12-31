@@ -270,10 +270,9 @@ public final class GDSHelper {
         }
         TimeZone timeZone = TimeZone.getTimeZone(sessionTimeZoneName);
         if ("GMT".equals(timeZone.getID()) && !"GMT".equalsIgnoreCase(sessionTimeZoneName)) {
-            String message = "TimeZone fallback to GMT from " + sessionTimeZoneName
-                    + "; possible cause: value of sessionTimeZone unknown in Java. Time and Timestamp values may "
-                    + "yield unexpected values. Consider setting a different value for sessionTimeZone.";
-            LoggerFactory.getLogger(getClass()).warn(message);
+            LoggerFactory.getLogger(getClass()).warnf("TimeZone fallback to GMT from %s; possible cause: value of "
+                    + "sessionTimeZone unknown in Java. Time and Timestamp values may yield unexpected values. "
+                    + "Consider setting a different value for sessionTimeZone.", sessionTimeZoneName);
         }
         return sessionTimeZone = timeZone;
     }

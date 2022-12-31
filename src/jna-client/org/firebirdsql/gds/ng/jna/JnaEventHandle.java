@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -39,7 +39,7 @@ import org.firebirdsql.logging.LoggerFactory;
  */
 public final class JnaEventHandle extends AbstractEventHandle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JnaEventHandle.class);
+    private static final Logger log = LoggerFactory.getLogger(JnaEventHandle.class);
 
     private final Memory eventNameMemory;
     private final IntByReference eventId = new IntByReference(0);
@@ -119,16 +119,13 @@ public final class JnaEventHandle extends AbstractEventHandle {
      * Dumps the event buffers to the logger, if debug is enabled.
      */
     public void debugMemoryDump() {
-        if (!LOG.isDebugEnabled()) return;
+        if (!log.isDebugEnabled()) return;
         if (size == -1) {
-            LOG.debug("Event handle not allocated");
+            log.debug("Event handle not allocated");
         }
         synchronized (JnaEventHandle.class) {
-            String sb = "Event Buffer " + getEventName() + ':' +
-                    getEventBuffer().getValue().dump(0, size) +
-                    "Result Buffer " + getEventName() + ':' +
-                    getResultBuffer().getValue().dump(0, size);
-            LOG.debug(sb);
+            log.debugf("%s: Event Buffer: %s, Result Buffer: %s", getEventName(),
+                    getEventBuffer().getValue().dump(0, size), getResultBuffer().getValue().dump(0, size));
         }
     }
 

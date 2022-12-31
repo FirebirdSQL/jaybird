@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -106,14 +106,14 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
             switch (arg) {
             case isc_arg_gds:
                 errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_gds int: " + errorCode);
+                if (debug) log.debugf("readStatusVector arg:isc_arg_gds int: %d", errorCode);
                 if (errorCode != 0) {
                     builder.exception(errorCode);
                 }
                 break;
             case isc_arg_warning:
                 errorCode = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_warning int: " + errorCode);
+                if (debug) log.debugf("readStatusVector arg:isc_arg_warning int: %d", errorCode);
                 if (errorCode != 0) {
                     builder.warning(errorCode);
                 }
@@ -129,10 +129,10 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
                 Pointer stringPointer = new Pointer(stringPointerAddress);
                 String stringValue = stringPointer.getString(0, getEncodingDefinition().getJavaEncodingName());
                 if (arg != isc_arg_sql_state) {
-                    if (debug) log.debug("readStatusVector string: " + stringValue);
+                    log.debugf("readStatusVector string: %s", stringValue);
                     builder.messageParameter(stringValue);
                 } else {
-                    if (debug) log.debug("readStatusVector sqlstate: " + stringValue);
+                    log.debugf("readStatusVector sqlstate: %s", stringValue);
                     builder.sqlState(stringValue);
                 }
                 break;
@@ -146,14 +146,14 @@ public abstract class JnaConnection<T extends IAttachProperties<T>, C extends Jn
                 break;
             case isc_arg_number:
                 int intValue = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg:isc_arg_number int: " + intValue);
+                if (debug) log.debugf("readStatusVector arg:isc_arg_number int: %d", intValue);
                 builder.messageParameter(intValue);
                 break;
             case isc_arg_end:
                 break processingLoop;
             default:
                 int e = statusVector[vectorIndex++].intValue();
-                if (debug) log.debug("readStatusVector arg: " + arg + " int: " + e);
+                if (debug) log.debugf("readStatusVector arg: %d int: %d", arg, e);
                 builder.messageParameter(e);
                 break;
             }

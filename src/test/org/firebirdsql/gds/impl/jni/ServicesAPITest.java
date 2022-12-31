@@ -141,7 +141,7 @@ class ServicesAPITest {
 
         assertTrue(new File(mAbsoluteDatabasePath).exists(), "Database file doesn't exist after restore !");
         if (!new File(mAbsoluteBackupPath).delete()) {
-            this.log.debug("Unable to delete file " + mAbsoluteBackupPath);
+            log.debugf("Unable to delete file %s", mAbsoluteBackupPath);
         }
     }
 
@@ -166,7 +166,7 @@ class ServicesAPITest {
 
     private void backupDatabase(FbService service) throws Exception {
         if (!new File(mAbsoluteBackupPath).delete()) {
-            log.debug("Unable to delete file " + mAbsoluteBackupPath);
+            log.debugf("Unable to delete file %s", mAbsoluteBackupPath);
         }
 
         startBackup(service);

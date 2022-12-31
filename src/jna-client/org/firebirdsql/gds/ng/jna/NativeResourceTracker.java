@@ -109,7 +109,7 @@ public final class NativeResourceTracker {
                     if (resource != null) resource.dispose();
                 } catch (Throwable e) {
                     LoggerFactory.getLogger(NativeResourceTracker.class)
-                            .error("Error disposing resource " + resource, e);
+                            .errorfe("Error disposing resource %s", resource, e);
                 }
             }
             registeredNativeResources.clear();
@@ -120,7 +120,7 @@ public final class NativeResourceTracker {
                     resource.dispose();
                 } catch (Throwable e) {
                     LoggerFactory.getLogger(NativeResourceTracker.class)
-                            .error("Error disposing resource " + resource, e);
+                            .errorfe("Error disposing resource %s", resource, e);
                 }
             }
             strongRegisteredNativeResources.clear();

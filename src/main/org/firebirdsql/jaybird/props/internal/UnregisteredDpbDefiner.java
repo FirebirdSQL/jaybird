@@ -70,7 +70,7 @@ class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
         // We only consider DPB items for addition, but will add matching SPB items
         return dpbItems.keySet().stream()
                 .map(shortName -> {
-                    log.debug("Defining unregistered DPB/SPB property " + shortName);
+                    log.debugf("Defining unregistered DPB/SPB property %s", shortName);
                     ConnectionProperty.Builder builder = builder(shortName);
                     if (dpbItems.containsKey(shortName)) {
                         builder.aliases(("isc_dpb_" + shortName).intern());
@@ -110,6 +110,6 @@ class UnregisteredDpbDefiner implements ConnectionPropertyDefinerSpi {
 
     @Override
     public void notRegistered(ConnectionProperty connectionProperty) {
-        log.debug("Property not registered: " + connectionProperty);
+        log.debugf("Property not registered: %s", connectionProperty);
     }
 }

@@ -286,7 +286,8 @@ public final class EncodingFactory implements IEncodingFactory {
             // TODO Consider throwing exception if no EncodingDefinition is found
             return null;
         } catch (Exception e) {
-            log.debug(String.format("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s", firebirdEncodingName, javaCharsetAlias), e);
+            log.debugfe("Exception looking up encoding definition for firebirdEncodingName %s, javaCharsetAlias %s",
+                    firebirdEncodingName, javaCharsetAlias, e);
             return null;
         }
     }
@@ -397,8 +398,8 @@ public final class EncodingFactory implements IEncodingFactory {
      *         The EncodingSet to process
      */
     private void processEncodingSet(final EncodingSet encodingSet) {
-        if (log.isDebugEnabled())
-            log.debug(String.format("Processing EncodingSet %s with preference weight %d", encodingSet.getClass().getName(), encodingSet.getPreferenceWeight()));
+        log.debugf("Processing EncodingSet %s with preference weight %d",
+                encodingSet.getClass().getName(), encodingSet.getPreferenceWeight());
         for (EncodingDefinition encodingDefinition : encodingSet.getEncodings()) {
             processEncodingDefinition(encodingDefinition);
         }
@@ -417,15 +418,13 @@ public final class EncodingFactory implements IEncodingFactory {
         final int firebirdCharacterSetId = encodingDefinition.getFirebirdCharacterSetId();
         if (firebirdEncodingToDefinition.containsKey(firebirdEncodingName.toLowerCase(Locale.ROOT))) {
             // We already loaded a definition for this encoding
-            if (log.isDebugEnabled())
-                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName));
+            log.debugf("Skipped loading encoding definition for Firebird encoding %s, already loaded a definition for that name", firebirdEncodingName);
             return;
         } else if (firebirdCharacterSetId == CS_dynamic) {
-            if (log.isDebugEnabled())
-                log.debug(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)", firebirdEncodingName));
+            log.debugf("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as the connection character set (FirebirdCharacterSetId 127 or CS_dynamic)", firebirdEncodingName);
             return;
         } else if (firebirdCharacterSetId < 0 || firebirdCharacterSetId > MAX_NORMAL_CHARSET_ID) {
-            log.warn(String.format("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as FirebirdCharacterSetId %d, which is outside the range [0, 255]", firebirdEncodingName, firebirdCharacterSetId));
+            log.warnf("Skipped loading encoding definition for Firebird encoding %s, as it declared itself as FirebirdCharacterSetId %d, which is outside the range [0, 255]", firebirdEncodingName, firebirdCharacterSetId);
             return;
         }
 
@@ -450,11 +449,10 @@ public final class EncodingFactory implements IEncodingFactory {
             for (String charsetAlias : charset.aliases()) {
                 javaAliasesToDefinition.put(charsetAlias.toLowerCase(Locale.ROOT), encodingDefinition);
             }
-        } else if (log.isDebugEnabled()) {
-            log.debug(String.format(
-                    "Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
+        } else {
+            log.debugf("Not mapping java charset %s to Firebird encoding %s, already mapped to Firebird encoding %s",
                     charset.name(), encodingDefinition.getEncoding(),
-                    currentEncodingDefinition.getFirebirdEncodingName()));
+                    currentEncodingDefinition.getFirebirdEncodingName());
         }
     }
 
@@ -481,10 +479,8 @@ public final class EncodingFactory implements IEncodingFactory {
             return encoding;
         }
         // We only get here if the EncodingDefinition implementation does not adhere to the contract
-        if (log.isDebugEnabled()) {
-            log.debug(String.format("EncodingDefinition for Firebird encoding %s returned null for getEncoding(), using fallback encoding",
-                    encodingDefinition.getFirebirdEncodingName()));
-        }
+        log.debugf("EncodingDefinition for Firebird encoding %s returned null for getEncoding(), using fallback encoding",
+                encodingDefinition.getFirebirdEncodingName());
         return fallbackEncoding;
     }
 

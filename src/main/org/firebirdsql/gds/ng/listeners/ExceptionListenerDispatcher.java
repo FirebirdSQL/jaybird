@@ -56,7 +56,7 @@ public final class ExceptionListenerDispatcher implements Iterable<ExceptionList
             try {
                 listener.errorOccurred(source, exception);
             } catch (Exception e) {
-                log.error("Error on notify errorOccurred to listener " + listener, e);
+                log.errorfe("Error on notify errorOccurred to listener %s", listener, e);
             }
         }
     }

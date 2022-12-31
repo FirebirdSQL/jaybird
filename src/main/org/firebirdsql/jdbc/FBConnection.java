@@ -151,7 +151,7 @@ public class FBConnection implements FirebirdConnection {
                 // the constructor: Do not log warning
                 return;
             }
-            log.warn("Specified statement was not created by this connection: " + stmt);
+            log.warnf("Specified statement was not created by this connection: %s", stmt);
         }
     }
 

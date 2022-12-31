@@ -1,7 +1,5 @@
 /*
- * $Id$
- *
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -37,24 +35,12 @@ public class AsynchronousChannelListenerDispatcher extends AbstractListenerDispa
 
     @Override
     public void channelClosing(FbWireAsynchronousChannel channel) {
-        for (AsynchronousChannelListener listener : this) {
-            try {
-                listener.channelClosing(channel);
-            } catch (Exception ex) {
-                log.error("Error on notify channelClosing to listener " + listener, ex);
-            }
-        }
+        notify(listener -> listener.channelClosing(channel), "channelClosing");
     }
 
     @Override
     public void eventReceived(FbWireAsynchronousChannel channel, Event event) {
-        for (AsynchronousChannelListener listener : this) {
-            try {
-                listener.eventReceived(channel, event);
-            } catch (Exception ex) {
-                log.error("Error on notify eventReceived to listener " + listener, ex);
-            }
-        }
+        notify(listener -> listener.eventReceived(channel, event), "eventReceived");
     }
 
     @Override

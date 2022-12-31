@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -28,8 +28,6 @@ import java.io.InputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import static java.lang.String.format;
-
 /**
  * {@code InflaterOutputStream} with some modifications to simplify usage for Jaybird.
  *
@@ -57,8 +55,8 @@ class FbInflaterInputStream extends InflaterInputStream implements EncryptedStre
             super.close();
         } finally {
             if (log.isTraceEnabled()) {
-                log.trace(format("FbInflaterInputStream: Compressed bytes: %d to uncompressed bytes: %d",
-                        inf.getBytesRead(), inf.getBytesWritten()));
+                log.tracef("FbInflaterInputStream: Compressed bytes: %d to uncompressed bytes: %d",
+                        inf.getBytesRead(), inf.getBytesWritten());
             }
             inf.end();
         }

@@ -130,15 +130,15 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
     private class ServiceInformationProcessor implements InfoProcessor<FbService> {
         @Override
         public FbService process(byte[] info) throws SQLException {
-            boolean debug = log.isDebugEnabled();
             if (info.length == 0) {
                 throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_infoResponseEmpty)
                         .messageParameter("service")
                         .toSQLException();
             }
-            if (debug)
-                log.debug(String.format("ServiceInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
-                        iscVaxInteger2(info, 0), info[0], info[1]));
+            if (log.isDebugEnabled()) {
+                log.debugf("ServiceInformationProcessor.process: first 2 bytes are %04X or: %02X, %02X",
+                        iscVaxInteger2(info, 0), info[0], info[1]);
+            }
             int len;
             int i = 0;
             while (info[i] != isc_info_end) {
@@ -149,11 +149,11 @@ public abstract class AbstractFbService<T extends AbstractConnection<IServicePro
                     String firebirdVersion = new String(info, i, len, StandardCharsets.UTF_8);
                     i += len;
                     setServerVersion(firebirdVersion);
-                    if (debug) log.debug("isc_info_svc_server_version:" + firebirdVersion);
+                    log.debugf("isc_info_svc_server_version:%s", firebirdVersion);
                     break;
                 }
                 case isc_info_truncated:
-                    log.debug("isc_info_truncated ");
+                    log.debug("isc_info_truncated");
                     return AbstractFbService.this;
                 default:
                     throw new FbExceptionBuilder().exception(isc_infunk).toSQLException();

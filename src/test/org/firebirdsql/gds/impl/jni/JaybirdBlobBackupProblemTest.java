@@ -133,7 +133,7 @@ class JaybirdBlobBackupProblemTest {
 
             fbManager.createDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
         } catch (Exception e) {
-            log.warn("exception in setup: ", e);
+            log.warn("exception in setup", e);
         }
     }
 
@@ -143,7 +143,7 @@ class JaybirdBlobBackupProblemTest {
             fbManager.dropDatabase(mAbsoluteDatabasePath, "SYSDBA", "masterkey");
             fbManager.stop();
         } catch (Exception e) {
-            log.warn("exception in teardown: ", e);
+            log.warn("exception in teardown", e);
         }
     }
 

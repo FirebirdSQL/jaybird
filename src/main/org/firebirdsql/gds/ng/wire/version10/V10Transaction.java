@@ -87,11 +87,12 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             throw e;
         } finally {
             final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.COMMITTED) {
+            if (transactionState != TransactionState.COMMITTED && log.isWarnEnabled()) {
                 String message = "Commit not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Commit not completed"));
+                    log.warnDebug(message, new RuntimeException("Commit not completed"));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }
@@ -108,11 +109,12 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             throw e;
         } finally {
             final TransactionState transactionState = getState();
-            if (transactionState != TransactionState.ROLLED_BACK) {
+            if (transactionState != TransactionState.ROLLED_BACK && log.isWarnEnabled()) {
                 String message = "Rollback not completed, state was " + transactionState;
-                log.warn(message + "; see debug level for stacktrace");
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException("Rollback not completed"));
+                    log.warnDebug(message, new RuntimeException("Rollback not completed"));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }
@@ -164,11 +166,13 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
         } finally {
-            if (getState() != TransactionState.PREPARED) {
-                String message = "Prepare not completed";
-                log.warn(message + "; see debug level for stacktrace");
+            final TransactionState transactionState = getState();
+            if (transactionState != TransactionState.PREPARED && log.isWarnEnabled()) {
+                String message = "Prepare not completed, state was " + transactionState;
                 if (log.isDebugEnabled()) {
-                    log.debug(message, new RuntimeException(message));
+                    log.warnDebug(message, new RuntimeException("Prepare not completed"));
+                } else {
+                    log.warn(message + "; see debug level for stacktrace");
                 }
             }
         }

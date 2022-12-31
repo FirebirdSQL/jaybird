@@ -286,8 +286,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                                 expectedResponseCount = 0;
                                 SQLWarning sqlWarning = new SQLWarning(
                                         "Expected an SqlResponse, instead received a " + response.getClass().getName());
-                                log.warn(sqlWarning + "; see debug level for stacktrace");
-                                log.debug(sqlWarning.toString(), sqlWarning);
+                                log.warnDebug("Unexpected response", sqlWarning);
                                 statementWarningCallback.processWarning(sqlWarning);
                             }
                             setAfterLast();
@@ -449,7 +448,7 @@ public class V10Statement extends AbstractFbWireStatement implements FbWireState
                 // Exit loop
                 break;
             } else {
-                log.debug("Received unexpected fetch response " + fetchResponse + ", ignored");
+                log.debugf("Received unexpected fetch response %s, ignored", fetchResponse);
                 break;
             }
         }

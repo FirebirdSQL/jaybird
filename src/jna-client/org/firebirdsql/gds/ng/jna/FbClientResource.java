@@ -73,7 +73,7 @@ class FbClientResource extends NativeResourceTracker.NativeResource {
         try {
             disposeImpl();
         } catch (Throwable e) {
-            LoggerFactory.getLogger(FbClientResource.class).error("Error disposing of " + local, e);
+            LoggerFactory.getLogger(FbClientResource.class).errorfe("Error disposing of %s", local, e);
         }
     }
 
@@ -90,20 +90,20 @@ class FbClientResource extends NativeResourceTracker.NativeResource {
             if (isNativeResourceShutdownDisabled()) return;
 
             // only explicitly shutdown and dispose if native resource shutdown is not disabled
-            Logger logger = LoggerFactory.getLogger(FbClientResource.class);
+            Logger log = LoggerFactory.getLogger(FbClientResource.class);
             try {
-                if (logger.isDebugEnabled()) logger.debug("Calling fb_shutdown on " + local);
+                log.debugf("Calling fb_shutdown on %s", local);
                 local.fb_shutdown(0, 1);
             } finally {
                 FbClientFeatureAccessHandler handler =
                         (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(local);
                 NativeLibrary nativeLibrary = handler.getNativeLibrary();
-                if (logger.isDebugEnabled()) logger.debug("Disposing JNA native library " + nativeLibrary);
+                log.debugf("Disposing JNA native library %s", nativeLibrary);
                 try {
                     // Retaining use of dispose for backwards compatibility with older JNA versions for now
                     nativeLibrary.dispose();
                 } catch (Throwable e) {
-                    logger.error("Error disposing of " + nativeLibrary, e);
+                    log.errorfe("Error disposing of %s", nativeLibrary, e);
                 }
             }
         });

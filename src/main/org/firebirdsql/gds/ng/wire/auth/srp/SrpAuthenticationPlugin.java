@@ -69,7 +69,7 @@ class SrpAuthenticationPlugin implements AuthenticationPlugin {
     @Override
     public AuthStatus authenticate(ClientAuthBlock clientAuthBlock) throws SQLException {
         if (srpClient == null) {
-            log.debug("SRP phase 1, user: " + clientAuthBlock.getLogin());
+            log.debugf("SRP phase 1, user: %s", clientAuthBlock.getLogin());
             if (clientAuthBlock.getLogin() == null || clientAuthBlock.getPassword() == null) {
                 return AuthStatus.AUTH_CONTINUE;
             }

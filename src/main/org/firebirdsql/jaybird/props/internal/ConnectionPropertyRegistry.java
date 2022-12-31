@@ -27,7 +27,6 @@ import org.firebirdsql.util.InternalApi;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 
@@ -206,8 +205,8 @@ public final class ConnectionPropertyRegistry {
             HashSet<String> duplicateAliases = new HashSet<>(property.aliases());
             duplicateAliases.add(property.name());
             duplicateAliases.retainAll(connectionPropertiesMap.keySet());
-            log.warn(format("Failed to register connection property, one or more of its aliases were already "
-                    + "defined; duplicate alias(es): %s, connection property: %s", duplicateAliases, property));
+            log.warnf("Failed to register connection property, one or more of its aliases were already "
+                    + "defined; duplicate alias(es): %s, connection property: %s", duplicateAliases, property);
             notifyNotRegistered(definer, property);
         }
 
@@ -223,8 +222,8 @@ public final class ConnectionPropertyRegistry {
                 ConnectionPropertyDefinerSpi definer, String type) {
             assert (!(definer instanceof StandardConnectionPropertyDefiner))
                     : "standard properties should not have duplicate " + type + " items: " + property.name();
-            log.warn(format("Failed to register connection property, its %s item was already defined; "
-                    + "connection property: %s", type, property));
+            log.warnf("Failed to register connection property, its %s item was already defined; connection property: %s",
+                    type, property);
             notifyNotRegistered(definer, property);
         }
 
@@ -233,8 +232,8 @@ public final class ConnectionPropertyRegistry {
                 definer.notRegistered(connectionProperty);
             } catch (Exception e) {
                 // Intentionally not catching Throwable here to allow errors to escape
-                log.warn("Exception received notifying definer.notRegistered(" + connectionProperty + ") at "
-                        + definer, e);
+                log.warnfe("Exception received notifying definer.notRegistered(%s) at %s",
+                        connectionProperty, definer, e);
             }
         }
     }

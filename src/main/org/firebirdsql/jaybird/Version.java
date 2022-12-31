@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -48,7 +48,7 @@ public final class Version {
         } catch (Exception e) {
             // Intentionally not logging stacktrace
             LoggerFactory.getLogger(Version.class)
-                    .error("org.firebirdsql.jaybird.Version: Unable to load version information: " + e);
+                    .errorf("org.firebirdsql.jaybird.Version: Unable to load version information: %s", e);
             // Resource bundle missing, or key missing
             jaybirdSimpleVersion = "version unknown";
             jaybirdDisplayVersion = "Jaybird (version unknown)";
@@ -71,8 +71,8 @@ public final class Version {
         } catch (NumberFormatException e) {
             // Intentionally not logging stacktrace
             LoggerFactory.getLogger(Version.class)
-                    .error("org.firebirdsql.jaybird.Version: Unable to parse number " + stringValue
-                            + "; defaulting to 0: " + e);
+                    .errorf("org.firebirdsql.jaybird.Version: Unable to parse number %s; defaulting to 0: %s",
+                            stringValue, e);
             return 0;
         }
     }

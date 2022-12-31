@@ -18,7 +18,6 @@
  */
 package org.firebirdsql.management;
 
-import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.Volatile;
 
@@ -191,13 +190,11 @@ public final class TableStatistics {
             case isc_info_expunge_count:
                 expungeCount = value;
                 break;
-            default: {
-                Logger logger = LoggerFactory.getLogger(TableStatisticsBuilder.class);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Unexpected information item, this is likely an implementation bug. "
-                            + "Received item: " + statistic + " and value " + value);
-                }
-            }
+            default:
+                LoggerFactory.getLogger(TableStatisticsBuilder.class)
+                        .debugf("Unexpected information item %d with value %d, this is likely an implementation bug.",
+                                statistic, value);
+                break;
             }
         }
 

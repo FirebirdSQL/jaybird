@@ -381,9 +381,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                         log.debug("Ignoring exception on disconnect in connect phase of protocol", ex);
                     }
                 }
-                if (log.isDebugEnabled()) {
-                    log.debug("Reached end of identify without error or connection, last operation: " + operation);
-                }
+                log.debugf("Reached end of identify without error or connection, last operation: %d", operation);
                 // If we reach here, authentication failed (or never authenticated for lack of username and password)
                 throw new FbExceptionBuilder().exception(ISCConstants.isc_login).toSQLException();
             }
@@ -475,7 +473,7 @@ public abstract class WireConnection<T extends IAttachProperties<T>, C extends F
                 break;
             }
             default:
-                log.debug("Ignored unexpected tag type: " + currentTag);
+                log.debugf("Ignored unexpected tag type: %d", currentTag);
                 break;
             }
         }
