@@ -59,7 +59,7 @@ public final class FBClob implements Clob, NClob {
 	 * </p>
 	 */
 	@Override
-	public void truncate(long param1) throws SQLException {
+	public void truncate(long len) throws SQLException {
 		throw new FBDriverNotCapableException("Method truncate(long) is not supported");
 	}
 
@@ -153,12 +153,12 @@ public final class FBClob implements Clob, NClob {
 	}
 
 	@Override
-	public Writer setCharacterStream(long position) throws SQLException {
-		if (position < 1) {
+	public Writer setCharacterStream(long pos) throws SQLException {
+		if (pos < 1) {
 			throw new SQLNonTransientException("You can't start before the beginning of the blob",
 					SQLStateConstants.SQL_STATE_INVALID_ARG_VALUE);
 		}
-		if (position > 1) {
+		if (pos > 1) {
 			throw new FBDriverNotCapableException("Offset start positions are not supported.");
 		}
 		return wrappedBlob.config().createWriter(
