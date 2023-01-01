@@ -70,8 +70,6 @@ specify them on the commandline (using `-P<prop>=<value>`), or in a file
 
 Important properties to override are:
 
-- `pandoc.app` - the path to the pandoc executable used for the FAQ and release
-notes (defaults to `pandoc`)
 - `test.user` - the user to use for tests (defaults to `sysdba`); this user must
 have privileges to create databases and users
 - `test.password` - the password for user of previous property (defaults to 
