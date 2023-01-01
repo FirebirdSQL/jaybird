@@ -151,6 +151,7 @@ task dist(type: Zip) {
     }
     from('.') {
         include 'CONTRIBUTING.md'
+        include 'SECURITY.md'
     }
     from(configurations.runtimeClasspath) {
         into 'lib'
