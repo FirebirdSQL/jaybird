@@ -18,29 +18,29 @@
 [#maven]
 === Maven
 
-////
-TODO Hidden for now
 [#jaybird-5]
 ==== Jaybird 5
 
-Jaybird 5 is in development and not yet available from Maven central:
+Jaybird 5 is available on Maven Central:
 
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`,
-version:: `5.0.0.javaXX` (where `XX` is `7`, `8` or `11`)
+version:: `{version_simple}.javaXX{version_tag}` (where `XX` is `11` or `8`)
+
+NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
 
 Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18`) is no longer provided.
 Please make sure you use the `jaybird` artifactId.
 
-For example, for Java 8:
+For example, for Java 11:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>5.0.0.java8</version>
+    <version>{version_example}</version>
 </dependency>
 ----
 
@@ -54,29 +54,28 @@ If you want to use Type 2 support (native or embedded), you need to explicitly i
     <version>5.12.1</version>
 </dependency>
 ----
-////
 
 [#jaybird-4]
 ==== Jaybird 4
 
-Jaybird 4 is available from Maven central:
+Jaybird 4 is available from Maven Central:
 
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
-version:: `4.0.7.javaXX` (where `XX` is `7`, `8` or `11`)
+version:: `4.0.7.javaXX` (where `XX` is `11`, `8` or `7`)
 
-For backwards compatibility, we also provide a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18` or `java11`.
+For backwards compatibility, we also provide a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17` or `jdk18`.
 However, we recommend switching to the `jaybird` artifact.
 
-For example, for Java 8:
+For example, for Java 11:
 
 [source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java8</version>
+    <version>4.0.8.java11</version>
 </dependency>
 ----
 
@@ -87,7 +86,7 @@ If your application is deployed to a Java EE application server, you will need t
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java8</version>
+    <version>4.0.8.java11</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -124,11 +123,11 @@ If you want to use Type 2 support (native, local or embedded), you need to expli
 Jaybird 3 is end-of-life and will receive no further updates.
 We recommend upgrading to <<jaybird-4>>.
 
-Jaybird 3 is available from Maven central:
+Jaybird 3 is available from Maven Central:
 
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
-artifactId:: `jaybird-XX` (where `XX` is `jdk17` or `jdk18`)
+artifactId:: `jaybird-XX` (where `XX` is `jdk18` or `jdk17`)
 version:: `3.0.12`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id `jaybird`.

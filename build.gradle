@@ -125,7 +125,7 @@ asciidoctorj {
             'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
             'version_tag': project.'version.tag',
-            'version_example': "${project.'version.simple'}.java8${project.'version.tag'}",
+            'version_example': "${project.'version.simple'}.java11${project.'version.tag'}",
             'stylesdir': file('src/docs/theme/jaybird-html'),
             'stylesheet': 'firebird.css',
             'docinfo': 'shared',
