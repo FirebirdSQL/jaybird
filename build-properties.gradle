@@ -21,27 +21,11 @@ ext.'build.id' = buildTime.format('yyyyMMddHHmm')
 ext.YEAR = buildTime.format("yyyy")
 
 // Build profile (Java version specific)
-if (findProperty('buildProfile') == 'java17') {
-    println 'Build profile: Java 17'
-    ext.'maven.jdkversion' = 'java17'
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    ext.'specification.version' = '4.3'
-} else if (findProperty('buildProfile') == 'java8') {
-    println 'Build profile: Java 8'
-    ext.buildProfile = 'java8'
-    ext.'maven.jdkversion' = 'java8'
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-    ext.'specification.version' = '4.2'
-} else {
-    // Default to Java 11
-    println 'Build profile: Java 11'
-    ext.'maven.jdkversion' = 'java11'
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-    ext.'specification.version' = '4.3'
-}
+println 'Build profile: Java 17'
+ext.'maven.jdkversion' = 'java17'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+ext.'specification.version' = '4.3'
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
 ext.'version.maven' = "${project.'version.simple'}.${project.'maven.jdkversion'}${project.'version.tag'}".toString()

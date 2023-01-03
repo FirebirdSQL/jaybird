@@ -4,12 +4,6 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 /*
   Gradle build script for Jaybird - Firebird JDBC driver.
 
-  Define target Java version:
-  - -PbuildProfile=java8           : Java 8  (supported)
-  - -PbuildProfile=java11 or
-    not specified or unknown value : Java 11 (supported)
-  - -PbuildProfile=java17          : Java 17 (for compatibility testing only)
-
   Uploading archives:
 
   publish -PcredentialsPassphrase=<credentials password>
@@ -82,9 +76,7 @@ dependencies {
 sourceSets {
     main {
         java {
-            srcDirs = findProperty('buildProfile') == 'java8'
-                    ? ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice']
-                    : ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
+            srcDirs = ['src/main', 'src/extern', 'src/jna-client', 'src/openoffice', 'src/chacha_j11']
         }
         resources {
             srcDirs = ['src/resources']
@@ -181,14 +173,7 @@ javadoc {
     options.docTitle = project.capitalizedName
     options.bottom = "Copyright &copy; 2001-${project.YEAR} Jaybird (Firebird JDBC) team. All rights reserved."
     def currentJavaVersion = JavaVersion.current()
-    if (currentJavaVersion.isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-
-        if (currentJavaVersion.isJava11Compatible() && !currentJavaVersion.isCompatibleWith(JavaVersion.VERSION_13)) {
-            // Ensure search index works correctly
-            options.addBooleanOption('-no-module-directories', true)
-        }
-    }
+    options.addBooleanOption('html5', true)
     options.addBooleanOption('Xdoclint:none', true)
     exclude 'org/firebirdsql/jdbc/oo/**'
 }
