@@ -25,16 +25,15 @@ import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.jaybird.Version;
 import org.firebirdsql.jaybird.props.InvalidPropertyValueException;
-import org.firebirdsql.jaybird.props.PropertyNames;
 import org.firebirdsql.jaybird.xca.FBManagedConnectionFactory;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,32 +50,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FBDriver implements FirebirdDriver {
 
     private static final Logger log;
-
-    @Deprecated
-    public static final String CHARSET = PropertyNames.charSet;
-    @Deprecated
-    public static final String USER = PropertyNames.user;
-    /**
-     * @deprecated Use {@link PropertyNames#user}
-     */
-    @Deprecated
-    public static final String USER_NAME = "user_name";
-    @Deprecated
-    public static final String PASSWORD = PropertyNames.password;
-    @Deprecated
-    public static final String DATABASE = FBConnectionProperties.DATABASE_PROPERTY;
-    /**
-     * @deprecated Use {@link PropertyNames#blobBufferSize}
-     */
-    @Deprecated
-    public static final String BLOB_BUFFER_LENGTH = "blob_buffer_length";
-    /**
-     * @deprecated Use {@link PropertyNames#tpbMapping}
-     */
-    @Deprecated
-    public static final String TPB_MAPPING = "tpb_mapping";
-
-    private static final String URL_CHARSET = "UTF-8";
 
     /*
      * @todo implement the default subject for the
@@ -336,12 +309,12 @@ public class FBDriver implements FirebirdDriver {
      *         The value to decode
      * @return The decoded value
      * @throws SQLException
-     *         If decoding fails (failures of {@link URLDecoder#decode(String, String)}
+     *         If decoding fails (failures of {@link URLDecoder#decode(String, java.nio.charset.Charset)}
      */
     private static String urlDecode(String encodedValue, String url) throws SQLException {
         try {
-            return URLDecoder.decode(encodedValue, URL_CHARSET);
-        } catch (RuntimeException | UnsupportedEncodingException e) {
+            return URLDecoder.decode(encodedValue, StandardCharsets.UTF_8);
+        } catch (RuntimeException e) {
             // NOTE: The UnsupportedEncodingException shouldn't occur because UTF-8 support is required in Java
             throw new FbExceptionBuilder()
                     .nonTransientConnectionException(JaybirdErrorCodes.jb_invalidConnectionString)

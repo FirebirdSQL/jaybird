@@ -1060,12 +1060,6 @@ public class FBConnection implements FirebirdConnection {
         return getGDSHelper().inTransaction();
     }
 
-    @Deprecated
-    @Override
-    public String getIscEncoding() throws SQLException {
-        return getGDSHelper().getIscEncoding();
-    }
-
     public void addWarning(SQLWarning warning) {
         try (LockCloseable ignored = withLock()) {
             // TODO: Find way so this method can be protected (or less visible) again.

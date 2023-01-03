@@ -27,6 +27,7 @@ import org.firebirdsql.jdbc.FBDataSource;
 
 import javax.naming.*;
 import javax.sql.DataSource;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -50,6 +51,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
         implements DataSource, Serializable, Referenceable {
 
+    @Serial
     private static final long serialVersionUID = 3156578540634970427L;
     static final String REF_DESCRIPTION = "description";
     static final String REF_MCF = "mcf";
@@ -86,30 +88,6 @@ public class FBSimpleDataSource extends AbstractConnectionPropertiesDataSource
      */
     FBSimpleDataSource(FBManagedConnectionFactory mcf) {
         this.mcf = mcf;
-    }
-
-    /**
-     * Get buffer length for the BLOB fields.
-     *
-     * @return length of BLOB buffer.
-     * @deprecated Use {@link #getBlobBufferSize()}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public Integer getBlobBufferLength() {
-        return getBlobBufferSize();
-    }
-
-    /**
-     * Set BLOB buffer length. This value influences the performance when
-     * working with BLOB fields.
-     *
-     * @param length
-     *         new length of the BLOB buffer.
-     * @deprecated Use {@link #setBlobBufferSize(int)}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public void setBlobBufferLength(Integer length) {
-        setBlobBufferSize(length);
     }
 
     @Override

@@ -26,7 +26,6 @@ package org.firebirdsql.jdbc;
 
 import org.firebirdsql.gds.TransactionParameterBuffer;
 import org.firebirdsql.gds.ng.FbDatabase;
-import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.util.InternalApi;
 
 import java.sql.Blob;
@@ -40,43 +39,12 @@ import java.sql.SQLException;
  */
 public interface FirebirdConnection extends Connection {
 
-    @Deprecated
-    int TPB_READ_COMMITTED = TpbItems.isc_tpb_read_committed;
-    @Deprecated
-    int TPB_CONCURRENCY = TpbItems.isc_tpb_concurrency;
-    @Deprecated
-    int TPB_CONSISTENCY = TpbItems.isc_tpb_consistency;
-
-    @Deprecated
-    int TPB_READ = TpbItems.isc_tpb_read;
-    @Deprecated
-    int TPB_WRITE = TpbItems.isc_tpb_write;
-
-    @Deprecated
-    int TPB_WAIT = TpbItems.isc_tpb_wait;
-    @Deprecated
-    int TPB_NOWAIT = TpbItems.isc_tpb_nowait;
-
-    @Deprecated
-    int TPB_REC_VERSION = TpbItems.isc_tpb_rec_version;
-    @Deprecated
-    int TPB_NO_REC_VERSION = TpbItems.isc_tpb_no_rec_version;
-
     /**
      * {@inheritDoc}
      *
      * @return instance of {@link FirebirdBlob}.
      */
     Blob createBlob() throws SQLException;
-
-    /**
-     * Get current ISC encoding.
-     *
-     * @return current ISC encoding.
-     * @deprecated Will be removed in Jaybird 6
-     */
-    @Deprecated
-    String getIscEncoding() throws SQLException;
 
     /**
      * Set transaction parameters for the specified isolation level. They will

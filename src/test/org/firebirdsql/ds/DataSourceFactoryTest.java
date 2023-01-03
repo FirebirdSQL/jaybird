@@ -151,15 +151,14 @@ class DataSourceFactoryTest {
      * </ol>
      * </p>
      */
-    @SuppressWarnings("deprecation")
     @Test
     void testBuildFBConnectionPoolDataSource_nonStandardProperties() throws Exception {
         final FBConnectionPoolDataSource originalDS = new FBConnectionPoolDataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
-        originalDS.setNonStandardProperty("defaultTransactionIsolation",
+        originalDS.setProperty("defaultTransactionIsolation",
                 Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
-        originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
+        originalDS.setProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
         
         FBConnectionPoolDataSource newDS = (FBConnectionPoolDataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);
@@ -173,7 +172,8 @@ class DataSourceFactoryTest {
     /**
      * Tests reconstruction of a {@link FBXADataSource} using a reference.
      * <p>
-     * This test is done with a selection of properties set through the {@link FBXADataSource#setNonStandardProperty(String)} methods. It tests
+     * This test is done with a selection of properties set through the {@link FBXADataSource#setNonStandardProperty(String)}
+     * and {@link FBXADataSource#setProperty(String, String)} methods. It tests
      * <ol>
      * <li>If the reference returned has the right factory name</li>
      * <li>If the reference returned has the right classname</li>
@@ -183,15 +183,14 @@ class DataSourceFactoryTest {
      * </ol>
      * </p>
      */
-    @SuppressWarnings("deprecation")
     @Test
     void testBuildFBXADataSource_nonStandardProperties() throws Exception {
         final FBXADataSource originalDS = new FBXADataSource();
         
         originalDS.setNonStandardProperty("buffersNumber=127");
-        originalDS.setNonStandardProperty("defaultTransactionIsolation",
+        originalDS.setProperty("defaultTransactionIsolation",
                 Integer.toString(Connection.TRANSACTION_SERIALIZABLE));
-        originalDS.setNonStandardProperty("madeUpProperty", "madeUpValue");
+        originalDS.setProperty("madeUpProperty", "madeUpValue");
         Reference ref = originalDS.getReference();
         
         FBXADataSource newDS = (FBXADataSource)new DataSourceFactory().getObjectInstance(ref, null, null, null);

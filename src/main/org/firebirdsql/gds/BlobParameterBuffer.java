@@ -24,8 +24,6 @@
  */
 package org.firebirdsql.gds;
 
-import org.firebirdsql.jaybird.fb.constants.BpbItems;
-
 /**
  * Instance of this interface represents a BLOB Parameter Buffer from the
  * Firebird API documentation and specifies attributes for
@@ -37,35 +35,15 @@ import org.firebirdsql.jaybird.fb.constants.BpbItems;
  * Two features are available:
  * <ul>
  * <li>Specifying the source and target BLOB types (server uses BLOB filters to
- * perform the conversion)
+ * perform the conversion)</li>
  * <li>Specifying type of the BLOB - either segmented or stream. The only
  * visible to user difference between segmented and stream BLOBs is the fact
  * that "seek" operation is not defined for segmented BLOBs (see
  * {@link org.firebirdsql.gds.ng.FbBlob#seek(int, org.firebirdsql.gds.ng.FbBlob.SeekMode)}
- * for more details).
+ * for more details).</li>
  * </ul>
  */
 public interface BlobParameterBuffer extends ParameterBuffer {
-
-    @Deprecated
-    int SOURCE_TYPE             =  BpbItems.isc_bpb_source_type;
-    @Deprecated
-    int TARGET_TYPE             =  BpbItems.isc_bpb_target_type;
-
-    @Deprecated
-    int SOURCE_INTERP           =  BpbItems.isc_bpb_source_interp;
-    @Deprecated
-    int TARGET_INTERP           =  BpbItems.isc_bpb_target_interp;
-
-    @Deprecated
-    int FILTER_PARAMETER        =  BpbItems.isc_bpb_filter_parameter;
-
-    @Deprecated
-    int TYPE                    =  BpbItems.isc_bpb_type;
-    @Deprecated
-    int TYPE_SEGMENTED          =  BpbItems.TypeValues.isc_bpb_type_segmented;
-    @Deprecated
-    int TYPE_STREAM             =  BpbItems.TypeValues.isc_bpb_type_stream;
 
     /**
      * Set a void (valueless) parameter on this {@code BlobParameterBuffer}.

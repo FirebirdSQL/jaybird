@@ -31,6 +31,7 @@ import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 import org.firebirdsql.util.InternalApi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.*;
@@ -54,6 +55,7 @@ public final class GDSFactory {
      */
     private static final class ReversedStringComparator implements Comparator<String>, Serializable {
 
+        @Serial
         private static final long serialVersionUID = 8861240319376746440L;
 
         public int compare(String s1, String s2) {
@@ -274,21 +276,6 @@ public final class GDSFactory {
      */
     public static Set<String> getSupportedProtocols() {
         return Collections.unmodifiableSet(jdbcUrlToPluginMap.keySet());
-    }
-
-    /**
-     * Create JDBC URL for the specified GDS type and database path.
-     *
-     * @param gdsType
-     *         type of the plugin, to which operation will be delegated to.
-     * @param databasePath
-     *         path to the database.
-     * @return newly created JDBC URL.
-     * @deprecated Use {@link #getJdbcUrl(GDSType, DatabaseConnectionProperties)}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    public static String getJdbcUrl(GDSType gdsType, String databasePath) {
-        return getPlugin(gdsType).getDefaultProtocol() + databasePath;
     }
 
     /**

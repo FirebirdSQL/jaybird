@@ -276,42 +276,6 @@ public class FBEventManager implements EventManager {
     }
 
     @Override
-    @Deprecated
-    public void setDatabase(String database) {
-        setDatabaseName(database);
-    }
-
-    @Override
-    @Deprecated
-    public String getDatabase() {
-        return getDatabaseName();
-    }
-
-    @Override
-    @Deprecated
-    public String getHost() {
-        return getServerName();
-    }
-
-    @Override
-    @Deprecated
-    public void setHost(String host) {
-        setServerName(host);
-    }
-
-    @Override
-    @Deprecated
-    public int getPort() {
-        return getPortNumber();
-    }
-
-    @Override
-    @Deprecated
-    public void setPort(int port) {
-        setPortNumber(port);
-    }
-
-    @Override
     public WireCrypt getWireCryptAsEnum() {
         return connectionProperties.getWireCryptAsEnum();
     }

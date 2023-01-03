@@ -25,7 +25,6 @@
 package org.firebirdsql.gds.ng;
 
 import org.firebirdsql.jaybird.props.DatabaseConnectionProperties;
-import org.firebirdsql.jaybird.props.PropertyConstants;
 
 /**
  * Connection properties for the Firebird connection.
@@ -34,46 +33,6 @@ import org.firebirdsql.jaybird.props.PropertyConstants;
  * @since 3.0
  */
 public interface IConnectionProperties extends IAttachProperties<IConnectionProperties>, DatabaseConnectionProperties {
-
-    /**
-     * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.
-     */
-    String SESSION_TIME_ZONE_SERVER = PropertyConstants.SESSION_TIME_ZONE_SERVER;
-    @Deprecated
-    short DEFAULT_DIALECT = PropertyConstants.DEFAULT_DIALECT;
-    @Deprecated
-    int DEFAULT_BUFFERS_NUMBER = PropertyConstants.DEFAULT_PAGE_CACHE_SIZE;
-
-    /**
-     * Get the dialect of the client connection
-     * <p>
-     * NOTE: Implementer should take care to return {@link IConnectionProperties#DEFAULT_DIALECT} if
-     * the value hasn't been set yet.
-     * </p>
-     *
-     * @return SQL dialect of the client.
-     * @deprecated Use {@link #getSqlDialect()}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    default short getConnectionDialect() {
-        return (short) getSqlDialect();
-    }
-
-    /**
-     * Set the dialect of the client connection
-     * <p>
-     * NOTE: Implementer should take care to use {@link #DEFAULT_DIALECT} if the
-     * value hasn't been set yet.
-     * </p>
-     *
-     * @param connectionDialect
-     *         SQL dialect of the client.
-     * @deprecated Use {@link #setSqlDialect(int)}; will be removed in Jaybird 6
-     */
-    @Deprecated
-    default void setConnectionDialect(short connectionDialect) {
-        setSqlDialect(connectionDialect);
-    }
 
     /**
      * @return An immutable version of this instance as an implementation of {@link IConnectionProperties}

@@ -283,17 +283,6 @@ class FBXADataSourceTest {
         assertEquals("someValue", ds.getProperty("someProperty"));
     }
 
-    /**
-     * Test if a property stored with {@link FBXADataSource#setNonStandardProperty(String, String)} is retrievable.
-     */
-    @SuppressWarnings("deprecation")
-    @Test
-    void testSetNonStandardProperty_twoParam() {
-        ds.setNonStandardProperty("someProperty", "someValue");
-
-        assertEquals("someValue", ds.getProperty("someProperty"));
-    }
-
     @Test
     void enableWireCompression() throws Exception {
         assumeThat("Test only works with pure java connections", FBTestProperties.GDS_TYPE, isPureJavaType());

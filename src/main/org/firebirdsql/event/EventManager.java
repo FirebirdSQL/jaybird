@@ -36,6 +36,7 @@ import java.sql.SQLException;
  * @author <a href="mailto:gab_reid@users.sourceforge.net">Gabriel Reid</a>
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  */
+@SuppressWarnings("unused")
 public interface EventManager extends AttachmentProperties, AutoCloseable {
 
     /**
@@ -99,60 +100,6 @@ public interface EventManager extends AttachmentProperties, AutoCloseable {
      * @since 5
      */
     void setDatabaseName(String databaseName);
-
-    /**
-     * Sets the database path or url for the connection to the database.
-     *
-     * @param database
-     *         path or url for the connection to the database.
-     * @deprecated Use {@link #setDatabaseName(String)}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    void setDatabase(String database);
-
-    /**
-     * @return the database path or url for the connection to the database.
-     * @deprecated Use {@link #getDatabaseName()}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    String getDatabase();
-
-    /**
-     * @return the host for the connection to the database.
-     * @deprecated Use {@link #getServerName()}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    String getHost();
-
-    /**
-     * Sets the host for the connection to the database.
-     * <p>
-     * See {@link AttachmentProperties#setServerName(String)} for details.
-     * </p>
-     *
-     * @param host
-     *         for the connection to the database.
-     * @deprecated Use {@link #setServerName(String)}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    void setHost(String host);
-
-    /**
-     * @return the port for the connection to the database.
-     * @deprecated Use {@link #getPortNumber()}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    int getPort();
-
-    /**
-     * Sets the port for the connection to the database.
-     *
-     * @param port
-     *         for the connection to the database.
-     * @deprecated Use {@link #setPortNumber(int)}; will be removed in Jaybird 6 or later
-     */
-    @Deprecated
-    void setPort(int port);
 
     /**
      * Get the wire encryption level.

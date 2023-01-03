@@ -161,17 +161,6 @@ public final class FBManagedConnection implements ExceptionListener {
         return gdsHelper;
     }
 
-    /**
-     * Returns the {@code databaseName} property as configured on the {@code ManagedConnectionFactory}.
-     *
-     * @return database name
-     * @deprecated Will be removed in Jaybird 6; there is no direction replacement
-     */
-    @Deprecated
-    public String getDatabase() {
-        return mcf.getDatabaseName();
-    }
-
     public boolean isManagedEnvironment() {
         return managedEnvironment;
     }

@@ -373,22 +373,67 @@ The following constants have been removed in Jaybird 6 without deprecation:
 
 The following packages have been removed in Jaybird 6:
 
+* `org.firebirdsql.gds.impl.oo`
+* `org.firebirdsql.jdbc.oo`
 
 [#removal-of-deprecated-methods]
 ==== Removal of deprecated methods
 
 The following methods have been removed in Jaybird 6:
 
+* `FirebirdConnectionProperties` +
+Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
+** `getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
+** `setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
+** `getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`
+** `setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`
+** `getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`
+** `setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`
+* `IConnectionProperties`
+** `short getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`
+** `setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`
+* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
+* `EventManager`
+** `get/setHost`, use `get/setServerName`
+** `get/setPort`, use `get/setPortNumber`
+** `get/setDatabase`, use `get/setDatabaseName`
+* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
+* `FBManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
+* `GDSHelper.getIscEncoding()`;
+there is no replacement
+* `FirebirdConnection.getIscEncoding`;
+there is no replacement
+
 [#removal-of-deprecated-classes]
 ==== Removal of deprecated classes
 
 The following classes have been removed in Jaybird 6:
+
+* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
+* `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
 
 [#removal-of-deprecated-constants]
 ==== Removal of deprecated constants
 
 The following constants have been removed in Jaybird 6:
 
+* All public String constants in `FBDriver`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
+* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`.
+* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.SpbItems`.
+* `ISCConstants.isc_bpb_{asterisk}` that are BPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems`.
+* `ISCConstants.isc_bpb_type_segmented` and `ISCConstants.isc_bpb_type_stream`, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
+* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.DpbItems`.
+* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.SpbItems`.
+* All constants in `BlobParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.BpbItems` and `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`.
+* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
+* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
+The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
+* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API.
+* All constants in `IConnectionProperties`, use the equivalent constant from `org.firebirdsql.jaybird.props.PropertyConstants`, though this class is considered internal API.
 
 [#breaking-changes-internal-api]
 === Breaking changes internal API
@@ -409,79 +454,31 @@ If you are confronted with such a change, let us know on https://groups.google.c
 The following changes might cause issues, though we think this is unlikely:
 
 
+[#breaking-changes-for-jaybird-7]
+=== Breaking changes for Jaybird 7
 
-[#breaking-changes-for-jaybird-6]
-=== Breaking changes for Jaybird 6
+With Jaybird 7 the following breaking changes will be introduced.
 
-// TODO Remove This section once everything has been done / moved
-
-With Jaybird 6 the following breaking changes will be introduced.
-
-==== Dropping support for OOREMOTE (OpenOffice/LibreOffice driver)
-
-The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been deprecated in Jaybird 5 and will be removed in Jaybird 6.
-
-See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
-
-The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
-
-[#removal-of-deprecated-classes-packages-and-methods-6]
+[#removal-of-deprecated-classes-packages-and-methods-7]
 ==== Removal of deprecated classes, packages and methods
 
-[#removal-of-deprecated-methods-6]
+[#removal-of-deprecated-methods-7]
 ===== Removal of deprecated methods
 
-The following methods will be removed in Jaybird 6:
+The following methods will be removed in Jaybird 7:
 
-* `FirebirdConnectionProperties` +
-Changes to the `FirebirdConnectionProperties` interface affect the data source implementations in `org.firebirdsql.ds`, and `FBManagedConnectionFactory`.
-** `getDatabase()` and all its implementations, use `DatabaseConnectionProperties.getDatabaseName()`
-** `setDatabase(String)` and all its implementations, use `DatabaseConnectionProperties.setDatabaseName(String)`
-** `getNonStandardProperty(String)` and all its implementations, use `BaseProperties.getProperty(String)`
-** `setNonStandardProperty(String,String)` and all its implementations, use `BaseProperties.setProperty(String,String)`
-** `short getConnectionDialect()` and all its implementations, use `int DatabaseConnectionProperties.getSqlDialect()`
-** `getBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.getPageCacheSize`
-** `setBuffersNumber` and all its implementations, use `DatabaseConnectionProperties.setPageCacheSize`
-* `IConnectionProperties.setConnectionDialect(short)`, and all its implementations, use `DatabaseConnectionProperties.setSqlDialect(int)`
-* `FBSimpleDataSource.get/setBlobBufferLength`, use `get/setBlobBufferSize`
-* `EventManager.get/setHost`, use `get/setServerName`
-* `EventManager.get/setPort`, use `get/setPortNumber`
-* `GDSFactory.getJdbcUrl(GDSType, String)`, use `GDSFactory.getJdbcUrl(GDSType, DatabaseConnectionProperties)`
-* `ManagedConnection.getDatabase()`, there is no direct replacement, but the information can be obtained from the connection properties
-* `GDSHelper.getIscEncoding()`;
-there is no replacement
-** `FirebirdConnection.getIscEncoding`;
-there is no replacement
 
-[#removal-of-deprecated-classes-6]
+[#removal-of-deprecated-classes-7]
 ===== Removal of deprecated classes
 
-The following classes have been deprecated and will be removed in Jaybird 6:
+The following classes have been deprecated and will be removed in Jaybird 7:
 
-* `org.firebirdsql.gds.ng.listeners.DefaultDatabaseListener` -- implementing `DatabaseListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
-* `org.firebirdsql.gds.ng.listeners.DefaultStatementListener` -- implementing `StatementListener` is now sufficient as all methods in the interface now have a default implementation that does nothing
-* `org.firebirdsql.jdbc.FBConnectionDefaults`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants`, is considered internal API
 
-[#removal-of-deprecated-constants-6]
+[#removal-of-deprecated-constants-7]
 ==== Removal of deprecated constants
 
-The following constants have been deprecated and will be removed in Jaybird 6:
+The following constants have been deprecated and will be removed in Jaybird 7:
 
-* All public String constants in `FBDriver`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
-* `ISCConstants.isc_dpb_{asterisk}` that are DPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`.
-* `ISCConstants.isc_tpb_{asterisk}` that are TPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* `ISCConstants.isc_spb_{asterisk}` that are SPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.SpbItems`.
-* `ISCConstants.isc_bpb_{asterisk}` that are BPB items, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems`.
-* `ISCConstants.isc_bpb_type_segmented` and `ISCConstants.isc_bpb_type_stream`, the replacement is the constant with the same name in `org.firebirdsql.jaybird.fb.constants.DpbItems.TypeValues`
-* All constants in `DatabaseParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.DpbItems`.
-* All constants in `TransactionParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* All constants in `ServiceParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.SpbItems`.
-* All constants in `BlobParameterBuffer`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.BpbItems` and `org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues`
-* All `TPB_{asterisk}` constants in `FirebirdConnection`, use the equivalent constant from `org.firebirdsql.jaybird.fb.constants.TpbItems`.
-* All public String constants in `org.firebirdsql.jdbc.FBConnectionProperties`.
-The replacement for most constants can be found in `org.firebirdsql.jaybird.props.PropertyNames`, though some will be removed without replacement.
-* `GDSHelper.DEFAULT_BLOB_BUFFER_SIZE`, its replacement, `org.firebirdsql.jaybird.props.PropertyConstants.DEFAULT_BLOB_BUFFER_SIZE`, is considered internal API
 
 [#compatibility-notes]
 == Compatibility notes

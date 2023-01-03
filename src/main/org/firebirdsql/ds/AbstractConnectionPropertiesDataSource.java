@@ -64,18 +64,6 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
         FirebirdConnectionProperties.super.setDatabaseName(databaseName);
     }
 
-    @Deprecated
-    @Override
-    public String getDatabase() {
-        return FirebirdConnectionProperties.super.getDatabase();
-    }
-
-    @Deprecated
-    @Override
-    public void setDatabase(String database) {
-        FirebirdConnectionProperties.super.setDatabase(database);
-    }
-
     @Override
     public String getType() {
         return FirebirdConnectionProperties.super.getType();
@@ -464,20 +452,6 @@ public abstract class AbstractConnectionPropertiesDataSource extends RootCommonD
     @Override
     public void setUserName(String userName) {
         FirebirdConnectionProperties.super.setUserName(userName);
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public int getBuffersNumber() {
-        return FirebirdConnectionProperties.super.getBuffersNumber();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Deprecated
-    @Override
-    public void setBuffersNumber(int buffersNumber) {
-        FirebirdConnectionProperties.super.setBuffersNumber(buffersNumber);
     }
 
 }
