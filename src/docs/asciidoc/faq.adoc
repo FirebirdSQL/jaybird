@@ -471,7 +471,7 @@ Jaybird 4 and higher also support:
 [#open-officelibre-office-pure-java]
 === Open Office/Libre Office (Pure Java)
 
-Jaybird can be used together with OpenOffice and LibreOffice Base.
+Jaybird 5 and earlier can be used together with OpenOffice and LibreOffice Base.
 To address some compatibility issues (and differences in interpretation of JDBC specifications) a separate sub-protocol is used:
 
  jdbc:firebirdsql:oo://host[:port]/<database>
@@ -483,7 +483,7 @@ Jaybird 4 and higher also support:
 [NOTE]
 ====
 This URL format is deprecated with jaybird 5 and will be removed in Jaybird 6.
-As a replacement, use the "Firebird External" option in LibreOffice Base.
+As a replacement, use the "`Firebird External`" option in LibreOffice Base.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
 ====

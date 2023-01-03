@@ -4,7 +4,7 @@
 
 - Published: 2022-12-07
 - Implemented in: Jaybird 5 (deprecation)
-- Proposed for: Jaybird 6 (removal)
+- Implemented in: Jaybird 6 (removal)
 
 ## Type
 

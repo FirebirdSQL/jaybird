@@ -52,13 +52,13 @@ public interface DatabaseConnectionProperties extends AttachmentProperties {
      * but without the {@code jdbc:firebird[sql]:[subprotocol:]} prefix and without connection properties. Examples:
      * </p>
      * <ul>
-     * <li>//localhost/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>//localhost/employee &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>//localhost:3051/employee &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>localhost:employee &mdash; NATIVE, PURE_JAVA</li>
+     * <li>//localhost:3051/employee &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost/3051:employee &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>/path/to/your.fdb &mdash; NATIVE, EMBEDDED, PURE_JAVA, OOREMOTE (PURE_JAVA and OOREMOTE will use localhost
+     * <li>localhost/3051:employee &mdash; NATIVE, PURE_JAVA</li>
+     * <li>/path/to/your.fdb &mdash; NATIVE, EMBEDDED, PURE_JAVA (PURE_JAVA will use localhost
      * as {@code serverName}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
      * <li>C:\path\to\your.fdb &mdash; NATIVE, EMBEDDED (protocols like PURE_JAVA may attempt to connect to a server
      * called {@code C}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>

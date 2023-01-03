@@ -36,8 +36,6 @@ class GDSFactoryTest {
             "jdbc:firebird://localhost/mydb,           PURE_JAVA",
             "jdbc:firebirdsql:localhost:mydb,          PURE_JAVA",
             "jdbc:firebirdsql:java://localhost/mydb,   PURE_JAVA",
-            "jdbc:firebirdsql:oo://localhost/mydb,     OOREMOTE",
-            "jdbc:firebird:oo://localhost/mydb,        OOREMOTE",
             "jdbc:firebirdsql:native://localhost/mydb, NATIVE",
             "jdbc:firebird:native://localhost/mydb,    NATIVE",
             "jdbc:firebirdsql:native:localhost:mydb,   NATIVE",

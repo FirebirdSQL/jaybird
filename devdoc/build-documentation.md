@@ -86,8 +86,7 @@ tests perform verifications against the local filesystem.
 
 Properties for varying the type of connection tested:
 
-- `test.gds_type` - the type to test (`PURE_JAVA`, `EMBEDDED`, `NATIVE`, 
-`OOREMOTE`)
+- `test.gds_type` - the type to test (`PURE_JAVA`, `EMBEDDED`, `NATIVE`)
 - `test.jna.library.path` - path containing the Firebird client or a suitable
 Firebird embedded for the `NATIVE` and `EMBEDDED` tests
 

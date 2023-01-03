@@ -1227,9 +1227,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
      * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
-     * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles. This note does not
-     * apply to the {@code OOREMOTE} sub-protocol, which already restricts privileges to the current user and
-     * {@code PUBLIC}.
+     * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles.
      * </p>
      */
     @Override
@@ -1251,9 +1249,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
      * <p>
      * <b>NOTE:</b> This implementation returns <b>all</b> privileges, not just applicable to the current user. It is
      * unclear if this complies with the JDBC requirements. This may change in the future to only return only privileges
-     * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles. This note does not
-     * apply to the {@code OOREMOTE} sub-protocol, which already restricts privileges to the current user and
-     * {@code PUBLIC}.
+     * applicable to the current user, user {@code PUBLIC} and &mdash; maybe &mdash; active roles.
      * </p>
      */
     @Override
@@ -1610,7 +1606,7 @@ public class FBDatabaseMetaData implements FirebirdDatabaseMetaData {
 
     @Override
     public ResultSet getSchemas(String catalog, String schemaPattern) throws SQLException {
-        return GetSchemas.create(getDbMetadataMediator()).getSchemas(schemaPattern);
+        return GetSchemas.create(getDbMetadataMediator()).getSchemas();
     }
 
     @Override

@@ -276,6 +276,15 @@ See also <<support-for-firebird-25-dropped>>.
 
 Jaybird 6 supports Firebird version 3.0, 4.0, and provides tentative support for Firebird 5.0.
 
+[#ooremote-removed]
+=== OOREMOTE (OpenOffice/LibreOffice driver) removed
+
+The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been removed in Jaybird 6.
+
+See also https://github.com/FirebirdSQL/jaybird/tree/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal^].
+
+The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
+
 // TODO add major changes
 
 [#potentially-breaking-changes]
@@ -319,6 +328,13 @@ Jaybird 5 does not support Java versions before Java 17.
 You will need to upgrade to Java 17 or higher, or remain on Jaybird 5.
 
 Jaybird 5 will serve as a form of "`long-term support`" for Java 8 and 11, with maintenance releases at least until the release of Jaybird 7.
+
+[#support-ooremote-dropped]
+=== Support for jdbc:firebirdsql:oo: (OpenOffice/LibreOffice driver) dropped
+
+The OOREMOTE protocol (JDBC URL prefix `jdbc:firebird:oo` and `jdbc:firebirdsql:oo`) has been removed in Jaybird 6.
+
+The recommended replacement is to use LibreOffice and the builtin "`Firebird External`" connection option in LibreOffice Base, instead of the "`JDBC`" option with Jaybird on the classpath of LibreOffice.
 
 // TODO Document compatibility issues
 
@@ -380,6 +396,12 @@ The following constants have been removed in Jaybird 6:
 The following breaking changes were made to the internal API, like the GDS-ng API in `org.firebirdsql.gds.ng` and sub-packages.
 These changes are primarily interesting for implementers of custom GDS-ng implementations or forks of Jaybird, or people using these low-level APIs directly.
 
+[NOTE]
+====
+Only changes we think are relevant to driver implementers or (internal) API users are documented.
+This means there may be undocumented changes to internal API.
+If you are confronted with such a change, let us know on https://groups.google.com/g/firebird-java[firebird-java], so we can take this into account when documenting future changes.
+====
 
 [#breaking-changes-unlikely]
 === Unlikely breaking changes

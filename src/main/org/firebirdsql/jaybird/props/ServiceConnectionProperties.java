@@ -49,17 +49,17 @@ public interface ServiceConnectionProperties extends AttachmentProperties {
      * interpretation depends on the protocol implementation ({@code type}). Examples:
      * </p>
      * <ul>
-     * <li>//localhost/ &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>//localhost/ &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example; will fail on Firebird 2.5 and earlier)</li>
-     * <li>localhost &mdash; NATIVE, PURE_JAVA, OOREMOTE</li><li>//localhost:3051/ &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>localhost &mdash; NATIVE, PURE_JAVA, </li><li>//localhost:3051/ &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example; will fail on Firebird 2.5 and earlier)</li>
-     * <li>//localhost/service_mgr &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>//localhost/service_mgr &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost:service_mgr &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>//localhost:3051/service_mgr &mdash; PURE_JAVA, OOREMOTE, NATIVE (for NATIVE, this format is parsed and
+     * <li>localhost:service_mgr &mdash; NATIVE, PURE_JAVA</li>
+     * <li>//localhost:3051/service_mgr &mdash; PURE_JAVA, NATIVE (for NATIVE, this format is parsed and
      * transformed to the next example)</li>
-     * <li>localhost/3051:service_mgr &mdash; NATIVE, PURE_JAVA, OOREMOTE</li>
-     * <li>service_mgr &mdash; NATIVE, EMBEDDED, PURE_JAVA, OOREMOTE (PURE_JAVA and OOREMOTE will use localhost
+     * <li>localhost/3051:service_mgr &mdash; NATIVE, PURE_JAVA</li>
+     * <li>service_mgr &mdash; NATIVE, EMBEDDED, PURE_JAVA (PURE_JAVA will use localhost
      * as {@code serverName}, depending on the Firebird version and platform, NATIVE may use Firebird Embedded)</li>
      * <li>xnet://service_mgr &mdash; NATIVE (EMBEDDED will behave as NATIVE, protocols like PURE_JAVA may
      * attempt to connect to a server called {@code xnet}) TODO: Check if actually valid</li>
