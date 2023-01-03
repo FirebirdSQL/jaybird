@@ -28,7 +28,7 @@ targetCompatibility = JavaVersion.VERSION_17
 ext.'specification.version' = '4.3'
 
 ext.'version.simple' = "${project.'version.major'}.${project.'version.minor'}.${project.'version.revision'}".toString()
-ext.'version.maven' = "${project.'version.simple'}.${project.'maven.jdkversion'}${project.'version.tag'}".toString()
+ext.'version.maven' = "${project.'version.simple'}${project.'version.tag'}".toString()
 
 ext.'signing.password' = credentials.forKey('signing.password')
 ext.ossrhPassword = credentials.forKey('ossrhPassword')

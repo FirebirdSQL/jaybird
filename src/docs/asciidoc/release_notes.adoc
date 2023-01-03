@@ -229,6 +229,24 @@ For known issues, consult <<known-issues>>.
 
 For a full list of changes, see https://github.com/FirebirdSQL/jaybird/issues?q=label%3A%22fix-version%3A+Jaybird+6%22[Firebird tracker for Jaybird 6].
 
+[#jaybird-version-numbering]
+=== Changes in version numbering
+
+Jaybird 6 uses Java 17 as the minimum supported version.
+Our expectation is that Java version specific artifacts are no longer needed.
+As a consequence, the Java version has been dropped from the version number.
+The full version and naming convention is documented in https://github.com/FirebirdSQL/jaybird/blob/v5.0.0-beta-1/devdoc/jdp/jdp-2023-01-version-number-and-naming-scheme.md[jdp-2023-01: Version Number and Naming Scheme]
+
+As a result of these new naming conventions, the following has been changed:
+
+* Maven version: `6.0.0` (was `5.0.0.java8`)
+* Distribution zip: `jaybird-6.0.0.zip` (was `jaybird-5.0.0.java8.zip`)
+* Jaybird: `jaybird-6.0.0.jar` (was `jaybird-5.0.0.java8.jar`)
+* Jaybird sources: `jaybird-6.0.0-sources.jar` (was `jaybird-5.0.0.java8-sources.jar`)
+* Jaybird javadoc: `jaybird-6.0.0-javadoc.jar` (was `jaybird-5.0.0.java8-javadoc.jar`)
+
+Furthermore, the client name reported to Firebird 2.5 and higher has been changed from `Jaybird jaybird-5.0.0.java8` to `Jaybird jaybird-6.0.0`.
+
 [#java-support]
 === Java support
 
