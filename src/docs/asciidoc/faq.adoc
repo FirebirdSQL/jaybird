@@ -7,6 +7,14 @@
 :source-highlighter: prettify
 :toc: left
 :icons: font
+:jaybird5-full-version: 5.0.0
+:jaybird5-tag: -SNAPSHOT
+:jaybird5-template-version: {jaybird5-full-version}.<java>{jaybird5-tag}
+:jaybird5-example-version: {jaybird5-full-version}.java11{jaybird5-tag}
+:jaybird4-full-version: 4.0.8
+:jaybird4-template-version: {jaybird4-full-version}.<java>
+:jaybird4-example-version: {jaybird4-full-version}.java11
+:jaybird3-full-version: 3.0.12
 :sectnums:
 
 [#jaybird]
@@ -26,7 +34,7 @@ Jaybird 5 is available on Maven Central:
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`,
-version:: `{version_simple}.javaXX{version_tag}` (where `XX` is `11` or `8`)
+version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
 
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
 
@@ -40,7 +48,7 @@ For example, for Java 11:
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>{version_example}</version>
+    <version>{jaybird5-example-version}</version>
 </dependency>
 ----
 
@@ -63,30 +71,30 @@ Jaybird 4 is available from Maven Central:
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`
-version:: `4.0.7.javaXX` (where `XX` is `11`, `8` or `7`)
+version:: `{jaybird4-template-version}` (where `<java>` is `java11`, `java8` or `java7`)
 
 For backwards compatibility, we also provide a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17` or `jdk18`.
 However, we recommend switching to the `jaybird` artifact.
 
 For example, for Java 11:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java11</version>
+    <version>{jaybird4-example-version}</version>
 </dependency>
 ----
 
 If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided dependency:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird</artifactId>
-    <version>4.0.8.java11</version>
+    <version>{jaybird4-example-version}</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
@@ -128,30 +136,30 @@ Jaybird 3 is available from Maven Central:
 [horizontal]
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird-XX` (where `XX` is `jdk18` or `jdk17`)
-version:: `3.0.12`
+version:: `{jaybird3-full-version}`
 
 For ease of use, we also provide a Maven relocation artifact with artifact id `jaybird`.
 For Jaybird 3 this relocation artifact points to `jaybird-jdk18`.
 
 For example, for Java 8:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.12</version>
+    <version>{jaybird3-full-version}</version>
 </dependency>
 ----
 
 If your application is deployed to a Java EE application server, you will need to exclude the `javax.resource:connector-api` dependency, and add it as a provided dependency:
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>
     <artifactId>jaybird-jdk18</artifactId>
-    <version>3.0.12</version>
+    <version>{jaybird3-full-version}</version>
     <exclusions>
         <exclusion>
             <groupId>javax.resource</groupId>
