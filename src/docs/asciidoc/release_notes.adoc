@@ -26,6 +26,11 @@ Changes per Jaybird 5 release.
 See also <<whats-new-in-jaybird-5>>.
 For known issues, consult <<known-issues>>.
 
+[#jaybird-5-0-0-beta-1-changelog]
+=== Jaybird 5.0.0-beta-1
+
+Initial release for evaluation.
+
 [#known-issues]
 == Known issues
 
@@ -90,7 +95,7 @@ Feedback can be sent to the https://groups.google.com/g/firebird-java[Firebird-j
 [#supported-firebird-versions]
 === Supported Firebird versions
 
-Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.10, and 4.0.2, but should also support other Firebird versions from 2.5 and up.
+Jaybird {version_wo_target} was tested against Firebird 2.5.9, 3.0.10, and 4.0.2 and a recent snapshot of Firebird 5.0, but should also support other Firebird versions from 2.5 and up.
 
 This driver does not support InterBase servers due to Firebird-specific changes in the protocol and database attachment parameters that are sent to the server.
 
@@ -149,11 +154,13 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 
 Jaybird {version_wo_target} is available on Maven Central:
 
-Groupid: `org.firebirdsql.jdbc`, +
-Artifactid: `jaybird`, +
-Version: `{version_simple}.javaXX{version_tag}` (where `XX` is `8` or `11`).
+groupId: `org.firebirdsql.jdbc`, +
+artifactId: `jaybird`, +
+version: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`).
 
+ifeval::["{version_tag}" == "-SNAPSHOT"]
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
+endif::[]
 
 For example:
 
@@ -187,7 +194,7 @@ See also <<type-2-native-and-embedded-driver>>.
 
 You can download the latest versions from https://www.firebirdsql.org/en/jdbc-driver/
 
-At minimum Jaybird 5 requires `jaybird-{version_simple}.javaXX{version_tag}.jar`  (where `XX` is `8` or `11`).
+At minimum Jaybird 5 requires `jaybird-{version_simple}.<java>{version_tag}.jar`  (where `<java>` is `java11` or `java8`).
 
 For native or embedded support, you will need to include `jna-5.12.1.jar` on your classpath.
 See also <<type-2-native-and-embedded-driver>>.
@@ -200,12 +207,12 @@ Please make sure to read <<compatibility-changes,Compatibility changes>> before 
 [#maven-2]
 === Maven
 
-Change the version of the dependency to `{version_simple}.javaXX{version_tag}` (where `XX` is your Java version, `8` for Java 8 and `11` for Java 11).
+Change the version of the dependency to `{version_simple}.<java>{version_tag}` (where `<java>` is your Java version, `java11` for Java 11 and higher, and `java8` for Java 8).
 If you're still using the artifact id `jaybird-jdkXX`, change it to `jaybird`.
 
 When your Jaybird dependency defines the exclusion for `javax.resource:connector-api` (see below), you can remove it.
 
-[source,{.xml}]
+[source,xml]
 ----
 <exclusions>
     <exclusion>
@@ -219,7 +226,7 @@ For more detailed instructions, see also the information on Maven in <<getting-j
 
 If you use native or embedded, make sure to update your JNA dependency to version 5.12.1 (Jaybird 5 requires at least JNA 5.0).
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
@@ -234,8 +241,8 @@ If you use native or embedded, make sure to update your JNA dependency to versio
 If you manage your dependencies manually, you need to do the following:
 
 . Replace the Jaybird 4 library with the Jaybird 5 version
-** `jaybird-4.0.x.javaXX.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar` (where `XX` is `8` or `11`)
-** `jaybird-full-4.0.x.javaXX.jar` with `jaybird-{version_simple}.javaXX{version_tag}.jar`, the `jaybird-full` library no longer exists
+** `jaybird-4.0.x.<java>.jar` with `jaybird-{version_simple}.<java>{version_tag}.jar` (where `<java>` is `java11` or `java8`)
+** `jaybird-full-4.0.x.<java>.jar` with `jaybird-{version_simple}.<java>{version_tag}.jar`, the `jaybird-full` library no longer exists
 . Replace the `jna-5.5.0.jar` library with `jna-5.12.1.jar`
 +
 Only needed if you actually use native or embedded connections, otherwise remove JNA (assuming your application itself or other dependencies don't use it).
@@ -289,8 +296,8 @@ Jaybird 5 is the last version to support Java versions earlier than Java 17.
 [#firebird-support]
 === Firebird support
 
-Firebird versions 2.5, 3.0 and 4.0 are supported.
-Support for Firebird 5.0 is experimental.
+Jaybird 5 supports Firebird version 2.5, 3.0 and 4.0, and provides tentative support for Firebird 5.0.
+Firebird 5.0 will become fully supported in the first release after Firebird 5.0.0.
 
 Jaybird 5 is the last version to support Firebird 2.5.
 
@@ -1148,7 +1155,7 @@ If you want to use the Type 2 driver, or Firebird embedded, then you need to inc
 
 When using Maven, you need to specify the dependency on JNA yourself, as we don't depend on it by default (it is specified as an optional dependency):
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>net.java.dev.jna</groupId>
@@ -1162,7 +1169,7 @@ The `fbclient.dll`, `fbembed.dll`, `libfbclient.so`, or `libfbembed.so` need to 
 For Windows and Linux, you can add the `org.firebirdsql.jdbc:fbclient` dependency on your classpath to provide the native libraries for the `native` and `local` protocol.
 Be aware that this dependency does not support `embedded`.
 
-[source,{.xml}]
+[source,xml]
 ----
 <dependency>
     <groupId>org.firebirdsql.jdbc</groupId>

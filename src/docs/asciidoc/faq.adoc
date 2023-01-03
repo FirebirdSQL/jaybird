@@ -8,7 +8,7 @@
 :toc: left
 :icons: font
 :jaybird5-full-version: 5.0.0
-:jaybird5-tag: -SNAPSHOT
+:jaybird5-tag: -beta-1
 :jaybird5-template-version: {jaybird5-full-version}.<java>{jaybird5-tag}
 :jaybird5-example-version: {jaybird5-full-version}.java11{jaybird5-tag}
 :jaybird4-full-version: 4.0.8
