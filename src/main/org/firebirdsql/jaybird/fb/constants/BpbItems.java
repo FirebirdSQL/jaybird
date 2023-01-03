@@ -24,6 +24,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
+@SuppressWarnings("unused")
 public final class BpbItems {
 
     public static final int isc_bpb_version1 = 1;

@@ -30,6 +30,7 @@ package org.firebirdsql.jaybird.fb.constants;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 5
  */
+@SuppressWarnings("unused")
 public final class DpbItems {
 
     public static final int isc_dpb_cdd_pathname = 1;

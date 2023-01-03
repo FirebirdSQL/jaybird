@@ -28,6 +28,16 @@ import org.firebirdsql.jaybird.fb.constants.StandardBlobTypes;
 
 /**
  * Constants for Firebird features, parameter blocks and errors.
+ * <p>
+ * Some constants previously held in this interface have been moved to:
+ * <ul>
+ * <li>{@link org.firebirdsql.jaybird.fb.constants.DpbItems}</li>
+ * <li>{@link org.firebirdsql.jaybird.fb.constants.SpbItems}</li>
+ * <li>{@link org.firebirdsql.jaybird.fb.constants.TpbItems}</li>
+ * <li>{@link org.firebirdsql.jaybird.fb.constants.BpbItems}</li>
+ * <li>{@link org.firebirdsql.jaybird.fb.constants.BpbItems.TypeValues}</li>
+ * </ul>
+ * </p>
  *
  * @author <a href="mailto:alberola@users.sourceforge.net">Alejandro Alberola</a>
  * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
