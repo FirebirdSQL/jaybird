@@ -2,7 +2,7 @@
 
 ## Status
 
-- Published
+- Published: 2023-01-03
 - Implemented in: Jaybird 6
 
 ## Type
