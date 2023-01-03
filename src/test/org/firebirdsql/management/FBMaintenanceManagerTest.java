@@ -37,8 +37,11 @@ import java.util.List;
 
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
+import static org.firebirdsql.common.matchers.GdsTypeMatchers.isEmbeddedType;
+import static org.firebirdsql.common.matchers.MatcherAssume.assumeThat;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCode;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.errorCodeEquals;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -173,6 +176,7 @@ class FBMaintenanceManagerTest {
      */
     @Test
     void testForcedShutdown() throws Exception {
+        assumeThat("Test doesn't work correctly under embedded", GDS_TYPE, not(isEmbeddedType()));
         try (Connection conn = getConnectionViaDriverManager()) {
             createTestTable();
 

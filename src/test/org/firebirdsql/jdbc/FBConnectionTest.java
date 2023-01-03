@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -95,8 +96,9 @@ class FBConnectionTest {
      * Test if {@link FirebirdConnection#setTransactionParameters(int, int[])} method works correctly.
      */
     @SuppressWarnings("deprecation")
-    @Test
-    void testTpbMapping() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testTpbMapping(boolean useTpbOption) throws Exception {
         try (Connection conA = getConnectionViaDriverManager()) {
             executeCreateTable(conA, CREATE_TABLE);
 
@@ -112,29 +114,26 @@ class FBConnectionTest {
             try (FirebirdConnection conB = getConnectionViaDriverManager()) {
                 conB.setAutoCommit(false);
 
-                /*
+                if (useTpbOption) {
+                    // This is the correct way to set transaction parameters
+                    TransactionParameterBuffer tpb = conB.createTransactionParameterBuffer();
+                    tpb.addArgument(isc_tpb_read_committed);
+                    tpb.addArgument(isc_tpb_rec_version);
+                    tpb.addArgument(isc_tpb_write);
+                    tpb.addArgument(isc_tpb_nowait);
 
-                // This is the correct way to set transaction parameters
-                // However, we use deprecated methods to check the
-                // backward compatibility
-
-                TransactionParameterBuffer tpb = ((FirebirdConnection)conB).createTransactionParameterBuffer();
-                tpb.addArgument(TransactionParameterBuffer.READ_COMMITTED);
-                tpb.addArgument(TransactionParameterBuffer.REC_VERSION);
-                tpb.addArgument(TransactionParameterBuffer.WRITE);
-                tpb.addArgument(TransactionParameterBuffer.NOWAIT);
-
-                ((FirebirdConnection)conB).setTransactionParameters(tpb);
-                */
-
-                conB.setTransactionParameters(
-                        Connection.TRANSACTION_READ_COMMITTED,
-                        new int[] {
-                                isc_tpb_read_committed,
-                                isc_tpb_rec_version,
-                                isc_tpb_write,
-                                isc_tpb_nowait
-                        });
+                    conB.setTransactionParameters(Connection.TRANSACTION_READ_COMMITTED, tpb);
+                } else {
+                    // This is the deprecated method, tested to check the backward compatibility
+                    conB.setTransactionParameters(
+                            Connection.TRANSACTION_READ_COMMITTED,
+                            new int[] {
+                                    isc_tpb_read_committed,
+                                    isc_tpb_rec_version,
+                                    isc_tpb_write,
+                                    isc_tpb_nowait
+                            });
+                }
                 conB.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 
                 try (Statement stmtA = conA.createStatement();

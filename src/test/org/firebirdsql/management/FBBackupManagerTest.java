@@ -25,6 +25,7 @@ import org.firebirdsql.gds.impl.GDSHelper;
 import org.firebirdsql.gds.impl.GDSType;
 import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.jdbc.FBConnection;
+import org.firebirdsql.util.FirebirdSupportInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -286,7 +287,8 @@ class FBBackupManagerTest {
 
     @Test
     void testBackupReplace_customSecurityDb() throws Exception {
-        assumeTrue(getDefaultSupportInfo().supportsCustomSecurityDb(), "Requires custom security DB support");
+        FirebirdSupportInfo supportInfo = getDefaultSupportInfo();
+        assumeTrue(supportInfo.supportsCustomSecurityDb(), "Requires custom security DB support");
         try (FBManager mgr = new FBManager(getGdsType())) {
             if (getGdsType() == GDSType.getType("PURE_JAVA") || getGdsType() == GDSType.getType("NATIVE")) {
                 mgr.setServer(DB_SERVER_URL);
@@ -304,6 +306,9 @@ class FBBackupManagerTest {
         backupManager.setDatabase("test_with_custom_sec_db");
         backupManager.setUser("custom_sec");
         backupManager.setPassword("custom_sec");
+        if (supportInfo.isVersionEqualOrAbove(3, 0) && supportInfo.isVersionBelow(4, 0)) {
+            backupManager.setRoleName("RDB$ADMIN");
+        }
         backupManager.backupDatabase();
 
         backupManager.setRestoreReplace(true);
