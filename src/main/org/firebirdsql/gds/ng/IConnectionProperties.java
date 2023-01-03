@@ -37,7 +37,10 @@ public interface IConnectionProperties extends IAttachProperties<IConnectionProp
 
     /**
      * Value for {@code sessionTimeZone} that indicates the session time zone should not be set and use server default.
+     *
+     * @deprecated will be removed in Jaybird 6, use {@link org.firebirdsql.jaybird.props.PropertyConstants#SESSION_TIME_ZONE_SERVER}
      */
+    @Deprecated
     String SESSION_TIME_ZONE_SERVER = PropertyConstants.SESSION_TIME_ZONE_SERVER;
     @Deprecated
     short DEFAULT_DIALECT = PropertyConstants.DEFAULT_DIALECT;

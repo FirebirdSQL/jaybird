@@ -33,7 +33,7 @@ import java.sql.SQLException;
 import java.util.TimeZone;
 
 import static java.util.Objects.requireNonNull;
-import static org.firebirdsql.gds.ng.IConnectionProperties.SESSION_TIME_ZONE_SERVER;
+import static org.firebirdsql.jaybird.props.PropertyConstants.SESSION_TIME_ZONE_SERVER;
 
 /**
  * Helper class for all GDS-related operations.
