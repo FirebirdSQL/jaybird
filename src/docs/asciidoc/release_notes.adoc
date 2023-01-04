@@ -360,6 +360,10 @@ The following methods have been removed in Jaybird 6 without deprecation:
 The following classes have been removed in Jaybird 6 without deprecation:
 
 
+The following classes are no longer accessible in Jaybird 6:
+
+* `RowValueBuilder` is now package private.
+
 [#removal-of-constants-without-deprecation]
 ==== Removal of constants without deprecation
 

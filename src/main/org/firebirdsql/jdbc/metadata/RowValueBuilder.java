@@ -22,6 +22,7 @@ import org.firebirdsql.gds.ng.DatatypeCoder;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
 
+import java.io.Serial;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,9 +40,7 @@ import java.util.Map;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @see org.firebirdsql.gds.ng.fields.RowValue#of(RowDescriptor, byte[][])
  */
-public final class RowValueBuilder {
-
-    // TODO Make package private once all references in org.firebirdsql.jdbc are gone
+final class RowValueBuilder {
 
     private final RowDescriptor rowDescriptor;
     private final DatatypeCoder datatypeCoder;
@@ -57,7 +56,7 @@ public final class RowValueBuilder {
      * @param rowDescriptor
      *         The RowDescriptor for the row(s) to be created
      */
-    public RowValueBuilder(RowDescriptor rowDescriptor) {
+    RowValueBuilder(RowDescriptor rowDescriptor) {
         this.rowDescriptor = rowDescriptor;
         rowValue = rowDescriptor.createDefaultFieldValues();
         datatypeCoder = rowDescriptor.getDatatypeCoder();
@@ -72,7 +71,7 @@ public final class RowValueBuilder {
      * @throws IndexOutOfBoundsException
      *         When {@code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
-    public RowValueBuilder setFieldIndex(int index) {
+    RowValueBuilder setFieldIndex(int index) {
         checkBounds(index);
         currentIndex = index;
         return this;
@@ -86,7 +85,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @see #setFieldIndex(int)
      */
-    public RowValueBuilder at(int index) {
+    RowValueBuilder at(int index) {
         return setFieldIndex(index);
     }
 
@@ -97,7 +96,7 @@ public final class RowValueBuilder {
      *         Data
      * @return this builder
      */
-    public RowValueBuilder set(byte[] fieldData) {
+    RowValueBuilder set(byte[] fieldData) {
         rowValue.setFieldData(currentIndex, fieldData);
         return this;
     }
@@ -110,7 +109,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setInt(int value) {
+    RowValueBuilder setInt(int value) {
         return set(datatypeCoder.encodeInt(value));
     }
 
@@ -122,7 +121,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setInt(Number value) {
+    RowValueBuilder setInt(Number value) {
         if (value != null) {
             return setInt(value.intValue());
         } else {
@@ -139,7 +138,7 @@ public final class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    public RowValueBuilder setShort(int value) {
+    RowValueBuilder setShort(int value) {
         return setShort((short) value);
     }
 
@@ -152,7 +151,7 @@ public final class RowValueBuilder {
      * @see #setShort(short)
      * @since 5
      */
-    public RowValueBuilder setShort(Number value) {
+    RowValueBuilder setShort(Number value) {
         if (value != null) {
             return setShort(value.shortValue());
         } else {
@@ -169,7 +168,7 @@ public final class RowValueBuilder {
      * @see #setShort(int)
      * @since 5
      */
-    public RowValueBuilder setShort(short value) {
+    RowValueBuilder setShort(short value) {
         return set(datatypeCoder.encodeShort(value));
     }
 
@@ -181,7 +180,7 @@ public final class RowValueBuilder {
      * @return this builder
      * @since 5
      */
-    public RowValueBuilder setString(String value) {
+    RowValueBuilder setString(String value) {
         return set(value != null
                 ? stringCache.computeIfAbsent(value, datatypeCoder::encodeString)
                 : null);
@@ -196,7 +195,7 @@ public final class RowValueBuilder {
      * @throws java.lang.IndexOutOfBoundsException
      *         When @{code index} is not between 0 (inclusive) and {@link #getSize()} (exclusive)
      */
-    public byte[] get(int index) {
+    byte[] get(int index) {
         checkBounds(index);
         return rowValue.getFieldData(index);
     }
@@ -206,7 +205,7 @@ public final class RowValueBuilder {
      *
      * @return this builder.
      */
-    public RowValueBuilder reset() {
+    RowValueBuilder reset() {
         rowValue = rowDescriptor.createDefaultFieldValues();
         return this;
     }
@@ -214,7 +213,7 @@ public final class RowValueBuilder {
     /**
      * @return Number of fields in the row
      */
-    public int getSize() {
+    int getSize() {
         return rowDescriptor.getCount();
     }
 
@@ -227,7 +226,7 @@ public final class RowValueBuilder {
      * @return The row value object
      * @see #reset()
      */
-    public RowValue toRowValue(boolean initialize) {
+    RowValue toRowValue(boolean initialize) {
         try {
             if (initialize) {
                 rowValue.initializeFields();
@@ -246,9 +245,11 @@ public final class RowValueBuilder {
         }
     }
 
-    private static class LruEncodedStringCache extends LinkedHashMap<String, byte[]> {
+    private static final class LruEncodedStringCache extends LinkedHashMap<String, byte[]> {
 
+        @Serial
         private static final long serialVersionUID = -901927526404254328L;
+
         private final int maxCapacity;
 
         private LruEncodedStringCache(int maxCapacity) {
