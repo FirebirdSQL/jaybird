@@ -152,20 +152,6 @@ public abstract class AbstractFbTransaction implements FbTransaction {
         return database.withLock();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            try {
-                if (getState() == TransactionState.ACTIVE)
-                    rollback();
-            } catch (Throwable t) {
-                // ignore TODO: Log?
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
     protected FbDatabase getDatabase() {
         return database;
     }

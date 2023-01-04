@@ -20,13 +20,17 @@ package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.ptr.IntByReference;
 import org.firebirdsql.gds.ng.AbstractFbTransaction;
+import org.firebirdsql.gds.ng.FbDatabase;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.TransactionState;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
@@ -43,6 +47,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     private final IntByReference handle;
     private final ISC_STATUS[] statusVector = new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE];
     private final FbClientLibrary clientLibrary;
+    private final Cleaner.Cleanable cleanable;
 
     /**
      * Initializes AbstractFbTransaction.
@@ -59,6 +64,7 @@ public class JnaTransaction extends AbstractFbTransaction {
         super(initialState, database);
         handle = transactionHandle;
         clientLibrary = database.getClientLibrary();
+        cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(transactionHandle, database));
     }
 
     @Override
@@ -84,6 +90,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             clientLibrary.isc_commit_transaction(statusVector, handle);
             processStatusVector();
             switchState(TransactionState.COMMITTED);
+            cleanable.clean();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -109,6 +116,7 @@ public class JnaTransaction extends AbstractFbTransaction {
             clientLibrary.isc_rollback_transaction(statusVector, handle);
             processStatusVector();
             switchState(TransactionState.ROLLED_BACK);
+            cleanable.clean();
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -178,5 +186,44 @@ public class JnaTransaction extends AbstractFbTransaction {
 
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, null);
+    }
+
+    private static final class CleanupAction implements Runnable, DatabaseListener {
+
+        private final IntByReference handle;
+        private JnaDatabase database;
+
+        private CleanupAction(IntByReference handle, JnaDatabase database) {
+            this.handle = handle;
+            this.database = database;
+            database.addWeakDatabaseListener(this);
+        }
+
+        @Override
+        public void detached(FbDatabase database) {
+            this.database = null;
+            database.removeDatabaseListener(this);
+        }
+
+        @Override
+        public void run() {
+            final JnaDatabase database = this.database;
+            if (database == null) return;
+            this.database = null;
+            database.removeDatabaseListener(this);
+            if (handle.getValue() == 0 || !database.hasFeature(FbClientFeature.FB_DISCONNECT_TRANSACTION)) return;
+            try (LockCloseable ignored = database.withLock()) {
+                if (!database.isAttached()) return;
+                /*
+                 ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only
+                 happen when the connection itself was also GC'd, which means an attempt to roll back would likely fail
+                 anyway (and the server will perform a rollback eventually), so we don't perform any action other than
+                 fb_disconnect_transaction
+                */
+                database.getClientLibrary()
+                        .fb_disconnect_transaction(new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle);
+                // We intentionally ignore the status vector result
+            }
+        }
     }
 }

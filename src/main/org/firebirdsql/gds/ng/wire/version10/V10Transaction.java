@@ -187,4 +187,13 @@ public class V10Transaction extends AbstractFbTransaction implements FbWireTrans
             throw e;
         }
     }
+
+    /*
+     NOTE: V10Transaction does not perform any clean through a Cleaner, because there is realistically no option:
+     - ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only happen when
+       the connection itself was also GC'd, which means an attempt to roll back would likely fail anyway (and the server
+       will perform a rollback eventually)
+     - There is no wire protocol equivalent of fb_disconnect_transaction, so we can't release the handle if we wanted to
+    */
+
 }
