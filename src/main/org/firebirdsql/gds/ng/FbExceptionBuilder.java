@@ -317,9 +317,8 @@ public final class FbExceptionBuilder {
      * This is used by {@link #toFlatSQLException()} to find a more suitable error code.
      * </p>
      */
-    private static final Set<Integer> UNINTERESTING_ERROR_CODES =
-            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(0, isc_dsql_error, isc_dsql_line_col_error,
-                    isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err, isc_arith_except, isc_cancelled)));
+    private static final Set<Integer> UNINTERESTING_ERROR_CODES = Set.of(0, isc_dsql_error, isc_dsql_line_col_error,
+            isc_dsql_unknown_pos, isc_sqlerr, isc_dsql_command_err, isc_arith_except, isc_cancelled);
 
     /**
      * SQLState success is linked to some informational error message, we consider those 'not interesting' either.

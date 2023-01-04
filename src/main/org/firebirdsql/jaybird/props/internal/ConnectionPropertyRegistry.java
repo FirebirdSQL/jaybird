@@ -50,6 +50,8 @@ public final class ConnectionPropertyRegistry {
 
     // default access for test purposes
     ConnectionPropertyRegistry(Map<String, ConnectionProperty> connectionPropertiesMap) {
+        // Though the default implementation doesn't have null keys or values, there is no such requirement on the API
+        //noinspection Java9CollectionFactory
         this.connectionPropertiesMap = unmodifiableMap(new HashMap<>(connectionPropertiesMap));
     }
 

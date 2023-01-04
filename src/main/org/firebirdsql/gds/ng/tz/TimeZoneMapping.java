@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -361,7 +361,7 @@ public final class TimeZoneMapping {
                 zonesById[internalId] = timeZoneName != null ? timeZoneName : FALLBACK_ZONE;
             }
 
-            return Collections.unmodifiableList(Arrays.asList(zonesById));
+            return List.of(zonesById);
         } catch (Exception e) {
             LoggerFactory.getLogger(TimeZoneMapping.class).warn(
                     "Unable to load Firebird time zone id to name mapping, only offset timezone support will be "

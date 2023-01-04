@@ -23,6 +23,7 @@ import org.firebirdsql.gds.impl.TransactionParameterBufferImpl;
 import org.firebirdsql.jaybird.fb.constants.TpbItems;
 import org.firebirdsql.jaybird.props.internal.TransactionNameMapping;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -40,6 +41,7 @@ import static org.firebirdsql.jaybird.fb.constants.TpbItems.*;
  */
 public final class FBTpbMapper implements Serializable, Cloneable {
 
+    @Serial
     private static final long serialVersionUID = 1690658870275668176L;
 
     public static FBTpbMapper getDefaultMapper() {
@@ -74,8 +76,8 @@ public final class FBTpbMapper implements Serializable, Cloneable {
      */
     public static final String TRANSACTION_READ_COMMITTED = TransactionNameMapping.TRANSACTION_READ_COMMITTED;
 
-    private static final List<String> ISOLATION_LEVEL_NAMES = Collections.unmodifiableList(Arrays.asList(
-            TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED));
+    private static final List<String> ISOLATION_LEVEL_NAMES =
+            List.of(TRANSACTION_SERIALIZABLE, TRANSACTION_REPEATABLE_READ, TRANSACTION_READ_COMMITTED);
 
     // read uncommitted actually not supported
     /**
@@ -426,11 +428,10 @@ public final class FBTpbMapper implements Serializable, Cloneable {
             return true;
         }
 
-        if (!(obj instanceof FBTpbMapper)) {
+        if (!(obj instanceof FBTpbMapper that)) {
             return false;
         }
 
-        FBTpbMapper that = (FBTpbMapper) obj;
         boolean result = this.mapping.equals(that.mapping);
         result &= (this.defaultIsolationLevel == that.defaultIsolationLevel);
 

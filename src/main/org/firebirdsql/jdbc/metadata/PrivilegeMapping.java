@@ -18,8 +18,6 @@
  */
 package org.firebirdsql.jdbc.metadata;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,29 +28,25 @@ import java.util.Map;
  */
 public final class PrivilegeMapping {
 
-    private static final Map<String, String> PRIVILEGE_MAPPING;
-    static {
-        Map<String, String> tempMapping = new HashMap<>();
-        // NOTE: 'A' doesn't seem to be used by Firebird (maybe in older versions?)
-        tempMapping.put("A", "ALL");
-        tempMapping.put("D", "DELETE");
-        tempMapping.put("I", "INSERT");
-        tempMapping.put("R", "REFERENCES");
-        tempMapping.put("S", "SELECT");
-        tempMapping.put("U", "UPDATE");
+    private static final Map<String, String> PRIVILEGE_MAPPING = Map.ofEntries(
+            // NOTE: 'A' doesn't seem to be used by Firebird (maybe in older versions?)
+            Map.entry("A", "ALL"),
+            Map.entry("D", "DELETE"),
+            Map.entry("I", "INSERT"),
+            Map.entry("R", "REFERENCES"),
+            Map.entry("S", "SELECT"),
+            Map.entry("U", "UPDATE"),
 
-        tempMapping.put("C", "CREATE");
-        tempMapping.put("L", "ALTER");
-        tempMapping.put("O", "DROP");
-        
-        // Executing procedures/functions (unused in JDBC metadata)
-        tempMapping.put("X", "EXECUTE");
-        // Usage of object (unused in JDBC metadata)
-        tempMapping.put("G", "USAGE");
-        // User/object is a member of a ROLE (unused in JDBC metadata)
-        tempMapping.put("M", "MEMBEROF");
-        PRIVILEGE_MAPPING = Collections.unmodifiableMap(tempMapping);
-    }
+            Map.entry("C", "CREATE"),
+            Map.entry("L", "ALTER"),
+            Map.entry("O", "DROP"),
+
+            // Executing procedures/functions (unused in JDBC metadata)
+            Map.entry("X", "EXECUTE"),
+            // Usage of object (unused in JDBC metadata)
+            Map.entry("G", "USAGE"),
+            // User/object is a member of a ROLE (unused in JDBC metadata)
+            Map.entry("M", "MEMBEROF"));
 
     private PrivilegeMapping() {
         // no instances

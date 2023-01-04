@@ -45,8 +45,7 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
 
     private static final Logger log = LoggerFactory.getLogger(FbEmbeddedDatabaseFactory.class);
     // Note Firebird 3 embedded is fbclient + engine12
-    private static final List<String> LIBRARIES_TO_TRY =
-            Collections.unmodifiableList(Arrays.asList("fbembed", "fbclient"));
+    private static final List<String> LIBRARIES_TO_TRY = List.of("fbembed", "fbclient");
     private static final FbEmbeddedDatabaseFactory INSTANCE = new FbEmbeddedDatabaseFactory();
 
     @Override

@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Objects.requireNonNull;
 
@@ -46,7 +45,7 @@ public final class KnownServerKey {
 
     private KnownServerKey(String keyType, List<String> plugins, Map<String, byte[]> specificData) {
         this.keyType = requireNonNull(keyType, "keyType");
-        this.plugins = unmodifiableList(new ArrayList<>(requireNonNull(plugins, "plugins")));
+        this.plugins = List.copyOf(requireNonNull(plugins, "plugins"));
         this.specificData = specificData == null || specificData.isEmpty()
                 ? emptyMap()
                 : unmodifiableMap(specificData);

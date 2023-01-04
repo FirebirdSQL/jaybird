@@ -1,5 +1,5 @@
 /*
- * Firebird Open Source JavaEE Connector - JDBC Driver
+ * Firebird Open Source JDBC Driver
  *
  * Distributable under LGPL license.
  * You may obtain a copy of the License at http://www.gnu.org/copyleft/lgpl.html
@@ -18,8 +18,11 @@
  */
 package org.firebirdsql.ds;
 
-import static org.firebirdsql.util.ReflectionHelper.findMethod;
-import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
+import org.firebirdsql.gds.ng.LockCloseable;
+import org.firebirdsql.jdbc.FBSQLException;
+import org.firebirdsql.jdbc.FirebirdConnection;
+import org.firebirdsql.jdbc.SQLStateConstants;
+import org.firebirdsql.util.SQLExceptionChainBuilder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -29,16 +32,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.firebirdsql.gds.ng.LockCloseable;
-import org.firebirdsql.jdbc.FBSQLException;
-import org.firebirdsql.jdbc.FirebirdConnection;
-import org.firebirdsql.jdbc.SQLStateConstants;
-import org.firebirdsql.util.SQLExceptionChainBuilder;
+import static org.firebirdsql.util.ReflectionHelper.findMethod;
+import static org.firebirdsql.util.ReflectionHelper.getAllInterfaces;
 
 /**
  * InvocationHandler for the logical connection returned by FBPooledConnection.
@@ -261,14 +259,8 @@ class PooledConnectionHandler implements InvocationHandler {
     private final static Method CONNECTION_IS_CLOSED = findMethod(Connection.class, "isClosed", new Class[0]);
     private final static Method CONNECTION_CLOSE = findMethod(Connection.class, "close", new Class[0]);
     
-    private static final Set<String> STATEMENT_CREATION_METHOD_NAMES;
-    static {
-        Set<String> temp = new HashSet<>();
-        temp.add("createStatement");
-        temp.add("prepareCall");
-        temp.add("prepareStatement");
-        STATEMENT_CREATION_METHOD_NAMES = Collections.unmodifiableSet(temp);
-    }
+    private static final Set<String> STATEMENT_CREATION_METHOD_NAMES =
+            Set.of("createStatement", "prepareCall", "prepareStatement");
 
     // Object Methods
     private final static Method TO_STRING = findMethod(Object.class, "toString", new Class[0]);

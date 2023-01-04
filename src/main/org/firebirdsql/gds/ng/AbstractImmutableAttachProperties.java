@@ -53,6 +53,8 @@ public abstract class AbstractImmutableAttachProperties<T extends IAttachPropert
      *         Source to copy from
      */
     protected AbstractImmutableAttachProperties(IAttachProperties<T> src) {
+        // Though the default implementation doesn't have null keys or values, there is no such requirement on the API
+        //noinspection Java9CollectionFactory
         propValues = src instanceof AbstractImmutableAttachProperties
                 ? ((AbstractImmutableAttachProperties<T>) src).propValues
                 : unmodifiableMap(new HashMap<>(src.connectionPropertyValues()));

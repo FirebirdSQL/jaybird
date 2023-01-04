@@ -61,22 +61,22 @@ public final class FBEscapedFunctionHelper {
         final Map<String, SQLFunction> functionMap = new HashMap<>(71);
         /* Numeric Functions */
         Map<String, SQLFunction> numericFunctionMap = getNumericFunctions();
-        SUPPORTED_NUMERIC_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(numericFunctionMap.keySet()));
+        SUPPORTED_NUMERIC_FUNCTIONS = Set.copyOf(numericFunctionMap.keySet());
         functionMap.putAll(numericFunctionMap);
 
         /* String Functions */
         Map<String, SQLFunction> stringFunctionMap = getStringFunctions();
-        SUPPORTED_STRING_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(stringFunctionMap.keySet()));
+        SUPPORTED_STRING_FUNCTIONS = Set.copyOf(stringFunctionMap.keySet());
         functionMap.putAll(stringFunctionMap);
 
         /* Time and Date Functions */
         Map<String, SQLFunction> timeDateFunctionMap = getTimeDateFunctions();
-        SUPPORTED_TIME_DATE_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(timeDateFunctionMap.keySet()));
+        SUPPORTED_TIME_DATE_FUNCTIONS = Set.copyOf(timeDateFunctionMap.keySet());
         functionMap.putAll(timeDateFunctionMap);
 
         /* System Functions */
         Map<String, SQLFunction> systemFunctionMap = getSystemFunctions();
-        SUPPORTED_SYSTEM_FUNCTIONS = Collections.unmodifiableSet(new HashSet<>(systemFunctionMap.keySet()));
+        SUPPORTED_SYSTEM_FUNCTIONS = Set.copyOf(systemFunctionMap.keySet());
         functionMap.putAll(systemFunctionMap);
 
         /* Conversion Functions */
