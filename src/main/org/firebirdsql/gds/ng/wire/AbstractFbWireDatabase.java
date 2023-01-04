@@ -230,11 +230,16 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final void queueEvent(EventHandle eventHandle) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
-                asynchronousChannel = initAsynchronousChannel();
-                AsynchronousProcessor.getInstance().registerAsynchronousChannel(asynchronousChannel);
+            FbWireAsynchronousChannel channel = asynchronousChannel;
+            if (channel == null || !channel.isConnected()) {
+                var asynchronousProcessor = AsynchronousProcessor.getInstance();
+                if (channel != null) {
+                    asynchronousProcessor.unregisterAsynchronousChannel(channel);
+                }
+                channel = asynchronousChannel = initAsynchronousChannel();
+                asynchronousProcessor.registerAsynchronousChannel(channel);
             }
-            asynchronousChannel.queueEvent(eventHandle);
+            channel.queueEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;
@@ -245,12 +250,16 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
     public final void cancelEvent(EventHandle eventHandle) throws SQLException {
         try (LockCloseable ignored = withLock()) {
             checkAttached();
-            if (asynchronousChannel == null || !asynchronousChannel.isConnected()) {
+            FbWireAsynchronousChannel channel = asynchronousChannel;
+            if (channel == null || !channel.isConnected()) {
+                if (channel != null) {
+                    AsynchronousProcessor.getInstance().unregisterAsynchronousChannel(channel);
+                }
                 throw new FbExceptionBuilder()
                         .nonTransientException(JaybirdErrorCodes.jb_unableToCancelEventReasonNotConnected)
                         .toSQLException();
             }
-            asynchronousChannel.cancelEvent(eventHandle);
+            channel.cancelEvent(eventHandle);
         } catch (SQLException e) {
             exceptionListenerDispatcher.errorOccurred(e);
             throw e;

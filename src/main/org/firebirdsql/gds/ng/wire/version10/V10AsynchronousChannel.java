@@ -80,6 +80,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
     private static final int EVENT_BUFFER_SIZE = 2048;
 
     private final AsynchronousChannelListenerDispatcher channelListenerDispatcher = new AsynchronousChannelListenerDispatcher();
+    private final ChannelDatabaseListener databaseListener = new ChannelDatabaseListener();
     private final FbWireDatabase database;
     private final ByteBuffer eventBuffer = ByteBuffer.allocate(EVENT_BUFFER_SIZE);
     private int auxHandle;
@@ -87,7 +88,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     public V10AsynchronousChannel(FbWireDatabase database) {
         this.database = requireNonNull(database, "database");
-        database.addDatabaseListener(new ChannelDatabaseListener());
+        database.addWeakDatabaseListener(databaseListener);
     }
 
     /**
@@ -116,20 +117,24 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void close() throws SQLException {
-        if (!isConnected()) return;
-        // Lock already held by another close of the channel
-        if (!closeLock.tryLock()) return;
         try {
             if (!isConnected()) return;
-            channelListenerDispatcher.channelClosing(this);
-            socketChannel.close();
-        } catch (IOException ex) {
-            throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_errorAsynchronousEventChannelClose)
-                    .cause(ex)
-                    .toSQLException();
+            // Lock already held by another close of the channel
+            if (!closeLock.tryLock()) return;
+            try {
+                if (!isConnected()) return;
+                channelListenerDispatcher.channelClosing(this);
+                socketChannel.close();
+            } catch (IOException ex) {
+                throw FbExceptionBuilder.forException(JaybirdErrorCodes.jb_errorAsynchronousEventChannelClose)
+                        .cause(ex)
+                        .toSQLException();
+            } finally {
+                socketChannel = null;
+                closeLock.unlock();
+            }
         } finally {
-            socketChannel = null;
-            closeLock.unlock();
+            database.removeDatabaseListener(databaseListener);
         }
     }
 
@@ -205,9 +210,8 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void queueEvent(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof WireEventHandle))
+        if (!(eventHandle instanceof WireEventHandle wireEventHandle))
             throw new SQLNonTransientException("Invalid event handle type: " + eventHandle.getClass().getName());
-        final WireEventHandle wireEventHandle = (WireEventHandle) eventHandle;
         wireEventHandle.assignNewLocalId();
         addChannelListener(wireEventHandle);
 
@@ -235,9 +239,8 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
 
     @Override
     public void cancelEvent(EventHandle eventHandle) throws SQLException {
-        if (!(eventHandle instanceof WireEventHandle))
+        if (!(eventHandle instanceof WireEventHandle wireEventHandle))
             throw new SQLNonTransientException("Invalid event handle type: " + eventHandle.getClass().getName());
-        final WireEventHandle wireEventHandle = (WireEventHandle) eventHandle;
         removeChannelListener(wireEventHandle);
 
         try (LockCloseable ignored = withLock()) {
@@ -305,16 +308,7 @@ public class V10AsynchronousChannel implements FbWireAsynchronousChannel {
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            close();
-        } finally {
-            super.finalize();
-        }
-    }
-
-    private class ChannelDatabaseListener implements DatabaseListener {
+    private final class ChannelDatabaseListener implements DatabaseListener {
 
         @Override
         public void detached(FbDatabase database) {

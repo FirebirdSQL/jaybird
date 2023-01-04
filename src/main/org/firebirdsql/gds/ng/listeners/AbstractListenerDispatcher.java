@@ -86,15 +86,10 @@ public abstract class AbstractListenerDispatcher<TListener> implements Iterable<
             return;
         }
         // Try to remove weak listener
-        for (WeakReference<TListener> ref : weakListeners) {
+        weakListeners.removeIf(ref -> {
             TListener refValue = ref.get();
-            if (refValue == listener) {
-                weakListeners.remove(ref);
-                return;
-            } else if (refValue == null) {
-                weakListeners.remove(ref);
-            }
-        }
+            return refValue == null || refValue == listener;
+        });
     }
 
     protected final void notify(Consumer<TListener> notificationHandler, String notificationLogName) {

@@ -33,14 +33,14 @@ import java.util.*;
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 3.0
  */
-public class AsynchronousProcessor {
+public final class AsynchronousProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(AsynchronousProcessor.class);
 
     /**
      * Initialize on demand holder
      */
-    private static class ProcessorHolder {
+    private static final class ProcessorHolder {
         private static final AsynchronousProcessor INSTANCE = new AsynchronousProcessor();
     }
 
@@ -80,25 +80,29 @@ public class AsynchronousProcessor {
         selector.wakeup();
     }
 
+    public void unregisterAsynchronousChannel(FbWireAsynchronousChannel channel) {
+        if (!newChannels.remove(channel)) {
+            // TODO Replace with map from channel to selectionkey?
+            for (SelectionKey key : new ArrayList<>(selector.keys())) {
+                if (key.isValid() && key.attachment() == channel) {
+                    key.cancel();
+                    break;
+                }
+            }
+        }
+        channel.removeChannelListener(channelListener);
+    }
+
     // TODO Reduce visibility or remove entirely?
     public void shutdown() {
         selectorTask.stop();
         selector.wakeup();
     }
 
-    private class ProcessorChannelListener implements AsynchronousChannelListener {
+    private final class ProcessorChannelListener implements AsynchronousChannelListener {
         @Override
         public void channelClosing(FbWireAsynchronousChannel channel) {
-            if (!newChannels.remove(channel)) {
-                // TODO Replace with map from channel to selectionkey?
-                for (SelectionKey key : new ArrayList<>(selector.keys())) {
-                    if (key.isValid() && key.attachment() == channel) {
-                        key.cancel();
-                        break;
-                    }
-                }
-            }
-            channel.removeChannelListener(this);
+            unregisterAsynchronousChannel(channel);
         }
 
         @Override
@@ -135,6 +139,8 @@ public class AsynchronousProcessor {
             } catch (IOException e) {
                 // ignore
                 log.error("IOException closing event selector", e);
+            } finally {
+                newChannels.clear();
             }
         }
 
