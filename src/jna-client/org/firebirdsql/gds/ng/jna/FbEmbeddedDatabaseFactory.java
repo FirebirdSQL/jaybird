@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.jna;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import org.firebirdsql.gds.ng.IAttachProperties;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.embedded.FirebirdEmbeddedLookup;
 import org.firebirdsql.jna.embedded.spi.DisposableFirebirdEmbeddedLibrary;
 import org.firebirdsql.jna.embedded.spi.FirebirdEmbeddedLibrary;
@@ -29,6 +30,7 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.ref.Cleaner;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -107,17 +109,25 @@ public class FbEmbeddedDatabaseFactory extends AbstractNativeDatabaseFactory {
         return LIBRARIES_TO_TRY;
     }
 
-    private static class FirebirdEmbeddedLibraryNativeResource extends NativeResourceTracker.NativeResource {
+    private static final class FirebirdEmbeddedLibraryNativeResource extends NativeResourceTracker.NativeResource {
 
-        private final DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary;
+        private final Cleaner.Cleanable cleanable;
 
         private FirebirdEmbeddedLibraryNativeResource(DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary) {
-            this.firebirdEmbeddedLibrary = requireNonNull(firebirdEmbeddedLibrary, "firebirdEmbeddedLibrary");
+            requireNonNull(firebirdEmbeddedLibrary, "firebirdEmbeddedLibrary");
+            cleanable = Cleaners.getJbCleaner().register(this, new DisposeAction(firebirdEmbeddedLibrary));
         }
 
         @Override
         void dispose() {
-            firebirdEmbeddedLibrary.dispose();
+            cleanable.clean();
+        }
+
+        private record DisposeAction(DisposableFirebirdEmbeddedLibrary firebirdEmbeddedLibrary) implements Runnable {
+            @Override
+            public void run() {
+                firebirdEmbeddedLibrary.dispose();
+            }
         }
     }
 

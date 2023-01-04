@@ -19,10 +19,12 @@
 package org.firebirdsql.gds.ng.jna;
 
 import com.sun.jna.NativeLibrary;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.ref.Cleaner;
 import java.lang.reflect.Proxy;
 
 import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceShutdownDisabled;
@@ -36,14 +38,19 @@ import static org.firebirdsql.gds.ng.jna.NativeResourceTracker.isNativeResourceS
  * @author <a href="mailto:mrotteveel@users.sourceforge.net">Mark Rotteveel</a>
  * @since 4.0
  */
-class FbClientResource extends NativeResourceTracker.NativeResource {
+final class FbClientResource extends NativeResourceTracker.NativeResource {
 
     private volatile FbClientLibrary library;
     private final AbstractNativeDatabaseFactory owner;
+    private final Cleaner.Cleanable cleanable;
 
     FbClientResource(FbClientLibrary library, AbstractNativeDatabaseFactory owner) {
         this.library = library;
         this.owner = owner;
+        // only explicitly shutdown and dispose if native resource shutdown is not disabled
+        cleanable = isNativeResourceShutdownDisabled()
+                ? Cleaners.getNoOp()
+                : Cleaners.getJbCleaner().register(this, new DisposeAction(library));
     }
 
     FbClientLibrary get() {
@@ -78,25 +85,28 @@ class FbClientResource extends NativeResourceTracker.NativeResource {
     }
 
     // separate method to be able to test if this dispose doesn't result in errors
-    @SuppressWarnings("deprecation")
     private void disposeImpl() {
         final FbClientLibrary local = library;
         if (local == null) {
             return;
         }
-        owner.disposing(this, () -> {
-            library = null;
+        try {
+            owner.disposing(this, () -> library = null);
+        } finally {
+            cleanable.clean();
+        }
+    }
 
-            if (isNativeResourceShutdownDisabled()) return;
-
-            // only explicitly shutdown and dispose if native resource shutdown is not disabled
+    private record DisposeAction(FbClientLibrary library) implements Runnable {
+        @SuppressWarnings("deprecation")
+        public void run() {
             Logger log = LoggerFactory.getLogger(FbClientResource.class);
             try {
-                log.debugf("Calling fb_shutdown on %s", local);
-                local.fb_shutdown(0, 1);
+                log.debugf("Calling fb_shutdown on %s", library);
+                library.fb_shutdown(0, 1);
             } finally {
                 FbClientFeatureAccessHandler handler =
-                        (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(local);
+                        (FbClientFeatureAccessHandler) Proxy.getInvocationHandler(library);
                 NativeLibrary nativeLibrary = handler.getNativeLibrary();
                 log.debugf("Disposing JNA native library %s", nativeLibrary);
                 try {
@@ -106,7 +116,7 @@ class FbClientResource extends NativeResourceTracker.NativeResource {
                     log.errorfe("Error disposing of %s", nativeLibrary, e);
                 }
             }
-        });
+        }
     }
 
 }

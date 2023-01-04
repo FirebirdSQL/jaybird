@@ -21,6 +21,7 @@ package org.firebirdsql.gds.ng.jna;
 import org.firebirdsql.gds.JaybirdSystemProperties;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.ref.Cleaner;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -186,19 +187,11 @@ public final class NativeResourceTracker {
     static abstract class NativeResource {
         /**
          * Dispose method to clean up the native resource.
+         * <p>
+         * If needed, implementations are expected to have registered with {@link java.lang.ref.Cleaner} at construction
+         * and invoke the {@link Cleaner.Cleanable#clean()} from this method.
+         * </p>
          */
         abstract void dispose();
-
-        /**
-         * Finalizer that calls {@link #dispose()}.
-         */
-        @Override
-        protected void finalize() throws Throwable {
-            try {
-                dispose();
-            } finally {
-                super.finalize();
-            }
-        }
     }
 }
