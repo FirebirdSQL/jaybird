@@ -67,7 +67,7 @@ This driver does not work on Android, because it uses classes and features not a
 [#about-this-version]
 === About this version
 
-Jaybird 5 is - from a JDBC perspective - an incremental change from Jaybird 4.
+Jaybird 5 is -- from a JDBC perspective -- an incremental change from Jaybird 4.
 However, internally, Jaybird underwent some major changes, the biggest was the removal of JCA (Java Connector Architecture) support.
 
 The major changes and new features in Jaybird 5 are:
@@ -713,7 +713,7 @@ You will need to upgrade to Java 8 or higher, or remain on Jaybird 4.
 The JavaEE/JakartaEE Connector Architecture (JCA) implementation that was the core of Jaybird has been removed.
 The package `org.firebirdsql.jca` no longer exists, and it is no longer possible to use Jaybird as a JCA connector (Resource Adapter).
 
-From its inception, Jaybird has been built around the - then new - JCA specification.
+From its inception, Jaybird has been built around the -- then new -- JCA specification.
 Unfortunately, this had the side effect that Jaybird required the JCA api (`connector-api`) as a dependency.
 As far as we know, Jaybird was hardly used as a JCA connector, while at the same time it hindered development, as the JCA implementation was central to Jaybird.
 Lack of testing as a JCA connector also meant it was unclear if Jaybird actually functioned correctly as such.
@@ -995,7 +995,7 @@ there is no replacement.
 there is no direct replacement.
 The new way of adding non-standard properties is setting the appropriate properties by name (e.g. using `BaseProperty.setProperty(String, String)`) before `ParameterConverter.toDatabaseParameterBuffer` is called.
 * `FBConnectionRequestInfo.deepCopy()` (internal API);
-if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties.asNewMutable())`.
+if a replacement is needed, use `new FBConnectionRequestInfo(instance.asIConnectionProperties().asNewMutable())`.
 * `DatatypeCoder`
 ** `encodeTimestamp(Timestamp, Calendar)` -- use `encodeTimestamp(Timestamp, Calendar, boolean)`
 ** `encodeTimestamp(Timestamp)` -- use `encodeTimestampCalendar(Timestamp, Calendar)`
@@ -1051,7 +1051,7 @@ This change can have two potentially breaking effects:
 +
 . Values from metadata queries can now have leading spaces, where previously those were removed
 . Some -- but not all -- metadata ``ResultSet``s would previously return the untrimmed value through `getObject(..)`, but now return the trimmed value.
-* Setting a string on a `PreparedStatement` (or updatable `ResultSet`), had a weird boundary check that tried to exploit a benign buffer overflow if the value started and/or ended with "```%```", and was one or two bytes too long.
+* Setting a string on a `PreparedStatement`, or updatable `ResultSet`, had a weird boundary check that tried to exploit a benign buffer overflow if the value started and/or ended with "```%```", and was one or two bytes too long.
 This odd boundary check has been removed, and will now throw a `DataTruncation` if the byte length is longer than the declared length (in bytes) of the field.
 Previously, in Jaybird 3.0 and 4.0, this had the following effects:
 ** For pure-java, this would throw a "`string truncation error`" on execute
