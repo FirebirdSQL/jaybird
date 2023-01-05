@@ -24,6 +24,7 @@ import org.firebirdsql.encodings.EncodingDefinition;
 import org.firebirdsql.gds.*;
 import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.listeners.TransactionListener;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
@@ -31,6 +32,7 @@ import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -61,6 +63,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     private final Set<FbClientFeature> clientFeatures;
     protected final IntByReference handle = new IntByReference(0);
     protected final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
+    private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     public JnaDatabase(JnaDatabaseConnection connection) {
         super(connection, connection.createDatatypeCoder());
@@ -77,6 +80,14 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
      */
     protected final FbClientLibrary getClientLibrary() {
         return clientLibrary;
+    }
+
+    protected void setDetachedJna() {
+        try {
+            cleanable.clean();
+        } finally {
+            setDetached();
+        }
     }
 
     @Override
@@ -102,7 +113,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                         .cause(ex)
                         .toSQLException();
             } finally {
-                setDetached();
+                setDetachedJna();
             }
         }
     }
@@ -133,6 +144,9 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                 } else {
                     clientLibrary.isc_attach_database(statusVector, (short) dbName.length, dbName, handle,
                             (short) dpbArray.length, dpbArray);
+                }
+                if (handle.getValue() != 0) {
+                    cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, clientLibrary));
                 }
                 processStatusVector();
             } catch (SQLException ex) {
@@ -186,7 +200,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                     clientLibrary.isc_drop_database(statusVector, handle);
                     processStatusVector();
                 } finally {
-                    setDetached();
+                    setDetachedJna();
                 }
             }
         } catch (SQLException e) {
@@ -205,7 +219,7 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
                 clientLibrary.fb_cancel_operation(statusVector, handle, (short) kind);
             } finally {
                 if (kind == fb_cancel_abort) {
-                    setDetached();
+                    setDetachedJna();
                 }
             }
         } catch (SQLException e) {
@@ -499,17 +513,6 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (isAttached()) {
-                safelyDetach();
-            }
-        } finally {
-            super.finalize();
-        }
-    }
-
-    @Override
     public boolean hasFeature(FbClientFeature clientFeature) {
         return clientFeatures.contains(clientFeature);
     }
@@ -518,4 +521,17 @@ public class JnaDatabase extends AbstractFbDatabase<JnaDatabaseConnection>
     public Set<FbClientFeature> getFeatures() {
         return clientFeatures;
     }
+
+    private record CleanupAction(IntByReference handle, FbClientLibrary library) implements Runnable {
+        @Override
+        public void run() {
+            if (handle.getValue() == 0) return;
+            try {
+                library.isc_detach_database(new ISC_STATUS[STATUS_VECTOR_SIZE], handle);
+            } finally {
+                handle.setValue(0);
+            }
+        }
+    }
+    
 }

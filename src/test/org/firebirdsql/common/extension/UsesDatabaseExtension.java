@@ -75,6 +75,7 @@ public abstract class UsesDatabaseExtension {
     }
 
     void sharedAfter() {
+        if (fbManager == null) return;
         try {
             if (fbManager.getState().equals("Stopped")) {
                 FBTestProperties.configureFBManager(fbManager);
