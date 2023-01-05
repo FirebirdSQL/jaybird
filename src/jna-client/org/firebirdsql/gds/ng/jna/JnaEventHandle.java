@@ -26,6 +26,7 @@ import com.sun.jna.ptr.PointerByReference;
 import org.firebirdsql.encodings.Encoding;
 import org.firebirdsql.gds.EventHandler;
 import org.firebirdsql.gds.ng.AbstractEventHandle;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.WinFbClientLibrary;
 import org.firebirdsql.logging.Logger;
@@ -57,6 +58,7 @@ public final class JnaEventHandle extends AbstractEventHandle {
         }
         eventNameMemory = new Memory(eventNameBytes.length);
         eventNameMemory.write(0, eventNameBytes, 0, eventNameBytes.length);
+        Cleaners.getJbCleaner().register(this, new CleanupAction(eventBuffer, resultBuffer));
     }
 
     @Override
@@ -118,6 +120,7 @@ public final class JnaEventHandle extends AbstractEventHandle {
     /**
      * Dumps the event buffers to the logger, if debug is enabled.
      */
+    @SuppressWarnings("unused")
     public void debugMemoryDump() {
         if (!log.isDebugEnabled()) return;
         if (size == -1) {
@@ -143,25 +146,11 @@ public final class JnaEventHandle extends AbstractEventHandle {
     public synchronized void releaseMemory(FbClientLibrary clientLibrary) {
         if (size == -1) return;
         try {
-            if (eventBuffer.getValue() != Pointer.NULL) {
-                clientLibrary.isc_free(eventBuffer.getValue());
-                eventBuffer.setValue(Pointer.NULL);
-            }
-            if (resultBuffer.getValue() != Pointer.NULL) {
-                clientLibrary.isc_free(resultBuffer.getValue());
-                resultBuffer.setValue(Pointer.NULL);
-            }
+            // We can't use a cleanable here, because the event handle might be reused, not passing eventNameMemory as
+            // it shouldn't be cleaned here
+            new CleanupAction(eventBuffer, resultBuffer).cleanup(clientLibrary);
         } finally {
             size = -1;
-        }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            releaseMemory(FbClientDatabaseFactory.getInstance().getClientLibrary());
-        } finally {
-            super.finalize();
         }
     }
 
@@ -188,4 +177,28 @@ public final class JnaEventHandle extends AbstractEventHandle {
 
     private class WinJnaEventCallback extends JnaEventCallback implements WinFbClientLibrary.IscEventStdCallback {
     }
+
+    private record CleanupAction(PointerByReference eventBuffer, PointerByReference resultBuffer) implements Runnable {
+
+        // NOTE: This cleanup action doesn't do anything with eventNameMemory. The release of that memory will be
+        // handled by the cleaner within JNA class Memory.
+
+        @Override
+        public void run() {
+            cleanup(FbClientDatabaseFactory.getInstance().getClientLibrary());
+        }
+
+        // Allow reuse by method releaseMemory
+        private void cleanup(FbClientLibrary clientLibrary) {
+            if (eventBuffer.getValue() != Pointer.NULL) {
+                clientLibrary.isc_free(eventBuffer.getValue());
+                eventBuffer.setValue(Pointer.NULL);
+            }
+            if (resultBuffer.getValue() != Pointer.NULL) {
+                clientLibrary.isc_free(resultBuffer.getValue());
+                resultBuffer.setValue(Pointer.NULL);
+            }
+        }
+    }
+
 }
