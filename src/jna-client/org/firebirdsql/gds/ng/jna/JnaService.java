@@ -30,10 +30,12 @@ import org.firebirdsql.gds.ng.FbExceptionBuilder;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.ParameterConverter;
 import org.firebirdsql.gds.ng.WarningMessageCallback;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jdbc.FBDriverNotCapableException;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 
+import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 
@@ -53,10 +55,19 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
     private final FbClientLibrary clientLibrary;
     private final IntByReference handle = new IntByReference(0);
     private final ISC_STATUS[] statusVector = new ISC_STATUS[STATUS_VECTOR_SIZE];
+    private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     public JnaService(JnaServiceConnection connection) {
         super(connection, connection.createDatatypeCoder());
         clientLibrary = connection.getClientLibrary();
+    }
+
+    private void setDetachedJna() {
+        try {
+            cleanable.clean();
+        } finally {
+            setDetached();
+        }
     }
 
     @Override
@@ -133,6 +144,9 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
                 try {
                     clientLibrary.isc_service_attach(statusVector, (short) serviceName.length, serviceName, handle,
                             (short) spbArray.length, spbArray);
+                    if (handle.getValue() != 0) {
+                        cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, clientLibrary));
+                    }
                     processStatusVector();
                 } catch (SQLException ex) {
                     safelyDetach();
@@ -175,7 +189,7 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
                 clientLibrary.isc_service_detach(statusVector, handle);
                 processStatusVector();
             } finally {
-                setDetached();
+                setDetachedJna();
             }
         } catch (SQLException ex) {
             throw ex;
@@ -222,14 +236,16 @@ public final class JnaService extends AbstractFbService<JnaServiceConnection> im
         connection.processStatusVector(statusVector, warningMessageCallback);
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (isAttached()) {
-                safelyDetach();
+    private record CleanupAction(IntByReference handle, FbClientLibrary library) implements Runnable {
+        @Override
+        public void run() {
+            if (handle.getValue() == 0) return;
+            try {
+                library.isc_service_detach(new ISC_STATUS[STATUS_VECTOR_SIZE], handle);
+            } finally {
+                handle.setValue(0);
             }
-        } finally {
-            super.finalize();
         }
     }
+
 }
