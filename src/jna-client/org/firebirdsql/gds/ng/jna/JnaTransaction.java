@@ -191,7 +191,7 @@ public class JnaTransaction extends AbstractFbTransaction {
     private static final class CleanupAction implements Runnable, DatabaseListener {
 
         private final IntByReference handle;
-        private JnaDatabase database;
+        private volatile JnaDatabase database;
 
         private CleanupAction(IntByReference handle, JnaDatabase database) {
             this.handle = handle;
@@ -200,7 +200,7 @@ public class JnaTransaction extends AbstractFbTransaction {
         }
 
         @Override
-        public void detached(FbDatabase database) {
+        public void detaching(FbDatabase database) {
             this.database = null;
             database.removeDatabaseListener(this);
         }
@@ -209,8 +209,7 @@ public class JnaTransaction extends AbstractFbTransaction {
         public void run() {
             final JnaDatabase database = this.database;
             if (database == null) return;
-            this.database = null;
-            database.removeDatabaseListener(this);
+            detaching(database);
             if (handle.getValue() == 0
                     || !database.hasFeature(FbClientFeature.FB_DISCONNECT_TRANSACTION)
                     || !database.isAttached()) return;

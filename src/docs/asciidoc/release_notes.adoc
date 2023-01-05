@@ -452,6 +452,8 @@ This means there may be undocumented changes to internal API.
 If you are confronted with such a change, let us know on https://groups.google.com/g/firebird-java[firebird-java], so we can take this into account when documenting future changes.
 ====
 
+* `AbstractFbWireStatement.close()` is now final
+
 [#breaking-changes-unlikely]
 === Unlikely breaking changes
 

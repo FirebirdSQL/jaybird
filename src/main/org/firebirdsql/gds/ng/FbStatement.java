@@ -243,15 +243,26 @@ public interface FbStatement extends ExceptionListenable, AutoCloseable {
      * Registers a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
      * @param statementListener
-     *         The row listener
+     *         The statement listener
      */
     void addStatementListener(StatementListener statementListener);
+
+    /**
+     * Adds a {@link StatementListener} instance to this database using a weak reference.
+     * <p>
+     * If the listener is already strongly referenced, this call will be ignored
+     * </p>
+     *
+     * @param statementListener
+     *         statement listener
+     */
+    void addWeakStatementListener(StatementListener statementListener);
 
     /**
      * Removes a {@link org.firebirdsql.gds.ng.listeners.StatementListener}.
      *
      * @param statementListener
-     *         The row listener
+     *         The statement listener
      */
     void removeStatementListener(StatementListener statementListener);
 

@@ -27,6 +27,8 @@ import org.firebirdsql.gds.ng.*;
 import org.firebirdsql.gds.ng.fields.FieldDescriptor;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.jaybird.util.Cleaners;
 import org.firebirdsql.jna.fbclient.FbClientLibrary;
 import org.firebirdsql.jna.fbclient.ISC_STATUS;
 import org.firebirdsql.jna.fbclient.XSQLDA;
@@ -34,6 +36,7 @@ import org.firebirdsql.jna.fbclient.XSQLVAR;
 import org.firebirdsql.logging.Logger;
 import org.firebirdsql.logging.LoggerFactory;
 
+import java.lang.ref.Cleaner;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientException;
@@ -58,6 +61,7 @@ public class JnaStatement extends AbstractFbStatement {
     private final FbClientLibrary clientLibrary;
     private XSQLDA inXSqlDa;
     private XSQLDA outXSqlDa;
+    private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     public JnaStatement(JnaDatabase database) {
         this.database = requireNonNull(database, "database");
@@ -94,6 +98,12 @@ public class JnaStatement extends AbstractFbStatement {
             processStatusVector();
             // Reset statement information
             reset(option == ISCConstants.DSQL_drop);
+        } finally {
+            if (option == ISCConstants.DSQL_drop) {
+                // prevent attempt to call isc_dsql_free_statement in CleanupAction as well
+                handle.setValue(0);
+                cleanable.clean();
+            }
         }
     }
 
@@ -148,6 +158,9 @@ public class JnaStatement extends AbstractFbStatement {
                 if (initialState == StatementState.NEW) {
                     try {
                         clientLibrary.isc_dsql_allocate_statement(statusVector, db.getJnaHandle(), handle);
+                        if (handle.getValue() != 0) {
+                            cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(handle, database));
+                        }
                         processStatusVector();
                         reset();
                         switchState(StatementState.ALLOCATED);
@@ -482,5 +495,33 @@ public class JnaStatement extends AbstractFbStatement {
 
     private void processStatusVector() throws SQLException {
         getDatabase().processStatusVector(statusVector, getStatementWarningCallback());
+    }
+
+    private static final class CleanupAction implements Runnable, DatabaseListener {
+
+        private final IntByReference handle;
+        private volatile JnaDatabase database;
+
+        private CleanupAction(IntByReference handle, JnaDatabase database) {
+            this.handle = handle;
+            this.database = database;
+            database.addWeakDatabaseListener(this);
+        }
+
+        @Override
+        public void detaching(FbDatabase database) {
+            this.database = null;
+            database.removeDatabaseListener(this);
+        }
+
+        @Override
+        public void run() {
+            JnaDatabase database = this.database;
+            if (database == null) return;
+            detaching(database);
+            if (handle.getValue() == 0 || !database.isAttached()) return;
+            database.getClientLibrary().isc_dsql_free_statement(
+                    new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle, (short) ISCConstants.DSQL_drop);
+        }
     }
 }

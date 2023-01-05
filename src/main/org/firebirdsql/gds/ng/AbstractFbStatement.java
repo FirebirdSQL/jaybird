@@ -633,6 +633,12 @@ public abstract class AbstractFbStatement implements FbStatement {
     }
 
     @Override
+    public void addWeakStatementListener(StatementListener statementListener) {
+        if (getState() == StatementState.CLOSED) return;
+        statementListenerDispatcher.addWeakListener(statementListener);
+    }
+
+    @Override
     public final void removeStatementListener(StatementListener statementListener) {
         statementListenerDispatcher.removeListener(statementListener);
     }
@@ -688,15 +694,6 @@ public abstract class AbstractFbStatement implements FbStatement {
             return;
         }
         checkStatementValid();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (getState() != StatementState.CLOSED) close();
-        } finally {
-            super.finalize();
-        }
     }
 
     @Override

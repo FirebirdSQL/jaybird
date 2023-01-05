@@ -18,19 +18,27 @@
  */
 package org.firebirdsql.gds.ng.wire;
 
+import org.firebirdsql.gds.ISCConstants;
 import org.firebirdsql.gds.impl.wire.WireProtocolConstants;
 import org.firebirdsql.gds.impl.wire.XdrInputStream;
 import org.firebirdsql.gds.impl.wire.XdrOutputStream;
 import org.firebirdsql.gds.ng.AbstractFbStatement;
 import org.firebirdsql.gds.ng.DeferredResponse;
+import org.firebirdsql.gds.ng.FbDatabase;
+import org.firebirdsql.gds.ng.FbStatement;
 import org.firebirdsql.gds.ng.FbTransaction;
 import org.firebirdsql.gds.ng.LockCloseable;
 import org.firebirdsql.gds.ng.StatementState;
+import org.firebirdsql.gds.ng.WarningMessageCallback;
 import org.firebirdsql.gds.ng.fields.BlrCalculator;
 import org.firebirdsql.gds.ng.fields.RowDescriptor;
 import org.firebirdsql.gds.ng.fields.RowValue;
+import org.firebirdsql.gds.ng.listeners.DatabaseListener;
+import org.firebirdsql.gds.ng.listeners.StatementListener;
+import org.firebirdsql.jaybird.util.Cleaners;
 
 import java.io.IOException;
+import java.lang.ref.Cleaner;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
@@ -48,6 +56,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     private final Map<RowDescriptor, byte[]> blrCache = Collections.synchronizedMap(new WeakHashMap<>());
     private volatile int handle = WireProtocolConstants.INVALID_OBJECT;
     private final FbWireDatabase database;
+    private Cleaner.Cleanable cleanable = Cleaners.getNoOp();
 
     public AbstractFbWireStatement(FbWireDatabase database) {
         this.database = requireNonNull(database, "database");
@@ -102,6 +111,7 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
 
     protected final void setHandle(int handle) {
         this.handle = handle;
+        cleanable = Cleaners.getJbCleaner().register(this, new CleanupAction(this));
     }
 
     /**
@@ -150,11 +160,12 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
     }
 
     @Override
-    public void close() throws SQLException {
+    public final void close() throws SQLException {
         try {
             super.close();
         } finally {
             // TODO Preferably this should be done elsewhere and AbstractFbStatement.close() should be final
+            cleanable.clean();
             try (LockCloseable ignored = withLock()) {
                 blrCache.clear();
             }
@@ -222,4 +233,65 @@ public abstract class AbstractFbWireStatement extends AbstractFbStatement implem
             forceState(StatementState.ERROR);
         }
     }
+
+    private static final class CleanupAction implements Runnable, StatementListener, DatabaseListener {
+
+        private final int handle;
+        private volatile FbWireDatabase database;
+
+        private CleanupAction(AbstractFbWireStatement statement) {
+            // NOTE: Care should be taken not to retain a handle to statement itself here
+            handle = statement.getHandle();
+            database = statement.getDatabase();
+            database.addWeakDatabaseListener(this);
+            statement.addWeakStatementListener(this);
+        }
+
+        @Override
+        public void statementStateChanged(FbStatement sender, StatementState newState, StatementState previousState) {
+            if (newState == StatementState.CLOSING) {
+                FbDatabase database = this.database;
+                if (database != null) {
+                    detaching(database);
+                }
+                sender.removeStatementListener(this);
+            }
+        }
+
+        @Override
+        public void detaching(FbDatabase database) {
+            this.database = null;
+            database.removeDatabaseListener(this);
+        }
+
+        @Override
+        public void run() {
+            FbWireDatabase database = this.database;
+            if (database == null) return;
+            detaching(database);
+            try (LockCloseable ignored = database.withLock()) {
+                if (!database.isAttached()) return;
+                XdrOutputStream xdrOut = database.getXdrStreamAccess().getXdrOut();
+                xdrOut.writeInt(WireProtocolConstants.op_free_statement);
+                xdrOut.writeInt(handle);
+                xdrOut.writeInt(ISCConstants.DSQL_drop);
+                xdrOut.flush();
+                database.enqueueDeferredAction(new DeferredAction() {
+                    @Override
+                    public void processResponse(Response response) {
+                        // nothing to do
+                    }
+
+                    @Override
+                    public WarningMessageCallback getWarningMessageCallback() {
+                        // Use default callback
+                        return null;
+                    }
+                });
+            } catch (SQLException | IOException ignored) {
+                // nothing we can do here
+            }
+        }
+    }
+
 }
