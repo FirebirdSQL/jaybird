@@ -211,19 +211,18 @@ public class JnaTransaction extends AbstractFbTransaction {
             if (database == null) return;
             this.database = null;
             database.removeDatabaseListener(this);
-            if (handle.getValue() == 0 || !database.hasFeature(FbClientFeature.FB_DISCONNECT_TRANSACTION)) return;
-            try (LockCloseable ignored = database.withLock()) {
-                if (!database.isAttached()) return;
-                /*
-                 ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only
-                 happen when the connection itself was also GC'd, which means an attempt to roll back would likely fail
-                 anyway (and the server will perform a rollback eventually), so we don't perform any action other than
-                 fb_disconnect_transaction
-                */
-                database.getClientLibrary()
-                        .fb_disconnect_transaction(new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle);
-                // We intentionally ignore the status vector result
-            }
+            if (handle.getValue() == 0
+                    || !database.hasFeature(FbClientFeature.FB_DISCONNECT_TRANSACTION)
+                    || !database.isAttached()) return;
+            /*
+             ACTIVE transactions are held in AbstractFbDatabase.activeTransactions, so such cleanup would only
+             happen when the connection itself was also GC'd, which means an attempt to roll back would likely fail
+             anyway (and the server will perform a rollback eventually), so we don't perform any action other than
+             fb_disconnect_transaction
+            */
+            database.getClientLibrary()
+                    .fb_disconnect_transaction(new ISC_STATUS[JnaDatabase.STATUS_VECTOR_SIZE], handle);
+            // We intentionally ignore the status vector result
         }
     }
 }
