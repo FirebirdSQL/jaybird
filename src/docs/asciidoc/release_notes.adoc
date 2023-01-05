@@ -298,6 +298,7 @@ See also <<compatibility-changes>> for details.
 === Other fixes and changes
 
 // TODO Add minor changes
+* Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 
 [#removal-of-deprecated-classes-and-packages]
 === Removal of deprecated classes and packages
@@ -459,6 +460,18 @@ If you are confronted with such a change, let us know on https://groups.google.c
 
 The following changes might cause issues, though we think this is unlikely:
 
+[#breaking-finalization]
+==== Removal of finalization
+
+With the removal of finalization, the replacement cleanup has been simplified, and in some cases left out entirely.
+
+Possible effects include:
+
+* If a close/cleanup is performed by the `Cleaner`, listeners will not get notified.
+Given it is unlikely there will not be strong reference to an object if something is still interested in its listener events, we think this is acceptable.
+* The closing of a pure-java connection is now simply a socket close handled by the cleanup action of the socket itself.
+Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows).
+If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
 
 [#breaking-changes-for-jaybird-7]
 === Breaking changes for Jaybird 7
