@@ -326,17 +326,4 @@ public abstract class AbstractFbWireDatabase extends AbstractFbDatabase<WireData
      */
     public abstract FbWireAsynchronousChannel initAsynchronousChannel() throws SQLException;
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (!connection.isConnected()) return;
-            if (isAttached()) {
-                safelyDetach();
-            } else {
-                closeConnection();
-            }
-        } finally {
-            super.finalize();
-        }
-    }
 }
