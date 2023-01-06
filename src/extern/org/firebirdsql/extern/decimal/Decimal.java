@@ -375,7 +375,7 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            return valueOf(BigDecimal.valueOf(value).round(getMathContext()), overflowHandling);
+            return valueOf(new BigDecimal(Double.toString(value), getMathContext()), overflowHandling);
         }
 
         /**
