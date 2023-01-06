@@ -375,8 +375,7 @@ public abstract class Decimal<T extends Decimal<T>> {
                 return getSpecialConstant(Signum.NEGATIVE, DecimalType.INFINITY);
             }
 
-            // TODO Use new BigDecimal(double, MathContext) instead, has slightly different precision?
-            return valueOf(new BigDecimal(Double.toString(value), getMathContext()), overflowHandling);
+            return valueOf(BigDecimal.valueOf(value).round(getMathContext()), overflowHandling);
         }
 
         /**
