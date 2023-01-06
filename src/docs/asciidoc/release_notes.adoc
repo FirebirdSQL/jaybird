@@ -297,7 +297,7 @@ See also <<compatibility-changes>> for details.
 [#other-fixes-and-changes]
 === Other fixes and changes
 
-// TODO Add minor changes
+* Consistent use of `BigDecimal.valueOf(double)` instead of a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` (https://github.com/FirebirdSQL/jaybird/issues/553[jaybird#553])
 * Removed `finalize()` methods and -- where it made sense -- replaced them with use of `Cleaner` (https://github.com/FirebirdSQL/jaybird/issues/727[jaybird#727])
 
 [#removal-of-deprecated-classes-and-packages]
@@ -472,6 +472,14 @@ Given it is unlikely there will not be strong reference to an object if somethin
 * The closing of a pure-java connection is now simply a socket close handled by the cleanup action of the socket itself.
 Server-side this may result in delayed cleanup of a connection and its resources, and occurrences of "`connection reset by peer`" (e.g. error 10054 on Windows).
 If you see an increase of these errors, we recommend you hunt for connection leaks in your application.
+
+[#breaking-double-bigdecimal]
+==== Conversion from double to BigDecimal
+
+Conversions from `double` to `java.math.BigDecimal` now always use `BigDecimal.valueOf(double)`.
+Previously, a combination of `new BigDecimal(double)` and `BigDecimal.valueOf(double)` was used.
+
+This change may result in minor differences in precision or rounding of values.
 
 [#breaking-changes-for-jaybird-7]
 === Breaking changes for Jaybird 7

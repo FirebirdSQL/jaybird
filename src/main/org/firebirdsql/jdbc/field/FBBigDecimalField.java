@@ -254,7 +254,7 @@ final class FBBigDecimalField extends FBField {
         DOUBLE {
             @Override
             protected BigDecimal decode(FieldDescriptor fieldDescriptor, byte[] fieldData) {
-                BigDecimal value = new BigDecimal(fieldDescriptor.getDatatypeCoder().decodeDouble(fieldData));
+                BigDecimal value = BigDecimal.valueOf(fieldDescriptor.getDatatypeCoder().decodeDouble(fieldData));
                 return value.setScale(Math.abs(fieldDescriptor.getScale()), RoundingMode.HALF_EVEN);
             }
 

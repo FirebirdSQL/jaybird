@@ -121,7 +121,7 @@ class FBDoubleField extends FBField {
     public BigDecimal getBigDecimal() throws SQLException {
         if (isNull()) return null;
 
-        return new BigDecimal(getDatatypeCoder().decodeDouble(getFieldData()));
+        return BigDecimal.valueOf(getDatatypeCoder().decodeDouble(getFieldData()));
     }
 
     public boolean getBoolean() throws SQLException {

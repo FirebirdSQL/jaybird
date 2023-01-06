@@ -52,7 +52,7 @@ class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
     void getBigDecimalNonNull() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
-        BigDecimal expectedValue = new BigDecimal(1.34578f);
+        BigDecimal expectedValue = BigDecimal.valueOf(1.34578f);
         assertEquals(expectedValue, field.getBigDecimal(), "Unexpected value for getBigDecimal");
     }
 
@@ -61,7 +61,7 @@ class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
     void getObject_BigDecimal() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
-        BigDecimal expectedValue = new BigDecimal(1.34578f);
+        BigDecimal expectedValue = BigDecimal.valueOf(1.34578f);
         assertEquals(expectedValue, field.getObject(BigDecimal.class),
                 "Unexpected value for getObject(BigDecimal.class)");
     }
@@ -758,7 +758,7 @@ class FBFloatFieldTest extends BaseJUnit5TestFBField<FBFloatField, Float> {
     void getDecimalNonNull() throws SQLException {
         toReturnFloatExpectations(1.34578f);
 
-        Decimal128 expectedValue = Decimal128.valueOf(new BigDecimal(1.34578f));
+        Decimal128 expectedValue = Decimal128.valueOf(1.34578f);
         assertEquals(expectedValue, field.getDecimal(), "Unexpected value for getDecimal");
     }
 
