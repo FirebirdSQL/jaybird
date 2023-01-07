@@ -113,6 +113,7 @@ processResources {
 //apply from: 'documentation.gradle'
 
 asciidoctorj {
+    version = '2.5.7'
     attributes 'revnumber': null,
             'version_simple': project.'version.simple',
             'version_wo_target': "${project.'version.simple'}${project.'version.tag'}",
