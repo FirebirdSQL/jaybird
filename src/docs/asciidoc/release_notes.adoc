@@ -154,9 +154,10 @@ Java 9 and higher supported using the Java 8 or Java 11 driver.
 
 Jaybird {version_wo_target} is available on Maven Central:
 
-groupId: `org.firebirdsql.jdbc`, +
-artifactId: `jaybird`, +
-version: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`).
+[horizontal]
+groupId:: `org.firebirdsql.jdbc`
+artifactId:: `jaybird`
+version:: `{version_simple}.<java>{version_tag}` (where `<java>` is `java11` or `java8`)
 
 ifeval::["{version_tag}" == "-SNAPSHOT"]
 NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
@@ -602,7 +603,7 @@ Its API may change in point releases, or it may be removed or replaced entirely 
 [#table-statistics-manager]
 === Table statistics of a connection (experimental)
 
-A new class was added, `org.firebirdsql.managemen.FBTableStatisticsManager` which can be used to retrieve the table statistics of a connection.
+A new class was added, `org.firebirdsql.management.FBTableStatisticsManager`, which can be used to retrieve the table statistics of a connection.
 
 Create an instance with `FBTableStatisticsManager#of(java.sql.Connection)` -- the connection must unwrap to a `FirebirdConnection` -- and retrieve a snapshot of the statistics with `FBTableStatisticsManager#getTableStatistics()`.
 
@@ -708,9 +709,9 @@ Jaybird 5 does not support Java 7.
 You will need to upgrade to Java 8 or higher, or remain on Jaybird 4.
 
 [#removal-of-javaeejakartaee-connector-architecture-jca]
-=== Removal of JavaEE/JakartaEE Connector Architecture (JCA)
+=== Removal of Java EE/Jakarta EE Connector Architecture (JCA)
 
-The JavaEE/JakartaEE Connector Architecture (JCA) implementation that was the core of Jaybird has been removed.
+The Java EE/Jakarta EE Connector Architecture (JCA) implementation that was the core of Jaybird has been removed.
 The package `org.firebirdsql.jca` no longer exists, and it is no longer possible to use Jaybird as a JCA connector (Resource Adapter).
 
 From its inception, Jaybird has been built around the -- then new -- JCA specification.
