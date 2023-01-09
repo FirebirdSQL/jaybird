@@ -35,6 +35,8 @@ import static org.firebirdsql.common.DdlHelper.executeDDL;
 import static org.firebirdsql.common.FBTestProperties.*;
 import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
@@ -976,7 +978,7 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             cs.execute();
             String value = cs.getString(1);
             assertNotNull("Expected non-null value", value);
-            assertTrue("Expected non-empty value", value.trim().length() > 0);
+            assertThat("Expected non-empty value", value.trim(), containsString("EXECUTE BLOCK"));
         }
     }
 

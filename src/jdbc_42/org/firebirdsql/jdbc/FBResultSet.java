@@ -59,6 +59,12 @@ public class FBResultSet extends AbstractResultSet {
         super(rowDescriptor, connection, rows, retrieveBlobs);
     }
 
+    public FBResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
+            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs, boolean trimStrings)
+            throws SQLException {
+        super(rowDescriptor, connection, rows, listener, retrieveBlobs, trimStrings);
+    }
+
     /**
      * {@inheritDoc}
      * <p>

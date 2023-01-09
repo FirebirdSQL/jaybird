@@ -312,6 +312,14 @@ public abstract class AbstractCallableStatement extends FBPreparedStatement impl
         return hasResultSet;
     }
 
+    @Override
+    protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
+            throws SQLException {
+        // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
+        return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
+                resultSetListener, false, true);
+    }
+
     private void setField(FBField field, WrapperWithLong value) throws SQLException {
         Object obj = value.getValue();
 

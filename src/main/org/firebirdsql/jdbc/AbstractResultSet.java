@@ -180,29 +180,13 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * </p>
      *
      * @param rowDescriptor
-     *         Column definition
+     *         column definition
      * @param rows
-     *         Row data
-     * @throws SQLException
+     *         row data
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows,
             FBObjectListener.ResultSetListener listener) throws SQLException {
-        // TODO Evaluate if we need to share more implementation with constructor above
-        connection = null;
-        gdsHelper = null;
-        fbStatement = null;
-        this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
-        cursorName = null;
-        fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, null, false);
-        trimStrings = false;
-        this.rowDescriptor = rowDescriptor;
-        fields = new FBField[rowDescriptor.getCount()];
-        colNames = new HashMap<>(rowDescriptor.getCount(), 1);
-        prepareVars(true);
-        // TODO Set specific types (see also previous todo)
-        rsType = ResultSet.TYPE_FORWARD_ONLY;
-        rsConcurrency = ResultSet.CONCUR_READ_ONLY;
-        rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;
+        this(rowDescriptor, null, rows, listener, false, false);
     }
 
     /**
@@ -215,10 +199,9 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * </p>
      *
      * @param rowDescriptor
-     *         Column definition
+     *         column definition
      * @param rows
-     *         Row data
-     * @throws SQLException
+     *         row data
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, List<RowValue> rows) throws SQLException {
         this(rowDescriptor, null, rows, false);
@@ -234,28 +217,55 @@ public abstract class AbstractResultSet implements ResultSet, FirebirdResultSet,
      * </p>
      *
      * @param rowDescriptor
-     *         Column definition
+     *         column definition
      * @param connection
-     *         Connection (cannot be null when {@code retrieveBlobs} is {@code true}
+     *         connection (cannot be null when {@code retrieveBlobs} is {@code true}
      * @param rows
-     *         Row data
+     *         row data
      * @param retrieveBlobs
      *         {@code true} retrieves the blob data
-     * @throws SQLException
      */
     public AbstractResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
             boolean retrieveBlobs) throws SQLException {
+        this(rowDescriptor, connection, rows, null, retrieveBlobs, true);
+    }
+
+    /**
+     * Creates a FBResultSet with the columns specified by {@code rowDescriptor} and the data in {@code rows}.
+     * <p>
+     * Current implementation will ensure that strings will be trimmed on retrieval.
+     * </p>
+     *
+     * @param rowDescriptor
+     *         column definition
+     * @param connection
+     *         connection (cannot be {@code null} when {@code retrieveBlobs} is {@code true}
+     * @param rows
+     *         row data
+     * @param listener
+     *         result set listener
+     * @param retrieveBlobs
+     *         {@code true} retrieves the blob data
+     * @param trimStrings
+     *         {@code true} when strings need to be trimmed (generally only for metadata queries)
+     * @since 4.0.9
+     */
+    public AbstractResultSet(RowDescriptor rowDescriptor, FBConnection connection, List<RowValue> rows,
+            FBObjectListener.ResultSetListener listener, boolean retrieveBlobs, boolean trimStrings)
+            throws SQLException {
+        // TODO Evaluate if we need to share more implementation with constructor above
         this.connection = connection;
-        this.gdsHelper = connection != null ? connection.getGDSHelper() : null;
+        gdsHelper = connection != null ? connection.getGDSHelper() : null;;
         fbStatement = null;
-        listener = FBObjectListener.NoActionResultSetListener.instance();
+        this.listener = listener != null ? listener : FBObjectListener.NoActionResultSetListener.instance();
         cursorName = null;
         fbFetcher = new FBCachedFetcher(rows, this, rowDescriptor, gdsHelper, retrieveBlobs);
-        trimStrings = true;
+        this.trimStrings = trimStrings;
         this.rowDescriptor = rowDescriptor;
         fields = new FBField[rowDescriptor.getCount()];
         colNames = new HashMap<>(rowDescriptor.getCount(), 1);
         prepareVars(true);
+        // TODO Set specific types (see also previous todo)
         rsType = ResultSet.TYPE_FORWARD_ONLY;
         rsConcurrency = ResultSet.CONCUR_READ_ONLY;
         rsHoldability = ResultSet.CLOSE_CURSORS_AT_COMMIT;

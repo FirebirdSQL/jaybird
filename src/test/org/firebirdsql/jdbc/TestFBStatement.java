@@ -155,7 +155,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertFalse("Statement should be open", stmt.isClosed());
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is false, will not close
      * the statement.
@@ -176,7 +176,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertFalse("Statement should be open", stmt.isClosed());
         }
     }
-    
+
     /**
      * Test if an implicit close (by fully reading the resultset) while closeOnCompletion is true, will close
      * the statement.
@@ -200,7 +200,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertTrue("Statement should be closed", stmt.isClosed());
         }
     }
-    
+
     /**
      * Test if an explicit close (by calling close()) while closeOnCompletion is true, will close
      * the statement.
@@ -222,7 +222,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertTrue("Statement should be closed", stmt.isClosed());
         }
     }
-    
+
     /**
      * Test if a executing a query which does not produce a resultset (eg an INSERT without generated keys) will not close the
      * statement.
@@ -500,7 +500,7 @@ public class TestFBStatement extends FBJUnit4TestBase {
     public void testGetLastExplainedExecutionPlan_select() throws SQLException {
         assumeTrue("Test requires explained execution plan support",
                 getDefaultSupportInfo().supportsExplainedExecutionPlan());
-        
+
         executeCreateTable(con, CREATE_TABLE);
 
         try (FirebirdStatement stmt = (FirebirdStatement) con.createStatement()) {
@@ -1033,6 +1033,27 @@ public class TestFBStatement extends FBJUnit4TestBase {
             assertEquals(2, stmt.getUpdateCount());
 
             con.commit();
+        }
+    }
+
+    /**
+     * Test case for <a href="https://github.com/FirebirdSQL/jaybird/issues/728">jaybird#728</a> with thanks to Lukas
+     * Eder.
+     */
+    @Test
+    public void testCaseBlobInReturning_728() throws Exception {
+        try (Statement stmt = con.createStatement()) {
+            stmt.executeUpdate("create table t (a integer not null primary key, b blob)");
+
+            try (ResultSet rs = stmt.executeQuery("insert into t (a, b) values (1, X'010203') returning a, b")) {
+                assertTrue("expected a row", rs.next());
+                assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
+            }
+
+            try (ResultSet rs = stmt.executeQuery("select a, b from t")) {
+                assertTrue("expected a row", rs.next());
+                assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
+            }
         }
     }
 
