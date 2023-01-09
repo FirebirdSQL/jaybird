@@ -471,7 +471,7 @@ Jaybird 4 and higher also support:
 [#open-officelibre-office-pure-java]
 === Open Office/Libre Office (Pure Java)
 
-Jaybird can be used together with OpenOffice and LibreOffice Base.
+Jaybird 5 and earlier can be used together with OpenOffice and LibreOffice Base.
 To address some compatibility issues (and differences in interpretation of JDBC specifications) a separate sub-protocol is used:
 
  jdbc:firebirdsql:oo://host[:port]/<database>
@@ -483,7 +483,7 @@ Jaybird 4 and higher also support:
 [NOTE]
 ====
 This URL format is deprecated with jaybird 5 and will be removed in Jaybird 6.
-As a replacement, use the "Firebird External" option in LibreOffice Base.
+As a replacement, use the "`Firebird External`" option in LibreOffice Base.
 
 See also https://github.com/FirebirdSQL/jaybird/blob/master/devdoc/jdp/jdp-2022-04-deprecate-ooremote.md[jdp-2022-04: Deprecate OOREMOTE (OpenOffice/LibreOffice driver) for removal].
 ====
@@ -752,56 +752,56 @@ The following optional features are NOT supported:
 The following optional features and the methods that support it are not implemented:
 
 * Ref and Array types.
- ** `java.sql.PreparedStatement`
-  *** `setRef(int i, Ref x)`
-  *** `setArray(int i, Array x)`
- ** `java.sql.ResultSet`
-  *** `getArray(int i)`
-  *** `getArray(String columnName)`
-  *** `getRef(int i)`
-  *** `getRef(String columnName)`
+** `java.sql.PreparedStatement`
+*** `setRef(int i, Ref x)`
+*** `setArray(int i, Array x)`
+** `java.sql.ResultSet`
+*** `getArray(int i)`
+*** `getArray(String columnName)`
+*** `getRef(int i)`
+*** `getRef(String columnName)`
 * User Defined Types/Type Maps.
- ** `java.sql.ResultSet`
-  *** `getObject(int i, java.util.Map map)`
-  *** `getObject(String columnName, java.util.Map map)`
- ** `java.sql.Connection`
-  *** `getTypeMap()`
-  *** `setTypeMap(java.util.Map map)`
+** `java.sql.ResultSet`
+*** `getObject(int i, java.util.Map map)`
+*** `getObject(String columnName, java.util.Map map)`
+** `java.sql.Connection`
+*** `getTypeMap()`
+*** `setTypeMap(java.util.Map map)`
 
 Excluding the unsupported features, the following methods are not yet implemented:
 
 * `java.sql.Blob`
- ** `getBytes(long pos, int length)`
- ** `position(byte pattern[], long start)`
- ** `position(Blob pattern, long start)`
- ** `getBinaryStream(long pos, long length)`
- ** `truncate(long len)`
- ** Methods with a position (`pos`) parameter with a value greater than 1
+** `getBytes(long pos, int length)`
+** `position(byte pattern[], long start)`
+** `position(Blob pattern, long start)`
+** `getBinaryStream(long pos, long length)`
+** `truncate(long len)`
+** Methods with a position (`pos`) parameter with a value greater than 1
 * `java.sql.Clob`
- ** `length()`
- ** `truncate(long len)`
- ** `position(String searchstr, long start)`
- ** `position(Clob searchstr, long start)`
- ** `getCharacterStream(long pos, long length)`
- ** Methods with a position (`pos`) parameter with a value greater than 1
+** `length()`
+** `truncate(long len)`
+** `position(String searchstr, long start)`
+** `position(Clob searchstr, long start)`
+** `getCharacterStream(long pos, long length)`
+** Methods with a position (`pos`) parameter with a value greater than 1
 
 The following methods are implemented, but do not work as expected:
 
 * `java.sql.Statement`
- ** `get/setMaxFieldSize` does nothing
- ** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
+** `get/setMaxFieldSize` does nothing
+** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
- ** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
- ** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
+** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
+** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
 * `java.sql.CallableStatement`
- ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
+** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 * `java.sql.ResultSetMetaData`
- ** `isReadOnly(i)` always returns false
- ** `isWritable(i)` always returns true
- ** `isDefinitivelyWritable(i)` always returns true
+** `isReadOnly(i)` always returns false
+** `isWritable(i)` always returns true
+** `isDefinitivelyWritable(i)` always returns true
 * `java.sql.ResultSet`
- ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
+** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 
 [#features]
