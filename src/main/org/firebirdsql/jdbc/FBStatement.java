@@ -335,8 +335,8 @@ public class FBStatement implements FirebirdStatement {
     public ResultSet getGeneratedKeys() throws SQLException {
         checkValidity();
         if (isGeneratedKeyQuery()) {
-            return new FBResultSet(fbStatement.getRowDescriptor(), new ArrayList<>(specialResult),
-                    resultSetListener);
+            return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
+                    resultSetListener, true, false);
         }
         return new FBResultSet(fbStatement.emptyRowDescriptor(), emptyList());
     }
@@ -547,12 +547,29 @@ public class FBStatement implements FirebirdStatement {
                 currentRs = new FBResultSet(connection, this, fbStatement, resultSetListener, metaDataQuery, rsType,
                         rsConcurrency, rsHoldability, false);
             } else if (!specialResult.isEmpty()) {
-                currentRs = new FBResultSet(fbStatement.getRowDescriptor(),
-                        new ArrayList<>(specialResult), resultSetListener);
+                currentRs = createSpecialResultSet(resultSetListener);
             }
             return currentRs;
         }
         return null;
+    }
+
+    /**
+     * Create the result set for {@code specialResult}.
+     * <p>
+     * Should only be called from {@link #getResultSet(boolean)}. This exists because {@link FBCallableStatement} needs
+     * to create the result set in a slightly different way to account for the fact that the blobs were already cached
+     * earlier.
+     * </p>
+     *
+     * @param resultSetListener
+     *         result set listener (can be {@code null})
+     * @return result set wrapping {@code specialResult}
+     */
+    protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
+            throws SQLException {
+        return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
+                resultSetListener, true, true);
     }
 
     @Override
