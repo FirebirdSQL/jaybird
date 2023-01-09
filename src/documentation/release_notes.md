@@ -481,9 +481,9 @@ For example:
 </dependency>
 ~~~
 
-If your application is deployed to a Java EE application server, you will need to
-exclude the `javax.resource:connector-api` dependency, and add it as a provided 
-dependency:
+If your application is deployed to a Java EE or Jakarta EE 8 or lower 
+application server, you will need to exclude the `javax.resource:connector-api` 
+dependency, and add it as a provided dependency:
 
 ~~~ {.xml}
 <dependency>
@@ -531,10 +531,10 @@ At minimum Jaybird 4 requires `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar`
 `jaybird-full-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar` which includes
 the connector-api files.
 
-If you deploy your application to a Java EE application server, then you must 
-use `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar` (not `-full`!), and **not**
-include `connector-api-1.5.jar` as this dependency will be provided by your
-application server.
+If you deploy your application to a Java EE or Jakarta EE 8 or lower application
+server, then you must use `jaybird-@VERSION_SIMPLE@.javaXX@VERSION_TAG@.jar` 
+(not `-full`!), and **not** include `connector-api-1.5.jar` as this dependency 
+will be provided by your application server.
 
 For native, local or embedded support, you will need to include `jna-5.5.0.jar` 
 on your classpath. See also [Type 2 (native) and embedded driver](#type-2-native-and-embedded-driver).
