@@ -24,6 +24,7 @@ import org.firebirdsql.common.JdbcResourceHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -381,12 +382,28 @@ public class TestFBClob extends FBJUnit4TestBase {
         try (Statement stmt = con.createStatement();
              ResultSet resultSet = stmt.executeQuery("SELECT " + PLAIN_BLOB + " FROM test_clob")) {
             resultSet.next();
-            Clob clob = resultSet.getClob(1);
+            final Clob clob = resultSet.getClob(1);
             clob.free();
 
-            assertThrows(SQLException.class, clob::getCharacterStream);
-            assertThrows(SQLException.class, () -> clob.getCharacterStream(1, 1));
-            assertThrows(SQLException.class, () -> { try (Writer ignored = clob.setCharacterStream(1)) { } });
+            assertThrows(SQLException.class, new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                    clob.getCharacterStream();
+                }
+            });
+            assertThrows(SQLException.class, new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                    clob.getCharacterStream(1, 1);
+                }
+            });
+            assertThrows(SQLException.class, new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                    try (Writer ignored = clob.setCharacterStream(1)) {
+                    }
+                }
+            });
         }
     }
 
