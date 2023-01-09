@@ -38,7 +38,7 @@ public enum FirebirdReservedWords implements ReservedWords {
 
     // TODO Add other versions if it turns out we do need reserved words per version
 
-    FIREBIRD_4_0("ADD", "ADMIN", "ALL", "ALTER", "AND", "ANY", "AS", "AT", "AVG", "BEGIN", "BETWEEN", "BIGINT",
+    FIREBIRD_5_0("ADD", "ADMIN", "ALL", "ALTER", "AND", "ANY", "AS", "AT", "AVG", "BEGIN", "BETWEEN", "BIGINT",
             "BINARY", "BIT_LENGTH", "BLOB", "BOOLEAN", "BOTH", "BY", "CASE", "CAST", "CHAR", "CHARACTER",
             "CHARACTER_LENGTH", "CHAR_LENGTH", "CHECK", "CLOSE", "COLLATE", "COLUMN", "COMMENT", "COMMIT", "CONNECT",
             "CONSTRAINT", "CORR", "COUNT", "COVAR_POP", "COVAR_SAMP", "CREATE", "CROSS", "CURRENT",
@@ -55,13 +55,13 @@ public enum FirebirdReservedWords implements ReservedWords {
             "RDB$GET_CONTEXT", "RDB$GET_TRANSACTION_CN", "RDB$RECORD_VERSION", "RDB$ROLE_IN_USE", "RDB$SET_CONTEXT",
             "RDB$SYSTEM_PRIVILEGE", "REAL", "RECORD_VERSION", "RECREATE", "RECURSIVE", "REFERENCES", "REGR_AVGX",
             "REGR_AVGY", "REGR_COUNT", "REGR_INTERCEPT", "REGR_R2", "REGR_SLOPE", "REGR_SXX", "REGR_SXY", "REGR_SYY",
-            "RELEASE", "RETURN", "RETURNING_VALUES", "RETURNS", "REVOKE", "RIGHT", "ROLLBACK", "ROW", "ROWS",
-            "ROW_COUNT", "SAVEPOINT", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR", "SMALLINT", "SOME",
-            "SQLCODE", "SQLSTATE", "START", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TABLE", "THEN", "TIME", "TIMESTAMP",
-            "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRIGGER", "TRIM", "TRUE", "UNBOUNDED", "UNION",
-            "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE", "VALUES", "VARBINARY",
-            "VARCHAR", "VARIABLE", "VARYING", "VAR_POP", "VAR_SAMP", "VIEW", "WHEN", "WHERE", "WHILE", "WINDOW", "WITH",
-            "WITHOUT", "YEAR"),
+            "RELEASE", "RESETTING", "RETURN", "RETURNING_VALUES", "RETURNS", "REVOKE", "RIGHT", "ROLLBACK", "ROW",
+            "ROWS", "ROW_COUNT", "SAVEPOINT", "SCROLL", "SECOND", "SELECT", "SENSITIVE", "SET", "SIMILAR", "SMALLINT",
+            "SOME", "SQLCODE", "SQLSTATE", "START", "STDDEV_POP", "STDDEV_SAMP", "SUM", "TABLE", "THEN", "TIME",
+            "TIMESTAMP", "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRIGGER", "TRIM", "TRUE", "UNBOUNDED",
+            "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "UPDATING", "UPPER", "USER", "USING", "VALUE", "VALUES",
+            "VARBINARY", "VARCHAR", "VARIABLE", "VARYING", "VAR_POP", "VAR_SAMP", "VIEW", "WHEN", "WHERE", "WHILE",
+            "WINDOW", "WITH", "WITHOUT", "YEAR"),
     ;
 
     private final Set<CharSequence> reservedWords;
@@ -76,7 +76,7 @@ public enum FirebirdReservedWords implements ReservedWords {
      * @return reserved words for latest known Firebird version
      */
     public static FirebirdReservedWords latest() {
-        return FIREBIRD_4_0;
+        return FIREBIRD_5_0;
     }
 
     private static Set<CharSequence> toUnmodifiableCaseInsensitiveSet(Collection<CharSequence> values) {

@@ -25,8 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FirebirdReservedWordsTest {
 
     @Test
-    void latest_returnFIREBIRD_4_0() {
-        assertThat(FirebirdReservedWords.latest()).isEqualTo(FirebirdReservedWords.FIREBIRD_4_0);
+    void latest_returnFIREBIRD_5_0() {
+        assertThat(FirebirdReservedWords.latest()).isEqualTo(FirebirdReservedWords.FIREBIRD_5_0);
     }
 
 }

@@ -32,6 +32,16 @@ import java.sql.SQLException;
  */
 enum FirebirdVersionMetaData {
     // Order is intentionally from higher versions to lower versions, see getVersionMetaDataFor!
+    FIREBIRD_5_0(5, 0) {
+        @Override
+        String getSqlKeywords() {
+            return "ADD,ADMIN,BIT_LENGTH,COMMENT,CURRENT_CONNECTION,CURRENT_TRANSACTION,DECFLOAT,DELETING,GDSCODE,"
+                    + "INDEX,INSERTING,INT128,LONG,OFFSET,PLAN,POST_EVENT,PUBLICATION,RDB$DB_KEY,RDB$ERROR,"
+                    + "RDB$GET_CONTEXT,RDB$GET_TRANSACTION_CN,RDB$RECORD_VERSION,RDB$ROLE_IN_USE,RDB$SET_CONTEXT,"
+                    + "RDB$SYSTEM_PRIVILEGE,RECORD_VERSION,RECREATE,RESETTING,RETURNING_VALUES,ROW_COUNT,SQLCODE,"
+                    + "UNBOUNDED,UPDATING,VARBINARY,VARIABLE,VIEW,WHILE";
+        }
+    },
     FIREBIRD_4_0(4, 0) {
         @Override
         public String getSqlKeywords() {
