@@ -39,10 +39,8 @@ import static org.firebirdsql.common.JdbcResourceHelper.closeQuietly;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementClosed;
 import static org.firebirdsql.common.assertions.SQLExceptionAssertions.assertThrowsFbStatementOnlyMethod;
 import static org.firebirdsql.common.matchers.SQLExceptionMatchers.*;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -965,7 +963,7 @@ class FBCallableStatementTest {
             cs.execute();
             String value = cs.getString(1);
             assertNotNull(value, "Expected non-null value");
-            assertThat("Expected non-empty value", value.trim(), not(emptyString()));
+            assertThat("Expected non-empty value", value.trim(), containsString("EXECUTE BLOCK"));
         }
     }
 
