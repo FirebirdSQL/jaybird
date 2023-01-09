@@ -8,9 +8,8 @@
 :toc: left
 :icons: font
 :jaybird5-full-version: 5.0.0
-:jaybird5-tag: -beta-1
-:jaybird5-template-version: {jaybird5-full-version}.<java>{jaybird5-tag}
-:jaybird5-example-version: {jaybird5-full-version}.java11{jaybird5-tag}
+:jaybird5-template-version: {jaybird5-full-version}.<java>
+:jaybird5-example-version: {jaybird5-full-version}.java11
 :jaybird4-full-version: 4.0.8
 :jaybird4-template-version: {jaybird4-full-version}.<java>
 :jaybird4-example-version: {jaybird4-full-version}.java11
@@ -35,8 +34,6 @@ Jaybird 5 is available on Maven Central:
 groupId:: `org.firebirdsql.jdbc`
 artifactId:: `jaybird`,
 version:: `{jaybird5-template-version}` (where `<java>` is `java11` or `java8`)
-
-NOTE: SNAPSHOT releases are only available from the Sonatype snapshot  repository, https://oss.sonatype.org/content/repositories/snapshots
 
 Contrary to Jaybird 4, a Maven relocation artifact with artifact id `jaybird-XX` (with `XX` `jdk17`, `jdk18`) is no longer provided.
 Please make sure you use the `jaybird` artifactId.
@@ -311,7 +308,7 @@ Jaybird 2.2.7 is the last version to support Java 5, support has been dropped wi
 Jaybird 2.2 is the last version to support Java 6, support has been dropped with Jaybird 3.0.
 
 [#what-is-the-java-9-module-name-for-jaybird]
-=== What is the Java 9 module name for Jaybird?
+== What is the Java 9 module name for Jaybird?
 
 Jaybird itself is not (yet) modularized.
 To ensure a stable module name, Jaybird, since 2.2.14 and 3.0.3, declares the automatic module name `org.firebirdsql.jaybird`.
@@ -752,56 +749,56 @@ The following optional features are NOT supported:
 The following optional features and the methods that support it are not implemented:
 
 * Ref and Array types.
- ** `java.sql.PreparedStatement`
-  *** `setRef(int i, Ref x)`
-  *** `setArray(int i, Array x)`
- ** `java.sql.ResultSet`
-  *** `getArray(int i)`
-  *** `getArray(String columnName)`
-  *** `getRef(int i)`
-  *** `getRef(String columnName)`
+** `java.sql.PreparedStatement`
+*** `setRef(int i, Ref x)`
+*** `setArray(int i, Array x)`
+** `java.sql.ResultSet`
+*** `getArray(int i)`
+*** `getArray(String columnName)`
+*** `getRef(int i)`
+*** `getRef(String columnName)`
 * User Defined Types/Type Maps.
- ** `java.sql.ResultSet`
-  *** `getObject(int i, java.util.Map map)`
-  *** `getObject(String columnName, java.util.Map map)`
- ** `java.sql.Connection`
-  *** `getTypeMap()`
-  *** `setTypeMap(java.util.Map map)`
+** `java.sql.ResultSet`
+*** `getObject(int i, java.util.Map map)`
+*** `getObject(String columnName, java.util.Map map)`
+** `java.sql.Connection`
+*** `getTypeMap()`
+*** `setTypeMap(java.util.Map map)`
 
 Excluding the unsupported features, the following methods are not yet implemented:
 
 * `java.sql.Blob`
- ** `getBytes(long pos, int length)`
- ** `position(byte pattern[], long start)`
- ** `position(Blob pattern, long start)`
- ** `getBinaryStream(long pos, long length)`
- ** `truncate(long len)`
- ** Methods with a position (`pos`) parameter with a value greater than 1
+** `getBytes(long pos, int length)`
+** `position(byte pattern[], long start)`
+** `position(Blob pattern, long start)`
+** `getBinaryStream(long pos, long length)`
+** `truncate(long len)`
+** Methods with a position (`pos`) parameter with a value greater than 1
 * `java.sql.Clob`
- ** `length()`
- ** `truncate(long len)`
- ** `position(String searchstr, long start)`
- ** `position(Clob searchstr, long start)`
- ** `getCharacterStream(long pos, long length)`
- ** Methods with a position (`pos`) parameter with a value greater than 1
+** `length()`
+** `truncate(long len)`
+** `position(String searchstr, long start)`
+** `position(Clob searchstr, long start)`
+** `getCharacterStream(long pos, long length)`
+** Methods with a position (`pos`) parameter with a value greater than 1
 
 The following methods are implemented, but do not work as expected:
 
 * `java.sql.Statement`
- ** `get/setMaxFieldSize` does nothing
- ** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
+** `get/setMaxFieldSize` does nothing
+** `get/setQueryTimeout` supported since Jaybird 4 with Firebird 4.0 and higher
 * `java.sql.PreparedStatement`
- ** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
- ** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
+** `setObject(index,object,type)` This method is implemented but behaves as `setObject(index,object)`
+** `setObject(index,object,type,scale)` This method is implemented but behaves as `setObject(index,object)`
 * `java.sql.CallableStatement`
- ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
+** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 * `java.sql.ResultSetMetaData`
- ** `isReadOnly(i)` always returns false
- ** `isWritable(i)` always returns true
- ** `isDefinitivelyWritable(i)` always returns true
+** `isReadOnly(i)` always returns false
+** `isWritable(i)` always returns true
+** `isDefinitivelyWritable(i)` always returns true
 * `java.sql.ResultSet`
- ** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
+** `getBigDecimal(index,scale)` This method is implemented but behaves as `getBigDecimal(index)`.
 The method is deprecated, and we suggest using `getBigDecimal(index)` and adjust the scale of the returned `BigDecimal` using `BigDecimal.setScale(newScale,roundingMode)`
 
 [#features]
