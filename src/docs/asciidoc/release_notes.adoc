@@ -34,6 +34,9 @@ The following has been changed or fixed since Jaybird 5.0.0:
 * Fixed: Executing DML with a RETURNING clause containing a blob column would return the blob-id instead of the blob value (https://github.com/FirebirdSQL/jaybird/issues/728[jaybird#728])
 +
 This fix was also back-ported to 4.0.9.
+* Fixed: `CallableStatement.getString` and `CallableStatement.getObject` would incorrectly trim string values (https://github.com/FirebirdSQL/jaybird/issues/729[jaybird#729])
++
+This fix was also back-ported to 4.0.9.
 
 [#jaybird-5-0-0-changelog]
 === Jaybird 5.0.0
@@ -1068,6 +1071,7 @@ This change can have two potentially breaking effects:
 +
 . Values from metadata queries can now have leading spaces, where previously those were removed
 . Some -- but not all -- metadata ``ResultSet``s would previously return the untrimmed value through `getObject(..)`, but now return the trimmed value.
+* `CallableStatement.getString` (in Jaybird 3, 4.0.0 - 4.0.8, and 5.0.0) and `CallableStatement.getObject` (in Jaybird 5.0.0) would incorrectly trim string values.
 * Setting a string on a `PreparedStatement`, or updatable `ResultSet`, had a weird boundary check that tried to exploit a benign buffer overflow if the value started and/or ended with "```%```", and was one or two bytes too long.
 This odd boundary check has been removed, and will now throw a `DataTruncation` if the byte length is longer than the declared length (in bytes) of the field.
 Previously, in Jaybird 3.0 and 4.0, this had the following effects:
