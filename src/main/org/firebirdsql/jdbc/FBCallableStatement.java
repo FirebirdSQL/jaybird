@@ -330,7 +330,7 @@ public class FBCallableStatement extends FBPreparedStatement implements Callable
             throws SQLException {
         // retrieveBlobs is false, as they were already retrieved when initializing singletonRs in internalExecute
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
-                resultSetListener, false, true);
+                resultSetListener, false, false);
     }
 
     private void setField(FBField field, WrapperWithLong value) throws SQLException {
