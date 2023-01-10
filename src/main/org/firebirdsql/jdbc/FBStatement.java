@@ -569,7 +569,7 @@ public class FBStatement implements FirebirdStatement {
     protected FBResultSet createSpecialResultSet(FBObjectListener.ResultSetListener resultSetListener)
             throws SQLException {
         return new FBResultSet(fbStatement.getRowDescriptor(), connection, new ArrayList<>(specialResult),
-                resultSetListener, true, true);
+                resultSetListener, true, false);
     }
 
     @Override
