@@ -1047,4 +1047,25 @@ public class TestFBCallableStatement extends FBJUnit4TestBase {
             }
         }
     }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    public void callableStatementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con,
+                "create procedure char_return returns (val char(5)) as\n" +
+                "begin\n" +
+                "  val = 'A';\n" +
+                "end");
+
+        try (CallableStatement cstmt = con.prepareCall("execute procedure char_return")) {
+            cstmt.execute();
+            ResultSet rs = cstmt.getResultSet();
+            assertTrue("Expected a row", rs.next());
+            assertEquals("Unexpected trim by rs.getString", "A    ", rs.getString(1));
+            assertEquals("Unexpected trim by cstmt.getObject", "A    ", cstmt.getObject(1));
+            assertEquals("Unexpected trim by cstmt.getString", "A    ", cstmt.getString(1));
+        }
+    }
 }

@@ -15,6 +15,7 @@ The following has been changed or fixed since Jaybird 4.0.8
   configure `sessionTimeZone` with offset only, e.g. `-08:00` ([jaybird#720](https://github.com/FirebirdSQL/jaybird/issues/720))
 - Fixed: Executing DML with a RETURNING clause containing a blob column would 
   return the blob-id instead of the blob value ([jaybird#728](https://github.com/FirebirdSQL/jaybird/issues/728))
+- Fixed: `CallableStatement.getString` would incorrectly trim string values ([jaybird#729](https://github.com/FirebirdSQL/jaybird/issues/729))
 
 Jaybird 4.0.8
 -------------

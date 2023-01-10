@@ -1046,14 +1046,33 @@ public class TestFBStatement extends FBJUnit4TestBase {
             stmt.executeUpdate("create table t (a integer not null primary key, b blob)");
 
             try (ResultSet rs = stmt.executeQuery("insert into t (a, b) values (1, X'010203') returning a, b")) {
-                assertTrue("expected a row", rs.next());
+                assertTrue("Expected a row", rs.next());
                 assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
             }
 
             try (ResultSet rs = stmt.executeQuery("select a, b from t")) {
-                assertTrue("expected a row", rs.next());
+                assertTrue("Expected a row", rs.next());
                 assertArrayEquals(new byte[] { 1, 2, 3 }, rs.getBytes(2));
             }
+        }
+    }
+
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    public void statementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con,
+                "create procedure char_return returns (val char(5)) as\n" +
+                "begin\n" +
+                "  val = 'A';\n" +
+                "end");
+
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("execute procedure char_return")) {
+            assertTrue("Expected a row", rs.next());
+            assertEquals("Unexpected trim by getObject", "A    ", rs.getObject(1));
+            assertEquals("Unexpected trim by getString", "A    ", rs.getString(1));
         }
     }
 
