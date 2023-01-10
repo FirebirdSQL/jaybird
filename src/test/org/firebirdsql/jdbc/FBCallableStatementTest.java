@@ -1035,6 +1035,28 @@ class FBCallableStatementTest {
         }
     }
 
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    void callableStatementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con, """
+                create procedure char_return returns (val char(5)) as
+                begin
+                  val = 'A';
+                end""");
+
+        try (CallableStatement cstmt = con.prepareCall("execute procedure char_return")) {
+            cstmt.execute();
+            ResultSet rs = cstmt.getResultSet();
+            assertTrue(rs.next(), "Expected a row");
+            assertAll(
+                    () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by rs.getString"),
+                    () -> assertEquals("A    ", cstmt.getObject(1), "Unexpected trim by cstmt.getObject"),
+                    () -> assertEquals("A    ", cstmt.getString(1), "Unexpected trim by cstmt.getString"));
+        }
+    }
+
     static Stream<String> scrollableCursorPropertyValues() {
         // We are unconditionally emitting SERVER, to check if the value behaves appropriately on versions that do
         // not support server-side scrollable cursors

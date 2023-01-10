@@ -1410,6 +1410,26 @@ class FBPreparedStatementTest {
         }
     }
 
+    /**
+     * Tests for <a href="https://github.com/FirebirdSQL/jaybird/issues/729">jaybird#729</a>.
+     */
+    @Test
+    void preparedStatementExecuteProcedureShouldNotTrim_729() throws Exception {
+        executeDDL(con, """
+                create procedure char_return returns (val char(5)) as
+                begin
+                  val = 'A';
+                end""");
+
+        try (PreparedStatement stmt = con.prepareStatement("execute procedure char_return");
+             ResultSet rs = stmt.executeQuery()) {
+            assertTrue(rs.next(), "Expected a row");
+            assertAll(
+                    () -> assertEquals("A    ", rs.getObject(1), "Unexpected trim by getObject"),
+                    () -> assertEquals("A    ", rs.getString(1), "Unexpected trim by getString"));
+        }
+    }
+
     private void prepareTestData() throws SQLException {
         con.setAutoCommit(false);
         try (PreparedStatement pstmt = con.prepareStatement(INSERT_DATA)) {
